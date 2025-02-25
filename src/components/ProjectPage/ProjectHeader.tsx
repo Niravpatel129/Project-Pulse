@@ -27,7 +27,7 @@ export default function ProjectHeader() {
       </div>
 
       {/* Participants Section */}
-      <div className='container mx-auto flex items-center justify-between px-4 py-2'>
+      <div className='container mx-auto flex items-center justify-between px-10 py-2'>
         <span className='text-xs text-muted-foreground'>Visible to you + 1 participant</span>
       </div>
       <div className='container mx-auto flex items-center justify-between px-4 pb-4'>
