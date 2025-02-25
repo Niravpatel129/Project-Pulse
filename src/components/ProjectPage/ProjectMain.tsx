@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Project } from 'next/dist/build/swc/types';
 import { useState } from 'react';
 import ProjectActivity from './ProjectActivity';
+import ProjectSchedule from './ProjectSchedule';
 import { ProjectSidebar } from './ProjectSidebar';
 import TimelineExample from './TimelineExample';
 
@@ -74,7 +75,7 @@ export default function ProjectPage() {
                   <TimelineExample />
                 </TabsContent>
                 <TabsContent value='schedule'>
-                  <>Schedule </>
+                  <ProjectSchedule />
                 </TabsContent>
                 <TabsContent value='files'>
                   <>Files </>
