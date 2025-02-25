@@ -554,6 +554,11 @@ export default function ProjectFiles() {
                       rows={3}
                     />
                   </div>
+
+                  <div className='flex items-center space-x-2'>
+                    <Switch id='send-email' />
+                    <Label htmlFor='send-email'>Send email notification to client</Label>
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button variant='outline' onClick={() => setShowUploadDialog(false)}>
@@ -711,6 +716,9 @@ export default function ProjectFiles() {
 
       {/* File Details Dialog */}
       <Dialog open={showFileDetailsDialog} onOpenChange={setShowFileDetailsDialog}>
+        <DialogHeader className='sr-only'>
+          <DialogTitle>{selectedFile?.name}</DialogTitle>
+        </DialogHeader>
         <DialogContent className='max-w-4xl h-[80vh]'>
           {selectedFile && (
             <>
