@@ -9,6 +9,7 @@ import { Project } from 'next/dist/build/swc/types';
 import { useState } from 'react';
 import ProjectActivity from './ProjectActivity';
 import ProjectFiles from './ProjectFiles';
+import ProjectPayments from './ProjectPayments';
 import ProjectSchedule from './ProjectSchedule';
 import { ProjectSidebar } from './ProjectSidebar';
 import TimelineExample from './TimelineExample';
@@ -105,7 +106,7 @@ export default function ProjectPage() {
                   <ProjectFiles />
                 </TabsContent>
                 <TabsContent value='payments'>
-                  <>Payments </>
+                  <ProjectPayments />
                 </TabsContent>
               </div>
 

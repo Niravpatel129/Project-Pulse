@@ -2,9 +2,9 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
@@ -27,6 +27,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { addHours, format, parseISO } from 'date-fns';
 import { CalendarIcon, Clock, Mail, Plus, Users } from 'lucide-react';
 import { useState } from 'react';
+import { Calendar } from '../ui/calendar';
 
 type TeamMember = {
   id: string;
@@ -58,6 +59,8 @@ export default function ProjectSchedule() {
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showAvailabilityDialog, setShowAvailabilityDialog] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('upcoming');
+  const [startDateRange, setStartDateRange] = useState<Date | undefined>(new Date());
+  const [endDateRange, setEndDateRange] = useState<Date | undefined>(addHours(new Date(), 30 * 24));
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
@@ -252,7 +255,7 @@ export default function ProjectSchedule() {
     <div className='container mx-auto px-4 py-6 overflow-x-hidden'>
       <div className='flex flex-col lg:flex-row gap-6'>
         {/* Left side - Calendar view */}
-        <div className='w-full lg:w-1/3 xl:w-1/4 mb-6 lg:mb-0'>
+        <div className='w-full lg:w-1/3 xl:w-1/4 mb-6 lg:mb-0 min-w-[300px]'>
           <div className='w-full overflow-hidden'>
             <Card>
               <CardHeader>
@@ -596,20 +599,24 @@ export default function ProjectSchedule() {
                 </div>
 
                 <div className='grid gap-2'>
-                  <Label>Date Range</Label>
+                  <Label>Date Range (Optional)</Label>
                   <div className='flex flex-col sm:flex-row items-center gap-2'>
-                    <Input
-                      type='date'
-                      className='w-full'
-                      defaultValue={format(new Date(), 'yyyy-MM-dd')}
-                    />
+                    <div className='w-full'>
+                      <DatePicker
+                        date={startDateRange}
+                        setDate={setStartDateRange}
+                        placeholder='Start date'
+                      />
+                    </div>
                     <span className='hidden sm:inline'>to</span>
                     <span className='inline sm:hidden my-1'>to</span>
-                    <Input
-                      type='date'
-                      className='w-full'
-                      defaultValue={format(addHours(new Date(), 30 * 24), 'yyyy-MM-dd')}
-                    />
+                    <div className='w-full'>
+                      <DatePicker
+                        date={endDateRange}
+                        setDate={setEndDateRange}
+                        placeholder='End date'
+                      />
+                    </div>
                   </div>
                 </div>
 
