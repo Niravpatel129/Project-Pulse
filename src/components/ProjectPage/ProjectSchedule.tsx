@@ -249,10 +249,10 @@ export default function ProjectSchedule() {
   };
 
   return (
-    <div className='container mx-auto overflow-x-hidden'>
-      <div className='flex gap-6'>
+    <div className='container mx-auto px-4 py-6 overflow-x-hidden'>
+      <div className='flex flex-col lg:flex-row gap-6'>
         {/* Left side - Calendar view */}
-        <div className='col-span-1 lg:col-span-4 xl:col-span-3'>
+        <div className='w-full lg:w-1/3 xl:w-1/4 mb-6 lg:mb-0'>
           <div className='w-full overflow-hidden'>
             <Card>
               <CardHeader>
@@ -307,7 +307,7 @@ export default function ProjectSchedule() {
         </div>
 
         {/* Right side - Meetings list */}
-        <Card className='col-span-1 lg:col-span-8 xl:col-span-9 w-full'>
+        <Card className='w-full lg:w-2/3 xl:w-3/4'>
           <CardHeader>
             <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
               <CardTitle>Meetings</CardTitle>
@@ -330,7 +330,7 @@ export default function ProjectSchedule() {
                     <div className='flex flex-col sm:flex-row'>
                       <div className='flex w-full flex-col justify-between p-4 sm:w-2/3'>
                         <div>
-                          <div className='flex items-center gap-2'>
+                          <div className='flex flex-wrap items-center gap-2'>
                             <h3 className='font-semibold'>{meeting.title}</h3>
                             <Badge className={getStatusColor(meeting.status)}>
                               {meeting.status.charAt(0).toUpperCase() + meeting.status.slice(1)}
@@ -339,7 +339,7 @@ export default function ProjectSchedule() {
                           <p className='mt-1 text-sm text-gray-600'>{meeting.description}</p>
                         </div>
 
-                        <div className='mt-4 flex flex-wrap items-center gap-4'>
+                        <div className='mt-4 flex flex-wrap items-center gap-2 md:gap-4'>
                           <div className='flex items-center'>
                             <CalendarIcon className='mr-1 h-4 w-4 text-gray-500' />
                             <span className='text-sm'>
@@ -364,7 +364,9 @@ export default function ProjectSchedule() {
                         {meeting.clientEmail && (
                           <div className='mt-2'>
                             <div className='text-sm font-medium'>Client</div>
-                            <div className='text-sm text-gray-600'>{meeting.clientEmail}</div>
+                            <div className='text-sm text-gray-600 break-words'>
+                              {meeting.clientEmail}
+                            </div>
                           </div>
                         )}
 
@@ -415,7 +417,7 @@ export default function ProjectSchedule() {
 
         {/* Create Meeting Dialog */}
         <Dialog open={showMeetingDialog} onOpenChange={setShowMeetingDialog}>
-          <DialogContent className='sm:max-w-[500px]'>
+          <DialogContent className='sm:max-w-[500px] max-h-[90vh] overflow-y-auto'>
             <DialogHeader>
               <DialogTitle>Create New Meeting</DialogTitle>
               <DialogDescription>
@@ -445,7 +447,7 @@ export default function ProjectSchedule() {
                   />
                 </div>
 
-                <div className='grid grid-cols-2 gap-4'>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                   <div className='grid gap-2'>
                     <Label htmlFor='startTime'>Start Time</Label>
                     <Select value={meetingStartTime} onValueChange={setMeetingStartTime}>
@@ -537,7 +539,7 @@ export default function ProjectSchedule() {
                   </div>
                 </div>
               </div>
-              <DialogFooter>
+              <DialogFooter className='flex-col sm:flex-row gap-2'>
                 <Button type='submit'>Create Meeting</Button>
               </DialogFooter>
             </form>
@@ -546,7 +548,7 @@ export default function ProjectSchedule() {
 
         {/* Send Client Invite Dialog */}
         <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-          <DialogContent className='sm:max-w-[500px]'>
+          <DialogContent className='sm:max-w-[500px] max-h-[90vh] overflow-y-auto'>
             <DialogHeader>
               <DialogTitle>Send Client Invite</DialogTitle>
               <DialogDescription>
@@ -595,13 +597,14 @@ export default function ProjectSchedule() {
 
                 <div className='grid gap-2'>
                   <Label>Date Range</Label>
-                  <div className='flex items-center gap-2'>
+                  <div className='flex flex-col sm:flex-row items-center gap-2'>
                     <Input
                       type='date'
                       className='w-full'
                       defaultValue={format(new Date(), 'yyyy-MM-dd')}
                     />
-                    <span>to</span>
+                    <span className='hidden sm:inline'>to</span>
+                    <span className='inline sm:hidden my-1'>to</span>
                     <Input
                       type='date'
                       className='w-full'
@@ -630,7 +633,7 @@ export default function ProjectSchedule() {
                   </Select>
                 </div>
               </div>
-              <DialogFooter>
+              <DialogFooter className='flex-col sm:flex-row gap-2'>
                 <Button type='submit'>Send Invite</Button>
               </DialogFooter>
             </form>
@@ -639,7 +642,7 @@ export default function ProjectSchedule() {
 
         {/* Manage Availability Dialog */}
         <Dialog open={showAvailabilityDialog} onOpenChange={setShowAvailabilityDialog}>
-          <DialogContent className='sm:max-w-[600px]'>
+          <DialogContent className='sm:max-w-[600px] max-h-[90vh] overflow-y-auto'>
             <DialogHeader>
               <DialogTitle>Manage Availability Settings</DialogTitle>
               <DialogDescription>
@@ -648,16 +651,22 @@ export default function ProjectSchedule() {
             </DialogHeader>
             <div className='py-4'>
               <Tabs defaultValue='general'>
-                <TabsList className='w-full'>
-                  <TabsTrigger value='general'>General Settings</TabsTrigger>
-                  <TabsTrigger value='team'>Team Availability</TabsTrigger>
-                  <TabsTrigger value='sync'>Calendar Sync</TabsTrigger>
+                <TabsList className='w-full flex flex-wrap sm:flex-nowrap'>
+                  <TabsTrigger value='general' className='flex-1'>
+                    General Settings
+                  </TabsTrigger>
+                  <TabsTrigger value='team' className='flex-1'>
+                    Team Availability
+                  </TabsTrigger>
+                  <TabsTrigger value='sync' className='flex-1'>
+                    Calendar Sync
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value='general' className='mt-4 space-y-4'>
                   <div className='space-y-2'>
                     <h3 className='text-sm font-medium'>Meeting Duration Options</h3>
-                    <div className='grid grid-cols-2 gap-2'>
+                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
                       <div className='flex items-center space-x-2'>
                         <Checkbox id='duration30' defaultChecked />
                         <Label htmlFor='duration30'>30 minutes</Label>
@@ -680,13 +689,23 @@ export default function ProjectSchedule() {
                   <div className='space-y-2'>
                     <h3 className='text-sm font-medium'>Schedule Restrictions</h3>
                     <div className='space-y-2'>
-                      <div className='flex items-center justify-between'>
+                      <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2'>
                         <Label htmlFor='min-notice'>Minimum notice (hours)</Label>
-                        <Input id='min-notice' type='number' className='w-20' defaultValue={1} />
+                        <Input
+                          id='min-notice'
+                          type='number'
+                          className='w-full sm:w-20'
+                          defaultValue={1}
+                        />
                       </div>
-                      <div className='flex items-center justify-between'>
+                      <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2'>
                         <Label htmlFor='max-days'>Maximum days in advance</Label>
-                        <Input id='max-days' type='number' className='w-20' defaultValue={30} />
+                        <Input
+                          id='max-days'
+                          type='number'
+                          className='w-full sm:w-20'
+                          defaultValue={30}
+                        />
                       </div>
                     </div>
                   </div>
@@ -694,18 +713,23 @@ export default function ProjectSchedule() {
                   <div className='space-y-2'>
                     <h3 className='text-sm font-medium'>Buffer Time</h3>
                     <div className='space-y-2'>
-                      <div className='flex items-center justify-between'>
+                      <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2'>
                         <Label htmlFor='buffer-before'>Before meetings (minutes)</Label>
                         <Input
                           id='buffer-before'
                           type='number'
-                          className='w-20'
+                          className='w-full sm:w-20'
                           defaultValue={15}
                         />
                       </div>
-                      <div className='flex items-center justify-between'>
+                      <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2'>
                         <Label htmlFor='buffer-after'>After meetings (minutes)</Label>
-                        <Input id='buffer-after' type='number' className='w-20' defaultValue={15} />
+                        <Input
+                          id='buffer-after'
+                          type='number'
+                          className='w-full sm:w-20'
+                          defaultValue={15}
+                        />
                       </div>
                     </div>
                   </div>
@@ -719,19 +743,19 @@ export default function ProjectSchedule() {
                     </p>
 
                     <div className='rounded-md border'>
-                      <div className='flex items-center justify-between border-b p-3'>
+                      <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between border-b p-3 gap-2'>
                         <div className='font-medium'>Jane Smith</div>
                         <Button variant='outline' size='sm'>
                           View Calendar
                         </Button>
                       </div>
-                      <div className='flex items-center justify-between border-b p-3'>
+                      <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between border-b p-3 gap-2'>
                         <div className='font-medium'>John Doe</div>
                         <Button variant='outline' size='sm'>
                           View Calendar
                         </Button>
                       </div>
-                      <div className='flex items-center justify-between p-3'>
+                      <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 gap-2'>
                         <div className='font-medium'>Sarah Johnson</div>
                         <Button variant='outline' size='sm'>
                           View Calendar
@@ -754,7 +778,7 @@ export default function ProjectSchedule() {
 
                     <Card>
                       <CardHeader className='py-3'>
-                        <div className='flex items-center justify-between'>
+                        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2'>
                           <CardTitle className='text-base'>Google Calendar</CardTitle>
                           <Button variant='outline' size='sm'>
                             Connect
@@ -765,7 +789,7 @@ export default function ProjectSchedule() {
 
                     <Card>
                       <CardHeader className='py-3'>
-                        <div className='flex items-center justify-between'>
+                        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2'>
                           <CardTitle className='text-base'>Microsoft Outlook</CardTitle>
                           <Button variant='outline' size='sm'>
                             Connect
@@ -776,7 +800,7 @@ export default function ProjectSchedule() {
 
                     <Card>
                       <CardHeader className='py-3'>
-                        <div className='flex items-center justify-between'>
+                        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2'>
                           <CardTitle className='text-base'>Apple Calendar</CardTitle>
                           <Button variant='outline' size='sm'>
                             Connect
@@ -788,7 +812,7 @@ export default function ProjectSchedule() {
                 </TabsContent>
               </Tabs>
             </div>
-            <DialogFooter>
+            <DialogFooter className='flex-col sm:flex-row gap-2'>
               <Button onClick={() => setShowAvailabilityDialog(false)}>Save Changes</Button>
             </DialogFooter>
           </DialogContent>

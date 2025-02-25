@@ -1,8 +1,10 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import { Menu } from 'lucide-react';
 import { Project } from 'next/dist/build/swc/types';
 import { useState } from 'react';
 import ProjectActivity from './ProjectActivity';
@@ -28,46 +30,67 @@ export default function ProjectPage() {
 
   return (
     <div className='min-h-screen w-full'>
-      <div className=' bg-white'>
-        <div className='container mx-auto px-4 '>
+      <div className='bg-white'>
+        <div className='container mx-auto px-4 sm:px-6'>
+          <div className='md:hidden flex justify-end py-3'>
+            <Sheet>
+              <SheetTitle className='sr-only'>Project Sidebar</SheetTitle>
+              <SheetTrigger asChild>
+                <button
+                  className='bg-gray-100 p-2 rounded-md hover:bg-gray-200 transition-colors'
+                  aria-label='Open Sidebar'
+                >
+                  <Menu size={24} />
+                </button>
+              </SheetTrigger>
+              <SheetContent className='w-[85%] sm:max-w-md'>
+                <div className='mt-6 w-full'>
+                  <ProjectSidebar project={project} onUpdateProject={handleUpdateProject} />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+
           <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
-            <TabsList className='w-full justify-start border-0 bg-transparent p-0'>
-              <TabsTrigger
-                value='activity'
-                className='rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
-              >
-                Activity
-              </TabsTrigger>
-              <TabsTrigger
-                value='timeline'
-                className='rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
-              >
-                Timeline
-              </TabsTrigger>
-              <TabsTrigger
-                value='schedule'
-                className='rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
-              >
-                Schedule
-              </TabsTrigger>
-              <TabsTrigger
-                value='files'
-                className='rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
-              >
-                Files
-                <Badge variant='secondary' className='ml-2'>
-                  {5}
-                </Badge>
-              </TabsTrigger>
-              <TabsTrigger
-                value='payments'
-                className='rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
-              >
-                Payments
-              </TabsTrigger>
-            </TabsList>
-            <div className='container mx-auto flex gap-6 py-2'>
-              <div className='flex-1'>
+            <div className='overflow-x-auto pb-2'>
+              <TabsList className='w-full min-w-max justify-start border-0 bg-transparent p-0'>
+                <TabsTrigger
+                  value='activity'
+                  className='rounded-none border-b-2 border-transparent px-3 py-2 text-sm sm:px-4 sm:text-base data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
+                >
+                  Activity
+                </TabsTrigger>
+                <TabsTrigger
+                  value='timeline'
+                  className='rounded-none border-b-2 border-transparent px-3 py-2 text-sm sm:px-4 sm:text-base data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
+                >
+                  Timeline
+                </TabsTrigger>
+                <TabsTrigger
+                  value='schedule'
+                  className='rounded-none border-b-2 border-transparent px-3 py-2 text-sm sm:px-4 sm:text-base data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
+                >
+                  Schedule
+                </TabsTrigger>
+                <TabsTrigger
+                  value='files'
+                  className='rounded-none border-b-2 border-transparent px-3 py-2 text-sm sm:px-4 sm:text-base data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
+                >
+                  Files
+                  <Badge variant='secondary' className='ml-1 sm:ml-2'>
+                    {5}
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger
+                  value='payments'
+                  className='rounded-none border-b-2 border-transparent px-3 py-2 text-sm sm:px-4 sm:text-base data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
+                >
+                  Payments
+                </TabsTrigger>
+              </TabsList>
+            </div>
+            <div className='mx-auto flex flex-col gap-6 py-2 md:flex-row relative'>
+              <div className='w-full md:flex-1'>
                 <TabsContent value='activity'>
                   <ProjectActivity />
                 </TabsContent>
@@ -84,7 +107,11 @@ export default function ProjectPage() {
                   <>Payments </>
                 </TabsContent>
               </div>
-              <ProjectSidebar project={project} onUpdateProject={handleUpdateProject} />
+
+              {/* Desktop Sidebar - only visible on md and larger screens */}
+              <div className='hidden md:block'>
+                <ProjectSidebar project={project} onUpdateProject={handleUpdateProject} />
+              </div>
             </div>
           </Tabs>
         </div>
