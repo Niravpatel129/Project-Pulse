@@ -183,7 +183,7 @@ export function ProjectSidebar({ project, onUpdateProject }) {
   };
 
   return (
-    <div className='w-full max-w-full md:w-80 space-y-6 overflow-hidden'>
+    <div className='w-full max-w-full md:w-80 space-y-6 overflow-hidden p-1'>
       <div className='rounded-lg bg-gray-50 p-4'>
         <div className='mb-4 flex items-center gap-2'>
           <Lock className='h-4 w-4' />

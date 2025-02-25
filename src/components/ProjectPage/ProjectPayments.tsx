@@ -260,7 +260,7 @@ const CreateInvoiceForm = ({
 
         {items.map((item, index) => (
           <div key={index} className='grid grid-cols-12 gap-2 items-end'>
-            <div className='col-span-12 md:col-span-6'>
+            <div className='col-span-12 md:col-span-5'>
               <Label htmlFor={`item-desc-${index}`}>Description</Label>
               <Input
                 id={`item-desc-${index}`}
@@ -275,7 +275,7 @@ const CreateInvoiceForm = ({
                 id={`item-qty-${index}`}
                 type='number'
                 min='1'
-                value={item.quantity}
+                value={item.quantity.toString()}
                 onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value))}
                 required
               />
@@ -287,18 +287,18 @@ const CreateInvoiceForm = ({
                 type='number'
                 min='0'
                 step='0.01'
-                value={item.rate}
+                value={item.rate.toString()}
                 onChange={(e) => updateItem(index, 'rate', parseFloat(e.target.value))}
                 required
               />
             </div>
-            <div className='col-span-4 md:col-span-1'>
+            <div className='col-span-4 md:col-span-3'>
               <Label>Amount</Label>
-              <div className='p-2 bg-gray-50 rounded border text-right'>
+              <div className='p-2 bg-gray-50 rounded border text-right w-full h-9 overflow-hidden text-ellipsis whitespace-nowrap'>
                 {formatCurrency(item.amount)}
               </div>
             </div>
-            <div className='col-span-1'>
+            <div className='col-span-1 md:col-span-auto'>
               {items.length > 1 && (
                 <Button
                   type='button'
@@ -350,6 +350,14 @@ const CreateInvoiceForm = ({
 export default function ProjectPayments() {
   const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
+  const [openViewDialog, setOpenViewDialog] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+
+  // View invoice
+  const handleViewInvoice = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setOpenViewDialog(true);
+  };
 
   // Create invoice
   const handleCreateInvoice = (invoiceData: Omit<Invoice, 'id'>) => {
@@ -427,6 +435,124 @@ export default function ProjectPayments() {
         </Dialog>
       </div>
 
+      {/* View Invoice Dialog */}
+      <Dialog open={openViewDialog} onOpenChange={setOpenViewDialog}>
+        <DialogContent className='max-w-4xl'>
+          {selectedInvoice && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Invoice {selectedInvoice.number}</DialogTitle>
+                <DialogDescription>
+                  Issued to {selectedInvoice.clientName} on{' '}
+                  {new Date(selectedInvoice.date).toLocaleDateString()}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className='space-y-6'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div>
+                    <h3 className='text-lg font-medium mb-2'>Invoice Details</h3>
+                    <div className='space-y-1'>
+                      <div className='flex justify-between'>
+                        <span className='text-sm text-gray-500'>Invoice Number:</span>
+                        <span>{selectedInvoice.number}</span>
+                      </div>
+                      <div className='flex justify-between'>
+                        <span className='text-sm text-gray-500'>Date:</span>
+                        <span>{new Date(selectedInvoice.date).toLocaleDateString()}</span>
+                      </div>
+                      <div className='flex justify-between'>
+                        <span className='text-sm text-gray-500'>Due Date:</span>
+                        <span>{new Date(selectedInvoice.dueDate).toLocaleDateString()}</span>
+                      </div>
+                      <div className='flex justify-between'>
+                        <span className='text-sm text-gray-500'>Status:</span>
+                        <StatusBadge status={selectedInvoice.status} />
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className='text-lg font-medium mb-2'>Client Information</h3>
+                    <div className='space-y-1'>
+                      <div className='flex justify-between'>
+                        <span className='text-sm text-gray-500'>Client Name:</span>
+                        <span>{selectedInvoice.clientName}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className='text-lg font-medium mb-2'>Items</h3>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Description</TableHead>
+                        <TableHead className='text-right'>Quantity</TableHead>
+                        <TableHead className='text-right'>Rate</TableHead>
+                        <TableHead className='text-right'>Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {selectedInvoice.items.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell>{item.description}</TableCell>
+                          <TableCell className='text-right'>{item.quantity}</TableCell>
+                          <TableCell className='text-right'>{formatCurrency(item.rate)}</TableCell>
+                          <TableCell className='text-right'>
+                            {formatCurrency(item.amount)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div className='md:col-start-2 space-y-2'>
+                    <div className='flex justify-between py-2'>
+                      <span className='text-sm text-gray-500'>Subtotal:</span>
+                      <span>{formatCurrency(selectedInvoice.subtotal)}</span>
+                    </div>
+                    <div className='flex justify-between py-2'>
+                      <span className='text-sm text-gray-500'>Tax:</span>
+                      <span>{formatCurrency(selectedInvoice.tax)}</span>
+                    </div>
+                    <div className='flex justify-between py-2 font-bold'>
+                      <span>Total:</span>
+                      <span>{formatCurrency(selectedInvoice.total)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedInvoice.notes && (
+                  <div>
+                    <h3 className='text-lg font-medium mb-2'>Notes</h3>
+                    <div className='p-4 bg-gray-50 rounded border'>{selectedInvoice.notes}</div>
+                  </div>
+                )}
+              </div>
+
+              <DialogFooter>
+                {selectedInvoice.status !== 'PAID' && (
+                  <Button
+                    variant='outline'
+                    onClick={() => {
+                      markAsPaid(selectedInvoice.id);
+                      setOpenViewDialog(false);
+                    }}
+                  >
+                    <DollarSign className='mr-2 h-4 w-4' />
+                    Mark as Paid
+                  </Button>
+                )}
+                <Button onClick={() => setOpenViewDialog(false)}>Close</Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Card>
         <CardHeader>
           <CardTitle>Invoices</CardTitle>
@@ -475,7 +601,7 @@ export default function ProjectPayments() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align='end'>
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => {}}>
+                            <DropdownMenuItem onClick={() => handleViewInvoice(invoice)}>
                               <CreditCard className='mr-2 h-4 w-4' />
                               View Invoice
                             </DropdownMenuItem>
