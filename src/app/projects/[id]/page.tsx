@@ -7,7 +7,7 @@ export default function ProjectPage() {
   return (
     <div className='min-h-screen bg-white'>
       <ProjectHeader />
-      <div className='container mx-auto flex items-center justify-between px-0 py-2'>
+      <div className='container mx-auto flex items-center justify-between px-0 py-6'>
         <ProjectMain />
       </div>
     </div>
