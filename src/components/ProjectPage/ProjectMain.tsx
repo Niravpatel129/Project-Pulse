@@ -65,7 +65,7 @@ export default function ProjectPage() {
                 Payments
               </TabsTrigger>
             </TabsList>
-            <div className='container mx-auto flex gap-6 py-3'>
+            <div className='container mx-auto flex gap-6 py-2'>
               <div className='flex-1'>
                 <TabsContent value='activity'>
                   <ProjectActivity />
