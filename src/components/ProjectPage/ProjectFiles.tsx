@@ -84,7 +84,6 @@ export default function ProjectFiles() {
     requestApproval,
     setRequestApproval,
     uploadedFiles,
-    setUploadedFiles,
     showVersionHistoryDialog,
     setShowVersionHistoryDialog,
     selectedAttachment,
@@ -94,7 +93,6 @@ export default function ProjectFiles() {
     showVersionCompareDialog,
     setShowVersionCompareDialog,
     compareVersions,
-    setCompareVersions,
     notifyClient,
     setNotifyClient,
     showVariationDialog,
@@ -103,8 +101,6 @@ export default function ProjectFiles() {
     setVariationName,
     variationDescription,
     setVariationDescription,
-    files,
-    setFiles,
 
     // Helper functions
     getFileIcon,
