@@ -4,8 +4,11 @@ import {
   FileType,
   Product,
   ProjectFile,
+  Template,
   mockProducts,
   mockProjectFiles,
+  mockTemplateItems,
+  mockTemplates,
 } from '@/lib/mock/projectFiles';
 import { File, FileText, FolderPlus, Image, Paperclip } from 'lucide-react';
 import { useState } from 'react';
@@ -32,8 +35,9 @@ export function useProjectFiles() {
   const [variationDescription, setVariationDescription] = useState('');
 
   // Use the mock data from the imported file
-  const [files, setFiles] = useState<ProjectFile[]>(mockProjectFiles);
+  const [files, setFiles] = useState<ProjectFile[]>([...mockProjectFiles, ...mockTemplateItems]);
   const [products, setProducts] = useState<Product[]>(mockProducts);
+  const [templates, setTemplates] = useState<Template[]>(mockTemplates);
 
   // Use version history hook
   const versionHistory = useVersionHistory({
@@ -356,6 +360,163 @@ export function useProjectFiles() {
     setVariationDescription('');
   };
 
+  // Template related functions
+  const handleCreateTemplate = (template: Template) => {
+    // Add the new template to the templates array
+    setTemplates((prevTemplates) => [...prevTemplates, template]);
+
+    // Also add a corresponding template file to the files array
+    const templateFile: ProjectFile = {
+      id: `template-file-${Date.now()}`,
+      name: template.name,
+      type: 'template',
+      dateUploaded: new Date().toISOString(),
+      size: '1.0 KB', // Mock size
+      uploadedBy: 'Current User', // Would come from auth in a real app
+      isTemplate: true,
+      attachments: [],
+      comments: [],
+      description: template.description || `Template for ${template.name}`,
+    };
+
+    setFiles((prevFiles) => [...prevFiles, templateFile]);
+  };
+
+  const handleAddTemplateItem = (item: ProjectFile) => {
+    // Add the new template item to the files array
+    setFiles((prevFiles) => [...prevFiles, item]);
+
+    // If this is for a selected file, add it as a related item
+    if (selectedFile) {
+      // Create an updated version of the selected file with the template item added
+      const updatedSelectedFile = {
+        ...selectedFile,
+        // If the file already has templateItems, add to the array, otherwise create a new array
+        templateItems: selectedFile.templateItems ? [...selectedFile.templateItems, item] : [item],
+      };
+
+      setSelectedFile(updatedSelectedFile);
+
+      // Also update the file in the files array
+      setFiles((prevFiles) =>
+        prevFiles.map((file) => (file.id === selectedFile.id ? updatedSelectedFile : file)),
+      );
+    }
+  };
+
+  const handleDeleteTemplateItem = (fileId: string, templateItemId: string) => {
+    // First, remove the template item from the parent file's templateItems array
+    const fileToUpdate = files.find((f) => f.id === fileId);
+
+    if (fileToUpdate && fileToUpdate.templateItems) {
+      const updatedTemplateItems = fileToUpdate.templateItems.filter(
+        (item) => item.id !== templateItemId,
+      );
+
+      const updatedFile = {
+        ...fileToUpdate,
+        templateItems: updatedTemplateItems,
+      };
+
+      // Update the file in the files array
+      setFiles((prevFiles) => prevFiles.map((file) => (file.id === fileId ? updatedFile : file)));
+
+      // If this is the currently selected file, update it too
+      if (selectedFile && selectedFile.id === fileId) {
+        setSelectedFile(updatedFile);
+      }
+    }
+
+    // Also remove the template item from the files array if it exists there
+    setFiles((prevFiles) => prevFiles.filter((file) => file.id !== templateItemId));
+  };
+
+  const handleUpdateTemplateItem = (updatedItem: ProjectFile) => {
+    // Get the item ID that needs to be updated
+    const itemId = updatedItem.id;
+
+    // First, update the item in the files array
+    setFiles((prevFiles) => prevFiles.map((file) => (file.id === itemId ? updatedItem : file)));
+
+    // Then, update the item in any parent file's templateItems array
+    setFiles((prevFiles) =>
+      prevFiles.map((file) => {
+        if (file.templateItems && file.templateItems.some((item) => item.id === itemId)) {
+          // Replace the template item in the parent's templateItems array
+          const updatedTemplateItems = file.templateItems.map((item) =>
+            item.id === itemId ? updatedItem : item,
+          );
+
+          return {
+            ...file,
+            templateItems: updatedTemplateItems,
+          };
+        }
+        return file;
+      }),
+    );
+
+    // If this is the currently selected file or a template item of the selected file, update it
+    if (selectedFile) {
+      if (selectedFile.id === itemId) {
+        // The updated item is the selected file itself
+        setSelectedFile(updatedItem);
+      } else if (
+        selectedFile.templateItems &&
+        selectedFile.templateItems.some((item) => item.id === itemId)
+      ) {
+        // The updated item is in the selected file's templateItems
+        const updatedTemplateItems = selectedFile.templateItems.map((item) =>
+          item.id === itemId ? updatedItem : item,
+        );
+
+        setSelectedFile({
+          ...selectedFile,
+          templateItems: updatedTemplateItems,
+        });
+      }
+    }
+  };
+
+  // Handle restoring a template item to a previous version
+  const handleRestoreTemplateItemVersion = (itemId: string, versionId: string) => {
+    // Find the template item
+    const templateItem = files.find((file) => file.id === itemId);
+
+    if (!templateItem || !templateItem.versions) return;
+
+    // Find the specific version
+    const version = templateItem.versions.find((v) => v.id === versionId);
+    if (!version || !version.data) return;
+
+    // Create a new version for the current state before restoring
+    const currentDate = new Date().toISOString();
+    const newVersionId = `v${templateItem.versions.length + 1}-${templateItem.id}`;
+
+    // Create an updated item based on the version data
+    // Keep current metadata but update with version data fields
+    const restoredItem: ProjectFile = {
+      ...templateItem,
+      name: version.data.name || templateItem.name,
+      templateValues: version.data.templateValues || templateItem.templateValues,
+      lastModified: currentDate,
+      // Add current state as a new version before restoration
+      versions: [
+        ...templateItem.versions,
+        {
+          id: newVersionId,
+          date: currentDate,
+          createdBy: 'Current User',
+          changes: `State before restoring to version ${versionId}`,
+          data: { ...templateItem },
+        },
+      ],
+    };
+
+    // Update the item
+    handleUpdateTemplateItem(restoredItem);
+  };
+
   return {
     // States
     activeTab,
@@ -391,6 +552,7 @@ export function useProjectFiles() {
     files,
     setFiles,
     products,
+    templates,
 
     // Helper functions
     getFileIcon,
@@ -408,6 +570,11 @@ export function useProjectFiles() {
     handleAddAttachmentToFileItem,
     handleAddProductToFileItem,
     handleCreateVariation,
+    handleCreateTemplate,
+    handleAddTemplateItem,
+    handleDeleteTemplateItem,
+    handleUpdateTemplateItem,
+    handleRestoreTemplateItemVersion,
 
     // Version history (from hook)
     ...versionHistory,

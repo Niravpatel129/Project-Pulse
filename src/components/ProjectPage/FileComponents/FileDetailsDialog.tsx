@@ -1,15 +1,35 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Textarea } from '@/components/ui/textarea';
-import { Attachment, Product, ProjectFile } from '@/lib/mock/projectFiles';
+import { Attachment, Product, ProjectFile, Template } from '@/lib/mock/projectFiles';
 import { format } from 'date-fns';
-import { DollarSign, Download, FilePlus, Link, Mail, Plus, Send, Shirt, Tag } from 'lucide-react';
+import {
+  Download,
+  FileCog,
+  FilePlus,
+  History,
+  Link,
+  Mail,
+  MoreVertical,
+  Plus,
+  Send,
+  Shirt,
+  Tag,
+  Trash,
+} from 'lucide-react';
 import React, { useState } from 'react';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import AddItemsModal from './AddItemsModal';
-import { AddFileModal, AddInvoiceModal, AddProductModal, AddServiceModal } from './AddModals';
+import TemplateItemHistoryModal from './TemplateItemHistoryModal';
+import ViewTemplateItemModal from './ViewTemplateItemModal';
 
 interface FileDetailsDialogProps {
   selectedFile: ProjectFile | null;
@@ -18,13 +38,12 @@ interface FileDetailsDialogProps {
   commentText: string;
   setCommentText: (value: string) => void;
   handleAddComment: () => void;
-  handleOpenVersionHistory: (attachment: Attachment) => void;
-  onSendEmail: () => void;
-  handleFileUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  uploadedFiles?: File[];
-  handleAddAttachmentToFileItem?: (fileItemId: string) => void;
-  products?: Product[];
-  handleAddProductToFileItem?: (
+  uploadedFiles: File[];
+  handleFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  handleAddAttachmentToFileItem: (fileItemId: string) => void;
+  products: Product[];
+  templates: Template[];
+  handleAddProductToFileItem: (
     fileItemId: string,
     productData: {
       id?: string;
@@ -34,6 +53,13 @@ interface FileDetailsDialogProps {
       isNew: boolean;
     },
   ) => void;
+  handleAddTemplateItem: (item: ProjectFile) => void;
+  handleCreateTemplate: (template: Template) => void;
+  handleOpenVersionHistory: (attachment: Attachment) => void;
+  onSendEmail: () => void;
+  handleDeleteTemplateItem?: (fileId: string, templateItemId: string) => void;
+  handleUpdateTemplateItem?: (updatedItem: ProjectFile) => void;
+  handleRestoreTemplateItemVersion?: (itemId: string, versionId: string) => void;
 }
 
 const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
@@ -43,21 +69,35 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
   commentText,
   setCommentText,
   handleAddComment,
+  uploadedFiles,
+  handleFileUpload,
+  handleAddAttachmentToFileItem,
+  products,
+  templates,
+  handleAddProductToFileItem,
+  handleAddTemplateItem,
+  handleCreateTemplate,
   handleOpenVersionHistory,
   onSendEmail,
-  handleFileUpload,
-  uploadedFiles = [],
-  handleAddAttachmentToFileItem,
-  products = [],
-  handleAddProductToFileItem,
+  handleDeleteTemplateItem,
+  handleUpdateTemplateItem,
+  handleRestoreTemplateItemVersion,
 }) => {
-  const [showAddItemsModal, setShowAddItemsModal] = useState(false);
-  const [showFileModal, setShowFileModal] = useState(false);
-  const [showProductModal, setShowProductModal] = useState(false);
-  const [showServiceModal, setShowServiceModal] = useState(false);
-  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [showItemsModal, setShowItemsModal] = useState(false);
+  const [selectedItemType, setSelectedItemType] = useState<
+    'files' | 'products' | 'services' | 'templates'
+  >('files');
+  const [viewTemplateItem, setViewTemplateItem] = useState<ProjectFile | null>(null);
+  const [showTemplateItemHistory, setShowTemplateItemHistory] = useState<ProjectFile | null>(null);
 
   if (!selectedFile) return null;
+
+  const getTemplateForItem = (item: ProjectFile) => {
+    if (item.templateId) {
+      return templates.find((t) => t.id === item.templateId);
+    }
+    return undefined;
+  };
 
   return (
     <>
@@ -112,113 +152,209 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
                   </div>
                 </div>
 
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant='outline' size='sm' className='w-full max-w-fit'>
-                      <Plus className='h-4 w-4 mr-1' />
-                      Add Item
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className='w-56'>
-                    <div className='space-y-2'>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        className='w-full justify-start'
-                        onClick={() => setShowFileModal(true)}
-                      >
-                        <FilePlus className='h-4 w-4 mr-2' />
-                        Add File
-                      </Button>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        className='w-full justify-start'
-                        onClick={() => setShowProductModal(true)}
-                      >
-                        <Tag className='h-4 w-4 mr-2' />
-                        Add Product
-                      </Button>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        className='w-full justify-start'
-                        onClick={() => setShowServiceModal(true)}
-                      >
-                        <Shirt className='h-4 w-4 mr-2' />
-                        Add Service
-                      </Button>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        className='w-full justify-start'
-                        onClick={() => setShowInvoiceModal(true)}
-                      >
-                        <DollarSign className='h-4 w-4 mr-2' />
-                        Add Invoice
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {selectedFile.attachments.length > 0 && (
-                <div className='mt-4'>
-                  <h5 className='text-sm font-medium mb-2'>Files</h5>
-                  <div className='space-y-2 mb-4'>
-                    {selectedFile.attachments.map((attachment) => (
-                      <div
-                        key={attachment.id}
-                        className='flex items-center justify-between p-2 border rounded hover:bg-gray-50'
-                      >
-                        <div className='flex items-center'>
-                          {getAttachmentIcon(attachment.type)}
-                          <span className='ml-2 text-sm'>{attachment.name}</span>
-                        </div>
-                        <div className='flex items-center'>
-                          <span className='text-xs text-gray-500 mr-3'>{attachment.size}</span>
-                          {attachment.versions && attachment.versions.length > 1 && (
-                            <Button
-                              variant='outline'
-                              size='sm'
-                              className='mr-2'
-                              onClick={() => handleOpenVersionHistory(attachment)}
-                            >
-                              <span className='text-xs'>{attachment.versions.length} versions</span>
-                            </Button>
-                          )}
-                          <Button variant='ghost' size='icon'>
-                            <Download className='h-4 w-4' />
+                <div className='flex justify-between items-center mb-5'>
+                  <DialogTitle>File Details</DialogTitle>
+                  <div className='flex gap-2'>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant='outline' className='flex items-center gap-2'>
+                          <Plus className='h-4 w-4' />
+                          Add Item
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className='w-56 p-0' align='end'>
+                        <div className='p-1'>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            className='w-full justify-start'
+                            onClick={() => {
+                              setSelectedItemType('files');
+                              setShowItemsModal(true);
+                            }}
+                          >
+                            <FilePlus className='h-4 w-4 mr-2' />
+                            Add File
+                          </Button>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            className='w-full justify-start'
+                            onClick={() => {
+                              setSelectedItemType('products');
+                              setShowItemsModal(true);
+                            }}
+                          >
+                            <Tag className='h-4 w-4 mr-2' />
+                            Add Product
+                          </Button>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            className='w-full justify-start'
+                            onClick={() => {
+                              setSelectedItemType('services');
+                              setShowItemsModal(true);
+                            }}
+                          >
+                            <Shirt className='h-4 w-4 mr-2' />
+                            Add Service
+                          </Button>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            className='w-full justify-start'
+                            onClick={() => {
+                              setSelectedItemType('templates');
+                              setShowItemsModal(true);
+                            }}
+                          >
+                            <FileCog className='h-4 w-4 mr-2' />
+                            Add Template
                           </Button>
                         </div>
-                      </div>
-                    ))}
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
-              )}
 
-              {selectedFile.products && selectedFile.products.length > 0 && (
-                <div>
-                  <h5 className='text-sm font-medium mb-2'>Products</h5>
-                  <div className='space-y-2 mb-4'>
-                    {selectedFile.products.map((product, index) => (
-                      <div
-                        key={index}
-                        className='flex justify-between items-center p-2 border rounded hover:bg-gray-50'
-                      >
-                        <div className='flex items-center'>
-                          <Tag className='h-4 w-4 text-purple-500 mr-2' />
-                          <div>
-                            <div className='text-sm font-medium'>{product.name}</div>
-                            <div className='text-xs text-gray-500'>{product.description}</div>
+                {selectedFile.attachments.length > 0 && (
+                  <div className='mt-4'>
+                    <h5 className='text-sm font-medium mb-2'>Files</h5>
+                    <div className='space-y-2 mb-4'>
+                      {selectedFile.attachments.map((attachment) => (
+                        <div
+                          key={attachment.id}
+                          className='flex items-center justify-between p-2 border rounded hover:bg-gray-50'
+                        >
+                          <div className='flex items-center'>
+                            {getAttachmentIcon(attachment.type)}
+                            <span className='ml-2 text-sm'>{attachment.name}</span>
+                          </div>
+                          <div className='flex items-center'>
+                            <span className='text-xs text-gray-500 mr-3'>{attachment.size}</span>
+                            {attachment.versions && attachment.versions.length > 1 && (
+                              <Button
+                                variant='outline'
+                                size='sm'
+                                className='mr-2'
+                                onClick={() => handleOpenVersionHistory(attachment)}
+                              >
+                                <span className='text-xs'>
+                                  {attachment.versions.length} versions
+                                </span>
+                              </Button>
+                            )}
+                            <Button variant='ghost' size='icon'>
+                              <Download className='h-4 w-4' />
+                            </Button>
                           </div>
                         </div>
-                        <div className='text-sm font-medium'>${product.price}</div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+
+                {selectedFile.products && selectedFile.products.length > 0 && (
+                  <div>
+                    <h5 className='text-sm font-medium mb-2'>Products</h5>
+                    <div className='space-y-2 mb-4'>
+                      {selectedFile.products.map((product, index) => (
+                        <div
+                          key={index}
+                          className='flex justify-between items-center p-2 border rounded hover:bg-gray-50'
+                        >
+                          <div className='flex items-center'>
+                            <Tag className='h-4 w-4 text-purple-500 mr-2' />
+                            <div>
+                              <div className='text-sm font-medium'>{product.name}</div>
+                              <div className='text-xs text-gray-500'>{product.description}</div>
+                            </div>
+                          </div>
+                          <div className='text-sm font-medium'>${product.price}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Display Template Items */}
+                {selectedFile.templateItems && selectedFile.templateItems.length > 0 && (
+                  <div>
+                    <h5 className='text-sm font-medium mb-2'>Template Items</h5>
+                    <div className='space-y-2 mb-4'>
+                      {selectedFile.templateItems.map((item, index) => (
+                        <div
+                          key={index}
+                          className='flex justify-between items-center p-2 border rounded hover:bg-gray-50 cursor-pointer'
+                          onClick={() => setViewTemplateItem(item)}
+                        >
+                          <div className='flex items-center'>
+                            <FileCog className='h-4 w-4 text-blue-500 mr-2' />
+                            <div>
+                              <div className='text-sm font-medium'>{item.name}</div>
+                              <div className='text-xs text-gray-500'>
+                                {item.type === 'custom_template_item' &&
+                                  templates.find((t) => t.id === item.templateId)?.name}
+                              </div>
+                            </div>
+                          </div>
+                          <div className='flex items-center gap-2'>
+                            <div className='text-xs text-gray-500'>
+                              {item.lastModified
+                                ? `Updated: ${item.lastModified.split('T')[0]}`
+                                : `Created: ${item.dateUploaded.split('T')[0]}`}
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                <Button variant='ghost' size='icon'>
+                                  <MoreVertical className='h-4 w-4' />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align='end'>
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setViewTemplateItem(item);
+                                  }}
+                                >
+                                  <FileCog className='h-4 w-4 mr-2' />
+                                  View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (item.versions && item.versions.length > 0) {
+                                      setShowTemplateItemHistory(item);
+                                    } else {
+                                      alert('No version history available for this item');
+                                    }
+                                  }}
+                                >
+                                  <History className='h-4 w-4 mr-2' />
+                                  View History
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (handleDeleteTemplateItem) {
+                                      handleDeleteTemplateItem(selectedFile.id, item.id);
+                                    }
+                                  }}
+                                  className='text-red-600 hover:text-red-700 hover:bg-red-50'
+                                >
+                                  <Trash className='h-4 w-4 mr-2' />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className='flex justify-end space-x-2 mt-4'>
@@ -286,45 +422,69 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
         </div>
       </DialogContent>
 
-      {/* Comprehensive Collection Management Modal */}
-      {showAddItemsModal && (
+      {showItemsModal && (
         <AddItemsModal
+          onClose={() => setShowItemsModal(false)}
           selectedFile={selectedFile}
-          products={products}
-          handleAddAttachmentToFileItem={handleAddAttachmentToFileItem}
-          handleAddProductToFileItem={handleAddProductToFileItem}
-          handleFileUpload={handleFileUpload}
           uploadedFiles={uploadedFiles}
-          onClose={() => setShowAddItemsModal(false)}
-        />
-      )}
-
-      {/* Individual Add Item Modals */}
-      {showFileModal && (
-        <AddFileModal
-          selectedFile={selectedFile}
           handleFileUpload={handleFileUpload}
-          uploadedFiles={uploadedFiles}
           handleAddAttachmentToFileItem={handleAddAttachmentToFileItem}
-          onClose={() => setShowFileModal(false)}
-        />
-      )}
-
-      {showProductModal && (
-        <AddProductModal
-          selectedFile={selectedFile}
           products={products}
+          templates={templates}
           handleAddProductToFileItem={handleAddProductToFileItem}
-          onClose={() => setShowProductModal(false)}
+          handleAddTemplateItem={handleAddTemplateItem}
+          handleCreateTemplate={handleCreateTemplate}
+          defaultTab={selectedItemType}
         />
       )}
 
-      {showServiceModal && (
-        <AddServiceModal selectedFile={selectedFile} onClose={() => setShowServiceModal(false)} />
+      {viewTemplateItem && (
+        <ViewTemplateItemModal
+          item={viewTemplateItem}
+          template={getTemplateForItem(viewTemplateItem)}
+          onClose={() => setViewTemplateItem(null)}
+          onEdit={
+            handleUpdateTemplateItem
+              ? (updatedItem) => {
+                  if (handleUpdateTemplateItem) handleUpdateTemplateItem(updatedItem);
+                  setViewTemplateItem(null);
+                }
+              : undefined
+          }
+          onVersionRestore={
+            handleRestoreTemplateItemVersion
+              ? (itemId, versionId) => {
+                  if (handleRestoreTemplateItemVersion) {
+                    handleRestoreTemplateItemVersion(itemId, versionId);
+                    setViewTemplateItem(null);
+                  }
+                }
+              : undefined
+          }
+        />
       )}
 
-      {showInvoiceModal && (
-        <AddInvoiceModal selectedFile={selectedFile} onClose={() => setShowInvoiceModal(false)} />
+      {showTemplateItemHistory && (
+        <TemplateItemHistoryModal
+          item={showTemplateItemHistory}
+          onClose={() => setShowTemplateItemHistory(null)}
+          onVersionRestore={
+            handleRestoreTemplateItemVersion
+              ? (itemId, versionId) => {
+                  if (handleRestoreTemplateItemVersion) {
+                    handleRestoreTemplateItemVersion(itemId, versionId);
+                    setShowTemplateItemHistory(null);
+                  }
+                }
+              : undefined
+          }
+          onVersionView={() => {
+            // In a real app, you might fetch the specific version here
+            // For now we'll just close the history and open the item view
+            setShowTemplateItemHistory(null);
+            setViewTemplateItem(showTemplateItemHistory);
+          }}
+        />
       )}
     </>
   );

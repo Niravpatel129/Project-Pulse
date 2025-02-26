@@ -9,7 +9,52 @@ export type FileType =
   | 'sales_product'
   | 'service'
   | 'file'
-  | 'file_item';
+  | 'file_item'
+  | 'template'
+  | 'custom_template_item';
+
+// Define field types for custom templates
+export type FieldType =
+  | 'text'
+  | 'number'
+  | 'file'
+  | 'enum'
+  | 'link'
+  | 'date'
+  | 'price'
+  | 'dimension';
+
+// Interface for field definition in a template
+export interface TemplateField {
+  id: string;
+  name: string;
+  type: FieldType;
+  required?: boolean;
+  options?: string[]; // For enum type fields
+  defaultValue?: string | number;
+  description?: string;
+  fileTypes?: string[]; // For file type fields (e.g., ['png', 'svg'])
+  unit?: string; // For dimension or measurement fields (e.g., 'inches', 'cm')
+  formula?: string; // For calculated fields (e.g., price calculation formula)
+}
+
+// Interface for template definition
+export interface Template {
+  id: string;
+  name: string;
+  description?: string;
+  icon?: string; // Icon identifier to represent this template
+  createdBy: string;
+  dateCreated: string;
+  fields: TemplateField[];
+}
+
+// Interface for a field value in a template item
+export interface TemplateFieldValue {
+  fieldId: string;
+  value: string | number | null;
+  fileUrl?: string; // For file type fields
+}
 
 export interface FileVersion {
   id: string;
@@ -21,6 +66,15 @@ export interface FileVersion {
   size: string;
   url: string;
   isCurrent: boolean;
+}
+
+// Define a version type specifically for template items
+export interface TemplateItemVersion {
+  id: string;
+  date: string;
+  createdBy: string;
+  changes: string;
+  data: Partial<ProjectFile>; // Snapshot of the template item at this version
 }
 
 export interface Attachment {
@@ -60,6 +114,12 @@ export interface ProjectFile {
   variation?: string; // Renamed from branch
   latestVersion?: string; // Renamed from latestCommit
   products?: Product[]; // Products associated with this file item
+  templateId?: string; // Reference to template if this is a custom_template_item
+  templateValues?: TemplateFieldValue[]; // Values for template fields if this is a custom_template_item
+  isTemplate?: boolean; // Flag to identify if this file is a template itself
+  templateItems?: ProjectFile[]; // Template items associated with this file item
+  lastModified?: string; // Timestamp of the last modification
+  versions?: TemplateItemVersion[]; // Version history for template items
 }
 
 export interface Product {
@@ -263,6 +323,19 @@ export const mockProjectFiles: ProjectFile[] = [
     description: 'Photos from the venue scouting visit on November 25th.',
     clientEmail: 'shannon@example.com',
   },
+  {
+    id: 'template1',
+    name: 'Clothing Print Template',
+    type: 'template',
+    dateUploaded: '2023-12-01',
+    size: '1.5 KB',
+    uploadedBy: 'Hitarth',
+    isTemplate: true,
+    attachments: [],
+    comments: [],
+    description:
+      'Template for clothing print specifications including image, print location, type, and dimensions.',
+  },
 ];
 
 // Add some mock products
@@ -295,5 +368,96 @@ export const mockProducts: Product[] = [
     price: '499.99',
     description: 'Professional logo design with unlimited revisions',
     sku: 'DESIGN-LOGO-001',
+  },
+];
+
+// Mock templates
+export const mockTemplates: Template[] = [
+  {
+    id: 't1',
+    name: 'Clothing Print',
+    description: 'Template for clothing print specifications',
+    icon: 'shirt',
+    createdBy: 'Hitarth',
+    dateCreated: '2023-12-01',
+    fields: [
+      {
+        id: 'f1',
+        name: 'Image',
+        type: 'file',
+        required: true,
+        fileTypes: ['png', 'svg'],
+        description: 'Print image file',
+      },
+      {
+        id: 'f2',
+        name: 'Print Location',
+        type: 'enum',
+        required: true,
+        options: ['front', 'back', 'sleeve', 'neck tag'],
+        description: 'Location of the print on the garment',
+      },
+      {
+        id: 'f3',
+        name: 'Print Type',
+        type: 'enum',
+        required: true,
+        options: ['DTG', 'DTF', 'Emb'],
+        description: 'Type of printing technique',
+      },
+      {
+        id: 'f4',
+        name: 'Position',
+        type: 'enum',
+        options: ['X', 'Y'],
+        description: 'Position coordinates',
+      },
+      {
+        id: 'f5',
+        name: 'Width Size',
+        type: 'dimension',
+        required: true,
+        options: ['inches', 'cm'],
+        description: 'Width of the print',
+      },
+      {
+        id: 'f6',
+        name: 'Figma',
+        type: 'link',
+        description: 'Link to Figma design',
+      },
+      {
+        id: 'f7',
+        name: 'Price',
+        type: 'price',
+        formula: 'W*H*($/sqin)',
+        description: 'Calculated price based on dimensions',
+      },
+    ],
+  },
+];
+
+// Add a template item example
+export const mockTemplateItems: ProjectFile[] = [
+  {
+    id: 'ti1',
+    name: 'Summer Collection - Front Logo',
+    type: 'custom_template_item',
+    dateUploaded: '2023-12-05',
+    size: '3.2 MB',
+    status: 'active',
+    uploadedBy: 'Sam',
+    templateId: 't1', // Reference to Clothing Print template
+    templateValues: [
+      { fieldId: 'f1', value: null, fileUrl: '/placeholders/tshirt-print.png' },
+      { fieldId: 'f2', value: 'front' },
+      { fieldId: 'f3', value: 'DTG' },
+      { fieldId: 'f4', value: 'X' },
+      { fieldId: 'f5', value: '5 inches' },
+      { fieldId: 'f6', value: 'https://figma.com/file/example' },
+      { fieldId: 'f7', value: 24.99 },
+    ],
+    attachments: [],
+    comments: [],
   },
 ];

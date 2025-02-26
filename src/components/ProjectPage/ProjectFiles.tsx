@@ -50,7 +50,13 @@ export default function ProjectFiles() {
     notifyClient,
     setNotifyClient,
     products,
+    templates,
     handleAddProductToFileItem,
+    handleCreateTemplate,
+    handleAddTemplateItem,
+    handleDeleteTemplateItem,
+    handleUpdateTemplateItem,
+    handleRestoreTemplateItemVersion,
 
     // Helper functions
     getFileIcon,
@@ -178,7 +184,13 @@ export default function ProjectFiles() {
           uploadedFiles={uploadedFiles}
           handleAddAttachmentToFileItem={handleAddAttachmentToFileItem}
           products={products}
+          templates={templates}
           handleAddProductToFileItem={handleAddProductToFileItem}
+          handleAddTemplateItem={handleAddTemplateItem}
+          handleCreateTemplate={handleCreateTemplate}
+          handleDeleteTemplateItem={handleDeleteTemplateItem}
+          handleUpdateTemplateItem={handleUpdateTemplateItem}
+          handleRestoreTemplateItemVersion={handleRestoreTemplateItemVersion}
         />
       </Dialog>
 
