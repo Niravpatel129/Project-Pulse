@@ -32,26 +32,18 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Attachment,
-  Comment,
-  FileType,
-  FileVersion,
-  ProjectFile,
-  mockProjectFiles,
-} from '@/lib/mock/projectFiles';
+import { useProjectFiles } from '@/hooks/useProjectFiles';
+import { FileType } from '@/lib/mock/projectFiles';
 import { format } from 'date-fns';
 import {
   Check,
   Clock,
   Download,
   Eye,
-  File,
   FileClock,
   FilePlus,
   FileText,
   History,
-  Image,
   Link,
   Mail,
   MessageSquare,
@@ -65,385 +57,74 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
 
 export default function ProjectFiles() {
-  const [activeTab, setActiveTab] = useState<string>('all');
-  const [search, setSearch] = useState<string>('');
-  const [showUploadDialog, setShowUploadDialog] = useState(false);
-  const [selectedFileType, setSelectedFileType] = useState<FileType>('upload');
-  const [showFileDetailsDialog, setShowFileDetailsDialog] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<ProjectFile | null>(null);
-  const [commentText, setCommentText] = useState('');
-  const [showSendEmailDialog, setShowSendEmailDialog] = useState(false);
-  const [emailSubject, setEmailSubject] = useState('');
-  const [emailMessage, setEmailMessage] = useState('');
-  const [requestApproval, setRequestApproval] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const {
+    // States
+    activeTab,
+    setActiveTab,
+    search,
+    setSearch,
+    showUploadDialog,
+    setShowUploadDialog,
+    selectedFileType,
+    setSelectedFileType,
+    showFileDetailsDialog,
+    setShowFileDetailsDialog,
+    selectedFile,
+    setSelectedFile,
+    commentText,
+    setCommentText,
+    showSendEmailDialog,
+    setShowSendEmailDialog,
+    emailSubject,
+    setEmailSubject,
+    emailMessage,
+    setEmailMessage,
+    requestApproval,
+    setRequestApproval,
+    uploadedFiles,
+    setUploadedFiles,
+    showVersionHistoryDialog,
+    setShowVersionHistoryDialog,
+    selectedAttachment,
+    setSelectedAttachment,
+    changeDescription,
+    setChangeDescription,
+    showVersionCompareDialog,
+    setShowVersionCompareDialog,
+    compareVersions,
+    setCompareVersions,
+    notifyClient,
+    setNotifyClient,
+    showVariationDialog,
+    setShowVariationDialog,
+    variationName,
+    setVariationName,
+    variationDescription,
+    setVariationDescription,
+    files,
+    setFiles,
 
-  // Version history related states
-  const [showVersionHistoryDialog, setShowVersionHistoryDialog] = useState(false);
-  const [selectedAttachment, setSelectedAttachment] = useState<Attachment | null>(null);
-  const [changeDescription, setChangeDescription] = useState('');
-  const [showVersionCompareDialog, setShowVersionCompareDialog] = useState(false);
-  const [compareVersions, setCompareVersions] = useState<{
-    older: FileVersion | null;
-    newer: FileVersion | null;
-  }>({ older: null, newer: null });
-  const [notifyClient, setNotifyClient] = useState(false);
+    // Helper functions
+    getFileIcon,
+    getAttachmentIcon,
+    getStatusBadgeClass,
 
-  // Variation related states (renamed from branch)
-  const [showVariationDialog, setShowVariationDialog] = useState(false);
-  const [variationName, setVariationName] = useState('');
-  const [variationDescription, setVariationDescription] = useState('');
-
-  // Use the mock data from the imported file
-  const [files, setFiles] = useState<ProjectFile[]>(mockProjectFiles);
-
-  const getFileIcon = (type: FileType) => {
-    switch (type) {
-      case 'proposal':
-        return <File className='h-5 w-5 text-blue-500' />;
-      case 'invoice':
-        return <File className='h-5 w-5 text-green-500' />;
-      case 'contract':
-        return <File className='h-5 w-5 text-purple-500' />;
-      case 'questionnaire':
-        return <File className='h-5 w-5 text-orange-500' />;
-      case 'upload':
-        return <Image className='h-5 w-5 text-gray-500' />;
-    }
-  };
-
-  const getAttachmentIcon = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'pdf':
-        return <FileText className='h-5 w-5 text-red-500' />;
-      case 'docx':
-      case 'doc':
-        return <FileText className='h-5 w-5 text-blue-500' />;
-      case 'jpg':
-      case 'jpeg':
-      case 'png':
-        return <Image className='h-5 w-5 text-green-500' />;
-      default:
-        return <Paperclip className='h-5 w-5 text-gray-500' />;
-    }
-  };
-
-  const getStatusBadgeClass = (status?: string) => {
-    if (!status) return 'bg-gray-100 text-gray-600';
-
-    switch (status) {
-      case 'draft':
-        return 'bg-gray-100 text-gray-600';
-      case 'sent':
-        return 'bg-blue-100 text-blue-600';
-      case 'signed':
-        return 'bg-green-100 text-green-600';
-      case 'paid':
-        return 'bg-emerald-100 text-emerald-600';
-      case 'viewed':
-        return 'bg-amber-100 text-amber-600';
-      case 'awaiting_approval':
-        return 'bg-purple-100 text-purple-600';
-      default:
-        return 'bg-gray-100 text-gray-600';
-    }
-  };
-
-  const handleAddFile = () => {
-    // Generate a simple ID (would use a proper UUID in production)
-    const newId = (Math.max(...files.map((f) => parseInt(f.id))) + 1).toString();
-
-    const newAttachments: Attachment[] = uploadedFiles.map((file, index) => ({
-      id: `a-${newId}-${index}`,
-      name: file.name,
-      size: `${Math.round(file.size / 1024)} KB`,
-      type: file.name.split('.').pop() || 'unknown',
-      url: '#', // Would be a real URL in production
-    }));
-
-    const newFile: ProjectFile = {
-      id: newId,
-      name: `New ${
-        selectedFileType === 'upload'
-          ? 'Upload'
-          : selectedFileType.charAt(0).toUpperCase() + selectedFileType.slice(1)
-      }`,
-      type: selectedFileType,
-      dateUploaded: new Date().toISOString().split('T')[0],
-      size:
-        uploadedFiles.length > 0
-          ? `${Math.round(uploadedFiles.reduce((total, file) => total + file.size, 0) / 1024)} KB`
-          : '0.1 MB',
-      status: selectedFileType === 'upload' ? undefined : 'draft',
-      uploadedBy: 'Hitarth',
-      attachments: newAttachments,
-      comments: [],
-    };
-
-    setFiles([...files, newFile]);
-    setShowUploadDialog(false);
-    setUploadedFiles([]);
-  };
-
-  const filteredFiles = () => {
-    let filtered = files;
-
-    // Filter by search
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(
-        (file) =>
-          file.name.toLowerCase().includes(searchLower) ||
-          file.type.toLowerCase().includes(searchLower) ||
-          file.uploadedBy.toLowerCase().includes(searchLower),
-      );
-    }
-
-    // Filter by tab
-    if (activeTab !== 'all') {
-      filtered = filtered.filter((file) => file.type === activeTab);
-    }
-
-    return filtered;
-  };
-
-  const handleFileClick = (file: ProjectFile) => {
-    setSelectedFile(file);
-    setShowFileDetailsDialog(true);
-  };
-
-  const handleAddComment = () => {
-    if (!selectedFile || !commentText.trim()) return;
-
-    const newComment: Comment = {
-      id: `c${Date.now()}`,
-      text: commentText,
-      author: 'Hitarth', // Would be current user in production
-      authorRole: 'Photographer',
-      timestamp: new Date().toISOString(),
-    };
-
-    const updatedFile = {
-      ...selectedFile,
-      comments: [...selectedFile.comments, newComment],
-    };
-
-    setFiles(files.map((file) => (file.id === selectedFile.id ? updatedFile : file)));
-    setSelectedFile(updatedFile);
-    setCommentText('');
-  };
-
-  const handleSendEmail = () => {
-    if (!selectedFile) return;
-
-    // In a real app, this would send an API request to send the email
-    const updatedFile = {
-      ...selectedFile,
-      status: requestApproval ? 'awaiting_approval' : ('sent' as const),
-      emailSent: true,
-      emailSentDate: new Date().toISOString().split('T')[0],
-      needsApproval: requestApproval,
-    };
-    setFiles(
-      files.map((file) => (file.id === selectedFile.id ? (updatedFile as ProjectFile) : file)),
-    );
-    setSelectedFile(updatedFile as ProjectFile);
-    setShowSendEmailDialog(false);
-    setEmailSubject('');
-    setEmailMessage('');
-    setRequestApproval(false);
-  };
-
-  const handleSimulateApproval = () => {
-    if (!selectedFile) return;
-
-    // Simulate client approving the file
-    const updatedFile = {
-      ...selectedFile,
-      status: 'signed' as const,
-      needsApproval: false,
-    };
-
-    const newComment: Comment = {
-      id: `c${Date.now()}`,
-      text: "I've approved these files.",
-      author: 'Shannon',
-      authorRole: 'Client',
-      timestamp: new Date().toISOString(),
-    };
-
-    updatedFile.comments = [...updatedFile.comments, newComment];
-
-    setFiles(files.map((file) => (file.id === selectedFile.id ? updatedFile : file)));
-    setSelectedFile(updatedFile);
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setUploadedFiles(Array.from(e.target.files));
-    }
-  };
-
-  // Version history handlers
-  const handleOpenVersionHistory = (attachment: Attachment) => {
-    setSelectedAttachment(attachment);
-    setShowVersionHistoryDialog(true);
-  };
-
-  const handleCreateNewVersion = () => {
-    if (!selectedFile || !selectedAttachment || !changeDescription.trim()) return;
-
-    // Create a new version object
-    const currentVersions = selectedAttachment.versions || [];
-    const newVersionNumber =
-      currentVersions.length > 0 ? Math.max(...currentVersions.map((v) => v.versionNumber)) + 1 : 1;
-
-    // Create a simple version ID
-    const versionId = `v${newVersionNumber}`;
-
-    const newVersion: FileVersion = {
-      id: `v${Date.now()}`,
-      versionNumber: newVersionNumber,
-      versionId,
-      dateCreated: new Date().toISOString(),
-      createdBy: 'Hitarth', // Would be current user in production
-      changeDescription: changeDescription.trim(),
-      size: selectedAttachment.size,
-      url: '#', // Would be a real URL in production
-      isCurrent: true,
-    };
-
-    // Set all other versions to not current
-    const updatedVersions = currentVersions.map((v) => ({
-      ...v,
-      isCurrent: false,
-    }));
-
-    // Add new version
-    updatedVersions.push(newVersion);
-
-    // Update the attachment with new versions
-    const updatedAttachment = {
-      ...selectedAttachment,
-      versions: updatedVersions,
-    };
-
-    // Update the file with the new attachment
-    const updatedAttachments = selectedFile.attachments.map((att) =>
-      att.id === selectedAttachment.id ? updatedAttachment : att,
-    );
-
-    const updatedFile = {
-      ...selectedFile,
-      attachments: updatedAttachments,
-      latestVersion: versionId,
-    };
-
-    // Update files state
-    setFiles(files.map((file) => (file.id === selectedFile.id ? updatedFile : file)));
-    setSelectedFile(updatedFile);
-    setSelectedAttachment(updatedAttachment);
-    setChangeDescription('');
-
-    // If notify client is checked, prepare email
-    if (notifyClient && selectedFile.clientEmail) {
-      setEmailSubject(`New version uploaded: ${selectedFile.name}`);
-      setEmailMessage(
-        `I've uploaded a new version of ${selectedFile.name} with the following changes:\n\n${changeDescription}`,
-      );
-      setShowVersionHistoryDialog(false);
-      setShowSendEmailDialog(true);
-    } else {
-      // Close the dialog after creating a new version
-      setShowVersionHistoryDialog(false);
-    }
-
-    // Reset notify client checkbox
-    setNotifyClient(false);
-  };
-
-  const handleRevertToVersion = (version: FileVersion) => {
-    if (!selectedFile || !selectedAttachment) return;
-
-    // Update all versions, setting only the selected one to current
-    const updatedVersions = (selectedAttachment.versions || []).map((v) => ({
-      ...v,
-      isCurrent: v.id === version.id,
-    }));
-
-    // Update the attachment
-    const updatedAttachment = {
-      ...selectedAttachment,
-      size: version.size, // Update size to match reverted version
-      versions: updatedVersions,
-    };
-
-    // Update the file
-    const updatedAttachments = selectedFile.attachments.map((att) =>
-      att.id === selectedAttachment.id ? updatedAttachment : att,
-    );
-
-    const updatedFile = {
-      ...selectedFile,
-      attachments: updatedAttachments,
-      latestVersion: version.versionId,
-    };
-
-    // Update files state
-    setFiles(files.map((file) => (file.id === selectedFile.id ? updatedFile : file)));
-    setSelectedFile(updatedFile);
-    setSelectedAttachment(updatedAttachment);
-
-    // Create a reversion comment
-    const newComment: Comment = {
-      id: `c${Date.now()}`,
-      text: `Restored version ${version.versionNumber} (${version.changeDescription})`,
-      author: 'Hitarth', // Would be current user in production
-      authorRole: 'Photographer',
-      timestamp: new Date().toISOString(),
-    };
-
-    // Add the comment to the file
-    const updatedFileWithComment = {
-      ...updatedFile,
-      comments: [...updatedFile.comments, newComment],
-    };
-
-    setFiles(files.map((file) => (file.id === selectedFile.id ? updatedFileWithComment : file)));
-    setSelectedFile(updatedFileWithComment);
-  };
-
-  const handleCompareVersions = (olderVersion: FileVersion, newerVersion: FileVersion) => {
-    setCompareVersions({
-      older: olderVersion,
-      newer: newerVersion,
-    });
-    setShowVersionCompareDialog(true);
-  };
-
-  const handleCreateVariation = () => {
-    if (!selectedFile || !variationName.trim()) return;
-
-    // Create a new variation by copying the file with a new name
-    const newId = (Math.max(...files.map((f) => parseInt(f.id))) + 1).toString();
-
-    const newFile: ProjectFile = {
-      ...selectedFile,
-      id: newId,
-      name: `${selectedFile.name} (${variationName})`,
-      variation: variationName,
-      description: variationDescription || `Variation of ${selectedFile.name}`,
-      comments: [], // Start with no comments on the new variation
-    };
-
-    setFiles([...files, newFile]);
-    setShowVariationDialog(false);
-    setVariationName('');
-    setVariationDescription('');
-  };
+    // Logic functions
+    handleAddFile,
+    filteredFiles,
+    handleFileClick,
+    handleAddComment,
+    handleSendEmail,
+    handleSimulateApproval,
+    handleFileUpload,
+    handleOpenVersionHistory,
+    handleCreateNewVersion,
+    handleRevertToVersion,
+    handleCompareVersions,
+    handleCreateVariation,
+  } = useProjectFiles();
 
   return (
     <div className='space-y-4'>
