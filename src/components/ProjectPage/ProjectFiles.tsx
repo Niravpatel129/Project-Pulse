@@ -147,7 +147,6 @@ export default function ProjectFiles() {
                 }}
                 onCreateVariation={(file) => {
                   setSelectedFile(file);
-                  setShowVariationDialog(true);
                 }}
               />
             </TabsContent>
