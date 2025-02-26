@@ -134,6 +134,7 @@ export default function ProjectFiles() {
     older: FileVersion | null;
     newer: FileVersion | null;
   }>({ older: null, newer: null });
+  const [notifyClient, setNotifyClient] = useState(false);
 
   // Variation related states (renamed from branch)
   const [showVariationDialog, setShowVariationDialog] = useState(false);
@@ -581,8 +582,21 @@ export default function ProjectFiles() {
     setSelectedAttachment(updatedAttachment);
     setChangeDescription('');
 
-    // Close the dialog after creating a new version
-    setShowVersionHistoryDialog(false);
+    // If notify client is checked, prepare email
+    if (notifyClient && selectedFile.clientEmail) {
+      setEmailSubject(`New version uploaded: ${selectedFile.name}`);
+      setEmailMessage(
+        `I've uploaded a new version of ${selectedFile.name} with the following changes:\n\n${changeDescription}`,
+      );
+      setShowVersionHistoryDialog(false);
+      setShowSendEmailDialog(true);
+    } else {
+      // Close the dialog after creating a new version
+      setShowVersionHistoryDialog(false);
+    }
+
+    // Reset notify client checkbox
+    setNotifyClient(false);
   };
 
   const handleRevertToVersion = (version: FileVersion) => {
@@ -1162,7 +1176,17 @@ export default function ProjectFiles() {
                   <Input id='version-file-upload' type='file' className='hidden' />
                 </div>
 
-                <div className='flex justify-end'>
+                <div className='flex justify-between items-center'>
+                  <div className='flex items-center space-x-2'>
+                    <Switch
+                      id='notify-client'
+                      checked={notifyClient}
+                      onCheckedChange={setNotifyClient}
+                    />
+                    <Label htmlFor='notify-client' className='text-sm'>
+                      Notify client(s) about this update
+                    </Label>
+                  </div>
                   <Button onClick={handleCreateNewVersion} disabled={!changeDescription.trim()}>
                     <Plus className='h-4 w-4 mr-1' />
                     Save as New Version
