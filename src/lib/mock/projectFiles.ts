@@ -59,6 +59,17 @@ export interface ProjectFile {
   emailSentDate?: string;
   variation?: string; // Renamed from branch
   latestVersion?: string; // Renamed from latestCommit
+  products?: Product[]; // Products associated with this file item
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  price: string;
+  description?: string;
+  imageUrl?: string;
+  variations?: string[];
+  sku?: string;
 }
 
 export const mockProjectFiles: ProjectFile[] = [
@@ -250,5 +261,38 @@ export const mockProjectFiles: ProjectFile[] = [
     ],
     description: 'Photos from the venue scouting visit on November 25th.',
     clientEmail: 'shannon@example.com',
+  },
+];
+
+// Add some mock products
+export const mockProducts: Product[] = [
+  {
+    id: 'p1',
+    name: 'Wedding Photo Package - Basic',
+    price: '1299.99',
+    description: 'Coverage of ceremony and reception, 100 digital photos, 1 photographer',
+    sku: 'WED-BASIC-001',
+  },
+  {
+    id: 'p2',
+    name: 'Wedding Photo Package - Premium',
+    price: '2499.99',
+    description: 'Full day coverage, 300 digital photos, 2 photographers, photo album',
+    sku: 'WED-PREM-001',
+  },
+  {
+    id: 'p3',
+    name: 'T-shirt Design - Standard',
+    price: '24.99',
+    description: 'Custom designed t-shirt with your logo or design',
+    variations: ['S', 'M', 'L', 'XL'],
+    sku: 'TSHIRT-STD-001',
+  },
+  {
+    id: 'p4',
+    name: 'Logo Design Service',
+    price: '499.99',
+    description: 'Professional logo design with unlimited revisions',
+    sku: 'DESIGN-LOGO-001',
   },
 ];

@@ -2,7 +2,9 @@ import {
   Attachment,
   Comment,
   FileType,
+  Product,
   ProjectFile,
+  mockProducts,
   mockProjectFiles,
 } from '@/lib/mock/projectFiles';
 import { File, FileText, FolderPlus, Image, Paperclip } from 'lucide-react';
@@ -31,6 +33,7 @@ export function useProjectFiles() {
 
   // Use the mock data from the imported file
   const [files, setFiles] = useState<ProjectFile[]>(mockProjectFiles);
+  const [products, setProducts] = useState<Product[]>(mockProducts);
 
   // Use version history hook
   const versionHistory = useVersionHistory({
@@ -239,6 +242,99 @@ export function useProjectFiles() {
     }
   };
 
+  const handleAddAttachmentToFileItem = (fileItemId: string) => {
+    if (uploadedFiles.length === 0) return;
+
+    // Find the file item to add attachments to
+    const fileItemToUpdate = files.find((f) => f.id === fileItemId);
+    if (!fileItemToUpdate) return;
+
+    // Create new attachments from the uploaded files
+    const newAttachments: Attachment[] = uploadedFiles.map((file, index) => ({
+      id: `a-${fileItemId}-${Date.now()}-${index}`,
+      name: file.name,
+      size: `${Math.round(file.size / 1024)} KB`,
+      type: file.name.split('.').pop() || 'unknown',
+      url: '#', // Would be a real URL in production
+    }));
+
+    // Update the file item with new attachments
+    const updatedFileItem = {
+      ...fileItemToUpdate,
+      attachments: [...fileItemToUpdate.attachments, ...newAttachments],
+      size: `${Math.round(
+        parseInt(fileItemToUpdate.size) +
+          uploadedFiles.reduce((total, file) => total + file.size, 0) / 1024,
+      )} KB`,
+    };
+
+    // Update files array
+    setFiles(files.map((f) => (f.id === fileItemId ? updatedFileItem : f)));
+
+    // If this is the currently selected file, update it
+    if (selectedFile && selectedFile.id === fileItemId) {
+      setSelectedFile(updatedFileItem);
+    }
+
+    // Clear uploaded files
+    setUploadedFiles([]);
+  };
+
+  const handleAddProductToFileItem = (
+    fileItemId: string,
+    productData: {
+      id?: string;
+      name?: string;
+      price?: string;
+      description?: string;
+      isNew: boolean;
+    },
+  ) => {
+    // Find the file item to add product to
+    const fileItemToUpdate = files.find((f) => f.id === fileItemId);
+    if (!fileItemToUpdate) return;
+
+    let productToAdd: Product;
+
+    if (productData.isNew && productData.name && productData.price) {
+      // Create new product
+      const newProductId = `p${Date.now()}`;
+      productToAdd = {
+        id: newProductId,
+        name: productData.name,
+        price: productData.price,
+        description: productData.description || '',
+        sku: `PROD-${newProductId.substring(0, 5)}`,
+      };
+
+      // Add to products list
+      setProducts([...products, productToAdd]);
+    } else if (!productData.isNew && productData.id) {
+      // Use existing product
+      const existingProduct = products.find((p) => p.id === productData.id);
+      if (!existingProduct) return;
+      productToAdd = existingProduct;
+    } else {
+      return; // Invalid data
+    }
+
+    // Update the file item with the product
+    const updatedFileItem = {
+      ...fileItemToUpdate,
+      products: fileItemToUpdate.products
+        ? [...fileItemToUpdate.products, productToAdd]
+        : [productToAdd],
+    };
+
+    // Update files array
+    setFiles(files.map((f) => (f.id === fileItemId ? updatedFileItem : f)));
+
+    // If this is the currently selected file, update it
+    if (selectedFile && selectedFile.id === fileItemId) {
+      setSelectedFile(updatedFileItem);
+    }
+  };
+
   const handleCreateVariation = () => {
     if (!selectedFile || !variationName.trim()) return;
 
@@ -294,6 +390,7 @@ export function useProjectFiles() {
     setVariationDescription,
     files,
     setFiles,
+    products,
 
     // Helper functions
     getFileIcon,
@@ -308,6 +405,8 @@ export function useProjectFiles() {
     handleSendEmail,
     handleSimulateApproval,
     handleFileUpload,
+    handleAddAttachmentToFileItem,
+    handleAddProductToFileItem,
     handleCreateVariation,
 
     // Version history (from hook)

@@ -49,6 +49,8 @@ export default function ProjectFiles() {
     setChangeDescription,
     notifyClient,
     setNotifyClient,
+    products,
+    handleAddProductToFileItem,
 
     // Helper functions
     getFileIcon,
@@ -67,6 +69,7 @@ export default function ProjectFiles() {
     handleCreateNewVersion,
     handleRevertToVersion,
     handleCompareVersions,
+    handleAddAttachmentToFileItem,
   } = useProjectFiles();
 
   return (
@@ -171,6 +174,11 @@ export default function ProjectFiles() {
             setEmailMessage(`I'm sharing the following files with you: ${selectedFile?.name}`);
             setShowSendEmailDialog(true);
           }}
+          handleFileUpload={handleFileUpload}
+          uploadedFiles={uploadedFiles}
+          handleAddAttachmentToFileItem={handleAddAttachmentToFileItem}
+          products={products}
+          handleAddProductToFileItem={handleAddProductToFileItem}
         />
       </Dialog>
 

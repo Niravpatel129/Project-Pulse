@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { FileType } from '@/lib/mock/projectFiles';
 import { FolderPlus, Paperclip } from 'lucide-react';
 import React, { useState } from 'react';
 
@@ -18,8 +19,8 @@ interface UploadFileDialogProps {
   handleAddFile: () => void;
   uploadedFiles: File[];
   onClose: () => void;
-  selectedFileType: string;
-  setSelectedFileType: (type: string) => void;
+  selectedFileType: FileType;
+  setSelectedFileType: (type: FileType) => void;
 }
 
 const UploadFileDialog: React.FC<UploadFileDialogProps> = ({
