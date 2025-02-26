@@ -8,7 +8,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Textarea } from '@/components/ui/textarea';
-import { Attachment, Product, ProjectFile, Template } from '@/lib/mock/projectFiles';
+import {
+  Attachment,
+  InventoryCategory,
+  InventoryItem,
+  Product,
+  ProjectFile,
+  Template,
+} from '@/lib/mock/projectFiles';
 import { format } from 'date-fns';
 import {
   Download,
@@ -43,6 +50,8 @@ interface FileDetailsDialogProps {
   handleAddAttachmentToFileItem: (fileItemId: string) => void;
   products: Product[];
   templates: Template[];
+  inventoryItems: InventoryItem[];
+  inventoryCategories: InventoryCategory[];
   handleAddProductToFileItem: (
     fileItemId: string,
     productData: {
@@ -60,6 +69,12 @@ interface FileDetailsDialogProps {
   handleDeleteTemplateItem?: (fileId: string, templateItemId: string) => void;
   handleUpdateTemplateItem?: (updatedItem: ProjectFile) => void;
   handleRestoreTemplateItemVersion?: (itemId: string, versionId: string) => void;
+  updateInventoryStock?: (itemId: string, quantity: number) => InventoryItem | undefined;
+  trackInventoryUsage?: (
+    templateItemId: string,
+    inventoryItemId: string,
+    projectId?: string,
+  ) => void;
 }
 
 const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
@@ -74,6 +89,8 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
   handleAddAttachmentToFileItem,
   products,
   templates,
+  inventoryItems,
+  inventoryCategories,
   handleAddProductToFileItem,
   handleAddTemplateItem,
   handleCreateTemplate,
@@ -82,6 +99,8 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
   handleDeleteTemplateItem,
   handleUpdateTemplateItem,
   handleRestoreTemplateItemVersion,
+  updateInventoryStock,
+  trackInventoryUsage,
 }) => {
   const [showItemsModal, setShowItemsModal] = useState(false);
   const [selectedItemType, setSelectedItemType] = useState<
@@ -431,6 +450,8 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
           handleAddAttachmentToFileItem={handleAddAttachmentToFileItem}
           products={products}
           templates={templates}
+          inventoryItems={inventoryItems}
+          inventoryCategories={inventoryCategories}
           handleAddProductToFileItem={handleAddProductToFileItem}
           handleAddTemplateItem={handleAddTemplateItem}
           handleCreateTemplate={handleCreateTemplate}
@@ -443,24 +464,11 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
           item={viewTemplateItem}
           template={getTemplateForItem(viewTemplateItem)}
           onClose={() => setViewTemplateItem(null)}
-          onEdit={
-            handleUpdateTemplateItem
-              ? (updatedItem) => {
-                  if (handleUpdateTemplateItem) handleUpdateTemplateItem(updatedItem);
-                  setViewTemplateItem(null);
-                }
-              : undefined
-          }
-          onVersionRestore={
-            handleRestoreTemplateItemVersion
-              ? (itemId, versionId) => {
-                  if (handleRestoreTemplateItemVersion) {
-                    handleRestoreTemplateItemVersion(itemId, versionId);
-                    setViewTemplateItem(null);
-                  }
-                }
-              : undefined
-          }
+          onEdit={handleUpdateTemplateItem}
+          onVersionRestore={handleRestoreTemplateItemVersion}
+          inventoryItems={inventoryItems}
+          updateInventoryStock={updateInventoryStock}
+          trackInventoryUsage={trackInventoryUsage}
         />
       )}
 

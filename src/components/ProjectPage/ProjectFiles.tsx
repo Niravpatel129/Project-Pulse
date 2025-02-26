@@ -6,10 +6,11 @@ import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProjectFiles } from '@/hooks/useProjectFiles';
-import { Plus, Search, X } from 'lucide-react';
+import { BarChart, Plus, Search, X } from 'lucide-react';
 import {
   FileDetailsDialog,
   FileTable,
+  InventoryReportModal,
   SendEmailDialog,
   UploadFileDialog,
   VersionHistoryDialog,
@@ -51,12 +52,19 @@ export default function ProjectFiles() {
     setNotifyClient,
     products,
     templates,
+    inventoryItems,
+    inventoryCategories,
     handleAddProductToFileItem,
     handleCreateTemplate,
     handleAddTemplateItem,
     handleDeleteTemplateItem,
     handleUpdateTemplateItem,
     handleRestoreTemplateItemVersion,
+    showInventoryReportModal,
+    setShowInventoryReportModal,
+    getInventoryUsageReports,
+    updateInventoryStock,
+    trackInventoryUsage,
 
     // Helper functions
     getFileIcon,
@@ -107,6 +115,14 @@ export default function ProjectFiles() {
                 </button>
               )}
             </div>
+            <Button
+              variant='outline'
+              onClick={() => setShowInventoryReportModal(true)}
+              className='flex items-center gap-1'
+            >
+              <BarChart className='h-4 w-4' />
+              Inventory
+            </Button>
             <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
               <Button onClick={() => setShowUploadDialog(true)}>
                 <Plus className='mr-2 h-4 w-4' />
@@ -185,12 +201,16 @@ export default function ProjectFiles() {
           handleAddAttachmentToFileItem={handleAddAttachmentToFileItem}
           products={products}
           templates={templates}
+          inventoryItems={inventoryItems}
+          inventoryCategories={inventoryCategories}
           handleAddProductToFileItem={handleAddProductToFileItem}
           handleAddTemplateItem={handleAddTemplateItem}
           handleCreateTemplate={handleCreateTemplate}
           handleDeleteTemplateItem={handleDeleteTemplateItem}
           handleUpdateTemplateItem={handleUpdateTemplateItem}
           handleRestoreTemplateItemVersion={handleRestoreTemplateItemVersion}
+          updateInventoryStock={updateInventoryStock}
+          trackInventoryUsage={trackInventoryUsage}
         />
       </Dialog>
 
@@ -222,6 +242,15 @@ export default function ProjectFiles() {
           onClose={() => setShowSendEmailDialog(false)}
         />
       </Dialog>
+
+      {/* Inventory Report Modal */}
+      {showInventoryReportModal && (
+        <InventoryReportModal
+          inventoryItems={inventoryItems}
+          usageReports={getInventoryUsageReports()}
+          onClose={() => setShowInventoryReportModal(false)}
+        />
+      )}
     </div>
   );
 }

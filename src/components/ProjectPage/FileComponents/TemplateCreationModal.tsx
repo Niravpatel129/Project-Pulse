@@ -18,16 +18,27 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { FieldType, Template, TemplateField } from '@/lib/mock/projectFiles';
-import { ArrowDown, ArrowUp, PlusCircle, Trash2 } from 'lucide-react';
+import {
+  FieldType,
+  InventoryCategory,
+  mockInventoryCategories,
+  Template,
+  TemplateField,
+} from '@/lib/mock/projectFiles';
+import { ArrowDown, ArrowUp, Package, PlusCircle, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface TemplateCreationModalProps {
   onClose: () => void;
   onSave: (template: Template) => void;
+  inventoryCategories?: InventoryCategory[];
 }
 
-const TemplateCreationModal: React.FC<TemplateCreationModalProps> = ({ onClose, onSave }) => {
+const TemplateCreationModal: React.FC<TemplateCreationModalProps> = ({
+  onClose,
+  onSave,
+  inventoryCategories = mockInventoryCategories,
+}) => {
   const [templateName, setTemplateName] = useState('');
   const [templateDescription, setTemplateDescription] = useState('');
   const [fields, setFields] = useState<TemplateField[]>([
@@ -225,6 +236,12 @@ const TemplateCreationModal: React.FC<TemplateCreationModalProps> = ({ onClose, 
                               <SelectItem value='date'>Date</SelectItem>
                               <SelectItem value='price'>Price</SelectItem>
                               <SelectItem value='dimension'>Dimension</SelectItem>
+                              <SelectItem value='inventory_item'>
+                                <div className='flex items-center'>
+                                  <Package className='h-4 w-4 mr-2 text-gray-500' />
+                                  <span>Inventory Item</span>
+                                </div>
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -286,6 +303,38 @@ const TemplateCreationModal: React.FC<TemplateCreationModalProps> = ({ onClose, 
                             }
                             className='mt-1'
                           />
+                        </div>
+                      )}
+
+                      {field.type === 'inventory_item' && (
+                        <div>
+                          <Label htmlFor={`field-inventory-category-${index}`} className='text-xs'>
+                            Filter by Category (Optional)
+                          </Label>
+                          <Select
+                            value={field.inventoryCategory || ''}
+                            onValueChange={(value) =>
+                              updateField(index, {
+                                inventoryCategory: value === 'all' ? undefined : value,
+                              })
+                            }
+                          >
+                            <SelectTrigger className='mt-1'>
+                              <SelectValue placeholder='All Categories' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value='all'>All Categories</SelectItem>
+                              {inventoryCategories.map((category) => (
+                                <SelectItem key={category.id} value={category.id}>
+                                  {category.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <p className='text-xs text-muted-foreground mt-1'>
+                            This field will let users select items from inventory when filling out
+                            this template.
+                          </p>
                         </div>
                       )}
 

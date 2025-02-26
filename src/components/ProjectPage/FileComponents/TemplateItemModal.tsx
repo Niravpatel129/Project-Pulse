@@ -18,10 +18,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ProjectFile, Template, TemplateField, TemplateFieldValue } from '@/lib/mock/projectFiles';
+import {
+  InventoryItem,
+  ProjectFile,
+  Template,
+  TemplateField,
+  TemplateFieldValue,
+} from '@/lib/mock/projectFiles';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { CalendarIcon, DollarSign, FileUp, Link2 } from 'lucide-react';
+import { CalendarIcon, DollarSign, FileUp, Link2, Package, Search } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 interface TemplateItemModalProps {
@@ -29,6 +35,13 @@ interface TemplateItemModalProps {
   onClose: () => void;
   onSave: (item: ProjectFile) => void;
   existingItem?: ProjectFile;
+  inventoryItems?: InventoryItem[];
+  updateInventoryStock?: (itemId: string, quantity: number) => InventoryItem | undefined;
+  trackInventoryUsage?: (
+    templateItemId: string,
+    inventoryItemId: string,
+    projectId?: string,
+  ) => void;
 }
 
 const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
@@ -36,6 +49,9 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
   onClose,
   onSave,
   existingItem,
+  inventoryItems = [],
+  updateInventoryStock,
+  trackInventoryUsage,
 }) => {
   const [itemName, setItemName] = useState(existingItem?.name || '');
   const [fieldValues, setFieldValues] = useState<TemplateFieldValue[]>(
@@ -47,6 +63,7 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
       })),
   );
   const [files, setFiles] = useState<{ [key: string]: File | null }>({});
+  const [inventorySearch, setInventorySearch] = useState('');
 
   // Initialize with existing values if in edit mode
   useEffect(() => {
@@ -98,82 +115,74 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
   };
 
   const handleSave = () => {
-    if (!itemName.trim()) {
-      alert('Please enter an item name');
-      return;
-    }
+    if (!validateFields()) return;
 
-    const validationError = validateFields();
-    if (validationError) {
-      alert(validationError);
-      return;
-    }
-
-    // Calculate total size of files
-    let totalSize = 0;
-    Object.values(files).forEach((file) => {
-      if (file) totalSize += file.size;
-    });
-
-    // If we're editing, we need to use the existing size and just add any new files
-    let formattedSize = existingItem?.size || '1.0 KB';
-
-    if (totalSize > 0) {
-      formattedSize =
-        totalSize > 1024 * 1024
-          ? `${(totalSize / (1024 * 1024)).toFixed(1)} MB`
-          : `${(totalSize / 1024).toFixed(1)} KB`;
+    const requiredFields = template.fields.filter((field) => field.required);
+    for (const field of requiredFields) {
+      const value = getFieldValue(field.id);
+      if (value === undefined || value === null || value === '') {
+        alert(`Please fill in the required field: ${field.name}`);
+        return;
+      }
     }
 
     const newItem: ProjectFile = {
-      id: existingItem?.id || `item-${Date.now()}`,
-      name: itemName,
+      id: existingItem?.id || `template-item-${Date.now()}`,
+      name: itemName || template.name,
       type: 'custom_template_item',
       dateUploaded: existingItem?.dateUploaded || new Date().toISOString(),
-      size: formattedSize,
-      status: existingItem?.status || 'active',
-      uploadedBy: existingItem?.uploadedBy || 'Current User', // Would come from auth in a real app
+      lastModified: existingItem ? new Date().toISOString() : undefined,
+      size: '0 KB',
+      uploadedBy: 'Current User',
       templateId: template.id,
       templateValues: fieldValues,
-      attachments: existingItem?.attachments || [],
-      comments: existingItem?.comments || [],
-      // If this is an edit, preserve version history
+      attachments: [],
+      comments: [],
       versions: existingItem?.versions || [],
     };
 
-    // If we're editing, create a new version
-    if (existingItem) {
-      const currentDate = new Date().toISOString();
+    // Track inventory usage and update stock for any inventory item fields
+    fieldValues.forEach((fieldValue) => {
+      if (fieldValue.inventoryItemId) {
+        // Track usage if function is provided
+        if (trackInventoryUsage) {
+          trackInventoryUsage(newItem.id, fieldValue.inventoryItemId);
+        }
 
-      // Create a version of the previous state if versions don't exist yet
-      if (!newItem.versions || newItem.versions.length === 0) {
-        newItem.versions = [
-          {
-            id: `v1-${existingItem.id}`,
-            date: existingItem.dateUploaded,
-            createdBy: existingItem.uploadedBy,
-            changes: 'Initial version',
-            data: { ...existingItem },
-          },
-        ];
+        // Update stock if function is provided (reduce by 1 for demonstration)
+        if (updateInventoryStock) {
+          updateInventoryStock(fieldValue.inventoryItemId, 1);
+        }
       }
+    });
 
-      // Add the current state as a new version
-      newItem.versions.push({
-        id: `v${newItem.versions.length + 1}-${newItem.id}`,
-        date: currentDate,
+    // Create a version entry when editing an existing item
+    if (existingItem) {
+      const versionEntry = {
+        id: `v-${Date.now()}`,
+        date: new Date().toISOString(),
         createdBy: 'Current User',
         changes: 'Updated template item values',
-        data: { ...existingItem },
-      });
+        data: { ...existingItem, templateValues: [...(existingItem.templateValues || [])] },
+      };
 
-      // Update the last modified date
-      newItem.lastModified = currentDate;
+      newItem.versions = [...(existingItem.versions || []), versionEntry];
     }
 
     onSave(newItem);
     onClose();
   };
+
+  const findInventoryItem = (itemId: string): InventoryItem | undefined => {
+    return inventoryItems.find((item) => item.id === itemId);
+  };
+
+  const filteredInventoryItems = inventoryItems.filter(
+    (item) =>
+      item.name.toLowerCase().includes(inventorySearch.toLowerCase()) ||
+      item.sku.toLowerCase().includes(inventorySearch.toLowerCase()) ||
+      item.category.toLowerCase().includes(inventorySearch.toLowerCase()),
+  );
 
   const renderFieldInput = (field: TemplateField) => {
     switch (field.type) {
@@ -343,6 +352,86 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
               className='flex-1'
             />
             {field.unit && <span className='text-sm text-muted-foreground w-16'>{field.unit}</span>}
+          </div>
+        );
+
+      case 'inventory_item':
+        const selectedItemId = getFieldValue(field.id) as string;
+        const selectedItem = selectedItemId ? findInventoryItem(selectedItemId) : undefined;
+
+        return (
+          <div className='space-y-3'>
+            <div className='relative'>
+              <Search className='absolute left-2 top-2.5 h-4 w-4 text-muted-foreground' />
+              <Input
+                placeholder='Search inventory items...'
+                value={inventorySearch}
+                onChange={(e) => setInventorySearch(e.target.value)}
+                className='pl-8'
+              />
+            </div>
+
+            {selectedItem && (
+              <div className='flex items-center p-2 bg-muted rounded-md gap-2'>
+                {selectedItem.imageUrl && (
+                  <img
+                    src={selectedItem.imageUrl}
+                    alt={selectedItem.name}
+                    className='h-10 w-10 rounded-md object-cover border'
+                  />
+                )}
+                <div className='flex-1'>
+                  <div className='font-medium'>{selectedItem.name}</div>
+                  <div className='text-xs text-muted-foreground'>SKU: {selectedItem.sku}</div>
+                </div>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  onClick={() => handleFieldChange(field.id, null)}
+                  className='text-red-500 hover:text-red-700 hover:bg-red-50'
+                >
+                  Remove
+                </Button>
+              </div>
+            )}
+
+            <div className='max-h-64 overflow-y-auto border rounded-md'>
+              {filteredInventoryItems.length === 0 ? (
+                <div className='p-4 text-center text-sm text-muted-foreground'>No items found</div>
+              ) : (
+                <div className='divide-y'>
+                  {filteredInventoryItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className={cn(
+                        'flex items-center p-2 hover:bg-muted cursor-pointer gap-2',
+                        selectedItemId === item.id && 'bg-blue-50',
+                      )}
+                      onClick={() => handleFieldChange(field.id, item.id)}
+                    >
+                      <Package className='h-4 w-4 text-muted-foreground' />
+                      {item.imageUrl && (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className='h-8 w-8 rounded-md object-cover border'
+                        />
+                      )}
+                      <div className='flex-1'>
+                        <div className='font-medium'>{item.name}</div>
+                        <div className='text-xs text-muted-foreground'>
+                          SKU: {item.sku} | {item.category}
+                        </div>
+                      </div>
+                      <div className='text-xs text-right'>
+                        <div>${item.price.toFixed(2)}</div>
+                        <div className='text-muted-foreground'>Stock: {item.stock}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         );
 

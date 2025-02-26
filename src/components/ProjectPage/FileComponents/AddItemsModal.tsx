@@ -10,7 +10,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Product, ProjectFile, Template, mockTemplates } from '@/lib/mock/projectFiles';
+import {
+  InventoryCategory,
+  InventoryItem,
+  Product,
+  ProjectFile,
+  Template,
+  mockInventoryCategories,
+  mockTemplates,
+} from '@/lib/mock/projectFiles';
 import {
   CheckCircle2,
   DollarSign,
@@ -33,6 +41,8 @@ interface AddItemsModalProps {
   selectedFile: ProjectFile;
   products?: Product[];
   templates?: Template[];
+  inventoryItems?: InventoryItem[];
+  inventoryCategories?: InventoryCategory[];
   handleAddAttachmentToFileItem?: (fileItemId: string) => void;
   handleAddProductToFileItem?: (
     fileItemId: string,
@@ -48,14 +58,16 @@ interface AddItemsModalProps {
   handleCreateTemplate?: (template: Template) => void;
   handleFileUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   uploadedFiles?: File[];
-  onClose: () => void;
   defaultTab?: 'files' | 'products' | 'services' | 'templates';
+  onClose: () => void;
 }
 
 const AddItemsModal: React.FC<AddItemsModalProps> = ({
   selectedFile,
   products = [],
   templates = mockTemplates, // Default to mock templates if none provided
+  inventoryItems = [],
+  inventoryCategories = mockInventoryCategories,
   handleAddAttachmentToFileItem,
   handleAddProductToFileItem,
   handleAddTemplateItem,
@@ -543,6 +555,7 @@ const AddItemsModal: React.FC<AddItemsModalProps> = ({
           <TemplateCreationModal
             onClose={() => setShowTemplateCreationModal(false)}
             onSave={handleTemplateCreated}
+            inventoryCategories={inventoryCategories}
           />
         )}
 
@@ -551,6 +564,7 @@ const AddItemsModal: React.FC<AddItemsModalProps> = ({
             template={selectedTemplate}
             onClose={() => setShowTemplateItemModal(false)}
             onSave={handleTemplateItemCreated}
+            inventoryItems={inventoryItems}
           />
         )}
       </DialogContent>

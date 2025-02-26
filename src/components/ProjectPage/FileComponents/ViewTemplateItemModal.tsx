@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ProjectFile, Template, TemplateFieldValue } from '@/lib/mock/projectFiles';
+import { InventoryItem, ProjectFile, Template, TemplateFieldValue } from '@/lib/mock/projectFiles';
 import {
   Calendar,
   DollarSign,
@@ -15,11 +15,13 @@ import {
   FileText,
   History,
   ImageIcon,
+  Package,
   Pencil,
   Ruler,
   Text,
 } from 'lucide-react';
 import React, { useState } from 'react';
+import InventoryItemModal from './InventoryItemModal';
 import TemplateItemHistoryModal from './TemplateItemHistoryModal';
 import TemplateItemModal from './TemplateItemModal';
 
@@ -29,6 +31,13 @@ interface ViewTemplateItemModalProps {
   onClose: () => void;
   onEdit?: (updatedItem: ProjectFile) => void;
   onVersionRestore?: (itemId: string, versionId: string) => void;
+  inventoryItems?: InventoryItem[];
+  updateInventoryStock?: (itemId: string, quantity: number) => InventoryItem | undefined;
+  trackInventoryUsage?: (
+    templateItemId: string,
+    inventoryItemId: string,
+    projectId?: string,
+  ) => void;
 }
 
 const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
@@ -37,9 +46,13 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
   onClose,
   onEdit,
   onVersionRestore,
+  inventoryItems = [],
+  updateInventoryStock,
+  trackInventoryUsage,
 }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [selectedInventoryItem, setSelectedInventoryItem] = useState<InventoryItem | null>(null);
 
   if (!item || !template) return null;
 
@@ -65,6 +78,8 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
         return <DollarSign className='h-4 w-4 mr-2 text-gray-500' />;
       case 'dimension':
         return <Ruler className='h-4 w-4 mr-2 text-gray-500' />;
+      case 'inventory_item':
+        return <Package className='h-4 w-4 mr-2 text-gray-500' />;
       default:
         return <FileText className='h-4 w-4 mr-2 text-gray-500' />;
     }
@@ -88,6 +103,10 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
       onVersionRestore(itemId, versionId);
     }
     setShowHistoryModal(false);
+  };
+
+  const findInventoryItem = (itemId: string): InventoryItem | undefined => {
+    return inventoryItems.find((item) => item.id === itemId);
   };
 
   const renderFieldValue = (fieldId: string, fieldType: string) => {
@@ -126,6 +145,39 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
         return <span>${value.value}</span>;
       case 'dimension':
         return <span>{value.value}</span>;
+      case 'inventory_item':
+        const inventoryItemId = value.value as string;
+        const inventoryItem = findInventoryItem(inventoryItemId);
+
+        if (!inventoryItem) {
+          return <span className='text-gray-400'>Item not found</span>;
+        }
+
+        return (
+          <div className='flex items-center gap-2'>
+            <div className='flex flex-1 items-center'>
+              {inventoryItem.imageUrl && (
+                <img
+                  src={inventoryItem.imageUrl}
+                  alt={inventoryItem.name}
+                  className='h-10 w-10 rounded-md object-cover mr-2 border'
+                />
+              )}
+              <div>
+                <span className='font-medium'>{inventoryItem.name}</span>
+                <div className='text-xs text-gray-500'>SKU: {inventoryItem.sku}</div>
+              </div>
+            </div>
+            <Button
+              variant='outline'
+              size='sm'
+              className='ml-auto'
+              onClick={() => setSelectedInventoryItem(inventoryItem)}
+            >
+              View Details
+            </Button>
+          </div>
+        );
       default:
         return <span>{value.value as string}</span>;
     }
@@ -135,7 +187,10 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
 
   return (
     <>
-      <Dialog open={!showEditModal && !showHistoryModal} onOpenChange={onClose}>
+      <Dialog
+        open={!showEditModal && !showHistoryModal && !selectedInventoryItem}
+        onOpenChange={onClose}
+      >
         <DialogContent className='sm:max-w-[600px] max-h-[80vh] overflow-auto'>
           <DialogHeader>
             <DialogTitle>{item.name}</DialogTitle>
@@ -195,6 +250,9 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
           existingItem={item}
           onClose={() => setShowEditModal(false)}
           onSave={handleEditSave}
+          inventoryItems={inventoryItems}
+          updateInventoryStock={updateInventoryStock}
+          trackInventoryUsage={trackInventoryUsage}
         />
       )}
 
@@ -204,6 +262,13 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
           onClose={() => setShowHistoryModal(false)}
           onVersionRestore={handleRestoreVersion}
           onVersionView={handleViewVersion}
+        />
+      )}
+
+      {selectedInventoryItem && (
+        <InventoryItemModal
+          item={selectedInventoryItem}
+          onClose={() => setSelectedInventoryItem(null)}
         />
       )}
     </>

@@ -2,9 +2,13 @@ import {
   Attachment,
   Comment,
   FileType,
+  InventoryCategory,
+  InventoryItem,
   Product,
   ProjectFile,
   Template,
+  mockInventoryCategories,
+  mockInventoryItems,
   mockProducts,
   mockProjectFiles,
   mockTemplateItems,
@@ -38,6 +42,12 @@ export function useProjectFiles() {
   const [files, setFiles] = useState<ProjectFile[]>([...mockProjectFiles, ...mockTemplateItems]);
   const [products, setProducts] = useState<Product[]>(mockProducts);
   const [templates, setTemplates] = useState<Template[]>(mockTemplates);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(mockInventoryItems);
+  const [inventoryCategories, setInventoryCategories] =
+    useState<InventoryCategory[]>(mockInventoryCategories);
+  const [selectedInventoryItem, setSelectedInventoryItem] = useState<InventoryItem | null>(null);
+  const [showInventoryItemModal, setShowInventoryItemModal] = useState(false);
+  const [showInventoryReportModal, setShowInventoryReportModal] = useState(false);
 
   // Use version history hook
   const versionHistory = useVersionHistory({
@@ -517,6 +527,124 @@ export function useProjectFiles() {
     handleUpdateTemplateItem(restoredItem);
   };
 
+  // Inventory related functions
+  const getInventoryCategories = () => {
+    return inventoryCategories;
+  };
+
+  const getInventoryItemsByCategory = (categoryId?: string) => {
+    if (!categoryId) {
+      return inventoryItems;
+    }
+    return inventoryItems.filter((item) => item.category === categoryId);
+  };
+
+  const getInventoryItemById = (itemId: string) => {
+    return inventoryItems.find((item) => item.id === itemId) || null;
+  };
+
+  const handleViewInventoryItem = (itemId: string) => {
+    const item = getInventoryItemById(itemId);
+    if (item) {
+      setSelectedInventoryItem(item);
+      setShowInventoryItemModal(true);
+    }
+  };
+
+  // New functions for inventory management (CRM/ERP functionality)
+  const updateInventoryStock = (itemId: string, quantity: number) => {
+    // Update stock levels for inventory items
+    const updatedItems = inventoryItems.map((item) => {
+      if (item.id === itemId) {
+        const newStock = Math.max(0, item.stock - quantity);
+        return {
+          ...item,
+          stock: newStock,
+          lastUpdated: new Date().toISOString(),
+        };
+      }
+      return item;
+    });
+
+    setInventoryItems(updatedItems);
+    return updatedItems.find((item) => item.id === itemId);
+  };
+
+  const trackInventoryUsage = (
+    templateItemId: string,
+    inventoryItemId: string,
+    projectId: string = 'current-project',
+  ) => {
+    // In a real system, this would record inventory usage for reporting
+    console.log(
+      `Tracking: Item ${inventoryItemId} used in template ${templateItemId} for project ${projectId}`,
+    );
+
+    // For demonstration, we'll update a "usage count" in localStorage
+    try {
+      const usageKey = `inventory-usage-${inventoryItemId}`;
+      const currentUsage = JSON.parse(
+        localStorage.getItem(usageKey) || '{"count": 0, "projects": []}',
+      );
+
+      currentUsage.count += 1;
+      if (!currentUsage.projects.includes(projectId)) {
+        currentUsage.projects.push(projectId);
+      }
+
+      localStorage.setItem(usageKey, JSON.stringify(currentUsage));
+    } catch (e) {
+      console.error('Could not track inventory usage in localStorage', e);
+    }
+  };
+
+  const getInventoryUsageReports = () => {
+    // Get inventory usage reports (in a real system this would query a database)
+    const reports = inventoryItems.map((item) => {
+      try {
+        const usageKey = `inventory-usage-${item.id}`;
+        const usageData = JSON.parse(
+          localStorage.getItem(usageKey) || '{"count": 0, "projects": []}',
+        );
+
+        return {
+          item: item,
+          usageCount: usageData.count,
+          projectCount: usageData.projects.length,
+          projects: usageData.projects,
+        };
+      } catch (e) {
+        return {
+          item: item,
+          usageCount: 0,
+          projectCount: 0,
+          projects: [],
+        };
+      }
+    });
+
+    return reports;
+  };
+
+  // Enhance template item creation to track inventory
+  const handleAddTemplateItemWithInventory = (item: ProjectFile) => {
+    // First, add the template item as before
+    handleAddTemplateItem(item);
+
+    // Then, track and update inventory for any inventory fields
+    if (item.templateValues) {
+      item.templateValues.forEach((fieldValue) => {
+        if (fieldValue.inventoryItemId) {
+          // Record usage of this inventory item
+          trackInventoryUsage(item.id, fieldValue.inventoryItemId);
+
+          // Optionally decrement stock (set to 1 for demonstration)
+          updateInventoryStock(fieldValue.inventoryItemId, 1);
+        }
+      });
+    }
+  };
+
   return {
     // States
     activeTab,
@@ -553,11 +681,22 @@ export function useProjectFiles() {
     setFiles,
     products,
     templates,
+    inventoryItems,
+    inventoryCategories,
+    selectedInventoryItem,
+    setSelectedInventoryItem,
+    showInventoryItemModal,
+    setShowInventoryItemModal,
+    showInventoryReportModal,
+    setShowInventoryReportModal,
 
     // Helper functions
     getFileIcon,
     getAttachmentIcon,
     getStatusBadgeClass,
+    getInventoryCategories,
+    getInventoryItemsByCategory,
+    getInventoryItemById,
 
     // Logic functions
     handleAddFile,
@@ -575,8 +714,17 @@ export function useProjectFiles() {
     handleDeleteTemplateItem,
     handleUpdateTemplateItem,
     handleRestoreTemplateItemVersion,
+    handleViewInventoryItem,
 
     // Version history (from hook)
     ...versionHistory,
+
+    // New functions for inventory management (CRM/ERP functionality)
+    updateInventoryStock,
+    trackInventoryUsage,
+    getInventoryUsageReports,
+
+    // Enhance template item creation to track inventory
+    handleAddTemplateItemWithInventory,
   };
 }
