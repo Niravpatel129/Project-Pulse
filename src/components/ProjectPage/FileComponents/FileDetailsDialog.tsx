@@ -1,31 +1,14 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Attachment, Product, ProjectFile } from '@/lib/mock/projectFiles';
 import { format } from 'date-fns';
-import {
-  DollarSign,
-  Download,
-  FilePlus,
-  Link,
-  Mail,
-  Package,
-  Send,
-  Shirt,
-  Tag,
-} from 'lucide-react';
+import { DollarSign, Download, FilePlus, Link, Mail, Send, Shirt, Tag } from 'lucide-react';
 import React, { useState } from 'react';
+
 import AddItemsModal from './AddItemsModal';
+import { AddFileModal, AddInvoiceModal, AddProductModal, AddServiceModal } from './AddModals';
 
 interface FileDetailsDialogProps {
   selectedFile: ProjectFile | null;
@@ -67,47 +50,13 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
   products = [],
   handleAddProductToFileItem,
 }) => {
-  const [showAddContent, setShowAddContent] = useState(false);
-  const [contentType, setContentType] = useState<'file' | 'product' | 'service' | 'invoice'>(
-    'file',
-  );
-  const [selectedProduct, setSelectedProduct] = useState<string>('');
-  const [showNewProductForm, setShowNewProductForm] = useState(false);
-  const [newProduct, setNewProduct] = useState({
-    name: '',
-    price: '',
-    description: '',
-  });
   const [showAddItemsModal, setShowAddItemsModal] = useState(false);
+  const [showFileModal, setShowFileModal] = useState(false);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
   if (!selectedFile) return null;
-
-  const handleProductAction = () => {
-    if (!handleAddProductToFileItem) return;
-
-    if (showNewProductForm && newProduct.name && newProduct.price) {
-      // Create new product and attach
-      handleAddProductToFileItem(selectedFile.id, {
-        name: newProduct.name,
-        price: newProduct.price,
-        description: newProduct.description,
-        isNew: true,
-      });
-      setNewProduct({ name: '', price: '', description: '' });
-    } else if (selectedProduct) {
-      // Attach existing product
-      const product = products.find((p) => p.id === selectedProduct);
-      if (product) {
-        handleAddProductToFileItem(selectedFile.id, {
-          id: product.id,
-          isNew: false,
-        });
-      }
-    }
-    setShowAddContent(false);
-    setShowNewProductForm(false);
-    setSelectedProduct('');
-  };
 
   return (
     <>
@@ -159,292 +108,28 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
                 <div className='flex items-center justify-between mb-3'>
                   <div className='flex items-center'>
                     <h4 className='text-sm font-medium'>Attached Items</h4>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      className='h-6 w-6 p-0 ml-1 text-gray-500 hover:text-gray-700'
-                      onClick={() => setShowAddContent(!showAddContent)}
-                    >
-                      <span className='text-lg font-medium'>+</span>
-                    </Button>
                   </div>
-
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    className='flex items-center'
-                    onClick={() => setShowAddItemsModal(true)}
-                  >
-                    <Package className='h-4 w-4 mr-1' />
-                    <span>Manage Collection</span>
-                  </Button>
                 </div>
 
                 <div className='flex flex-wrap gap-2 mb-4'>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() => {
-                      setContentType('file');
-                      setShowAddContent(true);
-                      setShowNewProductForm(false);
-                    }}
-                  >
+                  <Button variant='outline' size='sm' onClick={() => setShowFileModal(true)}>
                     <FilePlus className='h-4 w-4 mr-1' />
                     Add File
                   </Button>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() => {
-                      setContentType('product');
-                      setShowAddContent(true);
-                      setShowNewProductForm(false);
-                    }}
-                  >
+                  <Button variant='outline' size='sm' onClick={() => setShowProductModal(true)}>
                     <Tag className='h-4 w-4 mr-1' />
                     Add Product
                   </Button>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() => {
-                      setContentType('service');
-                      setShowAddContent(true);
-                      setShowNewProductForm(false);
-                    }}
-                  >
+                  <Button variant='outline' size='sm' onClick={() => setShowServiceModal(true)}>
                     <Shirt className='h-4 w-4 mr-1' />
                     Add Service
                   </Button>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() => {
-                      setContentType('invoice');
-                      setShowAddContent(true);
-                      setShowNewProductForm(false);
-                    }}
-                  >
+                  <Button variant='outline' size='sm' onClick={() => setShowInvoiceModal(true)}>
                     <DollarSign className='h-4 w-4 mr-1' />
                     Add Invoice
                   </Button>
                 </div>
               </div>
-
-              {showAddContent && (
-                <div className='mb-4 p-3 border rounded-md bg-gray-50'>
-                  <div className='flex justify-between items-center mb-3'>
-                    <h5 className='text-sm font-medium'>
-                      {contentType === 'file' && 'Add New File'}
-                      {contentType === 'product' && 'Add Product'}
-                      {contentType === 'service' && 'Add Service'}
-                      {contentType === 'invoice' && 'Add Invoice'}
-                    </h5>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      onClick={() => setShowAddContent(false)}
-                      className='h-6 w-6 p-0 rounded-full'
-                    >
-                      ✕
-                    </Button>
-                  </div>
-
-                  {contentType === 'file' && (
-                    <div className='space-y-2'>
-                      <div className='border border-dashed rounded-md p-3 flex flex-col items-center justify-center'>
-                        <FilePlus className='h-6 w-6 text-gray-400 mb-2' />
-                        <p className='text-sm text-gray-500 mb-2'>Upload a file</p>
-                        <input
-                          id='file-upload-details'
-                          type='file'
-                          className='hidden'
-                          onChange={handleFileUpload}
-                          multiple
-                        />
-                        <Button
-                          size='sm'
-                          variant='outline'
-                          onClick={() => document.getElementById('file-upload-details')?.click()}
-                        >
-                          Browse Files
-                        </Button>
-                      </div>
-
-                      {uploadedFiles.length > 0 && (
-                        <div>
-                          <h6 className='text-xs font-medium mb-1'>Selected Files</h6>
-                          <div className='space-y-1 max-h-24 overflow-y-auto'>
-                            {uploadedFiles.map((file, index) => (
-                              <div
-                                key={index}
-                                className='text-xs flex items-center justify-between'
-                              >
-                                <span>{file.name}</span>
-                                <span>{Math.round(file.size / 1024)} KB</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className='flex justify-end mt-3'>
-                        <Button
-                          size='sm'
-                          disabled={uploadedFiles.length === 0}
-                          onClick={() => {
-                            if (handleAddAttachmentToFileItem) {
-                              handleAddAttachmentToFileItem(selectedFile.id);
-                              setShowAddContent(false);
-                            }
-                          }}
-                        >
-                          Add to {selectedFile.name}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {contentType === 'product' && (
-                    <div className='space-y-3'>
-                      <div className='space-y-2'>
-                        <div className='flex justify-between items-center'>
-                          <Label htmlFor='product-select'>Select Product</Label>
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            onClick={() => setShowNewProductForm(!showNewProductForm)}
-                          >
-                            {showNewProductForm ? 'Select Existing' : 'Create New'}
-                          </Button>
-                        </div>
-
-                        {!showNewProductForm ? (
-                          <div className='space-y-3'>
-                            <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                              <SelectTrigger id='product-select'>
-                                <SelectValue placeholder='Choose a product' />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {products.length > 0 ? (
-                                  products.map((product) => (
-                                    <SelectItem key={product.id} value={product.id}>
-                                      {product.name} (${product.price})
-                                    </SelectItem>
-                                  ))
-                                ) : (
-                                  <SelectItem value='no-products' disabled>
-                                    No products available
-                                  </SelectItem>
-                                )}
-                              </SelectContent>
-                            </Select>
-
-                            <div className='flex justify-end'>
-                              <Button
-                                size='sm'
-                                disabled={!selectedProduct || selectedProduct === 'no-products'}
-                                onClick={handleProductAction}
-                              >
-                                Link Product to {selectedFile.name}
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className='space-y-3 border rounded p-3'>
-                            <div className='space-y-2'>
-                              <Label htmlFor='new-product-name'>Product Name*</Label>
-                              <Input
-                                id='new-product-name'
-                                value={newProduct.name}
-                                onChange={(e) =>
-                                  setNewProduct({ ...newProduct, name: e.target.value })
-                                }
-                                placeholder='T-shirt Design 2024'
-                              />
-                            </div>
-
-                            <div className='space-y-2'>
-                              <Label htmlFor='new-product-price'>Price*</Label>
-                              <Input
-                                id='new-product-price'
-                                value={newProduct.price}
-                                onChange={(e) =>
-                                  setNewProduct({ ...newProduct, price: e.target.value })
-                                }
-                                placeholder='29.99'
-                                type='number'
-                                step='0.01'
-                              />
-                            </div>
-
-                            <div className='space-y-2'>
-                              <Label htmlFor='new-product-desc'>Description</Label>
-                              <Textarea
-                                id='new-product-desc'
-                                value={newProduct.description}
-                                onChange={(e) =>
-                                  setNewProduct({ ...newProduct, description: e.target.value })
-                                }
-                                placeholder='Product description...'
-                                rows={2}
-                              />
-                            </div>
-
-                            <div className='pt-2'>
-                              <p className='text-xs text-gray-500 mb-2'>
-                                Upload files related to this product using the File option
-                              </p>
-                              <div className='flex justify-end'>
-                                <Button
-                                  size='sm'
-                                  disabled={!newProduct.name || !newProduct.price}
-                                  onClick={handleProductAction}
-                                >
-                                  Create & Add to {selectedFile.name}
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {(contentType === 'service' || contentType === 'invoice') && (
-                    <div className='p-2 text-center'>
-                      <p className='text-sm text-gray-600 mb-3'>
-                        {contentType === 'service' &&
-                          'Define a service with related documents and details'}
-                        {contentType === 'invoice' &&
-                          'Create an invoice with payment details and supporting files'}
-                      </p>
-                      <div className='flex flex-col items-center'>
-                        <div className='bg-gray-100 rounded-md p-3 mb-3 text-xs text-gray-500 w-full max-w-xs'>
-                          <div className='flex items-center mb-2'>
-                            <span className='w-1/3 font-medium'>Name:</span>
-                            <span className='w-2/3'>New {contentType}</span>
-                          </div>
-                          <div className='flex items-center mb-2'>
-                            <span className='w-1/3 font-medium'>Type:</span>
-                            <span className='w-2/3'>
-                              {contentType.charAt(0).toUpperCase() + contentType.slice(1)}
-                            </span>
-                          </div>
-                          <div className='flex items-center'>
-                            <span className='w-1/3 font-medium'>Required:</span>
-                            <span className='w-2/3'>At least one file attachment</span>
-                          </div>
-                        </div>
-                        <Button size='sm' variant='outline' onClick={() => setContentType('file')}>
-                          Start by adding a file
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
 
               {selectedFile.attachments.length > 0 && (
                 <div>
@@ -570,6 +255,7 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
         </div>
       </DialogContent>
 
+      {/* Comprehensive Collection Management Modal */}
       {showAddItemsModal && (
         <AddItemsModal
           selectedFile={selectedFile}
@@ -580,6 +266,34 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
           uploadedFiles={uploadedFiles}
           onClose={() => setShowAddItemsModal(false)}
         />
+      )}
+
+      {/* Individual Add Item Modals */}
+      {showFileModal && (
+        <AddFileModal
+          selectedFile={selectedFile}
+          handleFileUpload={handleFileUpload}
+          uploadedFiles={uploadedFiles}
+          handleAddAttachmentToFileItem={handleAddAttachmentToFileItem}
+          onClose={() => setShowFileModal(false)}
+        />
+      )}
+
+      {showProductModal && (
+        <AddProductModal
+          selectedFile={selectedFile}
+          products={products}
+          handleAddProductToFileItem={handleAddProductToFileItem}
+          onClose={() => setShowProductModal(false)}
+        />
+      )}
+
+      {showServiceModal && (
+        <AddServiceModal selectedFile={selectedFile} onClose={() => setShowServiceModal(false)} />
+      )}
+
+      {showInvoiceModal && (
+        <AddInvoiceModal selectedFile={selectedFile} onClose={() => setShowInvoiceModal(false)} />
       )}
     </>
   );

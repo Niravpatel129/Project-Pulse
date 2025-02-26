@@ -70,6 +70,7 @@ export interface Product {
   imageUrl?: string;
   variations?: string[];
   sku?: string;
+  category?: string;
 }
 
 export const mockProjectFiles: ProjectFile[] = [
