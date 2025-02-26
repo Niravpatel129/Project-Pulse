@@ -4,9 +4,10 @@ import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog
 import { Textarea } from '@/components/ui/textarea';
 import { Attachment, Product, ProjectFile } from '@/lib/mock/projectFiles';
 import { format } from 'date-fns';
-import { DollarSign, Download, FilePlus, Link, Mail, Send, Shirt, Tag } from 'lucide-react';
+import { DollarSign, Download, FilePlus, Link, Mail, Plus, Send, Shirt, Tag } from 'lucide-react';
 import React, { useState } from 'react';
 
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import AddItemsModal from './AddItemsModal';
 import { AddFileModal, AddInvoiceModal, AddProductModal, AddServiceModal } from './AddModals';
 
@@ -111,28 +112,58 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
                   </div>
                 </div>
 
-                <div className='flex flex-wrap gap-2 mb-4'>
-                  <Button variant='outline' size='sm' onClick={() => setShowFileModal(true)}>
-                    <FilePlus className='h-4 w-4 mr-1' />
-                    Add File
-                  </Button>
-                  <Button variant='outline' size='sm' onClick={() => setShowProductModal(true)}>
-                    <Tag className='h-4 w-4 mr-1' />
-                    Add Product
-                  </Button>
-                  <Button variant='outline' size='sm' onClick={() => setShowServiceModal(true)}>
-                    <Shirt className='h-4 w-4 mr-1' />
-                    Add Service
-                  </Button>
-                  <Button variant='outline' size='sm' onClick={() => setShowInvoiceModal(true)}>
-                    <DollarSign className='h-4 w-4 mr-1' />
-                    Add Invoice
-                  </Button>
-                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant='outline' size='sm' className='w-full max-w-fit'>
+                      <Plus className='h-4 w-4 mr-1' />
+                      Add Item
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className='w-56'>
+                    <div className='space-y-2'>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        className='w-full justify-start'
+                        onClick={() => setShowFileModal(true)}
+                      >
+                        <FilePlus className='h-4 w-4 mr-2' />
+                        Add File
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        className='w-full justify-start'
+                        onClick={() => setShowProductModal(true)}
+                      >
+                        <Tag className='h-4 w-4 mr-2' />
+                        Add Product
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        className='w-full justify-start'
+                        onClick={() => setShowServiceModal(true)}
+                      >
+                        <Shirt className='h-4 w-4 mr-2' />
+                        Add Service
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        className='w-full justify-start'
+                        onClick={() => setShowInvoiceModal(true)}
+                      >
+                        <DollarSign className='h-4 w-4 mr-2' />
+                        Add Invoice
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               {selectedFile.attachments.length > 0 && (
-                <div>
+                <div className='mt-4'>
                   <h5 className='text-sm font-medium mb-2'>Files</h5>
                   <div className='space-y-2 mb-4'>
                     {selectedFile.attachments.map((attachment) => (
