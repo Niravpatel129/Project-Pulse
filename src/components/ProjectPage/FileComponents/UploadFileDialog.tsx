@@ -8,206 +8,113 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { FileType } from '@/lib/mock/projectFiles';
-import { Paperclip, Upload } from 'lucide-react';
-import React from 'react';
+import { FolderPlus, Paperclip } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface UploadFileDialogProps {
-  selectedFileType: FileType;
-  setSelectedFileType: (type: FileType) => void;
   handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleAddFile: () => void;
   uploadedFiles: File[];
   onClose: () => void;
+  selectedFileType: string;
+  setSelectedFileType: (type: string) => void;
 }
 
 const UploadFileDialog: React.FC<UploadFileDialogProps> = ({
-  selectedFileType,
-  setSelectedFileType,
   handleFileUpload,
   handleAddFile,
   uploadedFiles,
   onClose,
 }) => {
+  const [itemName, setItemName] = useState('');
+  const [description, setDescription] = useState('');
+  const [notifyClient, setNotifyClient] = useState(false);
+
   return (
     <DialogContent className='max-w-md'>
       <DialogHeader>
-        <DialogTitle>Add New File Item</DialogTitle>
+        <DialogTitle>Create File Item</DialogTitle>
         <DialogDescription>
-          Create a new file item that can contain multiple files or folders. Choose a type below.
+          Create a container that can hold files, products, services, invoices, and more.
         </DialogDescription>
       </DialogHeader>
       <div className='space-y-4 py-4'>
         <div className='space-y-2'>
-          <Label htmlFor='file-type'>File Item Type</Label>
-          <Select
-            value={selectedFileType}
-            onValueChange={(val) => setSelectedFileType(val as FileType)}
-          >
-            <SelectTrigger id='file-type'>
-              <SelectValue placeholder='Select file item type' />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='upload'>Upload Files</SelectItem>
-              <SelectItem value='sales_product'>Sales Product</SelectItem>
-              <SelectItem value='service'>Service</SelectItem>
-              <SelectItem value='file'>Single File</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {selectedFileType === 'upload' && (
-          <div className='space-y-2'>
-            <Label htmlFor='file-upload'>Upload Files</Label>
-            <div className='border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center'>
-              <Upload className='h-8 w-8 text-gray-400 mb-2' />
-              <p className='text-sm text-gray-500 mb-2'>Drag and drop your files here</p>
-              <Input
-                id='file-upload'
-                type='file'
-                className='hidden'
-                multiple
-                onChange={handleFileUpload}
-              />
-              <Button
-                size='sm'
-                variant='outline'
-                onClick={() => document.getElementById('file-upload')?.click()}
-              >
-                Browse Files
-              </Button>
-            </div>
-
-            {uploadedFiles.length > 0 && (
-              <div className='mt-4'>
-                <Label>Selected Files</Label>
-                <div className='mt-2 space-y-2 max-h-40 overflow-y-auto p-2 border rounded'>
-                  {uploadedFiles.map((file, index) => (
-                    <div key={index} className='flex justify-between items-center text-sm'>
-                      <div className='flex items-center'>
-                        <Paperclip className='h-4 w-4 text-gray-500 mr-2' />
-                        <span>{file.name}</span>
-                      </div>
-                      <span className='text-gray-500'>{Math.round(file.size / 1024)} KB</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {selectedFileType === 'sales_product' && (
-          <div className='space-y-4'>
-            <div className='space-y-2'>
-              <Label htmlFor='product-name'>Product Name</Label>
-              <Input id='product-name' placeholder='Enter product name' />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='product-price'>Price</Label>
-              <Input id='product-price' type='number' placeholder='0.00' />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='product-img'>Product Image</Label>
-              <Input id='product-img' type='file' accept='image/*' onChange={handleFileUpload} />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='product-desc'>Product Description</Label>
-              <Textarea id='product-desc' placeholder='Describe the product...' rows={3} />
-            </div>
-          </div>
-        )}
-
-        {selectedFileType === 'service' && (
-          <div className='space-y-4'>
-            <div className='space-y-2'>
-              <Label htmlFor='service-name'>Service Name</Label>
-              <Input id='service-name' placeholder='Enter service name' />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='service-rate'>Rate</Label>
-              <Input id='service-rate' type='number' placeholder='0.00' />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='rate-type'>Rate Type</Label>
-              <Select defaultValue='hourly'>
-                <SelectTrigger id='rate-type'>
-                  <SelectValue placeholder='Select rate type' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='hourly'>Hourly</SelectItem>
-                  <SelectItem value='fixed'>Fixed Price</SelectItem>
-                  <SelectItem value='daily'>Daily</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='service-desc'>Service Description</Label>
-              <Textarea id='service-desc' placeholder='Describe the service...' rows={3} />
-            </div>
-          </div>
-        )}
-
-        {selectedFileType === 'file' && (
-          <div className='space-y-2'>
-            <Label htmlFor='simple-file-upload'>Upload File</Label>
-            <Input id='simple-file-upload' type='file' onChange={handleFileUpload} />
-            {uploadedFiles.length > 0 && (
-              <div className='mt-4'>
-                <Label>Selected File</Label>
-                <div className='mt-2 space-y-2 max-h-40 overflow-y-auto p-2 border rounded'>
-                  {uploadedFiles.map((file, index) => (
-                    <div key={index} className='flex justify-between items-center text-sm'>
-                      <div className='flex items-center'>
-                        <Paperclip className='h-4 w-4 text-gray-500 mr-2' />
-                        <span>{file.name}</span>
-                      </div>
-                      <span className='text-gray-500'>{Math.round(file.size / 1024)} KB</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className='space-y-2'>
-          <Label htmlFor='doc-name'>File Item Name</Label>
-          <Input id='doc-name' placeholder='Wedding Venue Photos' />
+          <Label htmlFor='item-name' className='font-medium'>
+            File Item Name*
+          </Label>
+          <Input
+            id='item-name'
+            placeholder='e.g., Wedding Contract Documents'
+            value={itemName}
+            onChange={(e) => setItemName(e.target.value)}
+            required
+          />
         </div>
 
         <div className='space-y-2'>
           <Label htmlFor='description'>Description (Optional)</Label>
-          <Textarea id='description' placeholder='Add a description of these files...' rows={3} />
+          <Textarea
+            id='description'
+            placeholder='Brief description of what this collection will contain...'
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
         </div>
 
+        <div className='border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center'>
+          <FolderPlus className='h-10 w-10 text-gray-400 mb-2' />
+          <p className='text-base font-medium text-gray-700 mb-1'>Start with optional files</p>
+          <p className='text-sm text-gray-500 mb-3 text-center'>
+            Drag files here or click to browse
+          </p>
+          <Input
+            id='file-upload'
+            type='file'
+            className='hidden'
+            multiple
+            onChange={handleFileUpload}
+          />
+          <Button
+            size='sm'
+            variant='outline'
+            onClick={() => document.getElementById('file-upload')?.click()}
+          >
+            Browse Files
+          </Button>
+        </div>
+
+        {uploadedFiles.length > 0 && (
+          <div className='mt-4'>
+            <Label>Files to Include</Label>
+            <div className='mt-2 space-y-2 max-h-40 overflow-y-auto p-2 border rounded'>
+              {uploadedFiles.map((file, index) => (
+                <div key={index} className='flex justify-between items-center text-sm'>
+                  <div className='flex items-center'>
+                    <Paperclip className='h-4 w-4 text-gray-500 mr-2' />
+                    <span>{file.name}</span>
+                  </div>
+                  <span className='text-gray-500'>{Math.round(file.size / 1024)} KB</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className='flex items-center space-x-2'>
-          <Switch id='send-email' />
-          <Label htmlFor='send-email'>Send email notification to client</Label>
+          <Switch id='send-email' checked={notifyClient} onCheckedChange={setNotifyClient} />
+          <Label htmlFor='send-email'>Notify client when created</Label>
         </div>
       </div>
       <DialogFooter>
         <Button variant='outline' onClick={onClose}>
           Cancel
         </Button>
-        <Button
-          onClick={handleAddFile}
-          disabled={selectedFileType === 'upload' && uploadedFiles.length === 0}
-        >
-          {selectedFileType === 'sales_product'
-            ? 'Add Product'
-            : selectedFileType === 'service'
-            ? 'Add Service'
-            : 'Create File Item'}
+        <Button onClick={handleAddFile} disabled={!itemName.trim()}>
+          Create File Item
         </Button>
       </DialogFooter>
     </DialogContent>

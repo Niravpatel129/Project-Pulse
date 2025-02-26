@@ -8,7 +8,8 @@ export type FileType =
   | 'upload'
   | 'sales_product'
   | 'service'
-  | 'file';
+  | 'file'
+  | 'file_item';
 
 export interface FileVersion {
   id: string;
@@ -47,7 +48,7 @@ export interface ProjectFile {
   type: FileType;
   dateUploaded: string;
   size: string;
-  status?: 'draft' | 'sent' | 'signed' | 'paid' | 'viewed' | 'awaiting_approval';
+  status?: 'draft' | 'sent' | 'signed' | 'paid' | 'viewed' | 'awaiting_approval' | 'active';
   uploadedBy: string;
   attachments: Attachment[];
   comments: Comment[];

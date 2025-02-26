@@ -5,7 +5,7 @@ import {
   ProjectFile,
   mockProjectFiles,
 } from '@/lib/mock/projectFiles';
-import { File, FileText, Image, Paperclip } from 'lucide-react';
+import { File, FileText, FolderPlus, Image, Paperclip } from 'lucide-react';
 import { useState } from 'react';
 import { useVersionHistory } from './useVersionHistory';
 
@@ -54,8 +54,14 @@ export function useProjectFiles() {
         return <File className='h-5 w-5 text-purple-500' />;
       case 'questionnaire':
         return <File className='h-5 w-5 text-orange-500' />;
-      case 'upload':
-        return <Image className='h-5 w-5 text-gray-500' />;
+      case 'sales_product':
+        return <Image className='h-5 w-5 text-pink-500' />;
+      case 'service':
+        return <File className='h-5 w-5 text-indigo-500' />;
+      case 'file_item':
+        return <FolderPlus className='h-5 w-5 text-teal-500' />;
+      default:
+        return <FileText className='h-5 w-5 text-gray-500' />;
     }
   };
 
@@ -101,6 +107,10 @@ export function useProjectFiles() {
     // Generate a simple ID (would use a proper UUID in production)
     const newId = (Math.max(...files.map((f) => parseInt(f.id))) + 1).toString();
 
+    // Get the name from the input - if not provided, use a generic name
+    const itemName = document.getElementById('item-name') as HTMLInputElement;
+    const itemDescription = document.getElementById('description') as HTMLTextAreaElement;
+
     const newAttachments: Attachment[] = uploadedFiles.map((file, index) => ({
       id: `a-${newId}-${index}`,
       name: file.name,
@@ -111,21 +121,18 @@ export function useProjectFiles() {
 
     const newFile: ProjectFile = {
       id: newId,
-      name: `New ${
-        selectedFileType === 'upload'
-          ? 'Upload'
-          : selectedFileType.charAt(0).toUpperCase() + selectedFileType.slice(1)
-      }`,
-      type: selectedFileType,
+      name: itemName?.value || 'New File Item',
+      type: 'file_item', // Generic type for all file items
       dateUploaded: new Date().toISOString().split('T')[0],
       size:
         uploadedFiles.length > 0
           ? `${Math.round(uploadedFiles.reduce((total, file) => total + file.size, 0) / 1024)} KB`
           : '0.1 MB',
-      status: selectedFileType === 'upload' ? undefined : 'draft',
-      uploadedBy: 'Hitarth',
+      status: 'active',
+      uploadedBy: 'Current User',
       attachments: newAttachments,
       comments: [],
+      description: itemDescription?.value || '',
     };
 
     setFiles([...files, newFile]);
