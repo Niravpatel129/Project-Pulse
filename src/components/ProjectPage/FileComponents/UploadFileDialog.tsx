@@ -41,68 +41,147 @@ const UploadFileDialog: React.FC<UploadFileDialogProps> = ({
   return (
     <DialogContent className='max-w-md'>
       <DialogHeader>
-        <DialogTitle>Add New File</DialogTitle>
+        <DialogTitle>Add New File Item</DialogTitle>
         <DialogDescription>
-          Choose a file type and upload or create a new document.
+          Create a new file item that can contain multiple files or folders. Choose a type below.
         </DialogDescription>
       </DialogHeader>
       <div className='space-y-4 py-4'>
         <div className='space-y-2'>
-          <Label htmlFor='file-type'>File Type</Label>
+          <Label htmlFor='file-type'>File Item Type</Label>
           <Select
             value={selectedFileType}
             onValueChange={(val) => setSelectedFileType(val as FileType)}
           >
             <SelectTrigger id='file-type'>
-              <SelectValue placeholder='Select file type' />
+              <SelectValue placeholder='Select file item type' />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value='upload'>Upload Files</SelectItem>
+              <SelectItem value='sales_product'>Sales Product</SelectItem>
+              <SelectItem value='service'>Service</SelectItem>
+              <SelectItem value='file'>Single File</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <div className='space-y-2'>
-          <Label htmlFor='file-upload'>Upload Files</Label>
-          <div className='border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center'>
-            <Upload className='h-8 w-8 text-gray-400 mb-2' />
-            <p className='text-sm text-gray-500 mb-2'>Drag and drop your files here</p>
-            <Input
-              id='file-upload'
-              type='file'
-              className='hidden'
-              multiple
-              onChange={handleFileUpload}
-            />
-            <Button
-              size='sm'
-              variant='outline'
-              onClick={() => document.getElementById('file-upload')?.click()}
-            >
-              Browse Files
-            </Button>
-          </div>
-
-          {uploadedFiles.length > 0 && (
-            <div className='mt-4'>
-              <Label>Selected Files</Label>
-              <div className='mt-2 space-y-2 max-h-40 overflow-y-auto p-2 border rounded'>
-                {uploadedFiles.map((file, index) => (
-                  <div key={index} className='flex justify-between items-center text-sm'>
-                    <div className='flex items-center'>
-                      <Paperclip className='h-4 w-4 text-gray-500 mr-2' />
-                      <span>{file.name}</span>
-                    </div>
-                    <span className='text-gray-500'>{Math.round(file.size / 1024)} KB</span>
-                  </div>
-                ))}
-              </div>
+        {selectedFileType === 'upload' && (
+          <div className='space-y-2'>
+            <Label htmlFor='file-upload'>Upload Files</Label>
+            <div className='border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center'>
+              <Upload className='h-8 w-8 text-gray-400 mb-2' />
+              <p className='text-sm text-gray-500 mb-2'>Drag and drop your files here</p>
+              <Input
+                id='file-upload'
+                type='file'
+                className='hidden'
+                multiple
+                onChange={handleFileUpload}
+              />
+              <Button
+                size='sm'
+                variant='outline'
+                onClick={() => document.getElementById('file-upload')?.click()}
+              >
+                Browse Files
+              </Button>
             </div>
-          )}
-        </div>
+
+            {uploadedFiles.length > 0 && (
+              <div className='mt-4'>
+                <Label>Selected Files</Label>
+                <div className='mt-2 space-y-2 max-h-40 overflow-y-auto p-2 border rounded'>
+                  {uploadedFiles.map((file, index) => (
+                    <div key={index} className='flex justify-between items-center text-sm'>
+                      <div className='flex items-center'>
+                        <Paperclip className='h-4 w-4 text-gray-500 mr-2' />
+                        <span>{file.name}</span>
+                      </div>
+                      <span className='text-gray-500'>{Math.round(file.size / 1024)} KB</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {selectedFileType === 'sales_product' && (
+          <div className='space-y-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='product-name'>Product Name</Label>
+              <Input id='product-name' placeholder='Enter product name' />
+            </div>
+            <div className='space-y-2'>
+              <Label htmlFor='product-price'>Price</Label>
+              <Input id='product-price' type='number' placeholder='0.00' />
+            </div>
+            <div className='space-y-2'>
+              <Label htmlFor='product-img'>Product Image</Label>
+              <Input id='product-img' type='file' accept='image/*' onChange={handleFileUpload} />
+            </div>
+            <div className='space-y-2'>
+              <Label htmlFor='product-desc'>Product Description</Label>
+              <Textarea id='product-desc' placeholder='Describe the product...' rows={3} />
+            </div>
+          </div>
+        )}
+
+        {selectedFileType === 'service' && (
+          <div className='space-y-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='service-name'>Service Name</Label>
+              <Input id='service-name' placeholder='Enter service name' />
+            </div>
+            <div className='space-y-2'>
+              <Label htmlFor='service-rate'>Rate</Label>
+              <Input id='service-rate' type='number' placeholder='0.00' />
+            </div>
+            <div className='space-y-2'>
+              <Label htmlFor='rate-type'>Rate Type</Label>
+              <Select defaultValue='hourly'>
+                <SelectTrigger id='rate-type'>
+                  <SelectValue placeholder='Select rate type' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='hourly'>Hourly</SelectItem>
+                  <SelectItem value='fixed'>Fixed Price</SelectItem>
+                  <SelectItem value='daily'>Daily</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className='space-y-2'>
+              <Label htmlFor='service-desc'>Service Description</Label>
+              <Textarea id='service-desc' placeholder='Describe the service...' rows={3} />
+            </div>
+          </div>
+        )}
+
+        {selectedFileType === 'file' && (
+          <div className='space-y-2'>
+            <Label htmlFor='simple-file-upload'>Upload File</Label>
+            <Input id='simple-file-upload' type='file' onChange={handleFileUpload} />
+            {uploadedFiles.length > 0 && (
+              <div className='mt-4'>
+                <Label>Selected File</Label>
+                <div className='mt-2 space-y-2 max-h-40 overflow-y-auto p-2 border rounded'>
+                  {uploadedFiles.map((file, index) => (
+                    <div key={index} className='flex justify-between items-center text-sm'>
+                      <div className='flex items-center'>
+                        <Paperclip className='h-4 w-4 text-gray-500 mr-2' />
+                        <span>{file.name}</span>
+                      </div>
+                      <span className='text-gray-500'>{Math.round(file.size / 1024)} KB</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className='space-y-2'>
-          <Label htmlFor='doc-name'>File Group Name</Label>
+          <Label htmlFor='doc-name'>File Item Name</Label>
           <Input id='doc-name' placeholder='Wedding Venue Photos' />
         </div>
 
@@ -120,8 +199,15 @@ const UploadFileDialog: React.FC<UploadFileDialogProps> = ({
         <Button variant='outline' onClick={onClose}>
           Cancel
         </Button>
-        <Button onClick={handleAddFile} disabled={uploadedFiles.length === 0}>
-          Upload Files
+        <Button
+          onClick={handleAddFile}
+          disabled={selectedFileType === 'upload' && uploadedFiles.length === 0}
+        >
+          {selectedFileType === 'sales_product'
+            ? 'Add Product'
+            : selectedFileType === 'service'
+            ? 'Add Service'
+            : 'Create File Item'}
         </Button>
       </DialogFooter>
     </DialogContent>

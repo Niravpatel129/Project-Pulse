@@ -1,6 +1,14 @@
 // Mock data for project files
 
-export type FileType = 'proposal' | 'invoice' | 'contract' | 'questionnaire' | 'upload';
+export type FileType =
+  | 'proposal'
+  | 'invoice'
+  | 'contract'
+  | 'questionnaire'
+  | 'upload'
+  | 'sales_product'
+  | 'service'
+  | 'file';
 
 export interface FileVersion {
   id: string;

@@ -49,7 +49,7 @@ const FileTable: React.FC<FileTableProps> = ({
   if (filteredFiles.length === 0) {
     return (
       <div className='text-center py-10'>
-        <p className='text-gray-500'>No files found</p>
+        <p className='text-gray-500'>No file items found</p>
       </div>
     );
   }
