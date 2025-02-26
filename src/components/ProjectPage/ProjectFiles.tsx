@@ -32,6 +32,14 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Attachment,
+  Comment,
+  FileType,
+  FileVersion,
+  ProjectFile,
+  mockProjectFiles,
+} from '@/lib/mock/projectFiles';
 import { format } from 'date-fns';
 import {
   Check,
@@ -58,58 +66,6 @@ import {
   X,
 } from 'lucide-react';
 import { useState } from 'react';
-
-type FileType = 'proposal' | 'invoice' | 'contract' | 'questionnaire' | 'upload';
-
-interface FileVersion {
-  id: string;
-  versionNumber: number;
-  versionId: string;
-  dateCreated: string;
-  createdBy: string;
-  changeDescription: string;
-  size: string;
-  url: string;
-  isCurrent: boolean;
-}
-
-interface Attachment {
-  id: string;
-  name: string;
-  size: string;
-  type: string; // file extension or mime type
-  url: string;
-  thumbnailUrl?: string;
-  versions?: FileVersion[]; // Add versions to attachments
-}
-
-interface Comment {
-  id: string;
-  text: string;
-  author: string;
-  authorRole: string;
-  timestamp: string;
-  avatarUrl?: string;
-}
-
-interface ProjectFile {
-  id: string;
-  name: string;
-  type: FileType;
-  dateUploaded: string;
-  size: string;
-  status?: 'draft' | 'sent' | 'signed' | 'paid' | 'viewed' | 'awaiting_approval';
-  uploadedBy: string;
-  attachments: Attachment[];
-  comments: Comment[];
-  description?: string;
-  clientEmail?: string;
-  needsApproval?: boolean;
-  emailSent?: boolean;
-  emailSentDate?: string;
-  variation?: string; // Renamed from branch
-  latestVersion?: string; // Renamed from latestCommit
-}
 
 export default function ProjectFiles() {
   const [activeTab, setActiveTab] = useState<string>('all');
@@ -141,198 +97,8 @@ export default function ProjectFiles() {
   const [variationName, setVariationName] = useState('');
   const [variationDescription, setVariationDescription] = useState('');
 
-  // Example files data
-  const [files, setFiles] = useState<ProjectFile[]>([
-    {
-      id: '1',
-      name: 'Wedding Photography Proposal',
-      type: 'proposal',
-      dateUploaded: '2023-11-15',
-      size: '2.4 MB',
-      status: 'sent',
-      uploadedBy: 'Hitarth',
-      variation: 'Main',
-      latestVersion: 'v2',
-      attachments: [
-        {
-          id: 'a1',
-          name: 'proposal.pdf',
-          size: '2.4 MB',
-          type: 'pdf',
-          url: '#',
-          versions: [
-            {
-              id: 'v1',
-              versionNumber: 1,
-              versionId: 'a1b2c3d4',
-              dateCreated: '2023-11-15T10:30:00Z',
-              createdBy: 'Hitarth',
-              changeDescription: 'Initial proposal draft',
-              size: '2.1 MB',
-              url: '#',
-              isCurrent: false,
-            },
-            {
-              id: 'v2',
-              versionNumber: 2,
-              versionId: 'e5f6g7h8',
-              dateCreated: '2023-11-15T14:45:00Z',
-              createdBy: 'Hitarth',
-              changeDescription: 'Updated pricing details',
-              size: '2.4 MB',
-              url: '#',
-              isCurrent: true,
-            },
-          ],
-        },
-      ],
-      comments: [
-        {
-          id: 'c1',
-          text: 'This looks great! Can we add more details about the engagement shoot?',
-          author: 'Shannon',
-          authorRole: 'Client',
-          timestamp: '2023-11-16T14:30:00Z',
-        },
-      ],
-      clientEmail: 'shannon@example.com',
-      emailSent: true,
-      emailSentDate: '2023-11-15',
-    },
-    {
-      id: '2',
-      name: 'Photography Contract',
-      type: 'contract',
-      dateUploaded: '2023-11-18',
-      size: '1.8 MB',
-      status: 'signed',
-      uploadedBy: 'Hitarth',
-      variation: 'Main',
-      latestVersion: 'v1',
-      attachments: [
-        {
-          id: 'a2',
-          name: 'contract.pdf',
-          size: '1.8 MB',
-          type: 'pdf',
-          url: '#',
-          versions: [
-            {
-              id: 'v1',
-              versionNumber: 1,
-              versionId: 'i9j0k1l2',
-              dateCreated: '2023-11-18T09:15:00Z',
-              createdBy: 'Hitarth',
-              changeDescription: 'Initial contract draft',
-              size: '1.8 MB',
-              url: '#',
-              isCurrent: true,
-            },
-          ],
-        },
-      ],
-      comments: [],
-      clientEmail: 'shannon@example.com',
-      emailSent: true,
-      emailSentDate: '2023-11-18',
-    },
-    {
-      id: '3',
-      name: 'Initial Payment Invoice',
-      type: 'invoice',
-      dateUploaded: '2023-11-20',
-      size: '0.5 MB',
-      status: 'paid',
-      uploadedBy: 'Hitarth',
-      attachments: [
-        {
-          id: 'a3',
-          name: 'invoice.pdf',
-          size: '0.5 MB',
-          type: 'pdf',
-          url: '#',
-        },
-      ],
-      comments: [],
-      clientEmail: 'shannon@example.com',
-      emailSent: true,
-      emailSentDate: '2023-11-20',
-    },
-    {
-      id: '4',
-      name: 'Wedding Details Questionnaire',
-      type: 'questionnaire',
-      dateUploaded: '2023-11-21',
-      size: '0.8 MB',
-      status: 'viewed',
-      uploadedBy: 'Sam',
-      attachments: [
-        {
-          id: 'a4',
-          name: 'questionnaire.docx',
-          size: '0.8 MB',
-          type: 'docx',
-          url: '#',
-        },
-      ],
-      comments: [],
-      clientEmail: 'shannon@example.com',
-      emailSent: true,
-      emailSentDate: '2023-11-21',
-    },
-    {
-      id: '5',
-      name: 'Venue Photos',
-      type: 'upload',
-      dateUploaded: '2023-11-25',
-      size: '15.2 MB',
-      uploadedBy: 'Sam',
-      attachments: [
-        {
-          id: 'a5-1',
-          name: 'venue-front.jpg',
-          size: '4.7 MB',
-          type: 'jpg',
-          url: '#',
-          thumbnailUrl: '/placeholders/venue-thumb-1.jpg',
-        },
-        {
-          id: 'a5-2',
-          name: 'venue-garden.jpg',
-          size: '5.1 MB',
-          type: 'jpg',
-          url: '#',
-          thumbnailUrl: '/placeholders/venue-thumb-2.jpg',
-        },
-        {
-          id: 'a5-3',
-          name: 'venue-hall.jpg',
-          size: '5.4 MB',
-          type: 'jpg',
-          url: '#',
-          thumbnailUrl: '/placeholders/venue-thumb-3.jpg',
-        },
-      ],
-      comments: [
-        {
-          id: 'c2',
-          text: 'These are beautiful! Can you get some shots of the back garden area too?',
-          author: 'Shannon',
-          authorRole: 'Client',
-          timestamp: '2023-11-26T10:15:00Z',
-        },
-        {
-          id: 'c3',
-          text: "Yes, I'll schedule another visit next week to capture those areas.",
-          author: 'Sam',
-          authorRole: 'Photographer',
-          timestamp: '2023-11-26T11:30:00Z',
-        },
-      ],
-      description: 'Photos from the venue scouting visit on November 25th.',
-      clientEmail: 'shannon@example.com',
-    },
-  ]);
+  // Use the mock data from the imported file
+  const [files, setFiles] = useState<ProjectFile[]>(mockProjectFiles);
 
   const getFileIcon = (type: FileType) => {
     switch (type) {
