@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import {
   Dialog,
   DialogContent,
@@ -10,7 +9,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -25,9 +23,6 @@ import {
   TemplateField,
   TemplateFieldValue,
 } from '@/lib/mock/projectFiles';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { CalendarIcon, DollarSign, FileUp, Link2, Package, Search } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 interface TemplateItemModalProps {
@@ -53,120 +48,172 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
   updateInventoryStock,
   trackInventoryUsage,
 }) => {
-  const [itemName, setItemName] = useState(existingItem?.name || '');
+  const [name, setName] = useState(existingItem?.name || `${template.name} Item`);
   const [fieldValues, setFieldValues] = useState<TemplateFieldValue[]>(
-    existingItem?.templateValues ||
-      template.fields.map((field) => ({
-        fieldId: field.id,
-        value: field.defaultValue || null,
-        fileUrl: '',
-      })),
+    existingItem?.templateValues || [],
   );
   const [files, setFiles] = useState<{ [key: string]: File | null }>({});
-  const [inventorySearch, setInventorySearch] = useState('');
+  const [formErrors, setFormErrors] = useState<string[]>([]);
+  const [selectedVariants, setSelectedVariants] = useState<{ [fieldId: string]: string }>({});
 
-  // Initialize with existing values if in edit mode
   useEffect(() => {
-    if (existingItem) {
-      setItemName(existingItem.name);
-      if (existingItem.templateValues) {
-        setFieldValues(existingItem.templateValues);
-      }
+    // Initialize with existing values if editing
+    if (existingItem?.templateValues) {
+      setFieldValues(existingItem.templateValues);
+    } else {
+      // Initialize with default values from template
+      const initialValues = template.fields.map((field) => ({
+        fieldId: field.id,
+        value: field.defaultValue !== undefined ? field.defaultValue : null,
+      }));
+      setFieldValues(initialValues);
     }
-  }, [existingItem]);
+  }, [existingItem, template.fields]);
 
-  const handleFieldChange = (fieldId: string, value: string | number | null, fileUrl?: string) => {
-    setFieldValues(
-      fieldValues.map((field) =>
-        field.fieldId === fieldId ? { ...field, value, fileUrl: fileUrl || field.fileUrl } : field,
-      ),
-    );
+  const handleFieldChange = (
+    fieldId: string,
+    value: string | number | null,
+    fileUrl?: string,
+    inventoryItemId?: string,
+    quantity?: number,
+  ) => {
+    const newValues = fieldValues.map((field) => {
+      if (field.fieldId === fieldId) {
+        return {
+          ...field,
+          value,
+          fileUrl,
+          inventoryItemId,
+          quantity,
+        };
+      }
+      return field;
+    });
+
+    // If field wasn't found, add it
+    if (!newValues.some((f) => f.fieldId === fieldId)) {
+      newValues.push({
+        fieldId,
+        value,
+        fileUrl,
+        inventoryItemId,
+        quantity,
+      });
+    }
+
+    setFieldValues(newValues);
   };
 
   const handleFileChange = (fieldId: string, file: File | null) => {
-    if (file) {
-      const updatedFiles = { ...files, [fieldId]: file };
-      setFiles(updatedFiles);
+    setFiles({ ...files, [fieldId]: file });
 
-      // Create a temporary URL for preview
+    if (file) {
+      // Create a URL for preview
       const fileUrl = URL.createObjectURL(file);
       handleFieldChange(fieldId, file.name, fileUrl);
+    } else {
+      // Clear the field if file is removed
+      handleFieldChange(fieldId, null);
     }
+  };
+
+  const handleVariantChange = (fieldId: string, variantId: string) => {
+    setSelectedVariants({
+      ...selectedVariants,
+      [fieldId]: variantId,
+    });
   };
 
   const getFieldValue = (fieldId: string) => {
-    return fieldValues.find((field) => field.fieldId === fieldId)?.value || '';
+    const field = fieldValues.find((f) => f.fieldId === fieldId);
+    return field ? field.value : null;
   };
 
   const getFieldFileUrl = (fieldId: string) => {
-    return fieldValues.find((field) => field.fieldId === fieldId)?.fileUrl || '';
+    const field = fieldValues.find((f) => f.fieldId === fieldId);
+    return field ? field.fileUrl : undefined;
   };
 
   const validateFields = () => {
-    for (const field of template.fields) {
+    const errors: string[] = [];
+    template.fields.forEach((field) => {
       if (field.required) {
         const value = getFieldValue(field.id);
-        if (!value && value !== 0) {
-          return `Field "${field.name}" is required`;
+        if (value === null || value === undefined || value === '') {
+          errors.push(`${field.name} is required`);
         }
       }
-    }
-    return null;
+    });
+    setFormErrors(errors);
+    return errors.length === 0;
   };
 
   const handleSave = () => {
-    if (!validateFields()) return;
-
-    const requiredFields = template.fields.filter((field) => field.required);
-    for (const field of requiredFields) {
-      const value = getFieldValue(field.id);
-      if (value === undefined || value === null || value === '') {
-        alert(`Please fill in the required field: ${field.name}`);
-        return;
-      }
+    if (!validateFields()) {
+      return;
     }
 
-    const newItem: ProjectFile = {
-      id: existingItem?.id || `template-item-${Date.now()}`,
-      name: itemName || template.name,
-      type: 'custom_template_item',
-      dateUploaded: existingItem?.dateUploaded || new Date().toISOString(),
-      lastModified: existingItem ? new Date().toISOString() : undefined,
-      size: '0 KB',
-      uploadedBy: 'Current User',
-      templateId: template.id,
-      templateValues: fieldValues,
-      attachments: [],
-      comments: [],
-      versions: existingItem?.versions || [],
-    };
-
-    // Track inventory usage and update stock for any inventory item fields
+    // Track inventory usage for any inventory items selected
     fieldValues.forEach((fieldValue) => {
-      if (fieldValue.inventoryItemId) {
-        // Track usage if function is provided
-        if (trackInventoryUsage) {
-          trackInventoryUsage(newItem.id, fieldValue.inventoryItemId);
-        }
+      if (fieldValue.inventoryItemId && trackInventoryUsage) {
+        const field = template.fields.find((f) => f.id === fieldValue.fieldId);
 
-        // Update stock if function is provided (reduce by 1 for demonstration)
-        if (updateInventoryStock) {
-          updateInventoryStock(fieldValue.inventoryItemId, 1);
+        if (field?.type === 'inventory_item') {
+          // Get the quantity (default to 1 if not specified)
+          const quantity = fieldValue.quantity || 1;
+
+          // If there's a variant selected for this field, use it for inventory tracking
+          const variantId = selectedVariants[fieldValue.fieldId];
+          const inventoryItemId = fieldValue.inventoryItemId;
+          const item = findInventoryItem(inventoryItemId);
+
+          if (item) {
+            if (variantId && item.variants?.some((v) => v.id === variantId)) {
+              // Decrease the variant stock by the specified quantity
+              updateInventoryStock?.(variantId, quantity);
+            } else {
+              // Decrease the main item stock by the specified quantity
+              updateInventoryStock?.(inventoryItemId, quantity);
+            }
+
+            // Track the usage
+            trackInventoryUsage(
+              existingItem?.id || `temp-${Date.now()}`,
+              inventoryItemId,
+              'current-project',
+            );
+          }
         }
       }
     });
 
-    // Create a version entry when editing an existing item
+    const newItem: ProjectFile = {
+      id: existingItem?.id || `item-${Date.now()}`,
+      name,
+      type: 'custom_template_item',
+      dateUploaded: existingItem?.dateUploaded || new Date().toISOString(),
+      size: existingItem?.size || '0 KB',
+      uploadedBy: 'Current User', // Would come from auth in a real app
+      templateId: template.id,
+      templateValues: fieldValues,
+      lastModified: new Date().toISOString(),
+      attachments: existingItem?.attachments || [],
+      comments: existingItem?.comments || [],
+      versions: existingItem?.versions || [],
+    };
+
+    // If updating an existing item, add a new version
     if (existingItem) {
-      const versionEntry = {
-        id: `v-${Date.now()}`,
+      const versionDescription = 'Updated template item';
+      const newVersion = {
+        id: `v${Date.now()}`,
         date: new Date().toISOString(),
-        createdBy: 'Current User',
-        changes: 'Updated template item values',
-        data: { ...existingItem, templateValues: [...(existingItem.templateValues || [])] },
+        createdBy: 'Current User', // Would come from auth in a real app
+        changes: versionDescription,
+        data: { ...existingItem }, // Keep a snapshot of the old data
       };
 
-      newItem.versions = [...(existingItem.versions || []), versionEntry];
+      newItem.versions = [...(newItem.versions || []), newVersion];
     }
 
     onSave(newItem);
@@ -177,93 +224,48 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
     return inventoryItems.find((item) => item.id === itemId);
   };
 
-  const filteredInventoryItems = inventoryItems.filter(
-    (item) =>
-      item.name.toLowerCase().includes(inventorySearch.toLowerCase()) ||
-      item.sku.toLowerCase().includes(inventorySearch.toLowerCase()) ||
-      item.category.toLowerCase().includes(inventorySearch.toLowerCase()),
-  );
-
   const renderFieldInput = (field: TemplateField) => {
+    const currentValue = getFieldValue(field.id);
+    const fileUrl = getFieldFileUrl(field.id);
+
+    // Get field-specific props
+    const getFieldProps = () => {
+      const props: Record<string, unknown> = {
+        id: `field-${field.id}`,
+        placeholder: `Enter ${field.name}...`,
+      };
+
+      if (field.type === 'number') {
+        props.type = 'number';
+        props.min = 0;
+      } else if (field.type === 'date') {
+        props.type = 'date';
+      } else if (field.type === 'link') {
+        props.type = 'url';
+      } else if (field.type === 'price') {
+        props.type = 'number';
+        props.min = 0;
+        props.step = 0.01;
+      } else if (field.type === 'dimension') {
+        props.type = 'text';
+        props.placeholder = `Enter dimensions${field.unit ? ` in ${field.unit}` : ''}...`;
+      }
+
+      return props;
+    };
+
+    // Icon components are imported directly where needed,
+    // so no need for a separate function to get icons
+
     switch (field.type) {
-      case 'text':
-        return (
-          <Input
-            id={`field-${field.id}`}
-            placeholder={`Enter ${field.name.toLowerCase()}`}
-            value={(getFieldValue(field.id) as string) || ''}
-            onChange={(e) => handleFieldChange(field.id, e.target.value)}
-          />
-        );
-
-      case 'number':
-        return (
-          <Input
-            id={`field-${field.id}`}
-            type='number'
-            placeholder={`Enter ${field.name.toLowerCase()}`}
-            value={(getFieldValue(field.id) as string) || ''}
-            onChange={(e) =>
-              handleFieldChange(field.id, e.target.value ? Number(e.target.value) : null)
-            }
-          />
-        );
-
-      case 'file':
-        return (
-          <div className='space-y-2'>
-            <div className='flex items-center gap-2'>
-              <Input
-                id={`field-${field.id}`}
-                type='file'
-                accept={field.fileTypes?.map((type) => `.${type}`).join(',')}
-                className='hidden'
-                onChange={(e) => {
-                  const file = e.target.files?.[0] || null;
-                  handleFileChange(field.id, file);
-                }}
-              />
-              <Button
-                type='button'
-                variant='outline'
-                onClick={() => document.getElementById(`field-${field.id}`)?.click()}
-                className='flex items-center gap-2'
-              >
-                <FileUp className='h-4 w-4' />
-                Choose file
-              </Button>
-              <span className='text-sm text-muted-foreground'>
-                {getFieldValue(field.id) || 'No file selected'}
-              </span>
-            </div>
-            {getFieldFileUrl(field.id) && (
-              <div className='mt-2'>
-                {['png', 'jpg', 'jpeg', 'gif', 'svg'].some((ext) =>
-                  ((getFieldValue(field.id) as string) || '').toLowerCase().endsWith(ext),
-                ) ? (
-                  <img
-                    src={getFieldFileUrl(field.id)}
-                    alt='Preview'
-                    className='max-h-32 rounded-md border'
-                  />
-                ) : (
-                  <div className='p-4 bg-muted rounded-md text-center'>
-                    File preview not available
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        );
-
       case 'enum':
         return (
           <Select
-            value={(getFieldValue(field.id) as string) || ''}
+            value={currentValue?.toString() || ''}
             onValueChange={(value) => handleFieldChange(field.id, value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder={`Select ${field.name.toLowerCase()}`} />
+              <SelectValue placeholder={`Select ${field.name}...`} />
             </SelectTrigger>
             <SelectContent>
               {field.options?.map((option) => (
@@ -275,173 +277,185 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
           </Select>
         );
 
-      case 'link':
+      case 'file':
         return (
-          <div className='relative'>
-            <Link2 className='absolute left-2 top-2.5 h-4 w-4 text-muted-foreground' />
-            <Input
-              id={`field-${field.id}`}
-              placeholder='https://...'
-              value={(getFieldValue(field.id) as string) || ''}
-              onChange={(e) => handleFieldChange(field.id, e.target.value)}
-              className='pl-8'
-            />
-          </div>
-        );
-
-      case 'date':
-        return (
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant='outline'
-                className={cn(
-                  'w-full justify-start text-left font-normal',
-                  !getFieldValue(field.id) && 'text-muted-foreground',
-                )}
-              >
-                <CalendarIcon className='mr-2 h-4 w-4' />
-                {getFieldValue(field.id) ? (
-                  format(new Date(getFieldValue(field.id) as string), 'PPP')
-                ) : (
-                  <span>Pick a date</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className='w-auto p-0'>
-              <Calendar
-                mode='single'
-                selected={
-                  getFieldValue(field.id) ? new Date(getFieldValue(field.id) as string) : undefined
+          <div className='space-y-2'>
+            <div className='flex items-center space-x-2'>
+              <Input
+                type='file'
+                onChange={(e) =>
+                  handleFileChange(
+                    field.id,
+                    e.target.files && e.target.files.length > 0 ? e.target.files[0] : null,
+                  )
                 }
-                onSelect={(date) => handleFieldChange(field.id, date ? date.toISOString() : null)}
-                initialFocus
+                accept={field.fileTypes?.map((type) => `.${type}`).join(',')}
               />
-            </PopoverContent>
-          </Popover>
-        );
-
-      case 'price':
-        return (
-          <div className='relative'>
-            <DollarSign className='absolute left-2 top-2.5 h-4 w-4 text-muted-foreground' />
-            <Input
-              id={`field-${field.id}`}
-              type='number'
-              step='0.01'
-              placeholder='0.00'
-              value={(getFieldValue(field.id) as string) || ''}
-              onChange={(e) =>
-                handleFieldChange(field.id, e.target.value ? Number(e.target.value) : null)
-              }
-              className='pl-8'
-            />
-          </div>
-        );
-
-      case 'dimension':
-        return (
-          <div className='flex items-center gap-2'>
-            <Input
-              id={`field-${field.id}`}
-              type='number'
-              step='0.1'
-              placeholder='0'
-              value={(getFieldValue(field.id) as string) || ''}
-              onChange={(e) => handleFieldChange(field.id, e.target.value ? e.target.value : null)}
-              className='flex-1'
-            />
-            {field.unit && <span className='text-sm text-muted-foreground w-16'>{field.unit}</span>}
+            </div>
+            {fileUrl && (
+              <div className='mt-2'>
+                <img
+                  src={fileUrl}
+                  alt='File preview'
+                  className='max-h-32 max-w-full rounded-md border'
+                />
+                <span className='text-sm text-gray-500 block mt-1'>{currentValue as string}</span>
+              </div>
+            )}
           </div>
         );
 
       case 'inventory_item':
-        const selectedItemId = getFieldValue(field.id) as string;
+        const filteredItems = field.inventoryCategory
+          ? inventoryItems.filter((item) => item.category === field.inventoryCategory)
+          : inventoryItems;
+
+        const selectedItemId = currentValue as string;
         const selectedItem = selectedItemId ? findInventoryItem(selectedItemId) : undefined;
+        const hasVariants =
+          selectedItem && selectedItem.variants && selectedItem.variants.length > 0;
+        const selectedVariantId = selectedVariants[field.id];
+
+        // Find the current quantity if any
+        const currentFieldValue = fieldValues.find((fv) => fv.fieldId === field.id);
+        const currentQuantity = currentFieldValue?.quantity || 1;
 
         return (
           <div className='space-y-3'>
-            <div className='relative'>
-              <Search className='absolute left-2 top-2.5 h-4 w-4 text-muted-foreground' />
-              <Input
-                placeholder='Search inventory items...'
-                value={inventorySearch}
-                onChange={(e) => setInventorySearch(e.target.value)}
-                className='pl-8'
-              />
-            </div>
+            <Select
+              value={currentValue?.toString() || ''}
+              onValueChange={(value) => {
+                handleFieldChange(field.id, value, undefined, value, currentQuantity);
 
-            {selectedItem && (
-              <div className='flex items-center p-2 bg-muted rounded-md gap-2'>
-                {selectedItem.imageUrl && (
-                  <img
-                    src={selectedItem.imageUrl}
-                    alt={selectedItem.name}
-                    className='h-10 w-10 rounded-md object-cover border'
-                  />
-                )}
-                <div className='flex-1'>
-                  <div className='font-medium'>{selectedItem.name}</div>
-                  <div className='text-xs text-muted-foreground'>SKU: {selectedItem.sku}</div>
-                </div>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  onClick={() => handleFieldChange(field.id, null)}
-                  className='text-red-500 hover:text-red-700 hover:bg-red-50'
-                >
-                  Remove
-                </Button>
-              </div>
-            )}
-
-            <div className='max-h-64 overflow-y-auto border rounded-md'>
-              {filteredInventoryItems.length === 0 ? (
-                <div className='p-4 text-center text-sm text-muted-foreground'>No items found</div>
-              ) : (
-                <div className='divide-y'>
-                  {filteredInventoryItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className={cn(
-                        'flex items-center p-2 hover:bg-muted cursor-pointer gap-2',
-                        selectedItemId === item.id && 'bg-blue-50',
-                      )}
-                      onClick={() => handleFieldChange(field.id, item.id)}
-                    >
-                      <Package className='h-4 w-4 text-muted-foreground' />
+                // Clear variant selection when changing the main item
+                if (selectedVariants[field.id]) {
+                  setSelectedVariants({
+                    ...selectedVariants,
+                    [field.id]: '',
+                  });
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={`Select ${field.name}...`} />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredItems.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    <div className='flex items-center gap-2'>
                       {item.imageUrl && (
                         <img
                           src={item.imageUrl}
                           alt={item.name}
-                          className='h-8 w-8 rounded-md object-cover border'
+                          className='h-6 w-6 rounded-md object-cover'
                         />
                       )}
-                      <div className='flex-1'>
-                        <div className='font-medium'>{item.name}</div>
-                        <div className='text-xs text-muted-foreground'>
-                          SKU: {item.sku} | {item.category}
-                        </div>
-                      </div>
-                      <div className='text-xs text-right'>
-                        <div>${item.price.toFixed(2)}</div>
-                        <div className='text-muted-foreground'>Stock: {item.stock}</div>
+                      <div className='flex flex-col'>
+                        <span>{item.name}</span>
+                        <span className='text-xs text-gray-500'>SKU: {item.sku}</span>
                       </div>
                     </div>
-                  ))}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {hasVariants && (
+              <div className='pl-2 border-l-2 border-gray-200'>
+                <Label htmlFor={`variant-${field.id}`} className='text-sm font-medium mb-1 block'>
+                  Select Size/Variant
+                </Label>
+                <Select
+                  value={selectedVariantId || ''}
+                  onValueChange={(value) => handleVariantChange(field.id, value)}
+                >
+                  <SelectTrigger id={`variant-${field.id}`}>
+                    <SelectValue placeholder='Select size/variant...' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {selectedItem.variants.map((variant) => (
+                      <SelectItem key={variant.id} value={variant.id} disabled={variant.stock <= 0}>
+                        <div className='flex justify-between w-full'>
+                          <span>{variant.name}</span>
+                          <span
+                            className={`text-xs ${
+                              variant.stock <= 0
+                                ? 'text-red-500'
+                                : variant.stock < 10
+                                ? 'text-amber-500'
+                                : 'text-green-500'
+                            }`}
+                          >
+                            {variant.stock <= 0 ? 'Out of stock' : `Stock: ${variant.stock}`}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Add quantity input */}
+            {selectedItem && (
+              <div className='space-y-2'>
+                <Label htmlFor={`quantity-${field.id}`} className='text-sm font-medium mb-1 block'>
+                  Quantity
+                </Label>
+                <Input
+                  id={`quantity-${field.id}`}
+                  type='number'
+                  min='1'
+                  value={currentQuantity}
+                  onChange={(e) => {
+                    const qty = parseInt(e.target.value) || 1;
+                    handleFieldChange(field.id, currentValue, undefined, selectedItemId, qty);
+                  }}
+                  className='w-24'
+                />
+              </div>
+            )}
+
+            {selectedItem && (
+              <div className='mt-1 p-2 bg-gray-50 rounded-md text-sm'>
+                <div className='flex items-center gap-2'>
+                  {selectedItem.imageUrl && (
+                    <img
+                      src={selectedItem.imageUrl}
+                      alt={selectedItem.name}
+                      className='h-10 w-10 rounded-md object-cover'
+                    />
+                  )}
+                  <div>
+                    <div className='font-medium'>{selectedItem.name}</div>
+                    <div className='text-xs text-gray-500'>
+                      SKU: {selectedItem.sku} | Price: ${selectedItem.price.toFixed(2)}
+                    </div>
+                    {hasVariants && selectedVariantId && (
+                      <div className='text-xs font-medium mt-1 text-blue-600'>
+                        Selected:{' '}
+                        {selectedItem.variants.find((v) => v.id === selectedVariantId)?.name}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         );
 
       default:
         return (
           <Input
-            id={`field-${field.id}`}
-            placeholder={`Enter ${field.name.toLowerCase()}`}
-            value={(getFieldValue(field.id) as string) || ''}
-            onChange={(e) => handleFieldChange(field.id, e.target.value)}
+            {...getFieldProps()}
+            value={currentValue !== null ? currentValue : ''}
+            onChange={(e) => {
+              const val =
+                field.type === 'number' || field.type === 'price'
+                  ? parseFloat(e.target.value)
+                  : e.target.value;
+              handleFieldChange(field.id, val);
+            }}
           />
         );
     }
@@ -449,52 +463,57 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className='sm:max-w-[600px] max-h-[90vh] overflow-auto'>
+      <DialogContent className='sm:max-w-[600px] max-h-[80vh] overflow-auto'>
         <DialogHeader>
           <DialogTitle>
-            {existingItem ? `Edit ${template.name} Item` : `Create ${template.name} Item`}
+            {existingItem ? 'Edit' : 'Create'} {template.name} Item
           </DialogTitle>
           <DialogDescription>
-            {existingItem
-              ? `Update the details for this ${template.name.toLowerCase()}.`
-              : `Fill in the details for this ${template.name.toLowerCase()}.`}
+            Fill in the fields below to {existingItem ? 'update' : 'create'} a {template.name} item.
           </DialogDescription>
         </DialogHeader>
 
-        <div className='flex flex-col space-y-4'>
+        <div className='space-y-4 py-4'>
           <div className='space-y-2'>
             <Label htmlFor='item-name'>Item Name</Label>
             <Input
               id='item-name'
-              placeholder={`Enter ${template.name.toLowerCase()} name`}
-              value={itemName}
-              onChange={(e) => setItemName(e.target.value)}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder='Enter a name for this item...'
             />
           </div>
 
-          <div className='space-y-4 pt-2'>
+          <div className='space-y-4'>
             {template.fields.map((field) => (
               <div key={field.id} className='space-y-2'>
                 <Label htmlFor={`field-${field.id}`} className='flex items-center'>
                   {field.name}
-                  {field.required && <span className='text-destructive ml-1'>*</span>}
+                  {field.required && <span className='text-red-500 ml-1'>*</span>}
                 </Label>
-                {field.description && (
-                  <p className='text-xs text-muted-foreground mb-1'>{field.description}</p>
-                )}
+                {field.description && <p className='text-sm text-gray-500'>{field.description}</p>}
                 {renderFieldInput(field)}
               </div>
             ))}
           </div>
+
+          {formErrors.length > 0 && (
+            <div className='bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md'>
+              <p className='font-medium'>Please correct the following errors:</p>
+              <ul className='list-disc list-inside text-sm mt-1'>
+                {formErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
-          <Button variant='outline' type='button' onClick={onClose}>
+          <Button variant='outline' onClick={onClose}>
             Cancel
           </Button>
-          <Button type='button' onClick={handleSave}>
-            {existingItem ? 'Save Changes' : 'Create Item'}
-          </Button>
+          <Button onClick={handleSave}>{existingItem ? 'Update' : 'Create'} Item</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

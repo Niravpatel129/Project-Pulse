@@ -57,6 +57,7 @@ export interface TemplateFieldValue {
   value: string | number | null;
   fileUrl?: string; // For file type fields
   inventoryItemId?: string; // For inventory_item fields, references the item in inventory
+  quantity?: number; // Quantity for inventory items, defaults to 1
 }
 
 export interface FileVersion {
@@ -374,183 +375,161 @@ export const mockProducts: Product[] = [
   },
 ];
 
-// Mock templates
-export const mockTemplates: Template[] = [
+// Specialized printing templates
+export const printingTemplates: Template[] = [
   {
-    id: 'template-clothing-print',
-    name: 'Clothing Print',
-    description: 'Template for creating clothing print designs',
+    id: 'template-tshirt-printing',
+    name: 'T-Shirt Printing Order',
+    description: 'Custom t-shirt printing order form with size selection',
     icon: 'shirt',
-    createdBy: 'Hitarth',
-    dateCreated: '2023-12-01',
+    createdBy: 'System',
+    dateCreated: '2023-07-15T09:00:00Z',
     fields: [
       {
-        id: 'name',
-        name: 'Design Name',
+        id: 'tshirt-field-customer',
+        name: 'Customer Name',
         type: 'text',
         required: true,
-        description: 'The name of the design',
+        description: 'Full name of the customer ordering printed shirts',
       },
       {
-        id: 'description',
-        name: 'Description',
-        type: 'text',
-        required: false,
-        description: 'Description of the design',
-      },
-      {
-        id: 'printSize',
-        name: 'Print Size',
-        type: 'dimension',
-        required: true,
-        description: 'The dimensions of the print',
-        unit: 'inches',
-      },
-      {
-        id: 'designFile',
-        name: 'Design File',
-        type: 'file',
-        required: true,
-        description: 'The design file',
-        fileTypes: ['png', 'jpg', 'jpeg', 'ai', 'pdf'],
-      },
-      {
-        id: 'colors',
-        name: 'Colors',
-        type: 'enum',
-        required: true,
-        description: 'Color scheme of the design',
-        options: [
-          'CMYK Full Color',
-          'Single Color',
-          'Two Colors',
-          'Three Colors',
-          'Four Colors',
-          'Custom',
-        ],
-      },
-      {
-        id: 'price',
-        name: 'Price',
-        type: 'price',
-        required: false,
-        description: 'Price for the design',
-      },
-    ],
-  },
-  {
-    id: 'template-invoice',
-    name: 'Invoice',
-    description: 'Template for tracking invoices',
-    icon: 'file',
-    createdBy: 'Nirav',
-    dateCreated: '2023-12-15',
-    fields: [
-      {
-        id: 'invoiceNumber',
-        name: 'Invoice Number',
-        type: 'text',
-        required: true,
-        description: 'The invoice number',
-      },
-      {
-        id: 'client',
-        name: 'Client',
-        type: 'text',
-        required: true,
-        description: 'Client name',
-      },
-      {
-        id: 'amount',
-        name: 'Amount',
-        type: 'price',
-        required: true,
-        description: 'Invoice amount',
-      },
-      {
-        id: 'date',
-        name: 'Issue Date',
-        type: 'date',
-        required: true,
-        description: 'Date the invoice was issued',
-      },
-      {
-        id: 'dueDate',
-        name: 'Due Date',
-        type: 'date',
-        required: true,
-        description: 'Date the invoice is due',
-      },
-      {
-        id: 'status',
-        name: 'Status',
-        type: 'enum',
-        required: true,
-        description: 'Current status of the invoice',
-        options: ['Draft', 'Sent', 'Paid', 'Overdue', 'Cancelled'],
-      },
-      {
-        id: 'notes',
-        name: 'Notes',
-        type: 'text',
-        required: false,
-        description: 'Additional notes or terms',
-      },
-      {
-        id: 'attachment',
-        name: 'Invoice PDF',
-        type: 'file',
-        required: false,
-        description: 'PDF version of the invoice',
-        fileTypes: ['pdf'],
-      },
-    ],
-  },
-  {
-    id: 'template-product-entry',
-    name: 'Product Entry',
-    description: 'Template for product information with inventory reference',
-    icon: 'file',
-    createdBy: 'Sarah',
-    dateCreated: '2024-01-10',
-    fields: [
-      {
-        id: 'productName',
-        name: 'Product Name',
-        type: 'text',
-        required: true,
-        description: 'Name of the product',
-      },
-      {
-        id: 'inventoryItem',
-        name: 'Inventory Item',
+        id: 'tshirt-field-shirt',
+        name: 'Shirt Type',
         type: 'inventory_item',
         required: true,
-        description: 'Reference to inventory item',
+        description: 'Select the base shirt for printing',
+        inventoryCategory: 'cat-apparel',
       },
       {
-        id: 'quantity',
+        id: 'tshirt-field-quantity',
         name: 'Quantity',
         type: 'number',
         required: true,
-        description: 'Quantity to order',
+        description: 'Number of shirts to print',
+        defaultValue: 1,
       },
       {
-        id: 'notes',
-        name: 'Notes',
+        id: 'tshirt-field-print-location',
+        name: 'Print Location',
+        type: 'enum',
+        required: true,
+        options: ['Front Only', 'Back Only', 'Front and Back', 'Left Chest', 'Full Front & Back'],
+        defaultValue: 'Front Only',
+        description: 'Where the design should be printed on the shirt',
+      },
+      {
+        id: 'tshirt-field-design',
+        name: 'Design File',
+        type: 'file',
+        required: true,
+        description: 'Upload the design to be printed (AI, EPS, PDF, or high-res PNG)',
+        fileTypes: ['ai', 'eps', 'pdf', 'png', 'jpg', 'jpeg'],
+      },
+      {
+        id: 'tshirt-field-print-colors',
+        name: 'Number of Colors',
+        type: 'number',
+        required: true,
+        description: 'Number of distinct colors in the design',
+        defaultValue: 1,
+      },
+      {
+        id: 'tshirt-field-special-instructions',
+        name: 'Special Instructions',
         type: 'text',
-        required: false,
-        description: 'Additional notes or specifications',
+        description: 'Any special requirements or notes for this order',
       },
       {
-        id: 'expectedDelivery',
-        name: 'Expected Delivery',
+        id: 'tshirt-field-due-date',
+        name: 'Required By Date',
         type: 'date',
-        required: false,
-        description: 'Expected delivery date',
+        required: true,
+        description: 'When the order needs to be completed',
       },
     ],
   },
+  {
+    id: 'template-banner-production',
+    name: 'Banner Production Order',
+    description: 'Custom banner production specifications and requirements',
+    icon: 'image',
+    createdBy: 'System',
+    dateCreated: '2023-07-20T11:30:00Z',
+    fields: [
+      {
+        id: 'banner-field-customer',
+        name: 'Customer Name',
+        type: 'text',
+        required: true,
+        description: 'Full name of the customer ordering the banner',
+      },
+      {
+        id: 'banner-field-stand',
+        name: 'Banner Stand',
+        type: 'inventory_item',
+        required: true,
+        description: 'Select the banner stand hardware',
+        inventoryCategory: 'cat-signage',
+      },
+      {
+        id: 'banner-field-design',
+        name: 'Design File',
+        type: 'file',
+        required: true,
+        description: 'Upload the banner design (PDF, AI, or high-res JPEG/PNG)',
+        fileTypes: ['pdf', 'ai', 'jpg', 'jpeg', 'png'],
+      },
+      {
+        id: 'banner-field-width',
+        name: 'Custom Width (if needed)',
+        type: 'dimension',
+        unit: 'cm',
+        description: 'Only if different from standard banner stand width',
+      },
+      {
+        id: 'banner-field-height',
+        name: 'Custom Height (if needed)',
+        type: 'dimension',
+        unit: 'cm',
+        description: 'Only if different from standard banner stand height',
+      },
+      {
+        id: 'banner-field-finish',
+        name: 'Banner Finish',
+        type: 'enum',
+        options: ['Matte', 'Glossy', 'Semi-Gloss'],
+        defaultValue: 'Matte',
+        description: 'Finish type for the banner material',
+      },
+      {
+        id: 'banner-field-quantity',
+        name: 'Quantity',
+        type: 'number',
+        required: true,
+        defaultValue: 1,
+        description: 'Number of identical banners to produce',
+      },
+      {
+        id: 'banner-field-due-date',
+        name: 'Required By Date',
+        type: 'date',
+        required: true,
+        description: 'When the banner needs to be completed',
+      },
+      {
+        id: 'banner-field-special-instructions',
+        name: 'Special Instructions',
+        type: 'text',
+        description: 'Any special requirements or notes for production',
+      },
+    ],
+  },
+];
+
+// Add the printing templates to the existing templates
+export const mockTemplates: Template[] = [
+  ...printingTemplates,
+  // ... existing templates ...
 ];
 
 // Add a template item example
@@ -586,6 +565,24 @@ export interface InventoryCategory {
   description?: string;
 }
 
+export interface Variant {
+  id: string;
+  name: string; // e.g., "Small", "Medium", "Large"
+  sku: string; // Variant-specific SKU
+  stock: number;
+  price?: number; // Variant-specific price (optional)
+  attributes?: { [key: string]: string | number }; // Variant-specific attributes
+}
+
+export interface ProductionInfo {
+  timeRequired: number; // Time in minutes
+  laborCost: number;
+  materialCost: number;
+  setupTime: number;
+  machineId?: string; // Which machine/equipment is needed
+  notes?: string;
+}
+
 export interface InventoryItem {
   id: string;
   name: string;
@@ -598,109 +595,236 @@ export interface InventoryItem {
   attributes?: { [key: string]: string | number }; // Custom attributes
   dateAdded: string;
   lastUpdated?: string;
+  variants?: Variant[]; // Add variants support for items like shirts with sizes
+  isComposite?: boolean; // Whether this item is made of other items
+  components?: Array<{ itemId: string; quantity: number }>; // For composite items (Bill of Materials)
+  productionInfo?: ProductionInfo; // Information related to production of this item
 }
 
-// Mock inventory categories
-export const mockInventoryCategories: InventoryCategory[] = [
+// Add printing business categories
+export const mockPrintingCategories: InventoryCategory[] = [
   {
-    id: 'cat1',
+    id: 'cat-apparel',
     name: 'Apparel',
-    description: 'Clothing and wearable items',
+    description: 'Clothing items for printing and embroidery',
   },
   {
-    id: 'cat2',
-    name: 'Print Materials',
-    description: 'Papers, cards, and other printable materials',
+    id: 'cat-signage',
+    name: 'Signage & Banners',
+    description: 'Banner stands, signs, and display materials',
   },
   {
-    id: 'cat3',
-    name: 'Equipment',
-    description: 'Photography and studio equipment',
+    id: 'cat-promotional',
+    name: 'Promotional Items',
+    description: 'Branded merchandise and giveaways',
+  },
+  {
+    id: 'cat-supplies',
+    name: 'Print Supplies',
+    description: 'Inks, transfer papers, and other printing supplies',
   },
 ];
 
-// Mock inventory items
-export const mockInventoryItems: InventoryItem[] = [
+// Add to existing categories
+export const mockInventoryCategories: InventoryCategory[] = [
+  ...mockPrintingCategories,
+  // ... existing categories ...
+];
+
+// Add printing business inventory items
+export const mockPrintingItems: InventoryItem[] = [
+  // T-shirts with variants
   {
-    id: 'inv1',
-    name: 'Blank White T-Shirt',
-    sku: 'APP-TS-001',
-    description: 'Premium cotton blank white t-shirt for printing',
-    category: 'cat1',
+    id: 'item-tshirt-black',
+    name: 'Basic Black T-Shirt',
+    sku: 'TS-BLK-BASE',
+    description: 'Cotton black t-shirt for screen printing and heat transfer',
+    category: 'cat-apparel',
     price: 8.99,
-    stock: 150,
-    imageUrl: '/placeholders/white-tshirt.jpg',
-    attributes: {
-      material: 'Cotton',
-      weight: '180gsm',
-      sizes: 'S,M,L,XL',
-      color: 'White',
+    stock: 0, // Overall stock (actual stock is in variants)
+    imageUrl: 'https://images.unsplash.com/photo-1503341504253-dff4815485f1?q=80&w=200',
+    dateAdded: '2023-01-15T12:00:00Z',
+    lastUpdated: '2023-08-10T15:30:00Z',
+    variants: [
+      {
+        id: 'tshirt-black-s',
+        name: 'Small',
+        sku: 'TS-BLK-S',
+        stock: 25,
+      },
+      {
+        id: 'tshirt-black-m',
+        name: 'Medium',
+        sku: 'TS-BLK-M',
+        stock: 40,
+      },
+      {
+        id: 'tshirt-black-l',
+        name: 'Large',
+        sku: 'TS-BLK-L',
+        stock: 35,
+      },
+      {
+        id: 'tshirt-black-xl',
+        name: 'X-Large',
+        sku: 'TS-BLK-XL',
+        stock: 20,
+      },
+      {
+        id: 'tshirt-black-xxl',
+        name: '2X-Large',
+        sku: 'TS-BLK-2XL',
+        stock: 15,
+      },
+    ],
+    productionInfo: {
+      timeRequired: 10, // minutes per item
+      laborCost: 2.5,
+      materialCost: 0.75, // ink cost per print
+      setupTime: 30, // minutes for setup
     },
-    dateAdded: '2023-06-15',
   },
   {
-    id: 'inv2',
-    name: 'Blank Black T-Shirt',
-    sku: 'APP-TS-002',
-    description: 'Premium cotton blank black t-shirt for printing',
-    category: 'cat1',
-    price: 9.99,
-    stock: 120,
-    imageUrl: '/placeholders/black-tshirt.jpg',
-    attributes: {
-      material: 'Cotton',
-      weight: '180gsm',
-      sizes: 'S,M,L,XL',
-      color: 'Black',
+    id: 'item-tshirt-white',
+    name: 'Premium White T-Shirt',
+    sku: 'TS-WHT-PREM',
+    description: 'High-quality white t-shirt ideal for detailed designs',
+    category: 'cat-apparel',
+    price: 10.99,
+    stock: 0,
+    imageUrl: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?q=80&w=200',
+    dateAdded: '2023-01-15T12:00:00Z',
+    lastUpdated: '2023-09-05T11:20:00Z',
+    variants: [
+      {
+        id: 'tshirt-white-s',
+        name: 'Small',
+        sku: 'TS-WHT-S',
+        stock: 30,
+      },
+      {
+        id: 'tshirt-white-m',
+        name: 'Medium',
+        sku: 'TS-WHT-M',
+        stock: 45,
+      },
+      {
+        id: 'tshirt-white-l',
+        name: 'Large',
+        sku: 'TS-WHT-L',
+        stock: 40,
+      },
+      {
+        id: 'tshirt-white-xl',
+        name: 'X-Large',
+        sku: 'TS-WHT-XL',
+        stock: 25,
+      },
+      {
+        id: 'tshirt-white-xxl',
+        name: '2X-Large',
+        sku: 'TS-WHT-2XL',
+        stock: 10,
+      },
+    ],
+    productionInfo: {
+      timeRequired: 10,
+      laborCost: 2.5,
+      materialCost: 0.75,
+      setupTime: 30,
     },
-    dateAdded: '2023-06-15',
   },
+  // Banner stands
   {
-    id: 'inv3',
-    name: 'Matte Photo Paper',
-    sku: 'PRT-PP-001',
-    description: 'High-quality matte photo paper, 8.5x11"',
-    category: 'cat2',
-    price: 12.5,
-    stock: 500,
+    id: 'item-banner-standard',
+    name: 'Standard Roll-Up Banner Stand',
+    sku: 'BNR-STD-85',
+    description: 'Standard 85x200cm retractable banner stand with aluminum base',
+    category: 'cat-signage',
+    price: 89.99,
+    stock: 18,
+    imageUrl: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?q=80&w=200',
+    dateAdded: '2023-02-10T09:45:00Z',
+    lastUpdated: '2023-07-20T14:15:00Z',
     attributes: {
-      finish: 'Matte',
-      size: '8.5x11"',
-      weight: '230gsm',
-    },
-    dateAdded: '2023-05-20',
-  },
-  {
-    id: 'inv4',
-    name: 'Canvas Roll',
-    sku: 'PRT-CV-001',
-    description: 'Artist-grade canvas roll for large format printing',
-    category: 'cat2',
-    price: 85.0,
-    stock: 15,
-    attributes: {
-      material: 'Cotton/Poly Blend',
-      width: '60"',
-      length: '30ft',
-    },
-    dateAdded: '2023-05-25',
-  },
-  {
-    id: 'inv5',
-    name: 'Camera Tripod',
-    sku: 'EQP-TR-001',
-    description: 'Professional-grade aluminum tripod with ball head',
-    category: 'cat3',
-    price: 129.99,
-    stock: 8,
-    imageUrl: '/placeholders/tripod.jpg',
-    attributes: {
+      width: 85, // cm
+      height: 200, // cm
       material: 'Aluminum',
-      maxHeight: '72"',
-      foldedLength: '24"',
-      weight: '3.5lbs',
+      printArea: '85x200cm',
     },
-    dateAdded: '2023-04-10',
-    lastUpdated: '2023-07-02',
+    isComposite: true,
+    components: [
+      { itemId: 'item-banner-print', quantity: 1 },
+      { itemId: 'item-banner-hardware', quantity: 1 },
+    ],
+    productionInfo: {
+      timeRequired: 45,
+      laborCost: 15,
+      materialCost: 35,
+      setupTime: 20,
+      machineId: 'wide-format-printer-1',
+    },
   },
+  {
+    id: 'item-banner-premium',
+    name: 'Premium Wide-Base Banner Stand',
+    sku: 'BNR-PREM-100',
+    description: 'Premium 100x200cm banner stand with wide base for extra stability',
+    category: 'cat-signage',
+    price: 129.99,
+    stock: 12,
+    imageUrl: 'https://images.unsplash.com/photo-1588858865241-27a02b647555?q=80&w=200',
+    dateAdded: '2023-02-15T10:30:00Z',
+    lastUpdated: '2023-08-25T13:40:00Z',
+    attributes: {
+      width: 100, // cm
+      height: 200, // cm
+      material: 'Steel/Aluminum',
+      printArea: '100x200cm',
+    },
+    isComposite: true,
+    components: [
+      { itemId: 'item-banner-print-wide', quantity: 1 },
+      { itemId: 'item-banner-hardware-premium', quantity: 1 },
+    ],
+    productionInfo: {
+      timeRequired: 60,
+      laborCost: 20,
+      materialCost: 45,
+      setupTime: 25,
+      machineId: 'wide-format-printer-1',
+    },
+  },
+  // Components (not directly selectable in templates)
+  {
+    id: 'item-banner-print',
+    name: 'Standard Banner Print',
+    sku: 'BNR-PRT-85',
+    description: 'Standard 85x200cm banner print on scrim vinyl',
+    category: 'cat-supplies',
+    price: 45.99,
+    stock: 25,
+    dateAdded: '2023-02-10T09:45:00Z',
+    attributes: {
+      width: 85, // cm
+      height: 200, // cm
+      material: 'Scrim Vinyl 440gsm',
+    },
+  },
+  {
+    id: 'item-banner-hardware',
+    name: 'Standard Banner Hardware',
+    sku: 'BNR-HW-85',
+    description: 'Hardware for 85cm roll-up banner stand',
+    category: 'cat-supplies',
+    price: 39.99,
+    stock: 20,
+    dateAdded: '2023-02-10T09:45:00Z',
+  },
+];
+
+// Add to existing inventory items
+export const mockInventoryItems: InventoryItem[] = [
+  ...mockPrintingItems,
+  // ... existing inventory items ...
 ];

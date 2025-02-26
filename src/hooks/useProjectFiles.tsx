@@ -43,8 +43,7 @@ export function useProjectFiles() {
   const [products, setProducts] = useState<Product[]>(mockProducts);
   const [templates, setTemplates] = useState<Template[]>(mockTemplates);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(mockInventoryItems);
-  const [inventoryCategories, setInventoryCategories] =
-    useState<InventoryCategory[]>(mockInventoryCategories);
+  const [inventoryCategories] = useState<InventoryCategory[]>(mockInventoryCategories);
   const [selectedInventoryItem, setSelectedInventoryItem] = useState<InventoryItem | null>(null);
   const [showInventoryItemModal, setShowInventoryItemModal] = useState(false);
   const [showInventoryReportModal, setShowInventoryReportModal] = useState(false);
@@ -59,6 +58,9 @@ export function useProjectFiles() {
     setEmailSubject,
     setEmailMessage,
   });
+
+  // Production tracking
+  const [showProductionTrackingModal, setShowProductionTrackingModal] = useState(false);
 
   // Helper functions
   const getFileIcon = (type: FileType) => {
@@ -555,11 +557,31 @@ export function useProjectFiles() {
   const updateInventoryStock = (itemId: string, quantity: number) => {
     // Update stock levels for inventory items
     const updatedItems = inventoryItems.map((item) => {
+      // Check if this is a main item or a variant
       if (item.id === itemId) {
+        // It's a main item
         const newStock = Math.max(0, item.stock - quantity);
         return {
           ...item,
           stock: newStock,
+          lastUpdated: new Date().toISOString(),
+        };
+      } else if (item.variants && item.variants.some((v) => v.id === itemId)) {
+        // It's a variant within this item
+        const updatedVariants = item.variants.map((variant) => {
+          if (variant.id === itemId) {
+            const newStock = Math.max(0, variant.stock - quantity);
+            return {
+              ...variant,
+              stock: newStock,
+            };
+          }
+          return variant;
+        });
+
+        return {
+          ...item,
+          variants: updatedVariants,
           lastUpdated: new Date().toISOString(),
         };
       }
@@ -567,7 +589,20 @@ export function useProjectFiles() {
     });
 
     setInventoryItems(updatedItems);
-    return updatedItems.find((item) => item.id === itemId);
+
+    // Find and return the updated item or variant
+    const mainItem = updatedItems.find((item) => item.id === itemId);
+    if (mainItem) return mainItem;
+
+    // Look for variant
+    for (const item of updatedItems) {
+      if (item.variants) {
+        const variant = item.variants.find((v) => v.id === itemId);
+        if (variant) return variant;
+      }
+    }
+
+    return undefined;
   };
 
   const trackInventoryUsage = (
@@ -613,6 +648,7 @@ export function useProjectFiles() {
           projectCount: usageData.projects.length,
           projects: usageData.projects,
         };
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         return {
           item: item,
@@ -642,6 +678,44 @@ export function useProjectFiles() {
           updateInventoryStock(fieldValue.inventoryItemId, 1);
         }
       });
+    }
+  };
+
+  // Production tracking functions
+  const handleUpdateProductionStatus = (productionItemId: string, status: string) => {
+    // In a real app, this would update a database record
+    console.log(`Updating production item ${productionItemId} to status: ${status}`);
+
+    // If completed, we might want to update the related project file status
+    if (status === 'completed') {
+      // Extract the template item ID from the production ID (format: prod-{templateItemId})
+      const templateItemId = productionItemId.replace('prod-', '');
+
+      // Find the file that contains this template item
+      const updatedFiles = files.map((file) => {
+        // Check if this file has the template item
+        const templateItemIndex = file.templateItems?.findIndex(
+          (item) => item.id === templateItemId,
+        );
+
+        if (templateItemIndex !== undefined && templateItemIndex >= 0 && file.templateItems) {
+          // Update the template item status
+          const updatedTemplateItems = [...file.templateItems];
+          updatedTemplateItems[templateItemIndex] = {
+            ...updatedTemplateItems[templateItemIndex],
+            status: 'active', // Mark as active/complete when production is done
+          };
+
+          return {
+            ...file,
+            templateItems: updatedTemplateItems,
+          };
+        }
+
+        return file;
+      });
+
+      setFiles(updatedFiles);
     }
   };
 
@@ -726,5 +800,10 @@ export function useProjectFiles() {
 
     // Enhance template item creation to track inventory
     handleAddTemplateItemWithInventory,
+
+    // Production tracking
+    showProductionTrackingModal,
+    setShowProductionTrackingModal,
+    handleUpdateProductionStatus,
   };
 }

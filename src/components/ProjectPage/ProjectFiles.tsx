@@ -6,7 +6,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProjectFiles } from '@/hooks/useProjectFiles';
-import { BarChart, Plus, Search, X } from 'lucide-react';
+import { BarChart, FolderClock, Plus, Search, X } from 'lucide-react';
 import {
   FileDetailsDialog,
   FileTable,
@@ -15,6 +15,7 @@ import {
   UploadFileDialog,
   VersionHistoryDialog,
 } from './FileComponents';
+import ProductionTrackingModal from './ProductionTrackingModal';
 
 export default function ProjectFiles() {
   const {
@@ -65,6 +66,9 @@ export default function ProjectFiles() {
     getInventoryUsageReports,
     updateInventoryStock,
     trackInventoryUsage,
+    showProductionTrackingModal,
+    setShowProductionTrackingModal,
+    handleUpdateProductionStatus,
 
     // Helper functions
     getFileIcon,
@@ -115,6 +119,14 @@ export default function ProjectFiles() {
                 </button>
               )}
             </div>
+            <Button
+              variant='outline'
+              onClick={() => setShowProductionTrackingModal(true)}
+              className='flex items-center gap-1'
+            >
+              <FolderClock className='h-4 w-4' />
+              Production
+            </Button>
             <Button
               variant='outline'
               onClick={() => setShowInventoryReportModal(true)}
@@ -242,6 +254,17 @@ export default function ProjectFiles() {
           onClose={() => setShowSendEmailDialog(false)}
         />
       </Dialog>
+
+      {/* Production Tracking Modal */}
+      {showProductionTrackingModal && (
+        <ProductionTrackingModal
+          templateItems={filteredFiles().filter((f) => f.type === 'custom_template_item')}
+          templates={templates}
+          inventoryItems={inventoryItems}
+          onClose={() => setShowProductionTrackingModal(false)}
+          onUpdateStatus={handleUpdateProductionStatus}
+        />
+      )}
 
       {/* Inventory Report Modal */}
       {showInventoryReportModal && (
