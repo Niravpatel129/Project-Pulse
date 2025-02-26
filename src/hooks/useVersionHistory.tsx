@@ -102,7 +102,7 @@ export function useVersionHistory({
       setShowSendEmailDialog(true);
     } else {
       // Close the dialog after creating a new version
-      setShowVersionHistoryDialog(false);
+      // setShowVersionHistoryDialog(false);
     }
 
     // Reset notify client checkbox
