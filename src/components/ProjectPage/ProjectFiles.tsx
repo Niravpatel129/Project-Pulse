@@ -37,8 +37,12 @@ import {
   Check,
   Clock,
   Download,
+  Eye,
   File,
+  FileClock,
+  FilePlus,
   FileText,
+  History,
   Image,
   Link,
   Mail,
@@ -46,6 +50,8 @@ import {
   MoreHorizontal,
   Paperclip,
   Plus,
+  RefreshCw,
+  RotateCcw,
   Search,
   Send,
   Upload,
@@ -55,6 +61,18 @@ import { useState } from 'react';
 
 type FileType = 'proposal' | 'invoice' | 'contract' | 'questionnaire' | 'upload';
 
+interface FileVersion {
+  id: string;
+  versionNumber: number;
+  versionId: string;
+  dateCreated: string;
+  createdBy: string;
+  changeDescription: string;
+  size: string;
+  url: string;
+  isCurrent: boolean;
+}
+
 interface Attachment {
   id: string;
   name: string;
@@ -62,6 +80,7 @@ interface Attachment {
   type: string; // file extension or mime type
   url: string;
   thumbnailUrl?: string;
+  versions?: FileVersion[]; // Add versions to attachments
 }
 
 interface Comment {
@@ -88,6 +107,8 @@ interface ProjectFile {
   needsApproval?: boolean;
   emailSent?: boolean;
   emailSentDate?: string;
+  variation?: string; // Renamed from branch
+  latestVersion?: string; // Renamed from latestCommit
 }
 
 export default function ProjectFiles() {
@@ -104,6 +125,21 @@ export default function ProjectFiles() {
   const [requestApproval, setRequestApproval] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
+  // Version history related states
+  const [showVersionHistoryDialog, setShowVersionHistoryDialog] = useState(false);
+  const [selectedAttachment, setSelectedAttachment] = useState<Attachment | null>(null);
+  const [changeDescription, setChangeDescription] = useState('');
+  const [showVersionCompareDialog, setShowVersionCompareDialog] = useState(false);
+  const [compareVersions, setCompareVersions] = useState<{
+    older: FileVersion | null;
+    newer: FileVersion | null;
+  }>({ older: null, newer: null });
+
+  // Variation related states (renamed from branch)
+  const [showVariationDialog, setShowVariationDialog] = useState(false);
+  const [variationName, setVariationName] = useState('');
+  const [variationDescription, setVariationDescription] = useState('');
+
   // Example files data
   const [files, setFiles] = useState<ProjectFile[]>([
     {
@@ -114,6 +150,8 @@ export default function ProjectFiles() {
       size: '2.4 MB',
       status: 'sent',
       uploadedBy: 'Hitarth',
+      variation: 'Main',
+      latestVersion: 'v2',
       attachments: [
         {
           id: 'a1',
@@ -121,6 +159,30 @@ export default function ProjectFiles() {
           size: '2.4 MB',
           type: 'pdf',
           url: '#',
+          versions: [
+            {
+              id: 'v1',
+              versionNumber: 1,
+              versionId: 'a1b2c3d4',
+              dateCreated: '2023-11-15T10:30:00Z',
+              createdBy: 'Hitarth',
+              changeDescription: 'Initial proposal draft',
+              size: '2.1 MB',
+              url: '#',
+              isCurrent: false,
+            },
+            {
+              id: 'v2',
+              versionNumber: 2,
+              versionId: 'e5f6g7h8',
+              dateCreated: '2023-11-15T14:45:00Z',
+              createdBy: 'Hitarth',
+              changeDescription: 'Updated pricing details',
+              size: '2.4 MB',
+              url: '#',
+              isCurrent: true,
+            },
+          ],
         },
       ],
       comments: [
@@ -144,6 +206,8 @@ export default function ProjectFiles() {
       size: '1.8 MB',
       status: 'signed',
       uploadedBy: 'Hitarth',
+      variation: 'Main',
+      latestVersion: 'v1',
       attachments: [
         {
           id: 'a2',
@@ -151,6 +215,19 @@ export default function ProjectFiles() {
           size: '1.8 MB',
           type: 'pdf',
           url: '#',
+          versions: [
+            {
+              id: 'v1',
+              versionNumber: 1,
+              versionId: 'i9j0k1l2',
+              dateCreated: '2023-11-18T09:15:00Z',
+              createdBy: 'Hitarth',
+              changeDescription: 'Initial contract draft',
+              size: '1.8 MB',
+              url: '#',
+              isCurrent: true,
+            },
+          ],
         },
       ],
       comments: [],
@@ -443,6 +520,151 @@ export default function ProjectFiles() {
     }
   };
 
+  // Version history handlers
+  const handleOpenVersionHistory = (attachment: Attachment) => {
+    setSelectedAttachment(attachment);
+    setShowVersionHistoryDialog(true);
+  };
+
+  const handleCreateNewVersion = () => {
+    if (!selectedFile || !selectedAttachment || !changeDescription.trim()) return;
+
+    // Create a new version object
+    const currentVersions = selectedAttachment.versions || [];
+    const newVersionNumber =
+      currentVersions.length > 0 ? Math.max(...currentVersions.map((v) => v.versionNumber)) + 1 : 1;
+
+    // Create a simple version ID
+    const versionId = `v${newVersionNumber}`;
+
+    const newVersion: FileVersion = {
+      id: `v${Date.now()}`,
+      versionNumber: newVersionNumber,
+      versionId,
+      dateCreated: new Date().toISOString(),
+      createdBy: 'Hitarth', // Would be current user in production
+      changeDescription: changeDescription.trim(),
+      size: selectedAttachment.size,
+      url: '#', // Would be a real URL in production
+      isCurrent: true,
+    };
+
+    // Set all other versions to not current
+    const updatedVersions = currentVersions.map((v) => ({
+      ...v,
+      isCurrent: false,
+    }));
+
+    // Add new version
+    updatedVersions.push(newVersion);
+
+    // Update the attachment with new versions
+    const updatedAttachment = {
+      ...selectedAttachment,
+      versions: updatedVersions,
+    };
+
+    // Update the file with the new attachment
+    const updatedAttachments = selectedFile.attachments.map((att) =>
+      att.id === selectedAttachment.id ? updatedAttachment : att,
+    );
+
+    const updatedFile = {
+      ...selectedFile,
+      attachments: updatedAttachments,
+      latestVersion: versionId,
+    };
+
+    // Update files state
+    setFiles(files.map((file) => (file.id === selectedFile.id ? updatedFile : file)));
+    setSelectedFile(updatedFile);
+    setSelectedAttachment(updatedAttachment);
+    setChangeDescription('');
+
+    // Close the dialog after creating a new version
+    setShowVersionHistoryDialog(false);
+  };
+
+  const handleRevertToVersion = (version: FileVersion) => {
+    if (!selectedFile || !selectedAttachment) return;
+
+    // Update all versions, setting only the selected one to current
+    const updatedVersions = (selectedAttachment.versions || []).map((v) => ({
+      ...v,
+      isCurrent: v.id === version.id,
+    }));
+
+    // Update the attachment
+    const updatedAttachment = {
+      ...selectedAttachment,
+      size: version.size, // Update size to match reverted version
+      versions: updatedVersions,
+    };
+
+    // Update the file
+    const updatedAttachments = selectedFile.attachments.map((att) =>
+      att.id === selectedAttachment.id ? updatedAttachment : att,
+    );
+
+    const updatedFile = {
+      ...selectedFile,
+      attachments: updatedAttachments,
+      latestVersion: version.versionId,
+    };
+
+    // Update files state
+    setFiles(files.map((file) => (file.id === selectedFile.id ? updatedFile : file)));
+    setSelectedFile(updatedFile);
+    setSelectedAttachment(updatedAttachment);
+
+    // Create a reversion comment
+    const newComment: Comment = {
+      id: `c${Date.now()}`,
+      text: `Restored version ${version.versionNumber} (${version.changeDescription})`,
+      author: 'Hitarth', // Would be current user in production
+      authorRole: 'Photographer',
+      timestamp: new Date().toISOString(),
+    };
+
+    // Add the comment to the file
+    const updatedFileWithComment = {
+      ...updatedFile,
+      comments: [...updatedFile.comments, newComment],
+    };
+
+    setFiles(files.map((file) => (file.id === selectedFile.id ? updatedFileWithComment : file)));
+    setSelectedFile(updatedFileWithComment);
+  };
+
+  const handleCompareVersions = (olderVersion: FileVersion, newerVersion: FileVersion) => {
+    setCompareVersions({
+      older: olderVersion,
+      newer: newerVersion,
+    });
+    setShowVersionCompareDialog(true);
+  };
+
+  const handleCreateVariation = () => {
+    if (!selectedFile || !variationName.trim()) return;
+
+    // Create a new variation by copying the file with a new name
+    const newId = (Math.max(...files.map((f) => parseInt(f.id))) + 1).toString();
+
+    const newFile: ProjectFile = {
+      ...selectedFile,
+      id: newId,
+      name: `${selectedFile.name} (${variationName})`,
+      variation: variationName,
+      description: variationDescription || `Variation of ${selectedFile.name}`,
+      comments: [], // Start with no comments on the new variation
+    };
+
+    setFiles([...files, newFile]);
+    setShowVariationDialog(false);
+    setVariationName('');
+    setVariationDescription('');
+  };
+
   return (
     <div className='space-y-4'>
       <Card>
@@ -669,6 +891,19 @@ export default function ProjectFiles() {
                                   <Download className='mr-2 h-4 w-4' />
                                   Download All
                                 </DropdownMenuItem>
+                                {file.attachments[0]?.versions &&
+                                  file.attachments[0].versions.length > 0 && (
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setSelectedFile(file);
+                                        setSelectedAttachment(file.attachments[0]);
+                                        setShowVersionHistoryDialog(true);
+                                      }}
+                                    >
+                                      <History className='mr-2 h-4 w-4' />
+                                      View Version History
+                                    </DropdownMenuItem>
+                                  )}
                                 {!file.emailSent && (
                                   <DropdownMenuItem
                                     onClick={() => {
@@ -693,6 +928,17 @@ export default function ProjectFiles() {
                                   >
                                     <Check className='mr-2 h-4 w-4' />
                                     Simulate Approval
+                                  </DropdownMenuItem>
+                                )}
+                                {file.variation && (
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedFile(file);
+                                      setShowVariationDialog(true);
+                                    }}
+                                  >
+                                    <FilePlus className='mr-2 h-4 w-4' />
+                                    Create Variation
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuSeparator />
@@ -722,16 +968,6 @@ export default function ProjectFiles() {
         <DialogContent className='max-w-4xl h-[80vh]'>
           {selectedFile && (
             <>
-              {/* <DialogHeader className='mb-4'>
-                <div className='flex items-center'>
-                  {getFileIcon(selectedFile.type)}
-                  <DialogTitle className='ml-2'>{selectedFile.name}</DialogTitle>
-                </div>
-                <DialogDescription>
-                  Uploaded on {selectedFile.dateUploaded} by {selectedFile.uploadedBy}
-                </DialogDescription>
-              </DialogHeader> */}
-
               <div className='flex flex-col md:flex-row h-full overflow-hidden'>
                 {/* Left side - file details and attachments */}
                 <div className='w-full md:w-2/3 pr-0 md:pr-4 overflow-y-auto'>
@@ -785,6 +1021,19 @@ export default function ProjectFiles() {
                           </div>
                           <div className='flex items-center'>
                             <span className='text-xs text-gray-500 mr-3'>{attachment.size}</span>
+                            {attachment.versions && attachment.versions.length > 1 && (
+                              <Button
+                                variant='outline'
+                                size='sm'
+                                className='mr-2'
+                                onClick={() => handleOpenVersionHistory(attachment)}
+                              >
+                                <History className='h-4 w-4 mr-1' />
+                                <span className='text-xs'>
+                                  {attachment.versions.length} versions
+                                </span>
+                              </Button>
+                            )}
                             <Button variant='ghost' size='icon'>
                               <Download className='h-4 w-4' />
                             </Button>
@@ -867,6 +1116,283 @@ export default function ProjectFiles() {
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Version History Dialog */}
+      <Dialog open={showVersionHistoryDialog} onOpenChange={setShowVersionHistoryDialog}>
+        <DialogContent className='max-w-3xl'>
+          <DialogHeader>
+            <DialogTitle>Version History</DialogTitle>
+            <DialogDescription>
+              {selectedAttachment?.name} - Track changes and manage file versions
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className='py-4'>
+            {/* New version form */}
+            <div className='mb-6 p-4 border rounded-md bg-gray-50'>
+              <h4 className='text-sm font-medium mb-2'>Upload New Version</h4>
+              <div className='flex flex-col gap-3'>
+                <div className='flex'>
+                  <div className='flex-grow'>
+                    <Label htmlFor='change-description' className='text-xs'>
+                      What changed in this version?
+                    </Label>
+                    <Textarea
+                      id='change-description'
+                      placeholder='Describe what changes you made to the design...'
+                      value={changeDescription}
+                      onChange={(e) => setChangeDescription(e.target.value)}
+                      rows={2}
+                    />
+                  </div>
+                </div>
+
+                <div className='border-2 border-dashed rounded-md p-4 flex flex-col items-center justify-center'>
+                  <Upload className='h-8 w-8 text-gray-400 mb-2' />
+                  <p className='text-sm text-gray-500 mb-2'>Drag and drop your updated file here</p>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    onClick={() => document.getElementById('version-file-upload')?.click()}
+                  >
+                    Browse Files
+                  </Button>
+                  <Input id='version-file-upload' type='file' className='hidden' />
+                </div>
+
+                <div className='flex justify-end'>
+                  <Button onClick={handleCreateNewVersion} disabled={!changeDescription.trim()}>
+                    <Plus className='h-4 w-4 mr-1' />
+                    Save as New Version
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Version timeline */}
+            <div className='mb-4'>
+              <h4 className='text-sm font-medium mb-2'>Version Timeline</h4>
+              <div className='relative pt-2 pb-2'>
+                <div className='absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200'></div>
+                <div className='space-y-4'>
+                  {selectedAttachment?.versions?.map((version, index, versions) => (
+                    <div key={version.id} className='relative pl-12'>
+                      <div
+                        className={`absolute left-0 top-2 h-8 w-8 rounded-full flex items-center justify-center ${
+                          version.isCurrent ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
+                        }`}
+                      >
+                        {version.isCurrent ? (
+                          <Check className='h-5 w-5' />
+                        ) : (
+                          <span>{version.versionNumber}</span>
+                        )}
+                      </div>
+                      <div
+                        className={`p-3 border rounded-md ${
+                          version.isCurrent ? 'bg-blue-50 border-blue-200' : 'bg-white'
+                        }`}
+                      >
+                        <div className='flex items-start justify-between'>
+                          <div>
+                            <div className='flex items-center mb-1'>
+                              {version.isCurrent ? (
+                                <span className='bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full mr-2'>
+                                  Current
+                                </span>
+                              ) : (
+                                <span className='text-xs text-gray-500'>
+                                  Version {version.versionNumber}
+                                </span>
+                              )}
+                              <span className='text-sm font-medium ml-2'>
+                                {version.changeDescription}
+                              </span>
+                            </div>
+                            <div className='flex items-center text-xs text-gray-500'>
+                              <Clock className='h-3 w-3 mr-1' />
+                              <span className='mr-2'>
+                                {format(new Date(version.dateCreated), 'MMM d, yyyy h:mm a')}
+                              </span>
+                              <span className='mr-2'>• by {version.createdBy}</span>
+                            </div>
+                          </div>
+                          <div className='flex items-center'>
+                            {!version.isCurrent && (
+                              <Button
+                                variant='outline'
+                                size='sm'
+                                className='mr-2'
+                                onClick={() => handleRevertToVersion(version)}
+                              >
+                                <RefreshCw className='h-3 w-3 mr-1' />
+                                Restore
+                              </Button>
+                            )}
+                            <Button variant='ghost' size='sm'>
+                              <Eye className='h-3 w-3 mr-1' />
+                              View
+                            </Button>
+                            <Button variant='ghost' size='sm'>
+                              <Download className='h-3 w-3 mr-1' />
+                              Download
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Compare with previous version button */}
+                        {index < versions.length - 1 && (
+                          <div className='mt-2 flex justify-end'>
+                            <Button
+                              variant='ghost'
+                              size='sm'
+                              className='text-xs'
+                              onClick={() => handleCompareVersions(versions[index + 1], version)}
+                            >
+                              <History className='h-3 w-3 mr-1' />
+                              Compare with Version {versions[index + 1].versionNumber}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Version Compare Dialog */}
+      <Dialog open={showVersionCompareDialog} onOpenChange={setShowVersionCompareDialog}>
+        <DialogContent className='max-w-4xl h-[80vh]'>
+          <DialogHeader>
+            <DialogTitle>Compare Versions</DialogTitle>
+            <DialogDescription>
+              Comparing Version {compareVersions.older?.versionNumber} with Version{' '}
+              {compareVersions.newer?.versionNumber}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className='h-full overflow-hidden py-4'>
+            <div className='flex justify-between mb-4'>
+              <div className='flex-1 border-r pr-4'>
+                <div className='flex items-center mb-2'>
+                  <span className='text-sm font-medium mr-3'>
+                    Version {compareVersions.older?.versionNumber}
+                  </span>
+                  <span className='text-xs text-gray-500'>
+                    {compareVersions.older?.dateCreated &&
+                      format(new Date(compareVersions.older.dateCreated), 'MMM d, yyyy h:mm a')}
+                  </span>
+                </div>
+                <div className='text-sm text-gray-700 mb-2'>
+                  {compareVersions.older?.changeDescription}
+                </div>
+              </div>
+              <div className='flex-1 pl-4'>
+                <div className='flex items-center mb-2'>
+                  <span className='text-sm font-medium mr-3'>
+                    Version {compareVersions.newer?.versionNumber}
+                  </span>
+                  <span className='text-xs text-gray-500'>
+                    {compareVersions.newer?.dateCreated &&
+                      format(new Date(compareVersions.newer.dateCreated), 'MMM d, yyyy h:mm a')}
+                  </span>
+                </div>
+                <div className='text-sm text-gray-700 mb-2'>
+                  {compareVersions.newer?.changeDescription}
+                </div>
+              </div>
+            </div>
+
+            {/* Comparison view */}
+            <div className='border rounded-md h-[calc(100%-120px)] overflow-hidden flex'>
+              {/* Left side: older version */}
+              <div className='w-1/2 border-r overflow-auto p-1'>
+                <div className='w-full h-full bg-gray-100 flex items-center justify-center'>
+                  <div className='text-center p-4'>
+                    <FileClock className='mx-auto h-12 w-12 text-gray-400 mb-2' />
+                    <p className='text-sm text-gray-500'>
+                      Version {compareVersions.older?.versionNumber} Preview
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right side: newer version */}
+              <div className='w-1/2 overflow-auto p-1'>
+                <div className='w-full h-full bg-gray-100 flex items-center justify-center'>
+                  <div className='text-center p-4'>
+                    <FileClock className='mx-auto h-12 w-12 text-gray-400 mb-2' />
+                    <p className='text-sm text-gray-500'>
+                      Version {compareVersions.newer?.versionNumber} Preview
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => handleRevertToVersion(compareVersions.older!)}
+              disabled={!compareVersions.older}
+            >
+              <RotateCcw className='h-4 w-4 mr-1' />
+              Restore Version {compareVersions.older?.versionNumber}
+            </Button>
+            <Button variant='default' onClick={() => setShowVersionCompareDialog(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Variation Dialog */}
+      <Dialog open={showVariationDialog} onOpenChange={setShowVariationDialog}>
+        <DialogContent className='max-w-md'>
+          <DialogHeader>
+            <DialogTitle>Create New Variation</DialogTitle>
+            <DialogDescription>Create a new variation from {selectedFile?.name}</DialogDescription>
+          </DialogHeader>
+
+          <div className='space-y-4 py-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='variation-name'>Variation Name</Label>
+              <Input
+                id='variation-name'
+                placeholder='Client Feedback Version'
+                value={variationName}
+                onChange={(e) => setVariationName(e.target.value)}
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <Label htmlFor='variation-description'>Description (Optional)</Label>
+              <Textarea
+                id='variation-description'
+                placeholder='Describe the purpose of this variation...'
+                value={variationDescription}
+                onChange={(e) => setVariationDescription(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant='outline' onClick={() => setShowVariationDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateVariation} disabled={!variationName.trim()}>
+              <FilePlus className='mr-2 h-4 w-4' />
+              Create Variation
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
