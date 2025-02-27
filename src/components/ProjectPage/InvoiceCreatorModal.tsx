@@ -1,5 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -90,6 +91,9 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
 
   // Add state for the active tab
   const [activeTab, setActiveTab] = useState<string>('invoice');
+
+  // Add a new state variable for the selected file to view details
+  const [selectedViewFile, setSelectedViewFile] = useState<ProjectFile | null>(null);
 
   // Calculate the totals based on the items
   const calculateTotals = (items: InvoiceItem[]) => {
@@ -425,6 +429,51 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
   // Check if a file has a product price
   const hasProductPrice = (file: ProjectFile): boolean => {
     return file.type === 'sales_product' && !!file.products && file.products.length > 0;
+  };
+
+  // Add a function to handle row click to view file details
+  const handleViewProjectItem = (file: ProjectFile) => {
+    setSelectedViewFile(file);
+  };
+
+  // Add a function to get field name from field ID
+  const getFieldNameById = (fieldId: string): string => {
+    // If the selected file has a template ID, look up the template and field
+    if (selectedViewFile?.templateId) {
+      // Find the template in available templates from project files
+      const template = projectFiles
+        .filter((file) => file.type === 'template')
+        .find((file) => file.id === selectedViewFile.templateId);
+
+      // If template has fields, find the matching field
+      if (template?.templateId) {
+        // Find template definition from any other source
+        // This is a placeholder - in a real app you'd have access to all templates
+        return fieldId; // Fallback to ID if template not found
+      }
+
+      // For demo purposes, map common field IDs to readable names
+      // In a real app, you'd get this from the template definition
+      const fieldNameMap: { [key: string]: string } = {
+        f1: 'Name',
+        f2: 'Description',
+        f3: 'Dimensions',
+        f4: 'Quantity',
+        f5: 'Material',
+        f6: 'Color',
+        f7: 'Finish',
+        f8: 'Notes',
+        f9: 'Delivery Date',
+        f10: 'Project Phase',
+        f11: 'Inventory Item',
+        f12: 'Specifications',
+        f13: 'Custom Options',
+      };
+
+      return fieldNameMap[fieldId] || fieldId;
+    }
+
+    return fieldId;
   };
 
   return (
@@ -833,16 +882,19 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                   <TableHeader>
                     <TableRow>
                       <TableHead className='w-[25%]'>Name</TableHead>
-                      <TableHead className='w-[15%]'>Type</TableHead>
                       <TableHead className='w-[15%]'>Price</TableHead>
                       <TableHead className='w-[30%]'>Description</TableHead>
-                      <TableHead className='w-[15%] text-right'>Action</TableHead>
+                      <TableHead className='w-[30%]'>Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {projectFiles.length > 0 ? (
                       projectFiles.filter(isProjectFile).map((file) => (
-                        <TableRow key={file.id}>
+                        <TableRow
+                          key={file.id}
+                          className='cursor-pointer hover:bg-muted/50'
+                          onClick={() => handleViewProjectItem(file)}
+                        >
                           <TableCell className='font-medium'>
                             <div className='flex items-center gap-2'>
                               {getFileIcon(file)}
@@ -853,16 +905,32 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                           <TableCell>
                             <span className='font-medium text-green-600'>
                               ${getEstimatedPrice(file).toFixed(2)}
+                              {hasInventoryPrice(file) && (
+                                <span className='ml-1 text-xs text-blue-500'>
+                                  (Inventory price)
+                                </span>
+                              )}
+                              {hasProductPrice(file) && (
+                                <span className='ml-1 text-xs text-purple-500'>
+                                  (Product price)
+                                </span>
+                              )}
+                              {!hasInventoryPrice(file) && !hasProductPrice(file) && (
+                                <span className='ml-1 text-xs text-gray-500'>(Default price)</span>
+                              )}
                             </span>
                           </TableCell>
                           <TableCell className='text-sm text-muted-foreground truncate max-w-[200px]'>
-                            {getFileDescription(file)}
+                            {getFileDescription(file) || 'No description available'}
                           </TableCell>
-                          <TableCell className='text-right'>
+                          <TableCell className='text-sm text-muted-foreground truncate max-w-[200px]'>
                             <Button
                               variant='outline'
                               size='sm'
-                              onClick={() => handleAddProjectItem(file)}
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent row click event
+                                handleAddProjectItem(file);
+                              }}
                               className='hover:bg-primary hover:text-primary-foreground'
                             >
                               <Plus className='h-4 w-4 mr-1' />
@@ -900,6 +968,123 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* File Details Dialog */}
+      {selectedViewFile && (
+        <Dialog open={!!selectedViewFile} onOpenChange={() => setSelectedViewFile(null)}>
+          <DialogContent className='sm:max-w-[700px] max-h-[90vh] overflow-auto'>
+            <DialogHeader>
+              <DialogTitle className='flex items-center gap-2'>
+                {getFileIcon(selectedViewFile)}
+                {selectedViewFile.name}
+              </DialogTitle>
+              <DialogDescription>
+                {formatFileType(selectedViewFile.type)} created on{' '}
+                {new Date(selectedViewFile.dateUploaded).toLocaleDateString()}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className='space-y-4'>
+              {/* File Type */}
+              <div className='grid grid-cols-[120px_1fr] gap-2'>
+                <div className='font-medium text-sm'>Type:</div>
+                <div>
+                  <Badge variant='outline' className='capitalize'>
+                    {formatFileType(selectedViewFile.type)}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Description */}
+              {selectedViewFile.description && (
+                <div className='grid grid-cols-[120px_1fr] gap-2'>
+                  <div className='font-medium text-sm'>Description:</div>
+                  <div>{selectedViewFile.description}</div>
+                </div>
+              )}
+
+              {/* Status */}
+              {selectedViewFile.status && (
+                <div className='grid grid-cols-[120px_1fr] gap-2'>
+                  <div className='font-medium text-sm'>Status:</div>
+                  <div>
+                    <Badge
+                      variant='outline'
+                      className={`capitalize ${
+                        selectedViewFile.status === 'paid'
+                          ? 'bg-green-50 text-green-700'
+                          : selectedViewFile.status === 'draft'
+                          ? 'bg-gray-50 text-gray-700'
+                          : 'bg-blue-50 text-blue-700'
+                      }`}
+                    >
+                      {selectedViewFile.status}
+                    </Badge>
+                  </div>
+                </div>
+              )}
+
+              {/* Price */}
+              <div className='grid grid-cols-[120px_1fr] gap-2'>
+                <div className='font-medium text-sm'>Estimated Price:</div>
+                <div className='font-medium text-green-600'>
+                  ${getEstimatedPrice(selectedViewFile).toFixed(2)}
+                </div>
+              </div>
+
+              {/* Date */}
+              <div className='grid grid-cols-[120px_1fr] gap-2'>
+                <div className='font-medium text-sm'>Date Created:</div>
+                <div>{new Date(selectedViewFile.dateUploaded).toLocaleDateString()}</div>
+              </div>
+
+              {/* Template Values if applicable */}
+              {selectedViewFile.templateValues && selectedViewFile.templateValues.length > 0 && (
+                <div className='mt-4'>
+                  <h4 className='font-medium mb-2'>Template Values:</h4>
+                  <div className='border rounded-md p-3 space-y-2'>
+                    {selectedViewFile.templateValues.map((value, index) => (
+                      <div key={index} className='grid grid-cols-[120px_1fr] gap-2'>
+                        <div className='font-medium text-sm'>
+                          {getFieldNameById(value.fieldId)}:
+                        </div>
+                        <div>
+                          {value.inventoryItemId ? (
+                            <div className='flex items-center'>
+                              <span>{value.value?.toString() || 'N/A'}</span>
+                              <Badge className='ml-2 bg-blue-100 text-blue-800 hover:bg-blue-200'>
+                                Inventory Item
+                              </Badge>
+                            </div>
+                          ) : (
+                            value.value?.toString() || 'N/A'
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter className='mt-6'>
+              <Button
+                variant='default'
+                onClick={() => {
+                  handleAddProjectItem(selectedViewFile);
+                  setSelectedViewFile(null);
+                }}
+              >
+                <Plus className='h-4 w-4 mr-1' />
+                Add to Invoice
+              </Button>
+              <Button variant='outline' onClick={() => setSelectedViewFile(null)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </Dialog>
   );
 };
