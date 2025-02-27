@@ -18,6 +18,8 @@ export type FileType =
   | 'logo'
   | 'banner'
   | 'brochure'
+  | 'brochure-cover'
+  | 'brochure-inner'
   | 'flyer'
   | 'business-card'
   | 'website'
@@ -43,19 +45,29 @@ export type FileStatus =
   | 'sent'
   | 'signed'
   | 'paid'
+  | 'overdue'
+  | 'cancelled'
   | 'archived'
-  | 'rejected';
+  | 'rejected'
+  | 'active'
+  | 'viewed'
+  | 'awaiting_approval';
 
 // Field types for templates
 export type FieldType =
   | 'text'
+  | 'textarea'
   | 'number'
   | 'file'
   | 'enum'
+  | 'select'
   | 'link'
   | 'date'
   | 'price'
   | 'dimension'
+  | 'color'
+  | 'email'
+  | 'array'
   | 'inventory_item';
 
 // ===================
@@ -67,13 +79,20 @@ export interface TemplateField {
   name: string;
   type: FieldType;
   required?: boolean;
-  options?: string[]; // For enum type fields
+  options?: (string | { value: string; label: string })[]; // For enum/select type fields
   defaultValue?: string | number;
   description?: string;
   fileTypes?: string[]; // For file type fields (e.g., ['png', 'svg'])
+  acceptTypes?: string[]; // For file type fields (e.g., ['image/png', 'image/jpeg'])
   unit?: string; // For dimension or measurement fields (e.g., 'inches', 'cm')
   formula?: string; // For calculated fields (e.g., price calculation formula)
   inventoryCategory?: string; // For inventory_item fields, can filter by category
+  placeholder?: string; // Placeholder text for input fields
+  validations?: Record<string, any>; // Validation rules
+  multiple?: boolean; // Whether multiple values can be selected/entered
+  linkedToInventory?: boolean; // Whether field is linked to inventory items
+  minItems?: number; // Minimum number of items for array fields
+  maxItems?: number; // Maximum number of items for array fields
 }
 
 export interface Template extends BaseModel {
@@ -81,6 +100,7 @@ export interface Template extends BaseModel {
   description?: string;
   icon?: string; // Icon identifier to represent this template
   fields: TemplateField[];
+  category?: string; // Category to group templates
 }
 
 export interface TemplateFieldValue {
@@ -348,11 +368,15 @@ export interface ListRequestParams {
   limit?: number;
   sort?: string;
   order?: 'asc' | 'desc';
-  search?: string;
+  search?: string | Record<string, string>;
   status?: string;
   type?: string;
   from?: string;
   to?: string;
+  filter?: Record<string, string | number | boolean | string[]>;
+  fields?: string[];
+  include?: string[];
+  [key: string]: string | number | boolean | string[] | Record<string, any> | undefined;
 }
 
 // Common paginated response

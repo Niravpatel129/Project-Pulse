@@ -52,7 +52,7 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
     setError(null);
 
     try {
-      const response = await services.inventory.getItems(params);
+      const response = await services.inventory.getInventoryItems(params);
       if (response) {
         setItems(response.items);
       }
@@ -69,11 +69,11 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
     setError(null);
 
     try {
-      const item = await services.inventory.getItemById(id);
+      const item = await services.inventory.getInventoryItemById(id);
       setCurrentItem(item);
       return item;
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(`Failed to load inventory item ${id}`));
+      setError(err instanceof Error ? err : new Error('Failed to load inventory item'));
       return null;
     } finally {
       setIsLoading(false);
@@ -86,7 +86,7 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
     setError(null);
 
     try {
-      const response = await services.inventory.getCategories(params);
+      const response = await services.inventory.getInventoryCategories(params);
       if (response) {
         setCategories(response.items);
       }
@@ -103,11 +103,11 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
     setError(null);
 
     try {
-      const category = await services.inventory.getCategoryById(id);
+      const category = await services.inventory.getInventoryCategoryById(id);
       setCurrentCategory(category);
       return category;
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(`Failed to load inventory category ${id}`));
+      setError(err instanceof Error ? err : new Error('Failed to load inventory category'));
       return null;
     } finally {
       setIsLoading(false);
@@ -120,12 +120,11 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
     setError(null);
 
     try {
-      const newItem = await services.inventory.createItem(item);
-      if (newItem) {
-        setItems((prevItems) => [newItem, ...prevItems]);
-        return newItem;
-      }
-      return null;
+      const newItem = await services.inventory.createInventoryItem(
+        item as Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>,
+      );
+      setItems((prev) => [...prev, newItem]);
+      return newItem;
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to create inventory item'));
       return null;
@@ -143,19 +142,16 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
     setError(null);
 
     try {
-      const updatedItem = await services.inventory.updateItem(id, updates);
-      if (updatedItem) {
-        setItems((prevItems) => prevItems.map((item) => (item.id === id ? updatedItem : item)));
+      const updatedItem = await services.inventory.updateInventoryItem(id, updates);
+      setItems((prev) => prev.map((item) => (item.id === id ? updatedItem : item)));
 
-        if (currentItem?.id === id) {
-          setCurrentItem(updatedItem);
-        }
-
-        return updatedItem;
+      if (currentItem?.id === id) {
+        setCurrentItem(updatedItem);
       }
-      return null;
+
+      return updatedItem;
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(`Failed to update inventory item ${id}`));
+      setError(err instanceof Error ? err : new Error('Failed to update inventory item'));
       return null;
     } finally {
       setIsLoading(false);
@@ -168,9 +164,10 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
     setError(null);
 
     try {
-      const result = await services.inventory.deleteItem(id);
-      if (result) {
-        setItems((prevItems) => prevItems.filter((item) => item.id !== id));
+      const result = await services.inventory.deleteInventoryItem(id);
+
+      if (result.success) {
+        setItems((prev) => prev.filter((item) => item.id !== id));
 
         if (currentItem?.id === id) {
           setCurrentItem(null);
@@ -178,9 +175,10 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
 
         return true;
       }
+
       return false;
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(`Failed to delete inventory item ${id}`));
+      setError(err instanceof Error ? err : new Error('Failed to delete inventory item'));
       return false;
     } finally {
       setIsLoading(false);
@@ -195,12 +193,11 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
     setError(null);
 
     try {
-      const newCategory = await services.inventory.createCategory(category);
-      if (newCategory) {
-        setCategories((prevCategories) => [newCategory, ...prevCategories]);
-        return newCategory;
-      }
-      return null;
+      const newCategory = await services.inventory.createInventoryCategory(
+        category as Omit<InventoryCategory, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>,
+      );
+      setCategories((prev) => [...prev, newCategory]);
+      return newCategory;
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to create inventory category'));
       return null;
@@ -218,21 +215,18 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
     setError(null);
 
     try {
-      const updatedCategory = await services.inventory.updateCategory(id, updates);
-      if (updatedCategory) {
-        setCategories((prevCategories) =>
-          prevCategories.map((category) => (category.id === id ? updatedCategory : category)),
-        );
+      const updatedCategory = await services.inventory.updateInventoryCategory(id, updates);
+      setCategories((prev) =>
+        prev.map((category) => (category.id === id ? updatedCategory : category)),
+      );
 
-        if (currentCategory?.id === id) {
-          setCurrentCategory(updatedCategory);
-        }
-
-        return updatedCategory;
+      if (currentCategory?.id === id) {
+        setCurrentCategory(updatedCategory);
       }
-      return null;
+
+      return updatedCategory;
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(`Failed to update inventory category ${id}`));
+      setError(err instanceof Error ? err : new Error('Failed to update inventory category'));
       return null;
     } finally {
       setIsLoading(false);
@@ -245,9 +239,10 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
     setError(null);
 
     try {
-      const result = await services.inventory.deleteCategory(id);
-      if (result) {
-        setCategories((prevCategories) => prevCategories.filter((category) => category.id !== id));
+      const result = await services.inventory.deleteInventoryCategory(id);
+
+      if (result.success) {
+        setCategories((prev) => prev.filter((category) => category.id !== id));
 
         if (currentCategory?.id === id) {
           setCurrentCategory(null);
@@ -255,9 +250,10 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
 
         return true;
       }
+
       return false;
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(`Failed to delete inventory category ${id}`));
+      setError(err instanceof Error ? err : new Error('Failed to delete inventory category'));
       return false;
     } finally {
       setIsLoading(false);

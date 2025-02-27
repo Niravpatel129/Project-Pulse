@@ -57,7 +57,7 @@ export const ProjectFilesProvider: React.FC<ProjectFilesProviderProps> = ({ chil
         search: searchQuery || undefined,
         status: statusFilter || undefined,
         type: typeFilter || undefined,
-      };
+      } as Record<string, string | number | boolean | null | undefined>;
 
       const response = await services.projectFiles.getAll(queryParams);
       if (response) {
@@ -91,7 +91,9 @@ export const ProjectFilesProvider: React.FC<ProjectFilesProviderProps> = ({ chil
     setError(null);
 
     try {
-      const newFile = await services.projectFiles.create(file);
+      const newFile = await services.projectFiles.create(
+        file as Omit<ProjectFile, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>,
+      );
       if (newFile) {
         setFiles((prevFiles) => [newFile, ...prevFiles]);
         return newFile;

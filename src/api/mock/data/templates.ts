@@ -9,12 +9,9 @@ export const mockTemplates: Template[] = [
     name: 'Banner Design',
     description: 'Template for creating customized banners',
     category: 'signage',
-    status: 'active',
     createdAt: '2023-07-02T15:30:00Z',
     updatedAt: '2023-07-02T15:30:00Z',
     createdBy: 'user-4',
-    thumbnailUrl: '/mock/thumbnails/banner-template.jpg',
-    previewUrl: '/mock/previews/banner-template.jpg',
     fields: [
       {
         id: 'f1',
@@ -81,12 +78,9 @@ export const mockTemplates: Template[] = [
     name: 'Business Card',
     description: 'Template for business cards',
     category: 'print',
-    status: 'active',
     createdAt: '2023-07-10T09:15:00Z',
     updatedAt: '2023-07-10T09:15:00Z',
     createdBy: 'user-1',
-    thumbnailUrl: '/mock/thumbnails/business-card-template.jpg',
-    previewUrl: '/mock/previews/business-card-template.jpg',
     fields: [
       {
         id: 'f1',
@@ -158,12 +152,9 @@ export const mockTemplates: Template[] = [
     name: 'Brochure',
     description: 'Template for tri-fold brochures',
     category: 'print',
-    status: 'active',
     createdAt: '2023-07-15T14:20:00Z',
     updatedAt: '2023-07-15T14:20:00Z',
     createdBy: 'user-2',
-    thumbnailUrl: '/mock/thumbnails/brochure-template.jpg',
-    previewUrl: '/mock/previews/brochure-template.jpg',
     fields: [
       {
         id: 'f1',
@@ -186,26 +177,28 @@ export const mockTemplates: Template[] = [
         description: 'Content sections for the brochure',
         minItems: 1,
         maxItems: 5,
-        itemFields: [
-          {
-            id: 'section_title',
-            name: 'Section Title',
-            type: 'text',
-            required: true,
-            validations: {
-              maxLength: 30,
+        validations: {
+          itemFields: [
+            {
+              id: 'section_title',
+              name: 'Section Title',
+              type: 'text',
+              required: true,
+              validations: {
+                maxLength: 30,
+              },
             },
-          },
-          {
-            id: 'section_content',
-            name: 'Section Content',
-            type: 'textarea',
-            required: true,
-            validations: {
-              maxLength: 300,
+            {
+              id: 'section_content',
+              name: 'Section Content',
+              type: 'textarea',
+              required: true,
+              validations: {
+                maxLength: 300,
+              },
             },
-          },
-        ],
+          ],
+        },
       },
       {
         id: 'f3',

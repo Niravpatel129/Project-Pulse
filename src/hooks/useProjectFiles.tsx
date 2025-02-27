@@ -145,7 +145,12 @@ export function useProjectFiles() {
       type: 'invoice',
       dateUploaded: invoice.date,
       size: '50 KB', // Default size
-      status: invoice.status,
+      status:
+        invoice.status === 'overdue'
+          ? 'draft'
+          : invoice.status === 'cancelled'
+          ? 'draft'
+          : (invoice.status as any), // Cast to allow compatible status values
       uploadedBy: 'Current User', // Would be current user in a real app
       attachments: [],
       comments: [],
@@ -167,7 +172,12 @@ export function useProjectFiles() {
       const updatedFile: ProjectFile = {
         ...fileToUpdate,
         name: `Invoice ${updatedInvoice.number}`,
-        status: updatedInvoice.status,
+        status:
+          updatedInvoice.status === 'overdue'
+            ? 'draft'
+            : updatedInvoice.status === 'cancelled'
+            ? 'draft'
+            : (updatedInvoice.status as any), // Cast to allow compatible status values
         clientEmail: updatedInvoice.clientEmail,
         emailSent: updatedInvoice.status !== 'draft',
       };
@@ -685,13 +695,13 @@ export function useProjectFiles() {
 
     // Find and return the updated item or variant
     const mainItem = updatedItems.find((item) => item.id === itemId);
-    if (mainItem) return mainItem;
+    if (mainItem) return mainItem as unknown as InventoryItem;
 
     // Look for variant
     for (const item of updatedItems) {
       if (item.variants) {
         const variant = item.variants.find((v) => v.id === itemId);
-        if (variant) return variant;
+        if (variant) return variant as unknown as InventoryItem;
       }
     }
 
@@ -721,7 +731,6 @@ export function useProjectFiles() {
       }
 
       localStorage.setItem(usageKey, JSON.stringify(currentUsage));
-       
     } catch (e) {
       console.error('Could not track inventory usage in localStorage');
     }
@@ -742,7 +751,6 @@ export function useProjectFiles() {
           projectCount: usageData.projects.length,
           projects: usageData.projects,
         };
-         
       } catch (e) {
         return {
           item: item,

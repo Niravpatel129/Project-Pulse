@@ -47,7 +47,7 @@ export const InvoicesProvider: React.FC<InvoicesProviderProps> = ({ children }) 
     setError(null);
 
     try {
-      const response = await services.invoices.getAll(params);
+      const response = await services.invoices.getInvoices(params);
       if (response) {
         setInvoices(response.items);
       }
@@ -64,11 +64,11 @@ export const InvoicesProvider: React.FC<InvoicesProviderProps> = ({ children }) 
     setError(null);
 
     try {
-      const invoice = await services.invoices.getById(id);
+      const invoice = await services.invoices.getInvoiceById(id);
       setCurrentInvoice(invoice);
       return invoice;
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(`Failed to load invoice ${id}`));
+      setError(err instanceof Error ? err : new Error('Failed to load invoice'));
       return null;
     } finally {
       setIsLoading(false);
@@ -81,12 +81,11 @@ export const InvoicesProvider: React.FC<InvoicesProviderProps> = ({ children }) 
     setError(null);
 
     try {
-      const newInvoice = await services.invoices.create(invoice);
-      if (newInvoice) {
-        setInvoices((prevInvoices) => [newInvoice, ...prevInvoices]);
-        return newInvoice;
-      }
-      return null;
+      const newInvoice = await services.invoices.createInvoice(
+        invoice as Omit<Invoice, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>,
+      );
+      setInvoices((prev) => [...prev, newInvoice]);
+      return newInvoice;
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to create invoice'));
       return null;
@@ -101,21 +100,16 @@ export const InvoicesProvider: React.FC<InvoicesProviderProps> = ({ children }) 
     setError(null);
 
     try {
-      const updatedInvoice = await services.invoices.update(id, updates);
-      if (updatedInvoice) {
-        setInvoices((prevInvoices) =>
-          prevInvoices.map((invoice) => (invoice.id === id ? updatedInvoice : invoice)),
-        );
+      const updatedInvoice = await services.invoices.updateInvoice(id, updates);
+      setInvoices((prev) => prev.map((invoice) => (invoice.id === id ? updatedInvoice : invoice)));
 
-        if (currentInvoice?.id === id) {
-          setCurrentInvoice(updatedInvoice);
-        }
-
-        return updatedInvoice;
+      if (currentInvoice?.id === id) {
+        setCurrentInvoice(updatedInvoice);
       }
-      return null;
+
+      return updatedInvoice;
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(`Failed to update invoice ${id}`));
+      setError(err instanceof Error ? err : new Error('Failed to update invoice'));
       return null;
     } finally {
       setIsLoading(false);
@@ -128,19 +122,19 @@ export const InvoicesProvider: React.FC<InvoicesProviderProps> = ({ children }) 
     setError(null);
 
     try {
-      const result = await services.invoices.delete(id);
-      if (result) {
-        setInvoices((prevInvoices) => prevInvoices.filter((invoice) => invoice.id !== id));
+      const result = await services.invoices.deleteInvoice(id);
 
+      if (result.success) {
+        setInvoices((prev) => prev.filter((invoice) => invoice.id !== id));
         if (currentInvoice?.id === id) {
           setCurrentInvoice(null);
         }
-
         return true;
       }
+
       return false;
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(`Failed to delete invoice ${id}`));
+      setError(err instanceof Error ? err : new Error('Failed to delete invoice'));
       return false;
     } finally {
       setIsLoading(false);
@@ -153,28 +147,28 @@ export const InvoicesProvider: React.FC<InvoicesProviderProps> = ({ children }) 
     setError(null);
 
     try {
-      const updatedInvoice = await services.invoices.updateStatus(id, 'paid');
-      if (updatedInvoice) {
-        setInvoices((prevInvoices) =>
-          prevInvoices.map((invoice) => (invoice.id === id ? updatedInvoice : invoice)),
-        );
+      const updatedInvoice = await services.invoices.markInvoiceAsPaid(
+        id,
+        new Date().toISOString(),
+        'bank_transfer',
+      );
 
-        if (currentInvoice?.id === id) {
-          setCurrentInvoice(updatedInvoice);
-        }
+      setInvoices((prev) => prev.map((invoice) => (invoice.id === id ? updatedInvoice : invoice)));
 
-        return updatedInvoice;
+      if (currentInvoice?.id === id) {
+        setCurrentInvoice(updatedInvoice);
       }
-      return null;
+
+      return updatedInvoice;
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(`Failed to mark invoice ${id} as paid`));
+      setError(err instanceof Error ? err : new Error('Failed to mark invoice as paid'));
       return null;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Send an invoice
+  // Send an invoice via email
   const sendInvoice = async (
     id: string,
     emailData: { to: string; subject?: string; message?: string },
@@ -183,10 +177,10 @@ export const InvoicesProvider: React.FC<InvoicesProviderProps> = ({ children }) 
     setError(null);
 
     try {
-      const result = await services.invoices.send(id, emailData);
-      return !!result;
+      const result = await services.invoices.sendInvoice(id, emailData.message);
+      return result.success;
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(`Failed to send invoice ${id}`));
+      setError(err instanceof Error ? err : new Error('Failed to send invoice'));
       return false;
     } finally {
       setIsLoading(false);

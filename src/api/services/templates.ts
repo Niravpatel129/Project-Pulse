@@ -11,7 +11,10 @@ export const templates = {
    * @param params Query parameters for pagination, sorting, and filtering
    */
   getAll: async (params?: ListRequestParams): Promise<PaginatedResponse<Template>> => {
-    return api.get('/templates', params);
+    return api.get(
+      '/templates',
+      params as Record<string, string | number | boolean | null | undefined>,
+    );
   },
 
   /**

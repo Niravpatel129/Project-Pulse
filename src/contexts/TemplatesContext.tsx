@@ -81,7 +81,9 @@ export const TemplatesProvider: React.FC<TemplatesProviderProps> = ({ children }
     setError(null);
 
     try {
-      const newTemplate = await services.templates.create(template);
+      const newTemplate = await services.templates.create(
+        template as Omit<Template, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>,
+      );
       if (newTemplate) {
         setTemplates((prevTemplates) => [newTemplate, ...prevTemplates]);
         return newTemplate;
