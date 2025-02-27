@@ -721,7 +721,7 @@ export function useProjectFiles() {
       }
 
       localStorage.setItem(usageKey, JSON.stringify(currentUsage));
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+       
     } catch (e) {
       console.error('Could not track inventory usage in localStorage');
     }
@@ -742,7 +742,7 @@ export function useProjectFiles() {
           projectCount: usageData.projects.length,
           projects: usageData.projects,
         };
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         
       } catch (e) {
         return {
           item: item,

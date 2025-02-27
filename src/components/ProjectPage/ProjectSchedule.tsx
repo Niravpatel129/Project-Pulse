@@ -62,7 +62,7 @@ export default function ProjectSchedule() {
   const [startDateRange, setStartDateRange] = useState<Date | undefined>(new Date());
   const [endDateRange, setEndDateRange] = useState<Date | undefined>(addHours(new Date(), 30 * 24));
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
     {
       id: '1',

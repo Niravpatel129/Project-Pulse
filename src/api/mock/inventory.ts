@@ -25,7 +25,7 @@ export const handleInventoryItemsRequest = (
         // Get by category
         if (url.includes('/category/')) {
           const categoryId = url.split('/category/').pop() as string;
-          const filteredItems = mockInventoryItems.filter((item) => item.category === categoryId);
+          const filteredItems = mockInventoryItems.filter((item) => item.categoryId === categoryId);
 
           // Apply pagination and other filters
           const { page = '1', limit = '10', sort = 'name', order = 'asc' } = params;
@@ -106,7 +106,7 @@ export const handleInventoryItemsRequest = (
         }
 
         if (category) {
-          filteredItems = filteredItems.filter((item) => item.category === category);
+          filteredItems = filteredItems.filter((item) => item.categoryId === category);
         }
 
         // Sort items

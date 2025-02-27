@@ -182,7 +182,7 @@ export function useApi() {
     if (typeof keys === 'string') {
       // Clear a specific error
       setErrors((prev) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         
         const { [keys]: omitted, ...rest } = prev;
         return rest;
       });
