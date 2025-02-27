@@ -61,8 +61,7 @@ export const handleInvoicesRequest = (
           filteredInvoices = filteredInvoices.filter(
             (invoice) =>
               invoice.invoiceNumber.toLowerCase().includes(searchLower) ||
-              invoice.clientName.toLowerCase().includes(searchLower) ||
-              invoice.projectName.toLowerCase().includes(searchLower),
+              invoice.clientName.toLowerCase().includes(searchLower),
           );
         }
 
@@ -216,7 +215,7 @@ export const handleInvoicesRequest = (
 
           resolve({
             success: true,
-            message: `Invoice ${invoice.invoiceNumber} has been sent to ${invoice.clientEmail}`,
+            message: `Invoice ${invoice.invoiceNumber} has been sent to client`,
             invoice: updatedInvoice,
           });
         } else {
