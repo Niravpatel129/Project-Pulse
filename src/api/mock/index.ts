@@ -58,7 +58,7 @@ export const handleMockApiRequest = async (
 
   try {
     // Call the handler with the method, path, params, and data
-    return await handler(method, path, params, id ? { ...data, id } : data);
+    return await handler(method, path, params, id ? { ...(data as any), id } : data);
   } catch (error) {
     console.error(`Error in mock handler for ${path}:`, error);
     return {
