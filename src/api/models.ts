@@ -11,20 +11,40 @@ export interface BaseModel {
   createdBy: string;
 }
 
-// File types supported by the system
+/**
+ * Project file types
+ */
 export type FileType =
+  | 'logo'
+  | 'banner'
+  | 'brochure'
+  | 'flyer'
+  | 'business-card'
+  | 'website'
+  | 'social-media'
+  | 'email'
+  | 'video'
   | 'proposal'
   | 'invoice'
   | 'contract'
   | 'questionnaire'
-  | 'upload'
-  | 'sales_product'
-  | 'service'
-  | 'file'
-  | 'file_item'
-  | 'template'
-  | 'custom_template_item'
-  | 'invoice_item';
+  | 'other';
+
+/**
+ * Project file status
+ */
+export type FileStatus =
+  | 'draft'
+  | 'in-progress'
+  | 'pending-review'
+  | 'review-requested'
+  | 'approved'
+  | 'completed'
+  | 'sent'
+  | 'signed'
+  | 'paid'
+  | 'archived'
+  | 'rejected';
 
 // Field types for templates
 export type FieldType =
@@ -75,55 +95,93 @@ export interface TemplateFieldValue {
 // File Models
 // ===================
 
-export interface FileVersion extends BaseModel {
+/**
+ * File version for an attachment
+ */
+export interface FileVersion {
+  id: string;
   versionNumber: number;
-  changeDescription: string;
-  size: string;
-  url: string;
-  isCurrent: boolean;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  uploadedBy: string;
+  uploadedAt: string;
+  downloadUrl: string;
 }
 
-export interface TemplateItemVersion extends BaseModel {
-  changes: string;
-  data: Partial<ProjectFile>; // Snapshot of the template item at this version
+/**
+ * Attachment model
+ */
+export interface Attachment {
+  id: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  uploadedBy: string;
+  uploadedAt: string;
+  downloadUrl: string;
+  versions: FileVersion[];
 }
 
-export interface Attachment extends BaseModel {
-  name: string;
-  size: string;
-  type: string; // file extension or mime type
-  url: string;
-  thumbnailUrl?: string;
-  versions?: FileVersion[];
-}
-
-export interface Comment extends BaseModel {
+/**
+ * Comment model
+ */
+export interface Comment {
+  id: string;
   text: string;
-  authorRole: string;
-  avatarUrl?: string;
+  author: string;
+  authorName: string;
+  createdAt: string;
 }
 
-export interface ProjectFile extends BaseModel {
+/**
+ * Template item version
+ */
+export interface TemplateItemVersion {
+  id: string;
+  templateItemId: string;
+  versionNumber: number;
   name: string;
+  createdAt: string;
+  createdBy: string;
+  createdByName: string;
+  attachmentId: string;
+}
+
+/**
+ * Project file model
+ */
+export interface ProjectFile {
+  id: string;
+  name: string;
+  description?: string;
   type: FileType;
-  size: string;
-  status?: 'draft' | 'sent' | 'signed' | 'paid' | 'viewed' | 'awaiting_approval' | 'active';
+  status: FileStatus;
+  priority?: 'low' | 'medium' | 'high';
+  dueDate?: string;
+  clientId?: string;
+  clientName?: string;
+  assignedTo?: string;
+  assignedToName?: string;
+  createdBy: string;
+  createdByName?: string;
+  createdAt: string;
+  updatedAt: string;
+  tags?: string[];
   attachments: Attachment[];
   comments: Comment[];
+  templateId?: string;
+  templateItems?: Partial<ProjectFile>[];
+}
+
+/**
+ * Template model
+ */
+export interface Template extends BaseModel {
+  name: string;
   description?: string;
-  clientEmail?: string;
-  needsApproval?: boolean;
-  emailSent?: boolean;
-  emailSentDate?: string;
-  variation?: string;
-  latestVersion?: string;
-  products?: Product[]; // Products associated with this file item
-  templateId?: string; // Reference to template if this is a custom_template_item
-  templateValues?: TemplateFieldValue[]; // Values for template fields if this is a custom_template_item
-  isTemplate?: boolean; // Flag to identify if this file is a template itself
-  templateItems?: ProjectFile[]; // Template items associated with this file item
-  lastModified?: string; // Timestamp of the last modification
-  versions?: TemplateItemVersion[]; // Version history for template items
+  icon?: string; // Icon identifier to represent this template
+  fields: TemplateField[];
 }
 
 // ===================
@@ -156,29 +214,51 @@ export interface InvoiceItem extends BaseModel {
   total: number; // Calculated total
 }
 
-export interface Invoice extends BaseModel {
-  number: string; // Invoice number (e.g., INV-2023-001)
-  date: string;
-  dueDate: string;
-  projectId?: string; // Optional reference to a project
+/**
+ * Invoice model
+ */
+export interface Invoice {
+  id: string;
+  invoiceNumber: string;
   clientId: string;
   clientName: string;
-  clientEmail: string;
-  items: InvoiceItem[];
+  issueDate: string;
+  dueDate: string;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  items: Array<{
+    id: string;
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    discount?: number;
+    tax?: number;
+    total: number;
+    projectFileId?: string;
+  }>;
+  subtotal: number;
+  discount?: number;
+  tax?: number;
+  total: number;
   notes?: string;
   terms?: string;
-  subtotal: number;
-  taxTotal: number;
-  discountTotal: number;
-  total: number;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
-  paymentDate?: string;
   paymentMethod?: string;
+  paymentDate?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface InventoryCategory extends BaseModel {
+/**
+ * Inventory category model
+ */
+export interface InventoryCategory {
+  id: string;
   name: string;
   description?: string;
+  parentId?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Variant extends BaseModel {
@@ -198,19 +278,27 @@ export interface ProductionInfo {
   notes?: string;
 }
 
-export interface InventoryItem extends BaseModel {
+/**
+ * Inventory item model
+ */
+export interface InventoryItem {
+  id: string;
   name: string;
-  sku: string;
   description?: string;
-  category: string; // References a category id
+  sku: string;
+  categoryId?: string;
+  categoryName?: string;
   price: number;
+  cost?: number;
   stock: number;
+  minStock?: number;
+  unit?: string;
   imageUrl?: string;
-  attributes?: Record<string, string | number>; // Custom attributes
-  variants?: Variant[]; // Add variants support for items like shirts with sizes
-  isComposite?: boolean; // Whether this item is made of other items
-  components?: Array<{ itemId: string; quantity: number }>; // For composite items (Bill of Materials)
-  productionInfo?: ProductionInfo; // Information related to production of this item
+  isActive: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  tags?: string[];
 }
 
 // ===================

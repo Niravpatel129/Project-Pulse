@@ -1,5 +1,6 @@
 import { api } from '../client';
-import { Attachment, Comment, ListRequestParams, PaginatedResponse, ProjectFile } from '../models';
+import { Attachment, Comment, ProjectFile, TemplateItemVersion } from '../models';
+import { ListRequestParams, PaginatedResponse } from '../types';
 
 /**
  * Service for project file-related API calls
@@ -9,7 +10,7 @@ export const projectFiles = {
    * Get all project files with pagination
    * @param params Query parameters for pagination, sorting, and filtering
    */
-  getProjectFiles: async (params?: ListRequestParams): Promise<PaginatedResponse<ProjectFile>> => {
+  getAll: async (params?: ListRequestParams): Promise<PaginatedResponse<ProjectFile>> => {
     return api.get(
       '/project-files',
       params as Record<string, string | number | boolean | null | undefined>,
@@ -20,7 +21,7 @@ export const projectFiles = {
    * Get a single project file by ID
    * @param id Project file ID
    */
-  getProjectFileById: async (id: string): Promise<ProjectFile> => {
+  getById: async (id: string): Promise<ProjectFile> => {
     return api.get(`/project-files/${id}`);
   },
 
@@ -28,7 +29,7 @@ export const projectFiles = {
    * Create a new project file
    * @param data Project file data to create
    */
-  createProjectFile: async (
+  create: async (
     data: Omit<ProjectFile, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>,
   ): Promise<ProjectFile> => {
     return api.post('/project-files', data);
@@ -39,7 +40,7 @@ export const projectFiles = {
    * @param id Project file ID
    * @param data Project file data to update
    */
-  updateProjectFile: async (id: string, data: Partial<ProjectFile>): Promise<ProjectFile> => {
+  update: async (id: string, data: Partial<ProjectFile>): Promise<ProjectFile> => {
     return api.put(`/project-files/${id}`, data);
   },
 
@@ -47,135 +48,166 @@ export const projectFiles = {
    * Delete a project file
    * @param id Project file ID
    */
-  deleteProjectFile: async (id: string): Promise<{ success: boolean }> => {
+  delete: async (id: string): Promise<{ success: boolean }> => {
     return api.delete(`/project-files/${id}`);
   },
 
   /**
    * Update the status of a project file
    * @param id Project file ID
-   * @param status New status
+   * @param status New status value
    */
-  updateProjectFileStatus: async (id: string, status: string): Promise<ProjectFile> => {
+  updateStatus: async (id: string, status: string): Promise<ProjectFile> => {
     return api.patch(`/project-files/${id}/status`, { status });
   },
 
   /**
    * Add a comment to a project file
    * @param id Project file ID
-   * @param comment Comment text
+   * @param comment Comment data
    */
-  addCommentToProjectFile: async (id: string, comment: string): Promise<Comment> => {
-    return api.post(`/project-files/${id}/comments`, { text: comment });
+  addComment: async (
+    id: string,
+    comment: Omit<Comment, 'id' | 'createdAt'>,
+  ): Promise<ProjectFile> => {
+    return api.post(`/project-files/${id}/comments`, comment);
   },
 
   /**
    * Add an attachment to a project file
    * @param id Project file ID
    * @param file File to upload
-   * @param description Optional description for the file
    */
-  addAttachmentToProjectFile: async (
-    id: string,
-    file: File,
-    description?: string,
-  ): Promise<Attachment> => {
+  addAttachment: async (id: string, file: File): Promise<ProjectFile> => {
     const formData = new FormData();
     formData.append('file', file);
-    if (description) {
-      formData.append('description', description);
-    }
 
-    return api.post(`/project-files/${id}/attachments`, formData, {
-      'Content-Type': 'multipart/form-data',
-    });
+    // For the mock API, we'll just return the response
+    return api.post(`/project-files/${id}/attachments`, formData);
   },
 
   /**
-   * Upload a project file attachment (version)
-   * @param fileId Project file ID
+   * Upload a new version of a file
    * @param attachmentId Attachment ID
    * @param file File to upload
-   * @param description Optional description for the version
+   * @param description Description of the changes
    */
-  uploadFileVersion: async (
-    fileId: string,
+  uploadVersion: async (
     attachmentId: string,
     file: File,
-    description?: string,
+    description: string,
   ): Promise<Attachment> => {
     const formData = new FormData();
     formData.append('file', file);
-    if (description) {
-      formData.append('description', description);
-    }
+    formData.append('description', description);
 
-    return api.post(`/project-files/${fileId}/attachments/${attachmentId}/versions`, formData, {
-      'Content-Type': 'multipart/form-data',
+    // For the mock API, we'll just return the response
+    return api.post(`/attachments/${attachmentId}/versions`, formData);
+  },
+
+  /**
+   * Send an email with the project file
+   * @param id Project file ID
+   * @param to Email recipients
+   * @param cc Copy recipients (optional)
+   * @param subject Email subject
+   * @param message Email message
+   */
+  sendEmail: async (
+    id: string,
+    to: string[],
+    subject: string,
+    message: string,
+    cc?: string[],
+  ): Promise<{ success: boolean; message: string }> => {
+    return api.post(`/project-files/${id}/send-email`, {
+      to,
+      cc,
+      subject,
+      message,
     });
   },
 
   /**
-   * Send a project file via email
+   * Add a template item to a project file
+   * @param id Project file ID
+   * @param templateItem Template item data
    */
-  sendEmail: (
-    fileId: string,
-    data: { subject: string; message: string; requestApproval: boolean },
-  ) => {
-    return api.post<{ success: boolean; message: string }>(
-      `project-files/${fileId}/send-email`,
-      data,
-    );
-  },
-
-  /**
-   * Add a product to a file item
-   */
-  addProductToFile: (
-    fileId: string,
-    data: {
-      id?: string;
-      name?: string;
-      price?: string;
-      description?: string;
-      isNew: boolean;
-    },
-  ) => {
-    return api.post<ProjectFile>(`project-files/${fileId}/products`, data);
-  },
-
-  /**
-   * Add a template item to a file
-   */
-  addTemplateItem: (fileId: string, data: Omit<ProjectFile, 'id' | 'createdAt' | 'updatedAt'>) => {
-    return api.post<ProjectFile>(`project-files/${fileId}/template-items`, data);
+  addTemplateItem: async (
+    id: string,
+    templateItem: Omit<ProjectFile, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>,
+  ): Promise<ProjectFile> => {
+    return api.post(`/project-files/${id}/template-items`, templateItem);
   },
 
   /**
    * Update a template item
+   * @param projectFileId Project file ID
+   * @param templateItemId Template item ID
+   * @param data Template item data to update
    */
-  updateTemplateItem: (fileId: string, templateItemId: string, data: Partial<ProjectFile>) => {
-    return api.put<ProjectFile>(`project-files/${fileId}/template-items/${templateItemId}`, data);
+  updateTemplateItem: async (
+    projectFileId: string,
+    templateItemId: string,
+    data: Partial<ProjectFile>,
+  ): Promise<ProjectFile> => {
+    return api.put(`/project-files/${projectFileId}/template-items/${templateItemId}`, data);
   },
 
   /**
    * Delete a template item
+   * @param projectFileId Project file ID
+   * @param templateItemId Template item ID
    */
-  deleteTemplateItem: (fileId: string, templateItemId: string) => {
-    return api.delete<void>(`project-files/${fileId}/template-items/${templateItemId}`);
+  deleteTemplateItem: async (
+    projectFileId: string,
+    templateItemId: string,
+  ): Promise<{ success: boolean }> => {
+    return api.delete(`/project-files/${projectFileId}/template-items/${templateItemId}`);
   },
 
   /**
-   * Create a variation of a file
+   * Get all versions of a template item
+   * @param projectFileId Project file ID
+   * @param templateItemId Template item ID
    */
-  createVariation: (fileId: string, data: { name: string; description: string }) => {
-    return api.post<ProjectFile>(`project-files/${fileId}/variations`, data);
+  getTemplateItemVersions: async (
+    projectFileId: string,
+    templateItemId: string,
+  ): Promise<TemplateItemVersion[]> => {
+    return api.get(`/project-files/${projectFileId}/template-items/${templateItemId}/versions`);
   },
 
   /**
-   * Update production status of an item
+   * Restore a previous version of a template item
+   * @param projectFileId Project file ID
+   * @param templateItemId Template item ID
+   * @param versionId Version ID to restore
    */
-  updateProductionStatus: (itemId: string, status: string) => {
-    return api.put<ProjectFile>(`project-files/${itemId}/production-status`, { status });
+  restoreTemplateItemVersion: async (
+    projectFileId: string,
+    templateItemId: string,
+    versionId: string,
+  ): Promise<ProjectFile> => {
+    return api.post(
+      `/project-files/${projectFileId}/template-items/${templateItemId}/versions/${versionId}/restore`,
+      {},
+    );
+  },
+
+  /**
+   * Create a template from an existing project file
+   * @param projectFileId Project file ID to convert to a template
+   * @param templateData Template data
+   */
+  createTemplateFromProjectFile: async (
+    projectFileId: string,
+    templateData: {
+      name: string;
+      description?: string;
+      icon?: string;
+    },
+  ): Promise<ProjectFile> => {
+    return api.post(`/project-files/${projectFileId}/create-template`, templateData);
   },
 };

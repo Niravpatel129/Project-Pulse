@@ -57,12 +57,10 @@ export const handleTemplatesRequest = (
 
           const response: PaginatedResponse<Template> = {
             items: paginatedTemplates,
-            meta: {
-              total: filteredTemplates.length,
-              page: pageNum,
-              limit: limitNum,
-              totalPages: Math.ceil(filteredTemplates.length / limitNum),
-            },
+            total: filteredTemplates.length,
+            page: pageNum,
+            limit: limitNum,
+            totalPages: Math.ceil(filteredTemplates.length / limitNum),
           };
 
           resolve(response);

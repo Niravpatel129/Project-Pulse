@@ -117,12 +117,10 @@ export const handleInvoicesRequest = (
 
         const response: PaginatedResponse<Invoice> = {
           items: paginatedInvoices,
-          meta: {
-            total: filteredInvoices.length,
-            page: pageNum,
-            limit: limitNum,
-            totalPages: Math.ceil(filteredInvoices.length / limitNum),
-          },
+          total: filteredInvoices.length,
+          page: pageNum,
+          limit: limitNum,
+          totalPages: Math.ceil(filteredInvoices.length / limitNum),
         };
 
         resolve(response);

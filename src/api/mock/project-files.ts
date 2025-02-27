@@ -1,103 +1,7 @@
 import { PaginatedResponse, ProjectFile } from '../models';
-import { ApiResponse } from '../types';
-import { mockProjectFiles, mockTemplateItems } from './data/projectFiles';
 
-/**
- * Mock implementation for GET /project-files endpoint
- */
-export default async function handleProjectFilesRequest(
-  method: string,
-  data?: any,
-): Promise<ApiResponse<PaginatedResponse<ProjectFile>>> {
-  switch (method) {
-    case 'GET': {
-      // Extract query parameters from the URL if needed
-      const searchParams = typeof data === 'string' ? new URLSearchParams(data) : null;
-
-      const page = searchParams ? parseInt(searchParams.get('page') || '1', 10) : 1;
-      const limit = searchParams ? parseInt(searchParams.get('limit') || '10', 10) : 10;
-      const search = searchParams ? searchParams.get('search') || '' : '';
-      const status = searchParams ? searchParams.get('status') || '' : '';
-      const type = searchParams ? searchParams.get('type') || '' : '';
-
-      // Filter files based on query parameters
-      let filteredFiles = [...mockProjectFiles];
-
-      if (search) {
-        const searchLower = search.toLowerCase();
-        filteredFiles = filteredFiles.filter((file) => {
-          return (
-            file.name.toLowerCase().includes(searchLower) ||
-            (file.description && file.description.toLowerCase().includes(searchLower))
-          );
-        });
-      }
-
-      if (status) {
-        filteredFiles = filteredFiles.filter((file) => file.status === status);
-      }
-
-      if (type) {
-        filteredFiles = filteredFiles.filter((file) => file.type === type);
-      }
-
-      // Implement pagination
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedFiles = filteredFiles.slice(startIndex, endIndex);
-
-      // Return paginated response
-      return {
-        success: true,
-        data: {
-          items: paginatedFiles,
-          total: filteredFiles.length,
-          page,
-          limit,
-          totalPages: Math.ceil(filteredFiles.length / limit),
-        },
-        status: 200,
-        error: null,
-      };
-    }
-
-    case 'POST': {
-      // Handle creating a new project file
-      const newFile: ProjectFile = {
-        ...data,
-        id: `file-${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        createdBy: 'current-user',
-        attachments: [],
-        comments: [],
-      };
-
-      mockProjectFiles.unshift(newFile);
-
-      return {
-        success: true,
-        data: {
-          items: [newFile],
-          total: mockProjectFiles.length,
-          page: 1,
-          limit: 1,
-          totalPages: 1,
-        },
-        status: 201,
-        error: null,
-      };
-    }
-
-    default:
-      return {
-        success: false,
-        data: null,
-        status: 405,
-        error: 'Method not allowed',
-      };
-  }
-}
+// Import mock data
+import * as mockData from './data/projectFiles';
 
 /**
  * Handle project files API requests in the mock API
@@ -116,6 +20,10 @@ export const handleProjectFilesRequest = (
   return new Promise((resolve) => {
     // Simulate network delay
     setTimeout(() => {
+      // Get references to mock data
+      const mockProjectFiles = mockData.mockProjectFiles;
+      const mockTemplateItems = mockData.mockTemplateItems;
+
       // GET requests
       if (method === 'GET') {
         // Get project file by ID
@@ -151,12 +59,10 @@ export const handleProjectFilesRequest = (
 
           const response: PaginatedResponse<ProjectFile> = {
             items: paginatedItems,
-            meta: {
-              total: templateItems.length,
-              page: pageNum,
-              limit: limitNum,
-              totalPages: Math.ceil(templateItems.length / limitNum),
-            },
+            total: templateItems.length,
+            page: pageNum,
+            limit: limitNum,
+            totalPages: Math.ceil(templateItems.length / limitNum),
           };
 
           resolve(response);
@@ -196,12 +102,10 @@ export const handleProjectFilesRequest = (
 
         const response: PaginatedResponse<ProjectFile> = {
           items: paginatedFiles,
-          meta: {
-            total: filteredFiles.length,
-            page: pageNum,
-            limit: limitNum,
-            totalPages: Math.ceil(filteredFiles.length / limitNum),
-          },
+          total: filteredFiles.length,
+          page: pageNum,
+          limit: limitNum,
+          totalPages: Math.ceil(filteredFiles.length / limitNum),
         };
 
         resolve(response);
@@ -216,7 +120,6 @@ export const handleProjectFilesRequest = (
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           createdBy: 'user-1', // Mock user ID
-          uploadedBy: 'user-1', // Mock user ID
         } as ProjectFile;
 
         // In a real implementation, we would add this to the database
@@ -259,36 +162,6 @@ export const handleProjectFilesRequest = (
           resolve({
             success: true,
             message: 'Project file deleted successfully',
-          });
-        } else {
-          resolve({
-            error: 'Project file not found',
-            status: 404,
-          });
-        }
-
-        return;
-      }
-
-      // PUT request for /project-files/:id/email - Send a file via email
-      if (method === 'PUT' && url.includes('/email')) {
-        const fileId = url.split('/').slice(-2)[0]; // Get the ID from the URL
-        const file = mockProjectFiles.find((f) => f.id === fileId);
-
-        if (file) {
-          // In a real implementation, we would send the email and update the database
-          const updatedFile: ProjectFile = {
-            ...file,
-            status: 'sent',
-            emailSent: true,
-            emailSentDate: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          } as ProjectFile;
-
-          resolve({
-            success: true,
-            message: `File has been sent to ${(data as any)?.email || file.clientEmail}`,
-            file: updatedFile,
           });
         } else {
           resolve({

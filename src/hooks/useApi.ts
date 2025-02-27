@@ -112,26 +112,39 @@ export function useApi() {
       generatePdf: withLoadingAndErrors('invoices.generatePdf', invoices.generateInvoicePdf),
     },
     projectFiles: {
-      getAll: withLoadingAndErrors('projectFiles.getAll', projectFiles.getProjectFiles),
-      getById: withLoadingAndErrors('projectFiles.getById', projectFiles.getProjectFileById),
-      create: withLoadingAndErrors('projectFiles.create', projectFiles.createProjectFile),
-      update: withLoadingAndErrors('projectFiles.update', projectFiles.updateProjectFile),
-      delete: withLoadingAndErrors('projectFiles.delete', projectFiles.deleteProjectFile),
-      updateStatus: withLoadingAndErrors(
-        'projectFiles.updateStatus',
-        projectFiles.updateProjectFileStatus,
+      getAll: withLoadingAndErrors('projectFiles.getAll', projectFiles.getAll),
+      getById: withLoadingAndErrors('projectFiles.getById', projectFiles.getById),
+      create: withLoadingAndErrors('projectFiles.create', projectFiles.create),
+      update: withLoadingAndErrors('projectFiles.update', projectFiles.update),
+      delete: withLoadingAndErrors('projectFiles.delete', projectFiles.delete),
+      updateStatus: withLoadingAndErrors('projectFiles.updateStatus', projectFiles.updateStatus),
+      addComment: withLoadingAndErrors('projectFiles.addComment', projectFiles.addComment),
+      addAttachment: withLoadingAndErrors('projectFiles.addAttachment', projectFiles.addAttachment),
+      uploadVersion: withLoadingAndErrors('projectFiles.uploadVersion', projectFiles.uploadVersion),
+      sendEmail: withLoadingAndErrors('projectFiles.sendEmail', projectFiles.sendEmail),
+      addTemplateItem: withLoadingAndErrors(
+        'projectFiles.addTemplateItem',
+        projectFiles.addTemplateItem,
       ),
-      addComment: withLoadingAndErrors(
-        'projectFiles.addComment',
-        projectFiles.addCommentToProjectFile,
+      updateTemplateItem: withLoadingAndErrors(
+        'projectFiles.updateTemplateItem',
+        projectFiles.updateTemplateItem,
       ),
-      addAttachment: withLoadingAndErrors(
-        'projectFiles.addAttachment',
-        projectFiles.addAttachmentToProjectFile,
+      deleteTemplateItem: withLoadingAndErrors(
+        'projectFiles.deleteTemplateItem',
+        projectFiles.deleteTemplateItem,
       ),
-      uploadVersion: withLoadingAndErrors(
-        'projectFiles.uploadVersion',
-        projectFiles.uploadFileVersion,
+      restoreTemplateItemVersion: withLoadingAndErrors(
+        'projectFiles.restoreTemplateItemVersion',
+        projectFiles.restoreTemplateItemVersion,
+      ),
+      getTemplateItemVersions: withLoadingAndErrors(
+        'projectFiles.getTemplateItemVersions',
+        projectFiles.getTemplateItemVersions,
+      ),
+      createTemplateFromProjectFile: withLoadingAndErrors(
+        'projectFiles.createTemplateFromProjectFile',
+        projectFiles.createTemplateFromProjectFile,
       ),
     },
   };

@@ -52,12 +52,10 @@ export const handleInventoryItemsRequest = (
 
           const response: PaginatedResponse<InventoryItem> = {
             items: paginatedItems,
-            pagination: {
-              total: filteredItems.length,
-              page: pageNum,
-              limit: limitNum,
-              totalPages: Math.ceil(filteredItems.length / limitNum),
-            },
+            total: filteredItems.length,
+            page: pageNum,
+            limit: limitNum,
+            totalPages: Math.ceil(filteredItems.length / limitNum),
           };
 
           resolve(response);
@@ -131,12 +129,10 @@ export const handleInventoryItemsRequest = (
 
         const response: PaginatedResponse<InventoryItem> = {
           items: paginatedItems,
-          pagination: {
-            total: filteredItems.length,
-            page: pageNum,
-            limit: limitNum,
-            totalPages: Math.ceil(filteredItems.length / limitNum),
-          },
+          total: filteredItems.length,
+          page: pageNum,
+          limit: limitNum,
+          totalPages: Math.ceil(filteredItems.length / limitNum),
         };
 
         resolve(response);
@@ -286,12 +282,10 @@ export const handleInventoryCategoriesRequest = (
 
         const response: PaginatedResponse<InventoryCategory> = {
           items: paginatedCategories,
-          pagination: {
-            total: filteredCategories.length,
-            page: pageNum,
-            limit: limitNum,
-            totalPages: Math.ceil(filteredCategories.length / limitNum),
-          },
+          total: filteredCategories.length,
+          page: pageNum,
+          limit: limitNum,
+          totalPages: Math.ceil(filteredCategories.length / limitNum),
         };
 
         resolve(response);
