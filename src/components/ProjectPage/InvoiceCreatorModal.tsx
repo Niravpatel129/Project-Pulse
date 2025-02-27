@@ -854,15 +854,6 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                             <span className='font-medium text-green-600'>
                               ${getEstimatedPrice(file).toFixed(2)}
                             </span>
-                            {hasInventoryPrice(file) && (
-                              <span className='ml-1 text-xs text-blue-600'>(Inventory price)</span>
-                            )}
-                            {hasProductPrice(file) && (
-                              <span className='ml-1 text-xs text-purple-600'>(Product price)</span>
-                            )}
-                            {!hasInventoryPrice(file) && !hasProductPrice(file) && (
-                              <span className='ml-1 text-xs text-gray-500'>(Default price)</span>
-                            )}
                           </TableCell>
                           <TableCell className='text-sm text-muted-foreground truncate max-w-[200px]'>
                             {getFileDescription(file)}
