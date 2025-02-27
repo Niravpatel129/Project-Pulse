@@ -14,6 +14,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
@@ -24,7 +31,17 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { InventoryItem, Invoice, InvoiceItem, Product, ProjectFile } from '@/lib/mock/projectFiles';
 import { format } from 'date-fns';
-import { FileText, Package, Plus, Receipt, Trash2 } from 'lucide-react';
+import {
+  CheckCircle,
+  Clock,
+  FileText,
+  FolderClock,
+  Package,
+  Plus,
+  Receipt,
+  Timer,
+  Trash2,
+} from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 interface InvoiceCreatorModalProps {
@@ -35,6 +52,7 @@ interface InvoiceCreatorModalProps {
   inventoryItems: InventoryItem[];
   existingInvoice?: Invoice;
   defaultClient?: { id: string; name: string; email: string };
+  onUpdateProductionStatus?: (productionItemId: string, status: string) => void;
 }
 
 const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
@@ -45,6 +63,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
   inventoryItems,
   existingInvoice,
   defaultClient,
+  onUpdateProductionStatus,
 }) => {
   const today = new Date();
   const thirtyDaysFromNow = new Date(today);
@@ -476,6 +495,71 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
     return fieldId;
   };
 
+  // Get production items (template items with inventory references)
+  const getProductionItems = () => {
+    return projectFiles.filter((file) => {
+      return (
+        file.type === 'custom_template_item' &&
+        file.templateValues?.some((value) => value.inventoryItemId)
+      );
+    });
+  };
+
+  // Get status badge for production items
+  const getStatusBadge = (item: ProjectFile) => {
+    const status = item.status || 'awaiting_approval';
+
+    switch (status) {
+      case 'draft':
+      case 'awaiting_approval':
+        return (
+          <Badge
+            variant='outline'
+            className='bg-yellow-50 text-yellow-700 border-yellow-200 flex items-center gap-1'
+          >
+            <Clock className='h-3 w-3' />
+            Pending
+          </Badge>
+        );
+      case 'active':
+      case 'sent':
+      case 'viewed':
+        return (
+          <Badge
+            variant='outline'
+            className='bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1'
+          >
+            <Timer className='h-3 w-3' />
+            In Progress
+          </Badge>
+        );
+      case 'signed':
+      case 'paid':
+        return (
+          <Badge
+            variant='outline'
+            className='bg-green-50 text-green-700 border-green-200 flex items-center gap-1'
+          >
+            <CheckCircle className='h-3 w-3' />
+            Completed
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant='outline' className='bg-gray-50 text-gray-700 border-gray-200'>
+            {(status as string).charAt(0).toUpperCase() + (status as string).slice(1)}
+          </Badge>
+        );
+    }
+  };
+
+  // Update the production status of an item
+  const handleUpdateProductionStatus = (itemId: string, status: string) => {
+    if (onUpdateProductionStatus) {
+      onUpdateProductionStatus(itemId, status);
+    }
+  };
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className='sm:max-w-[800px] max-h-[90vh] overflow-auto'>
@@ -495,6 +579,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
           <TabsList className='mb-4'>
             <TabsTrigger value='invoice'>Invoice Details</TabsTrigger>
             <TabsTrigger value='projectItems'>Project Items</TabsTrigger>
+            <TabsTrigger value='production'>Production</TabsTrigger>
           </TabsList>
 
           <TabsContent value='invoice' className='space-y-6'>
@@ -943,6 +1028,139 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                       <TableRow>
                         <TableCell colSpan={5} className='text-center py-6 text-muted-foreground'>
                           No project items found
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className='flex justify-between mt-4'>
+                <Button variant='outline' onClick={() => setActiveTab('invoice')}>
+                  Back to Invoice
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* New Production Tab */}
+          <TabsContent value='production' className='space-y-4'>
+            <div>
+              <h3 className='text-lg font-medium flex items-center gap-2'>
+                <FolderClock className='h-5 w-5' /> Production Tracking
+              </h3>
+              <p className='text-sm text-muted-foreground mb-4'>
+                Track and manage production status of template items with inventory components.
+              </p>
+
+              {/* Production items filter */}
+              <div className='flex gap-2 mb-4'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => {
+                    /* Filter logic */
+                  }}
+                  className='rounded-full'
+                >
+                  All Items
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => {
+                    /* Filter logic */
+                  }}
+                  className='rounded-full'
+                >
+                  <Clock className='h-3.5 w-3.5 mr-1' />
+                  Pending
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => {
+                    /* Filter logic */
+                  }}
+                  className='rounded-full'
+                >
+                  <Timer className='h-3.5 w-3.5 mr-1' />
+                  In Progress
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => {
+                    /* Filter logic */
+                  }}
+                  className='rounded-full'
+                >
+                  <CheckCircle className='h-3.5 w-3.5 mr-1' />
+                  Completed
+                </Button>
+              </div>
+
+              <div className='rounded-md border'>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className='w-[30%]'>Item Name</TableHead>
+                      <TableHead className='w-[20%]'>Template Type</TableHead>
+                      <TableHead className='w-[15%]'>Date Created</TableHead>
+                      <TableHead className='w-[15%]'>Status</TableHead>
+                      <TableHead className='w-[20%]'>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {getProductionItems().length > 0 ? (
+                      getProductionItems().map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell className='font-medium'>
+                            <div className='flex items-center gap-2'>
+                              <FileText className='h-4 w-4 text-gray-500' />
+                              {item.name}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {item.templateId ? 'Custom Template' : formatFileType(item.type)}
+                          </TableCell>
+                          <TableCell>{new Date(item.dateUploaded).toLocaleDateString()}</TableCell>
+                          <TableCell>{getStatusBadge(item)}</TableCell>
+                          <TableCell>
+                            <div className='flex items-center gap-2'>
+                              <Select
+                                defaultValue={item.status || 'awaiting_approval'}
+                                onValueChange={(value) =>
+                                  handleUpdateProductionStatus(item.id, value)
+                                }
+                              >
+                                <SelectTrigger className='w-[140px] h-8'>
+                                  <SelectValue placeholder='Change status' />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value='awaiting_approval'>Pending</SelectItem>
+                                  <SelectItem value='active'>In Progress</SelectItem>
+                                  <SelectItem value='paid'>Completed</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                variant='outline'
+                                size='sm'
+                                onClick={() => handleAddProjectItem(item)}
+                                className='h-8'
+                                title='Add to invoice'
+                              >
+                                <Plus className='h-3.5 w-3.5' />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={5} className='text-center py-6 text-muted-foreground'>
+                          No production items found. Try adding a template item with inventory
+                          components.
                         </TableCell>
                       </TableRow>
                     )}

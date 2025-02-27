@@ -30,52 +30,52 @@ export default function ProjectFiles() {
     setShowUploadDialog,
     selectedFileType,
     setSelectedFileType,
-    showFileDetailsDialog,
-    setShowFileDetailsDialog,
+
+    // File-related states
+    files,
     selectedFile,
     setSelectedFile,
-    commentText,
-    setCommentText,
+    getFileIcon,
+    getAttachmentIcon,
+    getStatusBadgeClass,
+
+    // Dialog states
+    showFileDetailsDialog,
+    setShowFileDetailsDialog,
+    showVersionHistoryDialog,
+    setShowVersionHistoryDialog,
     showSendEmailDialog,
     setShowSendEmailDialog,
+    showProductionTrackingModal,
+    setShowProductionTrackingModal,
+    showInventoryReportModal,
+    setShowInventoryReportModal,
+
+    // Email states
     emailSubject,
     setEmailSubject,
     emailMessage,
     setEmailMessage,
     requestApproval,
     setRequestApproval,
-    uploadedFiles,
-    showVersionHistoryDialog,
-    setShowVersionHistoryDialog,
-    selectedAttachment,
-    setSelectedAttachment,
+
+    // Version history states
     changeDescription,
     setChangeDescription,
     notifyClient,
     setNotifyClient,
+    selectedAttachment,
+    setSelectedAttachment,
+    handleCreateNewVersion,
+    handleRevertToVersion,
+    handleCompareVersions,
+
+    // Products and inventory
     products,
-    templates,
     inventoryItems,
     inventoryCategories,
-    handleAddProductToFileItem,
-    handleCreateTemplate,
-    handleAddTemplateItem,
-    handleDeleteTemplateItem,
-    handleUpdateTemplateItem,
-    handleRestoreTemplateItemVersion,
-    showInventoryReportModal,
-    setShowInventoryReportModal,
+    templates,
     getInventoryUsageReports,
-    updateInventoryStock,
-    trackInventoryUsage,
-    showProductionTrackingModal,
-    setShowProductionTrackingModal,
-    handleUpdateProductionStatus,
-
-    // Helper functions
-    getFileIcon,
-    getAttachmentIcon,
-    getStatusBadgeClass,
 
     // Logic functions
     handleAddFile,
@@ -86,26 +86,28 @@ export default function ProjectFiles() {
     handleSimulateApproval,
     handleFileUpload,
     handleOpenVersionHistory,
-    handleCreateNewVersion,
-    handleRevertToVersion,
-    handleCompareVersions,
     handleAddAttachmentToFileItem,
+    handleAddProductToFileItem,
+    handleAddTemplateItem,
+    handleCreateTemplate,
+    handleDeleteTemplateItem,
+    handleUpdateTemplateItem,
+    handleRestoreTemplateItemVersion,
+    updateInventoryStock,
+    trackInventoryUsage,
+    handleUpdateProductionStatus,
 
     // Invoice-related states
-    invoices,
     selectedInvoice,
     setSelectedInvoice,
     showInvoiceCreatorModal,
     setShowInvoiceCreatorModal,
-    showInvoiceDetailsModal,
-    setShowInvoiceDetailsModal,
     handleCreateInvoice,
     handleUpdateInvoice,
-    handleSendInvoice,
-    handleMarkInvoiceAsPaid,
-    getInvoiceById,
-    handleDeleteInvoice,
   } = useProjectFiles();
+
+  const [commentText, setCommentText] = useState('');
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
   // Add a new state for the selected client
   const [selectedClient, setSelectedClient] = useState<{
@@ -349,13 +351,22 @@ export default function ProjectFiles() {
             } else {
               handleCreateInvoice(invoice);
             }
+            setShowInvoiceCreatorModal(false);
           }}
           projectFiles={filteredFiles()}
           products={products}
           inventoryItems={inventoryItems}
-          templates={templates}
-          existingInvoice={selectedInvoice || undefined}
-          defaultClient={selectedClient || undefined}
+          existingInvoice={selectedInvoice}
+          defaultClient={
+            selectedFile && selectedFile.clientEmail
+              ? {
+                  id: selectedFile.id,
+                  name: 'Client from ' + selectedFile.name,
+                  email: selectedFile.clientEmail,
+                }
+              : undefined
+          }
+          onUpdateProductionStatus={handleUpdateProductionStatus}
         />
       )}
 
