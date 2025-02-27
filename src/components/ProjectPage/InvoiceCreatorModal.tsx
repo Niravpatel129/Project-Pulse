@@ -1,7 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -22,16 +21,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  InventoryItem,
-  Invoice,
-  InvoiceItem,
-  Product,
-  ProjectFile,
-  Template,
-} from '@/lib/mock/projectFiles';
+import { InventoryItem, Invoice, InvoiceItem, Product, ProjectFile } from '@/lib/mock/projectFiles';
 import { format } from 'date-fns';
-import { FileText, Package, Percent, Plus, Receipt, Trash2 } from 'lucide-react';
+import { FileText, Package, Plus, Receipt, Trash2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 interface InvoiceCreatorModalProps {
@@ -40,7 +32,6 @@ interface InvoiceCreatorModalProps {
   projectFiles: ProjectFile[];
   products: Product[];
   inventoryItems: InventoryItem[];
-  templates: Template[];
   existingInvoice?: Invoice;
   defaultClient?: { id: string; name: string; email: string };
 }
@@ -51,7 +42,6 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
   projectFiles,
   products,
   inventoryItems,
-  templates,
   existingInvoice,
   defaultClient,
 }) => {
@@ -87,7 +77,6 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
   );
 
   // State for UI controls
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [showAddItemPopover, setShowAddItemPopover] = useState(false);
   const [newItem, setNewItem] = useState<Partial<InvoiceItem>>({
     id: generateId(),
@@ -98,6 +87,58 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
     discount: 0,
     total: 0,
   });
+
+  // Add state for the active tab
+  const [activeTab, setActiveTab] = useState<string>('invoice');
+
+  // Calculate the totals based on the items
+  const calculateTotals = (items: InvoiceItem[]) => {
+    const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+    const discountTotal = items.reduce((sum, item) => {
+      const itemDiscount = item.discount
+        ? (item.quantity * item.unitPrice * item.discount) / 100
+        : 0;
+      return sum + itemDiscount;
+    }, 0);
+    const taxableAmount = subtotal - discountTotal;
+    const taxTotal = items.reduce((sum, item) => {
+      const itemTax = item.taxRate ? taxableAmount * (item.taxRate / 100) : 0;
+      return sum + itemTax;
+    }, 0);
+    const total = subtotal - discountTotal + taxTotal;
+
+    setInvoice((prev) => ({
+      ...prev,
+      subtotal,
+      discountTotal,
+      taxTotal,
+      total,
+    }));
+  };
+
+  // Update handleUpdateItem to recalculate totals
+  const handleUpdateItem = (itemId: string, field: string, value: string | number) => {
+    const updatedItems = invoice.items.map((item) => {
+      if (item.id === itemId) {
+        const updatedItem = { ...item, [field]: value };
+
+        // Recalculate total for this item
+        const quantity = updatedItem.quantity;
+        const unitPrice = updatedItem.unitPrice;
+        const discount = updatedItem.discount || 0;
+        const discountAmount = (quantity * unitPrice * discount) / 100;
+        const taxableAmount = quantity * unitPrice - discountAmount;
+        const taxAmount = updatedItem.taxRate ? taxableAmount * (updatedItem.taxRate / 100) : 0;
+        updatedItem.total = taxableAmount + taxAmount;
+
+        return updatedItem;
+      }
+      return item;
+    });
+
+    setInvoice({ ...invoice, items: updatedItems });
+    calculateTotals(updatedItems);
+  };
 
   // Calculate totals when invoice items change
   useEffect(() => {
@@ -174,91 +215,12 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
     }));
   };
 
-  // Handle updating an existing item
-  const handleUpdateItem = (itemId: string, field: string, value: string | number) => {
-    setInvoice((prev) => {
-      const updatedItems = prev.items.map((item) => {
-        if (item.id === itemId) {
-          const updatedItem = { ...item, [field]: value };
-
-          // Recalculate total if necessary fields changed
-          if (['quantity', 'unitPrice', 'discount'].includes(field)) {
-            const subtotal = updatedItem.quantity * updatedItem.unitPrice;
-            const discount = ((updatedItem.discount || 0) / 100) * subtotal;
-            updatedItem.total = parseFloat((subtotal - discount).toFixed(2));
-          }
-
-          return updatedItem;
-        }
-        return item;
-      });
-
-      return {
-        ...prev,
-        items: updatedItems,
-      };
-    });
-  };
-
   // Handle field changes for the invoice
   const handleInvoiceFieldChange = (field: string, value: string | number) => {
     setInvoice((prev) => ({
       ...prev,
       [field]: value,
     }));
-  };
-
-  // Add selected project items to the invoice
-  const handleAddProjectItems = () => {
-    // Get file items that have been selected
-    const filesToAdd = projectFiles.filter((file) => selectedItems.includes(file.id));
-
-    // Convert each file to an invoice item
-    const newInvoiceItems = filesToAdd.map((file) => {
-      // For template items, we can extract more data
-      let unitPrice = 0;
-      let description = file.name;
-
-      if (file.type === 'custom_template_item' && file.templateValues) {
-        // Try to find a price field
-        const priceField = file.templateValues.find((v) => {
-          const fieldDef = templates
-            .find((t) => t.id === file.templateId)
-            ?.fields.find((f) => f.id === v.fieldId);
-          return fieldDef?.type === 'price';
-        });
-
-        if (priceField) {
-          unitPrice = Number(priceField.value) || 0;
-        }
-      }
-
-      // For product items, use the product price
-      if (file.type === 'sales_product' && file.products?.length) {
-        const productPrice = parseFloat(file.products[0].price);
-        if (!isNaN(productPrice)) {
-          unitPrice = productPrice;
-        }
-        description = file.products[0].name;
-      }
-
-      return {
-        id: generateId(),
-        description: description,
-        quantity: 1,
-        unitPrice: unitPrice,
-        taxRate: 7.5, // Default tax rate
-        total: unitPrice,
-        templateItemId: file.id,
-      } as InvoiceItem;
-    });
-
-    setInvoice((prev) => ({
-      ...prev,
-      items: [...prev.items, ...newInvoiceItems],
-    }));
-
-    setSelectedItems([]);
   };
 
   // Add product to invoice
@@ -317,6 +279,51 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
     return <FileText className='h-4 w-4 mr-2' />;
   };
 
+  // Fix the handleAddProjectItem function to use correct FileType values
+  const handleAddProjectItem = (file: ProjectFile) => {
+    // Determine a reasonable price based on file type
+    let price = 0;
+    switch (file.type) {
+      case 'proposal':
+        price = 150;
+        break;
+      case 'contract':
+        price = 200;
+        break;
+      case 'questionnaire':
+        price = 175;
+        break;
+      case 'custom_template_item':
+        price = 100;
+        break;
+      default:
+        price = 75;
+    }
+
+    // Create a new invoice item from the project file
+    const newInvoiceItem: InvoiceItem = {
+      id: generateId(),
+      description: `${file.name} (${file.type.replace('_', ' ')})`,
+      quantity: 1,
+      unitPrice: price,
+      discount: 0,
+      taxRate: 0,
+      total: price,
+    };
+
+    // Add the item to the invoice
+    setInvoice((prev) => ({
+      ...prev,
+      items: [...prev.items, newInvoiceItem],
+    }));
+
+    // Calculate new totals
+    calculateTotals([...invoice.items, newInvoiceItem]);
+
+    // Return to the invoice tab after adding the item
+    setActiveTab('invoice');
+  };
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className='sm:max-w-[800px] max-h-[90vh] overflow-auto'>
@@ -332,66 +339,71 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className='space-y-6'>
-          {/* Invoice Header Section */}
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            <div className='space-y-3'>
-              <div>
-                <Label htmlFor='invoice-number'>Invoice Number</Label>
-                <Input
-                  id='invoice-number'
-                  value={invoice.number}
-                  onChange={(e) => handleInvoiceFieldChange('number', e.target.value)}
-                />
-              </div>
-              <div className='grid grid-cols-2 gap-3'>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
+          <TabsList className='mb-4'>
+            <TabsTrigger value='invoice'>Invoice Details</TabsTrigger>
+            <TabsTrigger value='projectItems'>Project Items</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value='invoice' className='space-y-6'>
+            {/* Invoice Header Section */}
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              <div className='space-y-3'>
                 <div>
-                  <Label htmlFor='invoice-date'>Invoice Date</Label>
+                  <Label htmlFor='invoice-number'>Invoice Number</Label>
                   <Input
-                    id='invoice-date'
-                    type='date'
-                    value={invoice.date}
-                    onChange={(e) => handleInvoiceFieldChange('date', e.target.value)}
+                    id='invoice-number'
+                    value={invoice.number}
+                    onChange={(e) => handleInvoiceFieldChange('number', e.target.value)}
+                  />
+                </div>
+                <div className='grid grid-cols-2 gap-2'>
+                  <div>
+                    <Label htmlFor='invoice-date'>Invoice Date</Label>
+                    <Input
+                      id='invoice-date'
+                      type='date'
+                      value={invoice.date}
+                      onChange={(e) => handleInvoiceFieldChange('date', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor='invoice-due-date'>Due Date</Label>
+                    <Input
+                      id='invoice-due-date'
+                      type='date'
+                      value={invoice.dueDate}
+                      onChange={(e) => handleInvoiceFieldChange('dueDate', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className='space-y-3'>
+                <div>
+                  <Label htmlFor='client-name'>Client Name</Label>
+                  <Input
+                    id='client-name'
+                    value={invoice.clientName}
+                    onChange={(e) => handleInvoiceFieldChange('clientName', e.target.value)}
                   />
                 </div>
                 <div>
-                  <Label htmlFor='due-date'>Due Date</Label>
+                  <Label htmlFor='client-email'>Client Email</Label>
                   <Input
-                    id='due-date'
-                    type='date'
-                    value={invoice.dueDate}
-                    onChange={(e) => handleInvoiceFieldChange('dueDate', e.target.value)}
+                    id='client-email'
+                    type='email'
+                    value={invoice.clientEmail}
+                    onChange={(e) => handleInvoiceFieldChange('clientEmail', e.target.value)}
                   />
                 </div>
               </div>
             </div>
 
-            <div className='space-y-3'>
-              <div>
-                <Label htmlFor='client-name'>Client Name</Label>
-                <Input
-                  id='client-name'
-                  value={invoice.clientName}
-                  onChange={(e) => handleInvoiceFieldChange('clientName', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor='client-email'>Client Email</Label>
-                <Input
-                  id='client-email'
-                  type='email'
-                  value={invoice.clientEmail}
-                  onChange={(e) => handleInvoiceFieldChange('clientEmail', e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Invoice Items Section */}
-          <div className='space-y-3'>
-            <div className='flex justify-between items-center'>
-              <h3 className='text-lg font-medium'>Invoice Items</h3>
-              <div className='flex gap-2'>
+            {/* Invoice Items Section */}
+            <div>
+              <div className='flex justify-between items-center mb-3'>
+                <h3 className='text-lg font-medium'>Invoice Items</h3>
                 <Popover open={showAddItemPopover} onOpenChange={setShowAddItemPopover}>
                   <PopoverTrigger asChild>
                     <Button size='sm' className='flex items-center gap-1'>
@@ -534,75 +546,19 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                     </Tabs>
                   </PopoverContent>
                 </Popover>
-
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant='outline' size='sm' className='flex items-center gap-1'>
-                      <FileText className='h-4 w-4' /> Add from Project
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className='w-[400px] p-4'>
-                    <div className='space-y-4'>
-                      <h4 className='font-medium'>Select items from project</h4>
-
-                      {projectFiles.filter(isProjectFile).length === 0 ? (
-                        <p className='text-center py-2 text-gray-500'>
-                          No eligible items in this project
-                        </p>
-                      ) : (
-                        <div className='space-y-2 max-h-[300px] overflow-auto'>
-                          {projectFiles.filter(isProjectFile).map((file) => (
-                            <div
-                              key={file.id}
-                              className='flex items-center p-2 hover:bg-gray-100 rounded-md'
-                            >
-                              <Checkbox
-                                id={`file-${file.id}`}
-                                checked={selectedItems.includes(file.id)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSelectedItems((prev) => [...prev, file.id]);
-                                  } else {
-                                    setSelectedItems((prev) => prev.filter((id) => id !== file.id));
-                                  }
-                                }}
-                              />
-                              <label
-                                htmlFor={`file-${file.id}`}
-                                className='ml-2 flex items-center cursor-pointer flex-1'
-                              >
-                                {getFileIcon(file)}
-                                <span>{file.name}</span>
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className='flex justify-end'>
-                        <Button
-                          onClick={handleAddProjectItems}
-                          disabled={selectedItems.length === 0}
-                        >
-                          Add Selected Items
-                        </Button>
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
               </div>
             </div>
 
-            {/* Invoice items table */}
-            <div className='border rounded-md'>
+            {/* Items table */}
+            <div className='rounded-md border'>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className='w-[300px]'>Description</TableHead>
-                    <TableHead className='text-right'>Qty</TableHead>
-                    <TableHead className='text-right'>Unit Price</TableHead>
-                    <TableHead className='text-right'>Discount</TableHead>
-                    <TableHead className='text-right'>Tax</TableHead>
+                    <TableHead className='w-[40%]'>Description</TableHead>
+                    <TableHead>Qty</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Discount</TableHead>
+                    <TableHead>Tax</TableHead>
                     <TableHead className='text-right'>Total</TableHead>
                     <TableHead className='w-[50px]'></TableHead>
                   </TableRow>
@@ -610,84 +566,102 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                 <TableBody>
                   {invoice.items.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className='text-center py-4 text-gray-500'>
-                        No items added to this invoice yet
+                      <TableCell colSpan={7} className='text-center py-6 text-muted-foreground'>
+                        No items added to this invoice yet.
+                        <div className='mt-2'>
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={() => setActiveTab('projectItems')}
+                            className='mx-auto'
+                          >
+                            Select from Project Items
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ) : (
                     invoice.items.map((item) => (
                       <TableRow key={item.id}>
+                        <TableCell className='font-medium'>{item.description}</TableCell>
                         <TableCell>
-                          <Input
-                            value={item.description}
-                            onChange={(e) =>
-                              handleUpdateItem(item.id, 'description', e.target.value)
-                            }
-                          />
-                        </TableCell>
-                        <TableCell className='text-right'>
                           <Input
                             type='number'
                             min='1'
+                            step='1'
                             value={item.quantity}
                             onChange={(e) =>
-                              handleUpdateItem(item.id, 'quantity', Number(e.target.value))
+                              handleUpdateItem(item.id, 'quantity', parseInt(e.target.value) || 1)
                             }
-                            className='w-[70px] text-right ml-auto'
+                            className='w-16 h-8'
                           />
                         </TableCell>
-                        <TableCell className='text-right'>
-                          <Input
-                            type='number'
-                            step='0.01'
-                            min='0'
-                            value={item.unitPrice}
-                            onChange={(e) =>
-                              handleUpdateItem(item.id, 'unitPrice', Number(e.target.value))
-                            }
-                            className='w-[100px] text-right ml-auto'
-                          />
+                        <TableCell>
+                          <div className='flex items-center'>
+                            <span className='mr-1'>$</span>
+                            <Input
+                              type='number'
+                              min='0'
+                              step='0.01'
+                              value={item.unitPrice}
+                              onChange={(e) =>
+                                handleUpdateItem(
+                                  item.id,
+                                  'unitPrice',
+                                  parseFloat(e.target.value) || 0,
+                                )
+                              }
+                              className='w-24 h-8'
+                            />
+                          </div>
                         </TableCell>
-                        <TableCell className='text-right'>
-                          <div className='flex items-center justify-end gap-1'>
+                        <TableCell>
+                          <div className='flex items-center'>
                             <Input
                               type='number'
                               min='0'
                               max='100'
                               value={item.discount || 0}
                               onChange={(e) =>
-                                handleUpdateItem(item.id, 'discount', Number(e.target.value))
+                                handleUpdateItem(
+                                  item.id,
+                                  'discount',
+                                  parseFloat(e.target.value) || 0,
+                                )
                               }
-                              className='w-[70px] text-right'
+                              className='w-16 h-8 mr-1'
                             />
-                            <Percent className='h-4 w-4 text-gray-500' />
+                            <span>%</span>
                           </div>
                         </TableCell>
-                        <TableCell className='text-right'>
-                          <div className='flex items-center justify-end gap-1'>
+                        <TableCell>
+                          <div className='flex items-center'>
                             <Input
                               type='number'
-                              step='0.1'
                               min='0'
+                              max='100'
                               value={item.taxRate || 0}
                               onChange={(e) =>
-                                handleUpdateItem(item.id, 'taxRate', Number(e.target.value))
+                                handleUpdateItem(
+                                  item.id,
+                                  'taxRate',
+                                  parseFloat(e.target.value) || 0,
+                                )
                               }
-                              className='w-[70px] text-right'
+                              className='w-16 h-8 mr-1'
                             />
-                            <Percent className='h-4 w-4 text-gray-500' />
+                            <span>%</span>
                           </div>
                         </TableCell>
-                        <TableCell className='text-right font-medium'>
-                          ${item.total.toFixed(2)}
-                        </TableCell>
+                        <TableCell className='text-right'>${item.total.toFixed(2)}</TableCell>
                         <TableCell>
                           <Button
                             variant='ghost'
-                            size='icon'
+                            size='sm'
                             onClick={() => handleRemoveItem(item.id)}
+                            className='h-8 w-8 p-0'
                           >
-                            <Trash2 className='h-4 w-4 text-gray-500' />
+                            <Trash2 className='h-4 w-4' />
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -696,60 +670,120 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                 </TableBody>
               </Table>
             </div>
-          </div>
 
-          {/* Invoice Totals */}
-          <div className='flex flex-col md:flex-row gap-6'>
-            <div className='flex-1 space-y-3'>
-              <div>
-                <Label htmlFor='invoice-notes'>Notes</Label>
-                <Textarea
-                  id='invoice-notes'
-                  placeholder='Add notes to client...'
-                  value={invoice.notes || ''}
-                  onChange={(e) => handleInvoiceFieldChange('notes', e.target.value)}
-                  rows={3}
-                />
-              </div>
-              <div>
-                <Label htmlFor='invoice-terms'>Terms & Conditions</Label>
-                <Textarea
-                  id='invoice-terms'
-                  placeholder='Payment terms, delivery information, etc.'
-                  value={invoice.terms || ''}
-                  onChange={(e) => handleInvoiceFieldChange('terms', e.target.value)}
-                  rows={3}
-                />
+            {/* Invoice Totals Section */}
+            <div className='flex justify-end'>
+              <div className='w-[300px] space-y-2'>
+                <div className='flex justify-between'>
+                  <span>Subtotal:</span>
+                  <span>${invoice.subtotal.toFixed(2)}</span>
+                </div>
+                <div className='flex justify-between'>
+                  <span>Discount:</span>
+                  <span>-${invoice.discountTotal.toFixed(2)}</span>
+                </div>
+                <div className='flex justify-between'>
+                  <span>Tax:</span>
+                  <span>${invoice.taxTotal.toFixed(2)}</span>
+                </div>
+                <div className='flex justify-between font-medium text-lg'>
+                  <span>Total:</span>
+                  <span>${invoice.total.toFixed(2)}</span>
+                </div>
               </div>
             </div>
 
-            <div className='w-full md:w-[250px] bg-gray-50 p-4 rounded-md space-y-2'>
-              <div className='flex justify-between items-center'>
-                <span className='text-gray-600'>Subtotal:</span>
-                <span>${invoice.subtotal.toFixed(2)}</span>
+            {/* Invoice Notes Section */}
+            <div className='space-y-2'>
+              <Label htmlFor='invoice-notes'>Notes</Label>
+              <Textarea
+                id='invoice-notes'
+                value={invoice.notes || ''}
+                onChange={(e) => handleInvoiceFieldChange('notes', e.target.value)}
+                placeholder='Enter any notes for the client...'
+                className='h-20'
+              />
+            </div>
+
+            {/* Invoice Terms Section */}
+            <div className='space-y-2'>
+              <Label htmlFor='invoice-terms'>Terms and Conditions</Label>
+              <Textarea
+                id='invoice-terms'
+                value={invoice.terms || ''}
+                onChange={(e) => handleInvoiceFieldChange('terms', e.target.value)}
+                placeholder='Enter your terms and conditions...'
+                className='h-20'
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value='projectItems' className='space-y-4'>
+            <div>
+              <h3 className='text-lg font-medium'>Select Project Items</h3>
+              <p className='text-sm text-muted-foreground mb-4'>
+                Choose items from your project to add to the invoice.
+              </p>
+
+              <div className='rounded-md border'>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Date Created</TableHead>
+                      <TableHead className='text-right'>Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {projectFiles.length > 0 ? (
+                      projectFiles.filter(isProjectFile).map((file) => (
+                        <TableRow key={file.id}>
+                          <TableCell className='font-medium'>
+                            <div className='flex items-center gap-2'>
+                              {getFileIcon(file)}
+                              {file.name}
+                            </div>
+                          </TableCell>
+                          <TableCell>{file.type.replace('_', ' ')}</TableCell>
+                          <TableCell>{new Date(file.dateUploaded).toLocaleDateString()}</TableCell>
+                          <TableCell className='text-right'>
+                            <Button
+                              variant='ghost'
+                              size='sm'
+                              onClick={() => handleAddProjectItem(file)}
+                            >
+                              <Plus className='h-4 w-4 mr-1' />
+                              Add
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={4} className='text-center py-6 text-muted-foreground'>
+                          No project items found
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
               </div>
-              <div className='flex justify-between items-center'>
-                <span className='text-gray-600'>Discount:</span>
-                <span>-${invoice.discountTotal.toFixed(2)}</span>
-              </div>
-              <div className='flex justify-between items-center'>
-                <span className='text-gray-600'>Tax:</span>
-                <span>${invoice.taxTotal.toFixed(2)}</span>
-              </div>
-              <div className='pt-2 border-t flex justify-between items-center font-medium'>
-                <span>Total:</span>
-                <span className='text-lg'>${invoice.total.toFixed(2)}</span>
+
+              <div className='flex justify-between mt-4'>
+                <Button variant='outline' onClick={() => setActiveTab('invoice')}>
+                  Back to Invoice
+                </Button>
               </div>
             </div>
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
 
-        <DialogFooter className='space-x-2 pt-4'>
+        <DialogFooter>
           <Button variant='outline' onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSaveInvoice} className='gap-1'>
-            <Receipt className='h-4 w-4' />
+          <Button onClick={handleSaveInvoice}>
             {existingInvoice ? 'Update Invoice' : 'Create Invoice'}
           </Button>
         </DialogFooter>
