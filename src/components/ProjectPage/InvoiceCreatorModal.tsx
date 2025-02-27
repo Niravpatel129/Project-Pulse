@@ -281,23 +281,56 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
 
   // Fix the handleAddProjectItem function to use correct FileType values
   const handleAddProjectItem = (file: ProjectFile) => {
-    // Determine a reasonable price based on file type
+    // Determine price based on file properties or type
     let price = 0;
-    switch (file.type) {
-      case 'proposal':
-        price = 150;
-        break;
-      case 'contract':
-        price = 200;
-        break;
-      case 'questionnaire':
-        price = 175;
-        break;
-      case 'custom_template_item':
-        price = 100;
-        break;
-      default:
-        price = 75;
+
+    // Check for inventory items with associated prices
+    if (file.type === 'custom_template_item' && file.templateValues) {
+      // Look for inventory item references in the template values
+      const inventoryFieldValue = file.templateValues.find((v) => v.inventoryItemId);
+
+      if (inventoryFieldValue && inventoryFieldValue.inventoryItemId) {
+        // Find the actual inventory item to get its price
+        const inventoryItem = inventoryItems.find(
+          (item) => item.id === inventoryFieldValue.inventoryItemId,
+        );
+        if (inventoryItem) {
+          price = inventoryItem.price;
+        }
+      }
+    }
+
+    // If no inventory price was found, fall back to the type-based pricing
+    if (price === 0) {
+      switch (file.type) {
+        case 'proposal':
+          price = 150;
+          break;
+        case 'contract':
+          price = 200;
+          break;
+        case 'questionnaire':
+          price = 175;
+          break;
+        case 'custom_template_item':
+          price = 100;
+          break;
+        case 'sales_product':
+          // Try to find an associated product price
+          if (file.products && file.products.length > 0) {
+            const productPrice = parseFloat(file.products[0].price);
+            if (!isNaN(productPrice)) {
+              price = productPrice;
+            } else {
+              price = 75;
+            }
+          } else {
+            price = 75;
+          }
+          break;
+        default:
+          price = 75;
+      }
     }
 
     // Create a new invoice item from the project file
@@ -322,6 +355,76 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
 
     // Return to the invoice tab after adding the item
     setActiveTab('invoice');
+  };
+
+  // Get a descriptive status or description for a file
+  const getFileDescription = (file: ProjectFile) => {
+    if (file.description) return file.description;
+    if (file.status) return `Status: ${file.status.replace('_', ' ')}`;
+    return `Added on ${new Date(file.dateUploaded).toLocaleDateString()}`;
+  };
+
+  // Get estimated price for a file based on its type
+  const getEstimatedPrice = (file: ProjectFile) => {
+    // First check if this file has inventory items with associated prices
+    if (file.type === 'custom_template_item' && file.templateValues) {
+      // Look for inventory item references in the template values
+      const inventoryFieldValue = file.templateValues.find((v) => v.inventoryItemId);
+
+      if (inventoryFieldValue && inventoryFieldValue.inventoryItemId) {
+        // Find the actual inventory item to get its price
+        const inventoryItem = inventoryItems.find(
+          (item) => item.id === inventoryFieldValue.inventoryItemId,
+        );
+        if (inventoryItem) {
+          return inventoryItem.price;
+        }
+      }
+    }
+
+    // If no inventory price was found, check for product prices
+    if (file.type === 'sales_product' && file.products && file.products.length > 0) {
+      const productPrice = parseFloat(file.products[0].price);
+      if (!isNaN(productPrice)) {
+        return productPrice;
+      }
+    }
+
+    // Fall back to default prices based on type
+    switch (file.type) {
+      case 'proposal':
+        return 150;
+      case 'contract':
+        return 200;
+      case 'questionnaire':
+        return 175;
+      case 'custom_template_item':
+        return 100;
+      default:
+        return 75;
+    }
+  };
+
+  // Format file type to be more readable
+  const formatFileType = (type: string) => {
+    return type
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Check if a file has an inventory price
+  const hasInventoryPrice = (file: ProjectFile): boolean => {
+    if (file.type === 'custom_template_item' && file.templateValues) {
+      const inventoryFieldValue = file.templateValues.find((v) => v.inventoryItemId);
+      return !!inventoryFieldValue && !!inventoryFieldValue.inventoryItemId;
+    }
+    return false;
+  };
+
+  // Check if a file has a product price
+  const hasProductPrice = (file: ProjectFile): boolean => {
+    return file.type === 'sales_product' && !!file.products && file.products.length > 0;
   };
 
   return (
@@ -729,10 +832,11 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Date Created</TableHead>
-                      <TableHead className='text-right'>Action</TableHead>
+                      <TableHead className='w-[25%]'>Name</TableHead>
+                      <TableHead className='w-[15%]'>Type</TableHead>
+                      <TableHead className='w-[15%]'>Price</TableHead>
+                      <TableHead className='w-[30%]'>Description</TableHead>
+                      <TableHead className='w-[15%] text-right'>Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -745,23 +849,40 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                               {file.name}
                             </div>
                           </TableCell>
-                          <TableCell>{file.type.replace('_', ' ')}</TableCell>
-                          <TableCell>{new Date(file.dateUploaded).toLocaleDateString()}</TableCell>
+
+                          <TableCell>
+                            <span className='font-medium text-green-600'>
+                              ${getEstimatedPrice(file).toFixed(2)}
+                            </span>
+                            {hasInventoryPrice(file) && (
+                              <span className='ml-1 text-xs text-blue-600'>(Inventory price)</span>
+                            )}
+                            {hasProductPrice(file) && (
+                              <span className='ml-1 text-xs text-purple-600'>(Product price)</span>
+                            )}
+                            {!hasInventoryPrice(file) && !hasProductPrice(file) && (
+                              <span className='ml-1 text-xs text-gray-500'>(Default price)</span>
+                            )}
+                          </TableCell>
+                          <TableCell className='text-sm text-muted-foreground truncate max-w-[200px]'>
+                            {getFileDescription(file)}
+                          </TableCell>
                           <TableCell className='text-right'>
                             <Button
-                              variant='ghost'
+                              variant='outline'
                               size='sm'
                               onClick={() => handleAddProjectItem(file)}
+                              className='hover:bg-primary hover:text-primary-foreground'
                             >
                               <Plus className='h-4 w-4 mr-1' />
-                              Add
+                              Add to Invoice
                             </Button>
                           </TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={4} className='text-center py-6 text-muted-foreground'>
+                        <TableCell colSpan={5} className='text-center py-6 text-muted-foreground'>
                           No project items found
                         </TableCell>
                       </TableRow>
