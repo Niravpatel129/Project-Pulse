@@ -111,7 +111,13 @@ export const configureMockApi = (apiClient: {
       try {
         // Parse the URL
         const urlString = url.toString();
-        const urlObj = new URL(urlString);
+
+        // Add a base URL if the URL is relative
+        const urlObj = new URL(
+          urlString.startsWith('http')
+            ? urlString
+            : `http://localhost${urlString.startsWith('/') ? '' : '/'}${urlString}`,
+        );
 
         // Extract the path from the URL
         const path = urlObj.pathname;

@@ -1,4 +1,5 @@
 import { Toaster } from '@/components/ui/toaster';
+import { AppProvider } from '@/contexts';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
@@ -29,11 +30,18 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Configure the initial API settings
+  const initialApiConfig = {
+    useMock: process.env.NODE_ENV !== 'production', // Use mock API in non-production environments
+  };
+
   return (
     <html lang='en'>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
-        <Toaster />
+        <AppProvider initialApiConfig={initialApiConfig}>
+          {children}
+          <Toaster />
+        </AppProvider>
       </body>
     </html>
   );
