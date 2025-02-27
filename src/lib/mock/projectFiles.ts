@@ -11,7 +11,8 @@ export type FileType =
   | 'file'
   | 'file_item'
   | 'template'
-  | 'custom_template_item';
+  | 'custom_template_item'
+  | 'invoice_item';
 
 // Define field types for custom templates
 export type FieldType =
@@ -135,7 +136,117 @@ export interface Product {
   variations?: string[];
   sku?: string;
   category?: string;
+  // Add invoice-related fields
+  cost?: number; // Cost price (for profit calculations)
+  taxRate?: number; // Default tax rate for this product
+  discountable?: boolean; // Whether this product can be discounted
+  unit?: string; // Unit of measurement (each, hour, etc.)
 }
+
+// Add an Invoice interface after the Product interface
+export interface InvoiceItem {
+  id: string;
+  productId?: string; // Reference to a product
+  inventoryItemId?: string; // Reference to inventory item
+  templateItemId?: string; // Reference to a template item
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  discount?: number; // Discount percentage
+  taxRate?: number;
+  total: number; // Calculated total
+}
+
+export interface Invoice {
+  id: string;
+  number: string; // Invoice number (e.g., INV-2023-001)
+  date: string;
+  dueDate: string;
+  projectId?: string; // Optional reference to a project
+  clientId: string;
+  clientName: string;
+  clientEmail: string;
+  items: InvoiceItem[];
+  notes?: string;
+  terms?: string;
+  subtotal: number;
+  taxTotal: number;
+  discountTotal: number;
+  total: number;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  paymentDate?: string;
+  paymentMethod?: string;
+}
+
+// Add mock invoices
+export const mockInvoices: Invoice[] = [
+  {
+    id: 'inv1',
+    number: 'INV-2023-001',
+    date: '2023-11-25',
+    dueDate: '2023-12-25',
+    clientId: 'client1',
+    clientName: 'Shannon Cooper',
+    clientEmail: 'shannon@example.com',
+    items: [
+      {
+        id: 'item1',
+        productId: 'p1',
+        description: 'Wedding Photo Package - Basic',
+        quantity: 1,
+        unitPrice: 1299.99,
+        taxRate: 7.5,
+        total: 1299.99,
+      },
+      {
+        id: 'item2',
+        inventoryItemId: 'item-tshirt-black',
+        description: 'Custom Printed T-Shirts (Black)',
+        quantity: 10,
+        unitPrice: 24.99,
+        discount: 5,
+        taxRate: 7.5,
+        total: 249.9,
+      },
+    ],
+    notes: 'Thank you for your business!',
+    terms: 'Payment due within 30 days',
+    subtotal: 1549.89,
+    taxTotal: 116.24,
+    discountTotal: 12.5,
+    total: 1653.63,
+    status: 'paid',
+    paymentDate: '2023-12-01',
+    paymentMethod: 'Credit Card',
+  },
+  {
+    id: 'inv2',
+    number: 'INV-2023-002',
+    date: '2023-12-05',
+    dueDate: '2024-01-05',
+    clientId: 'client2',
+    clientName: 'Alex Johnson',
+    clientEmail: 'alex@example.com',
+    items: [
+      {
+        id: 'item3',
+        inventoryItemId: 'item-banner-standard',
+        description: 'Standard Roll-Up Banner',
+        quantity: 2,
+        unitPrice: 89.99,
+        taxRate: 7.5,
+        total: 179.98,
+      },
+    ],
+    notes: 'Please reference invoice number when making payment',
+    terms: 'Payment due within 30 days',
+    subtotal: 179.98,
+    taxTotal: 13.5,
+    discountTotal: 0,
+    total: 193.48,
+    status: 'sent',
+  },
+];
 
 export const mockProjectFiles: ProjectFile[] = [
   {

@@ -4,17 +4,19 @@ import {
   FileType,
   InventoryCategory,
   InventoryItem,
+  Invoice,
   Product,
   ProjectFile,
   Template,
   mockInventoryCategories,
   mockInventoryItems,
+  mockInvoices,
   mockProducts,
   mockProjectFiles,
   mockTemplateItems,
   mockTemplates,
 } from '@/lib/mock/projectFiles';
-import { File, FileText, FolderPlus, Image, Paperclip } from 'lucide-react';
+import { File, FileText, FolderPlus, Image, Paperclip, Receipt } from 'lucide-react';
 import { useState } from 'react';
 import { useVersionHistory } from './useVersionHistory';
 
@@ -48,6 +50,12 @@ export function useProjectFiles() {
   const [showInventoryItemModal, setShowInventoryItemModal] = useState(false);
   const [showInventoryReportModal, setShowInventoryReportModal] = useState(false);
 
+  // Invoice related states
+  const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [showInvoiceCreatorModal, setShowInvoiceCreatorModal] = useState(false);
+  const [showInvoiceDetailsModal, setShowInvoiceDetailsModal] = useState(false);
+
   // Use version history hook
   const versionHistory = useVersionHistory({
     selectedFile,
@@ -68,7 +76,7 @@ export function useProjectFiles() {
       case 'proposal':
         return <File className='h-5 w-5 text-blue-500' />;
       case 'invoice':
-        return <File className='h-5 w-5 text-green-500' />;
+        return <Receipt className='h-5 w-5 text-green-500' />;
       case 'contract':
         return <File className='h-5 w-5 text-purple-500' />;
       case 'questionnaire':
@@ -79,6 +87,8 @@ export function useProjectFiles() {
         return <File className='h-5 w-5 text-indigo-500' />;
       case 'file_item':
         return <FolderPlus className='h-5 w-5 text-teal-500' />;
+      case 'invoice_item':
+        return <Receipt className='h-5 w-5 text-green-500' />;
       default:
         return <FileText className='h-5 w-5 text-gray-500' />;
     }
@@ -116,9 +126,92 @@ export function useProjectFiles() {
         return 'bg-amber-100 text-amber-600';
       case 'awaiting_approval':
         return 'bg-purple-100 text-purple-600';
+      case 'overdue':
+        return 'bg-red-100 text-red-600';
       default:
         return 'bg-gray-100 text-gray-600';
     }
+  };
+
+  // Invoice-related functions
+  const handleCreateInvoice = (invoice: Invoice) => {
+    // Add the invoice to the list
+    setInvoices([...invoices, invoice]);
+
+    // Create a project file entry for this invoice
+    const invoiceFile: ProjectFile = {
+      id: `file-${invoice.id}`,
+      name: `Invoice ${invoice.number}`,
+      type: 'invoice',
+      dateUploaded: invoice.date,
+      size: '50 KB', // Default size
+      status: invoice.status,
+      uploadedBy: 'Current User', // Would be current user in a real app
+      attachments: [],
+      comments: [],
+      clientEmail: invoice.clientEmail,
+      emailSent: invoice.status !== 'draft',
+      emailSentDate: invoice.date,
+    };
+
+    setFiles([...files, invoiceFile]);
+  };
+
+  const handleUpdateInvoice = (updatedInvoice: Invoice) => {
+    // Update invoice in the invoices list
+    setInvoices(invoices.map((inv) => (inv.id === updatedInvoice.id ? updatedInvoice : inv)));
+
+    // Update the project file entry
+    const fileToUpdate = files.find((f) => f.id === `file-${updatedInvoice.id}`);
+    if (fileToUpdate) {
+      const updatedFile: ProjectFile = {
+        ...fileToUpdate,
+        name: `Invoice ${updatedInvoice.number}`,
+        status: updatedInvoice.status,
+        clientEmail: updatedInvoice.clientEmail,
+        emailSent: updatedInvoice.status !== 'draft',
+      };
+
+      setFiles(files.map((f) => (f.id === updatedFile.id ? updatedFile : f)));
+    }
+  };
+
+  const handleSendInvoice = (invoiceId: string) => {
+    // Update invoice status
+    const invoiceToUpdate = invoices.find((inv) => inv.id === invoiceId);
+    if (invoiceToUpdate) {
+      const updatedInvoice: Invoice = {
+        ...invoiceToUpdate,
+        status: 'sent',
+      };
+
+      handleUpdateInvoice(updatedInvoice);
+    }
+  };
+
+  const handleMarkInvoiceAsPaid = (invoiceId: string) => {
+    const invoiceToUpdate = invoices.find((inv) => inv.id === invoiceId);
+    if (invoiceToUpdate) {
+      const updatedInvoice: Invoice = {
+        ...invoiceToUpdate,
+        status: 'paid',
+        paymentDate: new Date().toISOString().split('T')[0],
+      };
+
+      handleUpdateInvoice(updatedInvoice);
+    }
+  };
+
+  const getInvoiceById = (id: string) => {
+    return invoices.find((inv) => inv.id === id);
+  };
+
+  const handleDeleteInvoice = (invoiceId: string) => {
+    // Remove from invoices array
+    setInvoices(invoices.filter((inv) => inv.id !== invoiceId));
+
+    // Remove associated project file
+    setFiles(files.filter((f) => f.id !== `file-${invoiceId}`));
   };
 
   // Logic functions
@@ -628,8 +721,9 @@ export function useProjectFiles() {
       }
 
       localStorage.setItem(usageKey, JSON.stringify(currentUsage));
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
-      console.error('Could not track inventory usage in localStorage', e);
+      console.error('Could not track inventory usage in localStorage');
     }
   };
 
@@ -671,11 +765,14 @@ export function useProjectFiles() {
     if (item.templateValues) {
       item.templateValues.forEach((fieldValue) => {
         if (fieldValue.inventoryItemId) {
+          // Get the quantity (default to 1 if not specified)
+          const quantity = fieldValue.quantity || 1;
+
           // Record usage of this inventory item
           trackInventoryUsage(item.id, fieldValue.inventoryItemId);
 
-          // Optionally decrement stock (set to 1 for demonstration)
-          updateInventoryStock(fieldValue.inventoryItemId, 1);
+          // Update stock with the specified quantity
+          updateInventoryStock(fieldValue.inventoryItemId, quantity);
         }
       });
     }
@@ -764,6 +861,15 @@ export function useProjectFiles() {
     showInventoryReportModal,
     setShowInventoryReportModal,
 
+    // Invoice states
+    invoices,
+    selectedInvoice,
+    setSelectedInvoice,
+    showInvoiceCreatorModal,
+    setShowInvoiceCreatorModal,
+    showInvoiceDetailsModal,
+    setShowInvoiceDetailsModal,
+
     // Helper functions
     getFileIcon,
     getAttachmentIcon,
@@ -789,6 +895,14 @@ export function useProjectFiles() {
     handleUpdateTemplateItem,
     handleRestoreTemplateItemVersion,
     handleViewInventoryItem,
+
+    // Invoice functions
+    handleCreateInvoice,
+    handleUpdateInvoice,
+    handleSendInvoice,
+    handleMarkInvoiceAsPaid,
+    getInvoiceById,
+    handleDeleteInvoice,
 
     // Version history (from hook)
     ...versionHistory,

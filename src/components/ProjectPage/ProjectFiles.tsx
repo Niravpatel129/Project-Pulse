@@ -6,16 +6,18 @@ import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProjectFiles } from '@/hooks/useProjectFiles';
-import { BarChart, FolderClock, Plus, Search, X } from 'lucide-react';
+import { BarChart, FolderClock, Plus, Receipt, Search, X } from 'lucide-react';
+import { useState } from 'react';
 import {
   FileDetailsDialog,
   FileTable,
   InventoryReportModal,
+  ProductionTrackingModal,
   SendEmailDialog,
   UploadFileDialog,
   VersionHistoryDialog,
 } from './FileComponents';
-import ProductionTrackingModal from './ProductionTrackingModal';
+import InvoiceCreatorModal from './InvoiceCreatorModal';
 
 export default function ProjectFiles() {
   const {
@@ -88,7 +90,65 @@ export default function ProjectFiles() {
     handleRevertToVersion,
     handleCompareVersions,
     handleAddAttachmentToFileItem,
+
+    // Invoice-related states
+    invoices,
+    selectedInvoice,
+    setSelectedInvoice,
+    showInvoiceCreatorModal,
+    setShowInvoiceCreatorModal,
+    showInvoiceDetailsModal,
+    setShowInvoiceDetailsModal,
+    handleCreateInvoice,
+    handleUpdateInvoice,
+    handleSendInvoice,
+    handleMarkInvoiceAsPaid,
+    getInvoiceById,
+    handleDeleteInvoice,
   } = useProjectFiles();
+
+  // Add a new state for the selected client
+  const [selectedClient, setSelectedClient] = useState<{
+    id: string;
+    name: string;
+    email: string;
+  } | null>(null);
+
+  // Helper function to format invoice status
+  const formatInvoiceStatus = (status: string): string => {
+    switch (status) {
+      case 'draft':
+        return 'Draft';
+      case 'sent':
+        return 'Sent';
+      case 'paid':
+        return 'Paid';
+      case 'overdue':
+        return 'Overdue';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  };
+
+  // Helper function to get invoice status badge class
+  const getInvoiceStatusClass = (status: string): string => {
+    switch (status) {
+      case 'draft':
+        return 'bg-gray-100 text-gray-800';
+      case 'sent':
+        return 'bg-blue-100 text-blue-800';
+      case 'paid':
+        return 'bg-green-100 text-green-800';
+      case 'overdue':
+        return 'bg-red-100 text-red-800';
+      case 'cancelled':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   return (
     <div className='space-y-4'>
@@ -134,6 +194,27 @@ export default function ProjectFiles() {
             >
               <BarChart className='h-4 w-4' />
               Inventory
+            </Button>
+            <Button
+              variant='outline'
+              onClick={() => {
+                // Default to the project client if available
+                if (filteredFiles().length > 0) {
+                  const clientFile = filteredFiles().find((f) => f.clientEmail);
+                  if (clientFile) {
+                    setSelectedClient({
+                      id: 'client1', // In a real app, this would be a proper client ID
+                      name: clientFile.clientEmail?.split('@')[0] || 'Client',
+                      email: clientFile.clientEmail || '',
+                    });
+                  }
+                }
+                setShowInvoiceCreatorModal(true);
+              }}
+              className='flex items-center gap-1'
+            >
+              <Receipt className='h-4 w-4 mr-2' />
+              Create Invoice
             </Button>
             <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
               <Button onClick={() => setShowUploadDialog(true)}>
@@ -255,13 +336,35 @@ export default function ProjectFiles() {
         />
       </Dialog>
 
+      {/* Invoice Creator Modal */}
+      {showInvoiceCreatorModal && (
+        <InvoiceCreatorModal
+          onClose={() => {
+            setShowInvoiceCreatorModal(false);
+            setSelectedInvoice(null);
+          }}
+          onSave={(invoice) => {
+            if (selectedInvoice) {
+              handleUpdateInvoice(invoice);
+            } else {
+              handleCreateInvoice(invoice);
+            }
+          }}
+          projectFiles={filteredFiles()}
+          products={products}
+          inventoryItems={inventoryItems}
+          templates={templates}
+          existingInvoice={selectedInvoice || undefined}
+          defaultClient={selectedClient || undefined}
+        />
+      )}
+
       {/* Production Tracking Modal */}
       {showProductionTrackingModal && (
         <ProductionTrackingModal
-          templateItems={filteredFiles().filter((f) => f.type === 'custom_template_item')}
-          templates={templates}
-          inventoryItems={inventoryItems}
           onClose={() => setShowProductionTrackingModal(false)}
+          files={filteredFiles()}
+          templates={templates}
           onUpdateStatus={handleUpdateProductionStatus}
         />
       )}
