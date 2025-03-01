@@ -6,7 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -17,21 +17,32 @@ export default function RegisterPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [mounted, setMounted] = useState(false);
   const { toast } = useToast();
-
-  // Safely extract auth context values with fallbacks
-  const auth = useAuth();
-  const { register, isAuthenticated = false, error: authError = null } = auth || {};
+  const initStarted = useRef(false);
+  const { isAuthenticated, register, error, loading } = useAuth();
 
   const router = useRouter();
 
-  // Ensure client-side only rendering
+  // Ensure client-side only rendering with a single initialization
   useEffect(() => {
+    if (initStarted.current) return;
+    initStarted.current = true;
+
+    // Set mounted state after first render
     setMounted(true);
-  }, []);
+
+    // Check if we need to redirect immediately - only if auth is ready
+    if (isAuthenticated) {
+      console.log('Register page: Already authenticated, preparing redirect');
+      router.push('/');
+    }
+  }, [isAuthenticated, router]);
 
   // If already authenticated, redirect to home
+  // This is a separate effect to avoid execution during SSR
   useEffect(() => {
-    if (mounted && isAuthenticated) {
+    if (!mounted) return;
+
+    if (isAuthenticated) {
       router.push('/');
     }
   }, [isAuthenticated, router, mounted]);
@@ -42,7 +53,7 @@ export default function RegisterPage() {
     setErrorMsg('');
 
     // Validate auth context is available with super defensive check
-    if (!register || typeof register !== 'function') {
+    if (!mounted || !register || typeof register !== 'function') {
       setErrorMsg('Authentication system not available');
       setIsLoading(false);
       toast({
@@ -101,6 +112,18 @@ export default function RegisterPage() {
         <div className='animate-pulse text-center'>
           <div className='h-8 w-32 bg-gray-200 mx-auto mb-4 rounded'></div>
           <div className='h-4 w-48 bg-gray-200 mx-auto rounded'></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show initialization loading state if necessary
+  if (loading) {
+    return (
+      <div className='flex min-h-screen items-center justify-center'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4'></div>
+          <div className='text-gray-600'>Loading authentication system...</div>
         </div>
       </div>
     );
@@ -185,8 +208,8 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {(errorMsg || authError) && (
-            <div className='text-red-500 text-sm text-center'>{errorMsg || authError}</div>
+          {(errorMsg || (mounted && error)) && (
+            <div className='text-red-500 text-sm text-center'>{errorMsg || error}</div>
           )}
 
           <div>

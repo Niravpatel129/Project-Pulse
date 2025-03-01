@@ -8,6 +8,7 @@ export { TemplatesProvider, useTemplates } from './TemplatesContext';
 // Combined provider for easier application wrapping
 import React, { ReactNode } from 'react';
 import { ApiProvider } from './ApiContext';
+import { AuthProvider } from './AuthContext';
 import { InventoryProvider } from './InventoryContext';
 import { InvoicesProvider } from './InvoicesContext';
 import { ProjectFilesProvider } from './ProjectFilesContext';
@@ -20,14 +21,16 @@ interface AppProviderProps {
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children, initialApiConfig }) => {
   return (
-    <ApiProvider initialConfig={initialApiConfig}>
-      <ProjectFilesProvider>
-        <InventoryProvider>
-          <InvoicesProvider>
-            <TemplatesProvider>{children}</TemplatesProvider>
-          </InvoicesProvider>
-        </InventoryProvider>
-      </ProjectFilesProvider>
-    </ApiProvider>
+    <AuthProvider>
+      <ApiProvider initialConfig={initialApiConfig}>
+        <ProjectFilesProvider>
+          <InventoryProvider>
+            <InvoicesProvider>
+              <TemplatesProvider>{children}</TemplatesProvider>
+            </InvoicesProvider>
+          </InventoryProvider>
+        </ProjectFilesProvider>
+      </ApiProvider>
+    </AuthProvider>
   );
 };

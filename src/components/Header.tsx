@@ -13,39 +13,21 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 export default function Header() {
-  // Use try-catch to safely extract auth context
-  let authValues = {
-    isAuthenticated: false,
-    user: null,
-    logout: () => {},
-    loading: false,
-  };
-
-  try {
-    const auth = useAuth();
-    if (auth) {
-      authValues = {
-        isAuthenticated: !!auth.isAuthenticated,
-        user: auth.user || null,
-        logout: auth.logout || (() => {}),
-        loading: !!auth.loading,
-      };
-    }
-  } catch (error) {
-    console.warn('Error accessing auth context in Header:', error);
-  }
-
-  const { isAuthenticated, user, logout } = authValues;
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
 
-  // Only run on client, avoids hydration mismatches
+  // Get auth values
+  const { isAuthenticated, user, logout, reloadAuth } = useAuth();
+
+  // Debug log auth state changes
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    console.log('Header auth state:', {
+      isAuthenticated,
+      user: user ? `${user.name} (${user.email})` : 'none',
+    });
+  }, [isAuthenticated, user]);
 
   // Check if the current path is login or register
   const isAuthPage = pathname === '/login' || pathname === '/register';
@@ -55,19 +37,12 @@ export default function Header() {
     return null;
   }
 
-  // While not mounted or loading, show a simplified header
-  if (!mounted) {
-    return (
-      <header className='border-b'>
-        <div className='container mx-auto px-4 py-4 flex items-center justify-between'>
-          <Link href='/' className='font-semibold text-lg'>
-            Pulse App
-          </Link>
-          <div className='w-8 h-8 rounded-full bg-gray-200 animate-pulse'></div>
-        </div>
-      </header>
-    );
-  }
+  // Handle logout with reload
+  const handleLogout = () => {
+    logout();
+    // Force redirect after logout
+    window.location.href = '/';
+  };
 
   return (
     <header className='border-b'>
@@ -88,6 +63,8 @@ export default function Header() {
                 Projects
               </Link>
             </li>
+
+            {/* Admin link - only for admin users */}
             {isAuthenticated && user?.role === 'admin' && (
               <li>
                 <Link href='/admin' className='text-sm font-medium hover:text-primary'>
@@ -95,6 +72,8 @@ export default function Header() {
                 </Link>
               </li>
             )}
+
+            {/* Auth buttons or user menu */}
             {!isAuthenticated ? (
               <>
                 <li>
@@ -112,20 +91,35 @@ export default function Header() {
               <li>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant='ghost' size='icon' className='rounded-full'>
-                      <Avatar className='h-8 w-8'>
-                        <AvatarFallback>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='rounded-full relative overflow-hidden'
+                    >
+                      <Avatar className='h-8 w-8 bg-primary text-primary-foreground border border-border text-black'>
+                        <AvatarFallback className='font-semibold'>
                           {user?.name
-                            ?.split(' ')
-                            .map((n) => n[0])
-                            .join('')
-                            .toUpperCase() || '?'}
+                            ? user.name
+                                .split(' ')
+                                .map((n) => n[0])
+                                .join('')
+                                .toUpperCase()
+                            : '?'}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
+
                   <DropdownMenuContent align='end'>
-                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuLabel className='flex flex-col gap-1'>
+                      <span>{user?.name || 'Unknown User'}</span>
+                      <span className='text-xs text-muted-foreground'>
+                        {user?.email || 'No email'}
+                      </span>
+                      <span className='text-xs text-muted-foreground capitalize'>
+                        Role: {user?.role || 'unknown'}
+                      </span>
+                    </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link href='/profile'>Profile</Link>
@@ -134,7 +128,7 @@ export default function Header() {
                       <Link href='/settings'>Settings</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => logout()}>Sign Out</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout}>Sign Out</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </li>
