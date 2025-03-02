@@ -125,6 +125,12 @@ export default function AddParticipantModal({
 
     const newParticipant: Participant = {
       id: `new-${Date.now()}`,
+      name: values.name,
+      email: values.email,
+      phone: values.phone,
+      website: values.website,
+      jobTitle: values.jobTitle,
+      mailingAddress: values.mailingAddress,
       ...values,
       customFields: customFieldsObj,
     };

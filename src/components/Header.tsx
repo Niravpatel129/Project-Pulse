@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
+import { LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
@@ -32,8 +33,16 @@ export default function Header() {
   // Check if the current path is login or register
   const isAuthPage = pathname === '/login' || pathname === '/register';
 
+  // Check if the current path is in the dashboard
+  const isDashboardPage = pathname.startsWith('/dashboard');
+
   // If we're on an auth page, don't show the header
   if (isAuthPage) {
+    return null;
+  }
+
+  // If we're on a dashboard page, don't show the regular header
+  if (isDashboardPage) {
     return null;
   }
 
@@ -56,6 +65,15 @@ export default function Header() {
             <li>
               <Link href='/' className='text-sm font-medium hover:text-primary'>
                 Home
+              </Link>
+            </li>
+            <li>
+              <Link
+                href='/dashboard'
+                className='text-sm font-medium hover:text-primary flex items-center'
+              >
+                <LayoutDashboard className='h-4 w-4 mr-1' />
+                Dashboard
               </Link>
             </li>
             <li>
@@ -121,6 +139,9 @@ export default function Header() {
                       </span>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href='/dashboard'>Dashboard</Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href='/profile'>Profile</Link>
                     </DropdownMenuItem>
