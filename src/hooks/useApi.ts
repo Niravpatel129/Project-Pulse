@@ -78,7 +78,20 @@ export function useApi() {
       trackUsage: withLoadingAndErrors('inventory.trackUsage', inventory.trackInventoryUsage),
       getUsageReports: withLoadingAndErrors<InventoryUsageReport[], []>(
         'inventory.getUsageReports',
-        inventory.getInventoryUsageReports,
+        async () => {
+          const response = await inventory.getInventoryUsageReports();
+          return response.items.map((item) => ({
+            item: {
+              id: item.itemId,
+              name: item.itemName,
+              sku: '',
+              stock: 0,
+            },
+            usageCount: item.quantity,
+            projectCount: item.projectId ? 1 : 0,
+            projects: item.projectId ? [item.projectId] : [],
+          }));
+        },
       ),
       getCategories: withLoadingAndErrors(
         'inventory.getCategories',
@@ -182,7 +195,6 @@ export function useApi() {
     if (typeof keys === 'string') {
       // Clear a specific error
       setErrors((prev) => {
-         
         const { [keys]: omitted, ...rest } = prev;
         return rest;
       });
