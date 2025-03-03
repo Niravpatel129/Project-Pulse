@@ -20,6 +20,7 @@ const eslintConfig = [
       "prefer-const": "error",
       "jsx-a11y/alt-text": "error",
       "jsx-a11y/aria-role": "error",
+      "@typescript-eslint/no-unused-vars": "off",
       "react/no-array-index-key": "off",
     },
   },
