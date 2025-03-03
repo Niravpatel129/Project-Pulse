@@ -232,9 +232,11 @@ const MONTHS = [
 // Hours for day view
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 8); // 8 AM to 7 PM
 
+type CalendarView = 'month' | 'week' | 'day' | 'list';
+
 export default function CalendarPage() {
   const { isAuthenticated, user } = useAuth();
-  const [view, setView] = useState<'month' | 'week' | 'day' | 'list'>('week');
+  const [view, setView] = useState<CalendarView>('month');
   const [currentDate, setCurrentDate] = useState(new Date('2024-04-19')); // Set to a date with events
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [typeFilter, setTypeFilter] = useState('all');
@@ -582,7 +584,11 @@ export default function CalendarPage() {
       </div>
 
       <div className='bg-card rounded-lg border shadow-sm overflow-hidden'>
-        <Tabs value={view} onValueChange={(value) => setView(value as any)} className='w-full'>
+        <Tabs
+          value={view}
+          onValueChange={(value) => setView(value as CalendarView)}
+          className='w-full'
+        >
           <div className='px-4 pt-3'>
             <TabsList className='grid grid-cols-4 mb-4 w-full sm:w-auto'>
               <TabsTrigger value='month'>

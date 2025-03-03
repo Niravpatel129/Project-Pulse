@@ -61,6 +61,8 @@ interface Payment {
   notes: string;
 }
 
+type PaymentViewMode = 'all' | 'upcoming' | 'overdue';
+
 // Mock payment data
 const MOCK_PAYMENTS: Payment[] = [
   {
@@ -198,7 +200,7 @@ export default function PaymentsPage() {
   const { isAuthenticated, user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [viewMode, setViewMode] = useState<'all' | 'upcoming' | 'recent'>('all');
+  const [viewMode, setViewMode] = useState<PaymentViewMode>('all');
   const [sortColumn, setSortColumn] = useState('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [payments, setPayments] = useState<Payment[]>(MOCK_PAYMENTS);
@@ -228,11 +230,11 @@ export default function PaymentsPage() {
     if (viewMode === 'upcoming') {
       const dueDate = new Date(payment.dueDate);
       matchesViewMode = dueDate >= today && payment.status !== 'Paid';
-    } else if (viewMode === 'recent') {
+    } else if (viewMode === 'overdue') {
       const date = new Date(payment.date);
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(today.getDate() - 30);
-      matchesViewMode = date >= thirtyDaysAgo;
+      matchesViewMode = date <= thirtyDaysAgo;
     }
 
     return matchesSearch && matchesStatus && matchesViewMode;
@@ -449,13 +451,13 @@ export default function PaymentsPage() {
 
         <Tabs
           value={viewMode}
-          onValueChange={(value) => setViewMode(value as any)}
+          onValueChange={(value) => setViewMode(value as PaymentViewMode)}
           className='w-full md:w-auto'
         >
           <TabsList className='grid w-full grid-cols-3'>
             <TabsTrigger value='all'>All</TabsTrigger>
             <TabsTrigger value='upcoming'>Upcoming</TabsTrigger>
-            <TabsTrigger value='recent'>Recent</TabsTrigger>
+            <TabsTrigger value='overdue'>Overdue</TabsTrigger>
           </TabsList>
         </Tabs>
 

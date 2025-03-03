@@ -65,7 +65,12 @@ export const handleMockApiRequest = async (
 
   try {
     // Call the handler with the method, path, params, and data
-    return await handler(method, path, params, id ? { ...(data as any), id } : data);
+    return await handler(
+      method,
+      path,
+      params,
+      id ? { ...(data as Record<string, unknown>), id } : data,
+    );
   } catch (error) {
     console.error(`Error in mock handler for ${path}:`, error);
     return {
@@ -160,7 +165,7 @@ export const configureMockApi = (apiClient: {
             // Convert FormData to object
             data = {};
             init.body.forEach((value, key) => {
-              (data as Record<string, any>)[key] = value;
+              (data as Record<string, string>)[key] = value.toString();
             });
           } else {
             data = init.body;
