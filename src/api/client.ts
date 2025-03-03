@@ -12,6 +12,13 @@ const API_CONFIG = {
   useMock: process.env.NODE_ENV !== 'production',
 };
 
+export interface ApiClientConfig {
+  baseUrl: string;
+  defaultHeaders?: Record<string, string>;
+  timeout?: number;
+  useMock?: boolean;
+}
+
 /**
  * API client for making HTTP requests to the backend
  */

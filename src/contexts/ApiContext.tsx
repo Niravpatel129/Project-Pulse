@@ -1,32 +1,34 @@
 'use client';
 
-import { ApiClient } from '@/api/client';
+import { ApiClient, ApiClientConfig } from '@/api/client';
 import { inventory } from '@/api/services/inventory';
 import { invoices } from '@/api/services/invoices';
 import { projectFiles } from '@/api/services/projectFiles';
 import { templates } from '@/api/services/templates';
-import React, { createContext, ReactNode, useContext, useMemo, useState } from 'react';
+import React, {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
-// Combine all services
-const services = {
-  projectFiles,
-  templates,
-  invoices,
-  inventory,
+const defaultApiConfig: ApiClientConfig = {
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
+  timeout: 30000,
 };
 
-// Type for API client config
-interface ApiClientConfig {
-  baseUrl: string;
-  defaultHeaders: Record<string, string>;
-  timeout: number;
-  useMock: boolean;
-}
-
 interface ApiContextState {
-  services: typeof services;
+  services: {
+    projectFiles: typeof projectFiles;
+    templates: typeof templates;
+    inventory: typeof inventory;
+    invoices: typeof invoices;
+  };
   isLoading: (key: string) => boolean;
-  setLoading: (key: string, isLoading: boolean) => void;
+  setLoading: (key: string, value: boolean) => void;
   getError: (key: string) => Error | null;
   setError: (key: string, error: Error | null) => void;
   clearAllErrors: () => void;
@@ -34,101 +36,112 @@ interface ApiContextState {
   setConfig: (config: Partial<ApiClientConfig>) => void;
 }
 
-const ApiContext = createContext<ApiContextState | undefined>(undefined);
-
 interface ApiProviderProps {
   children: ReactNode;
-  initialConfig?: Record<string, unknown>;
+  initialConfig?: Partial<ApiClientConfig>;
 }
 
+const ApiContext = createContext<ApiContextState | undefined>(undefined);
+
 export const ApiProvider: React.FC<ApiProviderProps> = ({ children, initialConfig }) => {
-  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, Error | null>>({});
+  const [config, setApiConfig] = useState<ApiClientConfig>(defaultApiConfig);
   const client = useMemo(() => new ApiClient(), []);
 
-  // Apply initial configuration if provided
-  useMemo(() => {
-    if (initialConfig) {
-      if (initialConfig.useMock !== undefined) {
-        client.setUseMock(initialConfig.useMock as boolean);
-      }
-    }
-  }, [client, initialConfig]);
+  const isLoading = useCallback((key: string) => loading[key] || false, [loading]);
+  const getError = useCallback((key: string) => errors[key] || null, [errors]);
+  const clearAllErrors = useCallback(() => setErrors({}), []);
+  const setLoadingState = useCallback((key: string, value: boolean) => {
+    setLoading((prev) => ({ ...prev, [key]: value }));
+  }, []);
 
-  // Wrap services with loading and error handling
-  const wrappedServices = useMemo(() => {
-    return Object.entries(services).reduce((acc, [serviceName, service]) => {
-      const wrappedService = Object.entries(service).reduce((serviceAcc, [methodName, method]) => {
+  const setErrorState = useCallback((key: string, error: Error | null) => {
+    setErrors((prev) => ({ ...prev, [key]: error }));
+  }, []);
+
+  const services = useMemo(() => {
+    const wrapService = <T extends Record<string, (...args: unknown[]) => Promise<unknown>>>(
+      service: T,
+      serviceName: string,
+    ): T => {
+      const wrapped = {} as T;
+
+      Object.entries(service).forEach(([methodName, method]) => {
+        if (typeof method !== 'function') {
+          wrapped[methodName as keyof T] = method;
+          return;
+        }
+
         const wrappedMethod = async (...args: unknown[]) => {
           const key = `${serviceName}.${methodName}`;
-          setLoading(key, true);
-          setError(key, null);
+          setLoadingState(key, true);
+          setErrorState(key, null);
 
           try {
-            const result = await (method as (...args: unknown[]) => Promise<unknown>)(...args);
+            const result = await method(...args);
             return result;
           } catch (error) {
-            setError(key, error instanceof Error ? error : new Error(String(error)));
+            setErrorState(key, error instanceof Error ? error : new Error(String(error)));
             throw error;
           } finally {
-            setLoading(key, false);
+            setLoadingState(key, false);
           }
         };
 
-        return {
-          ...serviceAcc,
-          [methodName]: wrappedMethod,
-        };
-      }, {});
+        wrapped[methodName as keyof T] = wrappedMethod as T[keyof T];
+      });
 
-      return {
-        ...acc,
-        [serviceName]: wrappedService,
-      };
-    }, {} as typeof services);
+      return wrapped;
+    };
+
+    return {
+      projectFiles: wrapService(projectFiles, 'projectFiles'),
+      templates: wrapService(templates, 'templates'),
+      inventory: wrapService(inventory, 'inventory'),
+      invoices: wrapService(invoices, 'invoices'),
+    };
+  }, [setLoadingState, setErrorState]);
+
+  const handleSetConfig = useCallback((newConfig: Partial<ApiClientConfig>) => {
+    setApiConfig((prev) => ({ ...prev, ...newConfig }));
   }, []);
 
-  // Helper methods for loading and error states
-  const isLoading = (key: string): boolean => !!loadingStates[key];
-  const setLoading = (key: string, loading: boolean) => {
-    setLoadingStates((prev) => ({ ...prev, [key]: loading }));
-  };
-
-  const getError = (key: string): Error | null => errors[key] || null;
-  const setError = (key: string, error: Error | null) => {
-    setErrors((prev) => ({ ...prev, [key]: error }));
-  };
-  const clearAllErrors = () => setErrors({});
-
-  // Update API client configuration
-  const setConfig = (config: Partial<ApiClientConfig>) => {
-    if (config.useMock !== undefined) {
-      client.setUseMock(config.useMock);
-    }
-  };
-
-  // Create context value
-  const contextValue = useMemo(
+  const value = useMemo(
     () => ({
-      services: wrappedServices,
+      services,
       isLoading,
-      setLoading,
+      setLoading: setLoadingState,
       getError,
-      setError,
+      setError: setErrorState,
       clearAllErrors,
       client,
-      setConfig,
+      setConfig: handleSetConfig,
     }),
-    [client, wrappedServices, isLoading, setLoading, getError, setError, clearAllErrors, setConfig],
+    [
+      services,
+      isLoading,
+      setLoadingState,
+      getError,
+      setErrorState,
+      clearAllErrors,
+      client,
+      handleSetConfig,
+    ],
   );
 
-  return <ApiContext.Provider value={contextValue}>{children}</ApiContext.Provider>;
+  useEffect(() => {
+    if (initialConfig) {
+      handleSetConfig(initialConfig);
+    }
+  }, [initialConfig, handleSetConfig]);
+
+  return <ApiContext.Provider value={value}>{children}</ApiContext.Provider>;
 };
 
-// Hook to use the API context
-export const useApi = (): ApiContextState => {
+export const useApi = () => {
   const context = useContext(ApiContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useApi must be used within an ApiProvider');
   }
   return context;

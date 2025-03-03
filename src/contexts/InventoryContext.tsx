@@ -1,7 +1,14 @@
 'use client';
 
-import { InventoryCategory, InventoryItem } from '@/api/models';
-import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { InventoryCategory, InventoryItem, ListRequestParams } from '@/api/models';
+import React, {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import { useApi } from './ApiContext';
 
 interface InventoryContextState {
@@ -14,9 +21,9 @@ interface InventoryContextState {
   error: Error | null;
 
   // Actions
-  loadItems: (params?: Record<string, unknown>) => Promise<void>;
+  loadItems: (params?: ListRequestParams) => Promise<void>;
   loadItemById: (id: string) => Promise<InventoryItem | null>;
-  loadCategories: (params?: Record<string, unknown>) => Promise<void>;
+  loadCategories: (params?: ListRequestParams) => Promise<void>;
   loadCategoryById: (id: string) => Promise<InventoryCategory | null>;
   createItem: (item: Partial<InventoryItem>) => Promise<InventoryItem | null>;
   updateItem: (id: string, updates: Partial<InventoryItem>) => Promise<InventoryItem | null>;
@@ -47,21 +54,24 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
   const [error, setError] = useState<Error | null>(null);
 
   // Load all inventory items
-  const loadItems = async (params: Record<string, unknown> = {}) => {
-    setIsLoading(true);
-    setError(null);
+  const loadItems = useCallback(
+    async (params: ListRequestParams = {}) => {
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const response = await services.inventory.getInventoryItems(params);
-      if (response) {
-        setItems(response.items);
+      try {
+        const response = await services.inventory.getInventoryItems(params);
+        if (response) {
+          setItems(response.items);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to load inventory items'));
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to load inventory items'));
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [services.inventory],
+  );
 
   // Load a single inventory item by ID
   const loadItemById = async (id: string): Promise<InventoryItem | null> => {
@@ -81,21 +91,24 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
   };
 
   // Load all inventory categories
-  const loadCategories = async (params: Record<string, unknown> = {}) => {
-    setIsLoading(true);
-    setError(null);
+  const loadCategories = useCallback(
+    async (params: ListRequestParams = {}) => {
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const response = await services.inventory.getInventoryCategories(params);
-      if (response) {
-        setCategories(response.items);
+      try {
+        const response = await services.inventory.getInventoryCategories(params);
+        if (response) {
+          setCategories(response.items);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to load inventory categories'));
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to load inventory categories'));
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [services.inventory],
+  );
 
   // Load a single inventory category by ID
   const loadCategoryById = async (id: string): Promise<InventoryCategory | null> => {
@@ -262,7 +275,19 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
 
   // Search inventory items
   const searchItems = async (query: string) => {
-    await loadItems({ search: query });
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await services.inventory.getInventoryItems({ search: query });
+      if (response) {
+        setItems(response.items);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to search inventory items'));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Filter items by category
@@ -274,8 +299,7 @@ export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }
   useEffect(() => {
     loadItems();
     loadCategories();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadItems, loadCategories]);
 
   // Context value
   const value: InventoryContextState = {

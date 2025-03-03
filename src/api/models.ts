@@ -88,7 +88,10 @@ export interface TemplateField {
   formula?: string; // For calculated fields (e.g., price calculation formula)
   inventoryCategory?: string; // For inventory_item fields, can filter by category
   placeholder?: string; // Placeholder text for input fields
-  validations?: Record<string, string | number | boolean | RegExp | ((value: unknown) => boolean)>; // Validation rules
+  validations?: Record<
+    string,
+    string | number | boolean | RegExp | ((value: unknown) => boolean) | TemplateField[]
+  >; // Validation rules
   multiple?: boolean; // Whether multiple values can be selected/entered
   linkedToInventory?: boolean; // Whether field is linked to inventory items
   minItems?: number; // Minimum number of items for array fields

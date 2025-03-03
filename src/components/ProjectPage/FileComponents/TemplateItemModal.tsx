@@ -23,6 +23,7 @@ import {
   TemplateField,
   TemplateFieldValue,
 } from '@/lib/mock/projectFiles';
+import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 
 interface TemplateItemModalProps {
@@ -294,9 +295,11 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
             </div>
             {fileUrl && (
               <div className='mt-2'>
-                <img
+                <Image
                   src={fileUrl}
                   alt='File preview'
+                  width={128}
+                  height={128}
                   className='max-h-32 max-w-full rounded-md border'
                 />
                 <span className='text-sm text-gray-500 block mt-1'>{currentValue as string}</span>
@@ -344,9 +347,11 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
                   <SelectItem key={item.id} value={item.id}>
                     <div className='flex items-center gap-2'>
                       {item.imageUrl && (
-                        <img
+                        <Image
                           src={item.imageUrl}
                           alt={item.name}
+                          width={24}
+                          height={24}
                           className='h-6 w-6 rounded-md object-cover'
                         />
                       )}
@@ -420,9 +425,11 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
               <div className='mt-1 p-2 bg-gray-50 rounded-md text-sm'>
                 <div className='flex items-center gap-2'>
                   {selectedItem.imageUrl && (
-                    <img
+                    <Image
                       src={selectedItem.imageUrl}
                       alt={selectedItem.name}
+                      width={40}
+                      height={40}
                       className='h-10 w-10 rounded-md object-cover'
                     />
                   )}
