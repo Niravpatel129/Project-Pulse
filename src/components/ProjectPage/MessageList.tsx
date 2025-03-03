@@ -38,7 +38,14 @@ export default function ActivityFeed({ activities }: ActivityFeedProps) {
   // Scroll to bottom of the chat container when component mounts or activities change
   useEffect(() => {
     if (messagesContainerRef.current) {
+      // Store the current scroll position of the page
+      const scrollY = window.scrollY;
+
+      // Scroll the messages container to the bottom
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+
+      // Restore the page scroll position
+      window.scrollTo({ top: scrollY });
     }
   }, [activities]);
 
