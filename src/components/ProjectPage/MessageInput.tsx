@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Paperclip, Send } from 'lucide-react';
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 
 interface MessageInputProps {
   user: {
@@ -36,13 +36,6 @@ export default function MessageInput({ user, onSendMessage }: MessageInputProps)
       }
     });
   };
-
-  // Keep focus on input after rendering
-  useEffect(() => {
-    if (inputRef.current && !isPending) {
-      inputRef.current.focus();
-    }
-  }, [isPending]);
 
   const recipientRole = user.role === 'PRINT_SHOP_EMPLOYEE' ? 'Client' : 'Print Shop';
 
