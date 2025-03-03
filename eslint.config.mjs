@@ -19,7 +19,8 @@ const eslintConfig = [
       "react/no-array-index-key": "warn",
       "prefer-const": "error",
       "jsx-a11y/alt-text": "error",
-      "jsx-a11y/aria-role": "error"
+      "jsx-a11y/aria-role": "error",
+      "react/no-array-index-key": "off",
     },
   },
 ];

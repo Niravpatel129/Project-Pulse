@@ -228,7 +228,7 @@ export default function DashboardPage() {
                 <div className='flex items-center justify-between'>
                   <CardTitle>Project Status</CardTitle>
                   <Button variant='ghost' size='sm' className='text-xs h-8' asChild>
-                    <Link href='/dashboard/projects'>
+                    <Link href='/projects'>
                       View All <ExternalLink className='ml-1 h-3 w-3' />
                     </Link>
                   </Button>
@@ -269,7 +269,7 @@ export default function DashboardPage() {
               </CardContent>
               <CardFooter className='pt-2'>
                 <Button variant='outline' size='sm' asChild className='mt-2 w-full'>
-                  <Link href='/dashboard/projects/new'>Create New Project</Link>
+                  <Link href='/projects/new'>Create New Project</Link>
                 </Button>
               </CardFooter>
             </Card>
@@ -280,7 +280,7 @@ export default function DashboardPage() {
                 <div className='flex items-center justify-between'>
                   <CardTitle>Upcoming Events</CardTitle>
                   <Button variant='ghost' size='sm' className='text-xs h-8' asChild>
-                    <Link href='/dashboard/calendar'>
+                    <Link href='/calendar'>
                       View Calendar <ExternalLink className='ml-1 h-3 w-3' />
                     </Link>
                   </Button>
@@ -315,7 +315,7 @@ export default function DashboardPage() {
               </CardContent>
               <CardFooter className='pt-0'>
                 <Button variant='outline' size='sm' asChild className='w-full'>
-                  <Link href='/dashboard/calendar'>
+                  <Link href='/calendar'>
                     <Calendar className='mr-2 h-4 w-4' />
                     View Full Calendar
                   </Link>
@@ -327,7 +327,7 @@ export default function DashboardPage() {
           {/* Quick Action Links */}
           <h3 className='text-lg font-medium mt-6'>Quick Access</h3>
           <div className='grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
-            <Link href='/dashboard/projects' className='group'>
+            <Link href='/projects' className='group'>
               <Card className='transition-all hover:shadow-md group-hover:border-primary'>
                 <CardHeader className='pb-2'>
                   <div className='flex items-center justify-between'>
@@ -343,7 +343,7 @@ export default function DashboardPage() {
               </Card>
             </Link>
 
-            <Link href='/dashboard/customers' className='group'>
+            <Link href='/customers' className='group'>
               <Card className='transition-all hover:shadow-md group-hover:border-primary'>
                 <CardHeader className='pb-2'>
                   <div className='flex items-center justify-between'>
@@ -359,7 +359,7 @@ export default function DashboardPage() {
               </Card>
             </Link>
 
-            <Link href='/dashboard/inventory' className='group'>
+            <Link href='/inventory' className='group'>
               <Card className='transition-all hover:shadow-md group-hover:border-primary'>
                 <CardHeader className='pb-2'>
                   <div className='flex items-center justify-between'>
