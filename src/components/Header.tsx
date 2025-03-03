@@ -68,10 +68,7 @@ export default function Header() {
               </Link>
             </li>
             <li>
-              <Link
-                href='/dashboard'
-                className='text-sm font-medium hover:text-primary flex items-center'
-              >
+              <Link href='/' className='text-sm font-medium hover:text-primary flex items-center'>
                 <LayoutDashboard className='h-4 w-4 mr-1' />
                 Dashboard
               </Link>

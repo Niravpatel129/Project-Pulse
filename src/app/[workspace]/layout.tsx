@@ -12,8 +12,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useAuth } from '@/contexts/AuthContext';
-import { useBreakpoints } from '@/hooks/useMediaQuery';
 import { cn } from '@/lib/utils';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import {
@@ -22,8 +20,8 @@ import {
   Calendar,
   CreditCard,
   Factory,
+  Home,
   Layers,
-  LayoutDashboard,
   LogOut,
   Menu,
   Package,
@@ -83,47 +81,45 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const { user } = useAuth();
-  const { isMd } = useBreakpoints();
 
   const navigation = [
     {
-      href: '/dashboard',
-      label: 'Overview',
-      icon: <LayoutDashboard className='h-4 w-4' />,
+      href: '/',
+      label: 'Home',
+      icon: <Home className='h-4 w-4' />,
     },
     {
-      href: '/dashboard/projects',
+      href: '/projects',
       label: 'Projects',
       icon: <Layers className='h-4 w-4' />,
     },
     {
-      href: '/dashboard/production',
+      href: '/production',
       label: 'Production',
       icon: <Factory className='h-4 w-4' />,
     },
     {
-      href: '/dashboard/customers',
+      href: '/customers',
       label: 'Customers',
       icon: <Users className='h-4 w-4' />,
     },
     {
-      href: '/dashboard/inventory',
+      href: '/inventory',
       label: 'Inventory',
       icon: <Package className='h-4 w-4' />,
     },
     {
-      href: '/dashboard/calendar',
+      href: '/calendar',
       label: 'Calendar',
       icon: <Calendar className='h-4 w-4' />,
     },
     {
-      href: '/dashboard/payments',
+      href: '/payments',
       label: 'Payments',
       icon: <CreditCard className='h-4 w-4' />,
     },
     {
-      href: '/dashboard/analytics',
+      href: '/analytics',
       label: 'Analytics',
       icon: <BarChart3 className='h-4 w-4' />,
     },
@@ -132,12 +128,12 @@ export default function DashboardLayout({
   // User settings navigation items - separated to put in a different dropdown
   const userNavigation = [
     {
-      href: '/dashboard/profile',
+      href: '/profile',
       label: 'Profile',
       icon: <UserCircle className='h-4 w-4' />,
     },
     {
-      href: '/dashboard/settings',
+      href: '/settings',
       label: 'Settings',
       icon: <Settings className='h-4 w-4' />,
     },
@@ -145,8 +141,8 @@ export default function DashboardLayout({
 
   // Checks if a navigation item is active
   const isNavItemActive = (href: string) => {
-    if (href === '/dashboard') {
-      return pathname === '/dashboard';
+    if (href === '/') {
+      return pathname === '/';
     }
     return pathname.startsWith(href);
   };
@@ -172,7 +168,7 @@ export default function DashboardLayout({
                     <SheetTitle>Navigation Menu</SheetTitle>
                   </VisuallyHidden>
                   <div className='flex h-14 items-center border-b px-4'>
-                    <Link href='/dashboard' className='flex items-center gap-2 font-semibold'>
+                    <Link href='/' className='flex items-center gap-2 font-semibold'>
                       <Layers className='h-6 w-6' />
                     </Link>
                   </div>
@@ -194,7 +190,7 @@ export default function DashboardLayout({
             </div>
 
             {/* Logo */}
-            <Link href='/dashboard' className='flex items-center gap-2 font-semibold'>
+            <Link href='/' className='flex items-center gap-2 font-semibold'>
               <Layers className='h-6 w-6' />
             </Link>
           </div>
