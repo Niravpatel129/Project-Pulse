@@ -18,7 +18,6 @@ const eslintConfig = [
       "react-hooks/exhaustive-deps": "warn",
       "react/no-array-index-key": "warn",
       "prefer-const": "error",
-      "no-console": ["warn", { "allow": ["warn", "error"] }],
       "jsx-a11y/alt-text": "error",
       "jsx-a11y/aria-role": "error"
     },

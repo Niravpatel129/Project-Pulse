@@ -82,6 +82,14 @@ export default function DashboardLayout({
 }>) {
   const pathname = usePathname();
 
+  // Check if the current path is login
+  const isLoginPage = pathname.includes('/login');
+
+  // If we're on the login page, only render the children without the layout
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
+
   const navigation = [
     {
       href: '/',
@@ -318,7 +326,6 @@ export default function DashboardLayout({
           </div>
         </div>
       </header>
-
       {/* Main Content */}
       <main className='flex-1 p-4 sm:p-6 md:p-8'>{children}</main>
     </div>

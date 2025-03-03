@@ -20,7 +20,7 @@ export default function Header() {
   const pathname = usePathname();
 
   // Get auth values
-  const { isAuthenticated, user, logout, reloadAuth } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
 
   // Debug log auth state changes
   useEffect(() => {

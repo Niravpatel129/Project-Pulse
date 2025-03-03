@@ -64,22 +64,6 @@ export default function LoginPage() {
     }
   };
 
-  // If already authenticated, show nothing (will be redirected by useEffect)
-  if (isAuthenticated) {
-    return (
-      <div className='flex min-h-screen items-center justify-center py-12 px-4 sm:px-6 lg:px-8'>
-        <div className='w-full max-w-md space-y-8 text-center'>
-          <div className='animate-pulse'>
-            <h2 className='text-center text-2xl font-semibold text-green-600'>
-              Already authenticated!
-            </h2>
-            <p className='mt-2 text-center text-sm text-gray-600'>Redirecting to home page...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className='flex min-h-screen items-center justify-center py-12 px-4 sm:px-6 lg:px-8'>
       <div className='w-full max-w-md space-y-8'>
@@ -128,8 +112,6 @@ export default function LoginPage() {
               />
             </div>
           </div>
-
-          {successMsg && <div className='text-green-500 text-sm text-center'>{successMsg}</div>}
 
           {(errorMsg || error) && (
             <div className='text-red-500 text-sm text-center'>{errorMsg || error}</div>
