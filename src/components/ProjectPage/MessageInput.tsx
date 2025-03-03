@@ -30,7 +30,6 @@ export default function MessageInput({ user, onSendMessage }: MessageInputProps)
     startTransition(async () => {
       await onSendMessage(message);
       setMessage('');
-      // Focus the input after sending the message
       if (inputRef.current) {
         inputRef.current.focus();
       }
