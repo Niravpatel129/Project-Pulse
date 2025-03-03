@@ -31,7 +31,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 // Only show in development
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
-function safeStringify(obj: any, fallback: string = '{}') {
+function safeStringify(obj: unknown, fallback: string = '{}') {
   try {
     return JSON.stringify(obj, null, 2);
   } catch (error) {
@@ -95,7 +95,7 @@ export default function DevPage() {
   }, []);
 
   // Safely format context data
-  const safeStringify = (obj: any) => {
+  const safeStringify = (obj: unknown) => {
     try {
       return JSON.stringify(obj, null, 2);
     } catch (error) {

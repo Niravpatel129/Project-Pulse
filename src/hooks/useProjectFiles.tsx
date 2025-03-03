@@ -16,9 +16,33 @@ import {
   mockTemplateItems,
   mockTemplates,
 } from '@/lib/mock/projectFiles';
-import { File, FileText, FolderPlus, Image, Paperclip, Receipt } from 'lucide-react';
+import { File, FileText, FolderPlus, ImageIcon, Paperclip, Receipt } from 'lucide-react';
 import { useState } from 'react';
 import { useVersionHistory } from './useVersionHistory';
+
+type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+type ProjectFileStatus =
+  | 'draft'
+  | 'sent'
+  | 'signed'
+  | 'paid'
+  | 'viewed'
+  | 'awaiting_approval'
+  | 'active';
+
+const mapInvoiceStatusToFileStatus = (status: InvoiceStatus): ProjectFileStatus => {
+  switch (status) {
+    case 'overdue':
+    case 'cancelled':
+      return 'draft';
+    case 'paid':
+      return 'paid';
+    case 'sent':
+      return 'sent';
+    default:
+      return 'draft';
+  }
+};
 
 export function useProjectFiles() {
   // All state declarations
@@ -82,7 +106,7 @@ export function useProjectFiles() {
       case 'questionnaire':
         return <File className='h-5 w-5 text-orange-500' />;
       case 'sales_product':
-        return <Image className='h-5 w-5 text-pink-500' />;
+        return <ImageIcon className='h-5 w-5 text-pink-500' />;
       case 'service':
         return <File className='h-5 w-5 text-indigo-500' />;
       case 'file_item':
@@ -104,7 +128,7 @@ export function useProjectFiles() {
       case 'jpg':
       case 'jpeg':
       case 'png':
-        return <Image className='h-5 w-5 text-green-500' />;
+        return <ImageIcon className='h-5 w-5 text-green-500' />;
       default:
         return <Paperclip className='h-5 w-5 text-gray-500' />;
     }
@@ -145,12 +169,7 @@ export function useProjectFiles() {
       type: 'invoice',
       dateUploaded: invoice.date,
       size: '50 KB', // Default size
-      status:
-        invoice.status === 'overdue'
-          ? 'draft'
-          : invoice.status === 'cancelled'
-          ? 'draft'
-          : (invoice.status as any), // Cast to allow compatible status values
+      status: mapInvoiceStatusToFileStatus(invoice.status),
       uploadedBy: 'Current User', // Would be current user in a real app
       attachments: [],
       comments: [],
@@ -172,12 +191,7 @@ export function useProjectFiles() {
       const updatedFile: ProjectFile = {
         ...fileToUpdate,
         name: `Invoice ${updatedInvoice.number}`,
-        status:
-          updatedInvoice.status === 'overdue'
-            ? 'draft'
-            : updatedInvoice.status === 'cancelled'
-            ? 'draft'
-            : (updatedInvoice.status as any), // Cast to allow compatible status values
+        status: mapInvoiceStatusToFileStatus(updatedInvoice.status),
         clientEmail: updatedInvoice.clientEmail,
         emailSent: updatedInvoice.status !== 'draft',
       };

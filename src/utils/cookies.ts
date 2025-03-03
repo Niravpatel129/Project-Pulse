@@ -56,7 +56,7 @@ export function parseJSONCookie<T>(cookieName: string, defaultValue: T): T {
 /**
  * Sets a JSON value in a cookie
  */
-export function setJSONCookie(name: string, value: any, days = 7): void {
+export function setJSONCookie<T>(name: string, value: T, days = 7): void {
   try {
     const jsonValue = JSON.stringify(value);
     setCookie(name, jsonValue, days);

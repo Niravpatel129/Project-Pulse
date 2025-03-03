@@ -1,6 +1,11 @@
 import { PaginatedResponse, Template } from '../models';
 import { mockTemplates } from './data/templates';
 
+type TemplateResponse =
+  | Template
+  | { error: string; status: number }
+  | { success: boolean; message: string };
+
 /**
  * Handle templates API requests in the mock API
  * @param method HTTP method (GET, POST, PUT, DELETE)
@@ -13,8 +18,8 @@ export const handleTemplatesRequest = (
   method: string,
   url: string,
   params: Record<string, string>,
-  data?: any,
-): Promise<any> => {
+  data?: Partial<Template>,
+): Promise<TemplateResponse | PaginatedResponse<Template>> => {
   return new Promise((resolve) => {
     // Simulate network delay
     setTimeout(() => {
@@ -40,8 +45,8 @@ export const handleTemplatesRequest = (
 
           // Sort templates
           filteredTemplates.sort((a, b) => {
-            const aValue = (a as any)[sort];
-            const bValue = (b as any)[sort];
+            const aValue = a[sort as keyof Template];
+            const bValue = b[sort as keyof Template];
 
             if (order === 'asc') {
               return aValue > bValue ? 1 : -1;
@@ -85,11 +90,24 @@ export const handleTemplatesRequest = (
 
       // POST request - Create a new template
       if (method === 'POST') {
+        if (!data?.name || !data?.fields) {
+          resolve({
+            error: 'Template must have a name and fields',
+            status: 400,
+          });
+          return;
+        }
+
         const newTemplate: Template = {
-          ...data,
           id: `template-${Date.now()}`,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+          createdBy: 'system', // In a real implementation, this would come from the authenticated user
+          name: data.name,
+          fields: data.fields,
+          description: data.description,
+          icon: data.icon,
+          category: data.category,
         };
 
         // In a real implementation, we would add this to the database

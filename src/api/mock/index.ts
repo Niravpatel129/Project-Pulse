@@ -6,10 +6,17 @@ import { handleTemplatesRequest } from './templates';
 // Simulate network delay (between 200-500ms)
 const NETWORK_DELAY = () => Math.random() * 300 + 200;
 
+type ApiHandler = (
+  method: string,
+  path: string,
+  params: Record<string, string>,
+  data?: unknown,
+) => Promise<unknown>;
+
 /**
  * Map API paths to their respective handler functions
  */
-const API_HANDLERS: Record<string, any> = {
+const API_HANDLERS: Record<string, ApiHandler> = {
   '/project-files': handleProjectFilesRequest,
   '/templates': handleTemplatesRequest,
   '/inventory/items': handleInventoryItemsRequest,

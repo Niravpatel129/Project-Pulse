@@ -49,8 +49,20 @@ import {
 import Link from 'next/link';
 import { useState } from 'react';
 
+interface Payment {
+  id: string;
+  customer: string;
+  project: string;
+  amount: number;
+  status: 'Paid' | 'Pending' | 'Overdue' | 'Scheduled' | 'Draft';
+  date: string;
+  dueDate: string;
+  paymentMethod: string;
+  notes: string;
+}
+
 // Mock payment data
-const MOCK_PAYMENTS = [
+const MOCK_PAYMENTS: Payment[] = [
   {
     id: 'INV-2024-001',
     customer: 'Acme Corporation',
@@ -164,7 +176,7 @@ const MOCK_PAYMENTS = [
 ];
 
 // Payment summary calculations
-const calculatePaymentSummary = (payments: any[]) => {
+const calculatePaymentSummary = (payments: Payment[]) => {
   const total = payments.reduce((sum, payment) => sum + payment.amount, 0);
   const paid = payments
     .filter((payment) => payment.status === 'Paid')
@@ -189,7 +201,7 @@ export default function PaymentsPage() {
   const [viewMode, setViewMode] = useState<'all' | 'upcoming' | 'recent'>('all');
   const [sortColumn, setSortColumn] = useState('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [payments, setPayments] = useState(MOCK_PAYMENTS);
+  const [payments, setPayments] = useState<Payment[]>(MOCK_PAYMENTS);
 
   // Function to handle column sorting
   const handleSort = (column: string) => {

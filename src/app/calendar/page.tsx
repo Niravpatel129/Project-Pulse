@@ -37,8 +37,22 @@ import {
 import Link from 'next/link';
 import { useState } from 'react';
 
+interface CalendarEvent {
+  id: number;
+  title: string;
+  type: 'Meeting' | 'Internal' | 'Workshop' | 'Presentation' | 'Deadline' | 'Call';
+  date: string;
+  startTime: string;
+  endTime: string;
+  location: string;
+  participants: string[];
+  description: string;
+  project: string;
+  status: 'Confirmed' | 'Tentative' | 'Recurring';
+}
+
 // Mock calendar events
-const MOCK_EVENTS = [
+const MOCK_EVENTS: CalendarEvent[] = [
   {
     id: 1,
     title: 'Client Meeting - Acme Corp',
@@ -222,9 +236,9 @@ export default function CalendarPage() {
   const { isAuthenticated, user } = useAuth();
   const [view, setView] = useState<'month' | 'week' | 'day' | 'list'>('week');
   const [currentDate, setCurrentDate] = useState(new Date('2024-04-19')); // Set to a date with events
-  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [typeFilter, setTypeFilter] = useState('all');
-  const [events, setEvents] = useState(MOCK_EVENTS);
+  const [events, setEvents] = useState<CalendarEvent[]>(MOCK_EVENTS);
 
   // Get unique event types for filter
   const eventTypes = [...new Set(events.map((event) => event.type))];
@@ -466,25 +480,25 @@ export default function CalendarPage() {
   };
 
   // Function to check if an event is in a specific time slot
-  const isEventInTimeSlot = (event: any, hour: number) => {
-    const startHour = parseInt(event.startTime.split(':')[0], 10);
-    const endHour = parseInt(event.endTime.split(':')[0], 10);
-    return startHour <= hour && endHour > hour;
+  const isEventInTimeSlot = (event: CalendarEvent, hour: number) => {
+    const eventStartHour = parseInt(event.startTime.split(':')[0]);
+    return eventStartHour === hour;
   };
 
   // Function to get event position and height for day view based on time
-  const getEventPosition = (event: any) => {
-    const startHour = parseInt(event.startTime.split(':')[0], 10);
-    const startMinutes = parseInt(event.startTime.split(':')[1], 10);
-    const endHour = parseInt(event.endTime.split(':')[0], 10);
-    const endMinutes = parseInt(event.endTime.split(':')[1], 10);
+  const getEventPosition = (event: CalendarEvent) => {
+    const startHour = parseInt(event.startTime.split(':')[0]);
+    const startMinute = parseInt(event.startTime.split(':')[1]);
+    const endHour = parseInt(event.endTime.split(':')[0]);
+    const endMinute = parseInt(event.endTime.split(':')[1]);
 
-    const startPosition = (startHour - 8) * 60 + startMinutes;
-    const duration = (endHour - startHour) * 60 + (endMinutes - startMinutes);
+    const startMinutes = startHour * 60 + startMinute;
+    const endMinutes = endHour * 60 + endMinute;
+    const duration = endMinutes - startMinutes;
 
     return {
-      top: `${startPosition}px`,
-      height: `${duration}px`,
+      top: `${(startMinutes - 8 * 60) * (100 / 720)}%`, // 720 minutes in 12 hours (8 AM to 8 PM)
+      height: `${(duration * 100) / 720}%`,
     };
   };
 

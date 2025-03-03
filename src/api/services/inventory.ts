@@ -1,6 +1,8 @@
 import { api } from '../client';
 import { InventoryCategory, InventoryItem, ListRequestParams, PaginatedResponse } from '../models';
 
+type ApiParams = Record<string, string | number | boolean | null | undefined>;
+
 /**
  * Service for inventory-related API calls
  */
@@ -12,10 +14,7 @@ export const inventory = {
   getInventoryItems: async (
     params?: ListRequestParams,
   ): Promise<PaginatedResponse<InventoryItem>> => {
-    return api.get(
-      '/inventory/items',
-      params as Record<string, string | number | boolean | null | undefined>,
-    );
+    return api.get('/inventory/items', params as ApiParams);
   },
 
   /**
@@ -28,7 +27,7 @@ export const inventory = {
     params?: ListRequestParams,
   ): Promise<PaginatedResponse<InventoryItem>> => {
     return api.get('/inventory/items', {
-      ...(params as Record<string, string | number | boolean | null | undefined>),
+      ...(params as ApiParams),
       category: categoryId,
     });
   },
@@ -99,11 +98,25 @@ export const inventory = {
    * Get reports on inventory usage
    * @param params Query parameters for pagination, sorting, and filtering
    */
-  getInventoryUsageReports: async (params?: ListRequestParams): Promise<any> => {
-    return api.get(
-      '/inventory/usage/reports',
-      params as Record<string, string | number | boolean | null | undefined>,
-    );
+  getInventoryUsageReports: async (
+    params?: ListRequestParams,
+  ): Promise<{
+    items: Array<{
+      itemId: string;
+      itemName: string;
+      quantity: number;
+      projectId?: string;
+      projectName?: string;
+      templateItemId?: string;
+      templateItemName?: string;
+      date: string;
+    }>;
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> => {
+    return api.get('/inventory/usage/reports', params as ApiParams);
   },
 
   /**
@@ -113,10 +126,7 @@ export const inventory = {
   getInventoryCategories: async (
     params?: ListRequestParams,
   ): Promise<PaginatedResponse<InventoryCategory>> => {
-    return api.get(
-      '/inventory/categories',
-      params as Record<string, string | number | boolean | null | undefined>,
-    );
+    return api.get('/inventory/categories', params as ApiParams);
   },
 
   /**

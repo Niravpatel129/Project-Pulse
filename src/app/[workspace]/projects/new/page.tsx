@@ -17,6 +17,18 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+interface Participant {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  website?: string;
+  jobTitle?: string;
+  mailingAddress?: string;
+  comments?: string;
+  customFields?: Record<string, string>;
+}
+
 export default function NewProjectPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,7 +75,7 @@ export default function NewProjectPage() {
     }
   };
 
-  const handleParticipantAdded = (participant: any) => {
+  const handleParticipantAdded = (participant: Participant) => {
     console.log('Participant added:', participant);
 
     // After participant is added, redirect to the new project's detail page

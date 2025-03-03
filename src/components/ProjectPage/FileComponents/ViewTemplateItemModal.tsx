@@ -20,6 +20,7 @@ import {
   Ruler,
   Text,
 } from 'lucide-react';
+import Image from 'next/image';
 import React, { useState } from 'react';
 import InventoryItemModal from './InventoryItemModal';
 import TemplateItemHistoryModal from './TemplateItemHistoryModal';
@@ -119,9 +120,11 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
       case 'file':
         return value.fileUrl ? (
           <div className='mt-1'>
-            <img
+            <Image
               src={value.fileUrl}
               alt='File preview'
+              width={300}
+              height={300}
               className='max-h-32 max-w-full rounded-md border'
             />
             <span className='text-sm text-gray-500 block mt-1'>{value.value as string}</span>
@@ -157,9 +160,11 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
           <div className='flex items-center gap-2'>
             <div className='flex flex-1 items-center'>
               {inventoryItem.imageUrl && (
-                <img
+                <Image
                   src={inventoryItem.imageUrl}
                   alt={inventoryItem.name}
+                  width={40}
+                  height={40}
                   className='h-10 w-10 rounded-md object-cover mr-2 border'
                 />
               )}

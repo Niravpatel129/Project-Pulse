@@ -10,6 +10,7 @@ import {
 import { InventoryItem } from '@/lib/mock/projectFiles';
 import { format } from 'date-fns';
 import { Box, Calendar, CheckSquare, Package, Tag } from 'lucide-react';
+import Image from 'next/image';
 import React from 'react';
 
 interface InventoryItemModalProps {
@@ -34,7 +35,13 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({ item, onClose }
             {item.imageUrl && (
               <div className='w-full sm:w-1/3'>
                 <div className='border rounded-md overflow-hidden'>
-                  <img src={item.imageUrl} alt={item.name} className='w-full h-auto object-cover' />
+                  <Image
+                    src={item.imageUrl}
+                    alt={item.name}
+                    width={300}
+                    height={300}
+                    className='w-full h-auto object-cover'
+                  />
                 </div>
               </div>
             )}

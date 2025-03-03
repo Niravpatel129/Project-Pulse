@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/table';
 import { InventoryItem } from '@/lib/mock/projectFiles';
 import { BarChart, Download, Package, PackageCheck, PackageX, Printer } from 'lucide-react';
+import Image from 'next/image';
 import React, { useState } from 'react';
 
 interface InventoryUsageReport {
@@ -160,9 +161,11 @@ const InventoryReportModal: React.FC<InventoryReportModalProps> = ({
                       <TableCell className='font-medium'>
                         <div className='flex items-center gap-2'>
                           {report.item.imageUrl ? (
-                            <img
+                            <Image
                               src={report.item.imageUrl}
                               alt={report.item.name}
+                              width={32}
+                              height={32}
                               className='h-8 w-8 rounded-md object-cover border'
                             />
                           ) : (

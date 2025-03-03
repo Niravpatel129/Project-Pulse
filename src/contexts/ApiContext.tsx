@@ -119,7 +119,7 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children, initialConfi
       client,
       setConfig,
     }),
-    [client, wrappedServices],
+    [client, wrappedServices, isLoading, setLoading, getError, setError, clearAllErrors, setConfig],
   );
 
   return <ApiContext.Provider value={contextValue}>{children}</ApiContext.Provider>;
