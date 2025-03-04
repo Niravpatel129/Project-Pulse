@@ -148,17 +148,17 @@ export default function ProjectHeader() {
   const [isNewFileDialogOpen, setIsNewFileDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-   
+
   const [inviteLink, setInviteLink] = useState('https://project.example.com/invite/abc123xyz');
   const [linkCopied, setLinkCopied] = useState(false);
-   
+
   const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
-   
+
   const [isViewParticipantOpen, setIsViewParticipantOpen] = useState(false);
   const [isEditingRole, setIsEditingRole] = useState(false);
   const [newRoleName, setNewRoleName] = useState('');
   const [newRolePermissions, setNewRolePermissions] = useState<string[]>([]);
-   
+
   const [newRoleColor, setNewRoleColor] = useState('bg-gray-100 text-gray-800');
 
   // Mock previous clients/team members for the CRM integration
