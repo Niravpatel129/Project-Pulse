@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, ReactNode, useContext, useState } from 'react';
+import { deleteCookie, getCookie, setCookie } from 'cookies-next';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 // Define user type
 export interface User {
@@ -25,6 +26,14 @@ interface AuthContextType {
 // Create Auth Context
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// Cookie options
+const cookieOptions = {
+  path: '/',
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict' as const,
+  maxAge: 7 * 24 * 60 * 60, // 7 days
+};
+
 // Mock users for testing
 const MOCK_USERS: User[] = [
   {
@@ -39,14 +48,45 @@ const MOCK_USERS: User[] = [
     name: 'Regular User',
     role: 'user',
   },
+  {
+    id: '3',
+    email: 'john@example.com',
+    name: 'John Doe',
+    role: 'user',
+  },
+  {
+    id: '4',
+    email: 'jane@example.com',
+    name: 'Jane Smith',
+    role: 'user',
+  },
 ];
 
 // Auth Provider component
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Load user from cookie on initial render
+  useEffect(() => {
+    const loadUserFromCookie = () => {
+      const userCookie = getCookie('user');
+      if (userCookie) {
+        try {
+          setUser(typeof userCookie === 'string' ? JSON.parse(userCookie) : userCookie);
+          setIsAuthenticated(true);
+        } catch (e) {
+          console.error('Failed to parse user cookie:', e);
+          deleteCookie('user');
+        }
+      }
+      setLoading(false);
+    };
+
+    loadUserFromCookie();
+  }, []);
 
   // Simple login function
   const login = async (email: string, password: string) => {
@@ -59,6 +99,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!foundUser) {
         throw new Error('Invalid email or password');
       }
+
+      // Store user in cookie
+      setCookie('user', JSON.stringify(foundUser), cookieOptions);
 
       setUser(foundUser);
       setIsAuthenticated(true);
@@ -74,6 +117,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Simple logout function
   const logout = () => {
+    // Remove user from cookie
+    deleteCookie('user');
+
     setUser(null);
     setIsAuthenticated(false);
   };
@@ -96,6 +142,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
 
       MOCK_USERS.push(newUser);
+
+      // Store user in cookie
+      setCookie('user', JSON.stringify(newUser), cookieOptions);
+
       setUser(newUser);
       setIsAuthenticated(true);
       return Promise.resolve();
@@ -108,9 +158,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // Simple reload function
+  // Reload auth function
   const reloadAuth = () => {
-    // No-op in this simplified version
+    const userCookie = getCookie('user');
+    if (userCookie) {
+      try {
+        setUser(typeof userCookie === 'string' ? JSON.parse(userCookie) : userCookie);
+        setIsAuthenticated(true);
+      } catch (e) {
+        console.error('Failed to parse user cookie:', e);
+        deleteCookie('user');
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    } else {
+      setUser(null);
+      setIsAuthenticated(false);
+    }
   };
 
   const value = {
