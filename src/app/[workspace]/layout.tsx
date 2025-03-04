@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import {
@@ -30,7 +31,8 @@ import {
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 interface NavItemProps {
   href: string;
@@ -81,12 +83,24 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated } = useAuth();
+
+  // Check if user is logged in
+  useEffect(() => {
+    if (!isAuthenticated && !pathname.includes('/login')) {
+      router.push('/login');
+    } else {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated, pathname, router]);
 
   // Check if the current path is login
   const isLoginPage = pathname.includes('/login');
 
-  // If we're on the login page, only render the children without the layout
-  if (isLoginPage) {
+  // If we're on the login page or still loading, only render the children without the layout
+  if (isLoginPage || isLoading) {
     return <>{children}</>;
   }
 
@@ -153,6 +167,11 @@ export default function DashboardLayout({
       return pathname === '/';
     }
     return pathname.startsWith(href);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    router.push('/login');
   };
 
   return (
@@ -317,7 +336,7 @@ export default function DashboardLayout({
                   ))}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className='mr-2 h-4 w-4' />
                   <span>Log out</span>
                 </DropdownMenuItem>
