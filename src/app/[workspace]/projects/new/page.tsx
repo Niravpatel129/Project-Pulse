@@ -20,7 +20,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 interface Participant {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   phone?: string;
@@ -128,6 +128,7 @@ export default function NewProjectPage() {
         participantData,
       );
       const savedParticipant = response.data.data;
+      console.log('🚀 savedParticipant:', savedParticipant);
 
       setSelectedParticipant(savedParticipant);
       return savedParticipant;
@@ -185,6 +186,7 @@ export default function NewProjectPage() {
       if (!participantToAttach && participantFormData.name && participantFormData.email) {
         participantToAttach = await handleCreateParticipant();
       }
+      console.log('🚀 participantToAttach:', participantToAttach);
 
       // Ensure we have a participant to attach to the project
       if (!participantToAttach) {
@@ -208,7 +210,7 @@ export default function NewProjectPage() {
 
       // Now attach the participant to the project in a separate call
       await newRequest.post(`/projects/${projectId}/participants`, {
-        participantId: participantToAttach.id,
+        participantId: participantToAttach._id,
       });
 
       toast.success('Project created successfully');
@@ -480,7 +482,7 @@ export default function NewProjectPage() {
                         <div className='space-y-2 max-h-80 overflow-y-auto'>
                           {existingParticipants.map((participant) => (
                             <div
-                              key={participant.id}
+                              key={participant._id}
                               className='flex items-center justify-between p-3 border rounded-md cursor-pointer hover:bg-gray-50'
                               onClick={() => handleSelectExistingParticipant(participant)}
                             >
