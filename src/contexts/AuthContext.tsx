@@ -1,6 +1,7 @@
 'use client';
 
-import { deleteCookie, getCookie, setCookie } from 'cookies-next';
+import { newRequest } from '@/utils/newRequest';
+import { deleteCookie, setCookie } from 'cookies-next';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 // Define user type
@@ -34,34 +35,6 @@ const cookieOptions = {
   maxAge: 7 * 24 * 60 * 60, // 7 days
 };
 
-// Mock users for testing
-const MOCK_USERS: User[] = [
-  {
-    id: '1',
-    email: 'admin@example.com',
-    name: 'Admin User',
-    role: 'admin',
-  },
-  {
-    id: '2',
-    email: 'user@example.com',
-    name: 'Regular User',
-    role: 'user',
-  },
-  {
-    id: '3',
-    email: 'john@example.com',
-    name: 'John Doe',
-    role: 'user',
-  },
-  {
-    id: '4',
-    email: 'jane@example.com',
-    name: 'Jane Smith',
-    role: 'user',
-  },
-];
-
 // Auth Provider component
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -71,43 +44,47 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Load user from cookie on initial render
   useEffect(() => {
-    const loadUserFromCookie = () => {
-      const userCookie = getCookie('user');
-      if (userCookie) {
-        try {
-          setUser(typeof userCookie === 'string' ? JSON.parse(userCookie) : userCookie);
+    const loadUserFromCookie = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+          const response = await newRequest.get('/auth/me');
+          const userData = response.data;
+          setUser(userData);
           setIsAuthenticated(true);
-        } catch (e) {
-          console.error('Failed to parse user cookie:', e);
-          deleteCookie('user');
         }
+      } catch (e) {
+        console.error('Failed to load user:', e);
+        localStorage.removeItem('authToken');
+        deleteCookie('user');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     loadUserFromCookie();
   }, []);
 
-  // Simple login function
+  // Login function using passport backend
   const login = async (email: string, password: string) => {
     setLoading(true);
     setError(null);
 
     try {
-      const foundUser = MOCK_USERS.find((u) => u.email.toLowerCase() === email.toLowerCase());
+      const response = await newRequest.post('/auth/login', { email, password });
+      const { user: userData, token } = response.data;
 
-      if (!foundUser) {
-        throw new Error('Invalid email or password');
-      }
+      // Store token in localStorage (already handled by interceptor)
+      localStorage.setItem('authToken', token);
 
       // Store user in cookie
-      setCookie('user', JSON.stringify(foundUser), cookieOptions);
+      setCookie('user', JSON.stringify(userData), cookieOptions);
 
-      setUser(foundUser);
+      setUser(userData);
       setIsAuthenticated(true);
       return Promise.resolve();
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Login failed';
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || 'Login failed';
       setError(errorMsg);
       return Promise.reject(new Error(errorMsg));
     } finally {
@@ -115,42 +92,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // Simple logout function
-  const logout = () => {
-    // Remove user from cookie
-    deleteCookie('user');
-
-    setUser(null);
-    setIsAuthenticated(false);
+  // Logout function
+  const logout = async () => {
+    try {
+      await newRequest.post('/auth/logout');
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      // Remove token and user data
+      localStorage.removeItem('authToken');
+      deleteCookie('user');
+      setUser(null);
+      setIsAuthenticated(false);
+    }
   };
 
-  // Simple register function
+  // Register function
   const register = async (email: string, password: string, name: string) => {
     setLoading(true);
     setError(null);
 
     try {
-      if (MOCK_USERS.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
-        throw new Error('User with this email already exists');
-      }
+      const response = await newRequest.post('/auth/register', { email, password, name });
+      const { user: userData, token } = response.data;
 
-      const newUser: User = {
-        id: `${MOCK_USERS.length + 1}`,
-        email,
-        name,
-        role: 'user',
-      };
-
-      MOCK_USERS.push(newUser);
+      // Store token in localStorage
+      localStorage.setItem('authToken', token);
 
       // Store user in cookie
-      setCookie('user', JSON.stringify(newUser), cookieOptions);
+      setCookie('user', JSON.stringify(userData), cookieOptions);
 
-      setUser(newUser);
+      setUser(userData);
       setIsAuthenticated(true);
       return Promise.resolve();
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Registration failed';
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || 'Registration failed';
       setError(errorMsg);
       return Promise.reject(new Error(errorMsg));
     } finally {
@@ -159,19 +135,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   // Reload auth function
-  const reloadAuth = () => {
-    const userCookie = getCookie('user');
-    if (userCookie) {
-      try {
-        setUser(typeof userCookie === 'string' ? JSON.parse(userCookie) : userCookie);
+  const reloadAuth = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        const response = await newRequest.get('/auth/me');
+        const userData = response.data;
+        setUser(userData);
         setIsAuthenticated(true);
-      } catch (e) {
-        console.error('Failed to parse user cookie:', e);
-        deleteCookie('user');
+      } else {
         setUser(null);
         setIsAuthenticated(false);
       }
-    } else {
+    } catch (e) {
+      console.error('Failed to reload auth:', e);
+      localStorage.removeItem('authToken');
+      deleteCookie('user');
       setUser(null);
       setIsAuthenticated(false);
     }

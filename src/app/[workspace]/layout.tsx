@@ -89,18 +89,23 @@ export default function DashboardLayout({
 
   // Check if user is logged in
   useEffect(() => {
-    if (!loading && !isAuthenticated && !pathname.includes('/login')) {
+    if (
+      !loading &&
+      !isAuthenticated &&
+      !pathname.includes('/login') &&
+      !pathname.includes('/register')
+    ) {
       router.push('/login');
     } else if (!loading) {
       setIsLoading(false);
     }
   }, [isAuthenticated, loading, pathname, router]);
 
-  // Check if the current path is login
-  const isLoginPage = pathname.includes('/login');
+  // Check if the current path is login or register
+  const isAuthPage = pathname.includes('/login') || pathname.includes('/register');
 
-  // If we're on the login page or still loading, only render the children without the layout
-  if (isLoginPage || isLoading || loading) {
+  // If we're on the login/register page or still loading, only render the children without the layout
+  if (isAuthPage || isLoading || loading) {
     return <div className='min-h-screen flex'>{children}</div>;
   }
 

@@ -108,8 +108,8 @@ export default function RegisterPage() {
   // Show loading state during server rendering or initial client hydration
   if (!mounted) {
     return (
-      <div className='flex min-h-screen items-center justify-center'>
-        <div className='animate-pulse text-center'>
+      <div className='flex min-h-screen items-center justify-center w-full'>
+        <div className='animate-pulse text-center w-full'>
           <div className='h-8 w-32 bg-gray-200 mx-auto mb-4 rounded'></div>
           <div className='h-4 w-48 bg-gray-200 mx-auto rounded'></div>
         </div>
@@ -120,8 +120,8 @@ export default function RegisterPage() {
   // Show initialization loading state if necessary
   if (loading) {
     return (
-      <div className='flex min-h-screen items-center justify-center'>
-        <div className='text-center'>
+      <div className='flex min-h-screen items-center justify-center w-full'>
+        <div className='text-center w-full'>
           <div className='animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4'></div>
           <div className='text-gray-600'>Loading authentication system...</div>
         </div>
@@ -130,13 +130,13 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className='flex min-h-screen items-center justify-center py-12 px-4 sm:px-6 lg:px-8'>
+    <div className='flex min-h-screen items-center justify-center py-12 px-4 sm:px-6 lg:px-8 w-full'>
       <div className='w-full max-w-md space-y-8'>
-        <div>
+        <div className='w-full'>
           <h2 className='mt-6 text-center text-3xl font-bold tracking-tight'>
             Create a new account
           </h2>
-          <p className='mt-2 text-center text-sm text-gray-600'>
+          <p className='mt-2 text-center text-sm text-gray-600 w-full'>
             Or{' '}
             <Link href='/login' className='font-medium text-primary hover:text-primary/90'>
               sign in to your account
@@ -144,9 +144,9 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <form className='mt-8 space-y-6' onSubmit={handleSubmit}>
-          <div className='space-y-4 rounded-md shadow-sm'>
-            <div>
+        <form className='mt-8 space-y-6 w-full' onSubmit={handleSubmit}>
+          <div className='space-y-4 rounded-md shadow-sm w-full'>
+            <div className='w-full'>
               <label htmlFor='name' className='sr-only'>
                 Full Name
               </label>
@@ -159,9 +159,10 @@ export default function RegisterPage() {
                 placeholder='Full Name'
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                className='w-full'
               />
             </div>
-            <div>
+            <div className='w-full'>
               <label htmlFor='email-address' className='sr-only'>
                 Email address
               </label>
@@ -174,9 +175,10 @@ export default function RegisterPage() {
                 placeholder='Email address'
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className='w-full'
               />
             </div>
-            <div>
+            <div className='w-full'>
               <label htmlFor='password' className='sr-only'>
                 Password
               </label>
@@ -189,9 +191,10 @@ export default function RegisterPage() {
                 placeholder='Password'
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className='w-full'
               />
             </div>
-            <div>
+            <div className='w-full'>
               <label htmlFor='confirm-password' className='sr-only'>
                 Confirm Password
               </label>
@@ -204,15 +207,16 @@ export default function RegisterPage() {
                 placeholder='Confirm Password'
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                className='w-full'
               />
             </div>
           </div>
 
           {(errorMsg || (mounted && error)) && (
-            <div className='text-red-500 text-sm text-center'>{errorMsg || error}</div>
+            <div className='text-red-500 text-sm text-center w-full'>{errorMsg || error}</div>
           )}
 
-          <div>
+          <div className='w-full'>
             <Button type='submit' disabled={isLoading} className='w-full'>
               {isLoading ? 'Creating Account...' : 'Create Account'}
             </Button>

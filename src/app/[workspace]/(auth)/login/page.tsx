@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 // Default credentials for development mode
 const DEV_CREDENTIALS = {
   email: 'admin@example.com',
-  password: 'password123',
+  password: 'admin@example.com',
 };
 
 export default function LoginPage() {
