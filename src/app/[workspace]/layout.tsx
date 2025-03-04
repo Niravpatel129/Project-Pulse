@@ -182,16 +182,16 @@ export default function DashboardLayout({
   return (
     <div className='flex min-h-screen flex-col'>
       {/* Top Navigation Bar */}
-      <header className='sticky top-0 z-30 flex h-16 items-center border-b bg-background px-4 sm:px-6 shadow-sm'>
-        <div className='container mx-auto flex items-center justify-between'>
+      <header className='sticky top-0 z-30 flex h-14 sm:h-16 items-center border-b bg-background px-2 sm:px-4 md:px-6 shadow-sm'>
+        <div className='w-full max-w-7xl mx-auto flex items-center justify-between'>
           {/* Logo and Mobile Menu */}
-          <div className='flex items-center gap-2'>
+          <div className='flex items-center gap-1 sm:gap-2'>
             {/* Mobile Navigation Trigger */}
-            <div className='md:hidden mr-2'>
+            <div className='lg:hidden'>
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant='ghost' size='icon'>
-                    <Menu className='h-5 w-5' />
+                  <Button variant='ghost' size='icon' className='h-8 w-8 sm:h-9 sm:w-9'>
+                    <Menu className='h-4 w-4 sm:h-5 sm:w-5' />
                     <span className='sr-only'>Toggle navigation menu</span>
                   </Button>
                 </SheetTrigger>
@@ -201,7 +201,8 @@ export default function DashboardLayout({
                   </VisuallyHidden>
                   <div className='flex h-14 items-center border-b px-4'>
                     <Link href='/' className='flex items-center gap-2 font-semibold'>
-                      <Layers className='h-6 w-6' />
+                      <Layers className='h-5 w-5 sm:h-6 sm:w-6' />
+                      <span className='text-sm sm:text-base'>Pulse</span>
                     </Link>
                   </div>
                   <div className='overflow-y-auto max-h-[calc(100vh-3.5rem)]'>
@@ -222,13 +223,13 @@ export default function DashboardLayout({
             </div>
 
             {/* Logo */}
-            <Link href='/' className='flex items-center gap-2 font-semibold'>
-              <Layers className='h-6 w-6' />
+            <Link href='/' className='flex items-center gap-1 sm:gap-2 font-semibold'>
+              <Layers className='h-5 w-5 sm:h-6 sm:w-6' />
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <nav className='hidden md:flex items-center space-x-1 ml-6 flex-1'>
+          <nav className='hidden lg:flex items-center space-x-1 ml-4 flex-1 overflow-x-auto'>
             {navigation.map((item) => (
               <DesktopNavItem
                 key={item.href}
@@ -241,69 +242,75 @@ export default function DashboardLayout({
           </nav>
 
           {/* Right Side - Notifications & User Profile */}
-          <div className='flex items-center gap-3'>
+          <div className='flex items-center gap-1 sm:gap-3'>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant='ghost' size='icon' className='relative'>
-                  <Bell className='h-5 w-5' />
-                  <span className='absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground'>
+                <Button variant='ghost' size='icon' className='relative h-8 w-8 sm:h-9 sm:w-9'>
+                  <Bell className='h-4 w-4 sm:h-5 sm:w-5' />
+                  <span className='absolute -right-0.5 -top-0.5 flex h-3 w-3 sm:h-4 sm:w-4 items-center justify-center rounded-full bg-primary text-[8px] sm:text-[10px] font-medium text-primary-foreground'>
                     3
                   </span>
                   <span className='sr-only'>Notifications</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align='end' className='w-80'>
+              <DropdownMenuContent align='end' className='w-[280px] sm:w-80'>
                 <DropdownMenuLabel className='flex items-center justify-between'>
                   Notifications
-                  <Button variant='ghost' size='sm' className='text-xs h-8'>
+                  <Button variant='ghost' size='sm' className='text-xs h-7 sm:h-8'>
                     Mark all as read
                   </Button>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <div className='max-h-80 overflow-y-auto'>
-                  <div className='flex gap-4 p-3 hover:bg-muted/50 rounded-md cursor-pointer'>
+                <div className='max-h-60 sm:max-h-80 overflow-y-auto'>
+                  <div className='flex gap-3 sm:gap-4 p-2 sm:p-3 hover:bg-muted/50 rounded-md cursor-pointer'>
                     <div className='flex-shrink-0 mt-1'>
                       <div className='w-2 h-2 bg-primary rounded-full'></div>
                     </div>
                     <div>
-                      <p className='text-sm font-medium'>
+                      <p className='text-xs sm:text-sm font-medium'>
                         New comment on &quot;Enterprise CRM Implementation&quot;
                       </p>
-                      <p className='text-xs text-muted-foreground mt-1'>
+                      <p className='text-[10px] sm:text-xs text-muted-foreground mt-1'>
                         Sarah Johnson left a comment on your project
                       </p>
-                      <p className='text-xs text-muted-foreground mt-2'>2 hours ago</p>
+                      <p className='text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2'>
+                        2 hours ago
+                      </p>
                     </div>
                   </div>
 
-                  <div className='flex gap-4 p-3 hover:bg-muted/50 rounded-md cursor-pointer'>
+                  <div className='flex gap-3 sm:gap-4 p-2 sm:p-3 hover:bg-muted/50 rounded-md cursor-pointer'>
                     <div className='flex-shrink-0 mt-1'>
                       <div className='w-2 h-2 bg-primary rounded-full'></div>
                     </div>
                     <div>
-                      <p className='text-sm font-medium'>Project milestone completed</p>
-                      <p className='text-xs text-muted-foreground mt-1'>
+                      <p className='text-xs sm:text-sm font-medium'>Project milestone completed</p>
+                      <p className='text-[10px] sm:text-xs text-muted-foreground mt-1'>
                         E-commerce Platform Upgrade - Phase 1 completed
                       </p>
-                      <p className='text-xs text-muted-foreground mt-2'>Yesterday</p>
+                      <p className='text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2'>
+                        Yesterday
+                      </p>
                     </div>
                   </div>
 
-                  <div className='flex gap-4 p-3 hover:bg-muted/50 rounded-md cursor-pointer'>
+                  <div className='flex gap-3 sm:gap-4 p-2 sm:p-3 hover:bg-muted/50 rounded-md cursor-pointer'>
                     <div className='flex-shrink-0 mt-1'>
                       <div className='w-2 h-2 bg-primary rounded-full'></div>
                     </div>
                     <div>
-                      <p className='text-sm font-medium'>Invoice paid</p>
-                      <p className='text-xs text-muted-foreground mt-1'>
+                      <p className='text-xs sm:text-sm font-medium'>Invoice paid</p>
+                      <p className='text-[10px] sm:text-xs text-muted-foreground mt-1'>
                         Global Retail paid invoice #INV-2024-042
                       </p>
-                      <p className='text-xs text-muted-foreground mt-2'>Yesterday</p>
+                      <p className='text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2'>
+                        Yesterday
+                      </p>
                     </div>
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild className='justify-center'>
+                <DropdownMenuItem asChild className='justify-center text-xs sm:text-sm'>
                   <Link href='/dashboard/notifications'>View all notifications</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -314,19 +321,19 @@ export default function DashboardLayout({
                 <Button
                   variant='ghost'
                   size='icon'
-                  className='relative rounded-full h-8 w-8 border'
+                  className='relative rounded-full h-7 w-7 sm:h-8 sm:w-8 border'
                 >
-                  <Avatar className='h-8 w-8'>
+                  <Avatar className='h-7 w-7 sm:h-8 sm:w-8'>
                     <AvatarImage src='/avatars/sarah.jpg' alt={user?.name || 'User'} />
                     <AvatarFallback>{user?.name?.substring(0, 2) || 'U'}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align='end' className='w-56'>
+              <DropdownMenuContent align='end' className='w-48 sm:w-56'>
                 <DropdownMenuLabel className='font-normal'>
                   <div className='flex flex-col space-y-1'>
-                    <p className='text-sm font-medium'>{user?.name || 'User'}</p>
-                    <p className='text-xs text-muted-foreground'>
+                    <p className='text-xs sm:text-sm font-medium'>{user?.name || 'User'}</p>
+                    <p className='text-[10px] sm:text-xs text-muted-foreground'>
                       {user?.email || 'user@example.com'}
                     </p>
                   </div>
@@ -334,7 +341,7 @@ export default function DashboardLayout({
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   {userNavigation.map((item) => (
-                    <DropdownMenuItem key={item.href} asChild>
+                    <DropdownMenuItem key={item.href} asChild className='text-xs sm:text-sm'>
                       <Link href={item.href}>
                         {item.icon}
                         <span className='ml-2'>{item.label}</span>
@@ -343,7 +350,7 @@ export default function DashboardLayout({
                   ))}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
+                <DropdownMenuItem onClick={handleLogout} className='text-xs sm:text-sm'>
                   <LogOut className='mr-2 h-4 w-4' />
                   <span>Log out</span>
                 </DropdownMenuItem>
@@ -353,7 +360,7 @@ export default function DashboardLayout({
         </div>
       </header>
       {/* Main Content */}
-      <main className='flex-1 p-4 sm:p-6 md:p-8'>{children}</main>
+      <main className='flex-1 p-3 sm:p-4 md:p-6 lg:p-8'>{children}</main>
     </div>
   );
 }

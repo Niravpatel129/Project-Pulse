@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { newRequest } from '@/utils/newRequest';
 import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -56,15 +57,11 @@ export default function NewProjectPage() {
     setIsSubmitting(true);
 
     try {
-      // In a real app, you would call your API here
-      console.log('Submitting project:', formData);
+      // Call the API to create a new project
+      const response = await newRequest.post<{ id: number }>('/projects', formData);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Set the created project ID (would come from API response)
-      const mockProjectId = Math.floor(Math.random() * 1000) + 1;
-      setCreatedProjectId(mockProjectId);
+      // Set the created project ID from the API response
+      setCreatedProjectId(response.data.id);
 
       // Show participant modal instead of redirecting
       setShowParticipantModal(true);
@@ -75,15 +72,26 @@ export default function NewProjectPage() {
     }
   };
 
-  const handleParticipantAdded = (participant: Participant) => {
-    console.log('Participant added:', participant);
+  const handleParticipantAdded = async (participant: Participant) => {
+    try {
+      // Associate the participant with the project
+      if (createdProjectId) {
+        await newRequest.post(`/projects/${createdProjectId}/participants`, participant);
 
-    // After participant is added, redirect to the new project's detail page
-    if (createdProjectId) {
-      router.push(`/projects/${createdProjectId}`);
-    } else {
-      // Fallback to projects list if project ID is somehow missing
-      router.push('/projects');
+        // After participant is added, redirect to the new project's detail page
+        router.push(`/projects/${createdProjectId}`);
+      } else {
+        // Fallback to projects list if project ID is somehow missing
+        router.push('/projects');
+      }
+    } catch (error) {
+      console.error('Error adding participant:', error);
+      // Still redirect to the project page even if adding participant fails
+      if (createdProjectId) {
+        router.push(`/projects/${createdProjectId}`);
+      } else {
+        router.push('/projects');
+      }
     }
   };
 

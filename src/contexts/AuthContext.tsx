@@ -1,8 +1,10 @@
 'use client';
 
 import { newRequest } from '@/utils/newRequest';
+import { useQueryClient } from '@tanstack/react-query';
 import { deleteCookie, setCookie } from 'cookies-next';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 // Define user type
 export interface User {
@@ -18,7 +20,7 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, options?: { noRedirect?: boolean }) => Promise<void>;
   logout: () => void;
   register: (email: string, password: string, name: string) => Promise<void>;
   reloadAuth: () => void;
@@ -28,12 +30,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 // Cookie options
-const cookieOptions = {
-  path: '/',
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict' as const,
-  maxAge: 7 * 24 * 60 * 60, // 7 days
-};
 
 // Auth Provider component
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -41,6 +37,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const queryClient = useQueryClient();
 
   // Load user from cookie on initial render
   useEffect(() => {
@@ -66,27 +63,39 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   // Login function using passport backend
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, options?: { noRedirect?: boolean }) => {
     setLoading(true);
     setError(null);
 
     try {
       const response = await newRequest.post('/auth/login', { email, password });
-      const { user: userData, token } = response.data;
+      const { user: userData, token } = response.data.data;
+      console.log('🚀 response:', response);
 
-      // Store token in localStorage (already handled by interceptor)
       localStorage.setItem('authToken', token);
-
-      // Store user in cookie
-      setCookie('user', JSON.stringify(userData), cookieOptions);
-
+      setCookie('user', JSON.stringify(userData));
       setUser(userData);
       setIsAuthenticated(true);
-      return Promise.resolve();
+
+      if (options?.noRedirect === true) {
+        return;
+      }
+
+      const redirectUrl = new URL(window.location.href).searchParams.get('redirect');
+      const localRedirectUrl = localStorage.getItem('redirect');
+
+      if (localRedirectUrl && localRedirectUrl !== '/login') {
+        toast.success('Redirecting to previous page');
+        localStorage.removeItem('redirect');
+        return;
+      }
+
+      toast.success('Login successful');
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || 'Login failed';
+      const errorMsg =
+        err.response?.data?.message || 'Login failed. Please check your credentials.';
       setError(errorMsg);
-      return Promise.reject(new Error(errorMsg));
+      throw new Error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -114,13 +123,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     try {
       const response = await newRequest.post('/auth/register', { email, password, name });
-      const { user: userData, token } = response.data;
+      const { user: userData, token } = response.data.data;
 
       // Store token in localStorage
       localStorage.setItem('authToken', token);
 
       // Store user in cookie
-      setCookie('user', JSON.stringify(userData), cookieOptions);
+      setCookie('user', JSON.stringify(userData));
 
       setUser(userData);
       setIsAuthenticated(true);
