@@ -10,7 +10,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useProject } from '@/contexts/ProjectContext';
 import { useProjectFiles } from '@/hooks/useProjectFiles';
 import { newRequest } from '@/utils/newRequest';
@@ -18,7 +25,6 @@ import { MoreVertical, Plus, Search, Trash, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
   FileDetailsDialog,
-  FileTable,
   InventoryReportModal,
   ProductionTrackingModal,
   SendEmailDialog,
@@ -234,145 +240,79 @@ export default function ProjectModules() {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
-            <TabsList className='mb-4'>
-              <TabsTrigger value='all'>All Module Items</TabsTrigger>
-              <TabsTrigger value='upload'>Uploads</TabsTrigger>
-              <TabsTrigger value='modules'>Modules</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value={activeTab} className='mt-0'>
-              {activeTab === 'modules' ? (
-                <div className='space-y-4'>
-                  {isLoadingModules ? (
-                    <div className='text-center py-4'>Loading modules...</div>
-                  ) : modules.length > 0 ? (
-                    <div className='overflow-x-auto'>
-                      <table className='w-full border-collapse'>
-                        <thead>
-                          <tr className='bg-gray-50 border-b'>
-                            <th className='text-left py-3 px-4 font-medium text-gray-700'>Name</th>
-                            <th className='text-left py-3 px-4 font-medium text-gray-700'>
-                              Description
-                            </th>
-                            <th className='text-left py-3 px-4 font-medium text-gray-700'>
-                              Status
-                            </th>
-
-                            <th className='text-left py-3 px-4 font-medium text-gray-700'>
-                              Created
-                            </th>
-                            <th className='text-left py-3 px-4 font-medium text-gray-700'>
-                              Actions
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {modules.map((module) => {
-                            return (
-                              <tr
-                                key={module._id}
-                                className='border-b hover:bg-gray-50 transition-colors cursor-pointer'
-                                onClick={() => {
-                                  setSelectedModule(module);
-                                  setShowModuleDetailsDialog(true);
-                                }}
-                              >
-                                <td className='py-3 px-4 font-medium'>{module.name}</td>
-                                <td className='py-3 px-4 text-gray-600 truncate max-w-xs'>
-                                  {module.description}
-                                </td>
-                                <td className='py-3 px-4'>
-                                  <span
-                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                                      module.status === 'active'
-                                        ? 'bg-green-100 text-green-800'
-                                        : module.status === 'completed'
-                                        ? 'bg-blue-100 text-blue-800'
-                                        : module.status === 'archived'
-                                        ? 'bg-gray-100 text-gray-800'
-                                        : 'bg-yellow-100 text-yellow-800'
-                                    }`}
-                                  >
-                                    {module.status}
-                                  </span>
-                                </td>
-
-                                <td className='py-3 px-4 text-gray-500 text-sm'>
-                                  {new Date(module.createdAt).toLocaleDateString()}
-                                </td>
-                                <td className='py-3 px-4'>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger
-                                      asChild
-                                      onClick={(e) => {
-                                        return e.stopPropagation();
-                                      }}
-                                    >
-                                      <Button variant='ghost' size='icon'>
-                                        <MoreVertical className='h-4 w-4' />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align='end'>
-                                      <DropdownMenuItem
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setModuleToDelete(module);
-                                          setShowDeleteConfirmation(true);
-                                        }}
-                                        className='text-red-600'
-                                      >
-                                        <Trash className='h-4 w-4 mr-2' />
-                                        Delete Module
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className='text-center py-8 text-gray-500'>
-                      No modules found. Create your first module to get started.
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <FileTable
-                  filteredFiles={filteredFiles()}
-                  getFileIcon={getFileIcon}
-                  getAttachmentIcon={getAttachmentIcon}
-                  getStatusBadgeClass={getStatusBadgeClass}
-                  handleFileClick={handleFileClick}
-                  onViewDetails={(file) => {
-                    setSelectedFile(file);
-                    setShowFileDetailsDialog(true);
-                  }}
-                  onViewVersionHistory={(file, attachment) => {
-                    setSelectedFile(file);
-                    setSelectedAttachment(attachment);
-                    setShowVersionHistoryDialog(true);
-                  }}
-                  onSendEmail={(file) => {
-                    setSelectedFile(file);
-                    setEmailSubject(`Modules shared: ${file.name}`);
-                    setEmailMessage(`I'm sharing the following modules with you: ${file.name}`);
-                    setShowSendEmailDialog(true);
-                  }}
-                  onSimulateApproval={(file) => {
-                    setSelectedFile(file);
-                    handleSimulateApproval();
-                  }}
-                  onCreateVariation={(file) => {
-                    setSelectedFile(file);
-                  }}
-                />
-              )}
-            </TabsContent>
-          </Tabs>
+          <Table className='text-black mt-5'>
+            <TableHeader>
+              <TableRow>
+                <TableHead className='text-black'>Name</TableHead>
+                <TableHead className='text-black'>Description</TableHead>
+                <TableHead className='text-black'>Status</TableHead>
+                <TableHead className='text-black'>Created</TableHead>
+                <TableHead className='text-black'>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {modules.map((module) => {
+                return (
+                  <TableRow
+                    key={module._id}
+                    className='cursor-pointer'
+                    onClick={() => {
+                      setSelectedModule(module);
+                      setShowModuleDetailsDialog(true);
+                    }}
+                  >
+                    <TableCell className=''>{module.name}</TableCell>
+                    <TableCell className=' truncate max-w-xs'>{module.description}</TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                          module.status === 'active'
+                            ? 'bg-green-100 text-green-800'
+                            : module.status === 'completed'
+                            ? 'bg-blue-100 text-blue-800'
+                            : module.status === 'archived'
+                            ? 'bg-gray-100 text-gray-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}
+                      >
+                        {module.status}
+                      </span>
+                    </TableCell>
+                    <TableCell className=' text-sm'>
+                      {new Date(module.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          asChild
+                          onClick={(e) => {
+                            return e.stopPropagation();
+                          }}
+                        >
+                          <Button variant='ghost' size='icon'>
+                            <MoreVertical className='h-4 w-4' />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='end'>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setModuleToDelete(module);
+                              setShowDeleteConfirmation(true);
+                            }}
+                            className='text-red-600'
+                          >
+                            <Trash className='h-4 w-4 mr-2' />
+                            Delete Module
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 

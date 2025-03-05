@@ -226,17 +226,6 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                           <FileText className='h-4 w-4 mr-2' />
                           File Element
                         </Button>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='w-full justify-start'
-                          onClick={() => {
-                            return setSelectedElementType('custom');
-                          }}
-                        >
-                          <Package className='h-4 w-4 mr-2' />
-                          Custom Element
-                        </Button>
                       </div>
                     </PopoverContent>
                   </Popover>
