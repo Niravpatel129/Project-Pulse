@@ -499,9 +499,6 @@ export default function ProjectModules() {
       <Dialog open={showModuleDetailsDialog} onOpenChange={setShowModuleDetailsDialog}>
         <ModuleDetailsDialog
           selectedModule={selectedModule}
-          commentText={commentText}
-          setCommentText={setCommentText}
-          handleAddComment={handleAddComment}
           onClose={() => {
             setShowModuleDetailsDialog(false);
             setSelectedModule(null);

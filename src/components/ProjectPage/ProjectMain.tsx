@@ -1,14 +1,15 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProject } from '@/contexts/ProjectContext';
-import { Menu } from 'lucide-react';
+import { CalendarDays, CreditCard, FileText, Home, Menu, PanelsTopLeft } from 'lucide-react';
 import { useState } from 'react';
 import ProjectActivity from './ProjectActivity';
-import ProjectContext from './ProjectContext';
 import ProjectFiles from './ProjectFiles';
+import ProjectHome from './ProjectHome';
 import ProjectModules from './ProjectModules/ProjectModules';
 import ProjectPayments from './ProjectPayments';
 import ProjectSchedule from './ProjectSchedule';
@@ -16,7 +17,7 @@ import { ProjectSidebar } from './ProjectSidebar';
 import TimelineExample from './TimelineExample';
 
 export default function ProjectMain() {
-  const [activeTab, setActiveTab] = useState('context');
+  const [activeTab, setActiveTab] = useState('home');
   const { project, updateProject } = useProject();
 
   const handleUpdateProject = async (data: any) => {
@@ -47,65 +48,81 @@ export default function ProjectMain() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
-            <div className='overflow-x-auto pb-2'>
-              <TabsList className='w-full min-w-max justify-start border-0 bg-transparent p-0'>
+            <ScrollArea>
+              <TabsList className='text-foreground mb-3 h-auto gap-2 rounded-none border-b bg-transparent px-0 py-1'>
                 <TabsTrigger
-                  value='context'
-                  className='rounded-none border-b-2 border-transparent px-3 py-2 text-sm sm:px-4 sm:text-base data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
+                  value='home'
+                  className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
                 >
-                  Context
+                  <Home className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
+                  Home
                 </TabsTrigger>
                 {/* <TabsTrigger
                   value='activity'
-                  className='rounded-none border-b-2 border-transparent px-3 py-2 text-sm sm:px-4 sm:text-base data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
+                  className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
                 >
+                  <Activity className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
                   Activity
                 </TabsTrigger> */}
                 {/* <TabsTrigger
                   value='timeline'
-                  className='rounded-none border-b-2 border-transparent px-3 py-2 text-sm sm:px-4 sm:text-base data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
+                  className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
                 >
+                  <Clock className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
                   Timeline
                 </TabsTrigger> */}
                 <TabsTrigger
                   value='schedule'
-                  className='rounded-none border-b-2 border-transparent px-3 py-2 text-sm sm:px-4 sm:text-base data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
+                  className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
                 >
+                  <CalendarDays
+                    className='-ms-0.5 me-1.5 opacity-60'
+                    size={16}
+                    aria-hidden='true'
+                  />
                   Schedule
                 </TabsTrigger>
                 <TabsTrigger
                   value='files'
-                  className='rounded-none border-b-2 border-transparent px-3 py-2 text-sm sm:px-4 sm:text-base data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
+                  className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
                 >
+                  <FileText className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
                   Files
-                  <Badge variant='secondary' className='ml-1 sm:ml-2'>
+                  <Badge className='bg-primary/15 ms-1.5 min-w-5 px-1' variant='secondary'>
                     {5}
                   </Badge>
                 </TabsTrigger>
                 <TabsTrigger
                   value='modules'
-                  className='rounded-none border-b-2 border-transparent px-3 py-2 text-sm sm:px-4 sm:text-base data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
+                  className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
                 >
+                  <PanelsTopLeft
+                    className='-ms-0.5 me-1.5 opacity-60'
+                    size={16}
+                    aria-hidden='true'
+                  />
                   Modules
-                  <Badge variant='secondary' className='ml-1 sm:ml-2'>
+                  <Badge className='bg-primary/15 ms-1.5 min-w-5 px-1' variant='secondary'>
                     {5}
                   </Badge>
                 </TabsTrigger>
                 <TabsTrigger
                   value='payments'
-                  className='rounded-none border-b-2 border-transparent px-3 py-2 text-sm sm:px-4 sm:text-base data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
+                  className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
                 >
+                  <CreditCard className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
                   Payments
                 </TabsTrigger>
               </TabsList>
-            </div>
-            <div className='mx-auto flex flex-col gap-6 py-2 md:flex-row relative'>
+              <ScrollBar orientation='horizontal' />
+            </ScrollArea>
+            <div className=' flex flex-col gap-6 py-2 md:flex-row relative'>
               <div className='w-full md:flex-1'>
                 <TabsContent value='activity'>
                   <ProjectActivity />
                 </TabsContent>
-                <TabsContent value='context'>
-                  <ProjectContext />
+                <TabsContent value='home'>
+                  <ProjectHome />
                 </TabsContent>
                 <TabsContent value='timeline'>
                   <TimelineExample />
