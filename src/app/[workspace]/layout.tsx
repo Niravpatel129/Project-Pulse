@@ -17,7 +17,6 @@ import { cn } from '@/lib/utils';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import {
   BarChart3,
-  Bell,
   Calendar,
   CreditCard,
   Factory,
@@ -183,7 +182,7 @@ export default function DashboardLayout({
     <div className='flex min-h-screen flex-col'>
       {/* Top Navigation Bar */}
       <header className='sticky top-0 z-30 flex h-14 sm:h-16 items-center border-b bg-background px-2 sm:px-4 md:px-6 shadow-sm'>
-        <div className='w-full max-w-7xl mx-auto flex items-center justify-between'>
+        <div className='w-full mx-auto flex items-center justify-between'>
           {/* Logo and Mobile Menu */}
           <div className='flex items-center gap-1 sm:gap-2'>
             {/* Mobile Navigation Trigger */}
@@ -207,15 +206,17 @@ export default function DashboardLayout({
                   </div>
                   <div className='overflow-y-auto max-h-[calc(100vh-3.5rem)]'>
                     <nav className='grid gap-1 p-2'>
-                      {[...navigation, ...userNavigation].map((item) => {return (
-                        <MobileNavItem
-                          key={item.href}
-                          href={item.href}
-                          label={item.label}
-                          icon={item.icon}
-                          isActive={isNavItemActive(item.href)}
-                        />
-                      )})}
+                      {[...navigation, ...userNavigation].map((item) => {
+                        return (
+                          <MobileNavItem
+                            key={item.href}
+                            href={item.href}
+                            label={item.label}
+                            icon={item.icon}
+                            isActive={isNavItemActive(item.href)}
+                          />
+                        );
+                      })}
                     </nav>
                   </div>
                 </SheetContent>
@@ -230,92 +231,21 @@ export default function DashboardLayout({
 
           {/* Desktop Navigation */}
           <nav className='hidden lg:flex items-center space-x-1 ml-4 flex-1 overflow-x-auto'>
-            {navigation.map((item) => {return (
-              <DesktopNavItem
-                key={item.href}
-                href={item.href}
-                label={item.label}
-                icon={item.icon}
-                isActive={isNavItemActive(item.href)}
-              />
-            )})}
+            {navigation.map((item) => {
+              return (
+                <DesktopNavItem
+                  key={item.href}
+                  href={item.href}
+                  label={item.label}
+                  icon={item.icon}
+                  isActive={isNavItemActive(item.href)}
+                />
+              );
+            })}
           </nav>
 
           {/* Right Side - Notifications & User Profile */}
           <div className='flex items-center gap-1 sm:gap-3'>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant='ghost' size='icon' className='relative h-8 w-8 sm:h-9 sm:w-9'>
-                  <Bell className='h-4 w-4 sm:h-5 sm:w-5' />
-                  <span className='absolute -right-0.5 -top-0.5 flex h-3 w-3 sm:h-4 sm:w-4 items-center justify-center rounded-full bg-primary text-[8px] sm:text-[10px] font-medium text-primary-foreground'>
-                    3
-                  </span>
-                  <span className='sr-only'>Notifications</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='end' className='w-[280px] sm:w-80'>
-                <DropdownMenuLabel className='flex items-center justify-between'>
-                  Notifications
-                  <Button variant='ghost' size='sm' className='text-xs h-7 sm:h-8'>
-                    Mark all as read
-                  </Button>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <div className='max-h-60 sm:max-h-80 overflow-y-auto'>
-                  <div className='flex gap-3 sm:gap-4 p-2 sm:p-3 hover:bg-muted/50 rounded-md cursor-pointer'>
-                    <div className='flex-shrink-0 mt-1'>
-                      <div className='w-2 h-2 bg-primary rounded-full'></div>
-                    </div>
-                    <div>
-                      <p className='text-xs sm:text-sm font-medium'>
-                        New comment on &quot;Enterprise CRM Implementation&quot;
-                      </p>
-                      <p className='text-[10px] sm:text-xs text-muted-foreground mt-1'>
-                        Sarah Johnson left a comment on your project
-                      </p>
-                      <p className='text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2'>
-                        2 hours ago
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className='flex gap-3 sm:gap-4 p-2 sm:p-3 hover:bg-muted/50 rounded-md cursor-pointer'>
-                    <div className='flex-shrink-0 mt-1'>
-                      <div className='w-2 h-2 bg-primary rounded-full'></div>
-                    </div>
-                    <div>
-                      <p className='text-xs sm:text-sm font-medium'>Project milestone completed</p>
-                      <p className='text-[10px] sm:text-xs text-muted-foreground mt-1'>
-                        E-commerce Platform Upgrade - Phase 1 completed
-                      </p>
-                      <p className='text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2'>
-                        Yesterday
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className='flex gap-3 sm:gap-4 p-2 sm:p-3 hover:bg-muted/50 rounded-md cursor-pointer'>
-                    <div className='flex-shrink-0 mt-1'>
-                      <div className='w-2 h-2 bg-primary rounded-full'></div>
-                    </div>
-                    <div>
-                      <p className='text-xs sm:text-sm font-medium'>Invoice paid</p>
-                      <p className='text-[10px] sm:text-xs text-muted-foreground mt-1'>
-                        Global Retail paid invoice #INV-2024-042
-                      </p>
-                      <p className='text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2'>
-                        Yesterday
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild className='justify-center text-xs sm:text-sm'>
-                  <Link href='/dashboard/notifications'>View all notifications</Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -340,14 +270,16 @@ export default function DashboardLayout({
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  {userNavigation.map((item) => {return (
-                    <DropdownMenuItem key={item.href} asChild className='text-xs sm:text-sm'>
-                      <Link href={item.href}>
-                        {item.icon}
-                        <span className='ml-2'>{item.label}</span>
-                      </Link>
-                    </DropdownMenuItem>
-                  )})}
+                  {userNavigation.map((item) => {
+                    return (
+                      <DropdownMenuItem key={item.href} asChild className='text-xs sm:text-sm'>
+                        <Link href={item.href}>
+                          {item.icon}
+                          <span className='ml-2'>{item.label}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    );
+                  })}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className='text-xs sm:text-sm'>

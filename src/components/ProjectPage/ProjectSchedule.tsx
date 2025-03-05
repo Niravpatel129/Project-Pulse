@@ -13,6 +13,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -27,12 +33,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { addHours, format, parseISO } from 'date-fns';
-import { CalendarIcon, Clock, Mail, Plus, Users } from 'lucide-react';
+import { CalendarIcon, Clock, Mail, MoreHorizontal, Plus, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Calendar } from '../ui/calendar';
 
 type TeamMember = {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   role: string;
@@ -42,7 +49,7 @@ type TeamMember = {
   }[];
 };
 type Meeting = {
-  id: string;
+  _id: string;
   title: string;
   description?: string;
   date: string;
@@ -60,7 +67,7 @@ type Meeting = {
   };
   project?: string;
   organizer?: {
-    id: string;
+    _id: string;
     email: string;
   };
   clientEmail?: string;
@@ -73,13 +80,15 @@ export default function ProjectSchedule() {
   const [showMeetingDialog, setShowMeetingDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showAvailabilityDialog, setShowAvailabilityDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [meetingToDelete, setMeetingToDelete] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('upcoming');
   const [startDateRange, setStartDateRange] = useState<Date | undefined>(new Date());
   const [endDateRange, setEndDateRange] = useState<Date | undefined>(addHours(new Date(), 30 * 24));
 
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
     {
-      id: '1',
+      _id: '1',
       name: project?.participants?.[0]?.name || 'Jane Smith',
       email: project?.participants?.[0]?.email || 'jane@example.com',
       role: project?.participants?.[0]?.role || 'Project Manager',
@@ -101,7 +110,7 @@ export default function ProjectSchedule() {
       ],
     },
     {
-      id: '2',
+      _id: '2',
       name: project?.participants?.[1]?.name || 'John Doe',
       email: project?.participants?.[1]?.email || 'john@example.com',
       role: project?.participants?.[1]?.role || 'Designer',
@@ -117,7 +126,7 @@ export default function ProjectSchedule() {
       ],
     },
     {
-      id: '3',
+      _id: '3',
       name: project?.participants?.[2]?.name || 'Sarah Johnson',
       email: project?.participants?.[2]?.email || 'sarah@example.com',
       role: project?.participants?.[2]?.role || 'Developer',
@@ -139,7 +148,7 @@ export default function ProjectSchedule() {
     if (project?.participants && project.participants.length > 0) {
       const updatedTeamMembers = project.participants.map((participant, index) => {
         return {
-          id: participant._id,
+          _id: participant._id,
           name: participant.name,
           email: participant.email || `participant${index}@example.com`,
           role: participant.role,
@@ -183,7 +192,7 @@ export default function ProjectSchedule() {
         const response = await newRequest.get(`/meetings?projectId=${project._id}`);
         const fetchedMeetings = response.data.map((meeting: any) => {
           return {
-            id: meeting._id,
+            _id: meeting._id,
             title: meeting.title,
             description: meeting.description,
             date: meeting.date.split('T')[0], // Extract date part only
@@ -253,7 +262,7 @@ export default function ProjectSchedule() {
     const dayOfWeek = format(selectedDate, 'EEEE').toLowerCase();
     const unavailableMembers = selectedTeamMembers.filter((memberId) => {
       const member = teamMembers.find((m) => {
-        return m.id === memberId;
+        return m._id === memberId;
       });
       if (!member) return false;
 
@@ -280,17 +289,17 @@ export default function ProjectSchedule() {
       const unavailableNames = unavailableMembers
         .map((id) => {
           return teamMembers.find((m) => {
-            return m.id === id;
+            return m._id === id;
           })?.name;
         })
         .join(', ');
 
-      alert(`Some team members are not available at this time: ${unavailableNames}`);
+      toast.error(`Some team members are not available at this time: ${unavailableNames}`);
       return;
     }
 
     const newMeeting = {
-      id: Date.now().toString(),
+      _id: Date.now().toString(),
       title: meetingTitle,
       description: meetingDescription,
       date: format(selectedDate, 'yyyy-MM-dd'),
@@ -315,7 +324,7 @@ export default function ProjectSchedule() {
       setMeetings([
         ...meetings,
         {
-          id: createdMeeting._id,
+          _id: createdMeeting._id,
           title: createdMeeting.title,
           description: createdMeeting.description,
           date: createdMeeting.date.split('T')[0], // Extract date part only
@@ -332,7 +341,7 @@ export default function ProjectSchedule() {
       setShowMeetingDialog(false);
     } catch (error) {
       console.error('Error creating meeting:', error);
-      alert('Failed to create meeting. Please try again.');
+      toast.error('Failed to create meeting. Please try again.');
     }
   };
 
@@ -341,8 +350,29 @@ export default function ProjectSchedule() {
     // Logic to send invitation email to client
     // In a real app, this would call an API endpoint
 
-    alert(`Invitation sent to ${clientEmail}`);
+    toast.error(`Invitation sent to ${clientEmail}`);
     setShowInviteDialog(false);
+  };
+
+  const handleDeleteMeeting = async (meetingId: string) => {
+    try {
+      // Make API call to delete the meeting
+      await newRequest.delete(`/meetings/${meetingId}`);
+
+      // Update local state by removing the deleted meeting
+      setMeetings(
+        meetings.filter((meeting) => {
+          return meeting._id !== meetingId;
+        }),
+      );
+      toast.success('Meeting deleted successfully');
+    } catch (error) {
+      console.error('Error deleting meeting:', error);
+      toast.error('Failed to delete meeting. Please try again.');
+    } finally {
+      setMeetingToDelete(null);
+      setShowDeleteDialog(false);
+    }
   };
 
   const resetMeetingForm = () => {
@@ -482,15 +512,15 @@ export default function ProjectSchedule() {
           <CardContent>
             {filteredMeetings().length > 0 ? (
               <div className='space-y-4'>
-                {filteredMeetings().map((meeting) => {
+                {filteredMeetings().map((meeting, index) => {
                   return (
-                    <Card key={meeting.id} className='overflow-hidden'>
+                    <Card key={index} className='overflow-hidden'>
                       <div className='flex flex-col sm:flex-row'>
                         <div className='flex w-full flex-col justify-between p-4 sm:w-2/3'>
                           <div>
                             <div className='flex flex-wrap items-center gap-2'>
                               <h3 className='font-semibold'>{meeting.title}</h3>
-                              <Badge className={getStatusColor(meeting.status)}>
+                              <Badge variant='outline' className={getStatusColor(meeting.status)}>
                                 {meeting.status.charAt(0).toUpperCase() + meeting.status.slice(1)}
                               </Badge>
                             </div>
@@ -546,7 +576,32 @@ export default function ProjectSchedule() {
                         </div>
 
                         <div className='border-t bg-gray-50 p-4 sm:w-1/3 sm:border-l sm:border-t-0'>
-                          <h4 className='text-sm font-medium text-gray-600'>Participants</h4>
+                          <div className='flex justify-between items-start'>
+                            <h4 className='text-sm font-medium text-gray-600'>Participants</h4>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant='ghost'
+                                  size='sm'
+                                  className='h-8 w-8 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                                >
+                                  <MoreHorizontal className='h-4 w-4' />
+                                  <span className='sr-only'>Meeting options</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align='end'>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setMeetingToDelete(meeting._id);
+                                    setShowDeleteDialog(true);
+                                    handleDeleteMeeting(meeting._id);
+                                  }}
+                                >
+                                  Delete Meeting
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
 
                           {meeting.clientEmail && (
                             <div className='mt-2'>
@@ -562,7 +617,7 @@ export default function ProjectSchedule() {
                             <div className='mt-1 flex flex-wrap gap-1'>
                               {meeting.participants.map((memberId) => {
                                 const member = teamMembers.find((m) => {
-                                  return m.id === memberId;
+                                  return m._id === memberId;
                                 });
                                 return (
                                   <TooltipProvider key={memberId}>
@@ -826,23 +881,23 @@ export default function ProjectSchedule() {
                   <div className='flex flex-wrap gap-2'>
                     {teamMembers.map((member) => {
                       return (
-                        <div key={member.id} className='flex items-center space-x-2'>
+                        <div key={member._id} className='flex items-center space-x-2'>
                           <Checkbox
-                            id={`member-${member.id}`}
-                            checked={selectedTeamMembers.includes(member.id)}
+                            id={`member-${member._id}`}
+                            checked={selectedTeamMembers.includes(member._id)}
                             onCheckedChange={(checked) => {
                               if (checked) {
-                                setSelectedTeamMembers([...selectedTeamMembers, member.id]);
+                                setSelectedTeamMembers([...selectedTeamMembers, member._id]);
                               } else {
                                 setSelectedTeamMembers(
                                   selectedTeamMembers.filter((id) => {
-                                    return id !== member.id;
+                                    return id !== member._id;
                                   }),
                                 );
                               }
                             }}
                           />
-                          <Label htmlFor={`member-${member.id}`} className='text-sm'>
+                          <Label htmlFor={`member-${member._id}`} className='text-sm'>
                             {member.name} ({member.role})
                           </Label>
                         </div>
@@ -888,23 +943,23 @@ export default function ProjectSchedule() {
                   <div className='flex flex-wrap gap-2'>
                     {teamMembers.map((member) => {
                       return (
-                        <div key={member.id} className='flex items-center space-x-2'>
+                        <div key={member._id} className='flex items-center space-x-2'>
                           <Checkbox
-                            id={`invite-member-${member.id}`}
-                            checked={selectedTeamMembers.includes(member.id)}
+                            id={`invite-member-${member._id}`}
+                            checked={selectedTeamMembers.includes(member._id)}
                             onCheckedChange={(checked) => {
                               if (checked) {
-                                setSelectedTeamMembers([...selectedTeamMembers, member.id]);
+                                setSelectedTeamMembers([...selectedTeamMembers, member._id]);
                               } else {
                                 setSelectedTeamMembers(
                                   selectedTeamMembers.filter((id) => {
-                                    return id !== member.id;
+                                    return id !== member._id;
                                   }),
                                 );
                               }
                             }}
                           />
-                          <Label htmlFor={`invite-member-${member.id}`} className='text-sm'>
+                          <Label htmlFor={`invite-member-${member._id}`} className='text-sm'>
                             {member.name} ({member.role})
                           </Label>
                         </div>
