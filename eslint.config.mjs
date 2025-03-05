@@ -22,6 +22,7 @@ const eslintConfig = [
       "jsx-a11y/aria-role": "error",
       "@typescript-eslint/no-unused-vars": "off",
       "react/no-array-index-key": "off",
+      "arrow-body-style": ["error", "always"],
     },
   },
 ];

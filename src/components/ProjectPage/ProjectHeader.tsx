@@ -71,7 +71,8 @@ interface Role {
   color: string;
 }
 
-export default function ProjectHeader() {
+export default function ProjectHeader({ project }) {
+  console.log('🚀 project:', project);
   const [participants, setParticipants] = useState<Participant[]>([
     {
       id: '1',
@@ -225,25 +226,30 @@ export default function ProjectHeader() {
     },
   ];
 
-  const filteredContacts = previousContacts.filter(
-    (contact) =>
+  const filteredContacts = previousContacts.filter((contact) => {
+    return (
       contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.role.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+      contact.role.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   const handleAddParticipant = () => {
     if (newParticipantName.trim() === '' || newParticipantRole.trim() === '') return;
 
     const initials = newParticipantName
       .split(' ')
-      .map((name) => name[0])
+      .map((name) => {
+        return name[0];
+      })
       .join('')
       .toUpperCase();
 
     // Get permissions based on selected role
     const rolePermissions =
-      predefinedRoles.find((r) => r.name === newParticipantRole.toUpperCase())?.permissions || [];
+      predefinedRoles.find((r) => {
+        return r.name === newParticipantRole.toUpperCase();
+      })?.permissions || [];
 
     // Use selected permissions if any, otherwise use role default permissions
     const permissions =
@@ -273,7 +279,9 @@ export default function ProjectHeader() {
   };
 
   const handleAddExistingContact = (contact: (typeof previousContacts)[0]) => {
-    const exists = participants.some((p) => p.id === contact.id);
+    const exists = participants.some((p) => {
+      return p.id === contact.id;
+    });
     if (!exists) {
       setParticipants([
         ...participants,
@@ -287,23 +295,30 @@ export default function ProjectHeader() {
   };
 
   const handleRemoveParticipant = (id: string) => {
-    setParticipants(participants.filter((p) => p.id !== id));
+    setParticipants(
+      participants.filter((p) => {
+        return p.id !== id;
+      }),
+    );
   };
 
   const handleUpdateParticipantRole = (id: string, newRole: string) => {
     // Get permissions for the new role
-    const rolePermissions = predefinedRoles.find((r) => r.name === newRole)?.permissions || [];
+    const rolePermissions =
+      predefinedRoles.find((r) => {
+        return r.name === newRole;
+      })?.permissions || [];
 
     setParticipants(
-      participants.map((p) =>
-        p.id === id
+      participants.map((p) => {
+        return p.id === id
           ? {
               ...p,
               role: newRole.toUpperCase(),
               permissions: rolePermissions,
             }
-          : p,
-      ),
+          : p;
+      }),
     );
   };
 
@@ -311,7 +326,11 @@ export default function ProjectHeader() {
     id: string,
     newStatus: 'active' | 'pending' | 'inactive',
   ) => {
-    setParticipants(participants.map((p) => (p.id === id ? { ...p, status: newStatus } : p)));
+    setParticipants(
+      participants.map((p) => {
+        return p.id === id ? { ...p, status: newStatus } : p;
+      }),
+    );
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -333,7 +352,9 @@ export default function ProjectHeader() {
   const handleCopyInviteLink = () => {
     navigator.clipboard.writeText(inviteLink);
     setLinkCopied(true);
-    setTimeout(() => setLinkCopied(false), 2000);
+    setTimeout(() => {
+      return setLinkCopied(false);
+    }, 2000);
   };
 
   const handleViewParticipant = (participant: Participant) => {
@@ -380,7 +401,9 @@ export default function ProjectHeader() {
   };
 
   const getRoleBadge = (roleName: string) => {
-    const role = predefinedRoles.find((r) => r.name === roleName);
+    const role = predefinedRoles.find((r) => {
+      return r.name === roleName;
+    });
     return role ? (
       <Badge variant='outline' className={`${role.color} font-normal`}>
         {roleName}
@@ -407,8 +430,16 @@ export default function ProjectHeader() {
             />
           </div>
           <div>
-            <h1 className='text-xl sm:text-2xl font-medium'>Wedding Photography Project</h1>
-            <p className='text-xs sm:text-sm text-muted-foreground'>Created on April 15, 2023</p>
+            <h1 className='text-xl sm:text-2xl font-medium capitalize'>{project.name}</h1>
+            <p className='text-xs sm:text-sm text-muted-foreground'>
+              {/* Format the creation date in a readable format */}
+              Created on{' '}
+              {new Date(project.createdAt).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </p>
           </div>
         </div>
       </div>
@@ -419,102 +450,84 @@ export default function ProjectHeader() {
           <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
             <div className='flex flex-wrap items-center gap-4'>
               <div className='flex flex-wrap items-center gap-4'>
-                {participants.map((participant) => (
-                  <div key={participant.id} className='flex items-center gap-2'>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        {participant.avatar ? (
-                          <Avatar className='h-8 w-8 cursor-pointer'>
-                            <AvatarImage src={participant.avatar} alt={participant.name} />
-                            <AvatarFallback>{participant.initials}</AvatarFallback>
-                          </Avatar>
-                        ) : (
-                          <Avatar className='flex h-8 w-8 cursor-pointer items-center justify-center bg-gray-100'>
-                            <span className='text-sm'>{participant.initials}</span>
-                          </Avatar>
-                        )}
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <div>
-                          <p className='font-medium'>{participant.name}</p>
-                          <p className='text-xs text-muted-foreground'>{participant.role}</p>
-                          {participant.email && <p className='text-xs'>{participant.email}</p>}
-                          {participant.status && (
-                            <div className='mt-1'>{getStatusBadge(participant.status)}</div>
+                {project.participants.map((participant) => {
+                  console.log('🚀 participant:', participant);
+                  return (
+                    <div key={participant._id} className='flex items-center gap-2'>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          {participant.avatar ? (
+                            <Avatar className='h-8 w-8 cursor-pointer'>
+                              <AvatarImage src={participant.avatar} alt={participant.name} />
+                              <AvatarFallback>
+                                {participant.name.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          ) : (
+                            <Avatar className='flex h-8 w-8 cursor-pointer items-center justify-center bg-gray-100'>
+                              <span className='text-sm'>
+                                {participant.name.charAt(0).toUpperCase()}
+                              </span>
+                            </Avatar>
+                          )}
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <div>
+                            <p className='font-medium'>{participant.name}</p>
+                            <p className='text-xs text-muted-foreground'>{participant.role}</p>
+                            {participant.email && <p className='text-xs'>{participant.email}</p>}
+                            {participant.status && (
+                              <div className='mt-1'>{getStatusBadge(participant.status)}</div>
+                            )}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                      <div className='hidden sm:block'>
+                        <div className='flex items-center gap-1'>
+                          <p className='text-sm font-medium'>{participant.name}</p>
+                          {participant.id !== '1' && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant='ghost' size='icon' className='h-6 w-6'>
+                                  <MoreHorizontal className='h-3 w-3' />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align='end'>
+                                <DropdownMenuLabel>Manage Participant</DropdownMenuLabel>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    return handleViewParticipant(participant);
+                                  }}
+                                >
+                                  View Details
+                                </DropdownMenuItem>
+
+                                <DropdownMenuSeparator />
+
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    return handleRemoveParticipant(participant.id);
+                                  }}
+                                  className='text-red-600'
+                                >
+                                  Remove
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           )}
                         </div>
-                      </TooltipContent>
-                    </Tooltip>
-                    <div className='hidden sm:block'>
-                      <div className='flex items-center gap-1'>
-                        <p className='text-sm font-medium'>{participant.name}</p>
-                        {participant.id !== '1' && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant='ghost' size='icon' className='h-6 w-6'>
-                                <MoreHorizontal className='h-3 w-3' />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align='end'>
-                              <DropdownMenuLabel>Manage Participant</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => handleViewParticipant(participant)}>
-                                View Details
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuLabel>Change Role</DropdownMenuLabel>
-                              {predefinedRoles.map((role) => (
-                                <DropdownMenuItem
-                                  key={role.id}
-                                  onClick={() =>
-                                    handleUpdateParticipantRole(participant.id, role.name)
-                                  }
-                                >
-                                  Set as {role.name}
-                                </DropdownMenuItem>
-                              ))}
-                              <DropdownMenuSeparator />
-                              <DropdownMenuLabel>Change Status</DropdownMenuLabel>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleUpdateParticipantStatus(participant.id, 'active')
-                                }
-                              >
-                                Set as Active
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleUpdateParticipantStatus(participant.id, 'pending')
-                                }
-                              >
-                                Set as Pending
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleUpdateParticipantStatus(participant.id, 'inactive')
-                                }
-                              >
-                                Set as Inactive
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => handleRemoveParticipant(participant.id)}
-                                className='text-red-600'
-                              >
-                                Remove
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                      </div>
-                      <div className='flex items-center gap-1'>
-                        {getRoleBadge(participant.role)}
-                        {participant.status && (
-                          <span className='text-xs ml-1'>{getStatusBadge(participant.status)}</span>
-                        )}
+                        <div className='flex items-center gap-1'>
+                          {getRoleBadge(participant.role)}
+                          {participant.status && (
+                            <span className='text-xs ml-1'>
+                              {getStatusBadge(participant.status)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 {/* Add Participant Button */}
                 <Dialog open={isAddParticipantOpen} onOpenChange={setIsAddParticipantOpen}>
@@ -545,7 +558,9 @@ export default function ProjectHeader() {
                           <Input
                             id='name'
                             value={newParticipantName}
-                            onChange={(e) => setNewParticipantName(e.target.value)}
+                            onChange={(e) => {
+                              return setNewParticipantName(e.target.value);
+                            }}
                             placeholder='Enter participant name'
                           />
                         </div>
@@ -555,7 +570,9 @@ export default function ProjectHeader() {
                             id='email'
                             type='email'
                             value={newParticipantEmail}
-                            onChange={(e) => setNewParticipantEmail(e.target.value)}
+                            onChange={(e) => {
+                              return setNewParticipantEmail(e.target.value);
+                            }}
                             placeholder='Enter email address'
                           />
                         </div>
@@ -565,7 +582,9 @@ export default function ProjectHeader() {
                             id='phone'
                             type='tel'
                             value={newParticipantPhone}
-                            onChange={(e) => setNewParticipantPhone(e.target.value)}
+                            onChange={(e) => {
+                              return setNewParticipantPhone(e.target.value);
+                            }}
                             placeholder='Enter phone number'
                           />
                         </div>
@@ -580,18 +599,22 @@ export default function ProjectHeader() {
                                 <SelectValue placeholder='Select a role' />
                               </SelectTrigger>
                               <SelectContent>
-                                {predefinedRoles.map((role) => (
-                                  <SelectItem key={role.id} value={role.name}>
-                                    {role.name}
-                                  </SelectItem>
-                                ))}
+                                {predefinedRoles.map((role) => {
+                                  return (
+                                    <SelectItem key={role.id} value={role.name}>
+                                      {role.name}
+                                    </SelectItem>
+                                  );
+                                })}
                               </SelectContent>
                             </Select>
                             <Button
                               type='button'
                               variant='outline'
                               size='icon'
-                              onClick={() => setIsEditingRole(!isEditingRole)}
+                              onClick={() => {
+                                return setIsEditingRole(!isEditingRole);
+                              }}
                             >
                               <PlusCircle className='h-4 w-4' />
                             </Button>
@@ -606,7 +629,9 @@ export default function ProjectHeader() {
                               <Input
                                 id='roleName'
                                 value={newRoleName}
-                                onChange={(e) => setNewRoleName(e.target.value)}
+                                onChange={(e) => {
+                                  return setNewRoleName(e.target.value);
+                                }}
                                 placeholder='e.g., Videographer'
                               />
                             </div>
@@ -621,26 +646,33 @@ export default function ProjectHeader() {
                                   'share',
                                   'delete',
                                   'comment',
-                                ].map((perm) => (
-                                  <div key={perm} className='flex items-center space-x-2'>
-                                    <Checkbox
-                                      id={`perm-${perm}`}
-                                      checked={newRolePermissions.includes(perm)}
-                                      onCheckedChange={(checked) => {
-                                        if (checked) {
-                                          setNewRolePermissions([...newRolePermissions, perm]);
-                                        } else {
-                                          setNewRolePermissions(
-                                            newRolePermissions.filter((p) => p !== perm),
-                                          );
-                                        }
-                                      }}
-                                    />
-                                    <Label htmlFor={`perm-${perm}`} className='text-sm capitalize'>
-                                      {perm}
-                                    </Label>
-                                  </div>
-                                ))}
+                                ].map((perm) => {
+                                  return (
+                                    <div key={perm} className='flex items-center space-x-2'>
+                                      <Checkbox
+                                        id={`perm-${perm}`}
+                                        checked={newRolePermissions.includes(perm)}
+                                        onCheckedChange={(checked) => {
+                                          if (checked) {
+                                            setNewRolePermissions([...newRolePermissions, perm]);
+                                          } else {
+                                            setNewRolePermissions(
+                                              newRolePermissions.filter((p) => {
+                                                return p !== perm;
+                                              }),
+                                            );
+                                          }
+                                        }}
+                                      />
+                                      <Label
+                                        htmlFor={`perm-${perm}`}
+                                        className='text-sm capitalize'
+                                      >
+                                        {perm}
+                                      </Label>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
                             <Button onClick={handleAddNewRole} className='w-full'>
@@ -660,32 +692,36 @@ export default function ProjectHeader() {
                               'share',
                               'delete',
                               'comment',
-                            ].map((perm) => (
-                              <div key={perm} className='flex items-center space-x-2'>
-                                <Checkbox
-                                  id={`participant-perm-${perm}`}
-                                  checked={newParticipantPermissions.includes(perm)}
-                                  onCheckedChange={(checked) => {
-                                    if (checked) {
-                                      setNewParticipantPermissions([
-                                        ...newParticipantPermissions,
-                                        perm,
-                                      ]);
-                                    } else {
-                                      setNewParticipantPermissions(
-                                        newParticipantPermissions.filter((p) => p !== perm),
-                                      );
-                                    }
-                                  }}
-                                />
-                                <Label
-                                  htmlFor={`participant-perm-${perm}`}
-                                  className='text-sm capitalize'
-                                >
-                                  {perm}
-                                </Label>
-                              </div>
-                            ))}
+                            ].map((perm) => {
+                              return (
+                                <div key={perm} className='flex items-center space-x-2'>
+                                  <Checkbox
+                                    id={`participant-perm-${perm}`}
+                                    checked={newParticipantPermissions.includes(perm)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setNewParticipantPermissions([
+                                          ...newParticipantPermissions,
+                                          perm,
+                                        ]);
+                                      } else {
+                                        setNewParticipantPermissions(
+                                          newParticipantPermissions.filter((p) => {
+                                            return p !== perm;
+                                          }),
+                                        );
+                                      }
+                                    }}
+                                  />
+                                  <Label
+                                    htmlFor={`participant-perm-${perm}`}
+                                    className='text-sm capitalize'
+                                  >
+                                    {perm}
+                                  </Label>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
 
@@ -694,7 +730,9 @@ export default function ProjectHeader() {
                           <Textarea
                             id='notes'
                             value={newParticipantNotes}
-                            onChange={(e) => setNewParticipantNotes(e.target.value)}
+                            onChange={(e) => {
+                              return setNewParticipantNotes(e.target.value);
+                            }}
                             placeholder='Add any notes about this participant'
                             rows={3}
                           />
@@ -718,41 +756,47 @@ export default function ProjectHeader() {
                             placeholder='Search contacts...'
                             className='pl-8'
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                              return setSearchTerm(e.target.value);
+                            }}
                           />
                         </div>
 
                         <div className='max-h-60 overflow-y-auto space-y-2'>
                           {filteredContacts.length > 0 ? (
-                            filteredContacts.map((contact) => (
-                              <div
-                                key={contact.id}
-                                className='flex items-center justify-between p-2 hover:bg-gray-50 rounded'
-                              >
-                                <div className='flex items-center gap-2'>
-                                  <Avatar className='h-8 w-8'>
-                                    <AvatarFallback>{contact.initials}</AvatarFallback>
-                                  </Avatar>
-                                  <div>
-                                    <p className='text-sm font-medium'>{contact.name}</p>
-                                    <div className='flex items-center gap-2'>
-                                      <p className='text-xs text-muted-foreground'>
-                                        {contact.email}
-                                      </p>
-                                      {getRoleBadge(contact.role)}
+                            filteredContacts.map((contact) => {
+                              return (
+                                <div
+                                  key={contact.id}
+                                  className='flex items-center justify-between p-2 hover:bg-gray-50 rounded'
+                                >
+                                  <div className='flex items-center gap-2'>
+                                    <Avatar className='h-8 w-8'>
+                                      <AvatarFallback>{contact.initials}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                      <p className='text-sm font-medium'>{contact.name}</p>
+                                      <div className='flex items-center gap-2'>
+                                        <p className='text-xs text-muted-foreground'>
+                                          {contact.email}
+                                        </p>
+                                        {getRoleBadge(contact.role)}
+                                      </div>
                                     </div>
                                   </div>
+                                  <Button
+                                    size='sm'
+                                    variant='ghost'
+                                    onClick={() => {
+                                      return handleAddExistingContact(contact);
+                                    }}
+                                    className='h-8 w-8 p-0'
+                                  >
+                                    <UserPlus className='h-4 w-4' />
+                                  </Button>
                                 </div>
-                                <Button
-                                  size='sm'
-                                  variant='ghost'
-                                  onClick={() => handleAddExistingContact(contact)}
-                                  className='h-8 w-8 p-0'
-                                >
-                                  <UserPlus className='h-4 w-4' />
-                                </Button>
-                              </div>
-                            ))
+                              );
+                            })
                           ) : (
                             <p className='text-center text-sm text-muted-foreground py-4'>
                               No contacts found

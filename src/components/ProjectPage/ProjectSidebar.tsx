@@ -156,7 +156,9 @@ export function ProjectSidebar({ project, onUpdateProject }) {
   const removeAllowedEmail = (email) => {
     setSharingSettings({
       ...sharingSettings,
-      allowedEmails: sharingSettings.allowedEmails.filter((e) => e !== email),
+      allowedEmails: sharingSettings.allowedEmails.filter((e) => {
+        return e !== email;
+      }),
     });
   };
 
@@ -174,11 +176,13 @@ export function ProjectSidebar({ project, onUpdateProject }) {
 
     // Clear allowed emails when changing from email_restricted to another mode
     if (value !== 'email_restricted') {
-      setSharingSettings((prev) => ({
-        ...prev,
-        privacyLevel: value,
-        allowedEmails: [],
-      }));
+      setSharingSettings((prev) => {
+        return {
+          ...prev,
+          privacyLevel: value,
+          allowedEmails: [],
+        };
+      });
     }
   };
 
@@ -233,7 +237,9 @@ export function ProjectSidebar({ project, onUpdateProject }) {
                     type='email'
                     placeholder='client@example.com'
                     value={clientEmail}
-                    onChange={(e) => setClientEmail(e.target.value)}
+                    onChange={(e) => {
+                      return setClientEmail(e.target.value);
+                    }}
                   />
                 </div>
 
@@ -244,7 +250,9 @@ export function ProjectSidebar({ project, onUpdateProject }) {
                     placeholder='Add a personal message to your client...'
                     rows={3}
                     value={sharingSettings.customMessage}
-                    onChange={(e) => handleSharingSettingsChange('customMessage', e.target.value)}
+                    onChange={(e) => {
+                      return handleSharingSettingsChange('customMessage', e.target.value);
+                    }}
                   />
                 </div>
               </TabsContent>
@@ -300,7 +308,9 @@ export function ProjectSidebar({ project, onUpdateProject }) {
                         <Input
                           placeholder='client@example.com'
                           value={allowedEmailInput}
-                          onChange={(e) => setAllowedEmailInput(e.target.value)}
+                          onChange={(e) => {
+                            return setAllowedEmailInput(e.target.value);
+                          }}
                           onKeyDown={handleAllowedEmailKeyDown}
                         />
                         <Button
@@ -319,23 +329,27 @@ export function ProjectSidebar({ project, onUpdateProject }) {
                           </p>
                         ) : (
                           <div className='bg-muted/50 rounded-md p-1 max-h-28 overflow-y-auto'>
-                            {sharingSettings.allowedEmails.map((email, index) => (
-                              <div
-                                key={index}
-                                className='flex items-center justify-between py-1 px-2 text-sm bg-background/50 rounded my-1'
-                              >
-                                <span className='truncate'>{email}</span>
-                                <Button
-                                  size='sm'
-                                  variant='ghost'
-                                  className='h-7 w-7 p-0'
-                                  onClick={() => removeAllowedEmail(email)}
+                            {sharingSettings.allowedEmails.map((email, index) => {
+                              return (
+                                <div
+                                  key={index}
+                                  className='flex items-center justify-between py-1 px-2 text-sm bg-background/50 rounded my-1'
                                 >
-                                  <X className='h-3.5 w-3.5' />
-                                  <span className='sr-only'>Remove</span>
-                                </Button>
-                              </div>
-                            ))}
+                                  <span className='truncate'>{email}</span>
+                                  <Button
+                                    size='sm'
+                                    variant='ghost'
+                                    className='h-7 w-7 p-0'
+                                    onClick={() => {
+                                      return removeAllowedEmail(email);
+                                    }}
+                                  >
+                                    <X className='h-3.5 w-3.5' />
+                                    <span className='sr-only'>Remove</span>
+                                  </Button>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -351,9 +365,9 @@ export function ProjectSidebar({ project, onUpdateProject }) {
                     </div>
                     <Switch
                       checked={sharingSettings.requirePassword}
-                      onCheckedChange={(checked) =>
-                        handleSharingSettingsChange('requirePassword', checked)
-                      }
+                      onCheckedChange={(checked) => {
+                        return handleSharingSettingsChange('requirePassword', checked);
+                      }}
                     />
                   </div>
 
@@ -365,7 +379,9 @@ export function ProjectSidebar({ project, onUpdateProject }) {
                         type='password'
                         placeholder='Enter a secure password'
                         value={sharingSettings.password}
-                        onChange={(e) => handleSharingSettingsChange('password', e.target.value)}
+                        onChange={(e) => {
+                          return handleSharingSettingsChange('password', e.target.value);
+                        }}
                       />
                     </div>
                   )}
@@ -374,9 +390,9 @@ export function ProjectSidebar({ project, onUpdateProject }) {
                     <Label>Link Expiration</Label>
                     <Select
                       value={sharingSettings.expirationDays}
-                      onValueChange={(value) =>
-                        handleSharingSettingsChange('expirationDays', value)
-                      }
+                      onValueChange={(value) => {
+                        return handleSharingSettingsChange('expirationDays', value);
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -403,12 +419,14 @@ export function ProjectSidebar({ project, onUpdateProject }) {
                         <PopoverContent className='w-60 p-0'>
                           <div className='p-2'>
                             <div className='space-y-2'>
-                              {['Jane Cooper', 'Wade Warren', 'Robert Fox'].map((name, i) => (
-                                <div key={i} className='flex items-center space-x-2'>
-                                  <Checkbox id={`member-${i}`} />
-                                  <Label htmlFor={`member-${i}`}>{name}</Label>
-                                </div>
-                              ))}
+                              {['Jane Cooper', 'Wade Warren', 'Robert Fox'].map((name, i) => {
+                                return (
+                                  <div key={i} className='flex items-center space-x-2'>
+                                    <Checkbox id={`member-${i}`} />
+                                    <Label htmlFor={`member-${i}`}>{name}</Label>
+                                  </div>
+                                );
+                              })}
                             </div>
                             <Button size='sm' className='w-full mt-2'>
                               Add Selected
@@ -432,7 +450,12 @@ export function ProjectSidebar({ project, onUpdateProject }) {
             </Tabs>
 
             <DialogFooter className='mt-4'>
-              <Button variant='outline' onClick={() => setIsClientPortalDialogOpen(false)}>
+              <Button
+                variant='outline'
+                onClick={() => {
+                  return setIsClientPortalDialogOpen(false);
+                }}
+              >
                 Cancel
               </Button>
               <Button onClick={sendClientPortalEmail}>
@@ -480,12 +503,14 @@ export function ProjectSidebar({ project, onUpdateProject }) {
           <AccordionItem value='tasks'>
             <AccordionTrigger>Tasks</AccordionTrigger>
             <AccordionContent>
-              {tasks.map((task) => (
-                <div key={task.id} className='flex items-center space-x-2'>
-                  <Checkbox id={`task-${task.id}`} checked={task.completed} />
-                  <Label htmlFor={`task-${task.id}`}>{task.title}</Label>
-                </div>
-              ))}
+              {tasks.map((task) => {
+                return (
+                  <div key={task.id} className='flex items-center space-x-2'>
+                    <Checkbox id={`task-${task.id}`} checked={task.completed} />
+                    <Label htmlFor={`task-${task.id}`}>{task.title}</Label>
+                  </div>
+                );
+              })}
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant='outline' className='w-full mt-2'>
@@ -513,44 +538,7 @@ export function ProjectSidebar({ project, onUpdateProject }) {
               </Dialog>
             </AccordionContent>
           </AccordionItem>
-          <AccordionItem value='time-tracker'>
-            <AccordionTrigger>Time Tracker</AccordionTrigger>
-            <AccordionContent>
-              {timeEntries.map((entry) => (
-                <div key={entry.id} className='flex justify-between items-center'>
-                  <span>{entry.description}</span>
-                  <span>{entry.duration}</span>
-                </div>
-              ))}
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant='outline' className='w-full mt-2'>
-                    <PlusCircle className='mr-2 h-4 w-4' />
-                    Add Time Entry
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add Time Entry</DialogTitle>
-                  </DialogHeader>
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      const description = (e.target as HTMLFormElement).description.value;
-                      const duration = (e.target as HTMLFormElement).duration.value;
-                      addTimeEntry(description, duration);
-                    }}
-                  >
-                    <Input id='description' placeholder='Description' className='mb-2' />
-                    <Input id='duration' placeholder='Duration (e.g., 2h 30m)' />
-                    <Button type='submit' className='mt-2'>
-                      Add Entry
-                    </Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </AccordionContent>
-          </AccordionItem>
+
           <AccordionItem value='notes'>
             <AccordionTrigger>Notes</AccordionTrigger>
             <AccordionContent>
@@ -597,7 +585,9 @@ export function ProjectSidebar({ project, onUpdateProject }) {
         <Button
           variant='outline'
           className='w-full justify-between'
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={() => {
+            return setIsExpanded(!isExpanded);
+          }}
         >
           MORE OPTIONS
           <ChevronDown className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-180')} />

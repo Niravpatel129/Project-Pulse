@@ -8,6 +8,7 @@ import { Menu } from 'lucide-react';
 import { Project } from 'next/dist/build/swc/types';
 import { useState } from 'react';
 import ProjectActivity from './ProjectActivity';
+import ProjectContext from './ProjectContext';
 import ProjectFiles from './ProjectFiles';
 import ProjectPayments from './ProjectPayments';
 import ProjectSchedule from './ProjectSchedule';
@@ -15,7 +16,7 @@ import { ProjectSidebar } from './ProjectSidebar';
 import TimelineExample from './TimelineExample';
 
 export default function ProjectPage() {
-  const [activeTab, setActiveTab] = useState('activity');
+  const [activeTab, setActiveTab] = useState('context');
   const [project, setProject] = useState({
     id: '1',
     stage: 'FOLLOW_UP',
@@ -27,7 +28,9 @@ export default function ProjectPage() {
   });
 
   const handleUpdateProject = async (data: Partial<Project>) => {
-    setProject((prev) => ({ ...prev, ...data }));
+    setProject((prev) => {
+      return { ...prev, ...data };
+    });
   };
 
   return (
@@ -57,17 +60,23 @@ export default function ProjectPage() {
             <div className='overflow-x-auto pb-2'>
               <TabsList className='w-full min-w-max justify-start border-0 bg-transparent p-0'>
                 <TabsTrigger
+                  value='context'
+                  className='rounded-none border-b-2 border-transparent px-3 py-2 text-sm sm:px-4 sm:text-base data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
+                >
+                  Context
+                </TabsTrigger>
+                {/* <TabsTrigger
                   value='activity'
                   className='rounded-none border-b-2 border-transparent px-3 py-2 text-sm sm:px-4 sm:text-base data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
                 >
                   Activity
-                </TabsTrigger>
-                <TabsTrigger
+                </TabsTrigger> */}
+                {/* <TabsTrigger
                   value='timeline'
                   className='rounded-none border-b-2 border-transparent px-3 py-2 text-sm sm:px-4 sm:text-base data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
                 >
                   Timeline
-                </TabsTrigger>
+                </TabsTrigger> */}
                 <TabsTrigger
                   value='schedule'
                   className='rounded-none border-b-2 border-transparent px-3 py-2 text-sm sm:px-4 sm:text-base data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
@@ -95,6 +104,9 @@ export default function ProjectPage() {
               <div className='w-full md:flex-1'>
                 <TabsContent value='activity'>
                   <ProjectActivity />
+                </TabsContent>
+                <TabsContent value='context'>
+                  <ProjectContext />
                 </TabsContent>
                 <TabsContent value='timeline'>
                   <TimelineExample />

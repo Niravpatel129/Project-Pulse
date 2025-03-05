@@ -183,7 +183,9 @@ const CreateInvoiceForm = ({
   };
 
   // Calculate subtotal
-  const subtotal = items.reduce((total, item) => total + item.amount, 0);
+  const subtotal = items.reduce((total, item) => {
+    return total + item.amount;
+  }, 0);
 
   // Default tax rate (can be made adjustable)
   const taxRate = 0.08;
@@ -202,10 +204,12 @@ const CreateInvoiceForm = ({
       clientName: formData.get('clientName') as string,
       date: format(invoiceDate, 'yyyy-MM-dd'),
       dueDate: dueDate ? format(dueDate, 'yyyy-MM-dd') : '',
-      items: items.map((item, index) => ({
-        id: `item-${index}`,
-        ...item,
-      })),
+      items: items.map((item, index) => {
+        return {
+          id: `item-${index}`,
+          ...item,
+        };
+      }),
       subtotal,
       tax,
       total,
@@ -258,61 +262,71 @@ const CreateInvoiceForm = ({
           </Button>
         </div>
 
-        {items.map((item, index) => (
-          <div key={index} className='grid grid-cols-12 gap-2 items-end'>
-            <div className='col-span-12 md:col-span-5'>
-              <Label htmlFor={`item-desc-${index}`}>Description</Label>
-              <Input
-                id={`item-desc-${index}`}
-                value={item.description}
-                onChange={(e) => updateItem(index, 'description', e.target.value)}
-                required
-              />
-            </div>
-            <div className='col-span-3 md:col-span-2'>
-              <Label htmlFor={`item-qty-${index}`}>Quantity</Label>
-              <Input
-                id={`item-qty-${index}`}
-                type='number'
-                min='1'
-                value={item.quantity.toString()}
-                onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value))}
-                required
-              />
-            </div>
-            <div className='col-span-4 md:col-span-2'>
-              <Label htmlFor={`item-rate-${index}`}>Rate</Label>
-              <Input
-                id={`item-rate-${index}`}
-                type='number'
-                min='0'
-                step='0.01'
-                value={item.rate.toString()}
-                onChange={(e) => updateItem(index, 'rate', parseFloat(e.target.value))}
-                required
-              />
-            </div>
-            <div className='col-span-4 md:col-span-3'>
-              <Label>Amount</Label>
-              <div className='p-2 bg-gray-50 rounded border text-right w-full h-9 overflow-hidden text-ellipsis whitespace-nowrap'>
-                {formatCurrency(item.amount)}
+        {items.map((item, index) => {
+          return (
+            <div key={index} className='grid grid-cols-12 gap-2 items-end'>
+              <div className='col-span-12 md:col-span-5'>
+                <Label htmlFor={`item-desc-${index}`}>Description</Label>
+                <Input
+                  id={`item-desc-${index}`}
+                  value={item.description}
+                  onChange={(e) => {
+                    return updateItem(index, 'description', e.target.value);
+                  }}
+                  required
+                />
+              </div>
+              <div className='col-span-3 md:col-span-2'>
+                <Label htmlFor={`item-qty-${index}`}>Quantity</Label>
+                <Input
+                  id={`item-qty-${index}`}
+                  type='number'
+                  min='1'
+                  value={item.quantity.toString()}
+                  onChange={(e) => {
+                    return updateItem(index, 'quantity', parseInt(e.target.value));
+                  }}
+                  required
+                />
+              </div>
+              <div className='col-span-4 md:col-span-2'>
+                <Label htmlFor={`item-rate-${index}`}>Rate</Label>
+                <Input
+                  id={`item-rate-${index}`}
+                  type='number'
+                  min='0'
+                  step='0.01'
+                  value={item.rate.toString()}
+                  onChange={(e) => {
+                    return updateItem(index, 'rate', parseFloat(e.target.value));
+                  }}
+                  required
+                />
+              </div>
+              <div className='col-span-4 md:col-span-3'>
+                <Label>Amount</Label>
+                <div className='p-2 bg-gray-50 rounded border text-right w-full h-9 overflow-hidden text-ellipsis whitespace-nowrap'>
+                  {formatCurrency(item.amount)}
+                </div>
+              </div>
+              <div className='col-span-1 md:col-span-auto'>
+                {items.length > 1 && (
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='icon'
+                    onClick={() => {
+                      return removeItem(index);
+                    }}
+                    className='h-9 w-9'
+                  >
+                    <Trash2 className='h-4 w-4' />
+                  </Button>
+                )}
               </div>
             </div>
-            <div className='col-span-1 md:col-span-auto'>
-              {items.length > 1 && (
-                <Button
-                  type='button'
-                  variant='ghost'
-                  size='icon'
-                  onClick={() => removeItem(index)}
-                  className='h-9 w-9'
-                >
-                  <Trash2 className='h-4 w-4' />
-                </Button>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
@@ -389,9 +403,9 @@ export default function ProjectPayments() {
   // Mark as paid
   const markAsPaid = (invoiceId: string) => {
     setInvoices(
-      invoices.map((invoice) =>
-        invoice.id === invoiceId ? { ...invoice, status: 'PAID' } : invoice,
-      ),
+      invoices.map((invoice) => {
+        return invoice.id === invoiceId ? { ...invoice, status: 'PAID' } : invoice;
+      }),
     );
 
     toast({
@@ -402,7 +416,11 @@ export default function ProjectPayments() {
 
   // Delete invoice
   const deleteInvoice = (invoiceId: string) => {
-    setInvoices(invoices.filter((invoice) => invoice.id !== invoiceId));
+    setInvoices(
+      invoices.filter((invoice) => {
+        return invoice.id !== invoiceId;
+      }),
+    );
 
     toast({
       title: 'Invoice Deleted',
@@ -429,7 +447,9 @@ export default function ProjectPayments() {
             </DialogHeader>
             <CreateInvoiceForm
               onSubmit={handleCreateInvoice}
-              onCancel={() => setOpenCreateDialog(false)}
+              onCancel={() => {
+                return setOpenCreateDialog(false);
+              }}
             />
           </DialogContent>
         </Dialog>
@@ -494,16 +514,20 @@ export default function ProjectPayments() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {selectedInvoice.items.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell>{item.description}</TableCell>
-                          <TableCell className='text-right'>{item.quantity}</TableCell>
-                          <TableCell className='text-right'>{formatCurrency(item.rate)}</TableCell>
-                          <TableCell className='text-right'>
-                            {formatCurrency(item.amount)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {selectedInvoice.items.map((item) => {
+                        return (
+                          <TableRow key={item.id}>
+                            <TableCell>{item.description}</TableCell>
+                            <TableCell className='text-right'>{item.quantity}</TableCell>
+                            <TableCell className='text-right'>
+                              {formatCurrency(item.rate)}
+                            </TableCell>
+                            <TableCell className='text-right'>
+                              {formatCurrency(item.amount)}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
@@ -546,7 +570,13 @@ export default function ProjectPayments() {
                     Mark as Paid
                   </Button>
                 )}
-                <Button onClick={() => setOpenViewDialog(false)}>Close</Button>
+                <Button
+                  onClick={() => {
+                    return setOpenViewDialog(false);
+                  }}
+                >
+                  Close
+                </Button>
               </DialogFooter>
             </>
           )}
@@ -579,53 +609,73 @@ export default function ProjectPayments() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  invoices.map((invoice) => (
-                    <TableRow key={invoice.id}>
-                      <TableCell>
-                        <div className='font-medium'>{invoice.number}</div>
-                        <div className='text-sm text-gray-500'>{invoice.clientName}</div>
-                      </TableCell>
-                      <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
-                      <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-                      <TableCell className='font-medium'>{formatCurrency(invoice.total)}</TableCell>
-                      <TableCell>
-                        <StatusBadge status={invoice.status} />
-                      </TableCell>
-                      <TableCell className='text-right'>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant='ghost' size='icon'>
-                              <MoreVertical className='h-4 w-4' />
-                              <span className='sr-only'>Actions</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align='end'>
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleViewInvoice(invoice)}>
-                              <CreditCard className='mr-2 h-4 w-4' />
-                              View Invoice
-                            </DropdownMenuItem>
-                            {invoice.status !== 'PAID' && (
-                              <>
-                                <DropdownMenuItem onClick={() => markAsPaid(invoice.id)}>
-                                  <DollarSign className='mr-2 h-4 w-4' />
-                                  Mark as Paid
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => sendReminder(invoice.id)}>
-                                  <Send className='mr-2 h-4 w-4' />
-                                  Send Reminder
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                            <DropdownMenuItem onClick={() => deleteInvoice(invoice.id)}>
-                              <Trash2 className='mr-2 h-4 w-4' />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  invoices.map((invoice) => {
+                    return (
+                      <TableRow key={invoice.id}>
+                        <TableCell>
+                          <div className='font-medium'>{invoice.number}</div>
+                          <div className='text-sm text-gray-500'>{invoice.clientName}</div>
+                        </TableCell>
+                        <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
+                        <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
+                        <TableCell className='font-medium'>
+                          {formatCurrency(invoice.total)}
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge status={invoice.status} />
+                        </TableCell>
+                        <TableCell className='text-right'>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant='ghost' size='icon'>
+                                <MoreVertical className='h-4 w-4' />
+                                <span className='sr-only'>Actions</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align='end'>
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  return handleViewInvoice(invoice);
+                                }}
+                              >
+                                <CreditCard className='mr-2 h-4 w-4' />
+                                View Invoice
+                              </DropdownMenuItem>
+                              {invoice.status !== 'PAID' && (
+                                <>
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      return markAsPaid(invoice.id);
+                                    }}
+                                  >
+                                    <DollarSign className='mr-2 h-4 w-4' />
+                                    Mark as Paid
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      return sendReminder(invoice.id);
+                                    }}
+                                  >
+                                    <Send className='mr-2 h-4 w-4' />
+                                    Send Reminder
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  return deleteInvoice(invoice.id);
+                                }}
+                              >
+                                <Trash2 className='mr-2 h-4 w-4' />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>

@@ -29,6 +29,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useAuth } from '@/contexts/AuthContext';
+import { newRequest } from '@/utils/newRequest';
 import {
   AlertCircle,
   ArrowUpDown,
@@ -41,9 +42,9 @@ import {
   Search,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-// More realistic mock project data
+// Fallback mock data in case API fails
 const MOCK_PROJECTS = [
   {
     id: 1,
@@ -54,7 +55,6 @@ const MOCK_PROJECTS = [
     stage: 'Proposal',
     startDate: '2023-09-15',
     endDate: '2024-03-30',
-    budget: 85000,
     teamSize: 6,
     manager: 'Sarah Johnson',
     lastUpdated: '2 hours ago',
@@ -72,7 +72,6 @@ const MOCK_PROJECTS = [
     stage: 'Needs Analysis',
     startDate: '2023-11-01',
     endDate: '2024-04-15',
-    budget: 120000,
     teamSize: 8,
     manager: 'David Chen',
     lastUpdated: '1 day ago',
@@ -90,7 +89,6 @@ const MOCK_PROJECTS = [
     stage: 'Closed Won',
     startDate: '2023-06-10',
     endDate: '2023-12-20',
-    budget: 230000,
     teamSize: 5,
     manager: 'Maria Rodriguez',
     lastUpdated: '3 days ago',
@@ -108,7 +106,6 @@ const MOCK_PROJECTS = [
     stage: 'Negotiation',
     startDate: '2024-01-15',
     endDate: '2024-08-31',
-    budget: 340000,
     teamSize: 12,
     manager: 'Robert Jackson',
     lastUpdated: '1 week ago',
@@ -126,7 +123,6 @@ const MOCK_PROJECTS = [
     stage: 'Initial Contact',
     startDate: '2024-03-01',
     endDate: '2024-05-30',
-    budget: 75000,
     teamSize: 4,
     manager: 'Emily Taylor',
     lastUpdated: '2 days ago',
@@ -144,7 +140,6 @@ const MOCK_PROJECTS = [
     stage: 'Proposal',
     startDate: '2024-02-15',
     endDate: '2024-07-31',
-    budget: 95000,
     teamSize: 7,
     manager: 'Justin Miller',
     lastUpdated: '5 days ago',
@@ -162,7 +157,6 @@ const MOCK_PROJECTS = [
     stage: 'Needs Analysis',
     startDate: '2024-01-20',
     endDate: '2024-06-15',
-    budget: 180000,
     teamSize: 6,
     manager: 'Alex Wong',
     lastUpdated: '4 days ago',
@@ -177,9 +171,39 @@ export default function ProjectsPage() {
   const { isAuthenticated, user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [projects, setProjects] = useState(MOCK_PROJECTS);
+  const [projects, setProjects] = useState([]);
   const [sortColumn, setSortColumn] = useState('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('authToken');
+
+        if (!token) {
+          throw new Error('Authentication token not found');
+        }
+
+        const response = await newRequest.get('/projects');
+        console.log('🚀 response:', response);
+
+        if (response.data.data.projects) {
+          setProjects(response.data.data.projects);
+        }
+      } catch (err) {
+        console.error('Failed to fetch projects:', err);
+        setError('Failed to load projects. Using mock data instead.');
+        setProjects(MOCK_PROJECTS);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   // Function to handle column sorting
   const handleSort = (column: string) => {
@@ -192,7 +216,7 @@ export default function ProjectsPage() {
   };
 
   // Filter projects based on search query and status filter
-  const filteredProjects = projects.filter((project) => {
+  const filteredProjects = projects?.filter((project) => {
     const matchesSearch =
       project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       project.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -204,13 +228,14 @@ export default function ProjectsPage() {
 
     return matchesSearch && matchesStatus;
   });
+  console.log('🚀 projects:', projects);
 
   // Sort the filtered projects
   const sortedProjects = [...filteredProjects].sort((a, b) => {
     // Handle different column types appropriately
     let comparison = 0;
 
-    if (sortColumn === 'progress' || sortColumn === 'budget' || sortColumn === 'teamSize') {
+    if (sortColumn === 'progress' || sortColumn === 'teamSize') {
       // Numeric comparison
       comparison =
         (a[sortColumn as keyof typeof a] as number) - (b[sortColumn as keyof typeof b] as number);
@@ -225,8 +250,13 @@ export default function ProjectsPage() {
   });
 
   // Function to handle project deletion
-  const handleDeleteProject = (projectId: number) => {
-    setProjects(projects.filter((project) => project.id !== projectId));
+  const handleDeleteProject = async (projectId: number) => {
+    setProjects(projects?.filter((project) => project.id !== projectId));
+    try {
+      await newRequest.delete(`/projects/${projectId}`);
+    } catch (err) {
+      console.error('Failed to delete project:', err);
+    }
   };
 
   // Function to render status badge with appropriate color
@@ -344,8 +374,26 @@ export default function ProjectsPage() {
         </Select>
       </div>
 
-      {/* Projects table */}
-      {sortedProjects.length > 0 ? (
+      {/* Loading state */}
+      {loading ? (
+        <div className='text-center py-12'>
+          <div className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-4 animate-pulse'>
+            <Search className='h-6 w-6 text-muted-foreground' />
+          </div>
+          <h3 className='text-lg font-medium'>Loading projects...</h3>
+        </div>
+      ) : error ? (
+        <div className='rounded-md bg-amber-50 p-4 mb-4'>
+          <div className='flex'>
+            <div className='flex-shrink-0'>
+              <AlertCircle className='h-5 w-5 text-amber-400' />
+            </div>
+            <div className='ml-3'>
+              <h3 className='text-sm font-medium text-amber-800'>{error}</h3>
+            </div>
+          </div>
+        </div>
+      ) : sortedProjects.length > 0 ? (
         <div className='rounded-md border shadow-sm'>
           <Table>
             <TableHeader>
@@ -361,9 +409,6 @@ export default function ProjectsPage() {
                 </TableHead>
                 <TableHead>
                   <SortableColumnHeader column='manager' label='Manager' />
-                </TableHead>
-                <TableHead>
-                  <SortableColumnHeader column='budget' label='Budget' />
                 </TableHead>
                 <TableHead>
                   <SortableColumnHeader column='progress' label='Progress' />
@@ -385,13 +430,12 @@ export default function ProjectsPage() {
                       {project.name}
                     </Link>
                     <div className='text-xs text-muted-foreground mt-1'>
-                      {project.description.substring(0, 60)}...
+                      {project?.description?.substring(0, 60)}...
                     </div>
                   </TableCell>
-                  <TableCell>{project.client}</TableCell>
-                  <TableCell>{project.type}</TableCell>
-                  <TableCell>{project.manager}</TableCell>
-                  <TableCell>${project.budget.toLocaleString()}</TableCell>
+                  <TableCell>{project?.client?.name}</TableCell>
+                  <TableCell>{project?.projectType}</TableCell>
+                  <TableCell>{project?.manager?.name}</TableCell>
                   <TableCell>
                     <div className='space-y-1'>
                       <div className='text-xs flex justify-between'>
