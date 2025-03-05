@@ -9,6 +9,7 @@ import { useState } from 'react';
 import ProjectActivity from './ProjectActivity';
 import ProjectContext from './ProjectContext';
 import ProjectFiles from './ProjectFiles';
+import ProjectModules from './ProjectModules/ProjectModules';
 import ProjectPayments from './ProjectPayments';
 import ProjectSchedule from './ProjectSchedule';
 import { ProjectSidebar } from './ProjectSidebar';
@@ -82,6 +83,15 @@ export default function ProjectMain() {
                   </Badge>
                 </TabsTrigger>
                 <TabsTrigger
+                  value='modules'
+                  className='rounded-none border-b-2 border-transparent px-3 py-2 text-sm sm:px-4 sm:text-base data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
+                >
+                  Modules
+                  <Badge variant='secondary' className='ml-1 sm:ml-2'>
+                    {5}
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger
                   value='payments'
                   className='rounded-none border-b-2 border-transparent px-3 py-2 text-sm sm:px-4 sm:text-base data-[state=active]:border-[#5DD3D1] data-[state=active]:text-[#5DD3D1]'
                 >
@@ -105,6 +115,9 @@ export default function ProjectMain() {
                 </TabsContent>
                 <TabsContent value='files'>
                   <ProjectFiles />
+                </TabsContent>
+                <TabsContent value='modules'>
+                  <ProjectModules />
                 </TabsContent>
                 <TabsContent value='payments'>
                   <ProjectPayments />
