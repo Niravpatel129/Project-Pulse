@@ -24,9 +24,11 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useProject } from '@/contexts/ProjectContext';
+import { newRequest } from '@/utils/newRequest';
 import { addHours, format, parseISO } from 'date-fns';
 import { CalendarIcon, Clock, Mail, Plus, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Calendar } from '../ui/calendar';
 
 type TeamMember = {
@@ -50,10 +52,18 @@ type Meeting = {
   status: 'scheduled' | 'pending' | 'canceled';
   clientEmail?: string;
   teamMembers: string[]; // Array of team member IDs
-  location?: string;
+  type: 'inperson' | 'phone' | 'video' | 'other';
+  typeDetails?: {
+    videoType?: string;
+    videoLink?: string;
+    phoneNumber?: string;
+    location?: string;
+    otherDetails?: string;
+  };
 };
 
 export default function ProjectSchedule() {
+  const { project } = useProject();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showMeetingDialog, setShowMeetingDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
@@ -65,9 +75,9 @@ export default function ProjectSchedule() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
     {
       id: '1',
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      role: 'Project Manager',
+      name: project?.participants?.[0]?.name || 'Jane Smith',
+      email: project?.participants?.[0]?.email || 'jane@example.com',
+      role: project?.participants?.[0]?.role || 'Project Manager',
       availableTimes: [
         {
           day: 'monday',
@@ -87,9 +97,9 @@ export default function ProjectSchedule() {
     },
     {
       id: '2',
-      name: 'John Doe',
-      email: 'john@example.com',
-      role: 'Designer',
+      name: project?.participants?.[1]?.name || 'John Doe',
+      email: project?.participants?.[1]?.email || 'john@example.com',
+      role: project?.participants?.[1]?.role || 'Designer',
       availableTimes: [
         {
           day: 'monday',
@@ -103,9 +113,9 @@ export default function ProjectSchedule() {
     },
     {
       id: '3',
-      name: 'Sarah Johnson',
-      email: 'sarah@example.com',
-      role: 'Developer',
+      name: project?.participants?.[2]?.name || 'Sarah Johnson',
+      email: project?.participants?.[2]?.email || 'sarah@example.com',
+      role: project?.participants?.[2]?.role || 'Developer',
       availableTimes: [
         {
           day: 'tuesday',
@@ -119,41 +129,78 @@ export default function ProjectSchedule() {
     },
   ]);
 
+  // Update team members when project data changes
+  useEffect(() => {
+    if (project?.participants && project.participants.length > 0) {
+      const updatedTeamMembers = project.participants.map((participant, index) => {
+        return {
+          id: participant._id,
+          name: participant.name,
+          email: participant.email || `participant${index}@example.com`,
+          role: participant.role,
+          availableTimes: [
+            {
+              day: 'monday',
+              slots: [{ start: '09:00', end: '17:00' }],
+            },
+            {
+              day: 'tuesday',
+              slots: [{ start: '09:00', end: '17:00' }],
+            },
+            {
+              day: 'wednesday',
+              slots: [{ start: '09:00', end: '17:00' }],
+            },
+            {
+              day: 'thursday',
+              slots: [{ start: '09:00', end: '17:00' }],
+            },
+            {
+              day: 'friday',
+              slots: [{ start: '09:00', end: '17:00' }],
+            },
+          ],
+        };
+      });
+      setTeamMembers(updatedTeamMembers);
+    }
+  }, [project]);
+
   const [meetings, setMeetings] = useState<Meeting[]>([
     {
       id: '1',
-      title: 'Project Kickoff',
-      description: 'Initial meeting to discuss project scope and timeline',
+      title: `${project?.name || 'Project'} Kickoff`,
+      description: `Initial meeting to discuss ${project?.name || 'project'} scope and timeline`,
       date: new Date().toISOString().split('T')[0],
       startTime: '10:00',
       endTime: '11:00',
       status: 'scheduled',
       clientEmail: 'client@example.com',
       teamMembers: ['1', '3'],
-      location: 'Zoom',
+      type: 'video',
     },
     {
       id: '2',
       title: 'Design Review',
-      description: 'Review design mockups with client',
+      description: `Review design mockups with client`,
       date: addHours(new Date(), 48).toISOString().split('T')[0],
       startTime: '14:00',
       endTime: '15:00',
       status: 'pending',
       clientEmail: 'client@example.com',
       teamMembers: ['1', '2'],
-      location: 'Conference Room A',
+      type: 'video',
     },
     {
       id: '3',
-      title: 'Development Sprint Planning',
+      title: `${project?.name || 'Development'} Sprint Planning`,
       description: 'Plan the next development sprint',
       date: addHours(new Date(), 72).toISOString().split('T')[0],
       startTime: '09:00',
       endTime: '10:30',
       status: 'scheduled',
       teamMembers: ['1', '3'],
-      location: 'Zoom',
+      type: 'video',
     },
   ]);
 
@@ -162,10 +209,23 @@ export default function ProjectSchedule() {
   const [meetingDescription, setMeetingDescription] = useState('');
   const [meetingStartTime, setMeetingStartTime] = useState('09:00');
   const [meetingDuration, setMeetingDuration] = useState('60');
-  const [meetingLocation, setMeetingLocation] = useState('');
+  const [meetingType, setMeetingType] = useState<'inperson' | 'phone' | 'video' | 'other'>('video');
+  const [meetingTypeDetails, setMeetingTypeDetails] = useState<{
+    videoType?: string;
+    videoLink?: string;
+    phoneNumber?: string;
+    location?: string;
+    otherDetails?: string;
+  }>({
+    videoType: '',
+    videoLink: '',
+    phoneNumber: '',
+    location: '',
+    otherDetails: '',
+  });
   const [clientEmail, setClientEmail] = useState('');
 
-  const handleCreateMeeting = (e: React.FormEvent) => {
+  const handleCreateMeeting = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Calculate end time based on start time and duration
@@ -179,6 +239,46 @@ export default function ProjectSchedule() {
       .toString()
       .padStart(2, '0')}`;
 
+    // Check if selected team members are available at this time
+    const dayOfWeek = format(selectedDate, 'EEEE').toLowerCase();
+    const unavailableMembers = selectedTeamMembers.filter((memberId) => {
+      const member = teamMembers.find((m) => {
+        return m.id === memberId;
+      });
+      if (!member) return false;
+
+      // Check if member has availability for this day
+      const dayAvailability = member.availableTimes.find((a) => {
+        return a.day === dayOfWeek;
+      });
+      if (!dayAvailability) return true; // Not available on this day
+
+      // Check if meeting time falls within available slots
+      return !dayAvailability.slots.some((slot) => {
+        const slotStart = slot.start.split(':').map(Number);
+        const slotEnd = slot.end.split(':').map(Number);
+        const meetingStartMinutes = startHour * 60 + startMinute;
+        const meetingEndMinutes = endHour * 60 + endMinute;
+        const slotStartMinutes = slotStart[0] * 60 + slotStart[1];
+        const slotEndMinutes = slotEnd[0] * 60 + slotEnd[1];
+
+        return meetingStartMinutes >= slotStartMinutes && meetingEndMinutes <= slotEndMinutes;
+      });
+    });
+
+    if (unavailableMembers.length > 0) {
+      const unavailableNames = unavailableMembers
+        .map((id) => {
+          return teamMembers.find((m) => {
+            return m.id === id;
+          })?.name;
+        })
+        .join(', ');
+
+      alert(`Some team members are not available at this time: ${unavailableNames}`);
+      return;
+    }
+
     const newMeeting: Meeting = {
       id: Date.now().toString(),
       title: meetingTitle,
@@ -189,12 +289,41 @@ export default function ProjectSchedule() {
       status: 'scheduled',
       clientEmail: clientEmail || undefined,
       teamMembers: selectedTeamMembers,
-      location: meetingLocation,
+      type: meetingType,
+      typeDetails: meetingTypeDetails,
     };
 
-    setMeetings([...meetings, newMeeting]);
-    resetMeetingForm();
-    setShowMeetingDialog(false);
+    try {
+      // Make API call to create a new meeting
+      const response = await newRequest.post('/meetings', {
+        projectId: project?._id,
+        meeting: newMeeting,
+      });
+
+      // Update local state with the new meeting from API response
+      const createdMeeting = response.data;
+      setMeetings([
+        ...meetings,
+        {
+          id: createdMeeting._id,
+          title: createdMeeting.title,
+          description: createdMeeting.description,
+          date: createdMeeting.date.split('T')[0], // Extract date part only
+          startTime: createdMeeting.startTime,
+          endTime: createdMeeting.endTime,
+          status: createdMeeting.status,
+          clientEmail: createdMeeting.organizer?.email,
+          teamMembers: selectedTeamMembers, // Keep the selected team members
+          type: createdMeeting.type,
+          typeDetails: createdMeeting.typeDetails,
+        },
+      ]);
+      resetMeetingForm();
+      setShowMeetingDialog(false);
+    } catch (error) {
+      console.error('Error creating meeting:', error);
+      alert('Failed to create meeting. Please try again.');
+    }
   };
 
   const handleSendInvite = (e: React.FormEvent) => {
@@ -211,7 +340,14 @@ export default function ProjectSchedule() {
     setMeetingDescription('');
     setMeetingStartTime('09:00');
     setMeetingDuration('60');
-    setMeetingLocation('');
+    setMeetingType('video');
+    setMeetingTypeDetails({
+      videoType: '',
+      videoLink: '',
+      phoneNumber: '',
+      location: '',
+      otherDetails: '',
+    });
     setClientEmail('');
     setSelectedTeamMembers([]);
   };
@@ -363,8 +499,37 @@ export default function ProjectSchedule() {
                                 {meeting.startTime} - {meeting.endTime}
                               </span>
                             </div>
-                            {meeting.location && (
-                              <div className='text-sm text-gray-600'>{meeting.location}</div>
+                            {meeting.type && (
+                              <div className='text-sm text-gray-600'>
+                                {meeting.type.charAt(0).toUpperCase() + meeting.type.slice(1)}
+                                {meeting.typeDetails && (
+                                  <>
+                                    {meeting.type === 'video' && meeting.typeDetails.videoType && (
+                                      <span className='ml-1'>
+                                        • {meeting.typeDetails.videoType}
+                                      </span>
+                                    )}
+                                    {meeting.type === 'phone' &&
+                                      meeting.typeDetails.phoneNumber && (
+                                        <span className='ml-1'>
+                                          • {meeting.typeDetails.phoneNumber}
+                                        </span>
+                                      )}
+                                    {meeting.type === 'inperson' &&
+                                      meeting.typeDetails.location && (
+                                        <span className='ml-1'>
+                                          • {meeting.typeDetails.location}
+                                        </span>
+                                      )}
+                                    {meeting.type === 'other' &&
+                                      meeting.typeDetails.otherDetails && (
+                                        <span className='ml-1'>
+                                          • {meeting.typeDetails.otherDetails}
+                                        </span>
+                                      )}
+                                  </>
+                                )}
+                              </div>
                             )}
                           </div>
                         </div>
@@ -450,7 +615,9 @@ export default function ProjectSchedule() {
                     onChange={(e) => {
                       return setMeetingTitle(e.target.value);
                     }}
-                    placeholder='Project Discussion'
+                    placeholder={`${
+                      project?.name.charAt(0).toUpperCase() + project?.name.slice(1) || 'Project'
+                    } Discussion`}
                     required
                   />
                 </div>
@@ -513,16 +680,122 @@ export default function ProjectSchedule() {
                 </div>
 
                 <div className='grid gap-2'>
-                  <Label htmlFor='location'>Location</Label>
-                  <Input
-                    id='location'
-                    value={meetingLocation}
-                    onChange={(e) => {
-                      return setMeetingLocation(e.target.value);
+                  <Label htmlFor='type'>Meeting Type</Label>
+                  <Select
+                    value={meetingType}
+                    onValueChange={(value: 'inperson' | 'phone' | 'video' | 'other') => {
+                      setMeetingType(value);
+                      // Reset details when type changes but maintain controlled inputs
+                      setMeetingTypeDetails({
+                        videoType: '',
+                        videoLink: '',
+                        phoneNumber: '',
+                        location: '',
+                        otherDetails: '',
+                      });
                     }}
-                    placeholder='Zoom, Conference Room, etc.'
-                  />
+                  >
+                    <SelectTrigger id='type'>
+                      <SelectValue placeholder='Select meeting type' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='inperson'>In Person</SelectItem>
+                      <SelectItem value='phone'>Phone Call</SelectItem>
+                      <SelectItem value='video'>Video Call</SelectItem>
+                      <SelectItem value='other'>Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+
+                {/* Dynamic fields based on meeting type */}
+                {meetingType === 'video' && (
+                  <div className='space-y-4'>
+                    <div className='grid gap-2'>
+                      <Label htmlFor='videoType'>Video Platform</Label>
+                      <Select
+                        value={meetingTypeDetails.videoType || ''}
+                        onValueChange={(value) => {
+                          return setMeetingTypeDetails({ ...meetingTypeDetails, videoType: value });
+                        }}
+                      >
+                        <SelectTrigger id='videoType'>
+                          <SelectValue placeholder='Select video platform' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value='zoom'>Zoom</SelectItem>
+                          <SelectItem value='google-meet'>Google Meet</SelectItem>
+                          <SelectItem value='teams'>Microsoft Teams</SelectItem>
+                          <SelectItem value='other'>Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className='grid gap-2'>
+                      <Label htmlFor='videoLink'>Meeting Link</Label>
+                      <Input
+                        id='videoLink'
+                        value={meetingTypeDetails.videoLink || ''}
+                        onChange={(e) => {
+                          return setMeetingTypeDetails({
+                            ...meetingTypeDetails,
+                            videoLink: e.target.value,
+                          });
+                        }}
+                        placeholder='https://...'
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {meetingType === 'phone' && (
+                  <div className='grid gap-2'>
+                    <Label htmlFor='phoneNumber'>Phone Number</Label>
+                    <Input
+                      id='phoneNumber'
+                      value={meetingTypeDetails.phoneNumber || ''}
+                      onChange={(e) => {
+                        return setMeetingTypeDetails({
+                          ...meetingTypeDetails,
+                          phoneNumber: e.target.value,
+                        });
+                      }}
+                      placeholder='+1 (555) 555-5555'
+                    />
+                  </div>
+                )}
+
+                {meetingType === 'inperson' && (
+                  <div className='grid gap-2'>
+                    <Label htmlFor='location'>Location</Label>
+                    <Input
+                      id='location'
+                      value={meetingTypeDetails.location || ''}
+                      onChange={(e) => {
+                        return setMeetingTypeDetails({
+                          ...meetingTypeDetails,
+                          location: e.target.value,
+                        });
+                      }}
+                      placeholder='Office address or meeting room'
+                    />
+                  </div>
+                )}
+
+                {meetingType === 'other' && (
+                  <div className='grid gap-2'>
+                    <Label htmlFor='otherDetails'>Additional Details</Label>
+                    <Input
+                      id='otherDetails'
+                      value={meetingTypeDetails.otherDetails}
+                      onChange={(e) => {
+                        return setMeetingTypeDetails({
+                          ...meetingTypeDetails,
+                          otherDetails: e.target.value,
+                        });
+                      }}
+                      placeholder='Specify meeting details'
+                    />
+                  </div>
+                )}
 
                 <div className='grid gap-2'>
                   <Label htmlFor='client'>Client Email (Optional)</Label>
@@ -653,7 +926,10 @@ export default function ProjectSchedule() {
 
                 <div className='grid gap-2'>
                   <Label htmlFor='meetingPurpose'>Meeting Purpose</Label>
-                  <Input id='meetingPurpose' placeholder='Brief description of the meeting' />
+                  <Input
+                    id='meetingPurpose'
+                    placeholder={`Discuss ${project?.name || 'project'} details`}
+                  />
                 </div>
 
                 <div className='grid gap-2'>
