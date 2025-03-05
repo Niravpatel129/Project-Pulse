@@ -29,22 +29,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Define public paths that don't require authentication
-  const isPublicPath = path === '/login' || path === '/register' || path === '/';
-
   // Get the token from cookies
-  const token = request.cookies.get('token')?.value || '';
-
-  // Redirect logic
-  if (!isPublicPath && !token) {
-    // Redirect to login if accessing protected route without token
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
-
-  if (isPublicPath && token) {
-    // Redirect to dashboard if accessing public route with token
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
 
   return NextResponse.next();
 }

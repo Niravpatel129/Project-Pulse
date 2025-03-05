@@ -20,7 +20,7 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
     if (!isAuthenticated) {
       // Store the attempted URL to redirect back after login
       sessionStorage.setItem('redirectAfterLogin', pathname);
-      router.push('/login');
+      // router.push('/login');
       return;
     }
 
