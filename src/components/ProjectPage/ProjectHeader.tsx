@@ -31,6 +31,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useProject } from '@/contexts/ProjectContext';
 import {
   AlertCircle,
   CheckCircle2,
@@ -71,8 +72,8 @@ interface Role {
   color: string;
 }
 
-export default function ProjectHeader({ project }) {
-  console.log('🚀 project:', project);
+export default function ProjectHeader() {
+  const { project, loading, error } = useProject();
   const [participants, setParticipants] = useState<Participant[]>([
     {
       id: '1',
@@ -415,6 +416,10 @@ export default function ProjectHeader({ project }) {
     );
   };
 
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div className='text-red-500'>{error}</div>;
+  if (!project) return <div>No project found</div>;
+
   return (
     <div className='bg-white border-b'>
       {/* Project Banner */}
@@ -433,7 +438,7 @@ export default function ProjectHeader({ project }) {
             <h1 className='text-xl sm:text-2xl font-medium capitalize'>{project.name}</h1>
             <p className='text-xs sm:text-sm text-muted-foreground'>
               {/* Format the creation date in a readable format */}
-              Created on{' '}
+              {project.projectType} - Created on{' '}
               {new Date(project.createdAt).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
@@ -477,7 +482,11 @@ export default function ProjectHeader({ project }) {
                             <p className='text-xs text-muted-foreground'>{participant.role}</p>
                             {participant.email && <p className='text-xs'>{participant.email}</p>}
                             {participant.status && (
-                              <div className='mt-1'>{getStatusBadge(participant.status)}</div>
+                              <div className='mt-1'>
+                                {getStatusBadge(
+                                  participant.status as 'active' | 'pending' | 'inactive',
+                                )}
+                              </div>
                             )}
                           </div>
                         </TooltipContent>
@@ -485,7 +494,7 @@ export default function ProjectHeader({ project }) {
                       <div className='hidden sm:block'>
                         <div className='flex items-center gap-1'>
                           <p className='text-sm font-medium'>{participant.name}</p>
-                          {participant.id !== '1' && (
+                          {participant._id !== '1' && (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant='ghost' size='icon' className='h-6 w-6'>
@@ -494,19 +503,13 @@ export default function ProjectHeader({ project }) {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align='end'>
                                 <DropdownMenuLabel>Manage Participant</DropdownMenuLabel>
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    return handleViewParticipant(participant);
-                                  }}
-                                >
-                                  View Details
-                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => {}}>View Details</DropdownMenuItem>
 
                                 <DropdownMenuSeparator />
 
                                 <DropdownMenuItem
                                   onClick={() => {
-                                    return handleRemoveParticipant(participant.id);
+                                    return handleRemoveParticipant(participant._id);
                                   }}
                                   className='text-red-600'
                                 >
@@ -520,7 +523,9 @@ export default function ProjectHeader({ project }) {
                           {getRoleBadge(participant.role)}
                           {participant.status && (
                             <span className='text-xs ml-1'>
-                              {getStatusBadge(participant.status)}
+                              {getStatusBadge(
+                                participant.status as 'active' | 'pending' | 'inactive',
+                              )}
                             </span>
                           )}
                         </div>

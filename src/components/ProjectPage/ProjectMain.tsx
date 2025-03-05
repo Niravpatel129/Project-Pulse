@@ -3,9 +3,8 @@
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
+import { useProject } from '@/contexts/ProjectContext';
 import { Menu } from 'lucide-react';
-import { Project } from 'next/dist/build/swc/types';
 import { useState } from 'react';
 import ProjectActivity from './ProjectActivity';
 import ProjectContext from './ProjectContext';
@@ -15,22 +14,12 @@ import ProjectSchedule from './ProjectSchedule';
 import { ProjectSidebar } from './ProjectSidebar';
 import TimelineExample from './TimelineExample';
 
-export default function ProjectPage() {
+export default function ProjectMain() {
   const [activeTab, setActiveTab] = useState('context');
-  const [project, setProject] = useState({
-    id: '1',
-    stage: 'FOLLOW_UP',
-    leadSource: 'INSTAGRAM',
-    workflow: {
-      name: 'Wedding Photography',
-      status: 'In Progress',
-    },
-  });
+  const { project, updateProject } = useProject();
 
-  const handleUpdateProject = async (data: Partial<Project>) => {
-    setProject((prev) => {
-      return { ...prev, ...data };
-    });
+  const handleUpdateProject = async (data: any) => {
+    await updateProject(data);
   };
 
   return (
@@ -50,7 +39,7 @@ export default function ProjectPage() {
               </SheetTrigger>
               <SheetContent className='w-[85%] sm:max-w-md'>
                 <div className='mt-6 w-full'>
-                  <ProjectSidebar project={project} onUpdateProject={handleUpdateProject} />
+                  <ProjectSidebar onUpdateProject={handleUpdateProject} />
                 </div>
               </SheetContent>
             </Sheet>
@@ -124,7 +113,7 @@ export default function ProjectPage() {
 
               {/* Desktop Sidebar - only visible on md and larger screens */}
               <div className='hidden md:block'>
-                <ProjectSidebar project={project} onUpdateProject={handleUpdateProject} />
+                <ProjectSidebar onUpdateProject={handleUpdateProject} />
               </div>
             </div>
           </Tabs>

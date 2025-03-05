@@ -256,6 +256,28 @@ export default function ProjectsPage() {
     }
   };
 
+  // Function to handle status change
+  const handleStatusChange = async (projectId: number, newStatus: string) => {
+    try {
+      // Update local state first for immediate UI feedback
+      setProjects(
+        projects.map((project) => {
+          if (project.id === projectId) {
+            return { ...project, status: newStatus };
+          }
+          return project;
+        }),
+      );
+
+      // Then update on the server
+      await newRequest.patch(`/projects/${projectId}`, { status: newStatus });
+    } catch (err) {
+      console.error('Failed to update project status:', err);
+      // Revert the change if the API call fails
+      // You might want to fetch the projects again or handle this differently
+    }
+  };
+
   // Function to render status badge with appropriate color
   const renderStatusBadge = (status: string) => {
     let className = '';
@@ -263,24 +285,24 @@ export default function ProjectsPage() {
 
     switch (status) {
       case 'Completed':
-        className = 'bg-green-100 text-green-800';
+        className = 'bg-green-100 text-green-800 hover:bg-green-200';
         icon = <CheckCircle2 className='h-3 w-3 mr-1' />;
         break;
       case 'On Track':
-        className = 'bg-blue-100 text-blue-800';
+        className = 'bg-blue-100 text-blue-800 hover:bg-blue-200';
         icon = <Clock className='h-3 w-3 mr-1' />;
         break;
       case 'At Risk':
-        className = 'bg-amber-100 text-amber-800';
+        className = 'bg-amber-100 text-amber-800 hover:bg-amber-200';
         icon = <AlertCircle className='h-3 w-3 mr-1' />;
         break;
       case 'Delayed':
-        className = 'bg-red-100 text-red-800';
+        className = 'bg-red-100 text-red-800 hover:bg-red-200';
         icon = <Clock4 className='h-3 w-3 mr-1' />;
         break;
       case 'Not Started':
       default:
-        className = 'bg-slate-100 text-slate-800';
+        className = 'bg-slate-100 text-slate-800 hover:bg-slate-200';
         break;
     }
 
@@ -289,26 +311,6 @@ export default function ProjectsPage() {
         {icon}
         {status}
       </Badge>
-    );
-  };
-
-  // Function to render progress bar
-  const renderProgressBar = (progress: number) => {
-    return (
-      <div className='w-full h-2 bg-secondary rounded-full overflow-hidden'>
-        <div
-          className={`h-full ${
-            progress === 100
-              ? 'bg-green-500'
-              : progress > 60
-              ? 'bg-blue-500'
-              : progress > 30
-              ? 'bg-amber-500'
-              : 'bg-primary'
-          }`}
-          style={{ width: `${progress}%` }}
-        />
-      </div>
     );
   };
 
@@ -419,9 +421,6 @@ export default function ProjectsPage() {
                   <SortableColumnHeader column='manager' label='Manager' />
                 </TableHead>
                 <TableHead>
-                  <SortableColumnHeader column='progress' label='Progress' />
-                </TableHead>
-                <TableHead>
                   <SortableColumnHeader column='status' label='Status' />
                 </TableHead>
                 <TableHead>
@@ -432,6 +431,7 @@ export default function ProjectsPage() {
             </TableHeader>
             <TableBody>
               {sortedProjects.map((project) => {
+                console.log('🚀 project:', project);
                 return (
                   <TableRow key={project._id}>
                     <TableCell className='font-medium'>
@@ -442,18 +442,60 @@ export default function ProjectsPage() {
                         {project.name}
                       </Link>
                     </TableCell>
-                    <TableCell>{project?.client?.name}</TableCell>
+                    <TableCell>{project?.participants[0]?.participant?.name}</TableCell>
                     <TableCell>{project?.projectType}</TableCell>
                     <TableCell>{project?.manager?.name}</TableCell>
                     <TableCell>
-                      <div className='space-y-1'>
-                        <div className='text-xs flex justify-between'>
-                          <span>{project.progress}%</span>
-                        </div>
-                        {renderProgressBar(project.progress)}
-                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant='ghost' className='h-8 px-2 py-1'>
+                            {renderStatusBadge(project.status)}
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='start'>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              return handleStatusChange(project.id, 'Not Started');
+                            }}
+                            className='flex items-center'
+                          >
+                            {renderStatusBadge('Not Started')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              return handleStatusChange(project.id, 'On Track');
+                            }}
+                            className='flex items-center'
+                          >
+                            {renderStatusBadge('On Track')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              return handleStatusChange(project.id, 'At Risk');
+                            }}
+                            className='flex items-center'
+                          >
+                            {renderStatusBadge('At Risk')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              return handleStatusChange(project.id, 'Delayed');
+                            }}
+                            className='flex items-center'
+                          >
+                            {renderStatusBadge('Delayed')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              return handleStatusChange(project.id, 'Completed');
+                            }}
+                            className='flex items-center'
+                          >
+                            {renderStatusBadge('Completed')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
-                    <TableCell>{renderStatusBadge(project.status)}</TableCell>
                     <TableCell>
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
