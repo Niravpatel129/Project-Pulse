@@ -33,7 +33,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { addHours, format, parseISO } from 'date-fns';
-import { CalendarIcon, Clock, Mail, MoreHorizontal, Plus, Users } from 'lucide-react';
+import { CalendarIcon, Clock, MoreHorizontal, Plus, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Calendar } from '../ui/calendar';
@@ -204,7 +204,7 @@ export default function ProjectSchedule() {
               meeting.participants?.map((p: any) => {
                 return p._id;
               }) || [],
-            type: meeting.type || 'video',
+            type: meeting.type || 'other',
             typeDetails: meeting.typeDetails || {
               videoType: '',
               videoLink: '',
@@ -228,7 +228,7 @@ export default function ProjectSchedule() {
   const [meetingDescription, setMeetingDescription] = useState('');
   const [meetingStartTime, setMeetingStartTime] = useState('09:00');
   const [meetingDuration, setMeetingDuration] = useState('60');
-  const [meetingType, setMeetingType] = useState<'inperson' | 'phone' | 'video' | 'other'>('video');
+  const [meetingType, setMeetingType] = useState<'inperson' | 'phone' | 'video' | 'other'>('other');
   const [meetingTypeDetails, setMeetingTypeDetails] = useState<{
     videoType?: string;
     videoLink?: string;
@@ -243,6 +243,16 @@ export default function ProjectSchedule() {
     otherDetails: '',
   });
   const [clientEmail, setClientEmail] = useState('');
+
+  // Set all team members as selected when opening the meeting dialog
+  useEffect(() => {
+    if (showMeetingDialog) {
+      const allTeamMemberIds = teamMembers.map((member) => {
+        return member._id;
+      });
+      setSelectedTeamMembers(allTeamMemberIds);
+    }
+  }, [showMeetingDialog, teamMembers]);
 
   const handleCreateMeeting = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -380,7 +390,7 @@ export default function ProjectSchedule() {
     setMeetingDescription('');
     setMeetingStartTime('09:00');
     setMeetingDuration('60');
-    setMeetingType('video');
+    setMeetingType('other');
     setMeetingTypeDetails({
       videoType: '',
       videoLink: '',
@@ -466,7 +476,7 @@ export default function ProjectSchedule() {
                     Create Meeting
                   </Button>
 
-                  <Button
+                  {/* <Button
                     variant='outline'
                     onClick={() => {
                       return setShowInviteDialog(true);
@@ -486,7 +496,7 @@ export default function ProjectSchedule() {
                   >
                     <Clock className='mr-2 h-4 w-4' />
                     Manage Availability
-                  </Button>
+                  </Button> */}
                 </div>
               </CardContent>
             </Card>
@@ -689,7 +699,7 @@ export default function ProjectSchedule() {
                 </div>
 
                 <div className='grid gap-2'>
-                  <Label htmlFor='description'>Description (Optional)</Label>
+                  <Label htmlFor='description'>Description</Label>
                   <Input
                     id='description'
                     value={meetingDescription}
@@ -864,19 +874,6 @@ export default function ProjectSchedule() {
                 )}
 
                 <div className='grid gap-2'>
-                  <Label htmlFor='client'>Client Email (Optional)</Label>
-                  <Input
-                    id='client'
-                    type='email'
-                    value={clientEmail}
-                    onChange={(e) => {
-                      return setClientEmail(e.target.value);
-                    }}
-                    placeholder='client@example.com'
-                  />
-                </div>
-
-                <div className='grid gap-2'>
                   <Label>Team Members</Label>
                   <div className='flex flex-wrap gap-2'>
                     {teamMembers.map((member) => {
@@ -885,6 +882,7 @@ export default function ProjectSchedule() {
                           <Checkbox
                             id={`member-${member._id}`}
                             checked={selectedTeamMembers.includes(member._id)}
+                            defaultChecked={true}
                             onCheckedChange={(checked) => {
                               if (checked) {
                                 setSelectedTeamMembers([...selectedTeamMembers, member._id]);

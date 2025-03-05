@@ -25,7 +25,7 @@ export default function ProjectMain() {
   return (
     <div className='min-h-screen w-full'>
       <div className='bg-white'>
-        <div className='container mx-auto px-4 sm:px-6'>
+        <div className=''>
           <div className='md:hidden flex justify-end py-3'>
             <Sheet>
               <SheetTitle className='sr-only'>Project Sidebar</SheetTitle>
