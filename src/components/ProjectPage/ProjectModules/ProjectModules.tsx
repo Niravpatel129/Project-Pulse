@@ -9,7 +9,7 @@ import { useProject } from '@/contexts/ProjectContext';
 import { useProjectFiles } from '@/hooks/useProjectFiles';
 import { newRequest } from '@/utils/newRequest';
 import { Plus, Search, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   FileDetailsDialog,
   FileTable,
@@ -20,6 +20,26 @@ import {
 } from '../FileComponents';
 import CreateModuleDialog from '../FileComponents/CreateModuleDialog';
 import InvoiceCreatorModal from '../InvoiceCreatorModal';
+
+interface Module {
+  _id: string;
+  name: string;
+  description: string;
+  workspace: string;
+  project: string;
+  status: 'draft' | 'active' | 'completed' | 'archived';
+  order: number;
+  createdBy: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  assignedTo: string[];
+  isTemplate: boolean;
+  elements: any[];
+  createdAt: string;
+  updatedAt: string;
+}
 
 export default function ProjectModules() {
   const {
@@ -112,6 +132,26 @@ export default function ProjectModules() {
   const [commentText, setCommentText] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [showCreateModuleDialog, setShowCreateModuleDialog] = useState(false);
+  const [modules, setModules] = useState<Module[]>([]);
+  const [isLoadingModules, setIsLoadingModules] = useState(false);
+
+  useEffect(() => {
+    const fetchModules = async () => {
+      if (!project?._id) return;
+
+      setIsLoadingModules(true);
+      try {
+        const response = await newRequest.get(`/modules/project/${project._id}`);
+        setModules(response.data);
+      } catch (error) {
+        console.error('Error fetching modules:', error);
+      } finally {
+        setIsLoadingModules(false);
+      }
+    };
+
+    fetchModules();
+  }, [project?._id]);
 
   const handleCreateModule = async (moduleData: {
     name: string;
@@ -126,7 +166,8 @@ export default function ProjectModules() {
       });
       console.log('Module created successfully:', response);
       setShowCreateModuleDialog(false);
-      // TODO: Refresh the modules list or update the UI
+      // Refresh the modules list
+      setModules([...modules, response.data]);
     } catch (error) {
       console.error('Error creating module:', error);
       // TODO: Show error toast or handle error appropriately
@@ -190,38 +231,105 @@ export default function ProjectModules() {
             <TabsList className='mb-4'>
               <TabsTrigger value='all'>All Module Items</TabsTrigger>
               <TabsTrigger value='upload'>Uploads</TabsTrigger>
+              <TabsTrigger value='modules'>Modules</TabsTrigger>
             </TabsList>
 
             <TabsContent value={activeTab} className='mt-0'>
-              <FileTable
-                filteredFiles={filteredFiles()}
-                getFileIcon={getFileIcon}
-                getAttachmentIcon={getAttachmentIcon}
-                getStatusBadgeClass={getStatusBadgeClass}
-                handleFileClick={handleFileClick}
-                onViewDetails={(file) => {
-                  setSelectedFile(file);
-                  setShowFileDetailsDialog(true);
-                }}
-                onViewVersionHistory={(file, attachment) => {
-                  setSelectedFile(file);
-                  setSelectedAttachment(attachment);
-                  setShowVersionHistoryDialog(true);
-                }}
-                onSendEmail={(file) => {
-                  setSelectedFile(file);
-                  setEmailSubject(`Modules shared: ${file.name}`);
-                  setEmailMessage(`I'm sharing the following modules with you: ${file.name}`);
-                  setShowSendEmailDialog(true);
-                }}
-                onSimulateApproval={(file) => {
-                  setSelectedFile(file);
-                  handleSimulateApproval();
-                }}
-                onCreateVariation={(file) => {
-                  setSelectedFile(file);
-                }}
-              />
+              {activeTab === 'modules' ? (
+                <div className='space-y-4'>
+                  {isLoadingModules ? (
+                    <div className='text-center py-4'>Loading modules...</div>
+                  ) : modules.length > 0 ? (
+                    <div className='overflow-x-auto'>
+                      <table className='w-full border-collapse'>
+                        <thead>
+                          <tr className='bg-gray-50 border-b'>
+                            <th className='text-left py-3 px-4 font-medium text-gray-700'>Name</th>
+                            <th className='text-left py-3 px-4 font-medium text-gray-700'>
+                              Description
+                            </th>
+                            <th className='text-left py-3 px-4 font-medium text-gray-700'>
+                              Status
+                            </th>
+
+                            <th className='text-left py-3 px-4 font-medium text-gray-700'>
+                              Created
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {modules.map((module) => {
+                            return (
+                              <tr
+                                key={module._id}
+                                className='border-b hover:bg-gray-50 transition-colors'
+                              >
+                                <td className='py-3 px-4 font-medium'>{module.name}</td>
+                                <td className='py-3 px-4 text-gray-600 truncate max-w-xs'>
+                                  {module.description}
+                                </td>
+                                <td className='py-3 px-4'>
+                                  <span
+                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                                      module.status === 'active'
+                                        ? 'bg-green-100 text-green-800'
+                                        : module.status === 'completed'
+                                        ? 'bg-blue-100 text-blue-800'
+                                        : module.status === 'archived'
+                                        ? 'bg-gray-100 text-gray-800'
+                                        : 'bg-yellow-100 text-yellow-800'
+                                    }`}
+                                  >
+                                    {module.status}
+                                  </span>
+                                </td>
+
+                                <td className='py-3 px-4 text-gray-500 text-sm'>
+                                  {new Date(module.createdAt).toLocaleDateString()}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className='text-center py-8 text-gray-500'>
+                      No modules found. Create your first module to get started.
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <FileTable
+                  filteredFiles={filteredFiles()}
+                  getFileIcon={getFileIcon}
+                  getAttachmentIcon={getAttachmentIcon}
+                  getStatusBadgeClass={getStatusBadgeClass}
+                  handleFileClick={handleFileClick}
+                  onViewDetails={(file) => {
+                    setSelectedFile(file);
+                    setShowFileDetailsDialog(true);
+                  }}
+                  onViewVersionHistory={(file, attachment) => {
+                    setSelectedFile(file);
+                    setSelectedAttachment(attachment);
+                    setShowVersionHistoryDialog(true);
+                  }}
+                  onSendEmail={(file) => {
+                    setSelectedFile(file);
+                    setEmailSubject(`Modules shared: ${file.name}`);
+                    setEmailMessage(`I'm sharing the following modules with you: ${file.name}`);
+                    setShowSendEmailDialog(true);
+                  }}
+                  onSimulateApproval={(file) => {
+                    setSelectedFile(file);
+                    handleSimulateApproval();
+                  }}
+                  onCreateVariation={(file) => {
+                    setSelectedFile(file);
+                  }}
+                />
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
