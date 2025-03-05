@@ -3,12 +3,18 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProject } from '@/contexts/ProjectContext';
 import { useProjectFiles } from '@/hooks/useProjectFiles';
 import { newRequest } from '@/utils/newRequest';
-import { Plus, Search, X } from 'lucide-react';
+import { MoreVertical, Plus, Search, Trash, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
   FileDetailsDialog,
@@ -20,26 +26,7 @@ import {
 } from '../FileComponents';
 import CreateModuleDialog from '../FileComponents/CreateModuleDialog';
 import InvoiceCreatorModal from '../InvoiceCreatorModal';
-
-interface Module {
-  _id: string;
-  name: string;
-  description: string;
-  workspace: string;
-  project: string;
-  status: 'draft' | 'active' | 'completed' | 'archived';
-  order: number;
-  createdBy: {
-    _id: string;
-    name: string;
-    email: string;
-  };
-  assignedTo: string[];
-  isTemplate: boolean;
-  elements: any[];
-  createdAt: string;
-  updatedAt: string;
-}
+import { DeleteModuleDialog, ModuleDetailsDialog, type Module } from '../ModuleComponents';
 
 export default function ProjectModules() {
   const {
@@ -134,6 +121,10 @@ export default function ProjectModules() {
   const [showCreateModuleDialog, setShowCreateModuleDialog] = useState(false);
   const [modules, setModules] = useState<Module[]>([]);
   const [isLoadingModules, setIsLoadingModules] = useState(false);
+  const [selectedModule, setSelectedModule] = useState<Module | null>(null);
+  const [showModuleDetailsDialog, setShowModuleDetailsDialog] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [moduleToDelete, setModuleToDelete] = useState<Module | null>(null);
 
   useEffect(() => {
     const fetchModules = async () => {
@@ -170,6 +161,22 @@ export default function ProjectModules() {
       setModules([...modules, response.data]);
     } catch (error) {
       console.error('Error creating module:', error);
+      // TODO: Show error toast or handle error appropriately
+    }
+  };
+
+  const handleDeleteModule = async (module: Module) => {
+    try {
+      await newRequest.delete(`/modules/${module._id}`);
+      setModules(
+        modules.filter((m) => {
+          return m._id !== module._id;
+        }),
+      );
+      setShowDeleteConfirmation(false);
+      setModuleToDelete(null);
+    } catch (error) {
+      console.error('Error deleting module:', error);
       // TODO: Show error toast or handle error appropriately
     }
   };
@@ -255,6 +262,9 @@ export default function ProjectModules() {
                             <th className='text-left py-3 px-4 font-medium text-gray-700'>
                               Created
                             </th>
+                            <th className='text-left py-3 px-4 font-medium text-gray-700'>
+                              Actions
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
@@ -262,7 +272,11 @@ export default function ProjectModules() {
                             return (
                               <tr
                                 key={module._id}
-                                className='border-b hover:bg-gray-50 transition-colors'
+                                className='border-b hover:bg-gray-50 transition-colors cursor-pointer'
+                                onClick={() => {
+                                  setSelectedModule(module);
+                                  setShowModuleDetailsDialog(true);
+                                }}
                               >
                                 <td className='py-3 px-4 font-medium'>{module.name}</td>
                                 <td className='py-3 px-4 text-gray-600 truncate max-w-xs'>
@@ -286,6 +300,33 @@ export default function ProjectModules() {
 
                                 <td className='py-3 px-4 text-gray-500 text-sm'>
                                   {new Date(module.createdAt).toLocaleDateString()}
+                                </td>
+                                <td className='py-3 px-4'>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger
+                                      asChild
+                                      onClick={(e) => {
+                                        return e.stopPropagation();
+                                      }}
+                                    >
+                                      <Button variant='ghost' size='icon'>
+                                        <MoreVertical className='h-4 w-4' />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align='end'>
+                                      <DropdownMenuItem
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setModuleToDelete(module);
+                                          setShowDeleteConfirmation(true);
+                                        }}
+                                        className='text-red-600'
+                                      >
+                                        <Trash className='h-4 w-4 mr-2' />
+                                        Delete Module
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
                                 </td>
                               </tr>
                             );
@@ -453,6 +494,28 @@ export default function ProjectModules() {
           }}
         />
       )}
+
+      {/* Module Details Dialog */}
+      <Dialog open={showModuleDetailsDialog} onOpenChange={setShowModuleDetailsDialog}>
+        <ModuleDetailsDialog
+          selectedModule={selectedModule}
+          commentText={commentText}
+          setCommentText={setCommentText}
+          handleAddComment={handleAddComment}
+          onClose={() => {
+            setShowModuleDetailsDialog(false);
+            setSelectedModule(null);
+          }}
+        />
+      </Dialog>
+
+      {/* Delete Module Dialog */}
+      <DeleteModuleDialog
+        open={showDeleteConfirmation}
+        onOpenChange={setShowDeleteConfirmation}
+        moduleToDelete={moduleToDelete}
+        onDelete={handleDeleteModule}
+      />
     </div>
   );
 }
