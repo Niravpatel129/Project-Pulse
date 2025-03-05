@@ -1,4 +1,4 @@
-import { ClassValue, clsx } from 'clsx';
+import { type ClassValue, clsx } from 'clsx';
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
 import { twMerge } from 'tailwind-merge';
 
