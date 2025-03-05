@@ -41,7 +41,6 @@ type TeamMember = {
     slots: { start: string; end: string }[];
   }[];
 };
-
 type Meeting = {
   id: string;
   title: string;
@@ -49,17 +48,23 @@ type Meeting = {
   date: string;
   startTime: string;
   endTime: string;
-  status: 'scheduled' | 'pending' | 'canceled';
-  clientEmail?: string;
-  teamMembers: string[]; // Array of team member IDs
-  type: 'inperson' | 'phone' | 'video' | 'other';
-  typeDetails?: {
+  location?: string;
+  status: 'pending' | 'scheduled' | 'completed' | 'cancelled';
+  type: string;
+  typeDetails: {
     videoType?: string;
     videoLink?: string;
     phoneNumber?: string;
     location?: string;
     otherDetails?: string;
   };
+  project?: string;
+  organizer?: {
+    id: string;
+    email: string;
+  };
+  clientEmail?: string;
+  participants: any;
 };
 
 export default function ProjectSchedule() {
@@ -166,43 +171,48 @@ export default function ProjectSchedule() {
     }
   }, [project]);
 
-  const [meetings, setMeetings] = useState<Meeting[]>([
-    {
-      id: '1',
-      title: `${project?.name || 'Project'} Kickoff`,
-      description: `Initial meeting to discuss ${project?.name || 'project'} scope and timeline`,
-      date: new Date().toISOString().split('T')[0],
-      startTime: '10:00',
-      endTime: '11:00',
-      status: 'scheduled',
-      clientEmail: 'client@example.com',
-      teamMembers: ['1', '3'],
-      type: 'video',
-    },
-    {
-      id: '2',
-      title: 'Design Review',
-      description: `Review design mockups with client`,
-      date: addHours(new Date(), 48).toISOString().split('T')[0],
-      startTime: '14:00',
-      endTime: '15:00',
-      status: 'pending',
-      clientEmail: 'client@example.com',
-      teamMembers: ['1', '2'],
-      type: 'video',
-    },
-    {
-      id: '3',
-      title: `${project?.name || 'Development'} Sprint Planning`,
-      description: 'Plan the next development sprint',
-      date: addHours(new Date(), 72).toISOString().split('T')[0],
-      startTime: '09:00',
-      endTime: '10:30',
-      status: 'scheduled',
-      teamMembers: ['1', '3'],
-      type: 'video',
-    },
-  ]);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+
+  // Fetch meetings from API
+  useEffect(() => {
+    const fetchMeetings = async () => {
+      console.log('fetching meetings');
+      if (!project?._id) return;
+
+      try {
+        const response = await newRequest.get(`/meetings?projectId=${project._id}`);
+        const fetchedMeetings = response.data.map((meeting: any) => {
+          return {
+            id: meeting._id,
+            title: meeting.title,
+            description: meeting.description,
+            date: meeting.date.split('T')[0], // Extract date part only
+            startTime: meeting.startTime,
+            endTime: meeting.endTime,
+            status: meeting.status,
+            clientEmail: meeting.organizer?.email,
+            participants:
+              meeting.participants?.map((p: any) => {
+                return p._id;
+              }) || [],
+            type: meeting.type || 'video',
+            typeDetails: meeting.typeDetails || {
+              videoType: '',
+              videoLink: '',
+              phoneNumber: '',
+              location: meeting.location || '',
+              otherDetails: '',
+            },
+          };
+        });
+        setMeetings(fetchedMeetings);
+      } catch (error) {
+        console.error('Error fetching meetings:', error);
+      }
+    };
+
+    fetchMeetings();
+  }, [project]);
 
   const [selectedTeamMembers, setSelectedTeamMembers] = useState<string[]>([]);
   const [meetingTitle, setMeetingTitle] = useState('');
@@ -279,7 +289,7 @@ export default function ProjectSchedule() {
       return;
     }
 
-    const newMeeting: Meeting = {
+    const newMeeting = {
       id: Date.now().toString(),
       title: meetingTitle,
       description: meetingDescription,
@@ -288,7 +298,7 @@ export default function ProjectSchedule() {
       endTime,
       status: 'scheduled',
       clientEmail: clientEmail || undefined,
-      teamMembers: selectedTeamMembers,
+      participants: selectedTeamMembers,
       type: meetingType,
       typeDetails: meetingTypeDetails,
     };
@@ -313,7 +323,7 @@ export default function ProjectSchedule() {
           endTime: createdMeeting.endTime,
           status: createdMeeting.status,
           clientEmail: createdMeeting.organizer?.email,
-          teamMembers: selectedTeamMembers, // Keep the selected team members
+          participants: selectedTeamMembers,
           type: createdMeeting.type,
           typeDetails: createdMeeting.typeDetails,
         },
@@ -366,13 +376,14 @@ export default function ProjectSchedule() {
   };
 
   const filteredMeetings = () => {
+    console.log('🚀 meetings:', meetings);
     switch (activeTab) {
       case 'all':
         return meetings;
-      case 'upcoming':
+      case 'scheduled':
         return meetings.filter((meeting) => {
           const meetingDate = parseISO(meeting.date);
-          return meetingDate >= new Date() && meeting.status !== 'canceled';
+          return meetingDate >= new Date() && meeting.status !== 'cancelled';
         });
       case 'pending':
         return meetings.filter((meeting) => {
@@ -381,7 +392,7 @@ export default function ProjectSchedule() {
       case 'past':
         return meetings.filter((meeting) => {
           const meetingDate = parseISO(meeting.date);
-          return meetingDate < new Date() || meeting.status === 'canceled';
+          return meetingDate < new Date() || meeting.status === 'cancelled';
         });
       default:
         return meetings;
@@ -549,7 +560,7 @@ export default function ProjectSchedule() {
                           <div className='mt-2'>
                             <div className='text-sm font-medium'>Team Members</div>
                             <div className='mt-1 flex flex-wrap gap-1'>
-                              {meeting.teamMembers.map((memberId) => {
+                              {meeting.participants.map((memberId) => {
                                 const member = teamMembers.find((m) => {
                                   return m.id === memberId;
                                 });
