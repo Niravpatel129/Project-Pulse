@@ -28,7 +28,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useAuth } from '@/contexts/AuthContext';
 import { newRequest } from '@/utils/newRequest';
 import {
   AlertCircle,
@@ -168,7 +167,6 @@ const MOCK_PROJECTS = [
 ];
 
 export default function ProjectsPage() {
-  const { isAuthenticated, user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [projects, setProjects] = useState([]);
@@ -181,17 +179,12 @@ export default function ProjectsPage() {
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('authToken');
-
-        if (!token) {
-          throw new Error('Authentication token not found');
-        }
 
         const response = await newRequest.get('/projects');
         console.log('🚀 response:', response);
 
-        if (response.data.data.projects) {
-          setProjects(response.data.data.projects);
+        if (response.data.data) {
+          setProjects(response.data.data);
         }
       } catch (err) {
         console.error('Failed to fetch projects:', err);
@@ -251,7 +244,11 @@ export default function ProjectsPage() {
 
   // Function to handle project deletion
   const handleDeleteProject = async (projectId: number) => {
-    setProjects(projects?.filter((project) => project.id !== projectId));
+    setProjects(
+      projects?.filter((project) => {
+        return project.id !== projectId;
+      }),
+    );
     try {
       await newRequest.delete(`/projects/${projectId}`);
     } catch (err) {
@@ -296,30 +293,39 @@ export default function ProjectsPage() {
   };
 
   // Function to render progress bar
-  const renderProgressBar = (progress: number) => (
-    <div className='w-full h-2 bg-secondary rounded-full overflow-hidden'>
-      <div
-        className={`h-full ${
-          progress === 100
-            ? 'bg-green-500'
-            : progress > 60
-            ? 'bg-blue-500'
-            : progress > 30
-            ? 'bg-amber-500'
-            : 'bg-primary'
-        }`}
-        style={{ width: `${progress}%` }}
-      />
-    </div>
-  );
+  const renderProgressBar = (progress: number) => {
+    return (
+      <div className='w-full h-2 bg-secondary rounded-full overflow-hidden'>
+        <div
+          className={`h-full ${
+            progress === 100
+              ? 'bg-green-500'
+              : progress > 60
+              ? 'bg-blue-500'
+              : progress > 30
+              ? 'bg-amber-500'
+              : 'bg-primary'
+          }`}
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    );
+  };
 
   // Helper for column header with sorting
-  const SortableColumnHeader = ({ column, label }: { column: string; label: string }) => (
-    <div className='flex items-center cursor-pointer' onClick={() => handleSort(column)}>
-      {label}
-      <ArrowUpDown className='ml-2 h-4 w-4' />
-    </div>
-  );
+  const SortableColumnHeader = ({ column, label }: { column: string; label: string }) => {
+    return (
+      <div
+        className='flex items-center cursor-pointer'
+        onClick={() => {
+          return handleSort(column);
+        }}
+      >
+        {label}
+        <ArrowUpDown className='ml-2 h-4 w-4' />
+      </div>
+    );
+  };
 
   return (
     <div className='container mx-auto py-8'>
@@ -352,7 +358,9 @@ export default function ProjectsPage() {
             placeholder='Search projects...'
             className='pl-8'
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              return setSearchQuery(e.target.value);
+            }}
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -423,73 +431,77 @@ export default function ProjectsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedProjects.map((project) => (
-                <TableRow key={project.id}>
-                  <TableCell className='font-medium'>
-                    <Link href={`/projects/${project.id}`} className='hover:underline text-primary'>
-                      {project.name}
-                    </Link>
-                    <div className='text-xs text-muted-foreground mt-1'>
-                      {project?.description?.substring(0, 60)}...
-                    </div>
-                  </TableCell>
-                  <TableCell>{project?.client?.name}</TableCell>
-                  <TableCell>{project?.projectType}</TableCell>
-                  <TableCell>{project?.manager?.name}</TableCell>
-                  <TableCell>
-                    <div className='space-y-1'>
-                      <div className='text-xs flex justify-between'>
-                        <span>{project.progress}%</span>
+              {sortedProjects.map((project) => {
+                return (
+                  <TableRow key={project._id}>
+                    <TableCell className='font-medium'>
+                      <Link
+                        href={`/projects/${project._id}`}
+                        className='hover:underline text-primary'
+                      >
+                        {project.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell>{project?.client?.name}</TableCell>
+                    <TableCell>{project?.projectType}</TableCell>
+                    <TableCell>{project?.manager?.name}</TableCell>
+                    <TableCell>
+                      <div className='space-y-1'>
+                        <div className='text-xs flex justify-between'>
+                          <span>{project.progress}%</span>
+                        </div>
+                        {renderProgressBar(project.progress)}
                       </div>
-                      {renderProgressBar(project.progress)}
-                    </div>
-                  </TableCell>
-                  <TableCell>{renderStatusBadge(project.status)}</TableCell>
-                  <TableCell>
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        project.stage === 'Closed Won'
-                          ? 'bg-green-100 text-green-800'
-                          : project.stage === 'Proposal'
-                          ? 'bg-blue-100 text-blue-800'
-                          : project.stage === 'Negotiation'
-                          ? 'bg-amber-100 text-amber-800'
-                          : project.stage === 'Needs Analysis'
-                          ? 'bg-purple-100 text-purple-800'
-                          : 'bg-slate-100 text-slate-800'
-                      }`}
-                    >
-                      {project.stage}
-                    </span>
-                  </TableCell>
-                  <TableCell className='text-right'>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant='ghost' size='icon' className='h-8 w-8'>
-                          <MoreHorizontal className='h-4 w-4' />
-                          <span className='sr-only'>Actions</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align='end'>
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild>
-                          <Link href={`/projects/${project.id}`}>View Details</Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href={`/projects/${project.id}/edit`}>Edit Project</Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteProject(project.id)}
-                          className='text-destructive focus:text-destructive'
-                        >
-                          Delete Project
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>{renderStatusBadge(project.status)}</TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          project.stage === 'Closed Won'
+                            ? 'bg-green-100 text-green-800'
+                            : project.stage === 'Proposal'
+                            ? 'bg-blue-100 text-blue-800'
+                            : project.stage === 'Negotiation'
+                            ? 'bg-amber-100 text-amber-800'
+                            : project.stage === 'Needs Analysis'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-slate-100 text-slate-800'
+                        }`}
+                      >
+                        {project.stage}
+                      </span>
+                    </TableCell>
+                    <TableCell className='text-right'>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant='ghost' size='icon' className='h-8 w-8'>
+                            <MoreHorizontal className='h-4 w-4' />
+                            <span className='sr-only'>Actions</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='end'>
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem asChild>
+                            <Link href={`/projects/${project.id}`}>View Details</Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href={`/projects/${project.id}/edit`}>Edit Project</Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              return handleDeleteProject(project.id);
+                            }}
+                            className='text-destructive focus:text-destructive'
+                          >
+                            Delete Project
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

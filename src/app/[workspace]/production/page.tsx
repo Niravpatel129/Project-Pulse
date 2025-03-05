@@ -156,7 +156,9 @@ const PRODUCTION_STAGES = [
 ];
 
 // Production stages for kanban (without 'All Stages')
-const KANBAN_STAGES = PRODUCTION_STAGES.filter((stage) => stage !== 'All Stages');
+const KANBAN_STAGES = PRODUCTION_STAGES.filter((stage) => {
+  return stage !== 'All Stages';
+});
 
 // Type for production item
 type ProductionItem = (typeof MOCK_PRODUCTION_ITEMS)[0];
@@ -191,7 +193,9 @@ function SortableProductionItem({ item }: { item: ProductionItem }) {
           <Link
             href={`/dashboard/production/${item.id}`}
             className='font-medium text-sm line-clamp-2 hover:underline text-primary'
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              return e.stopPropagation();
+            }}
           >
             {item.projectName}
           </Link>
@@ -365,8 +369,8 @@ export default function ProductionTrackingPage() {
 
   // Get items for each stage in kanban view
   const getItemsByStage = (stage: string) => {
-    return productionItems.filter(
-      (item) =>
+    return productionItems.filter((item) => {
+      return (
         item.stage === stage &&
         (searchQuery === '' ||
           item.projectName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -375,15 +379,18 @@ export default function ProductionTrackingPage() {
         (priorityFilter === 'All' || item.priority === priorityFilter) &&
         (activeTab === 'all' ||
           (activeTab === 'active' && item.stage !== 'Completed') ||
-          (activeTab === 'completed' && item.stage === 'Completed')),
-    );
+          (activeTab === 'completed' && item.stage === 'Completed'))
+      );
+    });
   };
 
   // Handle drag start
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     const id = active.id.toString();
-    const foundItem = productionItems.find((item) => item.id.toString() === id);
+    const foundItem = productionItems.find((item) => {
+      return item.id.toString() === id;
+    });
     if (foundItem) {
       setActiveItem(foundItem);
     }
@@ -402,14 +409,16 @@ export default function ProductionTrackingPage() {
 
     // If the over element is a stage container, not an item
     if (KANBAN_STAGES.includes(overId)) {
-      const activeItem = productionItems.find((item) => item.id.toString() === activeItemId);
+      const activeItem = productionItems.find((item) => {
+        return item.id.toString() === activeItemId;
+      });
 
       if (activeItem && activeItem.stage !== overId) {
-        setProductionItems((items) =>
-          items.map((item) =>
-            item.id.toString() === activeItemId ? { ...item, stage: overId } : item,
-          ),
-        );
+        setProductionItems((items) => {
+          return items.map((item) => {
+            return item.id.toString() === activeItemId ? { ...item, stage: overId } : item;
+          });
+        });
       }
     }
   };
@@ -425,11 +434,11 @@ export default function ProductionTrackingPage() {
 
     // Handle dropping an item over a stage
     if (KANBAN_STAGES.includes(overId)) {
-      setProductionItems((items) =>
-        items.map((item) =>
-          item.id.toString() === activeItemId ? { ...item, stage: overId } : item,
-        ),
-      );
+      setProductionItems((items) => {
+        return items.map((item) => {
+          return item.id.toString() === activeItemId ? { ...item, stage: overId } : item;
+        });
+      });
     }
 
     setActiveItem(null);
@@ -500,30 +509,39 @@ export default function ProductionTrackingPage() {
   };
 
   // Function to render progress bar
-  const renderProgressBar = (progress: number) => (
-    <div className='w-full h-2 bg-secondary rounded-full overflow-hidden'>
-      <div
-        className={`h-full ${
-          progress === 100
-            ? 'bg-green-500'
-            : progress > 60
-            ? 'bg-blue-500'
-            : progress > 30
-            ? 'bg-amber-500'
-            : 'bg-primary'
-        }`}
-        style={{ width: `${progress}%` }}
-      />
-    </div>
-  );
+  const renderProgressBar = (progress: number) => {
+    return (
+      <div className='w-full h-2 bg-secondary rounded-full overflow-hidden'>
+        <div
+          className={`h-full ${
+            progress === 100
+              ? 'bg-green-500'
+              : progress > 60
+              ? 'bg-blue-500'
+              : progress > 30
+              ? 'bg-amber-500'
+              : 'bg-primary'
+          }`}
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    );
+  };
 
   // Helper for sortable column headers
-  const SortableColumnHeader = ({ column, label }: { column: string; label: string }) => (
-    <div className='flex items-center cursor-pointer' onClick={() => handleSort(column)}>
-      {label}
-      <ArrowUpDown className='ml-2 h-4 w-4' />
-    </div>
-  );
+  const SortableColumnHeader = ({ column, label }: { column: string; label: string }) => {
+    return (
+      <div
+        className='flex items-center cursor-pointer'
+        onClick={() => {
+          return handleSort(column);
+        }}
+      >
+        {label}
+        <ArrowUpDown className='ml-2 h-4 w-4' />
+      </div>
+    );
+  };
 
   return (
     <div className='container mx-auto py-8'>
@@ -559,7 +577,9 @@ export default function ProductionTrackingPage() {
               variant={viewMode === 'list' ? 'default' : 'ghost'}
               size='sm'
               className='rounded-none px-3'
-              onClick={() => setViewMode('list')}
+              onClick={() => {
+                return setViewMode('list');
+              }}
             >
               List View
             </Button>
@@ -567,7 +587,9 @@ export default function ProductionTrackingPage() {
               variant={viewMode === 'kanban' ? 'default' : 'ghost'}
               size='sm'
               className='rounded-none px-3'
-              onClick={() => setViewMode('kanban')}
+              onClick={() => {
+                return setViewMode('kanban');
+              }}
             >
               Kanban Board
             </Button>
@@ -583,7 +605,9 @@ export default function ProductionTrackingPage() {
             placeholder='Search projects, clients, or team members...'
             className='pl-8'
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              return setSearchQuery(e.target.value);
+            }}
           />
         </div>
 
@@ -595,11 +619,15 @@ export default function ProductionTrackingPage() {
             <SelectContent>
               <SelectGroup>
                 <SelectItem value='All Stages'>All Stages</SelectItem>
-                {PRODUCTION_STAGES.filter((stage) => stage !== 'All Stages').map((stage) => (
-                  <SelectItem key={stage} value={stage}>
-                    {stage}
-                  </SelectItem>
-                ))}
+                {PRODUCTION_STAGES.filter((stage) => {
+                  return stage !== 'All Stages';
+                }).map((stage) => {
+                  return (
+                    <SelectItem key={stage} value={stage}>
+                      {stage}
+                    </SelectItem>
+                  );
+                })}
               </SelectGroup>
             </SelectContent>
           </Select>
@@ -658,76 +686,80 @@ export default function ProductionTrackingPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sortedItems.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell className='font-medium'>
-                          <Link
-                            href={`/dashboard/production/${item.id}`}
-                            className='hover:underline text-primary'
-                          >
-                            {item.projectName}
-                          </Link>
-                        </TableCell>
-                        <TableCell>{item.client}</TableCell>
-                        <TableCell>
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              item.stage === 'Completed'
-                                ? 'bg-green-100 text-green-800'
-                                : item.stage === 'In Production'
-                                ? 'bg-blue-100 text-blue-800'
-                                : item.stage === 'Testing' || item.stage === 'Quality Assurance'
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-slate-100 text-slate-800'
-                            }`}
-                          >
-                            {item.stage}
-                          </span>
-                        </TableCell>
-                        <TableCell>{item.assignedTo}</TableCell>
-                        <TableCell>{renderPriorityIndicator(item.priority)}</TableCell>
-                        <TableCell>{new Date(item.dueDate).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <div className='space-y-1'>
-                            <div className='text-xs flex justify-between'>
-                              <span>{item.progress}%</span>
+                    {sortedItems.map((item) => {
+                      return (
+                        <TableRow key={item.id}>
+                          <TableCell className='font-medium'>
+                            <Link
+                              href={`/dashboard/production/${item.id}`}
+                              className='hover:underline text-primary'
+                            >
+                              {item.projectName}
+                            </Link>
+                          </TableCell>
+                          <TableCell>{item.client}</TableCell>
+                          <TableCell>
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                item.stage === 'Completed'
+                                  ? 'bg-green-100 text-green-800'
+                                  : item.stage === 'In Production'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : item.stage === 'Testing' || item.stage === 'Quality Assurance'
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : 'bg-slate-100 text-slate-800'
+                              }`}
+                            >
+                              {item.stage}
+                            </span>
+                          </TableCell>
+                          <TableCell>{item.assignedTo}</TableCell>
+                          <TableCell>{renderPriorityIndicator(item.priority)}</TableCell>
+                          <TableCell>{new Date(item.dueDate).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <div className='space-y-1'>
+                              <div className='text-xs flex justify-between'>
+                                <span>{item.progress}%</span>
+                              </div>
+                              {renderProgressBar(item.progress)}
                             </div>
-                            {renderProgressBar(item.progress)}
-                          </div>
-                        </TableCell>
-                        <TableCell>{renderStatusBadge(item.status)}</TableCell>
-                        <TableCell className='text-right'>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant='ghost' size='icon' className='h-8 w-8'>
-                                <MoreHorizontal className='h-4 w-4' />
-                                <span className='sr-only'>Actions</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align='end'>
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem asChild>
-                                <Link href={`/dashboard/production/${item.id}`}>View Details</Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem asChild>
-                                <Link href={`/dashboard/production/${item.id}/edit`}>
-                                  Edit Item
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem asChild>
-                                <Link href={`/dashboard/projects/${item.projectId}`}>
-                                  View Source Project
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className='text-destructive focus:text-destructive'>
-                                Delete Item
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          </TableCell>
+                          <TableCell>{renderStatusBadge(item.status)}</TableCell>
+                          <TableCell className='text-right'>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant='ghost' size='icon' className='h-8 w-8'>
+                                  <MoreHorizontal className='h-4 w-4' />
+                                  <span className='sr-only'>Actions</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align='end'>
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/dashboard/production/${item.id}`}>
+                                    View Details
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/dashboard/production/${item.id}/edit`}>
+                                    Edit Item
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/dashboard/projects/${item.projectId}`}>
+                                    View Source Project
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className='text-destructive focus:text-destructive'>
+                                  Delete Item
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -779,14 +811,16 @@ export default function ProductionTrackingPage() {
                     )}
                   >
                     <SortableContext
-                      items={stageItems.map((item) => item.id.toString())}
+                      items={stageItems.map((item) => {
+                        return item.id.toString();
+                      })}
                       strategy={verticalListSortingStrategy}
                     >
                       {stageItems.length > 0 ? (
                         <div className='grid gap-2'>
-                          {stageItems.map((item) => (
-                            <SortableProductionItem key={item.id} item={item} />
-                          ))}
+                          {stageItems.map((item) => {
+                            return <SortableProductionItem key={item.id} item={item} />;
+                          })}
                         </div>
                       ) : (
                         <div className='h-full flex items-center justify-center'>
@@ -859,7 +893,11 @@ export default function ProductionTrackingPage() {
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold'>
-              {productionItems.filter((item) => item.stage !== 'Completed').length}
+              {
+                productionItems.filter((item) => {
+                  return item.stage !== 'Completed';
+                }).length
+              }
             </div>
             <p className='text-xs text-muted-foreground'>
               Across {productionItems.length} total items
@@ -873,7 +911,11 @@ export default function ProductionTrackingPage() {
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold text-amber-600'>
-              {productionItems.filter((item) => item.status === 'At Risk').length}
+              {
+                productionItems.filter((item) => {
+                  return item.status === 'At Risk';
+                }).length
+              }
             </div>
             <p className='text-xs text-muted-foreground'>Items requiring attention</p>
           </CardContent>
