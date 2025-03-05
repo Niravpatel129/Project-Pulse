@@ -90,7 +90,7 @@ export default function OnboardPage() {
                   id='workspaceSlug'
                   placeholder='acme'
                   value={workspaceSlug}
-                  onChange={(e) => setWorkspaceSlug(e.target.value)}
+                  onChange={(e) => {return setWorkspaceSlug(e.target.value)}}
                   required
                 />
               </div>

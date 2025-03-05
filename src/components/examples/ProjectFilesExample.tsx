@@ -84,7 +84,7 @@ export function ProjectFilesExample() {
               <p className='text-muted-foreground'>No files found</p>
             ) : (
               <ul className='space-y-2'>
-                {files.map((file) => (
+                {files.map((file) => {return (
                   <li key={file.id} className='p-3 border rounded-md'>
                     <div className='flex justify-between items-center'>
                       <div>
@@ -97,17 +97,17 @@ export function ProjectFilesExample() {
                         <Button
                           variant='outline'
                           size='sm'
-                          onClick={() => updateStatus(file.id, 'approved' as const)}
+                          onClick={() => {return updateStatus(file.id, 'approved' as const)}}
                         >
                           Approve
                         </Button>
-                        <Button variant='destructive' size='sm' onClick={() => deleteFile(file.id)}>
+                        <Button variant='destructive' size='sm' onClick={() => {return deleteFile(file.id)}}>
                           Delete
                         </Button>
                       </div>
                     </div>
                   </li>
-                ))}
+                )})}
               </ul>
             )}
           </div>

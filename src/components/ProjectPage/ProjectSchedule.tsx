@@ -240,7 +240,7 @@ export default function ProjectSchedule() {
           return meetingDate >= new Date() && meeting.status !== 'canceled';
         });
       case 'pending':
-        return meetings.filter((meeting) => meeting.status === 'pending');
+        return meetings.filter((meeting) => {return meeting.status === 'pending'});
       case 'past':
         return meetings.filter((meeting) => {
           const meetingDate = parseISO(meeting.date);
@@ -268,7 +268,7 @@ export default function ProjectSchedule() {
                     <Calendar
                       mode='single'
                       selected={selectedDate}
-                      onSelect={(date) => date && setSelectedDate(date)}
+                      onSelect={(date) => {return date && setSelectedDate(date)}}
                       className='rounded-md border'
                     />
                   </div>
@@ -288,7 +288,7 @@ export default function ProjectSchedule() {
 
                   <Button
                     variant='outline'
-                    onClick={() => setShowInviteDialog(true)}
+                    onClick={() => {return setShowInviteDialog(true)}}
                     className='w-full text-sm'
                   >
                     <Mail className='mr-2 h-4 w-4' />
@@ -297,7 +297,7 @@ export default function ProjectSchedule() {
 
                   <Button
                     variant='outline'
-                    onClick={() => setShowAvailabilityDialog(true)}
+                    onClick={() => {return setShowAvailabilityDialog(true)}}
                     className='w-full text-sm'
                   >
                     <Clock className='mr-2 h-4 w-4' />
@@ -328,7 +328,7 @@ export default function ProjectSchedule() {
           <CardContent>
             {filteredMeetings().length > 0 ? (
               <div className='space-y-4'>
-                {filteredMeetings().map((meeting) => (
+                {filteredMeetings().map((meeting) => {return (
                   <Card key={meeting.id} className='overflow-hidden'>
                     <div className='flex flex-col sm:flex-row'>
                       <div className='flex w-full flex-col justify-between p-4 sm:w-2/3'>
@@ -377,7 +377,7 @@ export default function ProjectSchedule() {
                           <div className='text-sm font-medium'>Team Members</div>
                           <div className='mt-1 flex flex-wrap gap-1'>
                             {meeting.teamMembers.map((memberId) => {
-                              const member = teamMembers.find((m) => m.id === memberId);
+                              const member = teamMembers.find((m) => {return m.id === memberId});
                               return (
                                 <TooltipProvider key={memberId}>
                                   <Tooltip>
@@ -399,7 +399,7 @@ export default function ProjectSchedule() {
                       </div>
                     </div>
                   </Card>
-                ))}
+                )})}
               </div>
             ) : (
               <div className='flex h-40 items-center justify-center rounded-lg border border-dashed'>
@@ -408,7 +408,7 @@ export default function ProjectSchedule() {
                   <Button
                     variant='outline'
                     className='mt-2'
-                    onClick={() => setShowMeetingDialog(true)}
+                    onClick={() => {return setShowMeetingDialog(true)}}
                   >
                     Schedule a Meeting
                   </Button>
@@ -434,7 +434,7 @@ export default function ProjectSchedule() {
                   <Input
                     id='title'
                     value={meetingTitle}
-                    onChange={(e) => setMeetingTitle(e.target.value)}
+                    onChange={(e) => {return setMeetingTitle(e.target.value)}}
                     placeholder='Project Discussion'
                     required
                   />
@@ -445,7 +445,7 @@ export default function ProjectSchedule() {
                   <Input
                     id='description'
                     value={meetingDescription}
-                    onChange={(e) => setMeetingDescription(e.target.value)}
+                    onChange={(e) => {return setMeetingDescription(e.target.value)}}
                     placeholder='Brief description of the meeting'
                   />
                 </div>
@@ -500,7 +500,7 @@ export default function ProjectSchedule() {
                   <Input
                     id='location'
                     value={meetingLocation}
-                    onChange={(e) => setMeetingLocation(e.target.value)}
+                    onChange={(e) => {return setMeetingLocation(e.target.value)}}
                     placeholder='Zoom, Conference Room, etc.'
                   />
                 </div>
@@ -511,7 +511,7 @@ export default function ProjectSchedule() {
                     id='client'
                     type='email'
                     value={clientEmail}
-                    onChange={(e) => setClientEmail(e.target.value)}
+                    onChange={(e) => {return setClientEmail(e.target.value)}}
                     placeholder='client@example.com'
                   />
                 </div>
@@ -519,7 +519,7 @@ export default function ProjectSchedule() {
                 <div className='grid gap-2'>
                   <Label>Team Members</Label>
                   <div className='flex flex-wrap gap-2'>
-                    {teamMembers.map((member) => (
+                    {teamMembers.map((member) => {return (
                       <div key={member.id} className='flex items-center space-x-2'>
                         <Checkbox
                           id={`member-${member.id}`}
@@ -529,7 +529,7 @@ export default function ProjectSchedule() {
                               setSelectedTeamMembers([...selectedTeamMembers, member.id]);
                             } else {
                               setSelectedTeamMembers(
-                                selectedTeamMembers.filter((id) => id !== member.id),
+                                selectedTeamMembers.filter((id) => {return id !== member.id}),
                               );
                             }
                           }}
@@ -538,7 +538,7 @@ export default function ProjectSchedule() {
                           {member.name} ({member.role})
                         </Label>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 </div>
               </div>
@@ -566,7 +566,7 @@ export default function ProjectSchedule() {
                     id='clientEmail'
                     type='email'
                     value={clientEmail}
-                    onChange={(e) => setClientEmail(e.target.value)}
+                    onChange={(e) => {return setClientEmail(e.target.value)}}
                     placeholder='client@example.com'
                     required
                   />
@@ -575,7 +575,7 @@ export default function ProjectSchedule() {
                 <div className='grid gap-2'>
                   <Label>Available Team Members</Label>
                   <div className='flex flex-wrap gap-2'>
-                    {teamMembers.map((member) => (
+                    {teamMembers.map((member) => {return (
                       <div key={member.id} className='flex items-center space-x-2'>
                         <Checkbox
                           id={`invite-member-${member.id}`}
@@ -585,7 +585,7 @@ export default function ProjectSchedule() {
                               setSelectedTeamMembers([...selectedTeamMembers, member.id]);
                             } else {
                               setSelectedTeamMembers(
-                                selectedTeamMembers.filter((id) => id !== member.id),
+                                selectedTeamMembers.filter((id) => {return id !== member.id}),
                               );
                             }
                           }}
@@ -594,7 +594,7 @@ export default function ProjectSchedule() {
                           {member.name} ({member.role})
                         </Label>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 </div>
 
@@ -820,7 +820,7 @@ export default function ProjectSchedule() {
               </Tabs>
             </div>
             <DialogFooter className='flex-col sm:flex-row gap-2'>
-              <Button onClick={() => setShowAvailabilityDialog(false)}>Save Changes</Button>
+              <Button onClick={() => {return setShowAvailabilityDialog(false)}}>Save Changes</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

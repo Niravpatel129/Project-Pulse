@@ -117,7 +117,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
 
   const toggleProductSelection = (productId: string) => {
     if (selectedProducts.includes(productId)) {
-      setSelectedProducts(selectedProducts.filter((id) => id !== productId));
+      setSelectedProducts(selectedProducts.filter((id) => {return id !== productId}));
     } else {
       setSelectedProducts([...selectedProducts, productId]);
     }
@@ -162,7 +162,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     if (newProduct.sizes.includes(size)) {
       setNewProduct({
         ...newProduct,
-        sizes: newProduct.sizes.filter((s) => s !== size),
+        sizes: newProduct.sizes.filter((s) => {return s !== size}),
       });
     } else {
       setNewProduct({
@@ -176,7 +176,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     if (newProduct.colors.includes(color)) {
       setNewProduct({
         ...newProduct,
-        colors: newProduct.colors.filter((c) => c !== color),
+        colors: newProduct.colors.filter((c) => {return c !== color}),
       });
     } else {
       setNewProduct({
@@ -188,8 +188,8 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
 
   const filteredProducts = products.filter(
     (product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (productCategory === '' || product.category === productCategory),
+      {return product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (productCategory === '' || product.category === productCategory)},
   );
 
   return (
@@ -216,7 +216,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                       placeholder='Search products...'
                       className='pl-9'
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e) => {return setSearchTerm(e.target.value)}}
                     />
                   </div>
                 </div>
@@ -228,11 +228,11 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     <SelectContent>
                       <SelectGroup>
                         <SelectItem value='all'>All Categories</SelectItem>
-                        {productCategories.map((category) => (
+                        {productCategories.map((category) => {return (
                           <SelectItem key={category} value={category.toLowerCase()}>
                             {category}
                           </SelectItem>
-                        ))}
+                        )})}
                       </SelectGroup>
                     </SelectContent>
                   </Select>
@@ -242,13 +242,13 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               <div className='border rounded-md overflow-hidden'>
                 {filteredProducts.length > 0 ? (
                   <div className='max-h-80 overflow-y-auto'>
-                    {filteredProducts.map((product) => (
+                    {filteredProducts.map((product) => {return (
                       <div
                         key={product.id}
                         className={`flex justify-between items-center py-3 px-4 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer ${
                           selectedProducts.includes(product.id) ? 'bg-primary/5' : ''
                         }`}
-                        onClick={() => toggleProductSelection(product.id)}
+                        onClick={() => {return toggleProductSelection(product.id)}}
                       >
                         <div className='flex items-center'>
                           <div
@@ -276,7 +276,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                         </div>
                         <div className='text-base font-medium'>${product.price}</div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 ) : (
                   <div className='py-12 text-center text-gray-500'>
@@ -315,7 +315,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     <Input
                       id='product-name'
                       value={newProduct.name}
-                      onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                      onChange={(e) => {return setNewProduct({ ...newProduct, name: e.target.value })}}
                       placeholder='T-shirt Design 2024'
                     />
                   </div>
@@ -324,7 +324,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     <Input
                       id='product-price'
                       value={newProduct.price}
-                      onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                      onChange={(e) => {return setNewProduct({ ...newProduct, price: e.target.value })}}
                       placeholder='29.99'
                       type='number'
                       step='0.01'
@@ -338,7 +338,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     <Input
                       id='product-sku'
                       value={newProduct.sku}
-                      onChange={(e) => setNewProduct({ ...newProduct, sku: e.target.value })}
+                      onChange={(e) => {return setNewProduct({ ...newProduct, sku: e.target.value })}}
                       placeholder='TSHIRT-2024'
                     />
                   </div>
@@ -346,18 +346,18 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     <Label htmlFor='product-category'>Category</Label>
                     <Select
                       value={newProduct.category}
-                      onValueChange={(value) => setNewProduct({ ...newProduct, category: value })}
+                      onValueChange={(value) => {return setNewProduct({ ...newProduct, category: value })}}
                     >
                       <SelectTrigger id='product-category'>
                         <SelectValue placeholder='Select a category' />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          {productCategories.map((category) => (
+                          {productCategories.map((category) => {return (
                             <SelectItem key={category} value={category.toLowerCase()}>
                               {category}
                             </SelectItem>
-                          ))}
+                          )})}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -369,7 +369,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   <Textarea
                     id='product-description'
                     value={newProduct.description}
-                    onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                    onChange={(e) => {return setNewProduct({ ...newProduct, description: e.target.value })}}
                     placeholder='Product description...'
                     rows={3}
                   />
@@ -384,7 +384,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                           id='has-variants'
                           checked={newProduct.hasVariants}
                           onCheckedChange={(checked) =>
-                            setNewProduct({ ...newProduct, hasVariants: checked as boolean })
+                            {return setNewProduct({ ...newProduct, hasVariants: checked as boolean })}
                           }
                         />
                         <Label htmlFor='has-variants'>This product has multiple variants</Label>
@@ -398,7 +398,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                         <div className='space-y-2'>
                           <Label>Sizes</Label>
                           <div className='flex flex-wrap gap-2'>
-                            {availableSizes.map((size) => (
+                            {availableSizes.map((size) => {return (
                               <div
                                 key={size}
                                 className={`px-3 py-1 rounded border cursor-pointer text-sm text-center min-w-[40px] ${
@@ -406,17 +406,17 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                                     ? 'bg-primary/10 border-primary text-primary'
                                     : 'bg-white border-gray-200'
                                 }`}
-                                onClick={() => toggleSize(size)}
+                                onClick={() => {return toggleSize(size)}}
                               >
                                 {size}
                               </div>
-                            ))}
+                            )})}
                           </div>
                         </div>
                         <div className='space-y-2'>
                           <Label>Colors</Label>
                           <div className='flex flex-wrap gap-2'>
-                            {availableColors.map((color) => (
+                            {availableColors.map((color) => {return (
                               <div
                                 key={color}
                                 className={`px-3 py-1 rounded border cursor-pointer text-sm ${
@@ -424,11 +424,11 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                                     ? 'bg-primary/10 border-primary text-primary'
                                     : 'bg-white border-gray-200'
                                 }`}
-                                onClick={() => toggleColor(color)}
+                                onClick={() => {return toggleColor(color)}}
                               >
                                 {color}
                               </div>
-                            ))}
+                            )})}
                           </div>
                         </div>
                       </div>
@@ -443,17 +443,17 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                         </div>
 
                         <div className='space-y-2'>
-                          {newProduct.variants.map((variant, index) => (
+                          {newProduct.variants.map((variant, index) => {return (
                             <div key={index} className='flex gap-2 items-start'>
                               <Input
                                 value={variant.name}
-                                onChange={(e) => updateVariant(index, 'name', e.target.value)}
+                                onChange={(e) => {return updateVariant(index, 'name', e.target.value)}}
                                 placeholder='Variant name'
                                 className='flex-1'
                               />
                               <Input
                                 value={variant.price}
-                                onChange={(e) => updateVariant(index, 'price', e.target.value)}
+                                onChange={(e) => {return updateVariant(index, 'price', e.target.value)}}
                                 placeholder='Price'
                                 type='number'
                                 step='0.01'
@@ -461,7 +461,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                               />
                               <Input
                                 value={variant.sku}
-                                onChange={(e) => updateVariant(index, 'sku', e.target.value)}
+                                onChange={(e) => {return updateVariant(index, 'sku', e.target.value)}}
                                 placeholder='SKU'
                                 className='w-28'
                               />
@@ -470,14 +470,14 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                                   type='button'
                                   variant='ghost'
                                   size='icon'
-                                  onClick={() => removeVariant(index)}
+                                  onClick={() => {return removeVariant(index)}}
                                   className='h-9 w-9'
                                 >
                                   <X className='h-4 w-4' />
                                 </Button>
                               )}
                             </div>
-                          ))}
+                          )})}
                         </div>
                       </div>
                     </div>

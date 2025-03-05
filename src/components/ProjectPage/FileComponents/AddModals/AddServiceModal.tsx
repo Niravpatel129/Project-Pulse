@@ -119,7 +119,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ selectedFile, onClose
               <Input
                 id='service-name'
                 value={service.name}
-                onChange={(e) => setService({ ...service, name: e.target.value })}
+                onChange={(e) => {return setService({ ...service, name: e.target.value })}}
                 placeholder='Photography Session'
               />
             </div>
@@ -127,17 +127,17 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ selectedFile, onClose
               <Label htmlFor='service-category'>Category</Label>
               <Select
                 value={service.category}
-                onValueChange={(value) => setService({ ...service, category: value })}
+                onValueChange={(value) => {return setService({ ...service, category: value })}}
               >
                 <SelectTrigger id='service-category'>
                   <SelectValue placeholder='Select a category' />
                 </SelectTrigger>
                 <SelectContent>
-                  {serviceCategories.map((category) => (
+                  {serviceCategories.map((category) => {return (
                     <SelectItem key={category} value={category.toLowerCase()}>
                       {category}
                     </SelectItem>
-                  ))}
+                  )})}
                 </SelectContent>
               </Select>
             </div>
@@ -148,7 +148,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ selectedFile, onClose
             <Textarea
               id='service-description'
               value={service.description}
-              onChange={(e) => setService({ ...service, description: e.target.value })}
+              onChange={(e) => {return setService({ ...service, description: e.target.value })}}
               placeholder='Describe what this service includes...'
               rows={3}
             />
@@ -158,7 +158,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ selectedFile, onClose
             <h4 className='font-medium'>Pricing Model</h4>
             <RadioGroup
               value={service.pricingModel}
-              onValueChange={(value) => setService({ ...service, pricingModel: value })}
+              onValueChange={(value) => {return setService({ ...service, pricingModel: value })}}
               className='grid grid-cols-3 gap-4'
             >
               <div className='flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-gray-50'>
@@ -188,7 +188,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ selectedFile, onClose
                   <Input
                     id='service-price'
                     value={service.basePrice}
-                    onChange={(e) => setService({ ...service, basePrice: e.target.value })}
+                    onChange={(e) => {return setService({ ...service, basePrice: e.target.value })}}
                     placeholder='199.99'
                     type='number'
                     step='0.01'
@@ -204,7 +204,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ selectedFile, onClose
                   <Input
                     id='service-hourly-rate'
                     value={service.basePrice}
-                    onChange={(e) => setService({ ...service, basePrice: e.target.value })}
+                    onChange={(e) => {return setService({ ...service, basePrice: e.target.value })}}
                     placeholder='75.00'
                     type='number'
                     step='0.01'
@@ -215,7 +215,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ selectedFile, onClose
                   <Input
                     id='service-hours'
                     value={service.baseHours}
-                    onChange={(e) => setService({ ...service, baseHours: e.target.value })}
+                    onChange={(e) => {return setService({ ...service, baseHours: e.target.value })}}
                     placeholder='2'
                     type='number'
                     step='0.5'
@@ -244,7 +244,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ selectedFile, onClose
                   </div>
                 ) : (
                   <div className='space-y-4'>
-                    {service.packages.map((pkg, index) => (
+                    {service.packages.map((pkg, index) => {return (
                       <div key={index} className='border rounded-md p-3 space-y-3'>
                         <div className='flex items-center justify-between'>
                           <h5 className='font-medium'>Package {index + 1}</h5>
@@ -252,7 +252,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ selectedFile, onClose
                             type='button'
                             variant='ghost'
                             size='icon'
-                            onClick={() => removePackage(index)}
+                            onClick={() => {return removePackage(index)}}
                             className='h-8 w-8'
                           >
                             <X className='h-4 w-4' />
@@ -265,7 +265,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ selectedFile, onClose
                             <Input
                               id={`package-name-${index}`}
                               value={pkg.name}
-                              onChange={(e) => updatePackage(index, 'name', e.target.value)}
+                              onChange={(e) => {return updatePackage(index, 'name', e.target.value)}}
                               placeholder='Basic Package'
                             />
                           </div>
@@ -274,7 +274,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ selectedFile, onClose
                             <Input
                               id={`package-price-${index}`}
                               value={pkg.price}
-                              onChange={(e) => updatePackage(index, 'price', e.target.value)}
+                              onChange={(e) => {return updatePackage(index, 'price', e.target.value)}}
                               placeholder='99.99'
                               type='number'
                               step='0.01'
@@ -288,7 +288,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ selectedFile, onClose
                             <Input
                               id={`package-duration-${index}`}
                               value={pkg.duration}
-                              onChange={(e) => updatePackage(index, 'duration', e.target.value)}
+                              onChange={(e) => {return updatePackage(index, 'duration', e.target.value)}}
                               placeholder='1 hour'
                             />
                           </div>
@@ -299,13 +299,13 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ selectedFile, onClose
                           <Textarea
                             id={`package-desc-${index}`}
                             value={pkg.description}
-                            onChange={(e) => updatePackage(index, 'description', e.target.value)}
+                            onChange={(e) => {return updatePackage(index, 'description', e.target.value)}}
                             placeholder='Describe the package contents...'
                             rows={2}
                           />
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 )}
               </div>
@@ -333,7 +333,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ selectedFile, onClose
               (service.pricingModel === 'hourly' && !service.basePrice) ||
               (service.pricingModel === 'package' &&
                 (service.packages.length === 0 ||
-                  service.packages.some((pkg) => !pkg.name || !pkg.price)))
+                  service.packages.some((pkg) => {return !pkg.name || !pkg.price})))
             }
           >
             Create & Add Service

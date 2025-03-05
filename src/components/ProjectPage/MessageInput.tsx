@@ -49,7 +49,7 @@ export default function MessageInput({ user, onSendMessage }: MessageInputProps)
           <Input
             ref={inputRef}
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(e) => {return setMessage(e.target.value)}}
             placeholder={`Message ${recipientRole}...`}
             className='border-0 p-0 focus-visible:ring-0 shadow-none'
             disabled={isPending}

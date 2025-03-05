@@ -61,7 +61,7 @@ const TemplateItemHistoryModal: React.FC<TemplateItemHistoryModalProps> = ({
               variant='outline'
               size='sm'
               className='flex items-center gap-1'
-              onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+              onClick={() => {return setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}}
             >
               <ArrowDownUp className='h-4 w-4' />
               {sortOrder === 'desc' ? 'Newest first' : 'Oldest first'}
@@ -103,7 +103,7 @@ const TemplateItemHistoryModal: React.FC<TemplateItemHistoryModalProps> = ({
                         variant='outline'
                         size='sm'
                         className='flex items-center gap-1'
-                        onClick={() => handleViewVersion(version.id)}
+                        onClick={() => {return handleViewVersion(version.id)}}
                       >
                         View Details
                       </Button>
@@ -111,7 +111,7 @@ const TemplateItemHistoryModal: React.FC<TemplateItemHistoryModalProps> = ({
                         <Button
                           size='sm'
                           variant='secondary'
-                          onClick={() => handleRestoreVersion(version.id)}
+                          onClick={() => {return handleRestoreVersion(version.id)}}
                         >
                           Restore to This Version
                         </Button>

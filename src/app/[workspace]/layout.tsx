@@ -207,7 +207,7 @@ export default function DashboardLayout({
                   </div>
                   <div className='overflow-y-auto max-h-[calc(100vh-3.5rem)]'>
                     <nav className='grid gap-1 p-2'>
-                      {[...navigation, ...userNavigation].map((item) => (
+                      {[...navigation, ...userNavigation].map((item) => {return (
                         <MobileNavItem
                           key={item.href}
                           href={item.href}
@@ -215,7 +215,7 @@ export default function DashboardLayout({
                           icon={item.icon}
                           isActive={isNavItemActive(item.href)}
                         />
-                      ))}
+                      )})}
                     </nav>
                   </div>
                 </SheetContent>
@@ -230,7 +230,7 @@ export default function DashboardLayout({
 
           {/* Desktop Navigation */}
           <nav className='hidden lg:flex items-center space-x-1 ml-4 flex-1 overflow-x-auto'>
-            {navigation.map((item) => (
+            {navigation.map((item) => {return (
               <DesktopNavItem
                 key={item.href}
                 href={item.href}
@@ -238,7 +238,7 @@ export default function DashboardLayout({
                 icon={item.icon}
                 isActive={isNavItemActive(item.href)}
               />
-            ))}
+            )})}
           </nav>
 
           {/* Right Side - Notifications & User Profile */}
@@ -340,14 +340,14 @@ export default function DashboardLayout({
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  {userNavigation.map((item) => (
+                  {userNavigation.map((item) => {return (
                     <DropdownMenuItem key={item.href} asChild className='text-xs sm:text-sm'>
                       <Link href={item.href}>
                         {item.icon}
                         <span className='ml-2'>{item.label}</span>
                       </Link>
                     </DropdownMenuItem>
-                  ))}
+                  )})}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className='text-xs sm:text-sm'>

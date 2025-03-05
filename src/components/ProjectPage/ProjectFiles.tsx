@@ -170,11 +170,11 @@ export default function ProjectFiles() {
                 placeholder='Search file items...'
                 className='w-full sm:w-[250px] pl-8'
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {return setSearch(e.target.value)}}
               />
               {search && (
                 <button
-                  onClick={() => setSearch('')}
+                  onClick={() => {return setSearch('')}}
                   className='absolute right-2.5 top-2.5 text-gray-500 hover:text-gray-700'
                 >
                   <X className='h-4 w-4' />
@@ -183,7 +183,7 @@ export default function ProjectFiles() {
             </div>
             <Button
               variant='outline'
-              onClick={() => setShowProductionTrackingModal(true)}
+              onClick={() => {return setShowProductionTrackingModal(true)}}
               className='flex items-center gap-1'
             >
               <FolderClock className='h-4 w-4' />
@@ -191,7 +191,7 @@ export default function ProjectFiles() {
             </Button>
             <Button
               variant='outline'
-              onClick={() => setShowInventoryReportModal(true)}
+              onClick={() => {return setShowInventoryReportModal(true)}}
               className='flex items-center gap-1'
             >
               <BarChart className='h-4 w-4' />
@@ -202,7 +202,7 @@ export default function ProjectFiles() {
               onClick={() => {
                 // Default to the project client if available
                 if (filteredFiles().length > 0) {
-                  const clientFile = filteredFiles().find((f) => f.clientEmail);
+                  const clientFile = filteredFiles().find((f) => {return f.clientEmail});
                   if (clientFile) {
                     setSelectedClient({
                       id: 'client1', // In a real app, this would be a proper client ID
@@ -219,7 +219,7 @@ export default function ProjectFiles() {
               Create Invoice
             </Button>
             <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-              <Button onClick={() => setShowUploadDialog(true)}>
+              <Button onClick={() => {return setShowUploadDialog(true)}}>
                 <Plus className='mr-2 h-4 w-4' />
                 Add File Item
               </Button>
@@ -229,7 +229,7 @@ export default function ProjectFiles() {
                 handleFileUpload={handleFileUpload}
                 handleAddFile={handleAddFile}
                 uploadedFiles={uploadedFiles}
-                onClose={() => setShowUploadDialog(false)}
+                onClose={() => {return setShowUploadDialog(false)}}
               />
             </Dialog>
           </div>
@@ -334,7 +334,7 @@ export default function ProjectFiles() {
           requestApproval={requestApproval}
           setRequestApproval={setRequestApproval}
           handleSendEmail={handleSendEmail}
-          onClose={() => setShowSendEmailDialog(false)}
+          onClose={() => {return setShowSendEmailDialog(false)}}
         />
       </Dialog>
 
@@ -373,7 +373,7 @@ export default function ProjectFiles() {
       {/* Production Tracking Modal */}
       {showProductionTrackingModal && (
         <ProductionTrackingModal
-          onClose={() => setShowProductionTrackingModal(false)}
+          onClose={() => {return setShowProductionTrackingModal(false)}}
           files={filteredFiles()}
           templates={templates}
           onUpdateStatus={handleUpdateProductionStatus}
@@ -385,7 +385,7 @@ export default function ProjectFiles() {
         <InventoryReportModal
           inventoryItems={inventoryItems}
           usageReports={getInventoryUsageReports()}
-          onClose={() => setShowInventoryReportModal(false)}
+          onClose={() => {return setShowInventoryReportModal(false)}}
         />
       )}
     </div>

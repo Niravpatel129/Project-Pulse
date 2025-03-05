@@ -25,7 +25,7 @@ export const handleInventoryItemsRequest = (
         // Get by category
         if (url.includes('/category/')) {
           const categoryId = url.split('/category/').pop() as string;
-          const filteredItems = mockInventoryItems.filter((item) => item.categoryId === categoryId);
+          const filteredItems = mockInventoryItems.filter((item) => {return item.categoryId === categoryId});
 
           // Apply pagination and other filters
           const { page = '1', limit = '10', sort = 'name', order = 'asc' } = params;
@@ -65,7 +65,7 @@ export const handleInventoryItemsRequest = (
         // Get by ID
         if (url.includes('/') && !url.includes('/category/')) {
           const itemId = url.split('/').pop() as string;
-          const item = mockInventoryItems.find((item) => item.id === itemId);
+          const item = mockInventoryItems.find((item) => {return item.id === itemId});
 
           if (item) {
             resolve(item);
@@ -99,14 +99,14 @@ export const handleInventoryItemsRequest = (
           const searchLower = search.toLowerCase();
           filteredItems = filteredItems.filter(
             (item) =>
-              item.name.toLowerCase().includes(searchLower) ||
+              {return item.name.toLowerCase().includes(searchLower) ||
               item.description.toLowerCase().includes(searchLower) ||
-              item.sku.toLowerCase().includes(searchLower),
+              item.sku.toLowerCase().includes(searchLower)},
           );
         }
 
         if (category) {
-          filteredItems = filteredItems.filter((item) => item.categoryId === category);
+          filteredItems = filteredItems.filter((item) => {return item.categoryId === category});
         }
 
         // Sort items
@@ -156,7 +156,7 @@ export const handleInventoryItemsRequest = (
       // PUT request - Update an inventory item
       if (method === 'PUT') {
         const itemId = url.split('/').pop() as string;
-        const itemIndex = mockInventoryItems.findIndex((item) => item.id === itemId);
+        const itemIndex = mockInventoryItems.findIndex((item) => {return item.id === itemId});
 
         if (itemIndex !== -1) {
           // In a real implementation, we would update the database
@@ -181,7 +181,7 @@ export const handleInventoryItemsRequest = (
       // DELETE request - Delete an inventory item
       if (method === 'DELETE') {
         const itemId = url.split('/').pop() as string;
-        const itemIndex = mockInventoryItems.findIndex((item) => item.id === itemId);
+        const itemIndex = mockInventoryItems.findIndex((item) => {return item.id === itemId});
 
         if (itemIndex !== -1) {
           // In a real implementation, we would delete from the database
@@ -230,7 +230,7 @@ export const handleInventoryCategoriesRequest = (
         // Get by ID
         if (url.includes('/')) {
           const categoryId = url.split('/').pop() as string;
-          const category = mockInventoryCategories.find((cat) => cat.id === categoryId);
+          const category = mockInventoryCategories.find((cat) => {return cat.id === categoryId});
 
           if (category) {
             resolve(category);
@@ -257,8 +257,8 @@ export const handleInventoryCategoriesRequest = (
           const searchLower = search.toLowerCase();
           filteredCategories = filteredCategories.filter(
             (category) =>
-              category.name.toLowerCase().includes(searchLower) ||
-              (category.description && category.description.toLowerCase().includes(searchLower)),
+              {return category.name.toLowerCase().includes(searchLower) ||
+              (category.description && category.description.toLowerCase().includes(searchLower))},
           );
         }
 
@@ -309,7 +309,7 @@ export const handleInventoryCategoriesRequest = (
       // PUT request - Update a category
       if (method === 'PUT') {
         const categoryId = url.split('/').pop() as string;
-        const categoryIndex = mockInventoryCategories.findIndex((cat) => cat.id === categoryId);
+        const categoryIndex = mockInventoryCategories.findIndex((cat) => {return cat.id === categoryId});
 
         if (categoryIndex !== -1) {
           // In a real implementation, we would update the database
@@ -334,7 +334,7 @@ export const handleInventoryCategoriesRequest = (
       // DELETE request - Delete a category
       if (method === 'DELETE') {
         const categoryId = url.split('/').pop() as string;
-        const categoryIndex = mockInventoryCategories.findIndex((cat) => cat.id === categoryId);
+        const categoryIndex = mockInventoryCategories.findIndex((cat) => {return cat.id === categoryId});
 
         if (categoryIndex !== -1) {
           // In a real implementation, we would delete from the database

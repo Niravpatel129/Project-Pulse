@@ -113,7 +113,7 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
 
   const getTemplateForItem = (item: ProjectFile) => {
     if (item.templateId) {
-      return templates.find((t) => t.id === item.templateId);
+      return templates.find((t) => {return t.id === item.templateId});
     }
     return undefined;
   };
@@ -241,7 +241,7 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
                   <div className='mt-4'>
                     <h5 className='text-sm font-medium mb-2'>Files</h5>
                     <div className='space-y-2 mb-4'>
-                      {selectedFile.attachments.map((attachment) => (
+                      {selectedFile.attachments.map((attachment) => {return (
                         <div
                           key={attachment.id}
                           className='flex items-center justify-between p-2 border rounded hover:bg-gray-50'
@@ -257,7 +257,7 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
                                 variant='outline'
                                 size='sm'
                                 className='mr-2'
-                                onClick={() => handleOpenVersionHistory(attachment)}
+                                onClick={() => {return handleOpenVersionHistory(attachment)}}
                               >
                                 <span className='text-xs'>
                                   {attachment.versions.length} versions
@@ -269,7 +269,7 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
                             </Button>
                           </div>
                         </div>
-                      ))}
+                      )})}
                     </div>
                   </div>
                 )}
@@ -278,7 +278,7 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
                   <div>
                     <h5 className='text-sm font-medium mb-2'>Products</h5>
                     <div className='space-y-2 mb-4'>
-                      {selectedFile.products.map((product, index) => (
+                      {selectedFile.products.map((product, index) => {return (
                         <div
                           key={index}
                           className='flex justify-between items-center p-2 border rounded hover:bg-gray-50'
@@ -292,7 +292,7 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
                           </div>
                           <div className='text-sm font-medium'>${product.price}</div>
                         </div>
-                      ))}
+                      )})}
                     </div>
                   </div>
                 )}
@@ -302,11 +302,11 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
                   <div>
                     <h5 className='text-sm font-medium mb-2'>Template Items</h5>
                     <div className='space-y-2 mb-4'>
-                      {selectedFile.templateItems.map((item, index) => (
+                      {selectedFile.templateItems.map((item, index) => {return (
                         <div
                           key={index}
                           className='flex justify-between items-center p-2 border rounded hover:bg-gray-50 cursor-pointer'
-                          onClick={() => setViewTemplateItem(item)}
+                          onClick={() => {return setViewTemplateItem(item)}}
                         >
                           <div className='flex items-center'>
                             <FileCog className='h-4 w-4 text-blue-500 mr-2' />
@@ -314,7 +314,7 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
                               <div className='text-sm font-medium'>{item.name}</div>
                               <div className='text-xs text-gray-500'>
                                 {item.type === 'custom_template_item' &&
-                                  templates.find((t) => t.id === item.templateId)?.name}
+                                  templates.find((t) => {return t.id === item.templateId})?.name}
                               </div>
                             </div>
                           </div>
@@ -325,7 +325,7 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
                                 : `Created: ${item.dateUploaded.split('T')[0]}`}
                             </div>
                             <DropdownMenu>
-                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                              <DropdownMenuTrigger asChild onClick={(e) => {return e.stopPropagation()}}>
                                 <Button variant='ghost' size='icon'>
                                   <MoreVertical className='h-4 w-4' />
                                 </Button>
@@ -369,7 +369,7 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
                             </DropdownMenu>
                           </div>
                         </div>
-                      ))}
+                      )})}
                     </div>
                   </div>
                 )}
@@ -398,7 +398,7 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
               {selectedFile.comments.length === 0 ? (
                 <p className='text-sm text-gray-500'>No comments yet</p>
               ) : (
-                selectedFile.comments.map((comment) => (
+                selectedFile.comments.map((comment) => {return (
                   <div key={comment.id} className='flex space-x-3'>
                     <Avatar className='h-8 w-8'>
                       {comment.avatarUrl ? (
@@ -418,7 +418,7 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
                       </p>
                     </div>
                   </div>
-                ))
+                )})
               )}
             </div>
 
@@ -426,7 +426,7 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
               <Textarea
                 placeholder='Add a comment...'
                 value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
+                onChange={(e) => {return setCommentText(e.target.value)}}
                 className='resize-none'
                 rows={3}
               />
@@ -443,7 +443,7 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
 
       {showItemsModal && (
         <AddItemsModal
-          onClose={() => setShowItemsModal(false)}
+          onClose={() => {return setShowItemsModal(false)}}
           selectedFile={selectedFile}
           uploadedFiles={uploadedFiles}
           handleFileUpload={handleFileUpload}
@@ -463,7 +463,7 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
         <ViewTemplateItemModal
           item={viewTemplateItem}
           template={getTemplateForItem(viewTemplateItem)}
-          onClose={() => setViewTemplateItem(null)}
+          onClose={() => {return setViewTemplateItem(null)}}
           onEdit={handleUpdateTemplateItem}
           onVersionRestore={handleRestoreTemplateItemVersion}
           inventoryItems={inventoryItems}
@@ -475,7 +475,7 @@ const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({
       {showTemplateItemHistory && (
         <TemplateItemHistoryModal
           item={showTemplateItemHistory}
-          onClose={() => setShowTemplateItemHistory(null)}
+          onClose={() => {return setShowTemplateItemHistory(null)}}
           onVersionRestore={
             handleRestoreTemplateItemVersion
               ? (itemId, versionId) => {

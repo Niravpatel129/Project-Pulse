@@ -59,7 +59,7 @@ const SendEmailDialog: React.FC<SendEmailDialogProps> = ({
           <Input
             id='email-subject'
             value={emailSubject}
-            onChange={(e) => setEmailSubject(e.target.value)}
+            onChange={(e) => {return setEmailSubject(e.target.value)}}
           />
         </div>
 
@@ -68,7 +68,7 @@ const SendEmailDialog: React.FC<SendEmailDialogProps> = ({
           <Textarea
             id='email-message'
             value={emailMessage}
-            onChange={(e) => setEmailMessage(e.target.value)}
+            onChange={(e) => {return setEmailMessage(e.target.value)}}
             rows={4}
           />
         </div>

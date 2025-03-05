@@ -158,7 +158,7 @@ export default function RegisterPage() {
                 required
                 placeholder='Full Name'
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {return setName(e.target.value)}}
                 className='w-full'
               />
             </div>
@@ -174,7 +174,7 @@ export default function RegisterPage() {
                 required
                 placeholder='Email address'
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {return setEmail(e.target.value)}}
                 className='w-full'
               />
             </div>
@@ -190,7 +190,7 @@ export default function RegisterPage() {
                 required
                 placeholder='Password'
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {return setPassword(e.target.value)}}
                 className='w-full'
               />
             </div>
@@ -206,7 +206,7 @@ export default function RegisterPage() {
                 required
                 placeholder='Confirm Password'
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => {return setConfirmPassword(e.target.value)}}
                 className='w-full'
               />
             </div>

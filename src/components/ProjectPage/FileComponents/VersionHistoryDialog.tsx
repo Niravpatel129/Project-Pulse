@@ -60,7 +60,7 @@ const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
                   id='change-description'
                   placeholder='Describe what changes you made to the design...'
                   value={changeDescription}
-                  onChange={(e) => setChangeDescription(e.target.value)}
+                  onChange={(e) => {return setChangeDescription(e.target.value)}}
                   rows={2}
                 />
               </div>
@@ -72,7 +72,7 @@ const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
               <Button
                 size='sm'
                 variant='outline'
-                onClick={() => document.getElementById('version-file-upload')?.click()}
+                onClick={() => {return document.getElementById('version-file-upload')?.click()}}
               >
                 Browse Files
               </Button>
@@ -104,7 +104,7 @@ const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
           <div className='relative pt-2 pb-2'>
             <div className='absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200'></div>
             <div className='space-y-4'>
-              {selectedAttachment.versions?.map((version, index, versions) => (
+              {selectedAttachment.versions?.map((version, index, versions) => {return (
                 <div key={version.id} className='relative pl-12'>
                   <div
                     className={`absolute left-0 top-2 h-8 w-8 rounded-full flex items-center justify-center ${
@@ -152,7 +152,7 @@ const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
                             variant='outline'
                             size='sm'
                             className='mr-2'
-                            onClick={() => handleRevertToVersion(version)}
+                            onClick={() => {return handleRevertToVersion(version)}}
                           >
                             <RefreshCw className='h-3 w-3 mr-1' />
                             Restore
@@ -176,7 +176,7 @@ const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
                           variant='ghost'
                           size='sm'
                           className='text-xs'
-                          onClick={() => handleCompareVersions(versions[index + 1], version)}
+                          onClick={() => {return handleCompareVersions(versions[index + 1], version)}}
                         >
                           Compare with Version {versions[index + 1].versionNumber}
                         </Button>
@@ -184,7 +184,7 @@ const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
                     )}
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           </div>
         </div>

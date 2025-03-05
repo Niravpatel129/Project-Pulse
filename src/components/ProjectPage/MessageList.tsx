@@ -156,7 +156,7 @@ export default function ActivityFeed({ activities }: ActivityFeedProps) {
       ref={messagesContainerRef}
       className='flex flex-col space-y-6 h-[400px] overflow-y-auto p-4 rounded-lg'
     >
-      {Object.entries(groupedActivities).map(([date, dateActivities]) => (
+      {Object.entries(groupedActivities).map(([date, dateActivities]) => {return (
         <div key={date} className='space-y-4'>
           <div className='flex items-center gap-2'>
             <div className='h-px flex-1 bg-gray-200'></div>
@@ -164,7 +164,7 @@ export default function ActivityFeed({ activities }: ActivityFeedProps) {
             <div className='h-px flex-1 bg-gray-200'></div>
           </div>
 
-          {dateActivities.map((activity) => (
+          {dateActivities.map((activity) => {return (
             <div key={activity.id} className='flex gap-4 animate-in fade-in slide-in-from-bottom-2'>
               <div className='relative'>
                 <Avatar className='h-8 w-8 shrink-0 mt-1 border-2 border-white'>
@@ -220,7 +220,7 @@ export default function ActivityFeed({ activities }: ActivityFeedProps) {
 
                       {activity.metadata.rating && (
                         <div className='flex items-center gap-1 text-sm'>
-                          {[...Array(5)].map((_, i) => (
+                          {[...Array(5)].map((_, i) => {return (
                             <Star
                               key={i}
                               className={`h-3 w-3 ${
@@ -229,7 +229,7 @@ export default function ActivityFeed({ activities }: ActivityFeedProps) {
                                   : 'text-gray-300'
                               }`}
                             />
-                          ))}
+                          )})}
                         </div>
                       )}
 
@@ -247,7 +247,7 @@ export default function ActivityFeed({ activities }: ActivityFeedProps) {
                     <div className='mt-3 pt-3 border-t border-gray-100 space-y-2'>
                       <p className='text-xs font-medium text-gray-500'>Attachments</p>
                       <div className='grid grid-cols-2 gap-2'>
-                        {activity.attachments.map((attachment) => (
+                        {activity.attachments.map((attachment) => {return (
                           <a
                             key={attachment.id}
                             href={attachment.url}
@@ -258,7 +258,7 @@ export default function ActivityFeed({ activities }: ActivityFeedProps) {
                             <Paperclip className='h-3 w-3 text-gray-400' />
                             <span className='truncate'>{attachment.name}</span>
                           </a>
-                        ))}
+                        )})}
                       </div>
                     </div>
                   )}
@@ -281,9 +281,9 @@ export default function ActivityFeed({ activities }: ActivityFeedProps) {
                 )}
               </div>
             </div>
-          ))}
+          )})}
         </div>
-      ))}
+      )})}
       <div ref={messagesEndRef} />
     </div>
   );

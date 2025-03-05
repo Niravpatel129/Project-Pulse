@@ -64,18 +64,18 @@ export default function NewProjectPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {return { ...prev, [name]: value }});
   };
 
   const handleParticipantChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
-    setParticipantFormData((prev) => ({ ...prev, [name]: value }));
+    setParticipantFormData((prev) => {return { ...prev, [name]: value }});
   };
 
   const handleSelectChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {return { ...prev, [field]: value }});
   };
 
   // Add a custom field
@@ -91,22 +91,22 @@ export default function NewProjectPage() {
 
   // Update custom field value
   const updateCustomField = (id: string, value: string) => {
-    setCustomFields(customFields.map((field) => (field.id === id ? { ...field, value } : field)));
+    setCustomFields(customFields.map((field) => {return (field.id === id ? { ...field, value } : field)}));
   };
 
   // Remove a custom field
   const removeCustomField = (id: string) => {
-    setCustomFields(customFields.filter((field) => field.id !== id));
+    setCustomFields(customFields.filter((field) => {return field.id !== id}));
   };
 
   const handleCreateParticipant = async () => {
     try {
       // Create custom fields object
       const customFieldsObj = customFields.reduce(
-        (acc, field) => ({
+        (acc, field) => {return {
           ...acc,
           [field.name]: field.value,
-        }),
+        }},
         {},
       );
 
@@ -268,7 +268,7 @@ export default function NewProjectPage() {
                   <Label htmlFor='type'>Project Type</Label>
                   <Select
                     value={formData.type}
-                    onValueChange={(value) => handleSelectChange('type', value)}
+                    onValueChange={(value) => {return handleSelectChange('type', value)}}
                   >
                     <SelectTrigger id='type'>
                       <SelectValue placeholder='Select project type' />
@@ -288,7 +288,7 @@ export default function NewProjectPage() {
                   <Label htmlFor='leadSource'>Lead Source</Label>
                   <Select
                     value={formData.leadSource}
-                    onValueChange={(value) => handleSelectChange('leadSource', value)}
+                    onValueChange={(value) => {return handleSelectChange('leadSource', value)}}
                   >
                     <SelectTrigger id='leadSource'>
                       <SelectValue placeholder='Select lead source' />
@@ -309,7 +309,7 @@ export default function NewProjectPage() {
                   <Label htmlFor='stage'>Project Stage</Label>
                   <Select
                     value={formData.stage}
-                    onValueChange={(value) => handleSelectChange('stage', value)}
+                    onValueChange={(value) => {return handleSelectChange('stage', value)}}
                   >
                     <SelectTrigger id='stage'>
                       <SelectValue placeholder='Select project stage' />
@@ -326,7 +326,7 @@ export default function NewProjectPage() {
                 </div>
 
                 <div className='flex justify-end gap-4 mt-6'>
-                  <Button type='button' variant='outline' onClick={() => router.push('/projects')}>
+                  <Button type='button' variant='outline' onClick={() => {return router.push('/projects')}}>
                     Cancel
                   </Button>
                   <Button
@@ -352,7 +352,7 @@ export default function NewProjectPage() {
                         type='button'
                         variant='outline'
                         size='sm'
-                        onClick={() => setSelectedParticipant(null)}
+                        onClick={() => {return setSelectedParticipant(null)}}
                       >
                         Change
                       </Button>
@@ -433,13 +433,13 @@ export default function NewProjectPage() {
                           </p>
                         </div>
 
-                        {customFields.map((field) => (
+                        {customFields.map((field) => {return (
                           <div key={field.id} className='flex gap-2 items-start'>
                             <div className='flex-1'>
                               <Label>{field.name}</Label>
                               <Input
                                 value={field.value}
-                                onChange={(e) => updateCustomField(field.id, e.target.value)}
+                                onChange={(e) => {return updateCustomField(field.id, e.target.value)}}
                                 placeholder={`Enter ${field.name}`}
                               />
                             </div>
@@ -447,19 +447,19 @@ export default function NewProjectPage() {
                               type='button'
                               variant='ghost'
                               size='icon'
-                              onClick={() => removeCustomField(field.id)}
+                              onClick={() => {return removeCustomField(field.id)}}
                               className='mt-6'
                             >
                               <X className='h-4 w-4' />
                             </Button>
                           </div>
-                        ))}
+                        )})}
 
                         <div className='flex gap-2'>
                           <Input
                             placeholder="Add new field (e.g., 'LinkedIn Profile')"
                             value={newFieldName}
-                            onChange={(e) => setNewFieldName(e.target.value)}
+                            onChange={(e) => {return setNewFieldName(e.target.value)}}
                             className='flex-1'
                           />
                           <Button
@@ -480,11 +480,11 @@ export default function NewProjectPage() {
                         <div className='text-center py-4'>Loading participants...</div>
                       ) : existingParticipants.length > 0 ? (
                         <div className='space-y-2 max-h-80 overflow-y-auto'>
-                          {existingParticipants.map((participant) => (
+                          {existingParticipants.map((participant) => {return (
                             <div
                               key={participant._id}
                               className='flex items-center justify-between p-3 border rounded-md cursor-pointer hover:bg-gray-50'
-                              onClick={() => handleSelectExistingParticipant(participant)}
+                              onClick={() => {return handleSelectExistingParticipant(participant)}}
                             >
                               <div>
                                 <p className='font-medium'>{participant.name}</p>
@@ -494,7 +494,7 @@ export default function NewProjectPage() {
                                 Select
                               </Button>
                             </div>
-                          ))}
+                          )})}
                         </div>
                       ) : (
                         <div className='text-center py-4'>
@@ -503,7 +503,7 @@ export default function NewProjectPage() {
                             type='button'
                             variant='outline'
                             className='mt-2'
-                            onClick={() => setParticipantTab('new')}
+                            onClick={() => {return setParticipantTab('new')}}
                           >
                             Create New Participant
                           </Button>

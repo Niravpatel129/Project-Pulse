@@ -29,7 +29,7 @@ export const handleProjectFilesRequest = (
         // Get project file by ID
         if (url.includes('/') && !url.includes('/template-items')) {
           const fileId = url.split('/').pop() as string;
-          const file = mockProjectFiles.find((f) => f.id === fileId);
+          const file = mockProjectFiles.find((f) => {return f.id === fileId});
 
           if (file) {
             resolve(file);
@@ -46,7 +46,7 @@ export const handleProjectFilesRequest = (
         // Get template items
         if (url.includes('/template-items')) {
           const templateId = url.split('/').pop() as string;
-          const templateItems = mockTemplateItems.filter((item) => item.templateId === templateId);
+          const templateItems = mockTemplateItems.filter((item) => {return item.templateId === templateId});
 
           const { page = '1', limit = '10' } = params;
           const pageNum = parseInt(page, 10);
@@ -82,17 +82,17 @@ export const handleProjectFilesRequest = (
           const searchLower = search.toLowerCase();
           filteredFiles = filteredFiles.filter(
             (file) =>
-              file.name.toLowerCase().includes(searchLower) ||
-              (file.description && file.description.toLowerCase().includes(searchLower)),
+              {return file.name.toLowerCase().includes(searchLower) ||
+              (file.description && file.description.toLowerCase().includes(searchLower))},
           );
         }
 
         if (status) {
-          filteredFiles = filteredFiles.filter((file) => file.status === status);
+          filteredFiles = filteredFiles.filter((file) => {return file.status === status});
         }
 
         if (type) {
-          filteredFiles = filteredFiles.filter((file) => file.type === type);
+          filteredFiles = filteredFiles.filter((file) => {return file.type === type});
         }
 
         // Paginate
@@ -130,7 +130,7 @@ export const handleProjectFilesRequest = (
       // PUT request - Update a project file
       if (method === 'PUT') {
         const fileId = url.split('/').pop() as string;
-        const fileIndex = mockProjectFiles.findIndex((file) => file.id === fileId);
+        const fileIndex = mockProjectFiles.findIndex((file) => {return file.id === fileId});
 
         if (fileIndex !== -1) {
           // In a real implementation, we would update the database
@@ -155,7 +155,7 @@ export const handleProjectFilesRequest = (
       // DELETE request - Delete a project file
       if (method === 'DELETE') {
         const fileId = url.split('/').pop() as string;
-        const fileIndex = mockProjectFiles.findIndex((file) => file.id === fileId);
+        const fileIndex = mockProjectFiles.findIndex((file) => {return file.id === fileId});
 
         if (fileIndex !== -1) {
           // In a real implementation, we would delete from the database

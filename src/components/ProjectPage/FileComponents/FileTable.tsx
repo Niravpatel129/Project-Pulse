@@ -69,11 +69,11 @@ const FileTable: React.FC<FileTableProps> = ({
           </tr>
         </thead>
         <tbody>
-          {filteredFiles.map((file) => (
+          {filteredFiles.map((file) => {return (
             <tr
               key={file.id}
               className='border-b hover:bg-gray-50 cursor-pointer'
-              onClick={() => handleFileClick(file)}
+              onClick={() => {return handleFileClick(file)}}
             >
               <td className='px-4 py-3'>
                 <div className='flex items-center'>
@@ -114,7 +114,7 @@ const FileTable: React.FC<FileTableProps> = ({
                   <span>{file.comments.length}</span>
                 </div>
               </td>
-              <td className='px-4 py-3' onClick={(e) => e.stopPropagation()}>
+              <td className='px-4 py-3' onClick={(e) => {return e.stopPropagation()}}>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant='ghost' size='icon'>
@@ -124,7 +124,7 @@ const FileTable: React.FC<FileTableProps> = ({
                   <DropdownMenuContent align='end'>
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => onViewDetails(file)}>
+                    <DropdownMenuItem onClick={() => {return onViewDetails(file)}}>
                       <FileText className='mr-2 h-4 w-4' />
                       View Details
                     </DropdownMenuItem>
@@ -134,26 +134,26 @@ const FileTable: React.FC<FileTableProps> = ({
                     </DropdownMenuItem>
                     {file.attachments[0]?.versions && file.attachments[0].versions.length > 0 && (
                       <DropdownMenuItem
-                        onClick={() => onViewVersionHistory(file, file.attachments[0])}
+                        onClick={() => {return onViewVersionHistory(file, file.attachments[0])}}
                       >
                         <History className='mr-2 h-4 w-4' />
                         View Version History
                       </DropdownMenuItem>
                     )}
                     {!file.emailSent && (
-                      <DropdownMenuItem onClick={() => onSendEmail(file)}>
+                      <DropdownMenuItem onClick={() => {return onSendEmail(file)}}>
                         <Mail className='mr-2 h-4 w-4' />
                         Email to Client
                       </DropdownMenuItem>
                     )}
                     {file.status === 'awaiting_approval' && (
-                      <DropdownMenuItem onClick={() => onSimulateApproval(file)}>
+                      <DropdownMenuItem onClick={() => {return onSimulateApproval(file)}}>
                         <Check className='mr-2 h-4 w-4' />
                         Simulate Approval
                       </DropdownMenuItem>
                     )}
                     {file.variation && (
-                      <DropdownMenuItem onClick={() => onCreateVariation(file)}>
+                      <DropdownMenuItem onClick={() => {return onCreateVariation(file)}}>
                         <FilePlus className='mr-2 h-4 w-4' />
                         Create Variation
                       </DropdownMenuItem>
@@ -167,7 +167,7 @@ const FileTable: React.FC<FileTableProps> = ({
                 </DropdownMenu>
               </td>
             </tr>
-          ))}
+          )})}
         </tbody>
       </table>
     </div>

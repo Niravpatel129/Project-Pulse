@@ -58,7 +58,7 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
   if (!item || !template) return null;
 
   const getFieldValue = (fieldId: string): TemplateFieldValue | undefined => {
-    return item.templateValues?.find((v) => v.fieldId === fieldId);
+    return item.templateValues?.find((v) => {return v.fieldId === fieldId});
   };
 
   const getFieldIcon = (fieldType: string) => {
@@ -107,7 +107,7 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
   };
 
   const findInventoryItem = (itemId: string): InventoryItem | undefined => {
-    return inventoryItems.find((item) => item.id === itemId);
+    return inventoryItems.find((item) => {return item.id === itemId});
   };
 
   const renderFieldValue = (fieldId: string, fieldType: string) => {
@@ -177,7 +177,7 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
               variant='outline'
               size='sm'
               className='ml-auto'
-              onClick={() => setSelectedInventoryItem(inventoryItem)}
+              onClick={() => {return setSelectedInventoryItem(inventoryItem)}}
             >
               View Details
             </Button>
@@ -209,7 +209,7 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
 
           <div className='space-y-6 py-4'>
             <div className='grid grid-cols-1 gap-6'>
-              {template.fields.map((field) => (
+              {template.fields.map((field) => {return (
                 <div key={field.id} className='space-y-2'>
                   <div className='flex items-center'>
                     {getFieldIcon(field.type)}
@@ -220,7 +220,7 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
                   )}
                   <div className='ml-6 mt-1'>{renderFieldValue(field.id, field.type)}</div>
                 </div>
-              ))}
+              )})}
             </div>
           </div>
 
@@ -228,7 +228,7 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
             {onEdit && (
               <Button
                 variant='outline'
-                onClick={() => setShowEditModal(true)}
+                onClick={() => {return setShowEditModal(true)}}
                 className='flex items-center gap-1'
               >
                 <Pencil className='h-4 w-4' />
@@ -237,7 +237,7 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
             )}
             <Button
               variant='outline'
-              onClick={() => setShowHistoryModal(true)}
+              onClick={() => {return setShowHistoryModal(true)}}
               disabled={!hasVersionHistory}
               className='flex items-center gap-1'
             >
@@ -253,7 +253,7 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
         <TemplateItemModal
           template={template}
           existingItem={item}
-          onClose={() => setShowEditModal(false)}
+          onClose={() => {return setShowEditModal(false)}}
           onSave={handleEditSave}
           inventoryItems={inventoryItems}
           updateInventoryStock={updateInventoryStock}
@@ -264,7 +264,7 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
       {showHistoryModal && (
         <TemplateItemHistoryModal
           item={item}
-          onClose={() => setShowHistoryModal(false)}
+          onClose={() => {return setShowHistoryModal(false)}}
           onVersionRestore={handleRestoreVersion}
           onVersionView={handleViewVersion}
         />
@@ -273,7 +273,7 @@ const ViewTemplateItemModal: React.FC<ViewTemplateItemModalProps> = ({
       {selectedInventoryItem && (
         <InventoryItemModal
           item={selectedInventoryItem}
-          onClose={() => setSelectedInventoryItem(null)}
+          onClose={() => {return setSelectedInventoryItem(null)}}
         />
       )}
     </>

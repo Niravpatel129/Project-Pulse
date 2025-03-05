@@ -58,7 +58,7 @@ export default function ProfilePage() {
           </CardContent>
 
           <CardFooter className='flex justify-between'>
-            <Button variant='outline' onClick={() => router.push('/')}>
+            <Button variant='outline' onClick={() => {return router.push('/')}}>
               Back to Home
             </Button>
             <Button variant='destructive' onClick={handleLogout}>

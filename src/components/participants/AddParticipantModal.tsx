@@ -116,10 +116,10 @@ export default function AddParticipantModal({
   const onSubmit = (values: z.infer<typeof participantSchema>) => {
     // Create new participant with form values and any custom fields
     const customFieldsObj = customFields.reduce(
-      (acc, field) => ({
+      (acc, field) => {return {
         ...acc,
         [field.name]: field.value,
-      }),
+      }},
       {},
     );
 
@@ -142,7 +142,7 @@ export default function AddParticipantModal({
   // Handle adding an existing participant
   const handleAddExisting = () => {
     if (selectedParticipant) {
-      const participant = EXISTING_PARTICIPANTS.find((p) => p.id === selectedParticipant);
+      const participant = EXISTING_PARTICIPANTS.find((p) => {return p.id === selectedParticipant});
       if (participant) {
         onParticipantAdded(participant);
         onClose();
@@ -163,16 +163,16 @@ export default function AddParticipantModal({
 
   // Update custom field value
   const updateCustomField = (id: string, value: string) => {
-    setCustomFields(customFields.map((field) => (field.id === id ? { ...field, value } : field)));
+    setCustomFields(customFields.map((field) => {return (field.id === id ? { ...field, value } : field)}));
   };
 
   // Remove a custom field
   const removeCustomField = (id: string) => {
-    setCustomFields(customFields.filter((field) => field.id !== id));
+    setCustomFields(customFields.filter((field) => {return field.id !== id}));
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => {return !open && onClose()}}>
       <DialogContent className='sm:max-w-[600px] max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>Add Participant to Project</DialogTitle>
@@ -195,7 +195,7 @@ export default function AddParticipantModal({
                   <FormField
                     control={form.control}
                     name='name'
-                    render={({ field }) => (
+                    render={({ field }) => {return (
                       <FormItem>
                         <FormLabel>Name*</FormLabel>
                         <FormControl>
@@ -203,13 +203,13 @@ export default function AddParticipantModal({
                         </FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
+                    )}}
                   />
 
                   <FormField
                     control={form.control}
                     name='email'
-                    render={({ field }) => (
+                    render={({ field }) => {return (
                       <FormItem>
                         <FormLabel>Email*</FormLabel>
                         <FormControl>
@@ -217,13 +217,13 @@ export default function AddParticipantModal({
                         </FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
+                    )}}
                   />
 
                   <FormField
                     control={form.control}
                     name='phone'
-                    render={({ field }) => (
+                    render={({ field }) => {return (
                       <FormItem>
                         <FormLabel>Phone</FormLabel>
                         <FormControl>
@@ -231,13 +231,13 @@ export default function AddParticipantModal({
                         </FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
+                    )}}
                   />
 
                   <FormField
                     control={form.control}
                     name='website'
-                    render={({ field }) => (
+                    render={({ field }) => {return (
                       <FormItem>
                         <FormLabel>Website</FormLabel>
                         <FormControl>
@@ -245,13 +245,13 @@ export default function AddParticipantModal({
                         </FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
+                    )}}
                   />
 
                   <FormField
                     control={form.control}
                     name='jobTitle'
-                    render={({ field }) => (
+                    render={({ field }) => {return (
                       <FormItem>
                         <FormLabel>Job Title</FormLabel>
                         <FormControl>
@@ -259,7 +259,7 @@ export default function AddParticipantModal({
                         </FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
+                    )}}
                   />
                 </div>
 
@@ -268,7 +268,7 @@ export default function AddParticipantModal({
                   <FormField
                     control={form.control}
                     name='mailingAddress'
-                    render={({ field }) => (
+                    render={({ field }) => {return (
                       <FormItem>
                         <FormLabel>Mailing Address</FormLabel>
                         <FormControl>
@@ -276,13 +276,13 @@ export default function AddParticipantModal({
                         </FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
+                    )}}
                   />
 
                   <FormField
                     control={form.control}
                     name='comments'
-                    render={({ field }) => (
+                    render={({ field }) => {return (
                       <FormItem>
                         <FormLabel>Comments</FormLabel>
                         <FormControl>
@@ -293,7 +293,7 @@ export default function AddParticipantModal({
                         </FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
+                    )}}
                   />
                 </div>
 
@@ -304,13 +304,13 @@ export default function AddParticipantModal({
                     <FormDescription>Add additional information as needed</FormDescription>
                   </div>
 
-                  {customFields.map((field) => (
+                  {customFields.map((field) => {return (
                     <div key={field.id} className='flex gap-2 items-start'>
                       <div className='flex-1'>
                         <Label>{field.name}</Label>
                         <Input
                           value={field.value}
-                          onChange={(e) => updateCustomField(field.id, e.target.value)}
+                          onChange={(e) => {return updateCustomField(field.id, e.target.value)}}
                           placeholder={`Enter ${field.name}`}
                         />
                       </div>
@@ -318,19 +318,19 @@ export default function AddParticipantModal({
                         type='button'
                         variant='ghost'
                         size='icon'
-                        onClick={() => removeCustomField(field.id)}
+                        onClick={() => {return removeCustomField(field.id)}}
                         className='mt-6'
                       >
                         <X className='h-4 w-4' />
                       </Button>
                     </div>
-                  ))}
+                  )})}
 
                   <div className='flex gap-2'>
                     <Input
                       placeholder="Add new field (e.g., 'LinkedIn Profile')"
                       value={newFieldName}
-                      onChange={(e) => setNewFieldName(e.target.value)}
+                      onChange={(e) => {return setNewFieldName(e.target.value)}}
                       className='flex-1'
                     />
                     <Button
@@ -366,7 +366,7 @@ export default function AddParticipantModal({
                 onValueChange={setSelectedParticipant}
                 className='space-y-2'
               >
-                {EXISTING_PARTICIPANTS.map((participant) => (
+                {EXISTING_PARTICIPANTS.map((participant) => {return (
                   <div
                     key={participant.id}
                     className='flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-muted'
@@ -382,7 +382,7 @@ export default function AddParticipantModal({
                       )}
                     </div>
                   </div>
-                ))}
+                )})}
               </RadioGroup>
 
               <DialogFooter className='mt-6'>

@@ -35,20 +35,20 @@ export function useApi() {
   const withLoadingAndErrors = useCallback(
     <T, Args extends unknown[]>(key: string, apiCall: (...args: Args) => Promise<T>) => {
       return async (...args: Args): Promise<T | null> => {
-        setLoading((prev) => ({ ...prev, [key]: true }));
-        setErrors((prev) => ({ ...prev, [key]: null }));
+        setLoading((prev) => {return { ...prev, [key]: true }});
+        setErrors((prev) => {return { ...prev, [key]: null }});
 
         try {
           const result = await apiCall(...args);
           return result;
         } catch (error) {
-          setErrors((prev) => ({
+          setErrors((prev) => {return {
             ...prev,
             [key]: error instanceof Error ? error : new Error(String(error)),
-          }));
+          }});
           return null;
         } finally {
-          setLoading((prev) => ({ ...prev, [key]: false }));
+          setLoading((prev) => {return { ...prev, [key]: false }});
         }
       };
     },
@@ -80,7 +80,7 @@ export function useApi() {
         'inventory.getUsageReports',
         async () => {
           const response = await inventory.getInventoryUsageReports();
-          return response.items.map((item) => ({
+          return response.items.map((item) => {return {
             item: {
               id: item.itemId,
               name: item.itemName,
@@ -90,7 +90,7 @@ export function useApi() {
             usageCount: item.quantity,
             projectCount: item.projectId ? 1 : 0,
             projects: item.projectId ? [item.projectId] : [],
-          }));
+          }});
         },
       ),
       getCategories: withLoadingAndErrors(
@@ -176,13 +176,13 @@ export function useApi() {
       }
 
       // Check if any of the specified API calls are loading
-      return keys.some((key) => !!loading[key]);
+      return keys.some((key) => {return !!loading[key]});
     },
     [loading],
   );
 
   // Helper to get error for a specific API call
-  const getError = useCallback((key: string) => errors[key] || null, [errors]);
+  const getError = useCallback((key: string) => {return errors[key] || null}, [errors]);
 
   // Helper to clear errors
   const clearErrors = useCallback((keys?: string | string[]) => {

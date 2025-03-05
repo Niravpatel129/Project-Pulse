@@ -101,7 +101,7 @@ export default function ApiTestPage() {
     });
 
     if (newFile) {
-      setProjectFiles((prev) => [newFile, ...prev]);
+      setProjectFiles((prev) => {return [newFile, ...prev]});
     }
   };
 
@@ -126,7 +126,7 @@ export default function ApiTestPage() {
     });
 
     if (newTemplate) {
-      setTemplates((prev) => [newTemplate, ...prev]);
+      setTemplates((prev) => {return [newTemplate, ...prev]});
     }
   };
 
@@ -142,7 +142,7 @@ export default function ApiTestPage() {
     });
 
     if (newItem) {
-      setInventoryItems((prev) => [newItem, ...prev]);
+      setInventoryItems((prev) => {return [newItem, ...prev]});
     }
   };
 
@@ -172,7 +172,7 @@ export default function ApiTestPage() {
     });
 
     if (newInvoice) {
-      setInvoices((prev) => [newInvoice, ...prev]);
+      setInvoices((prev) => {return [newInvoice, ...prev]});
     }
   };
 
@@ -213,7 +213,7 @@ export default function ApiTestPage() {
             </Card>
           ) : (
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-              {projectFiles.map((file) => (
+              {projectFiles.map((file) => {return (
                 <Card key={file.id} className='overflow-hidden'>
                   <CardHeader className='pb-2'>
                     <div className='flex justify-between items-start'>
@@ -242,7 +242,7 @@ export default function ApiTestPage() {
                   </CardContent>
                   <CardFooter className='pt-0 text-xs text-gray-500'>ID: {file.id}</CardFooter>
                 </Card>
-              ))}
+              )})}
               {projectFiles.length === 0 && (
                 <Card className='col-span-full'>
                   <CardContent className='pt-6 text-center text-gray-500'>
@@ -275,7 +275,7 @@ export default function ApiTestPage() {
             </Card>
           ) : (
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-              {templates.map((template) => (
+              {templates.map((template) => {return (
                 <Card key={template.id} className='overflow-hidden'>
                   <CardHeader className='pb-2'>
                     <CardTitle className='text-lg'>{template.name}</CardTitle>
@@ -291,11 +291,11 @@ export default function ApiTestPage() {
                         {formatDate(template.createdAt)}
                       </div>
                       <div className='flex flex-wrap gap-1 mt-2'>
-                        {template.fields.slice(0, 3).map((field) => (
+                        {template.fields.slice(0, 3).map((field) => {return (
                           <Badge key={field.id} variant='outline' className='text-xs'>
                             {field.name} ({field.type})
                           </Badge>
-                        ))}
+                        )})}
                         {template.fields.length > 3 && (
                           <Badge variant='outline' className='text-xs'>
                             +{template.fields.length - 3} more
@@ -306,7 +306,7 @@ export default function ApiTestPage() {
                   </CardContent>
                   <CardFooter className='pt-0 text-xs text-gray-500'>ID: {template.id}</CardFooter>
                 </Card>
-              ))}
+              )})}
               {templates.length === 0 && (
                 <Card className='col-span-full'>
                   <CardContent className='pt-6 text-center text-gray-500'>
@@ -339,7 +339,7 @@ export default function ApiTestPage() {
             </Card>
           ) : (
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-              {inventoryItems.map((item) => (
+              {inventoryItems.map((item) => {return (
                 <Card key={item.id} className='overflow-hidden'>
                   <CardHeader className='pb-2'>
                     <div className='flex justify-between items-start'>
@@ -377,7 +377,7 @@ export default function ApiTestPage() {
                   </CardContent>
                   <CardFooter className='pt-0 text-xs text-gray-500'>ID: {item.id}</CardFooter>
                 </Card>
-              ))}
+              )})}
               {inventoryItems.length === 0 && (
                 <Card className='col-span-full'>
                   <CardContent className='pt-6 text-center text-gray-500'>
@@ -410,7 +410,7 @@ export default function ApiTestPage() {
             </Card>
           ) : (
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-              {invoices.map((invoice) => (
+              {invoices.map((invoice) => {return (
                 <Card key={invoice.id} className='overflow-hidden'>
                   <CardHeader className='pb-2'>
                     <div className='flex justify-between items-start'>
@@ -441,7 +441,7 @@ export default function ApiTestPage() {
                   </CardContent>
                   <CardFooter className='pt-0 text-xs text-gray-500'>ID: {invoice.id}</CardFooter>
                 </Card>
-              ))}
+              )})}
               {invoices.length === 0 && (
                 <Card className='col-span-full'>
                   <CardContent className='pt-6 text-center text-gray-500'>

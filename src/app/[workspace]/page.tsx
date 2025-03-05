@@ -237,7 +237,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className='pb-0'>
                 <div className='space-y-4'>
-                  {RECENT_PROJECTS.map((project) => (
+                  {RECENT_PROJECTS.map((project) => {return (
                     <div
                       key={project.id}
                       className='border rounded-lg p-3 hover:bg-muted/5 transition-colors'
@@ -264,7 +264,7 @@ export default function DashboardPage() {
                         <Progress value={project.progress} className='h-2' />
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
               </CardContent>
               <CardFooter className='pt-2'>
@@ -289,7 +289,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className='space-y-3'>
-                  {UPCOMING_EVENTS.map((event) => (
+                  {UPCOMING_EVENTS.map((event) => {return (
                     <div
                       key={event.id}
                       className='flex gap-3 p-2 border rounded hover:bg-muted/5 transition-colors'
@@ -310,7 +310,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
               </CardContent>
               <CardFooter className='pt-0'>

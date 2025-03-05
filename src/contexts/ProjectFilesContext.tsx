@@ -95,7 +95,7 @@ export const ProjectFilesProvider: React.FC<ProjectFilesProviderProps> = ({ chil
         file as Omit<ProjectFile, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>,
       );
       if (newFile) {
-        setFiles((prevFiles) => [newFile, ...prevFiles]);
+        setFiles((prevFiles) => {return [newFile, ...prevFiles]});
         return newFile;
       }
       return null;
@@ -118,7 +118,7 @@ export const ProjectFilesProvider: React.FC<ProjectFilesProviderProps> = ({ chil
     try {
       const updatedFile = await services.projectFiles.update(id, updates);
       if (updatedFile) {
-        setFiles((prevFiles) => prevFiles.map((file) => (file.id === id ? updatedFile : file)));
+        setFiles((prevFiles) => {return prevFiles.map((file) => {return (file.id === id ? updatedFile : file)})});
 
         if (currentFile?.id === id) {
           setCurrentFile(updatedFile);
@@ -143,7 +143,7 @@ export const ProjectFilesProvider: React.FC<ProjectFilesProviderProps> = ({ chil
     try {
       const result = await services.projectFiles.delete(id);
       if (result) {
-        setFiles((prevFiles) => prevFiles.filter((file) => file.id !== id));
+        setFiles((prevFiles) => {return prevFiles.filter((file) => {return file.id !== id})});
 
         if (currentFile?.id === id) {
           setCurrentFile(null);
@@ -168,7 +168,7 @@ export const ProjectFilesProvider: React.FC<ProjectFilesProviderProps> = ({ chil
     try {
       const updatedFile = await services.projectFiles.updateStatus(id, status);
       if (updatedFile) {
-        setFiles((prevFiles) => prevFiles.map((file) => (file.id === id ? updatedFile : file)));
+        setFiles((prevFiles) => {return prevFiles.map((file) => {return (file.id === id ? updatedFile : file)})});
 
         if (currentFile?.id === id) {
           setCurrentFile(updatedFile);
@@ -196,7 +196,7 @@ export const ProjectFilesProvider: React.FC<ProjectFilesProviderProps> = ({ chil
     try {
       const updatedFile = await services.projectFiles.addComment(id, comment);
       if (updatedFile) {
-        setFiles((prevFiles) => prevFiles.map((file) => (file.id === id ? updatedFile : file)));
+        setFiles((prevFiles) => {return prevFiles.map((file) => {return (file.id === id ? updatedFile : file)})});
 
         if (currentFile?.id === id) {
           setCurrentFile(updatedFile);

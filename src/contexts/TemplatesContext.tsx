@@ -85,7 +85,7 @@ export const TemplatesProvider: React.FC<TemplatesProviderProps> = ({ children }
         template as Omit<Template, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>,
       );
       if (newTemplate) {
-        setTemplates((prevTemplates) => [newTemplate, ...prevTemplates]);
+        setTemplates((prevTemplates) => {return [newTemplate, ...prevTemplates]});
         return newTemplate;
       }
       return null;
@@ -109,7 +109,7 @@ export const TemplatesProvider: React.FC<TemplatesProviderProps> = ({ children }
       const updatedTemplate = await services.templates.update(id, updates);
       if (updatedTemplate) {
         setTemplates((prevTemplates) =>
-          prevTemplates.map((template) => (template.id === id ? updatedTemplate : template)),
+          {return prevTemplates.map((template) => {return (template.id === id ? updatedTemplate : template)})},
         );
 
         if (currentTemplate?.id === id) {
@@ -135,7 +135,7 @@ export const TemplatesProvider: React.FC<TemplatesProviderProps> = ({ children }
     try {
       const result = await services.templates.delete(id);
       if (result) {
-        setTemplates((prevTemplates) => prevTemplates.filter((template) => template.id !== id));
+        setTemplates((prevTemplates) => {return prevTemplates.filter((template) => {return template.id !== id})});
 
         if (currentTemplate?.id === id) {
           setCurrentTemplate(null);

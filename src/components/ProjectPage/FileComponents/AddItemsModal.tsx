@@ -166,7 +166,7 @@ const AddItemsModal: React.FC<AddItemsModalProps> = ({
       });
 
       // Show success message
-      const product = products.find((p) => p.id === selectedProduct);
+      const product = products.find((p) => {return p.id === selectedProduct});
       setSuccessMessage(`Added product: ${product?.name || 'Selected product'}`);
       setTimeout(() => {
         setSuccessMessage('');
@@ -204,7 +204,7 @@ const AddItemsModal: React.FC<AddItemsModalProps> = ({
 
   const toggleProductSelection = (productId: string) => {
     if (selectedExistingProducts.includes(productId)) {
-      setSelectedExistingProducts(selectedExistingProducts.filter((id) => id !== productId));
+      setSelectedExistingProducts(selectedExistingProducts.filter((id) => {return id !== productId}));
     } else {
       setSelectedExistingProducts([...selectedExistingProducts, productId]);
     }
@@ -239,7 +239,7 @@ const AddItemsModal: React.FC<AddItemsModalProps> = ({
   };
 
   const selectedTemplate = selectedTemplateId
-    ? templates.find((t) => t.id === selectedTemplateId)
+    ? templates.find((t) => {return t.id === selectedTemplateId})
     : null;
 
   return (
@@ -298,7 +298,7 @@ const AddItemsModal: React.FC<AddItemsModalProps> = ({
                 />
                 <Button
                   variant='outline'
-                  onClick={() => document.getElementById('bulk-file-upload')?.click()}
+                  onClick={() => {return document.getElementById('bulk-file-upload')?.click()}}
                 >
                   Browse Files
                 </Button>
@@ -313,7 +313,7 @@ const AddItemsModal: React.FC<AddItemsModalProps> = ({
                     </Button>
                   </div>
                   <div className='border rounded-md p-2 max-h-60 overflow-y-auto'>
-                    {uploadedFiles.map((file, index) => (
+                    {uploadedFiles.map((file, index) => {return (
                       <div
                         key={index}
                         className='flex justify-between items-center py-2 px-3 border-b last:border-b-0'
@@ -337,7 +337,7 @@ const AddItemsModal: React.FC<AddItemsModalProps> = ({
                           </Button>
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                   <div className='mt-4'>
                     <Button onClick={handleAddFiles} disabled={uploadedFiles.length === 0}>
@@ -357,7 +357,7 @@ const AddItemsModal: React.FC<AddItemsModalProps> = ({
                   <Button
                     variant='outline'
                     size='sm'
-                    onClick={() => setShowNewProductForm(!showNewProductForm)}
+                    onClick={() => {return setShowNewProductForm(!showNewProductForm)}}
                   >
                     {showNewProductForm ? 'Select Existing' : 'Create New Product'}
                   </Button>
@@ -369,13 +369,13 @@ const AddItemsModal: React.FC<AddItemsModalProps> = ({
                   <div className='border rounded-md overflow-hidden'>
                     {products.length > 0 ? (
                       <div className='max-h-80 overflow-y-auto'>
-                        {products.map((product) => (
+                        {products.map((product) => {return (
                           <div
                             key={product.id}
                             className={`flex justify-between items-center py-3 px-4 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer ${
                               selectedExistingProducts.includes(product.id) ? 'bg-primary/5' : ''
                             }`}
-                            onClick={() => toggleProductSelection(product.id)}
+                            onClick={() => {return toggleProductSelection(product.id)}}
                           >
                             <div className='flex items-center'>
                               <div
@@ -394,7 +394,7 @@ const AddItemsModal: React.FC<AddItemsModalProps> = ({
                             </div>
                             <div className='text-base font-medium'>${product.price}</div>
                           </div>
-                        ))}
+                        )})}
                       </div>
                     ) : (
                       <div className='py-8 text-center text-gray-500'>
@@ -429,7 +429,7 @@ const AddItemsModal: React.FC<AddItemsModalProps> = ({
                       <Input
                         id='new-product-name'
                         value={newProduct.name}
-                        onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                        onChange={(e) => {return setNewProduct({ ...newProduct, name: e.target.value })}}
                         placeholder='T-shirt Design 2024'
                       />
                     </div>
@@ -439,7 +439,7 @@ const AddItemsModal: React.FC<AddItemsModalProps> = ({
                       <Input
                         id='new-product-price'
                         value={newProduct.price}
-                        onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                        onChange={(e) => {return setNewProduct({ ...newProduct, price: e.target.value })}}
                         placeholder='29.99'
                         type='number'
                         step='0.01'
@@ -452,7 +452,7 @@ const AddItemsModal: React.FC<AddItemsModalProps> = ({
                         id='new-product-desc'
                         value={newProduct.description}
                         onChange={(e) =>
-                          setNewProduct({ ...newProduct, description: e.target.value })
+                          {return setNewProduct({ ...newProduct, description: e.target.value })}
                         }
                         placeholder='Product description...'
                         rows={3}
@@ -495,13 +495,13 @@ const AddItemsModal: React.FC<AddItemsModalProps> = ({
                 </p>
 
                 <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
-                  {templates.map((template) => (
+                  {templates.map((template) => {return (
                     <div
                       key={template.id}
                       className={`border rounded-md p-4 cursor-pointer hover:border-primary transition-colors ${
                         selectedTemplateId === template.id ? 'border-primary bg-primary/5' : ''
                       }`}
-                      onClick={() => setSelectedTemplateId(template.id)}
+                      onClick={() => {return setSelectedTemplateId(template.id)}}
                     >
                       <div className='flex items-center gap-2 mb-2'>
                         {template.icon === 'shirt' ? (
@@ -518,11 +518,11 @@ const AddItemsModal: React.FC<AddItemsModalProps> = ({
                         {template.fields.length} fields
                       </div>
                     </div>
-                  ))}
+                  )})}
 
                   <div
                     className='border border-dashed rounded-md p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors'
-                    onClick={() => setShowTemplateCreationModal(true)}
+                    onClick={() => {return setShowTemplateCreationModal(true)}}
                   >
                     <PlusCircle className='h-6 w-6 text-muted-foreground' />
                     <span className='text-sm font-medium'>New Template</span>
@@ -553,7 +553,7 @@ const AddItemsModal: React.FC<AddItemsModalProps> = ({
 
         {showTemplateCreationModal && (
           <TemplateCreationModal
-            onClose={() => setShowTemplateCreationModal(false)}
+            onClose={() => {return setShowTemplateCreationModal(false)}}
             onSave={handleTemplateCreated}
             inventoryCategories={inventoryCategories}
           />
@@ -562,7 +562,7 @@ const AddItemsModal: React.FC<AddItemsModalProps> = ({
         {showTemplateItemModal && selectedTemplate && (
           <TemplateItemModal
             template={selectedTemplate}
-            onClose={() => setShowTemplateItemModal(false)}
+            onClose={() => {return setShowTemplateItemModal(false)}}
             onSave={handleTemplateItemCreated}
             inventoryItems={inventoryItems}
           />

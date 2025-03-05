@@ -142,7 +142,7 @@ const TemplateCreationModal: React.FC<TemplateCreationModalProps> = ({
                 id='template-name'
                 placeholder='e.g., Clothing Print Template'
                 value={templateName}
-                onChange={(e) => setTemplateName(e.target.value)}
+                onChange={(e) => {return setTemplateName(e.target.value)}}
               />
             </div>
 
@@ -152,7 +152,7 @@ const TemplateCreationModal: React.FC<TemplateCreationModalProps> = ({
                 id='template-description'
                 placeholder='Describe what this template is for...'
                 value={templateDescription}
-                onChange={(e) => setTemplateDescription(e.target.value)}
+                onChange={(e) => {return setTemplateDescription(e.target.value)}}
                 rows={2}
               />
             </div>
@@ -174,7 +174,7 @@ const TemplateCreationModal: React.FC<TemplateCreationModalProps> = ({
             </div>
 
             <div className='space-y-4 max-h-[350px] overflow-y-auto pr-2'>
-              {fields.map((field, index) => (
+              {fields.map((field, index) => {return (
                 <div key={field.id} className='border rounded-md p-3 bg-card'>
                   <div className='flex items-start gap-2'>
                     <div className='flex flex-col gap-1 mt-2'>
@@ -183,7 +183,7 @@ const TemplateCreationModal: React.FC<TemplateCreationModalProps> = ({
                         variant='ghost'
                         size='icon'
                         disabled={index === 0}
-                        onClick={() => moveField(index, 'up')}
+                        onClick={() => {return moveField(index, 'up')}}
                         className='h-6 w-6'
                       >
                         <ArrowUp className='h-4 w-4' />
@@ -193,7 +193,7 @@ const TemplateCreationModal: React.FC<TemplateCreationModalProps> = ({
                         variant='ghost'
                         size='icon'
                         disabled={index === fields.length - 1}
-                        onClick={() => moveField(index, 'down')}
+                        onClick={() => {return moveField(index, 'down')}}
                         className='h-6 w-6'
                       >
                         <ArrowDown className='h-4 w-4' />
@@ -210,7 +210,7 @@ const TemplateCreationModal: React.FC<TemplateCreationModalProps> = ({
                             id={`field-name-${index}`}
                             placeholder='e.g., Image, Size, Color'
                             value={field.name}
-                            onChange={(e) => updateField(index, { name: e.target.value })}
+                            onChange={(e) => {return updateField(index, { name: e.target.value })}}
                             className='mt-1'
                           />
                         </div>
@@ -221,7 +221,7 @@ const TemplateCreationModal: React.FC<TemplateCreationModalProps> = ({
                           <Select
                             value={field.type}
                             onValueChange={(value) =>
-                              updateField(index, { type: value as FieldType })
+                              {return updateField(index, { type: value as FieldType })}
                             }
                           >
                             <SelectTrigger className='mt-1'>
@@ -257,9 +257,9 @@ const TemplateCreationModal: React.FC<TemplateCreationModalProps> = ({
                             placeholder='e.g., Small, Medium, Large'
                             value={field.options?.join(', ') || ''}
                             onChange={(e) =>
-                              updateField(index, {
-                                options: e.target.value.split(',').map((item) => item.trim()),
-                              })
+                              {return updateField(index, {
+                                options: e.target.value.split(',').map((item) => {return item.trim()}),
+                              })}
                             }
                             className='mt-1'
                           />
@@ -276,9 +276,9 @@ const TemplateCreationModal: React.FC<TemplateCreationModalProps> = ({
                             placeholder='e.g., png, jpg, pdf'
                             value={field.fileTypes?.join(', ') || ''}
                             onChange={(e) =>
-                              updateField(index, {
-                                fileTypes: e.target.value.split(',').map((item) => item.trim()),
-                              })
+                              {return updateField(index, {
+                                fileTypes: e.target.value.split(',').map((item) => {return item.trim()}),
+                              })}
                             }
                             className='mt-1'
                           />
@@ -297,9 +297,9 @@ const TemplateCreationModal: React.FC<TemplateCreationModalProps> = ({
                             }
                             value={field.type === 'price' ? field.formula || '' : field.unit || ''}
                             onChange={(e) =>
-                              updateField(index, {
+                              {return updateField(index, {
                                 [field.type === 'price' ? 'formula' : 'unit']: e.target.value,
-                              })
+                              })}
                             }
                             className='mt-1'
                           />
@@ -314,9 +314,9 @@ const TemplateCreationModal: React.FC<TemplateCreationModalProps> = ({
                           <Select
                             value={field.inventoryCategory || ''}
                             onValueChange={(value) =>
-                              updateField(index, {
+                              {return updateField(index, {
                                 inventoryCategory: value === 'all' ? undefined : value,
-                              })
+                              })}
                             }
                           >
                             <SelectTrigger className='mt-1'>
@@ -324,11 +324,11 @@ const TemplateCreationModal: React.FC<TemplateCreationModalProps> = ({
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value='all'>All Categories</SelectItem>
-                              {inventoryCategories.map((category) => (
+                              {inventoryCategories.map((category) => {return (
                                 <SelectItem key={category.id} value={category.id}>
                                   {category.name}
                                 </SelectItem>
-                              ))}
+                              )})}
                             </SelectContent>
                           </Select>
                           <p className='text-xs text-muted-foreground mt-1'>
@@ -342,7 +342,7 @@ const TemplateCreationModal: React.FC<TemplateCreationModalProps> = ({
                         <Checkbox
                           id={`field-required-${index}`}
                           checked={field.required || false}
-                          onCheckedChange={(checked) => updateField(index, { required: !!checked })}
+                          onCheckedChange={(checked) => {return updateField(index, { required: !!checked })}}
                         />
                         <Label
                           htmlFor={`field-required-${index}`}
@@ -357,14 +357,14 @@ const TemplateCreationModal: React.FC<TemplateCreationModalProps> = ({
                       type='button'
                       variant='ghost'
                       size='icon'
-                      onClick={() => removeField(index)}
+                      onClick={() => {return removeField(index)}}
                       className='text-destructive hover:text-destructive/90 hover:bg-destructive/10'
                     >
                       <Trash2 className='h-4 w-4' />
                     </Button>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           </div>
         </div>

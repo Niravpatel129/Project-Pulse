@@ -45,7 +45,7 @@ const ProductionTrackingModal: React.FC<ProductionTrackingModalProps> = ({
   const productionItems = files.filter((file) => {
     return (
       file.type === 'custom_template_item' &&
-      file.templateValues?.some((value) => value.inventoryItemId)
+      file.templateValues?.some((value) => {return value.inventoryItemId})
     );
   });
 
@@ -108,7 +108,7 @@ const ProductionTrackingModal: React.FC<ProductionTrackingModalProps> = ({
 
   const getTemplateName = (templateId?: string) => {
     if (!templateId) return 'Unknown Template';
-    const template = templates.find((t) => t.id === templateId);
+    const template = templates.find((t) => {return t.id === templateId});
     return template ? template.name : 'Unknown Template';
   };
 
@@ -130,28 +130,28 @@ const ProductionTrackingModal: React.FC<ProductionTrackingModalProps> = ({
               <Button
                 variant={filter === 'all' ? 'default' : 'outline'}
                 size='sm'
-                onClick={() => setFilter('all')}
+                onClick={() => {return setFilter('all')}}
               >
                 All Items
               </Button>
               <Button
                 variant={filter === 'awaiting_approval' ? 'default' : 'outline'}
                 size='sm'
-                onClick={() => setFilter('awaiting_approval')}
+                onClick={() => {return setFilter('awaiting_approval')}}
               >
                 Pending
               </Button>
               <Button
                 variant={filter === 'active' ? 'default' : 'outline'}
                 size='sm'
-                onClick={() => setFilter('active')}
+                onClick={() => {return setFilter('active')}}
               >
                 In Progress
               </Button>
               <Button
                 variant={filter === 'paid' ? 'default' : 'outline'}
                 size='sm'
-                onClick={() => setFilter('paid')}
+                onClick={() => {return setFilter('paid')}}
               >
                 Completed
               </Button>
@@ -171,7 +171,7 @@ const ProductionTrackingModal: React.FC<ProductionTrackingModalProps> = ({
               </TableHeader>
               <TableBody>
                 {filteredItems.length > 0 ? (
-                  filteredItems.map((item) => (
+                  filteredItems.map((item) => {return (
                     <TableRow key={item.id}>
                       <TableCell className='font-medium'>{item.name}</TableCell>
                       <TableCell>{getTemplateName(item.templateId)}</TableCell>
@@ -180,7 +180,7 @@ const ProductionTrackingModal: React.FC<ProductionTrackingModalProps> = ({
                       <TableCell className='text-right'>
                         <Select
                           defaultValue={item.status || 'awaiting_approval'}
-                          onValueChange={(value) => onUpdateStatus(item.id, value)}
+                          onValueChange={(value) => {return onUpdateStatus(item.id, value)}}
                         >
                           <SelectTrigger className='w-[130px] h-8'>
                             <SelectValue placeholder='Change status' />
@@ -193,7 +193,7 @@ const ProductionTrackingModal: React.FC<ProductionTrackingModalProps> = ({
                         </Select>
                       </TableCell>
                     </TableRow>
-                  ))
+                  )})
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} className='text-center py-6 text-muted-foreground'>

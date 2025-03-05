@@ -36,11 +36,11 @@ export default function Timeline({ events, title = 'Timeline' }: TimelineProps) 
       </CardHeader>
       <CardContent>
         <div className='space-y-4'>
-          {sortedDates.map((date) => (
+          {sortedDates.map((date) => {return (
             <div key={date} className='mb-4'>
               <h3 className='mb-2 font-medium text-gray-700'>{date}</h3>
               <div className='ml-4 space-y-1'>
-                {groupedEvents[date].map((event, eventIndex) => (
+                {groupedEvents[date].map((event, eventIndex) => {return (
                   <div key={event.id} className='flex items-start gap-4'>
                     {/* Timeline connector */}
                     <div className='flex flex-col items-center'>
@@ -114,10 +114,10 @@ export default function Timeline({ events, title = 'Timeline' }: TimelineProps) 
                       </div>
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
             </div>
-          ))}
+          )})}
         </div>
       </CardContent>
     </Card>

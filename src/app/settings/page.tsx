@@ -25,10 +25,10 @@ export default function SettingsPage() {
   });
 
   const handleToggle = (setting: keyof typeof settings) => {
-    setSettings((prev) => ({
+    setSettings((prev) => {return {
       ...prev,
       [setting]: !prev[setting],
-    }));
+    }});
   };
 
   return (
@@ -51,7 +51,7 @@ export default function SettingsPage() {
               <Switch
                 id='dark-mode'
                 checked={settings.darkMode}
-                onCheckedChange={() => handleToggle('darkMode')}
+                onCheckedChange={() => {return handleToggle('darkMode')}}
               />
             </div>
           </CardContent>
@@ -73,7 +73,7 @@ export default function SettingsPage() {
               <Switch
                 id='email-notifications'
                 checked={settings.emailNotifications}
-                onCheckedChange={() => handleToggle('emailNotifications')}
+                onCheckedChange={() => {return handleToggle('emailNotifications')}}
               />
             </div>
             <Separator />
@@ -85,7 +85,7 @@ export default function SettingsPage() {
               <Switch
                 id='auto-save'
                 checked={settings.autoSave}
-                onCheckedChange={() => handleToggle('autoSave')}
+                onCheckedChange={() => {return handleToggle('autoSave')}}
               />
             </div>
           </CardContent>
@@ -107,7 +107,7 @@ export default function SettingsPage() {
               <Switch
                 id='two-factor'
                 checked={settings.twoFactorAuth}
-                onCheckedChange={() => handleToggle('twoFactorAuth')}
+                onCheckedChange={() => {return handleToggle('twoFactorAuth')}}
               />
             </div>
           </CardContent>

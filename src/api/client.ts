@@ -203,7 +203,7 @@ export class ApiClient {
     options.signal = controller.signal;
 
     // Set a timeout to abort the request if it takes too long
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+    const timeoutId = setTimeout(() => {return controller.abort()}, this.timeout);
 
     try {
       // Make the request

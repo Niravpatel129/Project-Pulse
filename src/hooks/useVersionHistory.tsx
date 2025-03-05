@@ -43,7 +43,7 @@ export function useVersionHistory({
     // Create a new version object
     const currentVersions = selectedAttachment.versions || [];
     const newVersionNumber =
-      currentVersions.length > 0 ? Math.max(...currentVersions.map((v) => v.versionNumber)) + 1 : 1;
+      currentVersions.length > 0 ? Math.max(...currentVersions.map((v) => {return v.versionNumber})) + 1 : 1;
 
     // Create a simple version ID
     const versionId = `v${newVersionNumber}`;
@@ -61,10 +61,10 @@ export function useVersionHistory({
     };
 
     // Set all other versions to not current
-    const updatedVersions = currentVersions.map((v) => ({
+    const updatedVersions = currentVersions.map((v) => {return {
       ...v,
       isCurrent: false,
-    }));
+    }});
 
     // Add new version
     updatedVersions.push(newVersion);
@@ -77,7 +77,7 @@ export function useVersionHistory({
 
     // Update the file with the new attachment
     const updatedAttachments = selectedFile.attachments.map((att) =>
-      att.id === selectedAttachment.id ? updatedAttachment : att,
+      {return att.id === selectedAttachment.id ? updatedAttachment : att},
     );
 
     const updatedFile = {
@@ -87,7 +87,7 @@ export function useVersionHistory({
     };
 
     // Update files state
-    setFiles(files.map((file) => (file.id === selectedFile.id ? updatedFile : file)));
+    setFiles(files.map((file) => {return (file.id === selectedFile.id ? updatedFile : file)}));
     setSelectedFile(updatedFile);
     setSelectedAttachment(updatedAttachment);
     setChangeDescription('');
@@ -113,10 +113,10 @@ export function useVersionHistory({
     if (!selectedFile || !selectedAttachment) return;
 
     // Update all versions, setting only the selected one to current
-    const updatedVersions = (selectedAttachment.versions || []).map((v) => ({
+    const updatedVersions = (selectedAttachment.versions || []).map((v) => {return {
       ...v,
       isCurrent: v.id === version.id,
-    }));
+    }});
 
     // Update the attachment
     const updatedAttachment = {
@@ -127,7 +127,7 @@ export function useVersionHistory({
 
     // Update the file
     const updatedAttachments = selectedFile.attachments.map((att) =>
-      att.id === selectedAttachment.id ? updatedAttachment : att,
+      {return att.id === selectedAttachment.id ? updatedAttachment : att},
     );
 
     const updatedFile = {
@@ -137,7 +137,7 @@ export function useVersionHistory({
     };
 
     // Update files state
-    setFiles(files.map((file) => (file.id === selectedFile.id ? updatedFile : file)));
+    setFiles(files.map((file) => {return (file.id === selectedFile.id ? updatedFile : file)}));
     setSelectedFile(updatedFile);
     setSelectedAttachment(updatedAttachment);
 
@@ -156,7 +156,7 @@ export function useVersionHistory({
       comments: [...updatedFile.comments, newComment],
     };
 
-    setFiles(files.map((file) => (file.id === selectedFile.id ? updatedFileWithComment : file)));
+    setFiles(files.map((file) => {return (file.id === selectedFile.id ? updatedFileWithComment : file)}));
     setSelectedFile(updatedFileWithComment);
   };
 

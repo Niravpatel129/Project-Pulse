@@ -106,7 +106,7 @@ const AddFileModal: React.FC<AddFileModalProps> = ({
             />
             <Button
               variant='outline'
-              onClick={() => document.getElementById('file-upload-modal')?.click()}
+              onClick={() => {return document.getElementById('file-upload-modal')?.click()}}
             >
               Browse Files
             </Button>
@@ -132,17 +132,17 @@ const AddFileModal: React.FC<AddFileModalProps> = ({
                     <Label htmlFor='file-category'>Category</Label>
                     <Select
                       value={fileDetails.category}
-                      onValueChange={(value) => setFileDetails({ ...fileDetails, category: value })}
+                      onValueChange={(value) => {return setFileDetails({ ...fileDetails, category: value })}}
                     >
                       <SelectTrigger id='file-category'>
                         <SelectValue placeholder='Select a category' />
                       </SelectTrigger>
                       <SelectContent>
-                        {fileCategories.map((category) => (
+                        {fileCategories.map((category) => {return (
                           <SelectItem key={category} value={category.toLowerCase()}>
                             {category}
                           </SelectItem>
-                        ))}
+                        )})}
                       </SelectContent>
                     </Select>
                   </div>
@@ -154,7 +154,7 @@ const AddFileModal: React.FC<AddFileModalProps> = ({
                       placeholder='Add a description for these files...'
                       value={fileDetails.description}
                       onChange={(e) =>
-                        setFileDetails({ ...fileDetails, description: e.target.value })
+                        {return setFileDetails({ ...fileDetails, description: e.target.value })}
                       }
                       rows={2}
                     />
@@ -166,7 +166,7 @@ const AddFileModal: React.FC<AddFileModalProps> = ({
                       id='file-tags'
                       placeholder='mockup, draft, client-review'
                       value={fileDetails.tags}
-                      onChange={(e) => setFileDetails({ ...fileDetails, tags: e.target.value })}
+                      onChange={(e) => {return setFileDetails({ ...fileDetails, tags: e.target.value })}}
                     />
                   </div>
                 </div>
@@ -177,7 +177,7 @@ const AddFileModal: React.FC<AddFileModalProps> = ({
                   <h4 className='font-medium'>Files to Upload ({uploadedFiles.length})</h4>
                 </div>
                 <div className='max-h-60 overflow-y-auto'>
-                  {uploadedFiles.map((file, index) => (
+                  {uploadedFiles.map((file, index) => {return (
                     <div
                       key={index}
                       className='flex justify-between items-center py-2 px-3 border-b last:border-b-0'
@@ -195,7 +195,7 @@ const AddFileModal: React.FC<AddFileModalProps> = ({
                         </Button>
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
               </div>
             </>

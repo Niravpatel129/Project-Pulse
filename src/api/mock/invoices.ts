@@ -23,7 +23,7 @@ export const handleInvoicesRequest = (
         // Get invoice by ID
         if (url.includes('/')) {
           const invoiceId = url.split('/').pop() as string;
-          const invoice = mockInvoices.find((inv) => inv.id === invoiceId);
+          const invoice = mockInvoices.find((inv) => {return inv.id === invoiceId});
 
           if (invoice) {
             resolve(invoice);
@@ -60,28 +60,28 @@ export const handleInvoicesRequest = (
           const searchLower = search.toLowerCase();
           filteredInvoices = filteredInvoices.filter(
             (invoice) =>
-              invoice.invoiceNumber.toLowerCase().includes(searchLower) ||
-              invoice.clientName.toLowerCase().includes(searchLower),
+              {return invoice.invoiceNumber.toLowerCase().includes(searchLower) ||
+              invoice.clientName.toLowerCase().includes(searchLower)},
           );
         }
 
         // Filter by status
         if (status) {
-          filteredInvoices = filteredInvoices.filter((invoice) => invoice.status === status);
+          filteredInvoices = filteredInvoices.filter((invoice) => {return invoice.status === status});
         }
 
         // Filter by date range
         if (from) {
           const fromDate = new Date(from).getTime();
           filteredInvoices = filteredInvoices.filter(
-            (invoice) => new Date(invoice.issueDate).getTime() >= fromDate,
+            (invoice) => {return new Date(invoice.issueDate).getTime() >= fromDate},
           );
         }
 
         if (to) {
           const toDate = new Date(to).getTime();
           filteredInvoices = filteredInvoices.filter(
-            (invoice) => new Date(invoice.issueDate).getTime() <= toDate,
+            (invoice) => {return new Date(invoice.issueDate).getTime() <= toDate},
           );
         }
 
@@ -156,7 +156,7 @@ export const handleInvoicesRequest = (
       // PUT request - Update an invoice
       if (method === 'PUT') {
         const invoiceId = url.split('/').pop() as string;
-        const invoiceIndex = mockInvoices.findIndex((inv) => inv.id === invoiceId);
+        const invoiceIndex = mockInvoices.findIndex((inv) => {return inv.id === invoiceId});
 
         if (invoiceIndex !== -1) {
           // In a real implementation, we would update the database
@@ -181,7 +181,7 @@ export const handleInvoicesRequest = (
       // DELETE request - Delete an invoice
       if (method === 'DELETE') {
         const invoiceId = url.split('/').pop() as string;
-        const invoiceIndex = mockInvoices.findIndex((inv) => inv.id === invoiceId);
+        const invoiceIndex = mockInvoices.findIndex((inv) => {return inv.id === invoiceId});
 
         if (invoiceIndex !== -1) {
           // In a real implementation, we would delete from the database
@@ -202,7 +202,7 @@ export const handleInvoicesRequest = (
       // PUT request for /invoices/:id/send - Send an invoice
       if (method === 'PUT' && url.includes('/send')) {
         const invoiceId = url.split('/').slice(-2)[0]; // Get the ID from the URL
-        const invoice = mockInvoices.find((inv) => inv.id === invoiceId);
+        const invoice = mockInvoices.find((inv) => {return inv.id === invoiceId});
 
         if (invoice) {
           // In a real implementation, we would send the invoice via email
@@ -231,7 +231,7 @@ export const handleInvoicesRequest = (
       // PUT request for /invoices/:id/mark-paid - Mark an invoice as paid
       if (method === 'PUT' && url.includes('/mark-paid')) {
         const invoiceId = url.split('/').slice(-2)[0]; // Get the ID from the URL
-        const invoice = mockInvoices.find((inv) => inv.id === invoiceId);
+        const invoice = mockInvoices.find((inv) => {return inv.id === invoiceId});
 
         if (invoice) {
           // In a real implementation, we would update the database with payment info
@@ -260,7 +260,7 @@ export const handleInvoicesRequest = (
       // GET request for /invoices/:id/pdf - Generate PDF
       if (method === 'GET' && url.includes('/pdf')) {
         const invoiceId = url.split('/').slice(-2)[0]; // Get the ID from the URL
-        const invoice = mockInvoices.find((inv) => inv.id === invoiceId);
+        const invoice = mockInvoices.find((inv) => {return inv.id === invoiceId});
 
         if (invoice) {
           // In a real implementation, we would generate a PDF

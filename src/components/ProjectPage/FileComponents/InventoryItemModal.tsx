@@ -99,7 +99,7 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({ item, onClose }
               <div className='space-y-2'>
                 <h3 className='text-sm font-medium border-b pb-2'>Attributes</h3>
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
-                  {Object.entries(item.attributes).map(([key, value]) => (
+                  {Object.entries(item.attributes).map(([key, value]) => {return (
                     <div key={key} className='flex items-start'>
                       <CheckSquare className='h-4 w-4 text-gray-500 mt-0.5 mr-2' />
                       <div>
@@ -107,7 +107,7 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({ item, onClose }
                         <p className='text-sm text-gray-600'>{value}</p>
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
               </div>
             )}

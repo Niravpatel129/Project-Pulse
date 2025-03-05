@@ -179,19 +179,19 @@ const MOCK_PAYMENTS: Payment[] = [
 
 // Payment summary calculations
 const calculatePaymentSummary = (payments: Payment[]) => {
-  const total = payments.reduce((sum, payment) => sum + payment.amount, 0);
+  const total = payments.reduce((sum, payment) => {return sum + payment.amount}, 0);
   const paid = payments
-    .filter((payment) => payment.status === 'Paid')
-    .reduce((sum, payment) => sum + payment.amount, 0);
+    .filter((payment) => {return payment.status === 'Paid'})
+    .reduce((sum, payment) => {return sum + payment.amount}, 0);
   const pending = payments
-    .filter((payment) => payment.status === 'Pending')
-    .reduce((sum, payment) => sum + payment.amount, 0);
+    .filter((payment) => {return payment.status === 'Pending'})
+    .reduce((sum, payment) => {return sum + payment.amount}, 0);
   const overdue = payments
-    .filter((payment) => payment.status === 'Overdue')
-    .reduce((sum, payment) => sum + payment.amount, 0);
+    .filter((payment) => {return payment.status === 'Overdue'})
+    .reduce((sum, payment) => {return sum + payment.amount}, 0);
   const scheduled = payments
-    .filter((payment) => payment.status === 'Scheduled')
-    .reduce((sum, payment) => sum + payment.amount, 0);
+    .filter((payment) => {return payment.status === 'Scheduled'})
+    .reduce((sum, payment) => {return sum + payment.amount}, 0);
 
   return { total, paid, pending, overdue, scheduled };
 };
@@ -322,12 +322,12 @@ export default function PaymentsPage() {
   };
 
   // Helper for column header with sorting
-  const SortableColumnHeader = ({ column, label }: { column: string; label: string }) => (
-    <div className='flex items-center cursor-pointer' onClick={() => handleSort(column)}>
+  const SortableColumnHeader = ({ column, label }: { column: string; label: string }) => {return (
+    <div className='flex items-center cursor-pointer' onClick={() => {return handleSort(column)}}>
       {label}
       <ArrowUpDown className='ml-2 h-4 w-4' />
     </div>
-  );
+  )};
 
   return (
     <div className='container mx-auto py-8'>
@@ -383,7 +383,7 @@ export default function PaymentsPage() {
           </CardContent>
           <CardFooter className='py-4'>
             <span className='text-xs text-muted-foreground'>
-              {payments.filter((p) => p.status === 'Paid').length} paid invoices
+              {payments.filter((p) => {return p.status === 'Paid'}).length} paid invoices
             </span>
           </CardFooter>
         </Card>
@@ -399,7 +399,7 @@ export default function PaymentsPage() {
           </CardContent>
           <CardFooter className='py-4'>
             <span className='text-xs text-muted-foreground'>
-              {payments.filter((p) => p.status === 'Pending').length} pending invoices
+              {payments.filter((p) => {return p.status === 'Pending'}).length} pending invoices
             </span>
           </CardFooter>
         </Card>
@@ -415,7 +415,7 @@ export default function PaymentsPage() {
           </CardContent>
           <CardFooter className='py-4'>
             <span className='text-xs text-muted-foreground'>
-              {payments.filter((p) => p.status === 'Overdue').length} overdue invoices
+              {payments.filter((p) => {return p.status === 'Overdue'}).length} overdue invoices
             </span>
           </CardFooter>
         </Card>
@@ -431,7 +431,7 @@ export default function PaymentsPage() {
           </CardContent>
           <CardFooter className='py-4'>
             <span className='text-xs text-muted-foreground'>
-              {payments.filter((p) => p.status === 'Scheduled').length} scheduled invoices
+              {payments.filter((p) => {return p.status === 'Scheduled'}).length} scheduled invoices
             </span>
           </CardFooter>
         </Card>
@@ -445,13 +445,13 @@ export default function PaymentsPage() {
             placeholder='Search invoices...'
             className='pl-8'
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {return setSearchQuery(e.target.value)}}
           />
         </div>
 
         <Tabs
           value={viewMode}
-          onValueChange={(value) => setViewMode(value as PaymentViewMode)}
+          onValueChange={(value) => {return setViewMode(value as PaymentViewMode)}}
           className='w-full md:w-auto'
         >
           <TabsList className='grid w-full grid-cols-3'>
@@ -510,7 +510,7 @@ export default function PaymentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedPayments.map((payment) => (
+              {sortedPayments.map((payment) => {return (
                 <TableRow key={payment.id}>
                   <TableCell className='font-medium'>
                     <Link
@@ -567,7 +567,7 @@ export default function PaymentsPage() {
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))}
+              )})}
             </TableBody>
           </Table>
         </div>

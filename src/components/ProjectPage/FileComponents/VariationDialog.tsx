@@ -46,7 +46,7 @@ const VariationDialog: React.FC<VariationDialogProps> = ({
             id='variation-name'
             placeholder='Client Feedback Version'
             value={variationName}
-            onChange={(e) => setVariationName(e.target.value)}
+            onChange={(e) => {return setVariationName(e.target.value)}}
           />
         </div>
 
@@ -56,7 +56,7 @@ const VariationDialog: React.FC<VariationDialogProps> = ({
             id='variation-description'
             placeholder='Describe the purpose of this variation...'
             value={variationDescription}
-            onChange={(e) => setVariationDescription(e.target.value)}
+            onChange={(e) => {return setVariationDescription(e.target.value)}}
             rows={3}
           />
         </div>

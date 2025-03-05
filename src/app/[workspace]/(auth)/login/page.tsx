@@ -93,7 +93,7 @@ export default function LoginPage() {
                 required
                 placeholder='Email address'
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {return setEmail(e.target.value)}}
               />
             </div>
             <div>
@@ -108,7 +108,7 @@ export default function LoginPage() {
                 required
                 placeholder='Password'
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {return setPassword(e.target.value)}}
               />
             </div>
           </div>

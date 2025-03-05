@@ -239,7 +239,7 @@ export default function CustomersPage() {
 
   // Function to handle customer deletion
   const handleDeleteCustomer = (customerId: number) => {
-    setCustomers(customers.filter((customer) => customer.id !== customerId));
+    setCustomers(customers.filter((customer) => {return customer.id !== customerId}));
   };
 
   // Function to render customer status badge
@@ -273,12 +273,12 @@ export default function CustomersPage() {
   };
 
   // Helper for column header with sorting
-  const SortableColumnHeader = ({ column, label }: { column: string; label: string }) => (
-    <div className='flex items-center cursor-pointer' onClick={() => handleSort(column)}>
+  const SortableColumnHeader = ({ column, label }: { column: string; label: string }) => {return (
+    <div className='flex items-center cursor-pointer' onClick={() => {return handleSort(column)}}>
       {label}
       <ArrowUpDown className='ml-2 h-4 w-4' />
     </div>
-  );
+  )};
 
   return (
     <div className='container mx-auto py-8'>
@@ -311,7 +311,7 @@ export default function CustomersPage() {
             placeholder='Search customers...'
             className='pl-8'
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {return setSearchQuery(e.target.value)}}
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -363,7 +363,7 @@ export default function CustomersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedCustomers.map((customer) => (
+              {sortedCustomers.map((customer) => {return (
                 <TableRow key={customer.id}>
                   <TableCell className='font-medium'>
                     <Link
@@ -422,7 +422,7 @@ export default function CustomersPage() {
                           <Link href={`/customers/${customer.id}/contact`}>Contact</Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => handleDeleteCustomer(customer.id)}
+                          onClick={() => {return handleDeleteCustomer(customer.id)}}
                           className='text-destructive focus:text-destructive'
                         >
                           Delete Customer
@@ -431,7 +431,7 @@ export default function CustomersPage() {
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))}
+              )})}
             </TableBody>
           </Table>
         </div>

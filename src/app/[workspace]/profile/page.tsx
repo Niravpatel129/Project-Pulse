@@ -78,7 +78,7 @@ export default function ProfilePage() {
                   <AvatarFallback className='text-2xl'>
                     {userData.name
                       .split(' ')
-                      .map((n) => n[0])
+                      .map((n) => {return n[0]})
                       .join('')}
                   </AvatarFallback>
                 </Avatar>
@@ -99,7 +99,7 @@ export default function ProfilePage() {
                   variant='outline'
                   size='sm'
                   className='w-full justify-start'
-                  onClick={() => setActiveTab('general')}
+                  onClick={() => {return setActiveTab('general')}}
                 >
                   <User className='mr-2 h-4 w-4' />
                   General
@@ -108,7 +108,7 @@ export default function ProfilePage() {
                   variant='outline'
                   size='sm'
                   className='w-full justify-start'
-                  onClick={() => setActiveTab('notifications')}
+                  onClick={() => {return setActiveTab('notifications')}}
                 >
                   <BellRing className='mr-2 h-4 w-4' />
                   Notifications
@@ -117,7 +117,7 @@ export default function ProfilePage() {
                   variant='outline'
                   size='sm'
                   className='w-full justify-start'
-                  onClick={() => setActiveTab('security')}
+                  onClick={() => {return setActiveTab('security')}}
                 >
                   <Lock className='mr-2 h-4 w-4' />
                   Security
@@ -126,7 +126,7 @@ export default function ProfilePage() {
                   variant='outline'
                   size='sm'
                   className='w-full justify-start'
-                  onClick={() => setActiveTab('billing')}
+                  onClick={() => {return setActiveTab('billing')}}
                 >
                   <CreditCard className='mr-2 h-4 w-4' />
                   Billing
@@ -193,14 +193,14 @@ export default function ProfilePage() {
                   <div className='space-y-4'>
                     <h3 className='text-lg font-medium'>Recent Projects</h3>
                     <div className='space-y-2'>
-                      {userData.recentProjects.map((project, index) => (
+                      {userData.recentProjects.map((project, index) => {return (
                         <div
                           key={index}
                           className='p-3 rounded-md border hover:bg-muted/5 transition-colors'
                         >
                           <p className='font-medium'>{project}</p>
                         </div>
-                      ))}
+                      )})}
                     </div>
                   </div>
                 </div>
@@ -214,7 +214,7 @@ export default function ProfilePage() {
                   </p>
 
                   <div className='space-y-4'>
-                    {notificationPreferences.map((pref) => (
+                    {notificationPreferences.map((pref) => {return (
                       <div key={pref.id} className='flex items-start space-x-4'>
                         <div className='pt-0.5'>
                           <input
@@ -231,7 +231,7 @@ export default function ProfilePage() {
                           <p className='text-sm text-muted-foreground'>{pref.description}</p>
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
 
                   <Separator className='my-6' />

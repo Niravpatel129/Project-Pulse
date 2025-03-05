@@ -65,7 +65,7 @@ export default function Activity() {
       timestamp: new Date().toISOString(),
       status: 'UNREAD',
     };
-    setMessages((prev) => [...prev, newMessage]);
+    setMessages((prev) => {return [...prev, newMessage]});
   };
 
   return (
@@ -76,7 +76,7 @@ export default function Activity() {
       <CardContent>
         <div className='space-y-6'>
           <ActivityFeed
-            activities={messages.map((message) => ({
+            activities={messages.map((message) => {return {
               id: message.id,
               actor: {
                 id: message.sender.id,
@@ -88,7 +88,7 @@ export default function Activity() {
               timestamp: message.timestamp,
               activityType: 'message',
               status: message.status === 'READ' ? 'completed' : 'pending',
-            }))}
+            }})}
           />
           <MessageInput user={currentUser} onSendMessage={handleSendMessage} />
         </div>

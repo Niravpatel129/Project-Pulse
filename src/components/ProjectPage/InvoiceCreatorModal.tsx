@@ -116,7 +116,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
 
   // Calculate the totals based on the items
   const calculateTotals = (items: InvoiceItem[]) => {
-    const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+    const subtotal = items.reduce((sum, item) => {return sum + item.quantity * item.unitPrice}, 0);
     const discountTotal = items.reduce((sum, item) => {
       const itemDiscount = item.discount
         ? (item.quantity * item.unitPrice * item.discount) / 100
@@ -130,13 +130,13 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
     }, 0);
     const total = subtotal - discountTotal + taxTotal;
 
-    setInvoice((prev) => ({
+    setInvoice((prev) => {return {
       ...prev,
       subtotal,
       discountTotal,
       taxTotal,
       total,
-    }));
+    }});
   };
 
   // Update handleUpdateItem to recalculate totals
@@ -165,10 +165,10 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
 
   // Calculate totals when invoice items change
   useEffect(() => {
-    const subtotal = invoice.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+    const subtotal = invoice.items.reduce((sum, item) => {return sum + item.quantity * item.unitPrice}, 0);
 
     const discountTotal = invoice.items.reduce(
-      (sum, item) => sum + ((item.discount || 0) / 100) * item.quantity * item.unitPrice,
+      (sum, item) => {return sum + ((item.discount || 0) / 100) * item.quantity * item.unitPrice},
       0,
     );
 
@@ -181,13 +181,13 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
 
     const total = subtotal - discountTotal + taxTotal;
 
-    setInvoice((prev) => ({
+    setInvoice((prev) => {return {
       ...prev,
       subtotal: parseFloat(subtotal.toFixed(2)),
       discountTotal: parseFloat(discountTotal.toFixed(2)),
       taxTotal: parseFloat(taxTotal.toFixed(2)),
       total: parseFloat(total.toFixed(2)),
-    }));
+    }});
   }, [invoice.items]);
 
   // Update new item total as user inputs values
@@ -198,10 +198,10 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
       // Don't add tax to the line item total to match most invoice formats
       const total = subtotal - discount;
 
-      setNewItem((prev) => ({
+      setNewItem((prev) => {return {
         ...prev,
         total: parseFloat(total.toFixed(2)),
-      }));
+      }});
     }
   }, [newItem.quantity, newItem.unitPrice, newItem.discount]);
 
@@ -211,10 +211,10 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
       return; // Don't add incomplete items
     }
 
-    setInvoice((prev) => ({
+    setInvoice((prev) => {return {
       ...prev,
       items: [...prev.items, newItem as InvoiceItem],
-    }));
+    }});
 
     // Reset the new item form
     setNewItem({
@@ -232,18 +232,18 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
 
   // Handle removing an item from the invoice
   const handleRemoveItem = (itemId: string) => {
-    setInvoice((prev) => ({
+    setInvoice((prev) => {return {
       ...prev,
-      items: prev.items.filter((item) => item.id !== itemId),
-    }));
+      items: prev.items.filter((item) => {return item.id !== itemId}),
+    }});
   };
 
   // Handle field changes for the invoice
   const handleInvoiceFieldChange = (field: string, value: string | number) => {
-    setInvoice((prev) => ({
+    setInvoice((prev) => {return {
       ...prev,
       [field]: value,
-    }));
+    }});
   };
 
   // Add product to invoice
@@ -258,10 +258,10 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
       total: parseFloat(product.price),
     };
 
-    setInvoice((prev) => ({
+    setInvoice((prev) => {return {
       ...prev,
       items: [...prev.items, newInvoiceItem],
-    }));
+    }});
 
     setShowAddItemPopover(false);
   };
@@ -278,10 +278,10 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
       total: item.price,
     };
 
-    setInvoice((prev) => ({
+    setInvoice((prev) => {return {
       ...prev,
       items: [...prev.items, newInvoiceItem],
-    }));
+    }});
 
     setShowAddItemPopover(false);
   };
@@ -292,9 +292,9 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
   };
 
   const isProjectFile = (file: ProjectFile) =>
-    file.type === 'custom_template_item' ||
+    {return file.type === 'custom_template_item' ||
     file.type === 'sales_product' ||
-    file.type === 'service';
+    file.type === 'service'};
 
   const getFileIcon = (file: ProjectFile) => {
     if (file.type === 'custom_template_item') return <FileText className='h-4 w-4 mr-2' />;
@@ -310,12 +310,12 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
     // Check for inventory items with associated prices
     if (file.type === 'custom_template_item' && file.templateValues) {
       // Look for inventory item references in the template values
-      const inventoryFieldValue = file.templateValues.find((v) => v.inventoryItemId);
+      const inventoryFieldValue = file.templateValues.find((v) => {return v.inventoryItemId});
 
       if (inventoryFieldValue && inventoryFieldValue.inventoryItemId) {
         // Find the actual inventory item to get its price
         const inventoryItem = inventoryItems.find(
-          (item) => item.id === inventoryFieldValue.inventoryItemId,
+          (item) => {return item.id === inventoryFieldValue.inventoryItemId},
         );
         if (inventoryItem) {
           price = inventoryItem.price;
@@ -368,10 +368,10 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
     };
 
     // Add the item to the invoice
-    setInvoice((prev) => ({
+    setInvoice((prev) => {return {
       ...prev,
       items: [...prev.items, newInvoiceItem],
-    }));
+    }});
 
     // Calculate new totals
     calculateTotals([...invoice.items, newInvoiceItem]);
@@ -392,12 +392,12 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
     // First check if this file has inventory items with associated prices
     if (file.type === 'custom_template_item' && file.templateValues) {
       // Look for inventory item references in the template values
-      const inventoryFieldValue = file.templateValues.find((v) => v.inventoryItemId);
+      const inventoryFieldValue = file.templateValues.find((v) => {return v.inventoryItemId});
 
       if (inventoryFieldValue && inventoryFieldValue.inventoryItemId) {
         // Find the actual inventory item to get its price
         const inventoryItem = inventoryItems.find(
-          (item) => item.id === inventoryFieldValue.inventoryItemId,
+          (item) => {return item.id === inventoryFieldValue.inventoryItemId},
         );
         if (inventoryItem) {
           return inventoryItem.price;
@@ -432,14 +432,14 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
   const formatFileType = (type: string) => {
     return type
       .split('_')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .map((word) => {return word.charAt(0).toUpperCase() + word.slice(1)})
       .join(' ');
   };
 
   // Check if a file has an inventory price
   const hasInventoryPrice = (file: ProjectFile): boolean => {
     if (file.type === 'custom_template_item' && file.templateValues) {
-      const inventoryFieldValue = file.templateValues.find((v) => v.inventoryItemId);
+      const inventoryFieldValue = file.templateValues.find((v) => {return v.inventoryItemId});
       return !!inventoryFieldValue && !!inventoryFieldValue.inventoryItemId;
     }
     return false;
@@ -461,8 +461,8 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
     if (selectedViewFile?.templateId) {
       // Find the template in available templates from project files
       const template = projectFiles
-        .filter((file) => file.type === 'template')
-        .find((file) => file.id === selectedViewFile.templateId);
+        .filter((file) => {return file.type === 'template'})
+        .find((file) => {return file.id === selectedViewFile.templateId});
 
       // If template has fields, find the matching field
       if (template?.templateId) {
@@ -500,7 +500,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
     return projectFiles.filter((file) => {
       return (
         file.type === 'custom_template_item' &&
-        file.templateValues?.some((value) => value.inventoryItemId)
+        file.templateValues?.some((value) => {return value.inventoryItemId})
       );
     });
   };
@@ -591,7 +591,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                   <Input
                     id='invoice-number'
                     value={invoice.number}
-                    onChange={(e) => handleInvoiceFieldChange('number', e.target.value)}
+                    onChange={(e) => {return handleInvoiceFieldChange('number', e.target.value)}}
                   />
                 </div>
                 <div className='grid grid-cols-2 gap-2'>
@@ -601,7 +601,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                       id='invoice-date'
                       type='date'
                       value={invoice.date}
-                      onChange={(e) => handleInvoiceFieldChange('date', e.target.value)}
+                      onChange={(e) => {return handleInvoiceFieldChange('date', e.target.value)}}
                     />
                   </div>
                   <div>
@@ -610,7 +610,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                       id='invoice-due-date'
                       type='date'
                       value={invoice.dueDate}
-                      onChange={(e) => handleInvoiceFieldChange('dueDate', e.target.value)}
+                      onChange={(e) => {return handleInvoiceFieldChange('dueDate', e.target.value)}}
                     />
                   </div>
                 </div>
@@ -622,7 +622,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                   <Input
                     id='client-name'
                     value={invoice.clientName}
-                    onChange={(e) => handleInvoiceFieldChange('clientName', e.target.value)}
+                    onChange={(e) => {return handleInvoiceFieldChange('clientName', e.target.value)}}
                   />
                 </div>
                 <div>
@@ -631,7 +631,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                     id='client-email'
                     type='email'
                     value={invoice.clientEmail}
-                    onChange={(e) => handleInvoiceFieldChange('clientEmail', e.target.value)}
+                    onChange={(e) => {return handleInvoiceFieldChange('clientEmail', e.target.value)}}
                   />
                 </div>
               </div>
@@ -662,7 +662,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                             id='item-description'
                             value={newItem.description}
                             onChange={(e) =>
-                              setNewItem({ ...newItem, description: e.target.value })
+                              {return setNewItem({ ...newItem, description: e.target.value })}
                             }
                           />
                         </div>
@@ -675,7 +675,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                               min='1'
                               value={newItem.quantity}
                               onChange={(e) =>
-                                setNewItem({ ...newItem, quantity: Number(e.target.value) })
+                                {return setNewItem({ ...newItem, quantity: Number(e.target.value) })}
                               }
                             />
                           </div>
@@ -688,7 +688,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                               min='0'
                               value={newItem.unitPrice}
                               onChange={(e) =>
-                                setNewItem({ ...newItem, unitPrice: Number(e.target.value) })
+                                {return setNewItem({ ...newItem, unitPrice: Number(e.target.value) })}
                               }
                             />
                           </div>
@@ -703,7 +703,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                               max='100'
                               value={newItem.discount || 0}
                               onChange={(e) =>
-                                setNewItem({ ...newItem, discount: Number(e.target.value) })
+                                {return setNewItem({ ...newItem, discount: Number(e.target.value) })}
                               }
                             />
                           </div>
@@ -716,7 +716,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                               min='0'
                               value={newItem.taxRate || 0}
                               onChange={(e) =>
-                                setNewItem({ ...newItem, taxRate: Number(e.target.value) })
+                                {return setNewItem({ ...newItem, taxRate: Number(e.target.value) })}
                               }
                             />
                           </div>
@@ -735,11 +735,11 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                             <p className='text-center py-4 text-gray-500'>No products available</p>
                           ) : (
                             <div className='space-y-1'>
-                              {products.map((product) => (
+                              {products.map((product) => {return (
                                 <div
                                   key={product.id}
                                   className='flex justify-between items-center p-2 hover:bg-gray-100 rounded-md cursor-pointer'
-                                  onClick={() => handleAddProduct(product)}
+                                  onClick={() => {return handleAddProduct(product)}}
                                 >
                                   <div className='flex items-center'>
                                     <Package className='h-4 w-4 mr-2 text-gray-500' />
@@ -749,7 +749,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                                     ${parseFloat(product.price).toFixed(2)}
                                   </span>
                                 </div>
-                              ))}
+                              )})}
                             </div>
                           )}
                         </div>
@@ -763,11 +763,11 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                             </p>
                           ) : (
                             <div className='space-y-1'>
-                              {inventoryItems.map((item) => (
+                              {inventoryItems.map((item) => {return (
                                 <div
                                   key={item.id}
                                   className='flex justify-between items-center p-2 hover:bg-gray-100 rounded-md cursor-pointer'
-                                  onClick={() => handleAddInventoryItem(item)}
+                                  onClick={() => {return handleAddInventoryItem(item)}}
                                 >
                                   <div className='flex items-center'>
                                     <Package className='h-4 w-4 mr-2 text-gray-500' />
@@ -775,7 +775,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                                   </div>
                                   <span className='font-medium'>${item.price.toFixed(2)}</span>
                                 </div>
-                              ))}
+                              )})}
                             </div>
                           )}
                         </div>
@@ -809,7 +809,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                           <Button
                             variant='outline'
                             size='sm'
-                            onClick={() => setActiveTab('projectItems')}
+                            onClick={() => {return setActiveTab('projectItems')}}
                             className='mx-auto'
                           >
                             Select from Project Items
@@ -818,7 +818,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                       </TableCell>
                     </TableRow>
                   ) : (
-                    invoice.items.map((item) => (
+                    invoice.items.map((item) => {return (
                       <TableRow key={item.id}>
                         <TableCell className='font-medium'>{item.description}</TableCell>
                         <TableCell>
@@ -828,7 +828,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                             step='1'
                             value={item.quantity}
                             onChange={(e) =>
-                              handleUpdateItem(item.id, 'quantity', parseInt(e.target.value) || 1)
+                              {return handleUpdateItem(item.id, 'quantity', parseInt(e.target.value) || 1)}
                             }
                             className='w-16 h-8'
                           />
@@ -842,11 +842,11 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                               step='0.01'
                               value={item.unitPrice}
                               onChange={(e) =>
-                                handleUpdateItem(
+                                {return handleUpdateItem(
                                   item.id,
                                   'unitPrice',
                                   parseFloat(e.target.value) || 0,
-                                )
+                                )}
                               }
                               className='w-24 h-8'
                             />
@@ -860,11 +860,11 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                               max='100'
                               value={item.discount || 0}
                               onChange={(e) =>
-                                handleUpdateItem(
+                                {return handleUpdateItem(
                                   item.id,
                                   'discount',
                                   parseFloat(e.target.value) || 0,
-                                )
+                                )}
                               }
                               className='w-16 h-8 mr-1'
                             />
@@ -879,11 +879,11 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                               max='100'
                               value={item.taxRate || 0}
                               onChange={(e) =>
-                                handleUpdateItem(
+                                {return handleUpdateItem(
                                   item.id,
                                   'taxRate',
                                   parseFloat(e.target.value) || 0,
-                                )
+                                )}
                               }
                               className='w-16 h-8 mr-1'
                             />
@@ -895,14 +895,14 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                           <Button
                             variant='ghost'
                             size='sm'
-                            onClick={() => handleRemoveItem(item.id)}
+                            onClick={() => {return handleRemoveItem(item.id)}}
                             className='h-8 w-8 p-0'
                           >
                             <Trash2 className='h-4 w-4' />
                           </Button>
                         </TableCell>
                       </TableRow>
-                    ))
+                    )})
                   )}
                 </TableBody>
               </Table>
@@ -936,7 +936,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
               <Textarea
                 id='invoice-notes'
                 value={invoice.notes || ''}
-                onChange={(e) => handleInvoiceFieldChange('notes', e.target.value)}
+                onChange={(e) => {return handleInvoiceFieldChange('notes', e.target.value)}}
                 placeholder='Enter any notes for the client...'
                 className='h-20'
               />
@@ -948,7 +948,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
               <Textarea
                 id='invoice-terms'
                 value={invoice.terms || ''}
-                onChange={(e) => handleInvoiceFieldChange('terms', e.target.value)}
+                onChange={(e) => {return handleInvoiceFieldChange('terms', e.target.value)}}
                 placeholder='Enter your terms and conditions...'
                 className='h-20'
               />
@@ -974,11 +974,11 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                   </TableHeader>
                   <TableBody>
                     {projectFiles.length > 0 ? (
-                      projectFiles.filter(isProjectFile).map((file) => (
+                      projectFiles.filter(isProjectFile).map((file) => {return (
                         <TableRow
                           key={file.id}
                           className='cursor-pointer hover:bg-muted/50'
-                          onClick={() => handleViewProjectItem(file)}
+                          onClick={() => {return handleViewProjectItem(file)}}
                         >
                           <TableCell className='font-medium'>
                             <div className='flex items-center gap-2'>
@@ -1023,7 +1023,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                             </Button>
                           </TableCell>
                         </TableRow>
-                      ))
+                      )})
                     ) : (
                       <TableRow>
                         <TableCell colSpan={5} className='text-center py-6 text-muted-foreground'>
@@ -1036,7 +1036,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
               </div>
 
               <div className='flex justify-between mt-4'>
-                <Button variant='outline' onClick={() => setActiveTab('invoice')}>
+                <Button variant='outline' onClick={() => {return setActiveTab('invoice')}}>
                   Back to Invoice
                 </Button>
               </div>
@@ -1113,7 +1113,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                   </TableHeader>
                   <TableBody>
                     {getProductionItems().length > 0 ? (
-                      getProductionItems().map((item) => (
+                      getProductionItems().map((item) => {return (
                         <TableRow key={item.id}>
                           <TableCell className='font-medium'>
                             <div className='flex items-center gap-2'>
@@ -1131,7 +1131,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                               <Select
                                 defaultValue={item.status || 'awaiting_approval'}
                                 onValueChange={(value) =>
-                                  handleUpdateProductionStatus(item.id, value)
+                                  {return handleUpdateProductionStatus(item.id, value)}
                                 }
                               >
                                 <SelectTrigger className='w-[140px] h-8'>
@@ -1146,7 +1146,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                               <Button
                                 variant='outline'
                                 size='sm'
-                                onClick={() => handleAddProjectItem(item)}
+                                onClick={() => {return handleAddProjectItem(item)}}
                                 className='h-8'
                                 title='Add to invoice'
                               >
@@ -1155,7 +1155,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                             </div>
                           </TableCell>
                         </TableRow>
-                      ))
+                      )})
                     ) : (
                       <TableRow>
                         <TableCell colSpan={5} className='text-center py-6 text-muted-foreground'>
@@ -1169,7 +1169,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
               </div>
 
               <div className='flex justify-between mt-4'>
-                <Button variant='outline' onClick={() => setActiveTab('invoice')}>
+                <Button variant='outline' onClick={() => {return setActiveTab('invoice')}}>
                   Back to Invoice
                 </Button>
               </div>
@@ -1189,7 +1189,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
 
       {/* File Details Dialog */}
       {selectedViewFile && (
-        <Dialog open={!!selectedViewFile} onOpenChange={() => setSelectedViewFile(null)}>
+        <Dialog open={!!selectedViewFile} onOpenChange={() => {return setSelectedViewFile(null)}}>
           <DialogContent className='sm:max-w-[700px] max-h-[90vh] overflow-auto'>
             <DialogHeader>
               <DialogTitle className='flex items-center gap-2'>
@@ -1261,7 +1261,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                 <div className='mt-4'>
                   <h4 className='font-medium mb-2'>Template Values:</h4>
                   <div className='border rounded-md p-3 space-y-2'>
-                    {selectedViewFile.templateValues.map((value, index) => (
+                    {selectedViewFile.templateValues.map((value, index) => {return (
                       <div key={index} className='grid grid-cols-[120px_1fr] gap-2'>
                         <div className='font-medium text-sm'>
                           {getFieldNameById(value.fieldId)}:
@@ -1279,7 +1279,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                           )}
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 </div>
               )}
@@ -1296,7 +1296,7 @@ const InvoiceCreatorModal: React.FC<InvoiceCreatorModalProps> = ({
                 <Plus className='h-4 w-4 mr-1' />
                 Add to Invoice
               </Button>
-              <Button variant='outline' onClick={() => setSelectedViewFile(null)}>
+              <Button variant='outline' onClick={() => {return setSelectedViewFile(null)}}>
                 Close
               </Button>
             </DialogFooter>

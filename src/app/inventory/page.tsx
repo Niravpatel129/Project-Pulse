@@ -183,7 +183,7 @@ export default function InventoryPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Get unique categories for filter
-  const categories = [...new Set(inventory.map((item) => item.category))];
+  const categories = [...new Set(inventory.map((item) => {return item.category}))];
 
   // Function to handle column sorting
   const handleSort = (column: string) => {
@@ -230,7 +230,7 @@ export default function InventoryPage() {
 
   // Function to handle inventory item deletion
   const handleDeleteItem = (itemId: number) => {
-    setInventory(inventory.filter((item) => item.id !== itemId));
+    setInventory(inventory.filter((item) => {return item.id !== itemId}));
   };
 
   // Function to render item status badge
@@ -264,12 +264,12 @@ export default function InventoryPage() {
   };
 
   // Helper for column header with sorting
-  const SortableColumnHeader = ({ column, label }: { column: string; label: string }) => (
-    <div className='flex items-center cursor-pointer' onClick={() => handleSort(column)}>
+  const SortableColumnHeader = ({ column, label }: { column: string; label: string }) => {return (
+    <div className='flex items-center cursor-pointer' onClick={() => {return handleSort(column)}}>
       {label}
       <ArrowUpDown className='ml-2 h-4 w-4' />
     </div>
-  );
+  )};
 
   // Calculate profit margin for an item
   const calculateProfitMargin = (price: number, cost: number) => {
@@ -312,7 +312,7 @@ export default function InventoryPage() {
             placeholder='Search inventory...'
             className='pl-8'
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {return setSearchQuery(e.target.value)}}
           />
         </div>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -323,11 +323,11 @@ export default function InventoryPage() {
             <SelectGroup>
               <SelectLabel>Category</SelectLabel>
               <SelectItem value='all'>All Categories</SelectItem>
-              {categories.map((category) => (
+              {categories.map((category) => {return (
                 <SelectItem key={category} value={category}>
                   {category}
                 </SelectItem>
-              ))}
+              )})}
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -381,7 +381,7 @@ export default function InventoryPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedInventory.map((item) => (
+              {sortedInventory.map((item) => {return (
                 <TableRow key={item.id}>
                   <TableCell className='font-medium'>
                     <Link
@@ -431,7 +431,7 @@ export default function InventoryPage() {
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => handleDeleteItem(item.id)}
+                          onClick={() => {return handleDeleteItem(item.id)}}
                           className='text-destructive focus:text-destructive'
                         >
                           Delete Item
@@ -440,7 +440,7 @@ export default function InventoryPage() {
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))}
+              )})}
             </TableBody>
           </Table>
         </div>

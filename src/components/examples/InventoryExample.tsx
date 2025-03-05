@@ -76,16 +76,16 @@ export function InventoryExample() {
                 <p className='text-muted-foreground'>No categories found</p>
               ) : (
                 <div className='flex flex-wrap gap-2'>
-                  {categories.map((category) => (
+                  {categories.map((category) => {return (
                     <Button
                       key={category.id}
                       variant='outline'
                       size='sm'
-                      onClick={() => handleFilterByCategory(category.id)}
+                      onClick={() => {return handleFilterByCategory(category.id)}}
                     >
                       {category.name}
                     </Button>
-                  ))}
+                  )})}
                 </div>
               )}
             </div>
@@ -96,7 +96,7 @@ export function InventoryExample() {
                 <p className='text-muted-foreground'>No items found</p>
               ) : (
                 <ul className='space-y-2'>
-                  {items.map((item) => (
+                  {items.map((item) => {return (
                     <li key={item.id} className='p-3 border rounded-md'>
                       <div className='flex justify-between items-center'>
                         <div>
@@ -112,14 +112,14 @@ export function InventoryExample() {
                           <Button
                             variant='destructive'
                             size='sm'
-                            onClick={() => deleteItem(item.id)}
+                            onClick={() => {return deleteItem(item.id)}}
                           >
                             Delete
                           </Button>
                         </div>
                       </div>
                     </li>
-                  ))}
+                  )})}
                 </ul>
               )}
             </div>

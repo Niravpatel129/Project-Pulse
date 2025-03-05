@@ -99,13 +99,13 @@ export function InvoicesExample() {
       <CardContent>
         <div className='flex gap-2 mb-4'>
           <Button onClick={handleCreateInvoice}>Create Invoice</Button>
-          <Button variant='outline' onClick={() => handleFilterByStatus('draft')}>
+          <Button variant='outline' onClick={() => {return handleFilterByStatus('draft')}}>
             Show Drafts
           </Button>
-          <Button variant='outline' onClick={() => handleFilterByStatus('sent')}>
+          <Button variant='outline' onClick={() => {return handleFilterByStatus('sent')}}>
             Show Sent
           </Button>
-          <Button variant='outline' onClick={() => handleFilterByStatus('paid')}>
+          <Button variant='outline' onClick={() => {return handleFilterByStatus('paid')}}>
             Show Paid
           </Button>
           <Button variant='outline' onClick={handleClearFilters}>
@@ -122,7 +122,7 @@ export function InvoicesExample() {
               <p className='text-muted-foreground'>No invoices found</p>
             ) : (
               <ul className='space-y-2'>
-                {invoices.map((invoice) => (
+                {invoices.map((invoice) => {return (
                   <li key={invoice.id} className='p-3 border rounded-md'>
                     <div className='flex justify-between items-center'>
                       <div>
@@ -142,7 +142,7 @@ export function InvoicesExample() {
                           <Button
                             variant='outline'
                             size='sm'
-                            onClick={() => markAsPaid(invoice.id)}
+                            onClick={() => {return markAsPaid(invoice.id)}}
                           >
                             Mark as Paid
                           </Button>
@@ -150,14 +150,14 @@ export function InvoicesExample() {
                         <Button
                           variant='destructive'
                           size='sm'
-                          onClick={() => deleteInvoice(invoice.id)}
+                          onClick={() => {return deleteInvoice(invoice.id)}}
                         >
                           Delete
                         </Button>
                       </div>
                     </div>
                   </li>
-                ))}
+                )})}
               </ul>
             )}
           </div>

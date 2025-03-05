@@ -84,7 +84,7 @@ export const InvoicesProvider: React.FC<InvoicesProviderProps> = ({ children }) 
       const newInvoice = await services.invoices.createInvoice(
         invoice as Omit<Invoice, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>,
       );
-      setInvoices((prev) => [...prev, newInvoice]);
+      setInvoices((prev) => {return [...prev, newInvoice]});
       return newInvoice;
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to create invoice'));
@@ -101,7 +101,7 @@ export const InvoicesProvider: React.FC<InvoicesProviderProps> = ({ children }) 
 
     try {
       const updatedInvoice = await services.invoices.updateInvoice(id, updates);
-      setInvoices((prev) => prev.map((invoice) => (invoice.id === id ? updatedInvoice : invoice)));
+      setInvoices((prev) => {return prev.map((invoice) => {return (invoice.id === id ? updatedInvoice : invoice)})});
 
       if (currentInvoice?.id === id) {
         setCurrentInvoice(updatedInvoice);
@@ -125,7 +125,7 @@ export const InvoicesProvider: React.FC<InvoicesProviderProps> = ({ children }) 
       const result = await services.invoices.deleteInvoice(id);
 
       if (result.success) {
-        setInvoices((prev) => prev.filter((invoice) => invoice.id !== id));
+        setInvoices((prev) => {return prev.filter((invoice) => {return invoice.id !== id})});
         if (currentInvoice?.id === id) {
           setCurrentInvoice(null);
         }
@@ -153,7 +153,7 @@ export const InvoicesProvider: React.FC<InvoicesProviderProps> = ({ children }) 
         'bank_transfer',
       );
 
-      setInvoices((prev) => prev.map((invoice) => (invoice.id === id ? updatedInvoice : invoice)));
+      setInvoices((prev) => {return prev.map((invoice) => {return (invoice.id === id ? updatedInvoice : invoice)})});
 
       if (currentInvoice?.id === id) {
         setCurrentInvoice(updatedInvoice);

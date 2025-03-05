@@ -65,9 +65,9 @@ const InventoryReportModal: React.FC<InventoryReportModalProps> = ({
 
   // Calculate summary stats
   const totalItems = inventoryItems.length;
-  const lowStockItems = inventoryItems.filter((item) => item.stock < 10).length;
-  const outOfStockItems = inventoryItems.filter((item) => item.stock <= 0).length;
-  const itemsWithUsage = usageReports.filter((report) => report.usageCount > 0).length;
+  const lowStockItems = inventoryItems.filter((item) => {return item.stock < 10}).length;
+  const outOfStockItems = inventoryItems.filter((item) => {return item.stock <= 0}).length;
+  const itemsWithUsage = usageReports.filter((report) => {return report.usageCount > 0}).length;
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -111,21 +111,21 @@ const InventoryReportModal: React.FC<InventoryReportModalProps> = ({
             <Button
               variant={filter === 'all' ? 'default' : 'outline'}
               size='sm'
-              onClick={() => setFilter('all')}
+              onClick={() => {return setFilter('all')}}
             >
               All Items
             </Button>
             <Button
               variant={filter === 'low' ? 'default' : 'outline'}
               size='sm'
-              onClick={() => setFilter('low')}
+              onClick={() => {return setFilter('low')}}
             >
               Low Stock
             </Button>
             <Button
               variant={filter === 'used' ? 'default' : 'outline'}
               size='sm'
-              onClick={() => setFilter('used')}
+              onClick={() => {return setFilter('used')}}
             >
               Used Items
             </Button>
@@ -156,7 +156,7 @@ const InventoryReportModal: React.FC<InventoryReportModalProps> = ({
               </TableHeader>
               <TableBody>
                 {filteredItems.length > 0 ? (
-                  filteredItems.map((report) => (
+                  filteredItems.map((report) => {return (
                     <TableRow key={report.item.id}>
                       <TableCell className='font-medium'>
                         <div className='flex items-center gap-2'>
@@ -207,7 +207,7 @@ const InventoryReportModal: React.FC<InventoryReportModalProps> = ({
                         </span>
                       </TableCell>
                     </TableRow>
-                  ))
+                  )})
                 ) : (
                   <TableRow>
                     <TableCell colSpan={6} className='text-center py-6 text-muted-foreground'>

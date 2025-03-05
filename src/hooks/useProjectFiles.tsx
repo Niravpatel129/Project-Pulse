@@ -183,10 +183,10 @@ export function useProjectFiles() {
 
   const handleUpdateInvoice = (updatedInvoice: Invoice) => {
     // Update invoice in the invoices list
-    setInvoices(invoices.map((inv) => (inv.id === updatedInvoice.id ? updatedInvoice : inv)));
+    setInvoices(invoices.map((inv) => {return (inv.id === updatedInvoice.id ? updatedInvoice : inv)}));
 
     // Update the project file entry
-    const fileToUpdate = files.find((f) => f.id === `file-${updatedInvoice.id}`);
+    const fileToUpdate = files.find((f) => {return f.id === `file-${updatedInvoice.id}`});
     if (fileToUpdate) {
       const updatedFile: ProjectFile = {
         ...fileToUpdate,
@@ -196,13 +196,13 @@ export function useProjectFiles() {
         emailSent: updatedInvoice.status !== 'draft',
       };
 
-      setFiles(files.map((f) => (f.id === updatedFile.id ? updatedFile : f)));
+      setFiles(files.map((f) => {return (f.id === updatedFile.id ? updatedFile : f)}));
     }
   };
 
   const handleSendInvoice = (invoiceId: string) => {
     // Update invoice status
-    const invoiceToUpdate = invoices.find((inv) => inv.id === invoiceId);
+    const invoiceToUpdate = invoices.find((inv) => {return inv.id === invoiceId});
     if (invoiceToUpdate) {
       const updatedInvoice: Invoice = {
         ...invoiceToUpdate,
@@ -214,7 +214,7 @@ export function useProjectFiles() {
   };
 
   const handleMarkInvoiceAsPaid = (invoiceId: string) => {
-    const invoiceToUpdate = invoices.find((inv) => inv.id === invoiceId);
+    const invoiceToUpdate = invoices.find((inv) => {return inv.id === invoiceId});
     if (invoiceToUpdate) {
       const updatedInvoice: Invoice = {
         ...invoiceToUpdate,
@@ -227,33 +227,33 @@ export function useProjectFiles() {
   };
 
   const getInvoiceById = (id: string) => {
-    return invoices.find((inv) => inv.id === id);
+    return invoices.find((inv) => {return inv.id === id});
   };
 
   const handleDeleteInvoice = (invoiceId: string) => {
     // Remove from invoices array
-    setInvoices(invoices.filter((inv) => inv.id !== invoiceId));
+    setInvoices(invoices.filter((inv) => {return inv.id !== invoiceId}));
 
     // Remove associated project file
-    setFiles(files.filter((f) => f.id !== `file-${invoiceId}`));
+    setFiles(files.filter((f) => {return f.id !== `file-${invoiceId}`}));
   };
 
   // Logic functions
   const handleAddFile = () => {
     // Generate a simple ID (would use a proper UUID in production)
-    const newId = (Math.max(...files.map((f) => parseInt(f.id))) + 1).toString();
+    const newId = (Math.max(...files.map((f) => {return parseInt(f.id)})) + 1).toString();
 
     // Get the name from the input - if not provided, use a generic name
     const itemName = document.getElementById('item-name') as HTMLInputElement;
     const itemDescription = document.getElementById('description') as HTMLTextAreaElement;
 
-    const newAttachments: Attachment[] = uploadedFiles.map((file, index) => ({
+    const newAttachments: Attachment[] = uploadedFiles.map((file, index) => {return {
       id: `a-${newId}-${index}`,
       name: file.name,
       size: `${Math.round(file.size / 1024)} KB`,
       type: file.name.split('.').pop() || 'unknown',
       url: '#', // Would be a real URL in production
-    }));
+    }});
 
     const newFile: ProjectFile = {
       id: newId,
@@ -262,7 +262,7 @@ export function useProjectFiles() {
       dateUploaded: new Date().toISOString().split('T')[0],
       size:
         uploadedFiles.length > 0
-          ? `${Math.round(uploadedFiles.reduce((total, file) => total + file.size, 0) / 1024)} KB`
+          ? `${Math.round(uploadedFiles.reduce((total, file) => {return total + file.size}, 0) / 1024)} KB`
           : '0.1 MB',
       status: 'active',
       uploadedBy: 'Current User',
@@ -284,15 +284,15 @@ export function useProjectFiles() {
       const searchLower = search.toLowerCase();
       filtered = filtered.filter(
         (file) =>
-          file.name.toLowerCase().includes(searchLower) ||
+          {return file.name.toLowerCase().includes(searchLower) ||
           file.type.toLowerCase().includes(searchLower) ||
-          file.uploadedBy.toLowerCase().includes(searchLower),
+          file.uploadedBy.toLowerCase().includes(searchLower)},
       );
     }
 
     // Filter by tab
     if (activeTab !== 'all') {
-      filtered = filtered.filter((file) => file.type === activeTab);
+      filtered = filtered.filter((file) => {return file.type === activeTab});
     }
 
     return filtered;
@@ -319,7 +319,7 @@ export function useProjectFiles() {
       comments: [...selectedFile.comments, newComment],
     };
 
-    setFiles(files.map((file) => (file.id === selectedFile.id ? updatedFile : file)));
+    setFiles(files.map((file) => {return (file.id === selectedFile.id ? updatedFile : file)}));
     setSelectedFile(updatedFile);
     setCommentText('');
   };
@@ -336,7 +336,7 @@ export function useProjectFiles() {
       needsApproval: requestApproval,
     };
     setFiles(
-      files.map((file) => (file.id === selectedFile.id ? (updatedFile as ProjectFile) : file)),
+      files.map((file) => {return (file.id === selectedFile.id ? (updatedFile as ProjectFile) : file)}),
     );
     setSelectedFile(updatedFile as ProjectFile);
     setShowSendEmailDialog(false);
@@ -365,7 +365,7 @@ export function useProjectFiles() {
 
     updatedFile.comments = [...updatedFile.comments, newComment];
 
-    setFiles(files.map((file) => (file.id === selectedFile.id ? updatedFile : file)));
+    setFiles(files.map((file) => {return (file.id === selectedFile.id ? updatedFile : file)}));
     setSelectedFile(updatedFile);
   };
 
@@ -379,17 +379,17 @@ export function useProjectFiles() {
     if (uploadedFiles.length === 0) return;
 
     // Find the file item to add attachments to
-    const fileItemToUpdate = files.find((f) => f.id === fileItemId);
+    const fileItemToUpdate = files.find((f) => {return f.id === fileItemId});
     if (!fileItemToUpdate) return;
 
     // Create new attachments from the uploaded files
-    const newAttachments: Attachment[] = uploadedFiles.map((file, index) => ({
+    const newAttachments: Attachment[] = uploadedFiles.map((file, index) => {return {
       id: `a-${fileItemId}-${Date.now()}-${index}`,
       name: file.name,
       size: `${Math.round(file.size / 1024)} KB`,
       type: file.name.split('.').pop() || 'unknown',
       url: '#', // Would be a real URL in production
-    }));
+    }});
 
     // Update the file item with new attachments
     const updatedFileItem = {
@@ -397,12 +397,12 @@ export function useProjectFiles() {
       attachments: [...fileItemToUpdate.attachments, ...newAttachments],
       size: `${Math.round(
         parseInt(fileItemToUpdate.size) +
-          uploadedFiles.reduce((total, file) => total + file.size, 0) / 1024,
+          uploadedFiles.reduce((total, file) => {return total + file.size}, 0) / 1024,
       )} KB`,
     };
 
     // Update files array
-    setFiles(files.map((f) => (f.id === fileItemId ? updatedFileItem : f)));
+    setFiles(files.map((f) => {return (f.id === fileItemId ? updatedFileItem : f)}));
 
     // If this is the currently selected file, update it
     if (selectedFile && selectedFile.id === fileItemId) {
@@ -424,7 +424,7 @@ export function useProjectFiles() {
     },
   ) => {
     // Find the file item to add product to
-    const fileItemToUpdate = files.find((f) => f.id === fileItemId);
+    const fileItemToUpdate = files.find((f) => {return f.id === fileItemId});
     if (!fileItemToUpdate) return;
 
     let productToAdd: Product;
@@ -444,7 +444,7 @@ export function useProjectFiles() {
       setProducts([...products, productToAdd]);
     } else if (!productData.isNew && productData.id) {
       // Use existing product
-      const existingProduct = products.find((p) => p.id === productData.id);
+      const existingProduct = products.find((p) => {return p.id === productData.id});
       if (!existingProduct) return;
       productToAdd = existingProduct;
     } else {
@@ -460,7 +460,7 @@ export function useProjectFiles() {
     };
 
     // Update files array
-    setFiles(files.map((f) => (f.id === fileItemId ? updatedFileItem : f)));
+    setFiles(files.map((f) => {return (f.id === fileItemId ? updatedFileItem : f)}));
 
     // If this is the currently selected file, update it
     if (selectedFile && selectedFile.id === fileItemId) {
@@ -472,7 +472,7 @@ export function useProjectFiles() {
     if (!selectedFile || !variationName.trim()) return;
 
     // Create a new variation by copying the file with a new name
-    const newId = (Math.max(...files.map((f) => parseInt(f.id))) + 1).toString();
+    const newId = (Math.max(...files.map((f) => {return parseInt(f.id)})) + 1).toString();
 
     const newFile: ProjectFile = {
       ...selectedFile,
@@ -492,7 +492,7 @@ export function useProjectFiles() {
   // Template related functions
   const handleCreateTemplate = (template: Template) => {
     // Add the new template to the templates array
-    setTemplates((prevTemplates) => [...prevTemplates, template]);
+    setTemplates((prevTemplates) => {return [...prevTemplates, template]});
 
     // Also add a corresponding template file to the files array
     const templateFile: ProjectFile = {
@@ -508,12 +508,12 @@ export function useProjectFiles() {
       description: template.description || `Template for ${template.name}`,
     };
 
-    setFiles((prevFiles) => [...prevFiles, templateFile]);
+    setFiles((prevFiles) => {return [...prevFiles, templateFile]});
   };
 
   const handleAddTemplateItem = (item: ProjectFile) => {
     // Add the new template item to the files array
-    setFiles((prevFiles) => [...prevFiles, item]);
+    setFiles((prevFiles) => {return [...prevFiles, item]});
 
     // If this is for a selected file, add it as a related item
     if (selectedFile) {
@@ -528,18 +528,18 @@ export function useProjectFiles() {
 
       // Also update the file in the files array
       setFiles((prevFiles) =>
-        prevFiles.map((file) => (file.id === selectedFile.id ? updatedSelectedFile : file)),
+        {return prevFiles.map((file) => {return (file.id === selectedFile.id ? updatedSelectedFile : file)})},
       );
     }
   };
 
   const handleDeleteTemplateItem = (fileId: string, templateItemId: string) => {
     // First, remove the template item from the parent file's templateItems array
-    const fileToUpdate = files.find((f) => f.id === fileId);
+    const fileToUpdate = files.find((f) => {return f.id === fileId});
 
     if (fileToUpdate && fileToUpdate.templateItems) {
       const updatedTemplateItems = fileToUpdate.templateItems.filter(
-        (item) => item.id !== templateItemId,
+        (item) => {return item.id !== templateItemId},
       );
 
       const updatedFile = {
@@ -548,7 +548,7 @@ export function useProjectFiles() {
       };
 
       // Update the file in the files array
-      setFiles((prevFiles) => prevFiles.map((file) => (file.id === fileId ? updatedFile : file)));
+      setFiles((prevFiles) => {return prevFiles.map((file) => {return (file.id === fileId ? updatedFile : file)})});
 
       // If this is the currently selected file, update it too
       if (selectedFile && selectedFile.id === fileId) {
@@ -557,7 +557,7 @@ export function useProjectFiles() {
     }
 
     // Also remove the template item from the files array if it exists there
-    setFiles((prevFiles) => prevFiles.filter((file) => file.id !== templateItemId));
+    setFiles((prevFiles) => {return prevFiles.filter((file) => {return file.id !== templateItemId})});
   };
 
   const handleUpdateTemplateItem = (updatedItem: ProjectFile) => {
@@ -565,15 +565,15 @@ export function useProjectFiles() {
     const itemId = updatedItem.id;
 
     // First, update the item in the files array
-    setFiles((prevFiles) => prevFiles.map((file) => (file.id === itemId ? updatedItem : file)));
+    setFiles((prevFiles) => {return prevFiles.map((file) => {return (file.id === itemId ? updatedItem : file)})});
 
     // Then, update the item in any parent file's templateItems array
     setFiles((prevFiles) =>
-      prevFiles.map((file) => {
-        if (file.templateItems && file.templateItems.some((item) => item.id === itemId)) {
+      {return prevFiles.map((file) => {
+        if (file.templateItems && file.templateItems.some((item) => {return item.id === itemId})) {
           // Replace the template item in the parent's templateItems array
           const updatedTemplateItems = file.templateItems.map((item) =>
-            item.id === itemId ? updatedItem : item,
+            {return item.id === itemId ? updatedItem : item},
           );
 
           return {
@@ -582,7 +582,7 @@ export function useProjectFiles() {
           };
         }
         return file;
-      }),
+      })},
     );
 
     // If this is the currently selected file or a template item of the selected file, update it
@@ -592,11 +592,11 @@ export function useProjectFiles() {
         setSelectedFile(updatedItem);
       } else if (
         selectedFile.templateItems &&
-        selectedFile.templateItems.some((item) => item.id === itemId)
+        selectedFile.templateItems.some((item) => {return item.id === itemId})
       ) {
         // The updated item is in the selected file's templateItems
         const updatedTemplateItems = selectedFile.templateItems.map((item) =>
-          item.id === itemId ? updatedItem : item,
+          {return item.id === itemId ? updatedItem : item},
         );
 
         setSelectedFile({
@@ -610,12 +610,12 @@ export function useProjectFiles() {
   // Handle restoring a template item to a previous version
   const handleRestoreTemplateItemVersion = (itemId: string, versionId: string) => {
     // Find the template item
-    const templateItem = files.find((file) => file.id === itemId);
+    const templateItem = files.find((file) => {return file.id === itemId});
 
     if (!templateItem || !templateItem.versions) return;
 
     // Find the specific version
-    const version = templateItem.versions.find((v) => v.id === versionId);
+    const version = templateItem.versions.find((v) => {return v.id === versionId});
     if (!version || !version.data) return;
 
     // Create a new version for the current state before restoring
@@ -655,11 +655,11 @@ export function useProjectFiles() {
     if (!categoryId) {
       return inventoryItems;
     }
-    return inventoryItems.filter((item) => item.category === categoryId);
+    return inventoryItems.filter((item) => {return item.category === categoryId});
   };
 
   const getInventoryItemById = (itemId: string) => {
-    return inventoryItems.find((item) => item.id === itemId) || null;
+    return inventoryItems.find((item) => {return item.id === itemId}) || null;
   };
 
   const handleViewInventoryItem = (itemId: string) => {
@@ -683,7 +683,7 @@ export function useProjectFiles() {
           stock: newStock,
           lastUpdated: new Date().toISOString(),
         };
-      } else if (item.variants && item.variants.some((v) => v.id === itemId)) {
+      } else if (item.variants && item.variants.some((v) => {return v.id === itemId})) {
         // It's a variant within this item
         const updatedVariants = item.variants.map((variant) => {
           if (variant.id === itemId) {
@@ -708,13 +708,13 @@ export function useProjectFiles() {
     setInventoryItems(updatedItems);
 
     // Find and return the updated item or variant
-    const mainItem = updatedItems.find((item) => item.id === itemId);
+    const mainItem = updatedItems.find((item) => {return item.id === itemId});
     if (mainItem) return mainItem as unknown as InventoryItem;
 
     // Look for variant
     for (const item of updatedItems) {
       if (item.variants) {
-        const variant = item.variants.find((v) => v.id === itemId);
+        const variant = item.variants.find((v) => {return v.id === itemId});
         if (variant) return variant as unknown as InventoryItem;
       }
     }
@@ -814,7 +814,7 @@ export function useProjectFiles() {
       const updatedFiles = files.map((file) => {
         // Check if this file has the template item
         const templateItemIndex = file.templateItems?.findIndex(
-          (item) => item.id === templateItemId,
+          (item) => {return item.id === templateItemId},
         );
 
         if (templateItemIndex !== undefined && templateItemIndex >= 0 && file.templateItems) {

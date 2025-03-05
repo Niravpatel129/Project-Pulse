@@ -61,10 +61,10 @@ const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
       };
 
       // Set previous current version to false
-      const updatedVersions = versions.map((v) => ({
+      const updatedVersions = versions.map((v) => {return {
         ...v,
         isCurrent: false,
-      }));
+      }});
 
       setVersions([...updatedVersions, newVersion]);
       setShowUploadForm(false);
@@ -78,10 +78,10 @@ const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
       onVersionRestore(versionId);
 
       // Mock updating the versions (in a real app this would be handled by the server)
-      const updatedVersions = versions.map((v) => ({
+      const updatedVersions = versions.map((v) => {return {
         ...v,
         isCurrent: v.versionId === versionId,
-      }));
+      }});
 
       setVersions(updatedVersions);
     }
@@ -115,13 +115,13 @@ const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
               variant='outline'
               size='sm'
               className='flex items-center gap-1'
-              onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+              onClick={() => {return setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}}
             >
               <ArrowDownUp className='h-4 w-4' />
               {sortOrder === 'desc' ? 'Newest first' : 'Oldest first'}
             </Button>
             <Button
-              onClick={() => setShowUploadForm(!showUploadForm)}
+              onClick={() => {return setShowUploadForm(!showUploadForm)}}
               size='sm'
               className='flex items-center gap-1'
             >
@@ -143,12 +143,12 @@ const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
                   id='change-description'
                   placeholder='Describe what changed in this version...'
                   value={changeDescription}
-                  onChange={(e) => setChangeDescription(e.target.value)}
+                  onChange={(e) => {return setChangeDescription(e.target.value)}}
                   rows={2}
                 />
               </div>
               <div className='flex justify-end gap-2 mt-3'>
-                <Button variant='outline' size='sm' onClick={() => setShowUploadForm(false)}>
+                <Button variant='outline' size='sm' onClick={() => {return setShowUploadForm(false)}}>
                   Cancel
                 </Button>
                 <Button
@@ -164,7 +164,7 @@ const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
 
           <div className='space-y-2'>
             {sortedVersions.length > 0 ? (
-              sortedVersions.map((version) => (
+              sortedVersions.map((version) => {return (
                 <div
                   key={version.versionId}
                   className={`border rounded-md p-3 ${
@@ -194,7 +194,7 @@ const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
                       variant='outline'
                       size='sm'
                       className='flex items-center gap-1'
-                      onClick={() => handleDownloadVersion(version.versionId)}
+                      onClick={() => {return handleDownloadVersion(version.versionId)}}
                     >
                       <Download className='h-3.5 w-3.5' />
                       Download
@@ -203,14 +203,14 @@ const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
                       <Button
                         size='sm'
                         variant='secondary'
-                        onClick={() => handleRestoreVersion(version.versionId)}
+                        onClick={() => {return handleRestoreVersion(version.versionId)}}
                       >
                         Set as Current
                       </Button>
                     )}
                   </div>
                 </div>
-              ))
+              )})
             ) : (
               <div className='text-center py-6 text-muted-foreground'>
                 <p>No version history available for this file.</p>

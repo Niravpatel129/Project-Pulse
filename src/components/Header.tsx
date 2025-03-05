@@ -116,7 +116,7 @@ export default function Header() {
                           {user?.name
                             ? user.name
                                 .split(' ')
-                                .map((n) => n[0])
+                                .map((n) => {return n[0]})
                                 .join('')
                                 .toUpperCase()
                             : '?'}

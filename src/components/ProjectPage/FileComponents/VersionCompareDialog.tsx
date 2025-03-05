@@ -98,7 +98,7 @@ const VersionCompareDialog: React.FC<VersionCompareDialogProps> = ({
       <DialogFooter>
         <Button
           variant='outline'
-          onClick={() => compareVersions.older && handleRevertToVersion(compareVersions.older)}
+          onClick={() => {return compareVersions.older && handleRevertToVersion(compareVersions.older)}}
           disabled={!compareVersions.older}
         >
           <RotateCcw className='h-4 w-4 mr-1' />

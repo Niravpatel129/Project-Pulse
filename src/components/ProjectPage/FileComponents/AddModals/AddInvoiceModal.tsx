@@ -125,7 +125,7 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({ selectedFile, onClose
 
   const calculateTotal = () => {
     return invoice.lineItems
-      .reduce((total, item) => total + (parseFloat(item.amount) || 0), 0)
+      .reduce((total, item) => {return total + (parseFloat(item.amount) || 0)}, 0)
       .toFixed(2);
   };
 
@@ -168,24 +168,24 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({ selectedFile, onClose
               <Input
                 id='invoice-number'
                 value={invoice.number}
-                onChange={(e) => setInvoice({ ...invoice, number: e.target.value })}
+                onChange={(e) => {return setInvoice({ ...invoice, number: e.target.value })}}
               />
             </div>
             <div className='space-y-2'>
               <Label htmlFor='invoice-status'>Status</Label>
               <Select
                 value={invoice.status}
-                onValueChange={(value) => setInvoice({ ...invoice, status: value })}
+                onValueChange={(value) => {return setInvoice({ ...invoice, status: value })}}
               >
                 <SelectTrigger id='invoice-status'>
                   <SelectValue placeholder='Select status' />
                 </SelectTrigger>
                 <SelectContent>
-                  {invoiceStatuses.map((status) => (
+                  {invoiceStatuses.map((status) => {return (
                     <SelectItem key={status.value} value={status.value}>
                       {status.label}
                     </SelectItem>
-                  ))}
+                  )})}
                 </SelectContent>
               </Select>
             </div>
@@ -199,7 +199,7 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({ selectedFile, onClose
                 <Input
                   id='client-name'
                   value={invoice.clientName}
-                  onChange={(e) => setInvoice({ ...invoice, clientName: e.target.value })}
+                  onChange={(e) => {return setInvoice({ ...invoice, clientName: e.target.value })}}
                   placeholder='Client or Company Name'
                 />
               </div>
@@ -208,7 +208,7 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({ selectedFile, onClose
                 <Input
                   id='client-email'
                   value={invoice.clientEmail}
-                  onChange={(e) => setInvoice({ ...invoice, clientEmail: e.target.value })}
+                  onChange={(e) => {return setInvoice({ ...invoice, clientEmail: e.target.value })}}
                   placeholder='client@example.com'
                   type='email'
                 />
@@ -224,7 +224,7 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({ selectedFile, onClose
                 <Input
                   id='issue-date'
                   value={invoice.issueDate}
-                  onChange={(e) => setInvoice({ ...invoice, issueDate: e.target.value })}
+                  onChange={(e) => {return setInvoice({ ...invoice, issueDate: e.target.value })}}
                   type='date'
                 />
               </div>
@@ -233,7 +233,7 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({ selectedFile, onClose
                 <Input
                   id='due-date'
                   value={invoice.dueDate}
-                  onChange={(e) => setInvoice({ ...invoice, dueDate: e.target.value })}
+                  onChange={(e) => {return setInvoice({ ...invoice, dueDate: e.target.value })}}
                   type='date'
                 />
               </div>
@@ -244,11 +244,11 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({ selectedFile, onClose
                     <SelectValue placeholder='Select terms' />
                   </SelectTrigger>
                   <SelectContent>
-                    {paymentTerms.map((term) => (
+                    {paymentTerms.map((term) => {return (
                       <SelectItem key={term.value} value={term.value}>
                         {term.label}
                       </SelectItem>
-                    ))}
+                    )})}
                   </SelectContent>
                 </Select>
               </div>
@@ -279,7 +279,7 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({ selectedFile, onClose
                   <div className='col-span-2'>Amount</div>
                 </div>
                 <div className='space-y-3'>
-                  {invoice.lineItems.map((item, index) => (
+                  {invoice.lineItems.map((item, index) => {return (
                     <div
                       key={index}
                       className='border rounded-md md:rounded-none md:border-t-0 md:first:rounded-t-none p-3 grid grid-cols-1 md:grid-cols-12 gap-3 items-center'
@@ -289,14 +289,14 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({ selectedFile, onClose
                         <div className='flex items-center'>
                           <Input
                             value={item.description}
-                            onChange={(e) => updateLineItem(index, 'description', e.target.value)}
+                            onChange={(e) => {return updateLineItem(index, 'description', e.target.value)}}
                             placeholder='Service or product description'
                           />
                           <Button
                             type='button'
                             variant='ghost'
                             size='icon'
-                            onClick={() => removeLineItem(index)}
+                            onClick={() => {return removeLineItem(index)}}
                             className='h-8 w-8 ml-2 md:hidden flex-shrink-0'
                           >
                             <X className='h-4 w-4' />
@@ -307,7 +307,7 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({ selectedFile, onClose
                         <Label className='md:hidden'>Quantity</Label>
                         <Input
                           value={item.quantity}
-                          onChange={(e) => updateLineItem(index, 'quantity', e.target.value)}
+                          onChange={(e) => {return updateLineItem(index, 'quantity', e.target.value)}}
                           placeholder='1'
                           type='number'
                           min='0'
@@ -318,7 +318,7 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({ selectedFile, onClose
                         <Label className='md:hidden'>Unit Price</Label>
                         <Input
                           value={item.unitPrice}
-                          onChange={(e) => updateLineItem(index, 'unitPrice', e.target.value)}
+                          onChange={(e) => {return updateLineItem(index, 'unitPrice', e.target.value)}}
                           placeholder='0.00'
                           type='number'
                           min='0'
@@ -334,14 +334,14 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({ selectedFile, onClose
                           type='button'
                           variant='ghost'
                           size='icon'
-                          onClick={() => removeLineItem(index)}
+                          onClick={() => {return removeLineItem(index)}}
                           className='h-8 w-8 ml-2 hidden md:flex'
                         >
                           <X className='h-4 w-4' />
                         </Button>
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
 
                 <div className='flex justify-end pt-4'>
@@ -362,7 +362,7 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({ selectedFile, onClose
               <Textarea
                 id='invoice-notes'
                 value={invoice.notes}
-                onChange={(e) => setInvoice({ ...invoice, notes: e.target.value })}
+                onChange={(e) => {return setInvoice({ ...invoice, notes: e.target.value })}}
                 placeholder='Additional notes or payment instructions...'
                 rows={3}
               />

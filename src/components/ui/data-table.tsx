@@ -141,7 +141,7 @@ export function DataTable<T>({
         <Table>
           <TableHeader>
             <TableRow>
-              {columns.map((column) => (
+              {columns.map((column) => {return (
                 <TableHead
                   key={column.key}
                   className={column.sortable ? 'cursor-pointer select-none' : ''}
@@ -156,20 +156,20 @@ export function DataTable<T>({
                     {column.sortable && renderSortIcon(column.key)}
                   </div>
                 </TableHead>
-              ))}
+              )})}
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedData.length > 0 ? (
-              paginatedData.map((item) => (
+              paginatedData.map((item) => {return (
                 <TableRow key={keyExtractor(item)}>
-                  {columns.map((column) => (
+                  {columns.map((column) => {return (
                     <TableCell key={`${keyExtractor(item)}-${column.key}`}>
                       {column.cell(item)}
                     </TableCell>
-                  ))}
+                  )})}
                 </TableRow>
-              ))
+              )})
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className='h-24 text-center'>
@@ -190,7 +190,7 @@ export function DataTable<T>({
             <Button
               variant='outline'
               size='sm'
-              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              onClick={() => {return setPage((prev) => {return Math.max(prev - 1, 1)})}}
               disabled={page === 1}
             >
               <ChevronLeft className='h-4 w-4' />
@@ -198,7 +198,7 @@ export function DataTable<T>({
             <Button
               variant='outline'
               size='sm'
-              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+              onClick={() => {return setPage((prev) => {return Math.min(prev + 1, totalPages)})}}
               disabled={page === totalPages}
             >
               <ChevronRight className='h-4 w-4' />

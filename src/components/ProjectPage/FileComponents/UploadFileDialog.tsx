@@ -50,7 +50,7 @@ const UploadFileDialog: React.FC<UploadFileDialogProps> = ({
             id='item-name'
             placeholder='e.g., Wedding Contract Documents'
             value={itemName}
-            onChange={(e) => setItemName(e.target.value)}
+            onChange={(e) => {return setItemName(e.target.value)}}
             required
           />
         </div>
@@ -62,7 +62,7 @@ const UploadFileDialog: React.FC<UploadFileDialogProps> = ({
             placeholder='Brief description of what this collection will contain...'
             rows={3}
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {return setDescription(e.target.value)}}
           />
         </div>
 
@@ -82,7 +82,7 @@ const UploadFileDialog: React.FC<UploadFileDialogProps> = ({
           <Button
             size='sm'
             variant='outline'
-            onClick={() => document.getElementById('file-upload')?.click()}
+            onClick={() => {return document.getElementById('file-upload')?.click()}}
           >
             Browse Files
           </Button>
@@ -92,7 +92,7 @@ const UploadFileDialog: React.FC<UploadFileDialogProps> = ({
           <div className='mt-4'>
             <Label>Files to Include</Label>
             <div className='mt-2 space-y-2 max-h-40 overflow-y-auto p-2 border rounded'>
-              {uploadedFiles.map((file, index) => (
+              {uploadedFiles.map((file, index) => {return (
                 <div key={index} className='flex justify-between items-center text-sm'>
                   <div className='flex items-center'>
                     <Paperclip className='h-4 w-4 text-gray-500 mr-2' />
@@ -100,7 +100,7 @@ const UploadFileDialog: React.FC<UploadFileDialogProps> = ({
                   </div>
                   <span className='text-gray-500'>{Math.round(file.size / 1024)} KB</span>
                 </div>
-              ))}
+              )})}
             </div>
           </div>
         )}

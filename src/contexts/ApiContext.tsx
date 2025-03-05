@@ -47,17 +47,17 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children, initialConfi
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, Error | null>>({});
   const [config, setApiConfig] = useState<ApiClientConfig>(defaultApiConfig);
-  const client = useMemo(() => new ApiClient(), []);
+  const client = useMemo(() => {return new ApiClient()}, []);
 
-  const isLoading = useCallback((key: string) => loading[key] || false, [loading]);
-  const getError = useCallback((key: string) => errors[key] || null, [errors]);
-  const clearAllErrors = useCallback(() => setErrors({}), []);
+  const isLoading = useCallback((key: string) => {return loading[key] || false}, [loading]);
+  const getError = useCallback((key: string) => {return errors[key] || null}, [errors]);
+  const clearAllErrors = useCallback(() => {return setErrors({})}, []);
   const setLoadingState = useCallback((key: string, value: boolean) => {
-    setLoading((prev) => ({ ...prev, [key]: value }));
+    setLoading((prev) => {return { ...prev, [key]: value }});
   }, []);
 
   const setErrorState = useCallback((key: string, error: Error | null) => {
-    setErrors((prev) => ({ ...prev, [key]: error }));
+    setErrors((prev) => {return { ...prev, [key]: error }});
   }, []);
 
   const services = useMemo(() => {
@@ -104,11 +104,11 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children, initialConfi
   }, [setLoadingState, setErrorState]);
 
   const handleSetConfig = useCallback((newConfig: Partial<ApiClientConfig>) => {
-    setApiConfig((prev) => ({ ...prev, ...newConfig }));
+    setApiConfig((prev) => {return { ...prev, ...newConfig }});
   }, []);
 
   const value = useMemo(
-    () => ({
+    () => {return {
       services,
       isLoading,
       setLoading: setLoadingState,
@@ -117,7 +117,7 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children, initialConfi
       clearAllErrors,
       client,
       setConfig: handleSetConfig,
-    }),
+    }},
     [
       services,
       isLoading,

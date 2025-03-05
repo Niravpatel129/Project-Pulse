@@ -230,7 +230,7 @@ const MONTHS = [
 ];
 
 // Hours for day view
-const HOURS = Array.from({ length: 12 }, (_, i) => i + 8); // 8 AM to 7 PM
+const HOURS = Array.from({ length: 12 }, (_, i) => {return i + 8}); // 8 AM to 7 PM
 
 type CalendarView = 'month' | 'week' | 'day' | 'list';
 
@@ -243,11 +243,11 @@ export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>(MOCK_EVENTS);
 
   // Get unique event types for filter
-  const eventTypes = [...new Set(events.map((event) => event.type))];
+  const eventTypes = [...new Set(events.map((event) => {return event.type}))];
 
   // Filter events based on the type filter
   const filteredEvents = events.filter(
-    (event) => typeFilter === 'all' || event.type === typeFilter,
+    (event) => {return typeFilter === 'all' || event.type === typeFilter},
   );
 
   // Move to previous period based on current view
@@ -423,7 +423,7 @@ export default function CalendarPage() {
     } catch (e) {
       console.error('Error in getDaysInWeek:', e);
       // Return a week of fallback dates
-      return Array.from({ length: 7 }, () => new Date('2024-04-19'));
+      return Array.from({ length: 7 }, () => {return new Date('2024-04-19')});
     }
   };
 
@@ -451,7 +451,7 @@ export default function CalendarPage() {
     }
 
     const dateString = formatDateToString(date);
-    return filteredEvents.filter((event) => event.date === dateString);
+    return filteredEvents.filter((event) => {return event.date === dateString});
   };
 
   // Function to render event badge with appropriate color based on type
@@ -581,11 +581,11 @@ export default function CalendarPage() {
               <SelectGroup>
                 <SelectLabel>Event Type</SelectLabel>
                 <SelectItem value='all'>All Types</SelectItem>
-                {eventTypes.map((type) => (
+                {eventTypes.map((type) => {return (
                   <SelectItem key={type} value={type}>
                     {type}
                   </SelectItem>
-                ))}
+                )})}
               </SelectGroup>
             </SelectContent>
           </Select>
@@ -595,7 +595,7 @@ export default function CalendarPage() {
       <div className='bg-card rounded-lg border shadow-sm overflow-hidden'>
         <Tabs
           value={view}
-          onValueChange={(value) => setView(value as CalendarView)}
+          onValueChange={(value) => {return setView(value as CalendarView)}}
           className='w-full'
         >
           <div className='px-4 pt-3'>
@@ -622,14 +622,14 @@ export default function CalendarPage() {
           <TabsContent value='month' className='p-0'>
             <div className='rounded-md overflow-hidden'>
               <div className='grid grid-cols-7 bg-muted/20'>
-                {SHORT_DAYS.map((day) => (
+                {SHORT_DAYS.map((day) => {return (
                   <div
                     key={day}
                     className='py-2 px-1 sm:px-3 text-center font-medium text-xs sm:text-sm border-b'
                   >
                     {day}
                   </div>
-                ))}
+                )})}
               </div>
               <div className='grid grid-cols-7 auto-rows-fr bg-background'>
                 {days.map((day, index) => {
@@ -670,16 +670,16 @@ export default function CalendarPage() {
                         )}
                       </div>
                       <div className='space-y-1 mt-1'>
-                        {eventsForDay.slice(0, maxEventsToShow).map((event) => (
+                        {eventsForDay.slice(0, maxEventsToShow).map((event) => {return (
                           <div
                             key={event.id}
                             className='text-xs bg-primary/10 p-1 rounded truncate cursor-pointer hover:bg-primary/20 transition-colors'
-                            onClick={() => setSelectedEvent(event)}
+                            onClick={() => {return setSelectedEvent(event)}}
                           >
                             <span className='hidden sm:inline'>{event.startTime} - </span>
                             {event.title}
                           </div>
-                        ))}
+                        )})}
                         {hasMoreEvents && (
                           <div className='text-xs text-muted-foreground p-1'>
                             +{eventsForDay.length - maxEventsToShow} more
@@ -698,11 +698,11 @@ export default function CalendarPage() {
               <div className='grid grid-cols-8 min-w-[640px]'>
                 <div className='border-r bg-muted/10'>
                   <div className='h-12 border-b'></div>
-                  {HOURS.map((hour) => (
+                  {HOURS.map((hour) => {return (
                     <div key={hour} className='h-16 border-b text-xs p-1 text-muted-foreground'>
                       {formatTimeSlot(hour)}
                     </div>
-                  ))}
+                  )})}
                 </div>
 
                 {days.map((date, dateIndex) => {
@@ -726,7 +726,7 @@ export default function CalendarPage() {
 
                       {HOURS.map((hour) => {
                         const eventsInHour = eventsForDay.filter((event) =>
-                          isEventInTimeSlot(event, hour),
+                          {return isEventInTimeSlot(event, hour)},
                         );
 
                         return (
@@ -734,19 +734,19 @@ export default function CalendarPage() {
                             key={hour}
                             className='h-16 border-b relative hover:bg-muted/5 transition-colors'
                           >
-                            {eventsInHour.map((event) => (
+                            {eventsInHour.map((event) => {return (
                               <div
                                 key={event.id}
                                 className='absolute left-0 right-0 mx-1 p-1 bg-primary/10 rounded border-l-2 border-primary overflow-hidden cursor-pointer hover:bg-primary/20 transition-colors'
                                 style={getEventPosition(event)}
-                                onClick={() => setSelectedEvent(event)}
+                                onClick={() => {return setSelectedEvent(event)}}
                               >
                                 <div className='text-xs font-medium truncate'>{event.title}</div>
                                 <div className='text-xs text-muted-foreground truncate'>
                                   {event.startTime} - {event.endTime}
                                 </div>
                               </div>
-                            ))}
+                            )})}
                           </div>
                         );
                       })}
@@ -771,7 +771,7 @@ export default function CalendarPage() {
                   {HOURS.map((hour) => {
                     const eventsForDay = getEventsForDate(currentDate);
                     const eventsInHour = eventsForDay.filter((event) =>
-                      isEventInTimeSlot(event, hour),
+                      {return isEventInTimeSlot(event, hour)},
                     );
 
                     return (
@@ -783,7 +783,7 @@ export default function CalendarPage() {
                           {formatTimeSlot(hour)}
                         </div>
                         <div className='col-span-7 relative p-1'>
-                          {eventsInHour.map((event, idx) => (
+                          {eventsInHour.map((event, idx) => {return (
                             <div
                               key={event.id}
                               className='absolute left-0 right-0 mx-2 p-2 bg-primary/10 rounded border-l-2 border-primary cursor-pointer hover:bg-primary/20 transition-colors'
@@ -791,14 +791,14 @@ export default function CalendarPage() {
                                 ...getEventPosition(event),
                                 zIndex: 10 + idx,
                               }}
-                              onClick={() => setSelectedEvent(event)}
+                              onClick={() => {return setSelectedEvent(event)}}
                             >
                               <div className='font-medium text-sm'>{event.title}</div>
                               <div className='text-xs text-muted-foreground'>
                                 {event.startTime} - {event.endTime} • {event.location}
                               </div>
                             </div>
-                          ))}
+                          )})}
                         </div>
                       </div>
                     );
@@ -815,17 +815,17 @@ export default function CalendarPage() {
                   <CardContent>
                     <div className='space-y-3'>
                       {filteredEvents
-                        .filter((event) => new Date(event.date) >= currentDate)
+                        .filter((event) => {return new Date(event.date) >= currentDate})
                         .sort(
                           (a, b) =>
-                            a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime),
+                            {return a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime)},
                         )
                         .slice(0, 5)
-                        .map((event) => (
+                        .map((event) => {return (
                           <div
                             key={event.id}
                             className='p-2 border rounded-md cursor-pointer hover:bg-muted/5 transition-colors'
-                            onClick={() => setSelectedEvent(event)}
+                            onClick={() => {return setSelectedEvent(event)}}
                           >
                             <div className='font-medium text-sm'>{event.title}</div>
                             <div className='text-xs text-muted-foreground mt-1'>
@@ -839,7 +839,7 @@ export default function CalendarPage() {
                             </div>
                             <div className='mt-1'>{renderEventBadge(event.type)}</div>
                           </div>
-                        ))}
+                        )})}
                     </div>
                   </CardContent>
                 </Card>
@@ -861,9 +861,9 @@ export default function CalendarPage() {
                 {filteredEvents
                   .sort(
                     (a, b) =>
-                      a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime),
+                      {return a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime)},
                   )
-                  .map((event) => (
+                  .map((event) => {return (
                     <div
                       key={event.id}
                       className='grid grid-cols-[auto_1fr_auto_auto] md:grid-cols-[auto_1fr_auto_auto_auto] items-center p-3 hover:bg-muted/5 transition-colors'
@@ -898,7 +898,7 @@ export default function CalendarPage() {
                           <DropdownMenuContent align='end'>
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => setSelectedEvent(event)}>
+                            <DropdownMenuItem onClick={() => {return setSelectedEvent(event)}}>
                               View Details
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
@@ -909,7 +909,7 @@ export default function CalendarPage() {
                         </DropdownMenu>
                       </div>
                     </div>
-                  ))}
+                  )})}
               </div>
             </div>
           </TabsContent>
@@ -926,7 +926,7 @@ export default function CalendarPage() {
                   variant='ghost'
                   size='icon'
                   className='h-8 w-8 rounded-full'
-                  onClick={() => setSelectedEvent(null)}
+                  onClick={() => {return setSelectedEvent(null)}}
                 >
                   <span className='sr-only'>Close</span>
                   &times;
@@ -960,11 +960,11 @@ export default function CalendarPage() {
                   <div>
                     <div className='font-medium mb-1 text-sm'>Participants</div>
                     <ul className='list-disc list-inside pl-2'>
-                      {selectedEvent.participants.map((person: string, idx: number) => (
+                      {selectedEvent.participants.map((person: string, idx: number) => {return (
                         <li key={idx} className='text-sm'>
                           {person}
                         </li>
-                      ))}
+                      )})}
                     </ul>
                   </div>
                 </div>
@@ -992,7 +992,7 @@ export default function CalendarPage() {
                 </div>
 
                 <div className='flex justify-end gap-2 mt-6'>
-                  <Button variant='outline' size='sm' onClick={() => setSelectedEvent(null)}>
+                  <Button variant='outline' size='sm' onClick={() => {return setSelectedEvent(null)}}>
                     Close
                   </Button>
                   <Button size='sm' asChild>

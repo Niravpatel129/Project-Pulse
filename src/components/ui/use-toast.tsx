@@ -62,7 +62,7 @@ const reducer = (state: State, action: Action): State => {
     case actionTypes.UPDATE_TOAST:
       return {
         ...state,
-        toasts: state.toasts.map((t) => (t.id === action.toast.id ? { ...t, ...action.toast } : t)),
+        toasts: state.toasts.map((t) => {return (t.id === action.toast.id ? { ...t, ...action.toast } : t)}),
       };
 
     case actionTypes.DISMISS_TOAST: {
@@ -85,12 +85,12 @@ const reducer = (state: State, action: Action): State => {
       return {
         ...state,
         toasts: state.toasts.map((t) =>
-          t.id === toastId || toastId === undefined
+          {return t.id === toastId || toastId === undefined
             ? {
                 ...t,
                 open: false,
               }
-            : t,
+            : t},
         ),
       };
     }
@@ -103,7 +103,7 @@ const reducer = (state: State, action: Action): State => {
       }
       return {
         ...state,
-        toasts: state.toasts.filter((t) => t.id !== action.toastId),
+        toasts: state.toasts.filter((t) => {return t.id !== action.toastId}),
       };
   }
 };
@@ -125,11 +125,11 @@ function toast({ ...props }: Toast) {
   const id = genId();
 
   const update = (props: ToasterToast) =>
-    dispatch({
+    {return dispatch({
       type: actionTypes.UPDATE_TOAST,
       toast: { ...props, id },
-    });
-  const dismiss = () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id });
+    })};
+  const dismiss = () => {return dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id })};
 
   dispatch({
     type: actionTypes.ADD_TOAST,
@@ -166,7 +166,7 @@ function useToast() {
   return {
     ...state,
     toast,
-    dismiss: (toastId?: string) => dispatch({ type: actionTypes.DISMISS_TOAST, toastId }),
+    dismiss: (toastId?: string) => {return dispatch({ type: actionTypes.DISMISS_TOAST, toastId })},
   };
 }
 
