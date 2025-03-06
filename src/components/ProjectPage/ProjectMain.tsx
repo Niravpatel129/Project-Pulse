@@ -49,7 +49,7 @@ export default function ProjectMain() {
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
             <ScrollArea>
-              <TabsList className='text-foreground mb-3 h-auto gap-2 rounded-none border-b bg-transparent px-0 py-1'>
+              <TabsList className='text-foreground mb-3 h-auto gap-2 rounded-none bg-transparent px-0 py-1'>
                 <TabsTrigger
                   value='home'
                   className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
@@ -57,20 +57,7 @@ export default function ProjectMain() {
                   <Home className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
                   Home
                 </TabsTrigger>
-                {/* <TabsTrigger
-                  value='activity'
-                  className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
-                >
-                  <Activity className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
-                  Activity
-                </TabsTrigger> */}
-                {/* <TabsTrigger
-                  value='timeline'
-                  className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
-                >
-                  <Clock className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
-                  Timeline
-                </TabsTrigger> */}
+
                 <TabsTrigger
                   value='schedule'
                   className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'

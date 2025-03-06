@@ -411,7 +411,7 @@ export default function ProjectHeader() {
   if (!project) return <></>;
 
   return (
-    <div className='bg-white border-b'>
+    <div className='bg-white'>
       {/* Project Banner */}
       <div className='container mx-auto px-4 py-4 sm:py-6'>
         <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4'>
