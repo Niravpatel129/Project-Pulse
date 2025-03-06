@@ -12,7 +12,7 @@ export default function ProjectPage() {
     <ProjectProvider projectId={id as string}>
       <div className='min-h-screen bg-white w-full'>
         <ProjectHeader />
-        <div className='container mx-auto flex items-center justify-between px-0 py-6'>
+        <div className='container mx-auto flex items-center justify-between px-0 py-3'>
           <ProjectMain />
         </div>
       </div>
