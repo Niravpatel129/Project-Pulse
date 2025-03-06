@@ -3,6 +3,7 @@
 import { Card } from '@/components/ui/card';
 import { FileText, Mail, User } from 'lucide-react';
 import { EmailComponent } from './EmailComponent';
+import { EmailList } from './EmailList';
 
 export default function ProjectHome() {
   // Mock activity data - in a real app, this would come from an API or context
@@ -24,6 +25,7 @@ export default function ProjectHome() {
   return (
     <div className='space-y-6'>
       <EmailComponent />
+      <EmailList />
 
       {/* Recent Activity Section */}
       <div className='mt-8'>

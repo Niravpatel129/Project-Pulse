@@ -7,7 +7,9 @@ import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -611,17 +613,29 @@ export const EmailComponent = ({ initialSubject = '', initialMessage = '' }) => 
                 </div>
                 <div className='flex gap-2'>
                   <Select value={selectedParticipant} onValueChange={setSelectedParticipant}>
-                    <SelectTrigger className='w-full'>
+                    <SelectTrigger className='w-full ps-2 [&>span]:flex [&>span]:items-center [&>span]:gap-2 [&>span_img]:shrink-0'>
                       <SelectValue placeholder='Select participant' />
                     </SelectTrigger>
-                    <SelectContent>
-                      {project?.participants.map((participant) => {
-                        return (
-                          <SelectItem key={participant._id} value={participant.email || ''}>
-                            {participant.name}
-                          </SelectItem>
-                        );
-                      })}
+                    <SelectContent className='[&_*[role=option]]:ps-2 [&_*[role=option]]:pe-8 [&_*[role=option]>span]:start-auto [&_*[role=option]>span]:end-2 [&_*[role=option]>span]:flex [&_*[role=option]>span]:items-center [&_*[role=option]>span]:gap-2'>
+                      <SelectGroup>
+                        <SelectLabel className='ps-2'>Project participants</SelectLabel>
+                        {project?.participants.map((participant) => {
+                          return (
+                            <SelectItem key={participant._id} value={participant.email || ''}>
+                              <Avatar className='size-5'>
+                                <AvatarImage
+                                  src={participant.avatar || ''}
+                                  alt={participant.name}
+                                />
+                                <AvatarFallback className='text-xs'>
+                                  {participant.name.substring(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className='truncate'>{participant.name}</span>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                   <Button
@@ -671,17 +685,29 @@ export const EmailComponent = ({ initialSubject = '', initialMessage = '' }) => 
                   </div>
                   <div className='flex gap-2'>
                     <Select value={selectedCcParticipant} onValueChange={setSelectedCcParticipant}>
-                      <SelectTrigger className='w-full'>
+                      <SelectTrigger className='w-full ps-2 [&>span]:flex [&>span]:items-center [&>span]:gap-2 [&>span_img]:shrink-0'>
                         <SelectValue placeholder='Select participant' />
                       </SelectTrigger>
-                      <SelectContent>
-                        {project?.participants.map((participant) => {
-                          return (
-                            <SelectItem key={participant._id} value={participant.email || ''}>
-                              {participant.name}
-                            </SelectItem>
-                          );
-                        })}
+                      <SelectContent className='[&_*[role=option]]:ps-2 [&_*[role=option]]:pe-8 [&_*[role=option]>span]:start-auto [&_*[role=option]>span]:end-2 [&_*[role=option]>span]:flex [&_*[role=option]>span]:items-center [&_*[role=option]>span]:gap-2'>
+                        <SelectGroup>
+                          <SelectLabel className='ps-2'>Project participants</SelectLabel>
+                          {project?.participants.map((participant) => {
+                            return (
+                              <SelectItem key={participant._id} value={participant.email || ''}>
+                                <Avatar className='size-5'>
+                                  <AvatarImage
+                                    src={participant.avatar || ''}
+                                    alt={participant.name}
+                                  />
+                                  <AvatarFallback className='text-xs'>
+                                    {participant.name.substring(0, 2).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className='truncate'>{participant.name}</span>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectGroup>
                       </SelectContent>
                     </Select>
                     <Button
@@ -735,17 +761,29 @@ export const EmailComponent = ({ initialSubject = '', initialMessage = '' }) => 
                       value={selectedBccParticipant}
                       onValueChange={setSelectedBccParticipant}
                     >
-                      <SelectTrigger className='w-full'>
+                      <SelectTrigger className='w-full ps-2 [&>span]:flex [&>span]:items-center [&>span]:gap-2 [&>span_img]:shrink-0'>
                         <SelectValue placeholder='Select participant' />
                       </SelectTrigger>
-                      <SelectContent>
-                        {project?.participants.map((participant) => {
-                          return (
-                            <SelectItem key={participant._id} value={participant.email || ''}>
-                              {participant.name}
-                            </SelectItem>
-                          );
-                        })}
+                      <SelectContent className='[&_*[role=option]]:ps-2 [&_*[role=option]]:pe-8 [&_*[role=option]>span]:start-auto [&_*[role=option]>span]:end-2 [&_*[role=option]>span]:flex [&_*[role=option]>span]:items-center [&_*[role=option]>span]:gap-2'>
+                        <SelectGroup>
+                          <SelectLabel className='ps-2'>Project participants</SelectLabel>
+                          {project?.participants.map((participant) => {
+                            return (
+                              <SelectItem key={participant._id} value={participant.email || ''}>
+                                <Avatar className='size-5'>
+                                  <AvatarImage
+                                    src={participant.avatar || ''}
+                                    alt={participant.name}
+                                  />
+                                  <AvatarFallback className='text-xs'>
+                                    {participant.name.substring(0, 2).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className='truncate'>{participant.name}</span>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectGroup>
                       </SelectContent>
                     </Select>
                     <Button
