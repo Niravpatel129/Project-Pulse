@@ -191,52 +191,69 @@ export default function ProjectModules() {
     <div className='space-y-4'>
       <Card>
         <CardHeader className='flex flex-col sm:flex-row justify-between space-y-2 sm:space-y-0 pb-4'>
-          <div>
-            <CardTitle>Project Modules</CardTitle>
-            <CardDescription>
-              Manage all project documents and module items in one place
-            </CardDescription>
-          </div>
-          <div className='flex space-x-2'>
-            <div className='relative'>
-              <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-gray-500' />
-              <Input
-                type='search'
-                placeholder='Search module items...'
-                className='w-full sm:w-[250px] pl-8'
-                value={search}
-                onChange={(e) => {
-                  return setSearch(e.target.value);
-                }}
-              />
-              {search && (
-                <button
-                  onClick={() => {
-                    return setSearch('');
-                  }}
-                  className='absolute right-2.5 top-2.5 text-gray-500 hover:text-gray-700'
-                >
-                  <X className='h-4 w-4' />
-                </button>
-              )}
+          <div className='flex justify-between w-full'>
+            <div>
+              <CardTitle>Project Modules</CardTitle>
+              <CardDescription>
+                Manage all project documents and modules in one place.
+              </CardDescription>
             </div>
-
-            <Dialog open={showCreateModuleDialog} onOpenChange={setShowCreateModuleDialog}>
+            <div className='flex flex-wrap gap-2'>
+              {/* Search button for mobile view */}
               <Button
+                variant='outline'
+                size='icon'
+                className='sm:hidden'
                 onClick={() => {
-                  return setShowCreateModuleDialog(true);
+                  return setSearch(search ? '' : ' ');
                 }}
               >
-                <Plus className='mr-2 h-4 w-4' />
-                Create Module
+                <Search className='h-4 w-4' />
               </Button>
-              <CreateModuleDialog
-                onClose={() => {
-                  return setShowCreateModuleDialog(false);
-                }}
-                onCreateModule={handleCreateModule}
-              />
-            </Dialog>
+
+              {/* Search input that collapses on mobile */}
+              <div className={`relative ${!search && 'hidden sm:block'}`}>
+                <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-gray-500' />
+                <Input
+                  type='search'
+                  placeholder='Search module items...'
+                  className='w-full sm:w-[250px] pl-8'
+                  value={search}
+                  onChange={(e) => {
+                    return setSearch(e.target.value);
+                  }}
+                />
+                {search && (
+                  <button
+                    onClick={() => {
+                      return setSearch('');
+                    }}
+                    className='absolute right-2.5 top-2.5 text-gray-500 hover:text-gray-700'
+                  >
+                    <X className='h-4 w-4' />
+                  </button>
+                )}
+              </div>
+
+              <Dialog open={showCreateModuleDialog} onOpenChange={setShowCreateModuleDialog}>
+                <Button
+                  onClick={() => {
+                    return setShowCreateModuleDialog(true);
+                  }}
+                  className='whitespace-nowrap'
+                >
+                  <Plus className='mr-2 h-4 w-4' />
+                  <span className='hidden sm:inline'>Create Module</span>
+                  <span className='sm:hidden'>Create</span>
+                </Button>
+                <CreateModuleDialog
+                  onClose={() => {
+                    return setShowCreateModuleDialog(false);
+                  }}
+                  onCreateModule={handleCreateModule}
+                />
+              </Dialog>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

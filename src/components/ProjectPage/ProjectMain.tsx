@@ -5,7 +5,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProject } from '@/contexts/ProjectContext';
-import { CalendarDays, CreditCard, FileText, Home, Menu, PanelsTopLeft } from 'lucide-react';
+import { CalendarDays, CreditCard, Home, Menu, PanelsTopLeft } from 'lucide-react';
 import { useState } from 'react';
 import ProjectActivity from './ProjectActivity';
 import ProjectFiles from './ProjectFiles';
@@ -82,16 +82,7 @@ export default function ProjectMain() {
                   />
                   Schedule
                 </TabsTrigger>
-                <TabsTrigger
-                  value='files'
-                  className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
-                >
-                  <FileText className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
-                  Files
-                  <Badge className='bg-primary/15 ms-1.5 min-w-5 px-1' variant='secondary'>
-                    {5}
-                  </Badge>
-                </TabsTrigger>
+
                 <TabsTrigger
                   value='modules'
                   className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'

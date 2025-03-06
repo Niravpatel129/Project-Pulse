@@ -11,14 +11,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -38,11 +30,10 @@ import {
   Clock,
   Copy,
   Mail,
-  MoreHorizontal,
+  Plus,
   PlusCircle,
   Search,
   Send,
-  Upload,
   UserPlus,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -424,7 +415,7 @@ export default function ProjectHeader() {
       {/* Project Banner */}
       <div className='container mx-auto px-4 py-4 sm:py-6'>
         <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4'>
-          <div className='relative h-12 w-12 sm:h-16 sm:w-16 rounded-md overflow-hidden'>
+          <div className='relative h-10 w-10 sm:h-16 sm:w-16 rounded-md overflow-hidden'>
             <Image
               src='https://picsum.photos/200'
               alt='Project Thumbnail'
@@ -461,14 +452,14 @@ export default function ProjectHeader() {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           {participant.avatar ? (
-                            <Avatar className='h-8 w-8 cursor-pointer'>
+                            <Avatar className='h-10 w-10 cursor-pointer'>
                               <AvatarImage src={participant.avatar} alt={participant.name} />
                               <AvatarFallback>
                                 {participant.name.charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                           ) : (
-                            <Avatar className='flex h-8 w-8 cursor-pointer items-center justify-center bg-gray-100'>
+                            <Avatar className='flex h-10 w-10 cursor-pointer items-center justify-center bg-gray-100'>
                               <span className='text-sm'>
                                 {participant.name.charAt(0).toUpperCase()}
                               </span>
@@ -492,31 +483,7 @@ export default function ProjectHeader() {
                       </Tooltip>
                       <div className='hidden sm:block'>
                         <div className='flex items-center gap-1'>
-                          <p className='text-sm font-medium'>{participant.name}</p>
-                          {participant._id !== '1' && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant='ghost' size='icon' className='h-6 w-6'>
-                                  <MoreHorizontal className='h-3 w-3' />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align='end'>
-                                <DropdownMenuLabel>Manage Participant</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => {}}>View Details</DropdownMenuItem>
-
-                                <DropdownMenuSeparator />
-
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    return handleRemoveParticipant(participant._id);
-                                  }}
-                                  className='text-red-600'
-                                >
-                                  Remove
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
+                          <p className='text-sm font-medium capitalize'>{participant.name}</p>
                         </div>
                         <div className='flex items-center gap-1'>
                           {getRoleBadge(participant.role)}
@@ -536,12 +503,8 @@ export default function ProjectHeader() {
                 {/* Add Participant Button */}
                 <Dialog open={isAddParticipantOpen} onOpenChange={setIsAddParticipantOpen}>
                   <DialogTrigger asChild>
-                    <Button
-                      variant='outline'
-                      className='ml-0 sm:ml-2 gap-1 rounded-full border-dashed hover:bg-gray-50'
-                      size='sm'
-                    >
-                      <PlusCircle className='h-3 w-3 sm:h-4 sm:w-4' />
+                    <Button variant='ghost' size='sm'>
+                      <Plus className='h-3 w-3 sm:h-4 sm:w-4' />
                       <span className='text-xs hidden xs:inline'>ADD PARTICIPANT</span>
                     </Button>
                   </DialogTrigger>
@@ -775,11 +738,13 @@ export default function ProjectHeader() {
                                   className='flex items-center justify-between p-2 hover:bg-gray-50 rounded'
                                 >
                                   <div className='flex items-center gap-2'>
-                                    <Avatar className='h-8 w-8'>
+                                    <Avatar className='h-24 w-24'>
                                       <AvatarFallback>{contact.initials}</AvatarFallback>
                                     </Avatar>
                                     <div>
-                                      <p className='text-sm font-medium'>{contact.name}</p>
+                                      <p className='text-sm font-medium capitalize'>
+                                        {contact.name}
+                                      </p>
                                       <div className='flex items-center gap-2'>
                                         <p className='text-xs text-muted-foreground'>
                                           {contact.email}
@@ -843,32 +808,6 @@ export default function ProjectHeader() {
                 </Dialog>
               </div>
             </div>
-
-            <Dialog open={isNewFileDialogOpen} onOpenChange={setIsNewFileDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className='bg-[#5DD3D1] hover:bg-[#4CC3C1] text-white w-full sm:w-auto'>
-                  NEW FILE
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Upload New File</DialogTitle>
-                </DialogHeader>
-                <div className='space-y-4 py-2'>
-                  <div className='border-2 border-dashed rounded-md p-6 text-center'>
-                    <Upload className='mx-auto h-8 w-8 text-gray-400' />
-                    <p className='mt-2 text-sm text-gray-600'>
-                      Drag and drop your file here or click to browse
-                    </p>
-                    <Input type='file' className='mt-4' onChange={handleFileUpload} />
-                  </div>
-                  {selectedFile && <p className='text-sm'>Selected: {selectedFile.name}</p>}
-                  <Button onClick={handleFileSubmit} disabled={!selectedFile} className='w-full'>
-                    Upload File
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
           </div>
         </div>
       </TooltipProvider>
