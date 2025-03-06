@@ -49,6 +49,7 @@
     "recharts": "^2.15.1",
     "slate": "^0.112.0",
     "slate-dom": "^0.112.2",
+    "slate-history": "^0.110.3",
     "slate-react": "^0.112.1",
     "sonner": "^2.0.1",
     "tailwind-merge": "^3.0.2",
