@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 interface CustomElement {
   type: 'custom';
@@ -38,12 +38,28 @@ interface CustomElementModalProps {
 }
 
 export function CustomElementModal({ isOpen, onClose, onAdd }: CustomElementModalProps) {
+  const [showDialog, setShowDialog] = useState(false);
   const [formData, setFormData] = useState<Partial<CustomElement>>({
     name: '',
     description: '',
     status: 'draft',
     fields: [],
   });
+
+  // Update local state when prop changes
+  React.useEffect(() => {
+    if (isOpen) {
+      setShowDialog(true);
+    }
+  }, [isOpen]);
+
+  const handleClose = () => {
+    setShowDialog(false);
+    // Wait for animation to finish before calling onClose
+    setTimeout(() => {
+      onClose();
+    }, 300); // Adjust this value to match your animation duration
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +72,7 @@ export function CustomElementModal({ isOpen, onClose, onAdd }: CustomElementModa
       status: 'draft',
       fields: [],
     });
-    onClose();
+    handleClose();
   };
 
   const addField = () => {
@@ -91,7 +107,7 @@ export function CustomElementModal({ isOpen, onClose, onAdd }: CustomElementModa
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={showDialog} onOpenChange={handleClose}>
       <DialogContent className='max-w-3xl'>
         <DialogHeader>
           <DialogTitle>Add Custom Element</DialogTitle>
@@ -177,7 +193,7 @@ export function CustomElementModal({ isOpen, onClose, onAdd }: CustomElementModa
             </div>
           </div>
           <DialogFooter>
-            <Button type='button' variant='outline' onClick={onClose}>
+            <Button type='button' variant='outline' onClick={handleClose}>
               Cancel
             </Button>
             <Button type='submit'>Add Element</Button>

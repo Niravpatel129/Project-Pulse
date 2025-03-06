@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { FileText, X } from 'lucide-react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 interface FileElement {
   type: 'file';
@@ -42,12 +42,28 @@ interface FileElementModalProps {
 }
 
 export function FileElementModal({ isOpen, onClose, onAdd }: FileElementModalProps) {
+  const [showDialog, setShowDialog] = useState(false);
   const [formData, setFormData] = useState<Partial<FileElement>>({
     name: '',
     description: '',
     status: 'draft',
     files: [],
   });
+
+  // Update local state when prop changes
+  React.useEffect(() => {
+    if (isOpen) {
+      setShowDialog(true);
+    }
+  }, [isOpen]);
+
+  const handleClose = () => {
+    setShowDialog(false);
+    // Wait for animation to finish before calling onClose
+    setTimeout(() => {
+      onClose();
+    }, 300); // Adjust this value to match your animation duration
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,11 +76,11 @@ export function FileElementModal({ isOpen, onClose, onAdd }: FileElementModalPro
       status: 'draft',
       files: [],
     });
-    onClose();
+    handleClose();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={showDialog} onOpenChange={handleClose}>
       <DialogContent className='max-w-3xl'>
         <DialogHeader>
           <DialogTitle>Add File Element</DialogTitle>
@@ -177,7 +193,7 @@ export function FileElementModal({ isOpen, onClose, onAdd }: FileElementModalPro
             )}
           </div>
           <DialogFooter>
-            <Button type='button' variant='outline' onClick={onClose}>
+            <Button type='button' variant='outline' onClick={handleClose}>
               Cancel
             </Button>
             <Button type='submit'>Add Element</Button>

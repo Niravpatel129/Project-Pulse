@@ -311,23 +311,29 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
             </div>
           </div>
         </div>
-
-        <FileElementModal
-          isOpen={selectedElementType === 'file'}
-          onClose={() => {
-            return setSelectedElementType(null);
-          }}
-          onAdd={handleAddElement}
-        />
-
-        <CustomElementModal
-          isOpen={selectedElementType === 'custom'}
-          onClose={() => {
-            return setSelectedElementType(null);
-          }}
-          onAdd={handleAddElement}
-        />
       </DialogContent>
+
+      <FileElementModal
+        isOpen={selectedElementType === 'file'}
+        onClose={() => {
+          setSelectedElementType(null);
+        }}
+        onAdd={(element) => {
+          handleAddElement(element);
+          setSelectedElementType(null);
+        }}
+      />
+
+      <CustomElementModal
+        isOpen={selectedElementType === 'custom'}
+        onClose={() => {
+          setSelectedElementType(null);
+        }}
+        onAdd={(element) => {
+          handleAddElement(element);
+          setSelectedElementType(null);
+        }}
+      />
 
       <Dialog open={showSendEmailDialog} onOpenChange={setShowSendEmailDialog}>
         <SendEmailDialog
