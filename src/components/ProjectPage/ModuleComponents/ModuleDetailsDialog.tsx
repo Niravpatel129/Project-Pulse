@@ -1,5 +1,4 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -17,6 +16,7 @@ import { FileText, MoreVertical, Package, PlusCircle, Receipt } from 'lucide-rea
 import { useState } from 'react';
 import { SendEmailDialog } from '../FileComponents';
 import { CustomElementModal } from './CustomElementModal';
+import { FileElementDetailsDialog } from './FileElementDetailsDialog';
 import { FileElementModal } from './FileElementModal';
 import { Module } from './types';
 
@@ -26,30 +26,26 @@ interface BaseElement {
   type: ElementType;
   name: string;
   description?: string;
-  status: string;
 }
 
 interface FileElement extends BaseElement {
   type: 'file';
   files: Array<{
     name: string;
-    type: 'document' | 'image' | '3d';
+    type: 'document' | 'image' | 'other';
     size: number;
     comment?: string;
     uploadedAt: string;
+    url: string;
   }>;
 }
 
 interface InvoiceElement extends BaseElement {
   type: 'invoice';
-  clientName: string;
-  clientEmail: string;
+  invoiceNumber: string;
+  amount: number;
+  currency: string;
   dueDate: string;
-  items: Array<{
-    description: string;
-    quantity: number;
-    unitPrice: number;
-  }>;
 }
 
 interface CustomElement extends BaseElement {
@@ -69,8 +65,13 @@ interface ModuleDetailsDialogProps {
   onClose: () => void;
 }
 
+const isFileElement = (element: Element): element is FileElement => {
+  return element.type === 'file';
+};
+
 export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDialogProps) {
   const [selectedElementType, setSelectedElementType] = useState<ElementType | null>(null);
+  const [selectedFileElement, setSelectedFileElement] = useState<FileElement | null>(null);
   const [elements, setElements] = useState<Element[]>([]);
   const [showSendEmailDialog, setShowSendEmailDialog] = useState(false);
   const [emailSubject, setEmailSubject] = useState('');
@@ -236,8 +237,7 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                   <TableRow>
                     <TableHead className='w-[50px]'></TableHead>
                     <TableHead>Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Files</TableHead>
                     <TableHead>Last Updated</TableHead>
                     <TableHead className='w-[50px]'></TableHead>
                   </TableRow>
@@ -246,7 +246,15 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                   {elements.length > 0 ? (
                     elements.map((element, index) => {
                       return (
-                        <TableRow key={index}>
+                        <TableRow
+                          key={index}
+                          className='cursor-pointer hover:bg-gray-50'
+                          onClick={() => {
+                            if (isFileElement(element)) {
+                              setSelectedFileElement(element);
+                            }
+                          }}
+                        >
                           <TableCell>
                             {element.type === 'file' && (
                               <FileText className='h-4 w-4 text-gray-500' />
@@ -258,46 +266,69 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                               <Package className='h-4 w-4 text-gray-500' />
                             )}
                           </TableCell>
-                          <TableCell>{element.name}</TableCell>
-                          <TableCell className='capitalize'>{element.type}</TableCell>
+                          <TableCell className='font-medium'>{element.name}</TableCell>
                           <TableCell>
-                            <Badge variant='secondary'>{element.status}</Badge>
-                          </TableCell>
-                          <TableCell>Just now</TableCell>
-                          <TableCell>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button variant='ghost' size='icon' className='h-8 w-8'>
-                                  <MoreVertical className='h-4 w-4' />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className='w-56 p-0' align='end'>
-                                <div className='p-1'>
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    className='w-full justify-start text-red-600 hover:text-red-600 hover:bg-red-50'
-                                  >
-                                    Delete
-                                  </Button>
-
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    className='w-full justify-start'
-                                  >
-                                    Duplicate
-                                  </Button>
+                            {isFileElement(element) && (
+                              <div className='flex items-center gap-2'>
+                                <span className='text-sm text-gray-500'>
+                                  {element.files.length}{' '}
+                                  {element.files.length === 1 ? 'file' : 'files'}
+                                </span>
+                                <div className='flex -space-x-2'>
+                                  {element.files.slice(0, 3).map((file, fileIndex) => {
+                                    return (
+                                      <div
+                                        key={fileIndex}
+                                        className='inline-flex items-center justify-center h-6 w-6 rounded-full bg-gray-100 border border-white'
+                                      >
+                                        {file.type === 'image' ? (
+                                          <img
+                                            src={file.url}
+                                            alt={file.name}
+                                            className='h-full w-full rounded-full object-cover'
+                                          />
+                                        ) : (
+                                          <FileText className='h-3 w-3 text-gray-500' />
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                  {element.files.length > 3 && (
+                                    <div className='inline-flex items-center justify-center h-6 w-6 rounded-full bg-gray-100 border border-white'>
+                                      <span className='text-xs text-gray-500'>
+                                        +{element.files.length - 3}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
-                              </PopoverContent>
-                            </Popover>
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell className='text-sm text-gray-500'>
+                            {isFileElement(element) &&
+                              (() => {
+                                try {
+                                  const date = new Date(element.files[0]?.uploadedAt || new Date());
+                                  if (isNaN(date.getTime())) {
+                                    return 'Invalid date';
+                                  }
+                                  return format(date, 'MMM d, h:mm a');
+                                } catch (error) {
+                                  return 'Invalid date';
+                                }
+                              })()}
+                          </TableCell>
+                          <TableCell>
+                            <Button variant='ghost' size='icon'>
+                              <MoreVertical className='h-4 w-4' />
+                            </Button>
                           </TableCell>
                         </TableRow>
                       );
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className='h-24 text-center'>
+                      <TableCell colSpan={5} className='h-24 text-center'>
                         <div className='flex flex-col items-center justify-center text-sm text-gray-500 mt-4'>
                           <PlusCircle className='h-8 w-8 mb-2 text-gray-400' />
                           <p>No elements added yet</p>
@@ -315,6 +346,7 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
 
       <FileElementModal
         isOpen={selectedElementType === 'file'}
+        moduleId={selectedModule?._id}
         onClose={() => {
           setSelectedElementType(null);
         }}
@@ -350,6 +382,16 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
           }}
         />
       </Dialog>
+
+      {selectedFileElement && (
+        <FileElementDetailsDialog
+          element={selectedFileElement}
+          isOpen={true}
+          onClose={() => {
+            return setSelectedFileElement(null);
+          }}
+        />
+      )}
     </>
   );
 }
