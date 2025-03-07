@@ -13,73 +13,42 @@ import {
 import { newRequest } from '@/utils/newRequest';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { format } from 'date-fns';
-import { FileText, MoreVertical, Package, PlusCircle, Receipt } from 'lucide-react';
+import { FileText, GitBranch, MoreVertical, Package, PlusCircle, Receipt } from 'lucide-react';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { SendEmailDialog } from '../FileComponents';
 import { CustomElementModal } from './CustomElementModal';
 import { FileElementDetailsDialog } from './FileElementDetailsDialog';
 import { FileElementModal } from './FileElementModal';
-import { Module } from './types';
+import { FileElement, Module } from './types';
 
 type ElementType = 'file' | 'invoice' | 'custom';
 
 interface BaseElement {
-  type: ElementType;
+  _id?: string;
   name: string;
   description?: string;
-}
-
-interface FileElement extends BaseElement {
-  type: 'file';
-  files: Array<{
-    name: string;
-    type: 'document' | 'image' | 'other';
-    size: number;
-    comment?: string;
-    uploadedAt: string;
-    url: string;
+  version?: number;
+  versionHistory?: Array<{
+    version: number;
+    changedAt: string;
+    changedBy: {
+      name: string;
+      email: string;
+    };
+    changeDescription?: string;
   }>;
 }
 
-interface InvoiceElement extends BaseElement {
-  type: 'invoice';
-  invoiceNumber: string;
-  amount: number;
-  currency: string;
-  dueDate: string;
-}
-
-interface CustomElement extends BaseElement {
-  type: 'custom';
-  fields: Array<{
-    name: string;
-    type: 'text' | 'number' | 'date' | 'select' | 'file';
-    required: boolean;
-    options?: string[];
-  }>;
-}
-
-interface ApiElement {
-  _id: string;
-  moduleId: string;
-  addedBy: {
-    _id: string;
-    name: string;
-    email: string;
-  };
-  files: string[];
-  createdAt: string;
-}
-
-type Element = FileElement | InvoiceElement | CustomElement;
+type Element = FileElement;
 
 interface ModuleDetailsDialogProps {
   selectedModule: Module | null;
   onClose: () => void;
 }
 
-const isFileElement = (element: Element): element is FileElement => {
-  return element.type === 'file';
+const isFileElement = (element) => {
+  return element.elementType === 'file';
 };
 
 export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDialogProps) {
@@ -91,6 +60,7 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
   const [emailMessage, setEmailMessage] = useState('');
   const [requestApproval, setRequestApproval] = useState(false);
   const [isLoadingElements, setIsLoadingElements] = useState(false);
+  const [selectedVersionElement, setSelectedVersionElement] = useState<Element | null>(null);
 
   useEffect(() => {
     const fetchElements = async () => {
@@ -101,23 +71,8 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
         const response = await newRequest.get(`/elements/modules/${selectedModule._id}`);
 
         // Transform API response to our Element type
-        const transformedElements: Element[] = response.data.data.map((apiElement: ApiElement) => {
-          return {
-            type: 'file',
-            name: `File ${new Date(apiElement.createdAt).toLocaleDateString()}`,
-            files: apiElement.files.map((fileUrl) => {
-              return {
-                name: fileUrl.split('/').pop() || 'Unknown file',
-                type: fileUrl.match(/\.(jpg|jpeg|png|gif)$/i) ? 'image' : 'document',
-                size: 0, // We don't have size info from the API
-                uploadedAt: apiElement.createdAt,
-                url: fileUrl,
-              };
-            }),
-          } as FileElement;
-        });
 
-        setElements(transformedElements);
+        setElements(response.data.data);
       } catch (error) {
         console.error('Error fetching module elements:', error);
       } finally {
@@ -129,8 +84,25 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
   }, [selectedModule?._id]);
 
   const handleAddElement = (newElement: Element) => {
+    // Add version information to new elements
+    const elementWithVersion = {
+      ...newElement,
+      version: 1,
+      versionHistory: [
+        {
+          version: 1,
+          changedAt: new Date().toISOString(),
+          changedBy: {
+            name: 'Current User', // In a real app, get from auth context
+            email: 'user@example.com',
+          },
+          changeDescription: 'Initial version',
+        },
+      ],
+    };
+
     setElements((prev) => {
-      return [...prev, newElement];
+      return [...prev, elementWithVersion];
     });
     setSelectedElementType(null);
   };
@@ -141,6 +113,10 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
     setEmailSubject('');
     setEmailMessage('');
     setRequestApproval(false);
+  };
+
+  const handleViewVersionHistory = (element: Element) => {
+    setSelectedVersionElement(element);
   };
 
   if (!selectedModule) return null;
@@ -287,7 +263,9 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Files</TableHead>
+                    <TableHead>Version</TableHead>
                     <TableHead>Last Updated</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -302,12 +280,12 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                     </TableRow>
                   ) : elements.length > 0 ? (
                     elements.map((element, index) => {
-                      console.log('🚀 element:', element);
+                      console.log('🚀 element 123:', element);
                       return (
                         <TableRow
                           key={index}
                           className='cursor-pointer hover:bg-gray-50'
-                          onClick={() => {
+                          onClick={(e) => {
                             if (isFileElement(element)) {
                               setSelectedFileElement(element);
                             }
@@ -315,16 +293,15 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                         >
                           <TableCell className=''>
                             <div className='flex items-center gap-2'>
-                              {element.type === 'file' && (
+                              {element.elementType === 'file' ? (
                                 <FileText className='h-4 w-4 text-gray-500' />
-                              )}
-                              {element.type === 'invoice' && (
+                              ) : element.elementType === 'invoice' ? (
                                 <Receipt className='h-4 w-4 text-gray-500' />
-                              )}
-                              {element.type === 'custom' && (
+                              ) : (
                                 <Package className='h-4 w-4 text-gray-500' />
                               )}
-                              {element.name}
+
+                              {element.name || 'Untitled'}
                             </div>
                           </TableCell>
                           <TableCell>
@@ -341,10 +318,12 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                                         key={fileIndex}
                                         className='inline-flex items-center justify-center h-6 w-6 rounded-full bg-gray-100 border border-white'
                                       >
-                                        {file.type === 'image' ? (
-                                          <img
+                                        {file.mimeType.startsWith('image/') ? (
+                                          <Image
                                             src={file.url}
-                                            alt={file.name}
+                                            alt={file.originalName}
+                                            width={24}
+                                            height={24}
                                             className='h-full w-full rounded-full object-cover'
                                           />
                                         ) : (
@@ -353,10 +332,10 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                                       </div>
                                     );
                                   })}
-                                  {element.files.length > 3 && (
+                                  {element?.files?.length > 3 && (
                                     <div className='inline-flex items-center justify-center h-6 w-6 rounded-full bg-gray-100 border border-white'>
                                       <span className='text-xs text-gray-500'>
-                                        +{element.files.length - 3}
+                                        +{element?.files?.length - 3}
                                       </span>
                                     </div>
                                   )}
@@ -364,11 +343,19 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                               </div>
                             )}
                           </TableCell>
+                          <TableCell>
+                            <div className='flex items-center gap-1'>
+                              <GitBranch className='h-3 w-3 text-gray-500' />
+                              <span className='text-sm text-gray-600'>v{element.version || 1}</span>
+                            </div>
+                          </TableCell>
                           <TableCell className='text-sm text-gray-500'>
                             {isFileElement(element) &&
                               (() => {
                                 try {
-                                  const date = new Date(element.files[0]?.uploadedAt || new Date());
+                                  const date = new Date(
+                                    element.uploadedAt || element.createdAt || new Date(),
+                                  );
                                   if (isNaN(date.getTime())) {
                                     return 'Invalid date';
                                   }
@@ -379,9 +366,50 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                               })()}
                           </TableCell>
                           <TableCell>
-                            <Button variant='ghost' size='icon'>
-                              <MoreVertical className='h-4 w-4' />
-                            </Button>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant='ghost'
+                                  size='icon'
+                                  onClick={(e) => {
+                                    e.stopPropagation(); // Prevent row click event from firing
+                                  }}
+                                >
+                                  <MoreVertical className='h-4 w-4' />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className='w-56 p-0' align='end'>
+                                <div className='p-1'>
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    className='w-full justify-start text-red-600 hover:text-red-600 hover:bg-red-50'
+                                    onClick={async (e) => {
+                                      try {
+                                        if (!element._id) {
+                                          throw new Error('Element ID is missing');
+                                        }
+
+                                        await newRequest.delete(`/elements/${element._id}`);
+                                        setElements((prev) => {
+                                          return prev.filter((e) => {
+                                            return e._id !== element._id;
+                                          });
+                                        });
+
+                                        // close the popover
+
+                                        e.stopPropagation();
+                                      } catch (error) {
+                                        console.error('Error deleting element:', error);
+                                      }
+                                    }}
+                                  >
+                                    Delete
+                                  </Button>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
                           </TableCell>
                         </TableRow>
                       );

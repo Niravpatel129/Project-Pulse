@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { Download, FileText, Image as ImageIcon } from 'lucide-react';
+import Image from 'next/image';
 import { FileElement } from './types';
 
 interface FileElementDetailsDialogProps {
@@ -70,7 +71,7 @@ export function FileElementDetailsDialog({
                       {file.type === 'image' ? (
                         <div className='flex items-center gap-2'>
                           <span>{file.name}</span>
-                          <img
+                          <Image
                             src={file.url}
                             alt={file.name}
                             className='h-8 w-8 rounded object-cover'

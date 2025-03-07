@@ -22,20 +22,7 @@ import { format } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertCircle, FileText, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-
-interface FileElement {
-  type: 'file';
-  name: string;
-  description?: string;
-  files: Array<{
-    name: string;
-    type: 'document' | 'image' | 'other';
-    size: number;
-    comment?: string;
-    uploadedAt: string;
-    url: string;
-  }>;
-}
+import { FileElement } from './types';
 
 interface FileElementModalProps {
   isOpen: boolean;

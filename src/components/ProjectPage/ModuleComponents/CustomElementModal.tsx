@@ -18,28 +18,15 @@ import {
 } from '@/components/ui/select';
 import React, { useState } from 'react';
 
-interface CustomElement {
-  type: 'custom';
-  name: string;
-  description?: string;
-  status: string;
-  fields: Array<{
-    name: string;
-    type: 'text' | 'number' | 'date' | 'select' | 'file';
-    required: boolean;
-    options?: string[];
-  }>;
-}
-
 interface CustomElementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (element: CustomElement) => void;
+  onAdd: (element) => void;
 }
 
 export function CustomElementModal({ isOpen, onClose, onAdd }: CustomElementModalProps) {
   const [showDialog, setShowDialog] = useState(false);
-  const [formData, setFormData] = useState<Partial<CustomElement>>({
+  const [formData, setFormData] = useState({
     name: '',
     description: '',
     status: 'draft',
@@ -65,7 +52,7 @@ export function CustomElementModal({ isOpen, onClose, onAdd }: CustomElementModa
     e.preventDefault();
     if (!formData.name || !formData.fields?.length) return;
 
-    onAdd(formData as CustomElement);
+    onAdd(formData as any);
     setFormData({
       name: '',
       description: '',
@@ -84,7 +71,7 @@ export function CustomElementModal({ isOpen, onClose, onAdd }: CustomElementModa
     });
   };
 
-  const updateField = (index: number, field: keyof CustomElement['fields'][0], value: any) => {
+  const updateField = (index: number, field: keyof any, value: any) => {
     setFormData((prev) => {
       return {
         ...prev,
