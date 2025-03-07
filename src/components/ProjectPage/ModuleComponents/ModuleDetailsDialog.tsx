@@ -10,10 +10,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { newRequest } from '@/utils/newRequest';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { format } from 'date-fns';
 import { FileText, MoreVertical, Package, PlusCircle, Receipt } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SendEmailDialog } from '../FileComponents';
 import { CustomElementModal } from './CustomElementModal';
 import { FileElementDetailsDialog } from './FileElementDetailsDialog';
@@ -58,6 +59,18 @@ interface CustomElement extends BaseElement {
   }>;
 }
 
+interface ApiElement {
+  _id: string;
+  moduleId: string;
+  addedBy: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  files: string[];
+  createdAt: string;
+}
+
 type Element = FileElement | InvoiceElement | CustomElement;
 
 interface ModuleDetailsDialogProps {
@@ -77,6 +90,43 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
   const [emailSubject, setEmailSubject] = useState('');
   const [emailMessage, setEmailMessage] = useState('');
   const [requestApproval, setRequestApproval] = useState(false);
+  const [isLoadingElements, setIsLoadingElements] = useState(false);
+
+  useEffect(() => {
+    const fetchElements = async () => {
+      if (!selectedModule?._id) return;
+
+      setIsLoadingElements(true);
+      try {
+        const response = await newRequest.get(`/elements/modules/${selectedModule._id}`);
+
+        // Transform API response to our Element type
+        const transformedElements: Element[] = response.data.data.map((apiElement: ApiElement) => {
+          return {
+            type: 'file',
+            name: `File ${new Date(apiElement.createdAt).toLocaleDateString()}`,
+            files: apiElement.files.map((fileUrl) => {
+              return {
+                name: fileUrl.split('/').pop() || 'Unknown file',
+                type: fileUrl.match(/\.(jpg|jpeg|png|gif)$/i) ? 'image' : 'document',
+                size: 0, // We don't have size info from the API
+                uploadedAt: apiElement.createdAt,
+                url: fileUrl,
+              };
+            }),
+          } as FileElement;
+        });
+
+        setElements(transformedElements);
+      } catch (error) {
+        console.error('Error fetching module elements:', error);
+      } finally {
+        setIsLoadingElements(false);
+      }
+    };
+
+    fetchElements();
+  }, [selectedModule?._id]);
 
   const handleAddElement = (newElement: Element) => {
     setElements((prev) => {
@@ -235,16 +285,24 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className='w-[50px]'></TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Files</TableHead>
                     <TableHead>Last Updated</TableHead>
-                    <TableHead className='w-[50px]'></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {elements.length > 0 ? (
+                  {isLoadingElements ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className='h-24 text-center'>
+                        <div className='flex flex-col items-center justify-center text-sm text-gray-500 mt-4'>
+                          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mb-2'></div>
+                          <p>Loading elements...</p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : elements.length > 0 ? (
                     elements.map((element, index) => {
+                      console.log('🚀 element:', element);
                       return (
                         <TableRow
                           key={index}
@@ -255,18 +313,20 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                             }
                           }}
                         >
-                          <TableCell>
-                            {element.type === 'file' && (
-                              <FileText className='h-4 w-4 text-gray-500' />
-                            )}
-                            {element.type === 'invoice' && (
-                              <Receipt className='h-4 w-4 text-gray-500' />
-                            )}
-                            {element.type === 'custom' && (
-                              <Package className='h-4 w-4 text-gray-500' />
-                            )}
+                          <TableCell className=''>
+                            <div className='flex items-center gap-2'>
+                              {element.type === 'file' && (
+                                <FileText className='h-4 w-4 text-gray-500' />
+                              )}
+                              {element.type === 'invoice' && (
+                                <Receipt className='h-4 w-4 text-gray-500' />
+                              )}
+                              {element.type === 'custom' && (
+                                <Package className='h-4 w-4 text-gray-500' />
+                              )}
+                              {element.name}
+                            </div>
                           </TableCell>
-                          <TableCell className='font-medium'>{element.name}</TableCell>
                           <TableCell>
                             {isFileElement(element) && (
                               <div className='flex items-center gap-2'>
