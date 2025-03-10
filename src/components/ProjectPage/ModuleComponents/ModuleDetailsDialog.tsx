@@ -1,7 +1,12 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -14,7 +19,6 @@ import { newRequest } from '@/utils/newRequest';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { format } from 'date-fns';
 import { FileText, GitBranch, MoreVertical, Package, PlusCircle, Receipt } from 'lucide-react';
-import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { SendEmailDialog } from '../FileComponents';
 import { CustomElementModal } from './CustomElementModal';
@@ -23,22 +27,6 @@ import { FileElementModal } from './FileElementModal';
 import { FileElement, Module } from './types';
 
 type ElementType = 'file' | 'invoice' | 'custom';
-
-interface BaseElement {
-  _id?: string;
-  name: string;
-  description?: string;
-  version?: number;
-  versionHistory?: Array<{
-    version: number;
-    changedAt: string;
-    changedBy: {
-      name: string;
-      email: string;
-    };
-    changeDescription?: string;
-  }>;
-}
 
 type Element = FileElement;
 
@@ -84,6 +72,7 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
   }, [selectedModule?._id]);
 
   const handleAddElement = (newElement: Element) => {
+    console.log('🚀 newElement:', newElement);
     // Add version information to new elements
     const elementWithVersion = {
       ...newElement,
@@ -132,39 +121,29 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
           <div className='w-full overflow-y-auto'>
             <div className='flex justify-between items-start mb-4'>
               <h2 className='text-2xl'>{selectedModule.name}</h2>
-              <Popover>
-                <PopoverTrigger asChild>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
                   <Button variant='ghost' size='icon' className='h-8 w-8'>
                     <MoreVertical className='h-4 w-4' />
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className='w-56 p-0' align='end'>
-                  <div className='p-1'>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      className='w-full justify-start'
-                      onClick={() => {
-                        setEmailSubject(`Module shared: ${selectedModule.name}`);
-                        setEmailMessage(
-                          `I'm sharing the following module with you: ${selectedModule.name}`,
-                        );
-                        setShowSendEmailDialog(true);
-                      }}
-                    >
-                      Send to Client
-                    </Button>
-
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      className='w-full justify-start text-red-600 hover:text-red-600 hover:bg-red-50'
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className='w-56' align='end'>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setEmailSubject(`Module shared: ${selectedModule.name}`);
+                      setEmailMessage(
+                        `I'm sharing the following module with you: ${selectedModule.name}`,
+                      );
+                      setShowSendEmailDialog(true);
+                    }}
+                  >
+                    Send to Client
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className='text-red-600 focus:text-red-600 focus:bg-red-50'>
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             {selectedModule.description && (
               <div className='mb-4'>
@@ -233,29 +212,24 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
               <div className='flex justify-between items-center mb-4'>
                 <h4 className='text-sm font-medium'>Module Elements</h4>
                 <div className='flex items-center gap-2'>
-                  <Popover>
-                    <PopoverTrigger asChild>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <Button variant='outline' size='sm' className='flex items-center gap-2'>
                         <PlusCircle className='h-4 w-4' />
                         Add Element
                       </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className='w-56 p-0' align='end'>
-                      <div className='p-1'>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='w-full justify-start'
-                          onClick={() => {
-                            return setSelectedElementType('file');
-                          }}
-                        >
-                          <FileText className='h-4 w-4 mr-2' />
-                          File Element
-                        </Button>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className='w-56' align='end'>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return setSelectedElementType('file');
+                        }}
+                      >
+                        <FileText className='h-4 w-4 mr-2' />
+                        File Element
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
               <Table>
@@ -312,26 +286,6 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                                   {element.files.length === 1 ? 'file' : 'files'}
                                 </span>
                                 <div className='flex -space-x-2'>
-                                  {element.files.slice(0, 3).map((file, fileIndex) => {
-                                    return (
-                                      <div
-                                        key={fileIndex}
-                                        className='inline-flex items-center justify-center h-6 w-6 rounded-full bg-gray-100 border border-white'
-                                      >
-                                        {file.mimeType.startsWith('image/') ? (
-                                          <Image
-                                            src={file.url}
-                                            alt={file.originalName}
-                                            width={24}
-                                            height={24}
-                                            className='h-full w-full rounded-full object-cover'
-                                          />
-                                        ) : (
-                                          <FileText className='h-3 w-3 text-gray-500' />
-                                        )}
-                                      </div>
-                                    );
-                                  })}
                                   {element?.files?.length > 3 && (
                                     <div className='inline-flex items-center justify-center h-6 w-6 rounded-full bg-gray-100 border border-white'>
                                       <span className='text-xs text-gray-500'>
@@ -366,8 +320,8 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                               })()}
                           </TableCell>
                           <TableCell>
-                            <Popover>
-                              <PopoverTrigger asChild>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
                                 <Button
                                   variant='ghost'
                                   size='icon'
@@ -377,39 +331,33 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                                 >
                                   <MoreVertical className='h-4 w-4' />
                                 </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className='w-56 p-0' align='end'>
-                                <div className='p-1'>
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    className='w-full justify-start text-red-600 hover:text-red-600 hover:bg-red-50'
-                                    onClick={async (e) => {
-                                      try {
-                                        if (!element._id) {
-                                          throw new Error('Element ID is missing');
-                                        }
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent className='w-56' align='end'>
+                                <DropdownMenuItem
+                                  className='text-red-600 focus:text-red-600 focus:bg-red-50'
+                                  onClick={async (e) => {
+                                    try {
+                                      e.stopPropagation(); // Prevent row click event from firing
 
-                                        await newRequest.delete(`/elements/${element._id}`);
-                                        setElements((prev) => {
-                                          return prev.filter((e) => {
-                                            return e._id !== element._id;
-                                          });
-                                        });
-
-                                        // close the popover
-
-                                        e.stopPropagation();
-                                      } catch (error) {
-                                        console.error('Error deleting element:', error);
+                                      if (!element._id) {
+                                        throw new Error('Element ID is missing');
                                       }
-                                    }}
-                                  >
-                                    Delete
-                                  </Button>
-                                </div>
-                              </PopoverContent>
-                            </Popover>
+
+                                      await newRequest.delete(`/elements/${element._id}`);
+                                      setElements((prev) => {
+                                        return prev.filter((e) => {
+                                          return e._id !== element._id;
+                                        });
+                                      });
+                                    } catch (error) {
+                                      console.error('Error deleting element:', error);
+                                    }
+                                  }}
+                                >
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
                       );

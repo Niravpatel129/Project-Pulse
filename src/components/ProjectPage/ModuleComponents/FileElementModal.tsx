@@ -20,7 +20,7 @@ import {
 import { newRequest } from '@/utils/newRequest';
 import { format } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertCircle, FileText, X } from 'lucide-react';
+import { AlertCircle, FileText, Pencil, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { FileElement } from './types';
 
@@ -40,6 +40,8 @@ export function FileElementModal({ isOpen, onClose, onAdd, moduleId }: FileEleme
   });
   const [error, setError] = useState<string | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [editingFileIndex, setEditingFileIndex] = useState<number | null>(null);
+  const [editedFileName, setEditedFileName] = useState<string>('');
 
   // Constants for file limitations
   const MAX_FILES = 5;
@@ -74,6 +76,8 @@ export function FileElementModal({ isOpen, onClose, onAdd, moduleId }: FileEleme
       });
       setUploadedFiles([]);
       setError(null);
+      setEditingFileIndex(null);
+      setEditedFileName('');
     }
   }, [isOpen]);
 
@@ -100,7 +104,11 @@ export function FileElementModal({ isOpen, onClose, onAdd, moduleId }: FileEleme
       formDataToSubmit.append('moduleId', moduleId);
 
       // Add each file to the FormData
-      uploadedFiles.forEach((file) => {
+      uploadedFiles.forEach((file, index) => {
+        // Use the custom file name if it was edited
+        if (formData.files && formData.files[index]) {
+          formDataToSubmit.append('fileNames', formData.files[index].name);
+        }
         formDataToSubmit.append('files', file);
       });
 
@@ -118,7 +126,7 @@ export function FileElementModal({ isOpen, onClose, onAdd, moduleId }: FileEleme
       // Create file elements from the response
       const fileElements = uploadedFiles.map((file, index) => {
         return {
-          name: file.name,
+          name: formData.files?.[index]?.name || file.name,
           type: (file.type.startsWith('image/')
             ? 'image'
             : file.type.includes('pdf') || file.type.includes('doc')
@@ -130,12 +138,7 @@ export function FileElementModal({ isOpen, onClose, onAdd, moduleId }: FileEleme
         };
       });
 
-      onAdd({
-        type: 'file',
-        name: formData.name,
-        description: formData.description,
-        files: fileElements,
-      });
+      onAdd(response.data.data);
 
       setFormData({
         name: '',
@@ -199,6 +202,7 @@ export function FileElementModal({ isOpen, onClose, onAdd, moduleId }: FileEleme
     setError(null);
 
     // Store the actual File objects for later upload
+
     setUploadedFiles((prev) => {
       return [...prev, ...files];
     });
@@ -227,6 +231,25 @@ export function FileElementModal({ isOpen, onClose, onAdd, moduleId }: FileEleme
 
     // Reset the file input so the same files can be selected again
     e.target.value = '';
+  };
+
+  const startEditingFileName = (index: number) => {
+    if (formData.files && formData.files[index]) {
+      setEditingFileIndex(index);
+      setEditedFileName(formData.files[index].name);
+    }
+  };
+
+  const saveEditedFileName = () => {
+    if (editingFileIndex !== null && formData.files) {
+      const newFiles = [...formData.files];
+      newFiles[editingFileIndex] = {
+        ...newFiles[editingFileIndex],
+        name: editedFileName,
+      };
+      setFormData({ ...formData, files: newFiles });
+      setEditingFileIndex(null);
+    }
   };
 
   const isNameValid = Boolean(formData.name && formData.name.trim());
@@ -324,7 +347,42 @@ export function FileElementModal({ isOpen, onClose, onAdd, moduleId }: FileEleme
                               transition={{ duration: 0.3 }}
                               className='border-b'
                             >
-                              <TableCell className='font-medium'>{file.name}</TableCell>
+                              <TableCell className='font-medium'>
+                                {editingFileIndex === index ? (
+                                  <div className='flex items-center'>
+                                    <input
+                                      type='text'
+                                      value={editedFileName}
+                                      onChange={(e) => {
+                                        return setEditedFileName(e.target.value);
+                                      }}
+                                      onBlur={saveEditedFileName}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          e.preventDefault();
+                                          saveEditedFileName();
+                                        }
+                                      }}
+                                      className='p-1 border rounded-md w-full'
+                                      autoFocus
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className='flex items-center gap-2'>
+                                    {file.name}
+                                    <Button
+                                      variant='ghost'
+                                      size='icon'
+                                      onClick={() => {
+                                        return startEditingFileName(index);
+                                      }}
+                                      className='h-6 w-6'
+                                    >
+                                      <Pencil className='h-3 w-3' />
+                                    </Button>
+                                  </div>
+                                )}
+                              </TableCell>
                               <TableCell>
                                 <Badge variant='secondary' className='capitalize'>
                                   {file.type}

@@ -12,8 +12,14 @@ export interface FileElement extends BaseElement {
   uploadedAt: string;
   createdAt: string;
   version: number;
+  moduleId: string;
   _id: string;
   files: any;
+  addedBy: {
+    _id: string;
+    name: string;
+    email: string;
+  };
 }
 
 export type Element = FileElement;
