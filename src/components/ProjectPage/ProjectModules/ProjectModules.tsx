@@ -7,6 +7,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -21,7 +22,19 @@ import {
 import { useProject } from '@/contexts/ProjectContext';
 import { useProjectFiles } from '@/hooks/useProjectFiles';
 import { newRequest } from '@/utils/newRequest';
-import { MoreVertical, Plus, Search, Trash, X } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronsUpDown,
+  Eye,
+  EyeOff,
+  MoreVertical,
+  Plus,
+  Search,
+  Settings,
+  Trash,
+  X,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
   FileDetailsDialog,
@@ -131,6 +144,9 @@ export default function ProjectModules() {
   const [showModuleDetailsDialog, setShowModuleDetailsDialog] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [moduleToDelete, setModuleToDelete] = useState<Module | null>(null);
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchModules = async () => {
@@ -187,6 +203,53 @@ export default function ProjectModules() {
     }
   };
 
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const toggleColumnVisibility = (column: string) => {
+    if (hiddenColumns.includes(column)) {
+      setHiddenColumns(
+        hiddenColumns.filter((col) => {
+          return col !== column;
+        }),
+      );
+    } else {
+      setHiddenColumns([...hiddenColumns, column]);
+    }
+  };
+
+  const sortedModules = [...modules].sort((a, b) => {
+    if (!sortField) return 0;
+
+    let valueA, valueB;
+
+    if (sortField === 'name') {
+      valueA = a.name.toLowerCase();
+      valueB = b.name.toLowerCase();
+    } else if (sortField === 'description') {
+      valueA = a.description.toLowerCase();
+      valueB = b.description.toLowerCase();
+    } else if (sortField === 'status') {
+      valueA = a.status.toLowerCase();
+      valueB = b.status.toLowerCase();
+    } else if (sortField === 'createdAt') {
+      valueA = new Date(a.createdAt).getTime();
+      valueB = new Date(b.createdAt).getTime();
+    } else {
+      return 0;
+    }
+
+    if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+    if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
   return (
     <div className='space-y-4'>
       <Card>
@@ -235,6 +298,66 @@ export default function ProjectModules() {
                 )}
               </div>
 
+              {/* Table settings dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant='outline' size='icon'>
+                    <Settings className='h-4 w-4' />
+                    <span className='sr-only'>Table settings</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end'>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      return toggleColumnVisibility('name');
+                    }}
+                  >
+                    {hiddenColumns.includes('name') ? (
+                      <Eye className='h-4 w-4 mr-2' />
+                    ) : (
+                      <EyeOff className='h-4 w-4 mr-2' />
+                    )}
+                    {hiddenColumns.includes('name') ? 'Show' : 'Hide'} Name
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      return toggleColumnVisibility('description');
+                    }}
+                  >
+                    {hiddenColumns.includes('description') ? (
+                      <Eye className='h-4 w-4 mr-2' />
+                    ) : (
+                      <EyeOff className='h-4 w-4 mr-2' />
+                    )}
+                    {hiddenColumns.includes('description') ? 'Show' : 'Hide'} Description
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      return toggleColumnVisibility('status');
+                    }}
+                  >
+                    {hiddenColumns.includes('status') ? (
+                      <Eye className='h-4 w-4 mr-2' />
+                    ) : (
+                      <EyeOff className='h-4 w-4 mr-2' />
+                    )}
+                    {hiddenColumns.includes('status') ? 'Show' : 'Hide'} Status
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      return toggleColumnVisibility('createdAt');
+                    }}
+                  >
+                    {hiddenColumns.includes('createdAt') ? (
+                      <Eye className='h-4 w-4 mr-2' />
+                    ) : (
+                      <EyeOff className='h-4 w-4 mr-2' />
+                    )}
+                    {hiddenColumns.includes('createdAt') ? 'Show' : 'Hide'} Created Date
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <Dialog open={showCreateModuleDialog} onOpenChange={setShowCreateModuleDialog}>
                 <Button
                   onClick={() => {
@@ -257,79 +380,244 @@ export default function ProjectModules() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table className='text-black mt-5'>
-            <TableHeader>
-              <TableRow>
-                <TableHead className='text-black'>Name</TableHead>
-                <TableHead className='text-black'>Description</TableHead>
-                <TableHead className='text-black'>Status</TableHead>
-                <TableHead className='text-black'>Created</TableHead>
-                <TableHead className='text-black'>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {modules.map((module) => {
-                return (
-                  <TableRow
-                    key={module._id}
-                    className='cursor-pointer'
-                    onClick={() => {
-                      setSelectedModule(module);
-                      setShowModuleDetailsDialog(true);
-                    }}
-                  >
-                    <TableCell className=''>{module.name}</TableCell>
-                    <TableCell className=' truncate max-w-xs'>{module.description}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                          module.status === 'active'
-                            ? 'bg-green-100 text-green-800'
-                            : module.status === 'completed'
-                            ? 'bg-blue-100 text-blue-800'
-                            : module.status === 'archived'
-                            ? 'bg-gray-100 text-gray-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                      >
-                        {module.status}
-                      </span>
-                    </TableCell>
-                    <TableCell className=' text-sm'>
-                      {new Date(module.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
+          <div className='rounded-md border'>
+            <Table>
+              <TableHeader className=''>
+                <TableRow>
+                  {!hiddenColumns.includes('name') && (
+                    <TableHead className=''>
                       <DropdownMenu>
-                        <DropdownMenuTrigger
-                          asChild
-                          onClick={(e) => {
-                            return e.stopPropagation();
-                          }}
-                        >
-                          <Button variant='ghost' size='icon'>
-                            <MoreVertical className='h-4 w-4' />
-                          </Button>
+                        <DropdownMenuTrigger className='flex items-center gap-1 cursor-pointer'>
+                          Name <ChevronsUpDown className='h-3 w-3' />
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align='end'>
+                        <DropdownMenuContent>
                           <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setModuleToDelete(module);
-                              setShowDeleteConfirmation(true);
+                            onClick={() => {
+                              return handleSort('name');
                             }}
-                            className='text-red-600'
                           >
-                            <Trash className='h-4 w-4 mr-2' />
-                            Delete Module
+                            <ArrowUp className=' text-muted-foreground/70 text-xs' />
+                            Asc
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              return handleSort('name');
+                            }}
+                          >
+                            <ArrowDown className=' text-muted-foreground/70 text-xs' />
+                            Desc
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              return toggleColumnVisibility('name');
+                            }}
+                          >
+                            <EyeOff className='text-muted-foreground/70 text-xs' />
+                            Hide
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
+                    </TableHead>
+                  )}
+                  {!hiddenColumns.includes('description') && (
+                    <TableHead className=''>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger className='flex items-center gap-1 cursor-pointer'>
+                          Description <ChevronsUpDown className='h-3 w-3' />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              return handleSort('description');
+                            }}
+                          >
+                            <ArrowUp className=' text-muted-foreground/70 text-xs' />
+                            Asc
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              return handleSort('description');
+                            }}
+                          >
+                            <ArrowDown className=' text-muted-foreground/70 text-xs' />
+                            Desc
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              return toggleColumnVisibility('description');
+                            }}
+                          >
+                            <EyeOff className='text-muted-foreground/70 text-xs' />
+                            Hide
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableHead>
+                  )}
+                  {!hiddenColumns.includes('status') && (
+                    <TableHead className=''>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger className='flex items-center gap-1 cursor-pointer'>
+                          Status <ChevronsUpDown className='h-3 w-3' />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              return handleSort('status');
+                            }}
+                          >
+                            <ArrowUp className=' text-muted-foreground/70 text-xs' />
+                            Asc
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              return handleSort('status');
+                            }}
+                          >
+                            <ArrowDown className=' text-muted-foreground/70 text-xs' />
+                            Desc
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              return toggleColumnVisibility('status');
+                            }}
+                          >
+                            <EyeOff className='text-muted-foreground/70 text-xs' />
+                            Hide
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableHead>
+                  )}
+                  {!hiddenColumns.includes('createdAt') && (
+                    <TableHead className=''>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger className='flex items-center gap-1 cursor-pointer'>
+                          Created <ChevronsUpDown className='h-3 w-3' />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              return handleSort('createdAt');
+                            }}
+                          >
+                            <ArrowUp className=' text-muted-foreground/70 text-xs' />
+                            Asc
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              return handleSort('createdAt');
+                            }}
+                          >
+                            <ArrowDown className=' text-muted-foreground/70 text-xs' />
+                            Desc
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              return toggleColumnVisibility('createdAt');
+                            }}
+                          >
+                            <EyeOff className='text-muted-foreground/70 text-xs' />
+                            Hide
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableHead>
+                  )}
+                  <TableHead className=' w-[50px]'></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoadingModules ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className='text-center py-4'>
+                      Loading modules...
                     </TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                ) : sortedModules.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className='text-center py-4'>
+                      No modules found. Create your first module to get started.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  sortedModules.map((module) => {
+                    return (
+                      <TableRow
+                        key={module._id}
+                        className='cursor-pointer hover:bg-muted/50'
+                        onClick={() => {
+                          setSelectedModule(module);
+                          setShowModuleDetailsDialog(true);
+                        }}
+                      >
+                        {!hiddenColumns.includes('name') && (
+                          <TableCell className=''>{module.name}</TableCell>
+                        )}
+                        {!hiddenColumns.includes('description') && (
+                          <TableCell className='truncate max-w-xs'>{module.description}</TableCell>
+                        )}
+                        {!hiddenColumns.includes('status') && (
+                          <TableCell>
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs  capitalize ${
+                                module.status === 'active'
+                                  ? 'bg-green-100 text-green-800'
+                                  : module.status === 'completed'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : module.status === 'archived'
+                                  ? 'bg-gray-100 text-gray-800'
+                                  : 'bg-yellow-100 text-yellow-800'
+                              }`}
+                            >
+                              {module.status}
+                            </span>
+                          </TableCell>
+                        )}
+                        {!hiddenColumns.includes('createdAt') && (
+                          <TableCell className='text-sm'>
+                            {new Date(module.createdAt).toLocaleDateString()}
+                          </TableCell>
+                        )}
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger
+                              asChild
+                              onClick={(e) => {
+                                return e.stopPropagation();
+                              }}
+                            >
+                              <Button variant='ghost' size='icon'>
+                                <MoreVertical className='h-4 w-4' />
+                                <span className='sr-only'>Open menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align='end'>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setModuleToDelete(module);
+                                  setShowDeleteConfirmation(true);
+                                }}
+                                className='text-red-600'
+                              >
+                                <Trash className='h-4 w-4 mr-2' />
+                                Delete Module
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 

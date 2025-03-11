@@ -239,7 +239,7 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                     <TableHead>Files</TableHead>
                     <TableHead>Version</TableHead>
                     <TableHead>Last Updated</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className='w-10'></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
