@@ -1,6 +1,7 @@
 'use client';
 
 import { Toaster } from '@/components/ui/toaster';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppProvider } from '@/contexts';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -15,9 +16,11 @@ export default function ClientLayout({
     <>
       <QueryClientProvider client={queryClient}>
         <AppProvider>
-          <div className='flex flex-col min-h-screen'>
-            <main className='flex-1'>{children}</main>
-          </div>
+          <TooltipProvider>
+            <div className='flex flex-col min-h-screen'>
+              <main className='flex-1'>{children}</main>
+            </div>
+          </TooltipProvider>
           <Toaster />
         </AppProvider>
       </QueryClientProvider>

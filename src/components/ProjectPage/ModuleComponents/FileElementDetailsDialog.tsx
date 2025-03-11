@@ -21,10 +21,10 @@ import {
   Download,
   Edit,
   FileText,
-  GitBranch,
-  GitCommit,
+  History,
   Image as ImageIcon,
   MoreVertical,
+  RotateCcw,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
@@ -46,43 +46,39 @@ export function FileElementDetailsDialog({
   const [activeTab, setActiveTab] = useState('files');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // Mock version control data
+  // Version history data
   const versionHistory = [
     {
       version: 'v1.3',
-      commitId: '8f7e6d5c4b3a2',
+      changeId: '8f7e6d5c4b3a2',
       message: 'Updated file content and metadata',
       author: 'Jane Smith',
       date: new Date(2023, 11, 15, 14, 30),
       changes: '+24 -12',
-      branch: 'main',
     },
     {
       version: 'v1.2',
-      commitId: '1a2b3c4d5e6f7',
+      changeId: '1a2b3c4d5e6f7',
       message: 'Fixed formatting issues',
       author: 'John Doe',
       date: new Date(2023, 11, 10, 9, 45),
       changes: '+5 -8',
-      branch: 'fix/formatting',
     },
     {
       version: 'v1.1',
-      commitId: '7g6f5e4d3c2b',
+      changeId: '7g6f5e4d3c2b',
       message: 'Added additional content',
       author: 'Jane Smith',
       date: new Date(2023, 11, 5, 16, 20),
       changes: '+45 -2',
-      branch: 'feature/content',
     },
     {
       version: 'v1.0',
-      commitId: '0z9y8x7w6v5u',
-      message: 'Initial commit',
+      changeId: '0z9y8x7w6v5u',
+      message: 'Initial upload',
       author: 'John Doe',
       date: new Date(2023, 11, 1, 10, 0),
       changes: '+120 -0',
-      branch: 'main',
     },
   ];
 
@@ -125,7 +121,7 @@ export function FileElementDetailsDialog({
           <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
             <TabsList className='mb-4'>
               <TabsTrigger value='files'>Files</TabsTrigger>
-              <TabsTrigger value='history'>History</TabsTrigger>
+              <TabsTrigger value='history'>Version History</TabsTrigger>
             </TabsList>
 
             <TabsContent value='files'>
@@ -164,20 +160,19 @@ export function FileElementDetailsDialog({
                   </div>
                 )}
                 <div className='space-y-1'>
-                  <p className='text-sm font-medium text-gray-500'>Current Branch</p>
+                  <p className='text-sm font-medium text-gray-500'>Latest Version</p>
                   <div className='flex items-center gap-2'>
-                    <GitBranch className='h-4 w-4 text-gray-500' />
-                    <p>main</p>
+                    <History className='h-4 w-4 text-gray-500' />
+                    <p>v1.3</p>
                     <Badge variant='outline' className='ml-2'>
-                      default
+                      current
                     </Badge>
                   </div>
                 </div>
                 <div className='space-y-1'>
-                  <p className='text-sm font-medium text-gray-500'>Latest Commit</p>
+                  <p className='text-sm font-medium text-gray-500'>Last Change</p>
                   <div className='flex items-center gap-2'>
-                    <GitCommit className='h-4 w-4 text-gray-500' />
-                    <p className='text-xs font-mono'>8f7e6d5c4b3a2</p>
+                    <p className='text-xs'>Updated file content and metadata</p>
                   </div>
                 </div>
               </div>
@@ -278,7 +273,7 @@ export function FileElementDetailsDialog({
                   <TableHeader>
                     <TableRow>
                       <TableHead className='w-[80px]'>Version</TableHead>
-                      <TableHead className='w-[120px]'>Commit</TableHead>
+                      <TableHead className='w-[120px]'>Change ID</TableHead>
                       <TableHead>Message</TableHead>
                       <TableHead>Author</TableHead>
                       <TableHead>Date</TableHead>
@@ -292,7 +287,7 @@ export function FileElementDetailsDialog({
                         <TableRow key={index}>
                           <TableCell className='font-medium'>{version.version}</TableCell>
                           <TableCell className='font-mono text-xs'>
-                            {version.commitId.substring(0, 7)}
+                            {version.changeId.substring(0, 7)}
                           </TableCell>
                           <TableCell>{version.message}</TableCell>
                           <TableCell>{version.author}</TableCell>
@@ -309,8 +304,11 @@ export function FileElementDetailsDialog({
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align='end'>
-                                <DropdownMenuItem>View changes</DropdownMenuItem>
-                                <DropdownMenuItem>Restore this version</DropdownMenuItem>
+                                <DropdownMenuItem>View this version</DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <RotateCcw className='h-4 w-4 mr-2' />
+                                  Restore this version
+                                </DropdownMenuItem>
                                 <DropdownMenuItem>Download</DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
