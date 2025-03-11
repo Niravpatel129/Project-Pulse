@@ -222,11 +222,6 @@ export default function DashboardLayout({
                 </SheetContent>
               </Sheet>
             </div>
-
-            {/* Logo */}
-            <Link href='/' className='flex items-center gap-1 sm:gap-2 font-semibold'>
-              <Layers className='h-5 w-5 sm:h-6 sm:w-6' />
-            </Link>
           </div>
 
           {/* Desktop Navigation */}

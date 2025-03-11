@@ -27,11 +27,22 @@ import { FileElement } from './types';
 interface FileElementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (element: FileElement) => void;
-  moduleId: string;
+  onSave?: (element: FileElement) => void;
+  moduleId?: string;
+  initialData?: FileElement;
+  isEditing?: boolean;
+  onAdd?: (element: FileElement) => void;
 }
 
-export function FileElementModal({ isOpen, onClose, onAdd, moduleId }: FileElementModalProps) {
+export function FileElementModal({
+  isOpen,
+  onClose,
+  onSave,
+  moduleId,
+  initialData,
+  isEditing = false,
+  onAdd,
+}: FileElementModalProps) {
   const [showDialog, setShowDialog] = useState(false);
   const [formData, setFormData] = useState<Partial<FileElement>>({
     name: '',
@@ -66,20 +77,26 @@ export function FileElementModal({ isOpen, onClose, onAdd, moduleId }: FileEleme
     }
   }, [isOpen]);
 
-  // Reset form data when modal is opened
+  // Initialize form data with initialData if editing
   useEffect(() => {
     if (isOpen) {
-      setFormData({
-        name: '',
-        description: '',
-        files: [],
-      });
-      setUploadedFiles([]);
+      if (isEditing && initialData) {
+        setFormData({
+          ...initialData,
+        });
+      } else {
+        setFormData({
+          name: '',
+          description: '',
+          files: [],
+        });
+        setUploadedFiles([]);
+      }
       setError(null);
       setEditingFileIndex(null);
       setEditedFileName('');
     }
-  }, [isOpen]);
+  }, [isOpen, isEditing, initialData]);
 
   const handleClose = () => {
     setShowDialog(false);
@@ -101,7 +118,10 @@ export function FileElementModal({ isOpen, onClose, onAdd, moduleId }: FileEleme
         formDataToSubmit.append('description', formData.description);
       }
       formDataToSubmit.append('type', 'file');
-      formDataToSubmit.append('moduleId', moduleId);
+
+      if (moduleId) {
+        formDataToSubmit.append('moduleId', moduleId);
+      }
 
       // Add each file to the FormData
       uploadedFiles.forEach((file, index) => {
@@ -112,33 +132,48 @@ export function FileElementModal({ isOpen, onClose, onAdd, moduleId }: FileEleme
         formDataToSubmit.append('files', file);
       });
 
-      // Make API call with newRequest
-      const response = await newRequest.post(
-        `/elements/modules/file-element/${moduleId}`,
-        formDataToSubmit,
-        {
+      if (isEditing && initialData?._id) {
+        // Update existing element
+        const response = await newRequest.put(`/elements/${initialData._id}`, formDataToSubmit, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
-        },
-      );
+        });
 
-      // Create file elements from the response
-      const fileElements = uploadedFiles.map((file, index) => {
-        return {
-          name: formData.files?.[index]?.name || file.name,
-          type: (file.type.startsWith('image/')
-            ? 'image'
-            : file.type.includes('pdf') || file.type.includes('doc')
-            ? 'document'
-            : 'other') as 'document' | 'image' | 'other',
-          size: file.size,
-          uploadedAt: response.data.createdAt,
-          url: response.data.data.files[index],
-        };
-      });
+        onSave(response.data.data);
+      } else {
+        // Create new element
+        const response = await newRequest.post(
+          `/elements/modules/file-element/${moduleId}`,
+          formDataToSubmit,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          },
+        );
 
-      onAdd(response.data.data);
+        // Create file elements from the response
+        const fileElements = uploadedFiles.map((file, index) => {
+          return {
+            name: formData.files?.[index]?.name || file.name,
+            type: (file.type.startsWith('image/')
+              ? 'image'
+              : file.type.includes('pdf') || file.type.includes('doc')
+              ? 'document'
+              : 'other') as 'document' | 'image' | 'other',
+            size: file.size,
+            uploadedAt: response.data.createdAt,
+            url: response.data.data.files[index],
+          };
+        });
+
+        if (onAdd) {
+          onAdd(response.data.data);
+        } else {
+          onSave(response.data.data);
+        }
+      }
 
       setFormData({
         name: '',
@@ -148,8 +183,8 @@ export function FileElementModal({ isOpen, onClose, onAdd, moduleId }: FileEleme
       setUploadedFiles([]);
       handleClose();
     } catch (error) {
-      console.error('Error adding file element:', error);
-      setError('Failed to add file element. Please try again.');
+      console.error('Error saving file element:', error);
+      setError('Failed to save file element. Please try again.');
     }
   };
 
@@ -259,8 +294,12 @@ export function FileElementModal({ isOpen, onClose, onAdd, moduleId }: FileEleme
     <Dialog open={showDialog} onOpenChange={handleClose}>
       <DialogContent className='max-w-3xl'>
         <DialogHeader>
-          <DialogTitle>Add File Element</DialogTitle>
-          <DialogDescription>Upload files and add them to this module</DialogDescription>
+          <DialogTitle>{isEditing ? 'Edit File Element' : 'Add File Element'}</DialogTitle>
+          <DialogDescription>
+            {isEditing
+              ? 'Update files in this element'
+              : 'Upload files and add them to this module'}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className='space-y-6'>
           <div className='space-y-4'>
@@ -274,6 +313,19 @@ export function FileElementModal({ isOpen, onClose, onAdd, moduleId }: FileEleme
                   return setFormData({ ...formData, name: e.target.value });
                 }}
                 placeholder='Enter element name'
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <Label>Description (Optional)</Label>
+              <textarea
+                className='w-full p-2 border rounded-md'
+                value={formData.description || ''}
+                onChange={(e) => {
+                  return setFormData({ ...formData, description: e.target.value });
+                }}
+                placeholder='Enter element description'
+                rows={3}
               />
             </div>
 
@@ -427,7 +479,7 @@ export function FileElementModal({ isOpen, onClose, onAdd, moduleId }: FileEleme
               Cancel
             </Button>
             <Button type='submit' disabled={!isNameValid}>
-              Add Element
+              {isEditing ? 'Save Changes' : 'Add Element'}
             </Button>
           </DialogFooter>
         </form>
