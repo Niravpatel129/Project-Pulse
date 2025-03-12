@@ -291,7 +291,7 @@ export function FileElementModal({
   const remainingFiles = MAX_FILES - (formData.files?.length || 0);
 
   return (
-    <Dialog open={showDialog} onOpenChange={handleClose}>
+    <Dialog open={showDialog} onOpenChange={handleClose} key={moduleId}>
       <DialogContent className='max-w-3xl'>
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit File Element' : 'Add File Element'}</DialogTitle>

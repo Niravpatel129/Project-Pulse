@@ -607,15 +607,13 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
         />
       </Dialog>
 
-      {selectedFileElement && (
-        <FileElementDetailsDialog
-          element={selectedFileElement}
-          isOpen={true}
-          onClose={() => {
-            return setSelectedFileElement(null);
-          }}
-        />
-      )}
+      <FileElementDetailsDialog
+        element={selectedFileElement}
+        isOpen={selectedFileElement}
+        onClose={() => {
+          return setSelectedFileElement(null);
+        }}
+      />
     </>
   );
 }

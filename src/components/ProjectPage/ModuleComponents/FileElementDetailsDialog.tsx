@@ -42,7 +42,6 @@ export function FileElementDetailsDialog({
   isOpen,
   onClose,
 }: FileElementDetailsDialogProps) {
-  const [isStorageInfoOpen, setIsStorageInfoOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('files');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -104,16 +103,16 @@ export function FileElementDetailsDialog({
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={onClose} key={'element-details-dialog'}>
         <DialogContent className='max-w-4xl' aria-describedby='file-element-description'>
           <DialogHeader>
             <DialogTitle className='flex items-center gap-2'>
               <FileText className='h-5 w-5' />
-              {element.name}
+              {element?.name}
             </DialogTitle>
-            {element.description && (
+            {element?.description && (
               <p className='text-sm text-gray-500 mt-2' id='file-element-description'>
-                {element.description}
+                {element?.description}
               </p>
             )}
           </DialogHeader>
@@ -128,35 +127,35 @@ export function FileElementDetailsDialog({
               <div className='grid grid-cols-2 gap-4 py-4'>
                 <div className='space-y-1'>
                   <p className='text-sm font-medium text-gray-500'>Element Type </p>
-                  <p className='capitalize'>{element.elementType}</p>
+                  <p className='capitalize'>{element?.elementType}</p>
                 </div>
                 <div className='space-y-1'>
                   <p className='text-sm font-medium text-gray-500'>Created</p>
                   <p>
-                    {element.createdAt ? format(new Date(element.createdAt), 'PPP') : 'Unknown'}
+                    {element?.createdAt ? format(new Date(element?.createdAt), 'PPP') : 'Unknown'}
                   </p>
                 </div>
                 <div className='space-y-1'>
                   <p className='text-sm font-medium text-gray-500'>Element ID</p>
-                  <p className='text-xs font-mono'>{element._id}</p>
+                  <p className='text-xs font-mono'>{element?._id}</p>
                 </div>
                 <div className='space-y-1'>
                   <p className='text-sm font-medium text-gray-500'>Module ID</p>
-                  <p className='text-xs font-mono'>{element.moduleId}</p>
+                  <p className='text-xs font-mono'>{element?.moduleId}</p>
                 </div>
                 <div className='space-y-1 col-span-2'>
                   <p className='text-sm font-medium text-gray-500'>Added By</p>
                   <div className='flex items-center gap-2'>
-                    <p>{element.addedBy?.name || 'Unknown'}</p>
-                    {element.addedBy?.email && (
-                      <p className='text-sm text-gray-500'>({element.addedBy.email})</p>
+                    <p>{element?.addedBy?.name || 'Unknown'}</p>
+                    {element?.addedBy?.email && (
+                      <p className='text-sm text-gray-500'>({element?.addedBy?.email})</p>
                     )}
                   </div>
                 </div>
-                {element.uploadedAt && (
+                {element?.uploadedAt && (
                   <div className='space-y-1'>
                     <p className='text-sm font-medium text-gray-500'>Uploaded</p>
-                    <p>{format(new Date(element.uploadedAt), 'PPP')}</p>
+                    <p>{format(new Date(element?.uploadedAt), 'PPP')}</p>
                   </div>
                 )}
                 <div className='space-y-1'>
@@ -178,8 +177,8 @@ export function FileElementDetailsDialog({
               </div>
 
               <div className='mt-3'>
-                <h3 className='text-lg font-medium mb-3'>Files ({element.files.length})</h3>
-                {element.files.length > 0 ? (
+                <h3 className='text-lg font-medium mb-3'>Files ({element?.files?.length})</h3>
+                {element?.files?.length > 0 ? (
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -192,9 +191,9 @@ export function FileElementDetailsDialog({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {element.files.map((file, index) => {
-                        const fileType = file.mimeType?.split('/')[0] || 'document';
-                        const fileName = file.originalName || `File ${index + 1}`;
+                      {element?.files?.map((file, index) => {
+                        const fileType = file?.mimeType?.split('/')[0] || 'document';
+                        const fileName = file?.originalName || `File ${index + 1}`;
 
                         return (
                           <TableRow key={index}>
@@ -333,11 +332,11 @@ export function FileElementDetailsDialog({
             <Button
               variant='default'
               onClick={() => {
-                if (element.files.length > 0) {
-                  handleDownload(element.files[0].url, element.files[0].originalName || 'file');
+                if (element?.files?.length > 0) {
+                  handleDownload(element?.files[0]?.url, element?.files[0]?.originalName || 'file');
                 }
               }}
-              disabled={element.files.length === 0}
+              disabled={element?.files?.length === 0}
             >
               <Download className='h-4 w-4 mr-2' />
               Download
