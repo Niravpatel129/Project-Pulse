@@ -405,26 +405,25 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <div className='flex items-center gap-2'>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant='outline' size='sm' className='flex items-center gap-2'>
-                        <PlusCircle className='h-4 w-4' />
-                        Add Element
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className='w-56' align='end'>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          return setSelectedElementType('file');
-                        }}
-                      >
-                        <FileText className='h-4 w-4 mr-2' />
-                        File Element
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant='outline' size='sm' className='flex items-center gap-2'>
+                      <PlusCircle className='h-4 w-4' />
+                      Add Element
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className='w-56' align='end'>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        return setSelectedElementType('file');
+                      }}
+                    >
+                      <FileText className='h-4 w-4 mr-2' />
+                      File Element
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               <div className='flex-1 overflow-y-auto pr-1'>
@@ -566,7 +565,9 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                           <div className='flex flex-col items-center justify-center text-sm text-gray-500 mt-4'>
                             <PlusCircle className='h-8 w-8 mb-2 text-gray-400' />
                             <p>No elements added yet</p>
-                            <p className='mt-1'>Use the button above to add your first element</p>
+                            <p className='mt-1'>
+                              Click the &quot;Add Element&quot; button to get started
+                            </p>
                           </div>
                         </TableCell>
                       </TableRow>
