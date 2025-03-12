@@ -11,8 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { ProjectFile } from '@/lib/mock/projectFiles';
-import { Clock, Send } from 'lucide-react';
-import React from 'react';
+import { Clock, Loader2, Send } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface SendEmailDialogProps {
   selectedFile: ProjectFile | null;
@@ -22,7 +22,7 @@ interface SendEmailDialogProps {
   setEmailMessage: (value: string) => void;
   requestApproval: boolean;
   setRequestApproval: (value: boolean) => void;
-  handleSendEmail: () => void;
+  handleSendEmail: () => Promise<void>;
   onClose: () => void;
 }
 
@@ -37,6 +37,19 @@ const SendEmailDialog: React.FC<SendEmailDialogProps> = ({
   handleSendEmail,
   onClose,
 }) => {
+  const [isSending, setIsSending] = useState(false);
+
+  const handleSubmit = async () => {
+    setIsSending(true);
+    try {
+      await handleSendEmail();
+    } catch (error) {
+      console.error('Error sending email:', error);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   return (
     <DialogContent className='max-w-md'>
       <DialogHeader>
@@ -59,7 +72,9 @@ const SendEmailDialog: React.FC<SendEmailDialogProps> = ({
           <Input
             id='email-subject'
             value={emailSubject}
-            onChange={(e) => {return setEmailSubject(e.target.value)}}
+            onChange={(e) => {
+              return setEmailSubject(e.target.value);
+            }}
           />
         </div>
 
@@ -68,7 +83,9 @@ const SendEmailDialog: React.FC<SendEmailDialogProps> = ({
           <Textarea
             id='email-message'
             value={emailMessage}
-            onChange={(e) => {return setEmailMessage(e.target.value)}}
+            onChange={(e) => {
+              return setEmailMessage(e.target.value);
+            }}
             rows={4}
           />
         </div>
@@ -93,12 +110,21 @@ const SendEmailDialog: React.FC<SendEmailDialogProps> = ({
       </div>
 
       <DialogFooter>
-        <Button variant='outline' onClick={onClose}>
+        <Button variant='outline' onClick={onClose} disabled={isSending}>
           Cancel
         </Button>
-        <Button onClick={handleSendEmail}>
-          <Send className='mr-2 h-4 w-4' />
-          Send Email
+        <Button onClick={handleSubmit} disabled={isSending}>
+          {isSending ? (
+            <>
+              <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+              Sending...
+            </>
+          ) : (
+            <>
+              <Send className='mr-2 h-4 w-4' />
+              Send Email
+            </>
+          )}
         </Button>
       </DialogFooter>
     </DialogContent>

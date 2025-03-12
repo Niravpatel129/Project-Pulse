@@ -679,8 +679,9 @@ export default function ProjectModules() {
           requestApproval={requestApproval}
           setRequestApproval={setRequestApproval}
           handleSendEmail={handleSendEmail}
-          onClose={() => {
-            return setShowSendEmailDialog(false);
+          onClose={async () => {
+            setShowSendEmailDialog(false);
+            return Promise.resolve();
           }}
         />
       </Dialog>

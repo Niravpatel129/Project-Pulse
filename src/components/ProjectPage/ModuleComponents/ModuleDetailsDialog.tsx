@@ -62,14 +62,16 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
   const [emailMessage, setEmailMessage] = useState('');
   const [requestApproval, setRequestApproval] = useState(false);
   const [isLoadingElements, setIsLoadingElements] = useState(false);
+  const [isLoadingApprovals, setIsLoadingApprovals] = useState(false);
   const [selectedVersionElement, setSelectedVersionElement] = useState<Element | null>(null);
   const [clientShares, setClientShares] = useState<
-    { id: string; status: 'awaiting_approval' | 'seen' | 'not_seen'; sentAt: Date }[]
-  >([
-    { id: '1', status: 'awaiting_approval', sentAt: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-    { id: '2', status: 'seen', sentAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
-    { id: '3', status: 'not_seen', sentAt: new Date(Date.now() - 1 * 60 * 60 * 1000) },
-  ]);
+    {
+      id: string;
+      status: 'awaiting_approval' | 'seen' | 'not_seen';
+      sentAt: Date;
+      recipientEmail: string;
+    }[]
+  >([]);
 
   useEffect(() => {
     const fetchElements = async () => {
@@ -78,9 +80,6 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
       setIsLoadingElements(true);
       try {
         const response = await newRequest.get(`/elements/modules/${selectedModule._id}`);
-
-        // Transform API response to our Element type
-
         setElements(response.data.data);
       } catch (error) {
         console.error('Error fetching module elements:', error);
@@ -89,7 +88,31 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
       }
     };
 
+    const fetchApprovals = async () => {
+      if (!selectedModule?._id) return;
+
+      setIsLoadingApprovals(true);
+      try {
+        const response = await newRequest.get(`/module-emails/${selectedModule._id}/approvals`);
+        setClientShares(
+          response.data.emails.map((share) => {
+            return {
+              id: share._id,
+              status: share.status,
+              sentAt: new Date(share.sentAt),
+              recipientEmail: share.recipientEmail,
+            };
+          }),
+        );
+      } catch (error) {
+        console.error('Error fetching module approvals:', error);
+      } finally {
+        setIsLoadingApprovals(false);
+      }
+    };
+
     fetchElements();
+    fetchApprovals();
   }, [selectedModule?._id]);
 
   const handleAddElement = (newElement: Element) => {
@@ -117,24 +140,41 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
     setSelectedElementType(null);
   };
 
-  const handleSendEmail = () => {
-    // In a real app, this would send an API request to send the email
-    setShowSendEmailDialog(false);
-    setEmailSubject('');
-    setEmailMessage('');
-    setRequestApproval(false);
+  const handleSendEmail = async () => {
+    try {
+      // Make API call to send email
+      const response = await newRequest.post('/module-emails/send-approval-email', {
+        moduleId: selectedModule._id,
+        subject: emailSubject,
+        message: emailMessage,
+        requestApproval: requestApproval,
+      });
 
-    // Add a new client share to the list
-    setClientShares((prev) => {
-      return [
-        ...prev,
-        {
-          id: Math.random().toString(36).substring(2, 9),
-          status: requestApproval ? 'awaiting_approval' : 'not_seen',
-          sentAt: new Date(),
-        },
-      ];
-    });
+      // Add new client shares to the list with data from response
+      if (response.data.emailRecords && response.data.emailRecords.length > 0) {
+        const newShares = response.data.emailRecords.map((record) => {
+          return {
+            id: record._id,
+            status: record.requestApproval ? 'awaiting_approval' : 'not_seen',
+            sentAt: new Date(record.sentAt),
+            recipientEmail: record.recipientEmail,
+          };
+        });
+
+        setClientShares((prev) => {
+          return [...prev, ...newShares];
+        });
+      }
+
+      // Reset form state
+      setShowSendEmailDialog(false);
+      setEmailSubject('');
+      setEmailMessage('');
+      setRequestApproval(false);
+    } catch (error) {
+      console.error('Error sending email:', error);
+      // Here you could add toast notification for error
+    }
   };
 
   const handleViewVersionHistory = (element: Element) => {
@@ -187,7 +227,7 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
           {/* Main content area with two columns */}
           <div className='flex flex-1 gap-6 overflow-hidden'>
             {/* Left column - Module details and client shares */}
-            <div className='w-1/3 flex flex-col overflow-y-auto pr-4'>
+            <div className='w-1/3 flex flex-col overflow-y-auto'>
               {/* Module details section */}
               <div className='mb-6'>
                 {selectedModule.description && (
@@ -262,17 +302,36 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                   </Badge>
                 </div>
 
-                {clientShares.length > 0 ? (
+                {isLoadingApprovals ? (
+                  <div className='flex flex-col items-center justify-center p-8 border rounded-md bg-gray-50'>
+                    <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800 mb-4'></div>
+                    <p className='text-sm text-gray-500'>Loading approvals...</p>
+                  </div>
+                ) : clientShares.length > 0 ? (
                   <div className='space-y-2 max-h-[300px] overflow-y-auto pr-1'>
                     {clientShares.map((share) => {
                       return (
                         <div
                           key={share.id}
-                          className='flex items-center justify-between p-3 border rounded-md hover:bg-gray-50 transition-colors'
+                          className='flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-md hover:bg-gray-50 transition-colors gap-2'
                         >
-                          <div className='flex items-center gap-2'>
-                            <Mail className='h-4 w-4 text-gray-500' />
-                            <span className='text-sm'>{format(share.sentAt, 'MMM d, h:mm a')}</span>
+                          <div className='flex flex-col gap-1'>
+                            <div className='flex items-center gap-2'>
+                              <Mail className='h-4 w-4 text-gray-500 flex-shrink-0' />
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className='text-sm font-medium cursor-help truncate max-w-[150px] sm:max-w-[200px]'>
+                                    {share.recipientEmail.split('@')[0]}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{share.recipientEmail}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
+                            <span className='text-xs text-gray-500 pl-6'>
+                              {format(share.sentAt, 'MMM d, h:mm a')}
+                            </span>
                           </div>
                           <Badge
                             variant={
@@ -282,7 +341,7 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                                 ? 'secondary'
                                 : 'default'
                             }
-                            className='flex items-center gap-1'
+                            className='flex items-center gap-1 self-start sm:self-center mt-2 sm:mt-0 whitespace-nowrap'
                           >
                             {share.status === 'awaiting_approval' && <Clock className='h-3 w-3' />}
                             {share.status === 'seen' && <Eye className='h-3 w-3' />}
@@ -298,12 +357,29 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                     })}
                   </div>
                 ) : (
-                  <div className='text-center p-6 border rounded-md bg-gray-50'>
-                    <Mail className='h-8 w-8 mx-auto mb-2 text-gray-400' />
-                    <p className='text-sm text-gray-500'>No shares with clients yet</p>
-                    <p className='text-xs text-gray-400 mt-1'>
-                      Use the &quot;Send to Client&quot; button to share this module
+                  <div className='flex flex-col items-center justify-center p-8 border rounded-md bg-gray-50 text-center'>
+                    <div className='bg-white p-3 rounded-full border mb-4'>
+                      <Mail className='h-8 w-8 text-gray-400' />
+                    </div>
+                    <h4 className='text-sm font-medium text-gray-900 mb-1'>No approvals yet</h4>
+                    <p className='text-sm text-gray-500 mb-4'>
+                      Share this module with clients to request approvals and track their responses
                     </p>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      className='flex items-center gap-2'
+                      onClick={() => {
+                        setEmailSubject(`Module shared: ${selectedModule.name}`);
+                        setEmailMessage(
+                          `I'm sharing the following module with you: ${selectedModule.name}`,
+                        );
+                        setShowSendEmailDialog(true);
+                      }}
+                    >
+                      <Mail className='h-4 w-4' />
+                      Send to Client
+                    </Button>
                   </div>
                 )}
               </div>
