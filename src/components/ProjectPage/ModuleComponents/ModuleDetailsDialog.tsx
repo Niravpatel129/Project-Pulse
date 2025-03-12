@@ -207,20 +207,8 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                 }}
               >
                 <Mail className='h-4 w-4' />
-                Send to Client
+                Share for Approval
               </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant='ghost' size='icon' className='h-8 w-8'>
-                    <MoreVertical className='h-4 w-4' />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className='w-56' align='end'>
-                  <DropdownMenuItem className='text-red-600 focus:text-red-600 focus:bg-red-50'>
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           </div>
 

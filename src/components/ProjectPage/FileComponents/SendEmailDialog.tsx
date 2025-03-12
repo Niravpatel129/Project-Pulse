@@ -54,7 +54,7 @@ const SendEmailDialog: React.FC<SendEmailDialogProps> = ({
     <DialogContent className='max-w-md'>
       <DialogHeader>
         <DialogTitle>Send Files to Client</DialogTitle>
-        <DialogDescription>Email these files directly to your client.</DialogDescription>
+        <DialogDescription>Email this module directly to your client.</DialogDescription>
       </DialogHeader>
 
       <div className='space-y-4 py-4'>
