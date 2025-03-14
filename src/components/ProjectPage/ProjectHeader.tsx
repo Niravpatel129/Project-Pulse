@@ -10,9 +10,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useProject } from '@/contexts/ProjectContext';
+import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircle,
@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import AddParticipantDialog from './AddParticipantDialog';
 import AddTeamDialog from './AddTeamDialog';
 
@@ -55,7 +56,7 @@ interface Role {
 }
 
 export default function ProjectHeader() {
-  const { project, loading, error } = useProject();
+  const { project, error } = useProject();
   const queryClient = useQueryClient();
 
   // Use React Query to manage participants state
@@ -84,6 +85,40 @@ export default function ProjectHeader() {
       });
     },
   });
+
+  const removeParticipantMutation = useMutation({
+    mutationFn: async (participantId: string) => {
+      // Make an API call to remove the participant
+      const response = await newRequest.delete(
+        `/projects/${project?._id}/participants/${participantId}`,
+      );
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to remove participant');
+      }
+      return participantId;
+    },
+    onSuccess: (participantId) => {
+      // Update the project participants list
+      queryClient.setQueryData(['project', project?._id], (oldData: any) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          participants: oldData.participants.filter((p: any) => {
+            return p._id !== participantId;
+          }),
+        };
+      });
+      toast.success('Participant removed successfully');
+    },
+    onError: (error) => {
+      console.error('Error removing participant:', error);
+      toast.error('Failed to remove participant');
+    },
+  });
+
+  const handleRemoveParticipant = (participantId: string) => {
+    removeParticipantMutation.mutate(participantId);
+  };
 
   const [predefinedRoles, setPredefinedRoles] = useState<Role[]>([]);
 
@@ -204,13 +239,10 @@ export default function ProjectHeader() {
               <div className='flex flex-wrap items-center gap-4'>
                 {project.participants.map((participant) => {
                   return (
-                    <div
-                      key={participant._id}
-                      className='flex items-center gap-3 transition-all  p-1.5 rounded-lg'
-                    >
-                      <HoverCard>
-                        <HoverCardTrigger asChild>
-                          <Avatar className='h-10 w-10 cursor-pointer border-2 border-transparent hover:border-gray-300 transition-colors bg-gray-200'>
+                    <DropdownMenu key={participant._id}>
+                      <DropdownMenuTrigger asChild>
+                        <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg cursor-pointer hover:bg-gray-50'>
+                          <Avatar className='h-10 w-10 border-2 border-transparent hover:border-gray-300 transition-colors bg-gray-200'>
                             {participant.avatar ? (
                               <AvatarImage src={participant.avatar} alt={participant.name} />
                             ) : (
@@ -224,59 +256,52 @@ export default function ProjectHeader() {
                               </AvatarFallback>
                             )}
                           </Avatar>
-                        </HoverCardTrigger>
-                        <HoverCardContent side='bottom' className='p-3 max-w-xs'>
-                          <div className='space-y-3'>
-                            <div className='flex items-center gap-3'>
-                              <Avatar className='h-10 w-10'>
-                                {participant.avatar ? (
-                                  <AvatarImage src={participant.avatar} alt={participant.name} />
-                                ) : (
-                                  <AvatarFallback className='bg-gray-200 text-gray-800 font-medium flex items-center justify-center'>
-                                    {participant.name
-                                      .split(' ')
-                                      .map((n) => {
-                                        return n.charAt(0).toUpperCase();
-                                      })
-                                      .join('')}
-                                  </AvatarFallback>
-                                )}
-                              </Avatar>
-                              <div className='space-y-0.5'>
-                                <p className='font-medium text-base'>{participant.name}</p>
-                                <div className='flex items-center gap-2'>
-                                  <span className='text-sm'>{participant.role}</span>
-                                  {participant.status && (
-                                    <span className='text-sm'>{participant.status}</span>
-                                  )}
-                                </div>
-                              </div>
+                          <div className='hidden sm:block'>
+                            <div className='flex items-center gap-1'>
+                              <p className='text-sm font-medium capitalize'>
+                                {participant.name.length > 15
+                                  ? `${participant.name.substring(0, 15)}...`
+                                  : participant.name}
+                              </p>
                             </div>
-                            {participant.email && (
-                              <div className='flex items-center gap-1.5 text-xs text-muted-foreground'>
-                                <Mail className='h-3 w-3' />
-                                <span>{participant.email}</span>
-                              </div>
-                            )}
-                          </div>
-                        </HoverCardContent>
-                      </HoverCard>
-                      <div className='hidden sm:block'>
-                        <div className='flex items-center gap-1'>
-                          <p className='text-sm font-medium capitalize'>{participant.name}</p>
-                        </div>
-                        <div className='flex items-center gap-1.5 mt-0.5'>
-                          {getRoleBadge(participant.role)}
-                          {participant.status && (
-                            <span>
-                              {getStatusBadge(
-                                participant.status as 'active' | 'pending' | 'inactive',
+                            <div className='flex items-center gap-1.5 mt-0.5'>
+                              {getRoleBadge(participant.role)}
+                              {participant.status && (
+                                <span>
+                                  {getStatusBadge(
+                                    participant.status as 'active' | 'pending' | 'inactive',
+                                  )}
+                                </span>
                               )}
-                            </span>
-                          )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align='end' className='w-48'>
+                        <DropdownMenuItem
+                          className='cursor-pointer'
+                          onClick={() => {
+                            if (participant.email) {
+                              navigator.clipboard?.writeText(participant.email);
+                              toast.success('Email copied to clipboard');
+                            }
+                          }}
+                        >
+                          <Mail className='h-4 w-4 mr-2' />
+                          {participant.email && participant.email.length > 20
+                            ? `${participant.email.substring(0, 20)}...`
+                            : participant.email || 'No email'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className='cursor-pointer text-red-500'
+                          onClick={() => {
+                            return handleRemoveParticipant(participant._id);
+                          }}
+                        >
+                          Remove from project
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   );
                 })}
 
