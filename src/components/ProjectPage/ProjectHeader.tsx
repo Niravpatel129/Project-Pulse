@@ -615,7 +615,6 @@ export default function ProjectHeader() {
                   onOpenChange={setIsAddTeamOpen}
                   selectedRole={selectedRole}
                   onAddParticipant={handleAddParticipant}
-                  predefinedRoles={predefinedRoles}
                 />
               </div>
             </div>

@@ -7,6 +7,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Search, UserPlus, Users } from 'lucide-react';
+import { Mail, Search, UserPlus, Users } from 'lucide-react';
 import { useState } from 'react';
 
 interface Role {
@@ -68,6 +69,9 @@ export default function AddTeamDialog({
 }: AddTeamDialogProps) {
   const [activeTab, setActiveTab] = useState('collaborator');
   const queryClient = useQueryClient();
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('MODERATOR');
 
   // Collaborator fields
   const [collaboratorName, setCollaboratorName] = useState('');
@@ -250,6 +254,14 @@ export default function AddTeamDialog({
     });
 
     resetTeamForm();
+  };
+
+  const handleInviteToWorkspace = () => {
+    // In a real app, this would send an invitation email
+    console.log(`Inviting ${inviteEmail} to workspace with role ${inviteRole}`);
+    setInviteEmail('');
+    setInviteRole('MODERATOR');
+    setInviteModalOpen(false);
   };
 
   const getInitials = (name: string) => {
@@ -439,71 +451,125 @@ export default function AddTeamDialog({
               />
             </div>
 
-            <div className='mt-2 mb-1 flex justify-between items-center'>
-              <Label className='text-sm font-medium'>Team Members</Label>
-            </div>
+            <div className='flex flex-col space-y-2'>
+              <div className='flex justify-between items-center'>
+                <Label className='text-sm font-medium'>Team Members</Label>
+              </div>
 
-            <div className='max-h-60 overflow-y-auto space-y-1 rounded-md'>
-              {isLoading ? (
-                <p className='text-center py-4 text-sm text-gray-500'>Loading team members...</p>
-              ) : filteredMembers && filteredMembers.length > 0 ? (
-                filteredMembers.map((member) => {
-                  return (
-                    <div
-                      key={member.id}
-                      className={`flex items-center p-2 rounded-md hover:bg-gray-50 cursor-pointer transition-colors ${
-                        selectedTeamMembers.includes(member.id) ? 'bg-gray-50' : ''
-                      }`}
-                      onClick={() => {
-                        return toggleTeamMember(member.id);
-                      }}
-                    >
-                      <Checkbox
-                        id={`member-${member.id}`}
-                        checked={selectedTeamMembers.includes(member.id)}
-                        className='mr-3'
-                        onCheckedChange={() => {
+              <div className='max-h-60 overflow-y-auto space-y-1 rounded-md'>
+                <div className='mb-4'>
+                  <Dialog open={inviteModalOpen} onOpenChange={setInviteModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant='outline' size='default' className='w-full'>
+                        <Mail className='mr-2 h-4 w-4' />
+                        Invite New Member
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className='sm:max-w-md'>
+                      <DialogHeader>
+                        <DialogTitle>Invite to Workspace</DialogTitle>
+                        <DialogDescription>
+                          Send an invitation to join your workspace.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className='space-y-4 py-4'>
+                        <div className='space-y-2'>
+                          <Label htmlFor='invite-email'>Email Address</Label>
+                          <Input
+                            id='invite-email'
+                            type='email'
+                            value={inviteEmail}
+                            onChange={(e) => {
+                              return setInviteEmail(e.target.value);
+                            }}
+                            placeholder='colleague@example.com'
+                          />
+                        </div>
+                        <div className='space-y-2'>
+                          <Label htmlFor='invite-role'>Role</Label>
+                          <Select value={inviteRole} onValueChange={setInviteRole}>
+                            <SelectTrigger>
+                              <SelectValue placeholder='Select a role' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value='ADMIN'>Admin</SelectItem>
+                              <SelectItem value='MODERATOR'>Moderator</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <Button
+                        className='w-full'
+                        onClick={handleInviteToWorkspace}
+                        disabled={!inviteEmail.trim()}
+                      >
+                        Send Invitation
+                      </Button>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+
+                {isLoading ? (
+                  <p className='text-center py-4 text-sm text-gray-500'>Loading team members...</p>
+                ) : filteredMembers && filteredMembers.length > 0 ? (
+                  filteredMembers.map((member) => {
+                    return (
+                      <div
+                        key={member.id}
+                        className={`flex items-center p-2 rounded-md hover:bg-gray-50 cursor-pointer transition-colors ${
+                          selectedTeamMembers.includes(member.id) ? 'bg-gray-50' : ''
+                        }`}
+                        onClick={() => {
                           return toggleTeamMember(member.id);
                         }}
-                      />
-                      <Avatar className='h-8 w-8 mr-3'>
-                        <AvatarImage src={member.avatar} alt={member.name} />
-                        <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
-                      </Avatar>
-                      <div className='flex-1 min-w-0'>
-                        <p className='text-sm font-medium truncate'>{member.name}</p>
-                        <p className='text-xs text-gray-500 truncate'>{member.email}</p>
-                      </div>
-                      <div className='flex items-center gap-2'>
-                        <Select
-                          defaultValue={teamRole}
-                          onValueChange={(value) => {
-                            return setTeamRole(value);
+                      >
+                        <Checkbox
+                          id={`member-${member.id}`}
+                          checked={selectedTeamMembers.includes(member.id)}
+                          className='mr-3'
+                          onCheckedChange={() => {
+                            return toggleTeamMember(member.id);
                           }}
-                          value={teamRole}
-                        >
-                          <SelectTrigger className='h-7 w-28 text-xs'>
-                            <SelectValue placeholder='Role' />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {predefinedRoles.map((role) => {
-                              return (
-                                <SelectItem key={role.id} value={role.name}>
-                                  {role.name}
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                        </Select>
+                        />
+                        <Avatar className='h-8 w-8 mr-3'>
+                          <AvatarImage src={member.avatar} alt={member.name} />
+                          <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
+                        </Avatar>
+                        <div className='flex-1 min-w-0'>
+                          <p className='text-sm font-medium truncate'>{member.name}</p>
+                          <p className='text-xs text-gray-500 truncate'>{member.email}</p>
+                        </div>
+                        <div className='flex items-center gap-2'>
+                          <Select
+                            defaultValue={teamRole}
+                            onValueChange={(value) => {
+                              return setTeamRole(value);
+                            }}
+                            value={teamRole}
+                          >
+                            <SelectTrigger className='h-7 w-28 text-xs'>
+                              <SelectValue placeholder='Role' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {predefinedRoles.map((role) => {
+                                return (
+                                  <SelectItem key={role.id} value={role.name}>
+                                    {role.name}
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className='text-center py-4 text-sm text-gray-500'>
-                  {searchQuery ? 'No matching members found' : 'No team members found'}
-                </p>
-              )}
+                    );
+                  })
+                ) : (
+                  <p className='text-center py-4 text-sm text-gray-500'>
+                    {searchQuery ? 'No matching members found' : 'No team members found'}
+                  </p>
+                )}
+              </div>
             </div>
 
             <Button
