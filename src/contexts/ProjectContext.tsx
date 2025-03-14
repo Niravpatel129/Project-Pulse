@@ -32,11 +32,22 @@ interface Project {
   };
 }
 
+interface Participant {
+  _id: string;
+  name: string;
+  role: string;
+  avatar?: string;
+  email?: string;
+  status?: string;
+}
+
 interface ProjectContextType {
   project: Project | null;
   loading: boolean;
   error: string | null;
   updateProject: (data: Partial<Project>) => Promise<void>;
+  participants: Participant[];
+  fetchParticipants: () => Promise<void>;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -52,6 +63,7 @@ export function ProjectProvider({
   console.log('🚀 project:', project);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [participants, setParticipants] = useState<Participant[]>([]);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -69,8 +81,22 @@ export function ProjectProvider({
 
     if (projectId) {
       fetchProject();
+      fetchParticipants();
     }
   }, [projectId]);
+
+  const fetchParticipants = async () => {
+    try {
+      const response = await newRequest.get(`/projects/${projectId}/participants`);
+      if (response.data.success) {
+        setParticipants(response.data.data);
+      } else {
+        console.error('Failed to fetch participants:', response.data.message);
+      }
+    } catch (err) {
+      console.error('Error fetching participants:', err);
+    }
+  };
 
   const updateProject = async (data: Partial<Project>) => {
     try {
@@ -91,7 +117,9 @@ export function ProjectProvider({
   };
 
   return (
-    <ProjectContext.Provider value={{ project, loading, error, updateProject }}>
+    <ProjectContext.Provider
+      value={{ project, loading, error, updateProject, participants, fetchParticipants }}
+    >
       {children}
     </ProjectContext.Provider>
   );

@@ -55,37 +55,7 @@ interface Role {
 
 export default function ProjectHeader() {
   const { project, loading, error } = useProject();
-  const [participants, setParticipants] = useState<Participant[]>([
-    {
-      id: '1',
-      name: 'You',
-      role: 'ADMIN',
-      avatar: 'https://picsum.photos/100/100?random=1',
-      email: 'you@example.com',
-      phone: '+1 (555) 123-4567',
-      status: 'active',
-      permissions: ['edit', 'upload', 'download', 'share', 'delete'],
-      dateAdded: '2023-04-15',
-      lastActive: '2023-06-22',
-      contractSigned: true,
-      paymentStatus: 'paid',
-    },
-    {
-      id: '2',
-      name: 'Shannon Zurawski',
-      role: 'CLIENT',
-      initials: 'SZ',
-      email: 'shannon@example.com',
-      phone: '+1 (555) 987-6543',
-      status: 'active',
-      permissions: ['view', 'download', 'comment'],
-      dateAdded: '2023-04-16',
-      lastActive: '2023-06-20',
-      contractSigned: true,
-      paymentStatus: 'partial',
-      notes: 'Primary contact for wedding planning',
-    },
-  ]);
+  const [participants, setParticipants] = useState<Participant[]>([]);
 
   const [predefinedRoles, setPredefinedRoles] = useState<Role[]>([
     {
@@ -199,12 +169,12 @@ export default function ProjectHeader() {
       return r.name === roleName;
     });
     return role ? (
-      <Badge variant='outline' className={`${role.color} font-normal`}>
-        {roleName}
+      <Badge variant='outline' className={`${role.color} font-normal capitalize`}>
+        {roleName || 'Client'}
       </Badge>
     ) : (
-      <Badge variant='outline' className='bg-gray-100 text-gray-800 font-normal'>
-        {roleName}
+      <Badge variant='outline' className='bg-gray-100 text-gray-800 font-normal capitalize'>
+        {roleName || 'Client'}
       </Badge>
     );
   };

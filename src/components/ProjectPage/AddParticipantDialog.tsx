@@ -9,7 +9,7 @@ import { useProject } from '@/contexts/ProjectContext';
 import { cn } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
 import { ChevronDownIcon, PhoneIcon, Plus, Search, UserPlus, X } from 'lucide-react';
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import * as RPNInput from 'react-phone-number-input';
 import flags from 'react-phone-number-input/flags';
 import { toast } from 'sonner';
@@ -59,6 +59,8 @@ export default function AddParticipantDialog({
   const phoneInputId = useId();
   const { project } = useProject();
   const [isLoading, setIsLoading] = useState(false);
+  const [previousContacts, setPreviousContacts] = useState<Participant[]>([]);
+  const [isLoadingContacts, setIsLoadingContacts] = useState(false);
 
   // Form validation
   const [nameError, setNameError] = useState('');
@@ -71,50 +73,51 @@ export default function AddParticipantDialog({
     !nameError &&
     !emailError;
 
-  // Mock previous clients/team members for the CRM integration
-  const previousContacts = [
-    {
-      id: 'c1',
-      name: 'Alex Johnson',
-      email: 'alex@example.com',
-      phone: '+1 (555) 234-5678',
-      dateAdded: '2023-01-10',
-      lastActive: '2023-06-15',
-      notes: 'Returning client, 3 previous projects',
-    },
-    {
-      id: 'c2',
-      name: 'Maria Garcia',
-      email: 'maria@example.com',
-      phone: '+1 (555) 345-6789',
-      dateAdded: '2023-02-22',
-      lastActive: '2023-05-30',
-      notes: 'Referred by Alex Johnson',
-    },
-    {
-      id: 'c3',
-      name: 'James Wilson',
-      email: 'james@example.com',
-      phone: '+1 (555) 456-7890',
-      dateAdded: '2022-11-15',
-      lastActive: '2023-06-21',
-      notes: 'Regular assistant, available weekends',
-    },
-    {
-      id: 'c4',
-      name: 'Emma Davis',
-      email: 'emma@example.com',
-      phone: '+1 (555) 567-8901',
-      dateAdded: '2023-03-05',
-      lastActive: '2023-06-10',
-      notes: 'Specializes in natural makeup looks',
-    },
-  ];
+  // Fetch existing contacts from API
+  useEffect(() => {
+    const fetchContacts = async () => {
+      try {
+        setIsLoadingContacts(true);
+        const response = await newRequest.get('/participants');
+
+        // Transform API response to match Participant interface
+        const transformedContacts = response.data.data.map((contact: any) => {
+          return {
+            id: contact._id,
+            name: contact.name,
+            email: contact.email,
+            phone: contact.phone,
+            dateAdded: new Date(contact.createdAt).toISOString().split('T')[0],
+            notes: contact.comments,
+            customFields: Object.entries(contact.customFields || {}).map(([key, value]) => {
+              return {
+                key,
+                value: value as string,
+              };
+            }),
+          };
+        });
+
+        setPreviousContacts(transformedContacts);
+      } catch (error) {
+        console.error('Error fetching contacts:', error);
+        toast.error('Error Loading Contacts', {
+          description: 'There was a problem loading existing contacts. Please try again.',
+        });
+      } finally {
+        setIsLoadingContacts(false);
+      }
+    };
+
+    if (isOpen) {
+      fetchContacts();
+    }
+  }, [isOpen]);
 
   const filteredContacts = previousContacts.filter((contact) => {
     return (
       contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.email.toLowerCase().includes(searchTerm.toLowerCase())
+      (contact.email && contact.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
 
@@ -168,14 +171,10 @@ export default function AddParticipantDialog({
 
     try {
       setIsLoading(true);
-      const response = await newRequest.post('/participants', {
+      const response = await newRequest.post(`/projects/${project?._id}/participants`, {
         participant: newParticipant,
-        projectId: project?._id,
       });
 
-      console.log('🚀 response:', response);
-
-      console.log('🚀 newParticipant:', newParticipant);
       onAddParticipant(newParticipant);
       resetForm();
 
@@ -192,19 +191,40 @@ export default function AddParticipantDialog({
     }
   };
 
-  const handleAddExistingContact = async (contact: (typeof previousContacts)[0]) => {
-    const newParticipant: Participant = {
-      ...contact,
-      dateAdded: new Date().toISOString().split('T')[0],
-    };
-
+  const handleAddExistingContact = async (contact: Participant) => {
     try {
       setIsLoading(true);
-      onAddParticipant(newParticipant);
-      toast.success('Participant Added', {
-        description: `${contact.name} has been added to the project successfully.`,
-      });
+
+      // Create a payload with the existing contact and project ID
+      const payload = {
+        participantId: contact.id,
+        projectId: project?._id,
+      };
+
+      // Make API call to add existing contact to project
+      const response = await newRequest.post('/participants/existing', payload);
+
+      if (response.data.success) {
+        // Create a new participant object with updated date
+        const newParticipant: Participant = {
+          ...contact,
+          dateAdded: new Date().toISOString().split('T')[0],
+        };
+
+        // Update UI with the newly added participant
+        onAddParticipant(newParticipant);
+
+        toast.success('Participant Added', {
+          description: `${contact.name} has been added to the project successfully.`,
+        });
+
+        // Close dialog after successful addition
+        onOpenChange(false);
+      } else {
+        throw new Error(response.data.message || 'Failed to add participant');
+      }
     } catch (error) {
+      console.error('Error adding existing contact:', error);
       toast.error('Error Adding Participant', {
         description: 'There was a problem adding the existing contact. Please try again.',
       });
@@ -422,7 +442,11 @@ export default function AddParticipantDialog({
             </div>
 
             <div className='max-h-72 overflow-y-auto space-y-2 rounded-md border p-1'>
-              {filteredContacts.length > 0 ? (
+              {isLoadingContacts ? (
+                <div className='text-center py-8 px-4'>
+                  <p className='text-sm text-muted-foreground'>Loading contacts...</p>
+                </div>
+              ) : filteredContacts.length > 0 ? (
                 filteredContacts.map((contact) => {
                   return (
                     <div
