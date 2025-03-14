@@ -292,6 +292,9 @@ export default function ProjectHeader() {
                             ? `${participant.email.substring(0, 20)}...`
                             : participant.email || 'No email'}
                         </DropdownMenuItem>
+                        <DropdownMenuLabel className='px-2 py-1.5 text-xs text-gray-500'>
+                          <hr />
+                        </DropdownMenuLabel>
                         <DropdownMenuItem
                           className='cursor-pointer text-red-500'
                           onClick={() => {
