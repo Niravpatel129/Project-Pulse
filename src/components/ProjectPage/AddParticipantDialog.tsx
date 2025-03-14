@@ -6,31 +6,17 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useProject } from '@/contexts/ProjectContext';
+import { useParticipantForm } from '@/hooks/useParticipantForm';
+import { useParticipantMutations } from '@/hooks/useParticipantMutations';
 import { cn } from '@/lib/utils';
-import { newRequest } from '@/utils/newRequest';
+import { participantService } from '@/services/participantService';
+import { Participant, Role } from '@/types/project';
+import { useQuery } from '@tanstack/react-query';
 import { ChevronDownIcon, PhoneIcon, Plus, Search, UserPlus, X } from 'lucide-react';
-import { useEffect, useId, useState } from 'react';
+import { useId, useState } from 'react';
 import * as RPNInput from 'react-phone-number-input';
 import flags from 'react-phone-number-input/flags';
 import { toast } from 'sonner';
-
-interface Role {
-  id: string;
-  name: string;
-  permissions: string[];
-  color: string;
-  description?: string;
-}
-
-interface Participant {
-  id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  dateAdded: string;
-  notes?: string;
-  customFields?: { key: string; value: string }[];
-}
 
 interface AddParticipantDialogProps {
   isOpen: boolean;
@@ -49,70 +35,24 @@ export default function AddParticipantDialog({
   onAddRole,
   getRoleBadge,
 }: AddParticipantDialogProps) {
-  const [newParticipantName, setNewParticipantName] = useState('');
-  const [newParticipantEmail, setNewParticipantEmail] = useState('');
-  const [newParticipantPhone, setNewParticipantPhone] = useState('');
-  const [newParticipantNotes, setNewParticipantNotes] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [customFields, setCustomFields] = useState<{ key: string; value: string }[]>([]);
-  const [newFieldName, setNewFieldName] = useState('');
   const phoneInputId = useId();
   const { project } = useProject();
-  const [isLoading, setIsLoading] = useState(false);
-  const [previousContacts, setPreviousContacts] = useState<Participant[]>([]);
-  const [isLoadingContacts, setIsLoadingContacts] = useState(false);
+  const [error, setError] = useState('');
 
-  // Form validation
-  const [nameError, setNameError] = useState('');
-  const [emailError, setEmailError] = useState('');
+  const { formData, setters, validation, customFieldHandlers, resetForm } = useParticipantForm();
 
-  // Check if form is valid
-  const isFormValid =
-    newParticipantName.trim() !== '' &&
-    newParticipantEmail.trim() !== '' &&
-    !nameError &&
-    !emailError;
+  const { addParticipantMutation, addExistingContactMutation } = useParticipantMutations(
+    project?._id || '',
+    onOpenChange,
+  );
 
-  // Fetch existing contacts from API
-  useEffect(() => {
-    const fetchContacts = async () => {
-      try {
-        setIsLoadingContacts(true);
-        const response = await newRequest.get('/participants');
-
-        // Transform API response to match Participant interface
-        const transformedContacts = response.data.data.map((contact: any) => {
-          return {
-            id: contact._id,
-            name: contact.name,
-            email: contact.email,
-            phone: contact.phone,
-            dateAdded: new Date(contact.createdAt).toISOString().split('T')[0],
-            notes: contact.comments,
-            customFields: Object.entries(contact.customFields || {}).map(([key, value]) => {
-              return {
-                key,
-                value: value as string,
-              };
-            }),
-          };
-        });
-
-        setPreviousContacts(transformedContacts);
-      } catch (error) {
-        console.error('Error fetching contacts:', error);
-        toast.error('Error Loading Contacts', {
-          description: 'There was a problem loading existing contacts. Please try again.',
-        });
-      } finally {
-        setIsLoadingContacts(false);
-      }
-    };
-
-    if (isOpen) {
-      fetchContacts();
-    }
-  }, [isOpen]);
+  // Fetch existing contacts using React Query
+  const { data: previousContacts = [], isLoading: isLoadingContacts } = useQuery({
+    queryKey: ['participants'],
+    queryFn: participantService.fetchParticipants,
+    enabled: isOpen,
+  });
 
   const filteredContacts = previousContacts.filter((contact) => {
     return (
@@ -121,35 +61,9 @@ export default function AddParticipantDialog({
     );
   });
 
-  const validateEmail = (email: string) => {
-    if (!email.trim()) {
-      setEmailError('Email is required');
-      return false;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setEmailError('Please enter a valid email address');
-      return false;
-    }
-
-    setEmailError('');
-    return true;
-  };
-
-  const validateName = (name: string) => {
-    if (!name.trim()) {
-      setNameError('Name is required');
-      return false;
-    }
-
-    setNameError('');
-    return true;
-  };
-
   const handleAddParticipant = async () => {
-    const isNameValid = validateName(newParticipantName);
-    const isEmailValid = validateEmail(newParticipantEmail);
+    const isNameValid = validation.validateName(formData.name);
+    const isEmailValid = validation.validateEmail(formData.email);
 
     if (!isNameValid || !isEmailValid) {
       toast.error('Validation Error', {
@@ -158,121 +72,21 @@ export default function AddParticipantDialog({
       return;
     }
 
-    // Default role and permissions
     const newParticipant: Participant = {
       id: Date.now().toString(),
-      name: newParticipantName,
-      email: newParticipantEmail,
-      phone: newParticipantPhone,
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
       dateAdded: new Date().toISOString().split('T')[0],
-      notes: newParticipantNotes,
-      customFields: customFields,
+      notes: formData.notes,
+      customFields: formData.customFields,
     };
 
-    try {
-      setIsLoading(true);
-      const response = await newRequest.post(`/projects/${project?._id}/participants`, {
-        participant: newParticipant,
-      });
-
-      onAddParticipant(newParticipant);
-      resetForm();
-
-      toast.success('Participant Added', {
-        description: `${newParticipantName} has been added to the project successfully.`,
-      });
-    } catch (error) {
-      console.error('Error adding participant:', error);
-      toast.error('Error Adding Participant', {
-        description: 'There was a problem adding the participant. Please try again.',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    addParticipantMutation.mutate(newParticipant);
   };
 
   const handleAddExistingContact = async (contact: Participant) => {
-    try {
-      setIsLoading(true);
-
-      // Create a payload with the existing contact and project ID
-      const payload = {
-        participantId: contact.id,
-        projectId: project?._id,
-      };
-
-      // Make API call to add existing contact to project
-      const response = await newRequest.post('/participants/existing', payload);
-
-      if (response.data.success) {
-        // Create a new participant object with updated date
-        const newParticipant: Participant = {
-          ...contact,
-          dateAdded: new Date().toISOString().split('T')[0],
-        };
-
-        // Update UI with the newly added participant
-        onAddParticipant(newParticipant);
-
-        toast.success('Participant Added', {
-          description: `${contact.name} has been added to the project successfully.`,
-        });
-
-        // Close dialog after successful addition
-        onOpenChange(false);
-      } else {
-        throw new Error(response.data.message || 'Failed to add participant');
-      }
-    } catch (error) {
-      console.error('Error adding existing contact:', error);
-      toast.error('Error Adding Participant', {
-        description: 'There was a problem adding the existing contact. Please try again.',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const resetForm = () => {
-    setNewParticipantName('');
-    setNewParticipantEmail('');
-    setNewParticipantPhone('');
-    setNewParticipantNotes('');
-    setCustomFields([]);
-    setNewFieldName('');
-    setNameError('');
-    setEmailError('');
-    onOpenChange(false);
-  };
-
-  const handleAddCustomField = () => {
-    if (newFieldName.trim() !== '') {
-      setCustomFields([...customFields, { key: newFieldName, value: '' }]);
-      setNewFieldName('');
-      toast.success('Custom Field Added', {
-        description: `New field "${newFieldName}" has been added.`,
-      });
-    } else {
-      toast.warning('Invalid Field Name', {
-        description: 'Field name cannot be empty.',
-      });
-    }
-  };
-
-  const handleUpdateCustomField = (index: number, value: string) => {
-    const updatedFields = [...customFields];
-    updatedFields[index].value = value;
-    setCustomFields(updatedFields);
-  };
-
-  const handleRemoveCustomField = (index: number) => {
-    const fieldName = customFields[index].key;
-    const updatedFields = [...customFields];
-    updatedFields.splice(index, 1);
-    setCustomFields(updatedFields);
-    toast.info('Field Removed', {
-      description: `Field "${fieldName}" has been removed.`,
-    });
+    addExistingContactMutation.mutate(contact);
   };
 
   return (
@@ -292,37 +106,43 @@ export default function AddParticipantDialog({
               <Label htmlFor='name'>Name</Label>
               <Input
                 id='name'
-                value={newParticipantName}
+                value={formData.name}
                 onChange={(e) => {
-                  setNewParticipantName(e.target.value);
-                  if (nameError) validateName(e.target.value);
+                  setters.setName(e.target.value);
+                  if (validation.nameError) validation.validateName(e.target.value);
                 }}
                 onBlur={(e) => {
-                  return validateName(e.target.value);
+                  return validation.validateName(e.target.value);
                 }}
                 placeholder='Enter participant name'
-                className={nameError ? 'border-red-500' : ''}
+                className={validation.nameError ? 'border-red-500' : ''}
               />
-              {nameError && <p className='text-xs text-red-500 mt-1'>{nameError}</p>}
+              {validation.nameError && (
+                <p className='text-xs text-red-500 mt-1'>{validation.nameError}</p>
+              )}
             </div>
+
             <div className='space-y-2'>
               <Label htmlFor='email'>Email</Label>
               <Input
                 id='email'
                 type='email'
-                value={newParticipantEmail}
+                value={formData.email}
                 onChange={(e) => {
-                  setNewParticipantEmail(e.target.value);
-                  if (emailError) validateEmail(e.target.value);
+                  setters.setEmail(e.target.value);
+                  if (validation.emailError) validation.validateEmail(e.target.value);
                 }}
                 onBlur={(e) => {
-                  return validateEmail(e.target.value);
+                  return validation.validateEmail(e.target.value);
                 }}
                 placeholder='Enter email address'
-                className={emailError ? 'border-red-500' : ''}
+                className={validation.emailError ? 'border-red-500' : ''}
               />
-              {emailError && <p className='text-xs text-red-500 mt-1'>{emailError}</p>}
+              {validation.emailError && (
+                <p className='text-xs text-red-500 mt-1'>{validation.emailError}</p>
+              )}
             </div>
+
             <div className='space-y-2'>
               <Label htmlFor={phoneInputId}>Phone (optional)</Label>
               <RPNInput.default
@@ -333,9 +153,9 @@ export default function AddParticipantDialog({
                 inputComponent={PhoneInput}
                 id={phoneInputId}
                 placeholder='Enter phone number'
-                value={newParticipantPhone}
+                value={formData.phone}
                 onChange={(newValue) => {
-                  return setNewParticipantPhone(newValue ?? '');
+                  return setters.setPhone(newValue ?? '');
                 }}
               />
             </div>
@@ -344,9 +164,9 @@ export default function AddParticipantDialog({
               <Label htmlFor='notes'>Notes (Optional)</Label>
               <Textarea
                 id='notes'
-                value={newParticipantNotes}
+                value={formData.notes}
                 onChange={(e) => {
-                  return setNewParticipantNotes(e.target.value);
+                  return setters.setNotes(e.target.value);
                 }}
                 placeholder='Add any notes about this participant'
                 rows={3}
@@ -362,7 +182,7 @@ export default function AddParticipantDialog({
                   size='sm'
                   className='h-8 text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground'
                   onClick={() => {
-                    setNewFieldName('Field Name');
+                    return setters.setNewFieldName('Field Name');
                   }}
                 >
                   <Plus className='h-3 w-3' />
@@ -370,32 +190,34 @@ export default function AddParticipantDialog({
                 </Button>
               </div>
 
-              {/* New field input */}
-              {newFieldName !== '' && (
+              {formData.newFieldName !== '' && (
                 <div className='flex items-center gap-2'>
                   <Input
                     placeholder='Field name'
-                    value={newFieldName}
+                    value={formData.newFieldName}
                     onChange={(e) => {
-                      return setNewFieldName(e.target.value);
+                      return setters.setNewFieldName(e.target.value);
                     }}
                     className='flex-1'
                   />
-                  <Button size='sm' onClick={handleAddCustomField} disabled={!newFieldName.trim()}>
+                  <Button
+                    size='sm'
+                    onClick={customFieldHandlers.handleAddCustomField}
+                    disabled={!formData.newFieldName.trim()}
+                  >
                     Add
                   </Button>
                 </div>
               )}
 
-              {/* Custom fields list */}
-              {customFields.map((field, index) => {
+              {formData.customFields.map((field, index) => {
                 return (
                   <div key={index} className='flex items-center gap-2'>
                     <Label className='w-1/3 text-sm'>{field.key}</Label>
                     <Input
                       value={field.value}
                       onChange={(e) => {
-                        return handleUpdateCustomField(index, e.target.value);
+                        return customFieldHandlers.handleUpdateCustomField(index, e.target.value);
                       }}
                       placeholder={`Enter ${field.key.toLowerCase()}`}
                       className='flex-1'
@@ -404,7 +226,7 @@ export default function AddParticipantDialog({
                       variant='ghost'
                       size='sm'
                       onClick={() => {
-                        return handleRemoveCustomField(index);
+                        return customFieldHandlers.handleRemoveCustomField(index);
                       }}
                       className='h-8 w-8 p-0'
                     >
@@ -415,14 +237,15 @@ export default function AddParticipantDialog({
               })}
             </div>
 
+            <div>{error && <p className='text-xs text-red-500 mt-1'>{error}</p>}</div>
             <div className='flex gap-2'>
               <Button
                 onClick={handleAddParticipant}
                 className='flex-1 gap-1'
-                disabled={!isFormValid || isLoading}
-                isLoading={isLoading}
+                disabled={!validation.isFormValid || addParticipantMutation.isPending}
+                isLoading={addParticipantMutation.isPending}
               >
-                {!isLoading && <UserPlus className='h-4 w-4' />}
+                {!addParticipantMutation.isPending && <UserPlus className='h-4 w-4' />}
                 Add Participant
               </Button>
             </div>
@@ -478,10 +301,12 @@ export default function AddParticipantDialog({
                           return handleAddExistingContact(contact);
                         }}
                         className='h-8 gap-1'
-                        disabled={isLoading}
-                        isLoading={isLoading}
+                        disabled={addExistingContactMutation.isPending}
+                        isLoading={addExistingContactMutation.isPending}
                       >
-                        {!isLoading && <UserPlus className='h-3.5 w-3.5' />}
+                        {!addExistingContactMutation.isPending && (
+                          <UserPlus className='h-3.5 w-3.5' />
+                        )}
                         <span className='hidden sm:inline'>Add</span>
                       </Button>
                     </div>

@@ -13,6 +13,7 @@ import {
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useProject } from '@/contexts/ProjectContext';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircle,
   CheckCircle2,
@@ -55,75 +56,59 @@ interface Role {
 
 export default function ProjectHeader() {
   const { project, loading, error } = useProject();
-  const [participants, setParticipants] = useState<Participant[]>([]);
+  const queryClient = useQueryClient();
 
-  const [predefinedRoles, setPredefinedRoles] = useState<Role[]>([
-    {
-      id: 'r1',
-      name: 'CLIENT',
-      permissions: ['view', 'download', 'comment'],
-      color: 'bg-blue-100 text-blue-800',
-      description: 'Can view and download files, and leave comments',
+  // Use React Query to manage participants state
+  const { data: participants = [] } = useQuery<Participant[]>({
+    queryKey: ['participants'],
+    queryFn: () => {
+      return Promise.resolve([]);
     },
-    {
-      id: 'r2',
-      name: 'TEAM MEMBER',
-      permissions: ['edit', 'upload', 'download', 'share'],
-      color: 'bg-green-100 text-green-800',
-      description: 'Full access to edit, upload, and manage project content',
+    initialData: [],
+  });
+
+  const addParticipantMutation = useMutation({
+    mutationFn: (newParticipant: Participant) => {
+      // Here you would typically make an API call
+      return Promise.resolve(newParticipant);
     },
-    {
-      id: 'r3',
-      name: 'ASSISTANT',
-      permissions: ['edit', 'upload', 'download'],
-      color: 'bg-purple-100 text-purple-800',
-      description: 'Can help with project tasks but with limited permissions',
+    onSuccess: (newParticipant) => {
+      queryClient.setQueryData<Participant[]>(['participants'], (oldData = []) => {
+        const exists = oldData.some((p) => {
+          return p.id === newParticipant.id;
+        });
+        if (!exists) {
+          return [...oldData, newParticipant];
+        }
+        return oldData;
+      });
     },
-    {
-      id: 'r4',
-      name: 'PHOTOGRAPHER',
-      permissions: ['edit', 'upload', 'download', 'share', 'delete'],
-      color: 'bg-amber-100 text-amber-800',
-      description: 'Can upload and manage photography assets',
-    },
-    {
-      id: 'r5',
-      name: 'MAKEUP ARTIST',
-      permissions: ['view', 'download'],
-      color: 'bg-pink-100 text-pink-800',
-      description: 'Limited access to view project details and references',
-    },
-    {
-      id: 'r6',
-      name: 'VIEWER',
-      permissions: ['view'],
-      color: 'bg-gray-100 text-gray-800',
-      description: 'Can only view project content, no other permissions',
-    },
-    {
-      id: 'r7',
-      name: 'COLLABORATOR',
-      permissions: ['edit', 'upload', 'download', 'comment'],
-      color: 'bg-indigo-100 text-indigo-800',
-      description: 'Can contribute to the project with editing and commenting abilities',
-    },
-  ]);
+  });
+
+  const [predefinedRoles, setPredefinedRoles] = useState<Role[]>([]);
 
   const [isAddParticipantOpen, setIsAddParticipantOpen] = useState(false);
   const [isAddTeamOpen, setIsAddTeamOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState('');
 
   const handleAddParticipant = (participant: Participant) => {
-    const exists = participants.some((p) => {
-      return p.id === participant.id;
-    });
-    if (!exists) {
-      setParticipants([...participants, participant]);
-    }
+    addParticipantMutation.mutate(participant);
   };
 
+  const addRoleMutation = useMutation({
+    mutationFn: (newRole: Role) => {
+      // Here you would typically make an API call
+      return Promise.resolve(newRole);
+    },
+    onSuccess: (newRole) => {
+      setPredefinedRoles((prev) => {
+        return [...prev, newRole];
+      });
+    },
+  });
+
   const handleAddRole = (role: Role) => {
-    setPredefinedRoles([...predefinedRoles, role]);
+    addRoleMutation.mutate(role);
   };
 
   const handleSelectRole = (roleName: string) => {

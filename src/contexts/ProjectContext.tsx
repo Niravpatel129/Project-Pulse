@@ -1,6 +1,7 @@
 'use client';
 
 import { newRequest } from '@/utils/newRequest';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 interface Project {
@@ -59,28 +60,28 @@ export function ProjectProvider({
   children: ReactNode;
   projectId: string;
 }) {
-  const [project, setProject] = useState<Project | null>(null);
-  console.log('🚀 project:', project);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
 
-  useEffect(() => {
-    const fetchProject = async () => {
+  // Use react-query to fetch project data
+  const { data: project, isLoading: loading } = useQuery({
+    queryKey: ['project', projectId],
+    queryFn: async () => {
       try {
-        setLoading(true);
         const response = await newRequest.get(`/projects/${projectId}`);
-        setProject(response.data.data);
+        return response.data.data;
       } catch (err) {
         console.error('Error fetching project:', err);
         setError('Failed to load project data');
-      } finally {
-        setLoading(false);
+        throw err;
       }
-    };
+    },
+    enabled: !!projectId,
+  });
 
+  useEffect(() => {
     if (projectId) {
-      fetchProject();
       fetchParticipants();
     }
   }, [projectId]);
@@ -102,10 +103,10 @@ export function ProjectProvider({
     try {
       const response = await newRequest.patch(`/projects/${projectId}`, data);
       if (response.data.success) {
-        // Update only the changed fields in the project state
-        setProject((prevProject) => {
-          if (!prevProject) return response.data.data;
-          return { ...prevProject, ...data };
+        // Update the react-query cache
+        queryClient.setQueryData(['project', projectId], (oldData: Project | undefined) => {
+          if (!oldData) return response.data.data;
+          return { ...oldData, ...data };
         });
       } else {
         throw new Error(response.data.message || 'Failed to update project');
