@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/s
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProject, type Project } from '@/contexts/ProjectContext';
 import { CalendarDays, CreditCard, Home, Menu, PanelsTopLeft } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ProjectActivity from './ProjectActivity';
 import ProjectFiles from './ProjectFiles';
 import ProjectHome from './ProjectHome';
@@ -18,7 +18,25 @@ import TimelineExample from './TimelineExample';
 
 export default function ProjectMain() {
   const [activeTab, setActiveTab] = useState('home');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 0,
+  );
   const { project, updateProject } = useProject();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      return window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Determine if we're on tablet size (between mobile and desktop)
+  const isTablet = windowWidth >= 768 && windowWidth < 1024;
 
   const handleUpdateProject = async (data: Partial<Project>) => {
     await updateProject(data);
@@ -28,8 +46,8 @@ export default function ProjectMain() {
     <div className='min-h-screen w-full'>
       <div className='bg-white'>
         <div className=''>
-          <div className='md:hidden flex justify-end py-3'>
-            <Sheet>
+          <div className='lg:hidden flex justify-end py-3'>
+            <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
               <SheetTitle className='sr-only'>Project Sidebar</SheetTitle>
               <SheetTrigger asChild>
                 <button
@@ -41,7 +59,12 @@ export default function ProjectMain() {
               </SheetTrigger>
               <SheetContent className='w-[85%] sm:max-w-md'>
                 <div className='mt-6 w-full'>
-                  <ProjectSidebar onUpdateProject={handleUpdateProject} />
+                  <ProjectSidebar
+                    onUpdateProject={handleUpdateProject}
+                    onActionComplete={() => {
+                      return isTablet && setIsSidebarOpen(false);
+                    }}
+                  />
                 </div>
               </SheetContent>
             </Sheet>
@@ -94,8 +117,8 @@ export default function ProjectMain() {
               </TabsList>
               <ScrollBar orientation='horizontal' />
             </ScrollArea>
-            <div className=' flex flex-col gap-6 py-2 md:flex-row relative'>
-              <div className='w-full md:flex-1'>
+            <div className='flex flex-col gap-6 py-2 md:flex-row relative'>
+              <div className='w-full lg:flex-1 md:px-2'>
                 <TabsContent value='activity'>
                   <ProjectActivity />
                 </TabsContent>
@@ -119,8 +142,8 @@ export default function ProjectMain() {
                 </TabsContent>
               </div>
 
-              {/* Desktop Sidebar - only visible on md and larger screens */}
-              <div className='hidden md:block'>
+              {/* Desktop Sidebar - only visible on lg and larger screens */}
+              <div className='hidden lg:block'>
                 <ProjectSidebar onUpdateProject={handleUpdateProject} />
               </div>
             </div>
