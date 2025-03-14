@@ -10,7 +10,7 @@ export default function ProjectPage() {
 
   return (
     <ProjectProvider projectId={id as string}>
-      <div className='min-h-screen bg-white w-full'>
+      <div className='min-h-screen bg-white w-full mt-1'>
         <ProjectHeader />
         <div className='container mx-auto flex items-center justify-between px-0 py-3'>
           <ProjectMain />

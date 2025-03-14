@@ -3,6 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +26,7 @@ import {
   Users,
 } from 'lucide-react';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import AddParticipantDialog from './AddParticipantDialog';
 import AddTeamDialog from './AddTeamDialog';
@@ -45,6 +46,15 @@ interface Participant {
   contractSigned?: boolean;
   paymentStatus?: 'paid' | 'unpaid' | 'partial';
   notes?: string;
+}
+
+interface Collaborator {
+  _id: string;
+  name: string;
+  email?: string;
+  avatar?: string;
+  role: string;
+  status?: 'active' | 'pending' | 'inactive';
 }
 
 interface Role {
@@ -69,6 +79,35 @@ interface ProjectData {
 export default function ProjectHeader() {
   const { project, error } = useProject();
   const queryClient = useQueryClient();
+  const [isSticky, setIsSticky] = useState(false);
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const [showParticipantsDialog, setShowParticipantsDialog] = useState(false);
+
+  // Use React Query to manage collaborators state
+  const { data: collaborators = [] } = useQuery<Collaborator[]>({
+    queryKey: ['collaborators', project?._id],
+    queryFn: async () => {
+      if (!project?._id) return [];
+      const response = await newRequest.get(`/projects/${project._id}/collaborators`);
+      return response.data.data || [];
+    },
+    enabled: !!project?._id,
+  });
+
+  // Handle sticky header on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (bannerRef.current) {
+        const bannerBottom = bannerRef.current.getBoundingClientRect().bottom;
+        setIsSticky(bannerBottom <= 0);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      return window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   // Use React Query to manage participants state
   const { data: participants = [] } = useQuery<Participant[]>({
@@ -99,7 +138,6 @@ export default function ProjectHeader() {
 
   const removeParticipantMutation = useMutation({
     mutationFn: async (participantId: string) => {
-      // Make an API call to remove the participant
       const response = await newRequest.delete(
         `/projects/${project?._id}/participants/${participantId}`,
       );
@@ -109,7 +147,6 @@ export default function ProjectHeader() {
       return participantId;
     },
     onSuccess: (participantId) => {
-      // Update the project participants list
       queryClient.setQueryData(['project', project?._id], (oldData: ProjectData | undefined) => {
         if (!oldData) return oldData;
         return {
@@ -119,16 +156,48 @@ export default function ProjectHeader() {
           }),
         };
       });
-      toast.success('Participant removed successfully');
     },
     onError: (error) => {
       console.error('Error removing participant:', error);
-      toast.error('Failed to remove participant');
+    },
+  });
+
+  const removeCollaboratorMutation = useMutation({
+    mutationFn: async (collaboratorId: string) => {
+      const response = await newRequest.delete(
+        `/projects/${project?._id}/collaborators/${collaboratorId}`,
+      );
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to remove collaborator');
+      }
+      return collaboratorId;
+    },
+    onSuccess: (collaboratorId) => {
+      queryClient.setQueryData<Collaborator[]>(['collaborators', project?._id], (oldData = []) => {
+        return oldData.filter((c) => {
+          return c._id !== collaboratorId;
+        });
+      });
+    },
+    onError: (error) => {
+      console.error('Error removing collaborator:', error);
     },
   });
 
   const handleRemoveParticipant = (participantId: string) => {
-    removeParticipantMutation.mutate(participantId);
+    toast.promise(removeParticipantMutation.mutateAsync(participantId), {
+      loading: 'Removing participant...',
+      success: 'Participant removed successfully',
+      error: 'Failed to remove participant',
+    });
+  };
+
+  const handleRemoveCollaborator = (collaboratorId: string) => {
+    toast.promise(removeCollaboratorMutation.mutateAsync(collaboratorId), {
+      loading: 'Removing collaborator...',
+      success: 'Collaborator removed successfully',
+      error: 'Failed to remove collaborator',
+    });
   };
 
   const [predefinedRoles, setPredefinedRoles] = useState<Role[]>([]);
@@ -210,50 +279,113 @@ export default function ProjectHeader() {
     );
   };
 
+  const handleSendEmail = () => {
+    toast.info('Email functionality coming soon');
+  };
+
+  const handleShowParticipants = () => {
+    setShowParticipantsDialog(true);
+  };
+
+  const handleProjectStatus = () => {
+    toast.info(`Current status: ${project.projectStatus || 'Active'}`);
+  };
+
   if (error) return <div className='text-red-500'>{error}</div>;
   if (!project) return <></>;
 
   return (
     <div className='bg-white'>
       {/* Project Banner */}
-      <div className='container mx-auto px-4 py-4 sm:py-6'>
-        <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4'>
-          <div className='relative h-10 w-10 sm:h-16 sm:w-16 rounded-md overflow-hidden'>
-            <Image
-              src='https://picsum.photos/200'
-              alt='Project Thumbnail'
-              fill
-              className='object-cover'
-              priority
-            />
-          </div>
-          <div>
-            <h1 className='text-xl sm:text-2xl font-medium capitalize'>{project.name}</h1>
-            <p className='text-xs sm:text-sm text-muted-foreground'>
-              {/* Format the creation date in a readable format */}
-              {project.projectType} - Created on{' '}
-              {new Date(project.createdAt).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </p>
+      <div ref={bannerRef} className='bg-white w-full'>
+        <div className='container mx-auto px-4 py-1 sm:py-1'>
+          <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4'>
+            <div className='relative h-8 w-8 sm:h-16 sm:w-16 rounded-md overflow-hidden'>
+              <Image
+                src='https://picsum.photos/200'
+                alt='Project Thumbnail'
+                fill
+                className='object-cover'
+                priority
+              />
+            </div>
+            <div>
+              <h1 className='text-xl sm:text-2xl font-medium capitalize'>{project.name}</h1>
+              <p className='text-xs sm:text-sm text-muted-foreground'>
+                {/* Format the creation date in a readable format */}
+                {project.projectType} - Created on{' '}
+                {new Date(project.createdAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Sticky Banner that appears when scrolling */}
+      {isSticky && (
+        <div className='fixed top-0 left-0 right-0 z-50 bg-white shadow-md border-b'>
+          <div className='container mx-auto px-4 py-2'>
+            <div className='flex items-center justify-between'>
+              <div className='flex items-center gap-3'>
+                <div className='relative h-8 w-8 rounded-md overflow-hidden'>
+                  <Image
+                    src='https://picsum.photos/200'
+                    alt='Project Thumbnail'
+                    fill
+                    className='object-cover'
+                    priority
+                  />
+                </div>
+                <h2 className='text-lg font-medium capitalize'>{project.name}</h2>
+                <Badge variant='outline' className='ml-2 bg-gray-100 text-gray-800'>
+                  {project.projectType}
+                </Badge>
+              </div>
+              <div className='flex items-center gap-2'>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  className='flex items-center gap-1'
+                  onClick={handleShowParticipants}
+                >
+                  <Users className='h-4 w-4' />
+                  <span className='hidden sm:inline'>Participants</span>
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='flex items-center gap-1'
+                  onClick={handleProjectStatus}
+                >
+                  <Clock className='h-4 w-4' />
+                  <span className='hidden sm:inline'>Project Status</span>
+                  <Badge variant='outline' className='ml-2 bg-gray-100 text-gray-800'>
+                    {project.projectStatus || 'Active'}
+                  </Badge>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Participants Section */}
       <TooltipProvider>
-        <div className='container mx-auto px-4 py-3 sm:py-4'>
+        <div id='participants-section' className='container mx-auto px-4 py-3 sm:py-4'>
           <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
             <div className='flex flex-wrap items-center gap-4'>
               <div className='flex flex-wrap items-center gap-4'>
+                {/* Participants */}
                 {project.participants.map((participant) => {
                   return (
                     <DropdownMenu key={participant._id}>
                       <DropdownMenuTrigger asChild>
                         <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg cursor-pointer hover:bg-gray-50'>
-                          <Avatar className='h-10 w-10 border-2 border-transparent hover:border-gray-300 transition-colors bg-gray-200'>
+                          <Avatar className='h-8 w-8 border-2 border-transparent hover:border-gray-300 transition-colors bg-gray-200'>
                             {participant.avatar ? (
                               <AvatarImage src={participant.avatar} alt={participant.name} />
                             ) : (
@@ -309,7 +441,79 @@ export default function ProjectHeader() {
                         <DropdownMenuItem
                           className='cursor-pointer text-red-500'
                           onClick={() => {
-                            return handleRemoveParticipant(participant._id);
+                            return handleRemoveCollaborator(participant._id);
+                          }}
+                        >
+                          Remove from project
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                })}
+
+                {/* Collaborators */}
+                {collaborators.map((collaborator) => {
+                  return (
+                    <DropdownMenu key={collaborator._id}>
+                      <DropdownMenuTrigger asChild>
+                        <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg cursor-pointer hover:bg-gray-50'>
+                          <Avatar className='h-8 w-8 border-2 border-indigo-200 hover:border-indigo-300 transition-colors bg-indigo-100'>
+                            {collaborator.avatar ? (
+                              <AvatarImage src={collaborator.avatar} alt={collaborator.name} />
+                            ) : (
+                              <AvatarFallback className='bg-indigo-100 text-indigo-800 font-medium'>
+                                {collaborator.name
+                                  .split(' ')
+                                  .map((n) => {
+                                    return n.charAt(0).toUpperCase();
+                                  })
+                                  .join('')}
+                              </AvatarFallback>
+                            )}
+                          </Avatar>
+                          <div className='hidden sm:block'>
+                            <div className='flex items-center gap-1'>
+                              <p className='text-sm font-medium capitalize'>
+                                {collaborator.name.length > 15
+                                  ? `${collaborator.name.substring(0, 15)}...`
+                                  : collaborator.name}
+                              </p>
+                            </div>
+                            <div className='flex items-center gap-1.5 mt-0.5'>
+                              {getRoleBadge(collaborator.role)}
+                              {collaborator.status && (
+                                <span>
+                                  {getStatusBadge(
+                                    collaborator.status as 'active' | 'pending' | 'inactive',
+                                  )}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align='end' className='w-48'>
+                        <DropdownMenuItem
+                          className='cursor-pointer'
+                          onClick={() => {
+                            if (collaborator.email) {
+                              navigator.clipboard?.writeText(collaborator.email);
+                              toast.success('Email copied to clipboard');
+                            }
+                          }}
+                        >
+                          <Mail className='h-4 w-4 mr-2' />
+                          {collaborator.email && collaborator.email.length > 20
+                            ? `${collaborator.email.substring(0, 20)}...`
+                            : collaborator.email || 'No email'}
+                        </DropdownMenuItem>
+                        <DropdownMenuLabel className='px-2 py-1.5 text-xs text-gray-500'>
+                          <hr />
+                        </DropdownMenuLabel>
+                        <DropdownMenuItem
+                          className='cursor-pointer text-red-500'
+                          onClick={() => {
+                            return handleRemoveCollaborator(collaborator._id);
                           }}
                         >
                           Remove from project
@@ -325,7 +529,7 @@ export default function ProjectHeader() {
                     <Button
                       variant='outline'
                       size='icon'
-                      className='rounded-full h-10 w-10 ml-2 border-dashed hover:border-primary hover:bg-primary/5 transition-colors'
+                      className='rounded-full h-8 w-8 ml-2 border-dashed hover:border-primary hover:bg-primary/5 transition-colors'
                     >
                       <Plus className='h-4 w-4' />
                       <span className='sr-only'>Add participant</span>
@@ -418,6 +622,120 @@ export default function ProjectHeader() {
           </div>
         </div>
       </TooltipProvider>
+
+      {/* Participants Dialog */}
+      <Dialog open={showParticipantsDialog} onOpenChange={setShowParticipantsDialog}>
+        <DialogContent className='sm:max-w-md'>
+          <DialogHeader>
+            <DialogTitle>Project Members</DialogTitle>
+          </DialogHeader>
+          <div className='max-h-[60vh] overflow-y-auto'>
+            <div className='space-y-4 py-2'>
+              {/* Participants Section */}
+              {project.participants.length > 0 && (
+                <div>
+                  <h3 className='text-sm font-medium text-muted-foreground mb-2'>Participants</h3>
+                  {project.participants.map((participant) => {
+                    return (
+                      <div
+                        key={participant._id}
+                        className='flex items-center justify-between p-2 rounded-lg hover:bg-gray-50'
+                      >
+                        <div className='flex items-center gap-3'>
+                          <Avatar className='h-8 w-8 bg-gray-200'>
+                            {participant.avatar ? (
+                              <AvatarImage src={participant.avatar} alt={participant.name} />
+                            ) : (
+                              <AvatarFallback className='bg-gray-200 text-gray-800 font-medium'>
+                                {participant.name
+                                  .split(' ')
+                                  .map((n) => {
+                                    return n.charAt(0).toUpperCase();
+                                  })
+                                  .join('')}
+                              </AvatarFallback>
+                            )}
+                          </Avatar>
+                          <div>
+                            <p className='text-sm font-medium'>{participant.name}</p>
+                            <p className='text-xs text-muted-foreground'>
+                              {participant.email || 'No email'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className='flex items-center gap-2'>
+                          {getRoleBadge(participant.role)}
+                          {participant.status && (
+                            <span>
+                              {getStatusBadge(
+                                participant.status as 'active' | 'pending' | 'inactive',
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Collaborators Section */}
+              {collaborators.length > 0 && (
+                <div>
+                  <h3 className='text-sm font-medium text-muted-foreground mb-2'>Collaborators</h3>
+                  {collaborators.map((collaborator) => {
+                    return (
+                      <div
+                        key={collaborator._id}
+                        className='flex items-center justify-between p-2 rounded-lg hover:bg-gray-50'
+                      >
+                        <div className='flex items-center gap-3'>
+                          <Avatar className='h-8 w-8 bg-indigo-100'>
+                            {collaborator.avatar ? (
+                              <AvatarImage src={collaborator.avatar} alt={collaborator.name} />
+                            ) : (
+                              <AvatarFallback className='bg-indigo-100 text-indigo-800 font-medium'>
+                                {collaborator.name
+                                  .split(' ')
+                                  .map((n) => {
+                                    return n.charAt(0).toUpperCase();
+                                  })
+                                  .join('')}
+                              </AvatarFallback>
+                            )}
+                          </Avatar>
+                          <div>
+                            <p className='text-sm font-medium'>{collaborator.name}</p>
+                            <p className='text-xs text-muted-foreground'>
+                              {collaborator.email || 'No email'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className='flex items-center gap-2'>
+                          {getRoleBadge(collaborator.role)}
+                          {collaborator.status && (
+                            <span>
+                              {getStatusBadge(
+                                collaborator.status as 'active' | 'pending' | 'inactive',
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {project.participants.length === 0 && collaborators.length === 0 && (
+                <div className='text-center text-muted-foreground py-4'>
+                  No project members found
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

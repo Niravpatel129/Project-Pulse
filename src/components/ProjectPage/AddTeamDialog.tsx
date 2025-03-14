@@ -1,4 +1,6 @@
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -15,7 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { UserPlus } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useProject } from '@/contexts/ProjectContext';
+import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Search, UserPlus, Users } from 'lucide-react';
 import { useState } from 'react';
 
 interface Role {
@@ -41,6 +47,10 @@ interface Participant {
   contractSigned?: boolean;
   paymentStatus?: 'paid' | 'unpaid' | 'partial';
   notes?: string;
+  companyName?: string;
+  companyType?: string;
+  companyWebsite?: string;
+  mailingAddress?: string;
 }
 
 interface AddTeamDialogProps {
@@ -48,7 +58,6 @@ interface AddTeamDialogProps {
   onOpenChange: (open: boolean) => void;
   selectedRole: string;
   onAddParticipant: (participant: Participant) => void;
-  predefinedRoles: Role[];
 }
 
 export default function AddTeamDialog({
@@ -56,111 +65,457 @@ export default function AddTeamDialog({
   onOpenChange,
   selectedRole,
   onAddParticipant,
-  predefinedRoles,
 }: AddTeamDialogProps) {
-  const [teamName, setTeamName] = useState('');
-  const [teamEmail, setTeamEmail] = useState('');
-  const [teamRole, setTeamRole] = useState(selectedRole || '');
+  const [activeTab, setActiveTab] = useState('collaborator');
+  const queryClient = useQueryClient();
 
-  const handleAddTeam = () => {
-    if (teamName.trim() === '' || teamRole.trim() === '') return;
+  // Collaborator fields
+  const [collaboratorName, setCollaboratorName] = useState('');
+  const [collaboratorEmail, setCollaboratorEmail] = useState('');
+  const [collaboratorRole, setCollaboratorRole] = useState(selectedRole || '');
+  const [collaboratorPhone, setCollaboratorPhone] = useState('');
+  const [collaboratorAddress, setCollaboratorAddress] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [companyType, setCompanyType] = useState('');
+  const [companyWebsite, setCompanyWebsite] = useState('');
 
-    const initials = teamName
-      .split(' ')
-      .map((name) => {
-        return name[0];
-      })
-      .join('')
-      .toUpperCase();
+  // Team fields
+  const [teamRole, setTeamRole] = useState(selectedRole || 'MODERATOR');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTeamMembers, setSelectedTeamMembers] = useState<string[]>([]);
+
+  const { project } = useProject();
+
+  const predefinedRoles = [
+    {
+      id: '1',
+      name: 'Admin',
+      permissions: ['admin'],
+    },
+    {
+      id: '2',
+      name: 'Moderator',
+      permissions: ['moderator'],
+    },
+  ];
+
+  // Mock workspace team members data
+  const mockWorkspaceMembers = [
+    {
+      id: '1',
+      name: 'Alex Johnson',
+      email: 'alex.johnson@example.com',
+      avatar: 'https://i.pravatar.cc/150?u=alex',
+      role: 'Designer',
+      lastActive: '2 hours ago',
+    },
+    {
+      id: '2',
+      name: 'Sarah Williams',
+      email: 'sarah.w@example.com',
+      avatar: 'https://i.pravatar.cc/150?u=sarah',
+      role: 'Developer',
+      lastActive: '5 mins ago',
+    },
+    {
+      id: '3',
+      name: 'Michael Chen',
+      email: 'michael.c@example.com',
+      avatar: 'https://i.pravatar.cc/150?u=michael',
+      role: 'Product Manager',
+      lastActive: 'Just now',
+    },
+    {
+      id: '4',
+      name: 'Emily Rodriguez',
+      email: 'emily.r@example.com',
+      avatar: 'https://i.pravatar.cc/150?u=emily',
+      role: 'Marketing',
+      lastActive: 'Yesterday',
+    },
+    {
+      id: '5',
+      name: 'David Kim',
+      email: 'david.k@example.com',
+      avatar: 'https://i.pravatar.cc/150?u=david',
+      role: 'Content Writer',
+      lastActive: '3 days ago',
+    },
+    {
+      id: '6',
+      name: 'Jessica Lee',
+      email: 'jessica.l@example.com',
+      avatar: 'https://i.pravatar.cc/150?u=jessica',
+      role: 'UX Researcher',
+      lastActive: '1 week ago',
+    },
+  ];
+
+  // Fetch workspace team members
+  const { data: workspaceMembers, isLoading } = useQuery({
+    queryKey: ['workspaceMembers'],
+    queryFn: () => {
+      // In a real app, this would be an API call
+      // For now, return mock data
+      return Promise.resolve(mockWorkspaceMembers);
+    },
+  });
+
+  const filteredMembers = workspaceMembers?.filter((member) => {
+    return (
+      member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.role?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
+
+  const addCollaboratorMutation = useMutation({
+    mutationFn: (newCollaborator: Participant) => {
+      return newRequest.post(`/projects/${project._id}/collaborator`, newCollaborator);
+    },
+    onSuccess: (response) => {
+      // Get the newly added collaborator from the response
+      const newCollaborator =
+        response.data.data.collaborators[response.data.data.collaborators.length - 1];
+      // Call the onAddParticipant with the last added collaborator
+      onAddParticipant(newCollaborator);
+      resetCollaboratorForm();
+      // Invalidate relevant queries to refetch data
+      queryClient.invalidateQueries({ queryKey: ['participants'] });
+    },
+    onError: (error) => {
+      console.error('Failed to add collaborator:', error);
+      // You could add error handling/notification here
+    },
+  });
+
+  const handleAddCollaborator = () => {
+    if (
+      collaboratorName.trim() === '' ||
+      collaboratorRole.trim() === '' ||
+      collaboratorEmail.trim() === ''
+    )
+      return;
 
     const rolePermissions =
       predefinedRoles.find((r) => {
-        return r.name === teamRole.toUpperCase();
+        return r.name === collaboratorRole.toUpperCase();
       })?.permissions || [];
 
-    const newTeam: Participant = {
+    const newCollaborator: Participant = {
       id: Date.now().toString(),
-      name: teamName,
-      role: teamRole.toUpperCase(),
-      initials,
-      email: teamEmail,
+      name: collaboratorName,
+      role: collaboratorRole.toUpperCase(),
+      email: collaboratorEmail,
+      phone: collaboratorPhone,
+      mailingAddress: collaboratorAddress,
+      companyName,
+      companyType,
+      companyWebsite,
       status: 'pending',
       permissions: rolePermissions,
       dateAdded: new Date().toISOString().split('T')[0],
     };
 
-    onAddParticipant(newTeam);
-    resetForm();
+    // Use the mutation to add the collaborator
+    addCollaboratorMutation.mutate(newCollaborator);
   };
 
-  const resetForm = () => {
-    setTeamName('');
-    setTeamEmail('');
-    setTeamRole(selectedRole || '');
+  const handleAddTeam = () => {
+    if (selectedTeamMembers.length === 0) return;
+
+    // Add selected team members to the project
+    selectedTeamMembers.forEach((memberId) => {
+      const member = workspaceMembers.find((m) => {
+        return m.id === memberId;
+      });
+      if (!member) return;
+
+      const rolePermissions =
+        predefinedRoles.find((r) => {
+          return r.name === teamRole.toUpperCase();
+        })?.permissions || [];
+
+      const newTeamMember: Participant = {
+        id: member.id,
+        name: member.name,
+        role: teamRole.toUpperCase(),
+        email: member.email,
+        status: 'pending',
+        permissions: rolePermissions,
+        dateAdded: new Date().toISOString().split('T')[0],
+      };
+
+      onAddParticipant(newTeamMember);
+    });
+
+    resetTeamForm();
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((part) => {
+        return part[0];
+      })
+      .join('')
+      .toUpperCase();
+  };
+
+  const toggleTeamMember = (memberId: string) => {
+    setSelectedTeamMembers((prev) => {
+      return prev.includes(memberId)
+        ? prev.filter((id) => {
+            return id !== memberId;
+          })
+        : [...prev, memberId];
+    });
+  };
+
+  const resetCollaboratorForm = () => {
+    setCollaboratorName('');
+    setCollaboratorEmail('');
+    setCollaboratorRole(selectedRole || '');
+    setCollaboratorPhone('');
+    setCollaboratorAddress('');
+    setCompanyName('');
+    setCompanyType('');
+    setCompanyWebsite('');
+    onOpenChange(false);
+  };
+
+  const resetTeamForm = () => {
+    setTeamRole(selectedRole || 'MODERATOR');
+    setSelectedTeamMembers([]);
+    setSearchQuery('');
     onOpenChange(false);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-md'>
+      <DialogContent className='sm:max-w-lg'>
         <DialogHeader>
-          <DialogTitle>Add Team</DialogTitle>
-          <DialogDescription>Add a new team to the project.</DialogDescription>
+          <DialogTitle>Add Project Member</DialogTitle>
+          <DialogDescription>Add a new collaborator or team to the project.</DialogDescription>
         </DialogHeader>
 
-        <div className='space-y-4 py-2'>
-          <div className='space-y-2'>
-            <Label htmlFor='team-name'>Team Name</Label>
-            <Input
-              id='team-name'
-              value={teamName}
-              onChange={(e) => {
-                return setTeamName(e.target.value);
-              }}
-              placeholder='Enter team name'
-            />
-          </div>
+        <Tabs defaultValue='collaborator' value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className='grid w-full grid-cols-2 mb-4'>
+            <TabsTrigger value='collaborator'>Collaborator</TabsTrigger>
+            <TabsTrigger value='team'>Team</TabsTrigger>
+          </TabsList>
 
-          <div className='space-y-2'>
-            <Label htmlFor='team-email'>Team Email (optional)</Label>
-            <Input
-              id='team-email'
-              type='email'
-              value={teamEmail}
-              onChange={(e) => {
-                return setTeamEmail(e.target.value);
-              }}
-              placeholder='Enter team email address'
-            />
-          </div>
+          <TabsContent value='collaborator' className='space-y-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='collaborator-email'>Email Address *</Label>
+              <Input
+                id='collaborator-email'
+                type='email'
+                value={collaboratorEmail}
+                onChange={(e) => {
+                  return setCollaboratorEmail(e.target.value);
+                }}
+                placeholder='Enter email address'
+                required
+              />
+            </div>
 
-          <div className='space-y-2'>
-            <Label htmlFor='team-role'>Role</Label>
-            <Select value={teamRole} onValueChange={setTeamRole}>
-              <SelectTrigger>
-                <SelectValue placeholder='Select a role' />
-              </SelectTrigger>
-              <SelectContent>
-                {predefinedRoles.map((role) => {
+            <div className='space-y-2'>
+              <Label htmlFor='collaborator-name'>Full Name *</Label>
+              <Input
+                id='collaborator-name'
+                value={collaboratorName}
+                onChange={(e) => {
+                  return setCollaboratorName(e.target.value);
+                }}
+                placeholder='Enter full name'
+                required
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <Label htmlFor='collaborator-role'>Role *</Label>
+              <Select
+                value={collaboratorRole}
+                onValueChange={setCollaboratorRole}
+                defaultValue='MODERATOR'
+              >
+                <SelectTrigger className='h-7 w-full text-xs min-w-[150px]'>
+                  <SelectValue placeholder='Select a role' />
+                </SelectTrigger>
+                <SelectContent className='w-full'>
+                  <SelectItem value='ADMIN'>Admin</SelectItem>
+                  <SelectItem value='MODERATOR'>Moderator</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className='space-y-2'>
+              <Label>Company Details</Label>
+              <div className='grid grid-cols-2 gap-2'>
+                <div>
+                  <Label htmlFor='company-type' className='text-xs'>
+                    Company Type
+                  </Label>
+                  <Select value={companyType} onValueChange={setCompanyType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder='Select type' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='Graphic Design'>Graphic Design</SelectItem>
+                      <SelectItem value='Web Design'>Web Design</SelectItem>
+                      <SelectItem value='Copywriting'>Copywriting</SelectItem>
+                      <SelectItem value='UI/UX Design'>UI/UX Design</SelectItem>
+                      <SelectItem value='Photography'>Photography</SelectItem>
+                      <SelectItem value='Video Production'>Video Production</SelectItem>
+                      <SelectItem value='Marketing'>Marketing</SelectItem>
+                      <SelectItem value='Other'>Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor='company-name' className='text-xs'>
+                    Company Name
+                  </Label>
+                  <Input
+                    id='company-name'
+                    value={companyName}
+                    onChange={(e) => {
+                      return setCompanyName(e.target.value);
+                    }}
+                    placeholder='Company name'
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor='company-website' className='text-xs'>
+                  Company Website URL
+                </Label>
+                <Input
+                  id='company-website'
+                  value={companyWebsite}
+                  onChange={(e) => {
+                    return setCompanyWebsite(e.target.value);
+                  }}
+                  placeholder='https://example.com'
+                />
+              </div>
+            </div>
+
+            <div className='space-y-2'>
+              <Label htmlFor='collaborator-phone'>Phone</Label>
+              <Input
+                id='collaborator-phone'
+                value={collaboratorPhone}
+                onChange={(e) => {
+                  return setCollaboratorPhone(e.target.value);
+                }}
+                placeholder='Enter phone number'
+              />
+            </div>
+
+            <Button
+              className='w-full mt-4'
+              onClick={handleAddCollaborator}
+              disabled={
+                !collaboratorName.trim() || !collaboratorRole.trim() || !collaboratorEmail.trim()
+              }
+            >
+              <UserPlus className='mr-2 h-4 w-4' />
+              Add Collaborator
+            </Button>
+          </TabsContent>
+
+          <TabsContent value='team' className='space-y-4'>
+            <div className='relative'>
+              <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-gray-400' />
+              <Input
+                placeholder='Search by name, email or role...'
+                className='pl-9'
+                value={searchQuery}
+                onChange={(e) => {
+                  return setSearchQuery(e.target.value);
+                }}
+              />
+            </div>
+
+            <div className='mt-2 mb-1 flex justify-between items-center'>
+              <Label className='text-sm font-medium'>Team Members</Label>
+            </div>
+
+            <div className='max-h-60 overflow-y-auto space-y-1 rounded-md'>
+              {isLoading ? (
+                <p className='text-center py-4 text-sm text-gray-500'>Loading team members...</p>
+              ) : filteredMembers && filteredMembers.length > 0 ? (
+                filteredMembers.map((member) => {
                   return (
-                    <SelectItem key={role.id} value={role.name}>
-                      {role.name}
-                    </SelectItem>
+                    <div
+                      key={member.id}
+                      className={`flex items-center p-2 rounded-md hover:bg-gray-50 cursor-pointer transition-colors ${
+                        selectedTeamMembers.includes(member.id) ? 'bg-gray-50' : ''
+                      }`}
+                      onClick={() => {
+                        return toggleTeamMember(member.id);
+                      }}
+                    >
+                      <Checkbox
+                        id={`member-${member.id}`}
+                        checked={selectedTeamMembers.includes(member.id)}
+                        className='mr-3'
+                        onCheckedChange={() => {
+                          return toggleTeamMember(member.id);
+                        }}
+                      />
+                      <Avatar className='h-8 w-8 mr-3'>
+                        <AvatarImage src={member.avatar} alt={member.name} />
+                        <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
+                      </Avatar>
+                      <div className='flex-1 min-w-0'>
+                        <p className='text-sm font-medium truncate'>{member.name}</p>
+                        <p className='text-xs text-gray-500 truncate'>{member.email}</p>
+                      </div>
+                      <div className='flex items-center gap-2'>
+                        <Select
+                          defaultValue={teamRole}
+                          onValueChange={(value) => {
+                            return setTeamRole(value);
+                          }}
+                          value={teamRole}
+                        >
+                          <SelectTrigger className='h-7 w-28 text-xs'>
+                            <SelectValue placeholder='Role' />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {predefinedRoles.map((role) => {
+                              return (
+                                <SelectItem key={role.id} value={role.name}>
+                                  {role.name}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
+                })
+              ) : (
+                <p className='text-center py-4 text-sm text-gray-500'>
+                  {searchQuery ? 'No matching members found' : 'No team members found'}
+                </p>
+              )}
+            </div>
 
-          <Button
-            className='w-full mt-4'
-            onClick={handleAddTeam}
-            disabled={!teamName.trim() || !teamRole.trim()}
-          >
-            <UserPlus className='mr-2 h-4 w-4' />
-            Add Team
-          </Button>
-        </div>
+            <Button
+              className='w-full mt-4'
+              onClick={handleAddTeam}
+              disabled={!teamRole.trim() || selectedTeamMembers.length === 0}
+            >
+              <Users className='mr-2 h-4 w-4' />
+              Add Selected Members ({selectedTeamMembers.length})
+            </Button>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
