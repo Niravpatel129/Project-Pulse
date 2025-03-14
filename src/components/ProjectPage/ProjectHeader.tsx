@@ -4,13 +4,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -34,7 +35,10 @@ import {
   PlusCircle,
   Search,
   Send,
+  UserCircle,
+  UserCog,
   UserPlus,
+  Users,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
@@ -61,6 +65,7 @@ interface Role {
   name: string;
   permissions: string[];
   color: string;
+  description?: string;
 }
 
 export default function ProjectHeader() {
@@ -103,32 +108,50 @@ export default function ProjectHeader() {
       name: 'CLIENT',
       permissions: ['view', 'download', 'comment'],
       color: 'bg-blue-100 text-blue-800',
+      description: 'Can view and download files, and leave comments',
     },
     {
       id: 'r2',
       name: 'TEAM MEMBER',
       permissions: ['edit', 'upload', 'download', 'share'],
       color: 'bg-green-100 text-green-800',
+      description: 'Full access to edit, upload, and manage project content',
     },
     {
       id: 'r3',
       name: 'ASSISTANT',
       permissions: ['edit', 'upload', 'download'],
       color: 'bg-purple-100 text-purple-800',
+      description: 'Can help with project tasks but with limited permissions',
     },
     {
       id: 'r4',
       name: 'PHOTOGRAPHER',
       permissions: ['edit', 'upload', 'download', 'share', 'delete'],
       color: 'bg-amber-100 text-amber-800',
+      description: 'Can upload and manage photography assets',
     },
     {
       id: 'r5',
       name: 'MAKEUP ARTIST',
       permissions: ['view', 'download'],
       color: 'bg-pink-100 text-pink-800',
+      description: 'Limited access to view project details and references',
     },
-    { id: 'r6', name: 'VIEWER', permissions: ['view'], color: 'bg-gray-100 text-gray-800' },
+    {
+      id: 'r6',
+      name: 'VIEWER',
+      permissions: ['view'],
+      color: 'bg-gray-100 text-gray-800',
+      description: 'Can only view project content, no other permissions',
+    },
+    {
+      id: 'r7',
+      name: 'COLLABORATOR',
+      permissions: ['edit', 'upload', 'download', 'comment'],
+      color: 'bg-indigo-100 text-indigo-800',
+      description: 'Can contribute to the project with editing and commenting abilities',
+    },
   ]);
 
   const [newParticipantName, setNewParticipantName] = useState('');
@@ -407,6 +430,11 @@ export default function ProjectHeader() {
     );
   };
 
+  const handleSelectRole = (roleName: string) => {
+    setNewParticipantRole(roleName);
+    setIsAddParticipantOpen(true);
+  };
+
   if (error) return <div className='text-red-500'>{error}</div>;
   if (!project) return <></>;
 
@@ -500,14 +528,82 @@ export default function ProjectHeader() {
                   );
                 })}
 
-                {/* Add Participant Button */}
-                <Dialog open={isAddParticipantOpen} onOpenChange={setIsAddParticipantOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant='ghost' size='sm'>
-                      <Plus className='h-3 w-3 sm:h-4 sm:w-4' />
-                      <span className='text-xs hidden xs:inline'>ADD PARTICIPANT</span>
+                {/* Add Participant Button with Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      className='rounded-full shadow-none flex items-center justify-center'
+                    >
+                      <Plus className='h-4 w-4' />
+                      <span className='text-xs hidden xs:inline ml-1'>ADD PARTICIPANT</span>
                     </Button>
-                  </DialogTrigger>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align='center' className='pb-2 w-[280px]'>
+                    <DropdownMenuLabel>Add Participant</DropdownMenuLabel>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        return handleSelectRole('CLIENT');
+                      }}
+                      className='flex items-start gap-2'
+                    >
+                      <div
+                        className='bg-background flex size-8 items-center justify-center rounded-md border flex-shrink-0'
+                        aria-hidden='true'
+                      >
+                        <UserCircle className='h-4 w-4 opacity-60' />
+                      </div>
+                      <div className='overflow-hidden'>
+                        <div className='text-sm font-medium'>Client</div>
+                        <div className='text-muted-foreground text-xs line-clamp-2'>
+                          Can view and download files, and leave comments
+                        </div>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        return handleSelectRole('COLLABORATOR');
+                      }}
+                      className='flex items-start gap-2'
+                    >
+                      <div
+                        className='bg-background flex size-8 items-center justify-center rounded-md border flex-shrink-0'
+                        aria-hidden='true'
+                      >
+                        <Users className='h-4 w-4 opacity-60' />
+                      </div>
+                      <div className='overflow-hidden'>
+                        <div className='text-sm font-medium'>Collaborator</div>
+                        <div className='text-muted-foreground text-xs line-clamp-2'>
+                          Can contribute to the project with editing and commenting abilities
+                        </div>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        return handleSelectRole('TEAM MEMBER');
+                      }}
+                      className='flex items-start gap-2'
+                    >
+                      <div
+                        className='bg-background flex size-8 items-center justify-center rounded-md border flex-shrink-0'
+                        aria-hidden='true'
+                      >
+                        <UserCog className='h-4 w-4 opacity-60' />
+                      </div>
+                      <div className='overflow-hidden'>
+                        <div className='text-sm font-medium'>Team Member</div>
+                        <div className='text-muted-foreground text-xs line-clamp-2'>
+                          Full access to edit, upload, and manage project content
+                        </div>
+                      </div>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Add Participant Dialog */}
+                <Dialog open={isAddParticipantOpen} onOpenChange={setIsAddParticipantOpen}>
                   <DialogContent className='sm:max-w-md'>
                     <DialogHeader>
                       <DialogTitle>Manage Project Participants</DialogTitle>
