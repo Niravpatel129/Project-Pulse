@@ -115,7 +115,6 @@ export default function TeamMembersList() {
         onOpenChange={setIsAddTeamDialogOpen}
         selectedRole={selectedRole}
         onAddParticipant={handleAddParticipant}
-        predefinedRoles={predefinedRoles}
       />
     </div>
   );

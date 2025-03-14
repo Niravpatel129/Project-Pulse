@@ -17,7 +17,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import React, { useState } from 'react';
-import { CustomElement } from './types';
 
 interface CustomField {
   name: string;
@@ -35,7 +34,7 @@ interface CustomElementData {
 interface CustomElementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (element: CustomElement) => void;
+  onAdd: (element) => void;
 }
 
 export function CustomElementModal({ isOpen, onClose, onAdd }: CustomElementModalProps) {
@@ -66,7 +65,7 @@ export function CustomElementModal({ isOpen, onClose, onAdd }: CustomElementModa
     e.preventDefault();
     if (!formData.name || !formData.fields?.length) return;
 
-    const customElement: CustomElement = {
+    const customElement = {
       type: 'custom',
       name: formData.name,
       description: formData.description,
