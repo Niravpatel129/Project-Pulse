@@ -10,9 +10,19 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { useProject } from '@/contexts/ProjectContext';
-import { AlertCircle, CheckCircle2, Clock, Plus, UserCircle, UserCog, Users } from 'lucide-react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  Mail,
+  Plus,
+  UserCircle,
+  UserCog,
+  Users,
+} from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import AddParticipantDialog from './AddParticipantDialog';
@@ -225,49 +235,72 @@ export default function ProjectHeader() {
             <div className='flex flex-wrap items-center gap-4'>
               <div className='flex flex-wrap items-center gap-4'>
                 {project.participants.map((participant) => {
-                  console.log('🚀 participant:', participant);
                   return (
-                    <div key={participant._id} className='flex items-center gap-2'>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          {participant.avatar ? (
-                            <Avatar className='h-10 w-10 cursor-pointer'>
+                    <div
+                      key={participant._id}
+                      className='flex items-center gap-3 transition-all  p-1.5 rounded-lg'
+                    >
+                      <HoverCard>
+                        <HoverCardTrigger asChild>
+                          <Avatar className='h-10 w-10 cursor-pointer border-2 border-transparent hover:border-gray-300 transition-colors bg-gray-200'>
+                            {participant.avatar ? (
                               <AvatarImage src={participant.avatar} alt={participant.name} />
-                              <AvatarFallback>
-                                {participant.name.charAt(0).toUpperCase()}
+                            ) : (
+                              <AvatarFallback className='bg-gray-200 text-gray-800 font-medium'>
+                                {participant.name
+                                  .split(' ')
+                                  .map((n) => {
+                                    return n.charAt(0).toUpperCase();
+                                  })
+                                  .join('')}
                               </AvatarFallback>
-                            </Avatar>
-                          ) : (
-                            <Avatar className='flex h-10 w-10 cursor-pointer items-center justify-center bg-gray-100'>
-                              <span className='text-sm'>
-                                {participant.name.charAt(0).toUpperCase()}
-                              </span>
-                            </Avatar>
-                          )}
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <div>
-                            <p className='font-medium'>{participant.name}</p>
-                            <p className='text-xs text-muted-foreground'>{participant.role}</p>
-                            {participant.email && <p className='text-xs'>{participant.email}</p>}
-                            {participant.status && (
-                              <div className='mt-1'>
-                                {getStatusBadge(
-                                  participant.status as 'active' | 'pending' | 'inactive',
+                            )}
+                          </Avatar>
+                        </HoverCardTrigger>
+                        <HoverCardContent side='bottom' className='p-3 max-w-xs'>
+                          <div className='space-y-3'>
+                            <div className='flex items-center gap-3'>
+                              <Avatar className='h-10 w-10'>
+                                {participant.avatar ? (
+                                  <AvatarImage src={participant.avatar} alt={participant.name} />
+                                ) : (
+                                  <AvatarFallback className='bg-gray-200 text-gray-800 font-medium flex items-center justify-center'>
+                                    {participant.name
+                                      .split(' ')
+                                      .map((n) => {
+                                        return n.charAt(0).toUpperCase();
+                                      })
+                                      .join('')}
+                                  </AvatarFallback>
                                 )}
+                              </Avatar>
+                              <div className='space-y-0.5'>
+                                <p className='font-medium text-base'>{participant.name}</p>
+                                <div className='flex items-center gap-2'>
+                                  <span className='text-sm'>{participant.role}</span>
+                                  {participant.status && (
+                                    <span className='text-sm'>{participant.status}</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            {participant.email && (
+                              <div className='flex items-center gap-1.5 text-xs text-muted-foreground'>
+                                <Mail className='h-3 w-3' />
+                                <span>{participant.email}</span>
                               </div>
                             )}
                           </div>
-                        </TooltipContent>
-                      </Tooltip>
+                        </HoverCardContent>
+                      </HoverCard>
                       <div className='hidden sm:block'>
                         <div className='flex items-center gap-1'>
                           <p className='text-sm font-medium capitalize'>{participant.name}</p>
                         </div>
-                        <div className='flex items-center gap-1'>
+                        <div className='flex items-center gap-1.5 mt-0.5'>
                           {getRoleBadge(participant.role)}
                           {participant.status && (
-                            <span className='text-xs ml-1'>
+                            <span>
                               {getStatusBadge(
                                 participant.status as 'active' | 'pending' | 'inactive',
                               )}
@@ -283,73 +316,77 @@ export default function ProjectHeader() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
-                      variant='ghost'
-                      size='sm'
-                      className='rounded-full shadow-none flex items-center justify-center'
+                      variant='outline'
+                      size='icon'
+                      className='rounded-full h-10 w-10 ml-2 border-dashed hover:border-primary hover:bg-primary/5 transition-colors'
                     >
                       <Plus className='h-4 w-4' />
-                      <span className='text-xs hidden xs:inline ml-1'>ADD PARTICIPANT</span>
+                      <span className='sr-only'>Add participant</span>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align='center' className='pb-2 w-[280px]'>
-                    <DropdownMenuLabel>Add Participant</DropdownMenuLabel>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        return handleSelectRole('CLIENT');
-                      }}
-                      className='flex items-start gap-2'
-                    >
-                      <div
-                        className='bg-background flex size-8 items-center justify-center rounded-md border flex-shrink-0'
-                        aria-hidden='true'
+                  <DropdownMenuContent align='center' className='w-[300px] p-2'>
+                    <DropdownMenuLabel className='text-center py-2 border-b mb-2'>
+                      Add Participant
+                    </DropdownMenuLabel>
+                    <div className='space-y-1'>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleSelectRole('CLIENT');
+                        }}
+                        className='flex items-start gap-3 p-3 rounded-md hover:bg-primary/5 cursor-pointer'
                       >
-                        <UserCircle className='h-4 w-4 opacity-60' />
-                      </div>
-                      <div className='overflow-hidden'>
-                        <div className='text-sm font-medium'>Client</div>
-                        <div className='text-muted-foreground text-xs line-clamp-2'>
-                          Can view and download files, and leave comments
+                        <div
+                          className='bg-blue-50 flex size-10 items-center justify-center rounded-full border border-blue-100 flex-shrink-0'
+                          aria-hidden='true'
+                        >
+                          <UserCircle className='h-5 w-5 text-blue-600' />
                         </div>
-                      </div>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        return handleSelectRole('COLLABORATOR');
-                      }}
-                      className='flex items-start gap-2'
-                    >
-                      <div
-                        className='bg-background flex size-8 items-center justify-center rounded-md border flex-shrink-0'
-                        aria-hidden='true'
+                        <div className='overflow-hidden'>
+                          <div className='text-sm font-medium'>Client</div>
+                          <div className='text-muted-foreground text-xs line-clamp-2'>
+                            Can view and download files, and leave comments
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleSelectRole('COLLABORATOR');
+                        }}
+                        className='flex items-start gap-3 p-3 rounded-md hover:bg-primary/5 cursor-pointer'
                       >
-                        <Users className='h-4 w-4 opacity-60' />
-                      </div>
-                      <div className='overflow-hidden'>
-                        <div className='text-sm font-medium'>Collaborator</div>
-                        <div className='text-muted-foreground text-xs line-clamp-2'>
-                          Can contribute to the project with editing and commenting abilities
+                        <div
+                          className='bg-indigo-50 flex size-10 items-center justify-center rounded-full border border-indigo-100 flex-shrink-0'
+                          aria-hidden='true'
+                        >
+                          <Users className='h-5 w-5 text-indigo-600' />
                         </div>
-                      </div>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        return handleSelectRole('TEAM MEMBER');
-                      }}
-                      className='flex items-start gap-2'
-                    >
-                      <div
-                        className='bg-background flex size-8 items-center justify-center rounded-md border flex-shrink-0'
-                        aria-hidden='true'
+                        <div className='overflow-hidden'>
+                          <div className='text-sm font-medium'>Collaborator</div>
+                          <div className='text-muted-foreground text-xs line-clamp-2'>
+                            Can contribute to the project with editing and commenting abilities
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          return handleSelectRole('TEAM MEMBER');
+                        }}
+                        className='flex items-start gap-3 p-3 rounded-md hover:bg-primary/5 cursor-pointer'
                       >
-                        <UserCog className='h-4 w-4 opacity-60' />
-                      </div>
-                      <div className='overflow-hidden'>
-                        <div className='text-sm font-medium'>Team Member</div>
-                        <div className='text-muted-foreground text-xs line-clamp-2'>
-                          Full access to edit, upload, and manage project content
+                        <div
+                          className='bg-green-50 flex size-10 items-center justify-center rounded-full border border-green-100 flex-shrink-0'
+                          aria-hidden='true'
+                        >
+                          <UserCog className='h-5 w-5 text-green-600' />
                         </div>
-                      </div>
-                    </DropdownMenuItem>
+                        <div className='overflow-hidden'>
+                          <div className='text-sm font-medium'>Team Member</div>
+                          <div className='text-muted-foreground text-xs line-clamp-2'>
+                            Full access to edit, upload, and manage project content
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+                    </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
 
