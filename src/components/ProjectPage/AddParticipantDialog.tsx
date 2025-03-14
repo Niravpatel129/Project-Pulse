@@ -1,20 +1,15 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle2, Copy, Mail, PlusCircle, Search, Send, UserPlus } from 'lucide-react';
-import { useState } from 'react';
+import { cn } from '@/lib/utils';
+import { ChevronDownIcon, PhoneIcon, Plus, Search, UserPlus, X } from 'lucide-react';
+import { useId, useState } from 'react';
+import * as RPNInput from 'react-phone-number-input';
+import flags from 'react-phone-number-input/flags';
 
 interface Role {
   id: string;
@@ -27,18 +22,12 @@ interface Role {
 interface Participant {
   id: string;
   name: string;
-  role: string;
-  avatar?: string;
-  initials?: string;
   email?: string;
   phone?: string;
   status: 'active' | 'pending' | 'inactive';
-  permissions: string[];
   dateAdded: string;
-  lastActive?: string;
-  contractSigned?: boolean;
-  paymentStatus?: 'paid' | 'unpaid' | 'partial';
   notes?: string;
+  customFields?: { key: string; value: string }[];
 }
 
 interface AddParticipantDialogProps {
@@ -59,29 +48,22 @@ export default function AddParticipantDialog({
   getRoleBadge,
 }: AddParticipantDialogProps) {
   const [newParticipantName, setNewParticipantName] = useState('');
-  const [newParticipantRole, setNewParticipantRole] = useState('');
   const [newParticipantEmail, setNewParticipantEmail] = useState('');
   const [newParticipantPhone, setNewParticipantPhone] = useState('');
   const [newParticipantNotes, setNewParticipantNotes] = useState('');
-  const [newParticipantPermissions, setNewParticipantPermissions] = useState<string[]>([]);
-  const [isEditingRole, setIsEditingRole] = useState(false);
-  const [newRoleName, setNewRoleName] = useState('');
-  const [newRolePermissions, setNewRolePermissions] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [inviteLink, setInviteLink] = useState('https://project.example.com/invite/abc123xyz');
-  const [linkCopied, setLinkCopied] = useState(false);
+  const [customFields, setCustomFields] = useState<{ key: string; value: string }[]>([]);
+  const [newFieldName, setNewFieldName] = useState('');
+  const phoneInputId = useId();
 
   // Mock previous clients/team members for the CRM integration
   const previousContacts = [
     {
       id: 'c1',
       name: 'Alex Johnson',
-      role: 'CLIENT',
       email: 'alex@example.com',
-      initials: 'AJ',
       phone: '+1 (555) 234-5678',
       status: 'active' as const,
-      permissions: ['view', 'download', 'comment'],
       dateAdded: '2023-01-10',
       lastActive: '2023-06-15',
       contractSigned: true,
@@ -91,12 +73,9 @@ export default function AddParticipantDialog({
     {
       id: 'c2',
       name: 'Maria Garcia',
-      role: 'CLIENT',
       email: 'maria@example.com',
-      initials: 'MG',
       phone: '+1 (555) 345-6789',
       status: 'active' as const,
-      permissions: ['view', 'download', 'comment'],
       dateAdded: '2023-02-22',
       lastActive: '2023-05-30',
       contractSigned: true,
@@ -106,12 +85,9 @@ export default function AddParticipantDialog({
     {
       id: 'c3',
       name: 'James Wilson',
-      role: 'ASSISTANT',
       email: 'james@example.com',
-      initials: 'JW',
       phone: '+1 (555) 456-7890',
       status: 'active' as const,
-      permissions: ['edit', 'upload', 'download'],
       dateAdded: '2022-11-15',
       lastActive: '2023-06-21',
       contractSigned: true,
@@ -121,12 +97,9 @@ export default function AddParticipantDialog({
     {
       id: 'c4',
       name: 'Emma Davis',
-      role: 'MAKEUP ARTIST',
       email: 'emma@example.com',
-      initials: 'ED',
       phone: '+1 (555) 567-8901',
       status: 'active' as const,
-      permissions: ['view', 'download'],
       dateAdded: '2023-03-05',
       lastActive: '2023-06-10',
       contractSigned: true,
@@ -138,43 +111,26 @@ export default function AddParticipantDialog({
   const filteredContacts = previousContacts.filter((contact) => {
     return (
       contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.role.toLowerCase().includes(searchTerm.toLowerCase())
+      contact.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
 
   const handleAddParticipant = () => {
-    if (newParticipantName.trim() === '' || newParticipantRole.trim() === '') return;
+    if (newParticipantName.trim() === '') return;
 
-    const initials = newParticipantName
-      .split(' ')
-      .map((name) => {
-        return name[0];
-      })
-      .join('')
-      .toUpperCase();
-
-    // Get permissions based on selected role
-    const rolePermissions =
-      predefinedRoles.find((r) => {
-        return r.name === newParticipantRole.toUpperCase();
-      })?.permissions || [];
-
-    // Use selected permissions if any, otherwise use role default permissions
-    const permissions =
-      newParticipantPermissions.length > 0 ? newParticipantPermissions : rolePermissions;
+    // Default role and permissions
 
     const newParticipant: Participant = {
       id: Date.now().toString(),
       name: newParticipantName,
-      role: newParticipantRole.toUpperCase(),
-      initials,
       email: newParticipantEmail,
       phone: newParticipantPhone,
       status: 'pending',
-      permissions,
       dateAdded: new Date().toISOString().split('T')[0],
       notes: newParticipantNotes,
+      ...customFields.reduce((acc, field) => {
+        return { ...acc, [field.key]: field.value };
+      }, {}),
     };
 
     onAddParticipant(newParticipant);
@@ -190,38 +146,33 @@ export default function AddParticipantDialog({
     onAddParticipant(newParticipant);
   };
 
-  const handleAddNewRole = () => {
-    if (newRoleName.trim() === '') return;
-
-    const newRole: Role = {
-      id: `r${predefinedRoles.length + 1}`,
-      name: newRoleName.toUpperCase(),
-      permissions: newRolePermissions,
-      color: 'bg-gray-100 text-gray-800',
-    };
-
-    onAddRole(newRole);
-    setNewRoleName('');
-    setNewRolePermissions([]);
-    setIsEditingRole(false);
-  };
-
-  const handleCopyInviteLink = () => {
-    navigator.clipboard.writeText(inviteLink);
-    setLinkCopied(true);
-    setTimeout(() => {
-      return setLinkCopied(false);
-    }, 2000);
-  };
-
   const resetForm = () => {
     setNewParticipantName('');
-    setNewParticipantRole('');
     setNewParticipantEmail('');
     setNewParticipantPhone('');
     setNewParticipantNotes('');
-    setNewParticipantPermissions([]);
+    setCustomFields([]);
+    setNewFieldName('');
     onOpenChange(false);
+  };
+
+  const handleAddCustomField = () => {
+    if (newFieldName.trim() !== '') {
+      setCustomFields([...customFields, { key: newFieldName, value: '' }]);
+      setNewFieldName('');
+    }
+  };
+
+  const handleUpdateCustomField = (index: number, value: string) => {
+    const updatedFields = [...customFields];
+    updatedFields[index].value = value;
+    setCustomFields(updatedFields);
+  };
+
+  const handleRemoveCustomField = (index: number) => {
+    const updatedFields = [...customFields];
+    updatedFields.splice(index, 1);
+    setCustomFields(updatedFields);
   };
 
   return (
@@ -231,10 +182,9 @@ export default function AddParticipantDialog({
           <DialogTitle>Manage Project Participants</DialogTitle>
         </DialogHeader>
         <Tabs defaultValue='invite'>
-          <TabsList className='grid w-full grid-cols-3'>
+          <TabsList className='grid w-full grid-cols-2'>
             <TabsTrigger value='invite'>Invite New</TabsTrigger>
-            <TabsTrigger value='existing'>From Contacts</TabsTrigger>
-            <TabsTrigger value='link'>Share Link</TabsTrigger>
+            <TabsTrigger value='existing'>Existing Participants</TabsTrigger>
           </TabsList>
 
           <TabsContent value='invite' className='space-y-4 py-2'>
@@ -262,128 +212,20 @@ export default function AddParticipantDialog({
               />
             </div>
             <div className='space-y-2'>
-              <Label htmlFor='phone'>Phone (optional)</Label>
-              <Input
-                id='phone'
-                type='tel'
-                value={newParticipantPhone}
-                onChange={(e) => {
-                  return setNewParticipantPhone(e.target.value);
-                }}
+              <Label htmlFor={phoneInputId}>Phone (optional)</Label>
+              <RPNInput.default
+                className='flex rounded-md shadow-xs'
+                international
+                flagComponent={FlagComponent}
+                countrySelectComponent={CountrySelect}
+                inputComponent={PhoneInput}
+                id={phoneInputId}
                 placeholder='Enter phone number'
+                value={newParticipantPhone}
+                onChange={(newValue) => {
+                  return setNewParticipantPhone(newValue ?? '');
+                }}
               />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='role'>Role</Label>
-              <div className='flex gap-2'>
-                <Select value={newParticipantRole} onValueChange={setNewParticipantRole}>
-                  <SelectTrigger className='flex-1'>
-                    <SelectValue placeholder='Select a role' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {predefinedRoles.map((role) => {
-                      return (
-                        <SelectItem key={role.id} value={role.name}>
-                          {role.name}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-                <Button
-                  type='button'
-                  variant='outline'
-                  size='icon'
-                  onClick={() => {
-                    return setIsEditingRole(!isEditingRole);
-                  }}
-                >
-                  <PlusCircle className='h-4 w-4' />
-                </Button>
-              </div>
-            </div>
-
-            {isEditingRole && (
-              <div className='space-y-4 p-3 border rounded-md bg-gray-50'>
-                <h4 className='font-medium'>Create New Role</h4>
-                <div className='space-y-2'>
-                  <Label htmlFor='roleName'>Role Name</Label>
-                  <Input
-                    id='roleName'
-                    value={newRoleName}
-                    onChange={(e) => {
-                      return setNewRoleName(e.target.value);
-                    }}
-                    placeholder='e.g., Videographer'
-                  />
-                </div>
-                <div className='space-y-2'>
-                  <Label>Permissions</Label>
-                  <div className='grid grid-cols-2 gap-2'>
-                    {['view', 'edit', 'upload', 'download', 'share', 'delete', 'comment'].map(
-                      (perm) => {
-                        return (
-                          <div key={perm} className='flex items-center space-x-2'>
-                            <Checkbox
-                              id={`perm-${perm}`}
-                              checked={newRolePermissions.includes(perm)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setNewRolePermissions([...newRolePermissions, perm]);
-                                } else {
-                                  setNewRolePermissions(
-                                    newRolePermissions.filter((p) => {
-                                      return p !== perm;
-                                    }),
-                                  );
-                                }
-                              }}
-                            />
-                            <Label htmlFor={`perm-${perm}`} className='text-sm capitalize'>
-                              {perm}
-                            </Label>
-                          </div>
-                        );
-                      },
-                    )}
-                  </div>
-                </div>
-                <Button onClick={handleAddNewRole} className='w-full'>
-                  Add Role
-                </Button>
-              </div>
-            )}
-
-            <div className='space-y-2'>
-              <Label>Custom Permissions (Optional)</Label>
-              <div className='grid grid-cols-2 gap-2'>
-                {['view', 'edit', 'upload', 'download', 'share', 'delete', 'comment'].map(
-                  (perm) => {
-                    return (
-                      <div key={perm} className='flex items-center space-x-2'>
-                        <Checkbox
-                          id={`participant-perm-${perm}`}
-                          checked={newParticipantPermissions.includes(perm)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setNewParticipantPermissions([...newParticipantPermissions, perm]);
-                            } else {
-                              setNewParticipantPermissions(
-                                newParticipantPermissions.filter((p) => {
-                                  return p !== perm;
-                                }),
-                              );
-                            }
-                          }}
-                        />
-                        <Label htmlFor={`participant-perm-${perm}`} className='text-sm capitalize'>
-                          {perm}
-                        </Label>
-                      </div>
-                    );
-                  },
-                )}
-              </div>
             </div>
 
             <div className='space-y-2'>
@@ -399,13 +241,72 @@ export default function AddParticipantDialog({
               />
             </div>
 
+            {/* Custom Fields Section */}
+            <div className='space-y-3 pb-2'>
+              <div className='flex items-center justify-between'>
+                <Label>Custom Fields</Label>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  className='h-8 text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground'
+                  onClick={() => {
+                    setNewFieldName('Field Name');
+                  }}
+                >
+                  <Plus className='h-3 w-3' />
+                  Add Field
+                </Button>
+              </div>
+
+              {/* New field input */}
+              {newFieldName !== '' && (
+                <div className='flex items-center gap-2'>
+                  <Input
+                    placeholder='Field name'
+                    value={newFieldName}
+                    onChange={(e) => {
+                      return setNewFieldName(e.target.value);
+                    }}
+                    className='flex-1'
+                  />
+                  <Button size='sm' onClick={handleAddCustomField} disabled={!newFieldName.trim()}>
+                    Add
+                  </Button>
+                </div>
+              )}
+
+              {/* Custom fields list */}
+              {customFields.map((field, index) => {
+                return (
+                  <div key={index} className='flex items-center gap-2'>
+                    <Label className='w-1/3 text-sm'>{field.key}</Label>
+                    <Input
+                      value={field.value}
+                      onChange={(e) => {
+                        return handleUpdateCustomField(index, e.target.value);
+                      }}
+                      placeholder={`Enter ${field.key.toLowerCase()}`}
+                      className='flex-1'
+                    />
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => {
+                        return handleRemoveCustomField(index);
+                      }}
+                      className='h-8 w-8 p-0'
+                    >
+                      <X className='h-4 w-4' />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+
             <div className='flex gap-2'>
-              <Button onClick={handleAddParticipant} className='flex-1'>
+              <Button onClick={handleAddParticipant} className='flex-1 gap-1'>
+                <UserPlus className='h-4 w-4' />
                 Add Participant
-              </Button>
-              <Button variant='outline' className='flex gap-1'>
-                <Mail className='h-4 w-4' />
-                <span>Send Invite</span>
               </Button>
             </div>
           </TabsContent>
@@ -414,7 +315,7 @@ export default function AddParticipantDialog({
             <div className='relative'>
               <Search className='absolute left-2 top-2.5 h-4 w-4 text-muted-foreground' />
               <Input
-                placeholder='Search contacts...'
+                placeholder='Search existing participants...'
                 className='pl-8'
                 value={searchTerm}
                 onChange={(e) => {
@@ -423,72 +324,126 @@ export default function AddParticipantDialog({
               />
             </div>
 
-            <div className='max-h-60 overflow-y-auto space-y-2'>
+            <div className='max-h-72 overflow-y-auto space-y-2 rounded-md border p-1'>
               {filteredContacts.length > 0 ? (
                 filteredContacts.map((contact) => {
                   return (
                     <div
                       key={contact.id}
-                      className='flex items-center justify-between p-2 hover:bg-gray-50 rounded'
+                      className='flex items-center justify-between p-3 hover:bg-gray-50 rounded-md border border-transparent hover:border-gray-200 transition-all'
                     >
-                      <div className='flex items-center gap-2'>
-                        <Avatar className='h-24 w-24'>
-                          <AvatarFallback>{contact.initials}</AvatarFallback>
+                      <div className='flex items-center gap-3'>
+                        <Avatar className='h-10 w-10 border border-gray-100 shadow-sm'>
+                          <AvatarFallback className='bg-primary/10 text-primary font-medium'>
+                            {contact.name
+                              .split(' ')
+                              .map((name) => {
+                                return name[0];
+                              })
+                              .join('')}
+                          </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className='text-sm font-medium capitalize'>{contact.name}</p>
-                          <div className='flex items-center gap-2'>
+                          <p className='text-sm font-medium'>{contact.name}</p>
+                          <div className='flex flex-col gap-1 mt-1 sm:flex-row sm:items-center sm:gap-2'>
                             <p className='text-xs text-muted-foreground'>{contact.email}</p>
-                            {getRoleBadge(contact.role)}
                           </div>
+                          <p className='text-xs text-muted-foreground mt-1'>{contact.phone}</p>
                         </div>
                       </div>
                       <Button
                         size='sm'
-                        variant='ghost'
                         onClick={() => {
                           return handleAddExistingContact(contact);
                         }}
-                        className='h-8 w-8 p-0'
+                        className='h-8 gap-1'
                       >
-                        <UserPlus className='h-4 w-4' />
+                        <UserPlus className='h-3.5 w-3.5' />
+                        <span className='hidden sm:inline'>Add</span>
                       </Button>
                     </div>
                   );
                 })
               ) : (
-                <p className='text-center text-sm text-muted-foreground py-4'>No contacts found</p>
+                <div className='text-center py-8 px-4'>
+                  <p className='text-sm text-muted-foreground mb-2'>No contacts found</p>
+                  <p className='text-xs text-muted-foreground'>
+                    Try a different search term or add a new participant
+                  </p>
+                </div>
               )}
             </div>
-          </TabsContent>
-
-          <TabsContent value='link' className='space-y-4 py-2'>
-            <div className='space-y-2'>
-              <Label>Project Invite Link</Label>
-              <div className='flex gap-2'>
-                <div className='flex-1 p-2 bg-gray-50 rounded border text-sm overflow-hidden text-ellipsis whitespace-nowrap'>
-                  {inviteLink}
-                </div>
-                <Button
-                  variant='outline'
-                  size='icon'
-                  onClick={handleCopyInviteLink}
-                  className='relative'
-                >
-                  {linkCopied ? <CheckCircle2 className='h-4 w-4' /> : <Copy className='h-4 w-4' />}
-                </Button>
-              </div>
-              <p className='text-xs text-muted-foreground'>
-                Share this link with people you want to invite to the project
-              </p>
-            </div>
-            <Button className='w-full flex gap-1'>
-              <Send className='h-4 w-4' />
-              <span>Send Invite Link</span>
-            </Button>
           </TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>
   );
 }
+
+const PhoneInput = ({ className, ...props }: React.ComponentProps<'input'>) => {
+  return (
+    <Input
+      data-slot='phone-input'
+      className={cn('-ms-px rounded-s-none shadow-none focus-visible:z-10', className)}
+      {...props}
+    />
+  );
+};
+
+PhoneInput.displayName = 'PhoneInput';
+
+type CountrySelectProps = {
+  disabled?: boolean;
+  value: RPNInput.Country;
+  onChange: (value: RPNInput.Country) => void;
+  options: { label: string; value: RPNInput.Country | undefined }[];
+};
+
+const CountrySelect = ({ disabled, value, onChange, options }: CountrySelectProps) => {
+  const handleSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    onChange(event.target.value as RPNInput.Country);
+  };
+
+  return (
+    <div className='border-input bg-background text-muted-foreground focus-within:border-ring focus-within:ring-ring/50 hover:bg-accent hover:text-foreground has-aria-invalid:border-destructive/60 has-aria-invalid:ring-destructive/20 dark:has-aria-invalid:ring-destructive/40 relative inline-flex items-center self-stretch rounded-s-md border py-2 ps-3 pe-2 transition-[color,box-shadow] outline-none focus-within:z-10 focus-within:ring-[3px] has-disabled:pointer-events-none has-disabled:opacity-50'>
+      <div className='inline-flex items-center gap-1' aria-hidden='true'>
+        <FlagComponent country={value} countryName={value} aria-hidden='true' />
+        <span className='text-muted-foreground/80'>
+          <ChevronDownIcon size={16} aria-hidden='true' />
+        </span>
+      </div>
+      <select
+        disabled={disabled}
+        value={value}
+        onChange={handleSelect}
+        className='absolute inset-0 text-sm opacity-0'
+        aria-label='Select country'
+      >
+        <option key='default' value=''>
+          Select a country
+        </option>
+        {options
+          .filter((x) => {
+            return x.value;
+          })
+          .map((option, i) => {
+            return (
+              <option key={option.value ?? `empty-${i}`} value={option.value}>
+                {option.label} {option.value && `+${RPNInput.getCountryCallingCode(option.value)}`}
+              </option>
+            );
+          })}
+      </select>
+    </div>
+  );
+};
+
+const FlagComponent = ({ country, countryName }: RPNInput.FlagProps) => {
+  const Flag = flags[country];
+
+  return (
+    <span className='w-5 overflow-hidden rounded-sm'>
+      {Flag ? <Flag title={countryName} /> : <PhoneIcon size={16} aria-hidden='true' />}
+    </span>
+  );
+};

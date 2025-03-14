@@ -26,6 +26,7 @@ import {
 import Image from 'next/image';
 import { useState } from 'react';
 import AddParticipantDialog from './AddParticipantDialog';
+import AddTeamDialog from './AddTeamDialog';
 
 interface Participant {
   id: string;
@@ -139,6 +140,7 @@ export default function ProjectHeader() {
   ]);
 
   const [isAddParticipantOpen, setIsAddParticipantOpen] = useState(false);
+  const [isAddTeamOpen, setIsAddTeamOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState('');
 
   const handleAddParticipant = (participant: Participant) => {
@@ -156,7 +158,18 @@ export default function ProjectHeader() {
 
   const handleSelectRole = (roleName: string) => {
     setSelectedRole(roleName);
-    setIsAddParticipantOpen(true);
+
+    // Open the appropriate dialog based on the role
+    if (roleName === 'CLIENT') {
+      setIsAddParticipantOpen(true);
+      setIsAddTeamOpen(false);
+    } else if (roleName === 'COLLABORATOR' || roleName === 'TEAM MEMBER') {
+      setIsAddTeamOpen(true);
+      setIsAddParticipantOpen(false);
+    } else {
+      setIsAddParticipantOpen(true);
+      setIsAddTeamOpen(false);
+    }
   };
 
   const getStatusBadge = (status: 'active' | 'pending' | 'inactive') => {
@@ -397,6 +410,14 @@ export default function ProjectHeader() {
                   predefinedRoles={predefinedRoles}
                   onAddRole={handleAddRole}
                   getRoleBadge={getRoleBadge}
+                />
+
+                <AddTeamDialog
+                  isOpen={isAddTeamOpen}
+                  onOpenChange={setIsAddTeamOpen}
+                  selectedRole={selectedRole}
+                  onAddParticipant={handleAddParticipant}
+                  predefinedRoles={predefinedRoles}
                 />
               </div>
             </div>
