@@ -285,9 +285,6 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
               <div className='mb-6'>
                 <div className='flex justify-between items-center mb-3'>
                   <h3 className='text-lg font-medium'>Approvals</h3>
-                  <Badge variant='outline' className='font-normal'>
-                    {clientShares.length} {clientShares.length === 1 ? 'share' : 'shares'}
-                  </Badge>
                 </div>
 
                 {isLoadingApprovals ? (
