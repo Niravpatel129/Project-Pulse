@@ -59,12 +59,7 @@ export default function ProjectMain() {
               </SheetTrigger>
               <SheetContent className='w-[85%] sm:max-w-md'>
                 <div className='mt-6 w-full'>
-                  <ProjectSidebar
-                    onUpdateProject={handleUpdateProject}
-                    onActionComplete={() => {
-                      return isTablet && setIsSidebarOpen(false);
-                    }}
-                  />
+                  <ProjectSidebar onUpdateProject={handleUpdateProject} />
                 </div>
               </SheetContent>
             </Sheet>
