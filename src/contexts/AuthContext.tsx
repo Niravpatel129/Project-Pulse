@@ -31,6 +31,12 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 // Cookie options
 
+interface ApiError {
+  message: string;
+  status?: number;
+  code?: string;
+}
+
 // Auth Provider component
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -91,12 +97,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       toast.success('Login successful');
-    } catch (err: any) {
-      const errorMsg =
-        err.response?.data?.message || 'Login failed. Please check your credentials.';
-      setError(errorMsg);
-      throw new Error(errorMsg);
-    } finally {
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      setError(error.message || 'An error occurred during login');
       setLoading(false);
     }
   };
@@ -134,12 +137,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(userData);
       setIsAuthenticated(true);
       return Promise.resolve();
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.message || 'Registration failed';
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      const errorMsg = error.message || 'An error occurred during signup';
       setError(errorMsg);
-      return Promise.reject(new Error(errorMsg));
-    } finally {
       setLoading(false);
+      return Promise.reject(new Error(errorMsg));
     }
   };
 

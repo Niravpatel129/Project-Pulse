@@ -48,6 +48,13 @@ type TeamMember = {
     slots: { start: string; end: string }[];
   }[];
 };
+
+type MeetingParticipant = {
+  _id: string;
+  name?: string;
+  email?: string;
+};
+
 type Meeting = {
   _id: string;
   title: string;
@@ -71,7 +78,31 @@ type Meeting = {
     email: string;
   };
   clientEmail?: string;
-  participants: any;
+  participants: string[];
+};
+
+type APIResponse = {
+  _id: string;
+  title: string;
+  description?: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  location?: string;
+  status: 'pending' | 'scheduled' | 'completed' | 'cancelled';
+  type?: string;
+  typeDetails?: {
+    videoType?: string;
+    videoLink?: string;
+    phoneNumber?: string;
+    location?: string;
+    otherDetails?: string;
+  };
+  organizer?: {
+    _id: string;
+    email: string;
+  };
+  participants?: MeetingParticipant[];
 };
 
 export default function ProjectSchedule() {
@@ -190,7 +221,7 @@ export default function ProjectSchedule() {
 
       try {
         const response = await newRequest.get(`/meetings?projectId=${project._id}`);
-        const fetchedMeetings = response.data.map((meeting: any) => {
+        const fetchedMeetings = response.data.map((meeting: APIResponse) => {
           return {
             _id: meeting._id,
             title: meeting.title,
@@ -201,7 +232,7 @@ export default function ProjectSchedule() {
             status: meeting.status,
             clientEmail: meeting.organizer?.email,
             participants:
-              meeting.participants?.map((p: any) => {
+              meeting.participants?.map((p) => {
                 return p._id;
               }) || [],
             type: meeting.type || 'other',

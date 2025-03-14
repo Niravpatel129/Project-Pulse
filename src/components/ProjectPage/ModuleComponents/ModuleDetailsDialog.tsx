@@ -38,24 +38,20 @@ import { SendEmailDialog } from '../FileComponents';
 import { CustomElementModal } from './CustomElementModal';
 import { FileElementDetailsDialog } from './FileElementDetailsDialog';
 import { FileElementModal } from './FileElementModal';
-import { Module } from './types';
-
-type ElementType = 'file' | 'invoice' | 'custom';
-
-type Element = any;
+import { Element, FileElement, Module, ElementType as ModuleElementType } from './types';
 
 interface ModuleDetailsDialogProps {
   selectedModule: Module | null;
   onClose: () => void;
 }
 
-const isFileElement = (element) => {
-  return element.elementType === 'file';
+const isFileElement = (element: Element): element is FileElement => {
+  return element.type === 'file';
 };
 
 export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDialogProps) {
-  const [selectedElementType, setSelectedElementType] = useState<ElementType | null>(null);
-  const [selectedFileElement, setSelectedFileElement] = useState<any | null>(null);
+  const [selectedElementType, setSelectedElementType] = useState<ModuleElementType | null>(null);
+  const [selectedFileElement, setSelectedFileElement] = useState<Element | null>(null);
   const [elements, setElements] = useState<Element[]>([]);
   const [showSendEmailDialog, setShowSendEmailDialog] = useState(false);
   const [emailSubject, setEmailSubject] = useState('');
@@ -439,23 +435,21 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
                           <TableRow
                             key={index}
                             className='cursor-pointer hover:bg-gray-50'
-                            onClick={(e) => {
-                              if (isFileElement(element)) {
-                                setSelectedFileElement(element);
-                              }
+                            onClick={() => {
+                              console.log('🚀 element 123:', element);
+                              setSelectedFileElement(element);
                             }}
                           >
                             <TableCell className=''>
                               <div className='flex items-center gap-2'>
-                                {element.elementType === 'file' ? (
+                                {element.type === 'file' ? (
                                   <FileText className='h-4 w-4 text-gray-500' />
-                                ) : element.elementType === 'invoice' ? (
+                                ) : element.type === 'invoice' ? (
                                   <Receipt className='h-4 w-4 text-gray-500' />
                                 ) : (
                                   <Package className='h-4 w-4 text-gray-500' />
                                 )}
-
-                                {element.name || 'Untitled'}
+                                <span>{element.name}</span>
                               </div>
                             </TableCell>
                             <TableCell>
@@ -571,10 +565,7 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
         onClose={() => {
           setSelectedElementType(null);
         }}
-        onAdd={(element) => {
-          handleAddElement(element);
-          setSelectedElementType(null);
-        }}
+        onAdd={handleAddElement}
       />
 
       <CustomElementModal
@@ -582,10 +573,7 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
         onClose={() => {
           setSelectedElementType(null);
         }}
-        onAdd={(element) => {
-          handleAddElement(element);
-          setSelectedElementType(null);
-        }}
+        onAdd={handleAddElement}
       />
 
       <Dialog open={showSendEmailDialog} onOpenChange={setShowSendEmailDialog}>
@@ -606,7 +594,7 @@ export function ModuleDetailsDialog({ selectedModule, onClose }: ModuleDetailsDi
 
       <FileElementDetailsDialog
         element={selectedFileElement}
-        isOpen={selectedFileElement}
+        isOpen={!!selectedFileElement}
         onClose={() => {
           return setSelectedFileElement(null);
         }}

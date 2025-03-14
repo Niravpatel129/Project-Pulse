@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useProject } from '@/contexts/ProjectContext';
+import { useProject, type Project } from '@/contexts/ProjectContext';
 import { CalendarDays, CreditCard, Home, Menu, PanelsTopLeft } from 'lucide-react';
 import { useState } from 'react';
 import ProjectActivity from './ProjectActivity';
@@ -20,7 +20,7 @@ export default function ProjectMain() {
   const [activeTab, setActiveTab] = useState('home');
   const { project, updateProject } = useProject();
 
-  const handleUpdateProject = async (data: any) => {
+  const handleUpdateProject = async (data: Partial<Project>) => {
     await updateProject(data);
   };
 

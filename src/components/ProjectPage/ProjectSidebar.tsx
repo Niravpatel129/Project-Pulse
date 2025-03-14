@@ -26,21 +26,45 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 
-import { useProject } from '@/contexts/ProjectContext';
+import { useProject, type Project } from '@/contexts/ProjectContext';
 import { Copy, Link as LinkIcon, Lock, Mail, PlusCircle, Share2, X } from 'lucide-react';
 import { useState } from 'react';
+
+interface Task {
+  _id: string | number;
+  title: string;
+  description: string;
+  status: string;
+  dueDate: string;
+}
+
+interface TimeEntry {
+  id: number;
+  description: string;
+  duration: number;
+}
+
+interface SharingSettings {
+  privacyLevel: 'signup_required' | 'email_restricted' | 'public';
+  requirePassword: boolean;
+  password: string;
+  teamMembers: string[];
+  customMessage: string;
+  expirationDays: string;
+  allowedEmails: string[];
+}
 
 export function ProjectSidebar({
   onUpdateProject,
 }: {
-  onUpdateProject: (data: any) => Promise<void>;
+  onUpdateProject: (data: Partial<Project>) => Promise<void>;
 }) {
   const { project } = useProject();
   console.log('🚀 project:', project);
-  const [tasks, setTasks] = useState(project?.tasks || []);
-  const [timeEntries, setTimeEntries] = useState([]);
+  const [tasks, setTasks] = useState<Task[]>(project?.tasks || []);
+  const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [isClientPortalDialogOpen, setIsClientPortalDialogOpen] = useState(false);
-  const [sharingSettings, setSharingSettings] = useState({
+  const [sharingSettings, setSharingSettings] = useState<SharingSettings>({
     privacyLevel: 'signup_required',
     requirePassword: false,
     password: '',
@@ -54,6 +78,9 @@ export function ProjectSidebar({
         })
         .map((p) => {
           return p.email;
+        })
+        .filter((email): email is string => {
+          return email !== undefined;
         }) || [],
   });
   const [clientEmail, setClientEmail] = useState(
@@ -64,26 +91,29 @@ export function ProjectSidebar({
   const [allowedEmailInput, setAllowedEmailInput] = useState('');
   const portalURL = `https://pulse.example.com/client/${project?._id || 'project-id'}`;
 
-  const handleStageChange = async (value) => {
+  const handleStageChange = async (value: string) => {
     await onUpdateProject?.({ stage: value });
   };
 
-  const handleLeadSourceChange = async (value) => {
+  const handleLeadSourceChange = async (value: string) => {
     await onUpdateProject?.({ leadSource: value });
   };
 
-  const addTask = (title) => {
+  const addTask = (title: string) => {
     setTasks([
       ...tasks,
       { _id: Date.now(), title, description: '', status: 'pending', dueDate: '' },
     ]);
   };
 
-  const addTimeEntry = (description, duration) => {
+  const addTimeEntry = (description: string, duration: number) => {
     setTimeEntries([...timeEntries, { id: Date.now(), description, duration }]);
   };
 
-  const handleSharingSettingsChange = (key, value) => {
+  const handleSharingSettingsChange = (
+    key: keyof SharingSettings,
+    value: string | boolean | string[],
+  ) => {
     setSharingSettings({
       ...sharingSettings,
       [key]: value,
@@ -155,7 +185,7 @@ export function ProjectSidebar({
     setAllowedEmailInput('');
   };
 
-  const removeAllowedEmail = (email) => {
+  const removeAllowedEmail = (email: string) => {
     setSharingSettings({
       ...sharingSettings,
       allowedEmails: sharingSettings.allowedEmails.filter((e) => {
@@ -164,7 +194,7 @@ export function ProjectSidebar({
     });
   };
 
-  const handleAllowedEmailKeyDown = (e) => {
+  const handleAllowedEmailKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     // Allow adding email with Enter key
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -173,7 +203,7 @@ export function ProjectSidebar({
   };
 
   // Function to handle the privacy level change
-  const handlePrivacyLevelChange = (value) => {
+  const handlePrivacyLevelChange = (value: SharingSettings['privacyLevel']) => {
     handleSharingSettingsChange('privacyLevel', value);
 
     // Clear allowed emails when changing from email_restricted to another mode

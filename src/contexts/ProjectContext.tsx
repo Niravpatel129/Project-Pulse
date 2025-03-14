@@ -2,9 +2,9 @@
 
 import { newRequest } from '@/utils/newRequest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 
-interface Project {
+export interface Project {
   _id: string;
   name: string;
   projectType: string;
@@ -80,24 +80,21 @@ export function ProjectProvider({
     enabled: !!projectId,
   });
 
+  const fetchParticipants = useCallback(async () => {
+    if (!project?._id) return;
+    try {
+      const response = await newRequest.get(`/projects/${project._id}/participants`);
+      setParticipants(response.data);
+    } catch (error) {
+      console.error('Error fetching participants:', error);
+    }
+  }, [project?._id]);
+
   useEffect(() => {
-    if (projectId) {
+    if (project?._id) {
       fetchParticipants();
     }
-  }, [projectId]);
-
-  const fetchParticipants = async () => {
-    try {
-      const response = await newRequest.get(`/projects/${projectId}/participants`);
-      if (response.data.success) {
-        setParticipants(response.data.data);
-      } else {
-        console.error('Failed to fetch participants:', response.data.message);
-      }
-    } catch (err) {
-      console.error('Error fetching participants:', err);
-    }
-  };
+  }, [project?._id, fetchParticipants]);
 
   const updateProject = async (data: Partial<Project>) => {
     try {

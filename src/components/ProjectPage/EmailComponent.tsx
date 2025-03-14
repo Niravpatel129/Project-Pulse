@@ -50,6 +50,14 @@ interface EmailAttachment {
   file?: File;
 }
 
+interface EmailHistoryItem {
+  id: string;
+  date: string;
+  subject: string;
+  recipients: string[];
+  snippet: string;
+}
+
 // Custom types for Slate
 type CustomElement = {
   type: 'paragraph' | 'list-item';
@@ -107,8 +115,40 @@ export const EmailComponent = ({ initialSubject = '', initialMessage = '' }) => 
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [newTemplateName, setNewTemplateName] = useState('');
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
-  const [emailHistory, setEmailHistory] = useState<any[]>([]);
+  const [emailHistory, setEmailHistory] = useState<EmailHistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  const fetchEmailHistory = useCallback(async () => {
+    if (!project?._id) return;
+
+    setIsLoadingHistory(true);
+    try {
+      // In a real app, this would fetch from an API
+      setTimeout(() => {
+        const mockHistory: EmailHistoryItem[] = [
+          {
+            id: '1',
+            date: new Date(Date.now() - 86400000 * 2).toISOString(),
+            subject: 'Project Kickoff Meeting',
+            recipients: ['client@example.com', 'team@example.com'],
+            snippet: "I'm looking forward to our kickoff meeting tomorrow...",
+          },
+          {
+            id: '2',
+            date: new Date(Date.now() - 86400000 * 5).toISOString(),
+            subject: 'Initial Project Proposal',
+            recipients: ['client@example.com'],
+            snippet: 'Please find attached our proposal for the project...',
+          },
+        ];
+        setEmailHistory(mockHistory);
+        setIsLoadingHistory(false);
+      }, 500);
+    } catch (error) {
+      console.error('Error fetching email history:', error);
+      setIsLoadingHistory(false);
+    }
+  }, [project?._id]);
 
   // Load email templates and history when component mounts
   useEffect(() => {
@@ -116,7 +156,7 @@ export const EmailComponent = ({ initialSubject = '', initialMessage = '' }) => 
       fetchTemplates();
       fetchEmailHistory();
     }
-  }, [isExpanded, project?._id]);
+  }, [isExpanded, project?._id, fetchEmailHistory]);
 
   // Update subject and body when props change
   useEffect(() => {
@@ -152,38 +192,6 @@ export const EmailComponent = ({ initialSubject = '', initialMessage = '' }) => 
       setTemplates(mockTemplates);
     } catch (error) {
       console.error('Error fetching email templates:', error);
-    }
-  };
-
-  const fetchEmailHistory = async () => {
-    if (!project?._id) return;
-
-    setIsLoadingHistory(true);
-    try {
-      // In a real app, this would fetch from an API
-      setTimeout(() => {
-        const mockHistory = [
-          {
-            id: '1',
-            date: new Date(Date.now() - 86400000 * 2).toISOString(),
-            subject: 'Project Kickoff Meeting',
-            recipients: ['client@example.com', 'team@example.com'],
-            snippet: "I'm looking forward to our kickoff meeting tomorrow...",
-          },
-          {
-            id: '2',
-            date: new Date(Date.now() - 86400000 * 5).toISOString(),
-            subject: 'Initial Project Proposal',
-            recipients: ['client@example.com'],
-            snippet: 'Please find attached our proposal for the project...',
-          },
-        ];
-        setEmailHistory(mockHistory);
-        setIsLoadingHistory(false);
-      }, 500);
-    } catch (error) {
-      console.error('Error fetching email history:', error);
-      setIsLoadingHistory(false);
     }
   };
 

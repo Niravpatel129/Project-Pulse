@@ -22,16 +22,15 @@ import { format } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertCircle, FileText, Pencil, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { FileElement } from './types';
 
 interface FileElementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave?: (element: FileElement) => void;
+  onSave?: (element) => void;
   moduleId?: string;
-  initialData?: FileElement;
+  initialData?: Element | undefined;
   isEditing?: boolean;
-  onAdd?: (element: FileElement) => void;
+  onAdd?: (element) => void;
 }
 
 export function FileElementModal({
@@ -44,7 +43,7 @@ export function FileElementModal({
   onAdd,
 }: FileElementModalProps) {
   const [showDialog, setShowDialog] = useState(false);
-  const [formData, setFormData] = useState<Partial<FileElement>>({
+  const [formData, setFormData] = useState({
     name: '',
     description: '',
     files: [],
@@ -83,6 +82,9 @@ export function FileElementModal({
       if (isEditing && initialData) {
         setFormData({
           ...initialData,
+          name: '',
+          description: '',
+          files: [],
         });
       } else {
         setFormData({
@@ -132,9 +134,9 @@ export function FileElementModal({
         formDataToSubmit.append('files', file);
       });
 
-      if (isEditing && initialData?._id) {
+      if (isEditing && initialData && 'id' in initialData) {
         // Update existing element
-        const response = await newRequest.put(`/elements/${initialData._id}`, formDataToSubmit, {
+        const response = await newRequest.put(`/elements/${initialData.id}`, formDataToSubmit, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },

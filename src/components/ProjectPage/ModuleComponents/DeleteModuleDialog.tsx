@@ -8,12 +8,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Module } from './types';
 
 interface DeleteModuleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  moduleToDelete: any | null;
-  onDelete: (module: any) => void;
+  moduleToDelete: Module | null;
+  onDelete: (module: Module) => void;
 }
 
 export function DeleteModuleDialog({

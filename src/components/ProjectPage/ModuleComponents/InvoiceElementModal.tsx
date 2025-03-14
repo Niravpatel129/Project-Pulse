@@ -70,7 +70,11 @@ export function InvoiceElementModal({ isOpen, onClose, onAdd }: InvoiceElementMo
     });
   };
 
-  const updateItem = (index: number, field: keyof InvoiceElement['items'][0], value: any) => {
+  const updateItem = (
+    index: number,
+    field: keyof InvoiceElement['items'][0],
+    value: string | number,
+  ) => {
     setFormData((prev) => {
       return {
         ...prev,

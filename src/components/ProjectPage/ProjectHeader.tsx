@@ -55,6 +55,17 @@ interface Role {
   description?: string;
 }
 
+interface ProjectData {
+  _id: string;
+  participants: Array<{
+    _id: string;
+    name: string;
+    email?: string;
+    avatar?: string;
+  }>;
+  [key: string]: unknown;
+}
+
 export default function ProjectHeader() {
   const { project, error } = useProject();
   const queryClient = useQueryClient();
@@ -99,11 +110,11 @@ export default function ProjectHeader() {
     },
     onSuccess: (participantId) => {
       // Update the project participants list
-      queryClient.setQueryData(['project', project?._id], (oldData: any) => {
+      queryClient.setQueryData(['project', project?._id], (oldData: ProjectData | undefined) => {
         if (!oldData) return oldData;
         return {
           ...oldData,
-          participants: oldData.participants.filter((p: any) => {
+          participants: oldData.participants.filter((p) => {
             return p._id !== participantId;
           }),
         };

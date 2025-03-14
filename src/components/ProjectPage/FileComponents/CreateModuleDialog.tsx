@@ -30,20 +30,40 @@ interface CreateModuleDialogProps {
   }) => void;
 }
 
+interface FormData {
+  name: string;
+  description: string;
+  status: 'draft' | 'active' | 'completed' | 'archived';
+  isTemplate: boolean;
+}
+
 const CreateModuleDialog: React.FC<CreateModuleDialogProps> = ({ onClose, onCreateModule }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<'draft' | 'active' | 'completed' | 'archived'>('draft');
   const [isTemplate, setIsTemplate] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onCreateModule({
+    const formData: FormData = {
       name,
       description,
-      status,
+      status: 'draft',
       isTemplate,
-    });
+    };
+    onCreateModule(formData);
+    onClose();
+  };
+
+  const handleSaveClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    const formData: FormData = {
+      name,
+      description,
+      status: 'draft',
+      isTemplate,
+    };
+    onCreateModule(formData);
     onClose();
   };
 
@@ -87,7 +107,7 @@ const CreateModuleDialog: React.FC<CreateModuleDialogProps> = ({ onClose, onCrea
           <Label htmlFor='module-status'>Status</Label>
           <Select
             value={status}
-            onValueChange={(value: any) => {
+            onValueChange={(value: 'draft' | 'active' | 'completed' | 'archived') => {
               return setStatus(value);
             }}
           >
@@ -113,7 +133,7 @@ const CreateModuleDialog: React.FC<CreateModuleDialogProps> = ({ onClose, onCrea
         <Button variant='outline' onClick={onClose}>
           Cancel
         </Button>
-        <Button onClick={handleSubmit} disabled={!name.trim()}>
+        <Button onClick={handleSaveClick} disabled={!name.trim()}>
           <Plus className='mr-2 h-4 w-4' />
           Create Module
         </Button>

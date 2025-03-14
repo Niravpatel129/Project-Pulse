@@ -1,10 +1,21 @@
 import { Participant } from '@/types/project';
 import { newRequest } from '@/utils/newRequest';
 
+interface Contact {
+  _id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  phone?: string;
+  createdAt: string;
+  comments?: string;
+  customFields?: Record<string, string>;
+}
+
 export const participantService = {
   fetchParticipants: async () => {
     const response = await newRequest.get('/participants');
-    return response.data.data.map((contact: any) => {
+    return response.data.data.map((contact: Contact) => {
       return {
         id: contact._id,
         name: contact.name,

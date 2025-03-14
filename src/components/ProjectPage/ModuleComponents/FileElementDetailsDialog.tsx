@@ -29,10 +29,9 @@ import {
 import Image from 'next/image';
 import { useState } from 'react';
 import { FileElementModal } from './FileElementModal';
-import { FileElement } from './types';
-
+import { Element } from './types';
 interface FileElementDetailsDialogProps {
-  element: FileElement;
+  element?: Element;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -94,7 +93,7 @@ export function FileElementDetailsDialog({
     setIsEditModalOpen(true);
   };
 
-  const handleEditComplete = (updatedElement: FileElement) => {
+  const handleEditComplete = (updatedElement: Element) => {
     // In a real app, you would update the element in the database
     // and then update the local state
     console.log('Element updated:', updatedElement);
@@ -352,7 +351,7 @@ export function FileElementDetailsDialog({
             return setIsEditModalOpen(false);
           }}
           onSave={handleEditComplete}
-          initialData={element}
+          initialData={element as any}
           isEditing={true}
         />
       )}

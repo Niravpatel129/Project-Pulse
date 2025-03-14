@@ -1,3 +1,4 @@
+import { Element } from '@/components/ProjectPage/ModuleComponents/types';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DialogContent } from '@/components/ui/dialog';
@@ -21,7 +22,7 @@ interface Module {
   };
   assignedTo: string[];
   isTemplate: boolean;
-  elements: any[];
+  elements: Element[];
   createdAt: string;
   updatedAt: string;
 }

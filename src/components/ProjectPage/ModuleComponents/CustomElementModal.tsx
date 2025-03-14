@@ -17,16 +17,30 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import React, { useState } from 'react';
+import { CustomElement } from './types';
+
+interface CustomField {
+  name: string;
+  type: 'text' | 'number' | 'date' | 'select' | 'file';
+  required: boolean;
+}
+
+interface CustomElementData {
+  name: string;
+  description: string;
+  status: string;
+  fields: CustomField[];
+}
 
 interface CustomElementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (element) => void;
+  onAdd: (element: CustomElement) => void;
 }
 
 export function CustomElementModal({ isOpen, onClose, onAdd }: CustomElementModalProps) {
   const [showDialog, setShowDialog] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CustomElementData>({
     name: '',
     description: '',
     status: 'draft',
@@ -52,7 +66,23 @@ export function CustomElementModal({ isOpen, onClose, onAdd }: CustomElementModa
     e.preventDefault();
     if (!formData.name || !formData.fields?.length) return;
 
-    onAdd(formData as any);
+    const customElement: CustomElement = {
+      type: 'custom',
+      name: formData.name,
+      description: formData.description,
+      content: JSON.stringify(formData.fields),
+      version: 1,
+      moduleId: '',
+      _id: '',
+      createdAt: new Date().toISOString(),
+      addedBy: {
+        _id: '',
+        name: 'Current User',
+        email: 'user@example.com',
+      },
+    };
+
+    onAdd(customElement);
     setFormData({
       name: '',
       description: '',
@@ -71,7 +101,7 @@ export function CustomElementModal({ isOpen, onClose, onAdd }: CustomElementModa
     });
   };
 
-  const updateField = (index: number, field: keyof any, value: any) => {
+  const updateField = (index: number, field: keyof CustomField, value: string | boolean) => {
     setFormData((prev) => {
       return {
         ...prev,
