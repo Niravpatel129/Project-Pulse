@@ -24,7 +24,6 @@ interface Participant {
   name: string;
   email?: string;
   phone?: string;
-  status: 'active' | 'pending' | 'inactive';
   dateAdded: string;
   notes?: string;
   customFields?: { key: string; value: string }[];
@@ -56,6 +55,17 @@ export default function AddParticipantDialog({
   const [newFieldName, setNewFieldName] = useState('');
   const phoneInputId = useId();
 
+  // Form validation
+  const [nameError, setNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
+
+  // Check if form is valid
+  const isFormValid =
+    newParticipantName.trim() !== '' &&
+    newParticipantEmail.trim() !== '' &&
+    !nameError &&
+    !emailError;
+
   // Mock previous clients/team members for the CRM integration
   const previousContacts = [
     {
@@ -63,11 +73,8 @@ export default function AddParticipantDialog({
       name: 'Alex Johnson',
       email: 'alex@example.com',
       phone: '+1 (555) 234-5678',
-      status: 'active' as const,
       dateAdded: '2023-01-10',
       lastActive: '2023-06-15',
-      contractSigned: true,
-      paymentStatus: 'paid' as const,
       notes: 'Returning client, 3 previous projects',
     },
     {
@@ -75,11 +82,8 @@ export default function AddParticipantDialog({
       name: 'Maria Garcia',
       email: 'maria@example.com',
       phone: '+1 (555) 345-6789',
-      status: 'active' as const,
       dateAdded: '2023-02-22',
       lastActive: '2023-05-30',
-      contractSigned: true,
-      paymentStatus: 'paid' as const,
       notes: 'Referred by Alex Johnson',
     },
     {
@@ -87,11 +91,8 @@ export default function AddParticipantDialog({
       name: 'James Wilson',
       email: 'james@example.com',
       phone: '+1 (555) 456-7890',
-      status: 'active' as const,
       dateAdded: '2022-11-15',
       lastActive: '2023-06-21',
-      contractSigned: true,
-      paymentStatus: 'paid' as const,
       notes: 'Regular assistant, available weekends',
     },
     {
@@ -99,11 +100,8 @@ export default function AddParticipantDialog({
       name: 'Emma Davis',
       email: 'emma@example.com',
       phone: '+1 (555) 567-8901',
-      status: 'active' as const,
       dateAdded: '2023-03-05',
       lastActive: '2023-06-10',
-      contractSigned: true,
-      paymentStatus: 'paid' as const,
       notes: 'Specializes in natural makeup looks',
     },
   ];
@@ -115,8 +113,37 @@ export default function AddParticipantDialog({
     );
   });
 
+  const validateEmail = (email: string) => {
+    if (!email.trim()) {
+      setEmailError('Email is required');
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError('Please enter a valid email address');
+      return false;
+    }
+
+    setEmailError('');
+    return true;
+  };
+
+  const validateName = (name: string) => {
+    if (!name.trim()) {
+      setNameError('Name is required');
+      return false;
+    }
+
+    setNameError('');
+    return true;
+  };
+
   const handleAddParticipant = () => {
-    if (newParticipantName.trim() === '') return;
+    const isNameValid = validateName(newParticipantName);
+    const isEmailValid = validateEmail(newParticipantEmail);
+
+    if (!isNameValid || !isEmailValid) return;
 
     // Default role and permissions
 
@@ -125,13 +152,14 @@ export default function AddParticipantDialog({
       name: newParticipantName,
       email: newParticipantEmail,
       phone: newParticipantPhone,
-      status: 'pending',
       dateAdded: new Date().toISOString().split('T')[0],
       notes: newParticipantNotes,
       ...customFields.reduce((acc, field) => {
         return { ...acc, [field.key]: field.value };
       }, {}),
     };
+
+    console.log('🚀 newParticipant:', newParticipant);
 
     onAddParticipant(newParticipant);
     resetForm();
@@ -140,7 +168,6 @@ export default function AddParticipantDialog({
   const handleAddExistingContact = (contact: (typeof previousContacts)[0]) => {
     const newParticipant: Participant = {
       ...contact,
-      status: 'pending',
       dateAdded: new Date().toISOString().split('T')[0],
     };
     onAddParticipant(newParticipant);
@@ -153,6 +180,8 @@ export default function AddParticipantDialog({
     setNewParticipantNotes('');
     setCustomFields([]);
     setNewFieldName('');
+    setNameError('');
+    setEmailError('');
     onOpenChange(false);
   };
 
@@ -194,10 +223,16 @@ export default function AddParticipantDialog({
                 id='name'
                 value={newParticipantName}
                 onChange={(e) => {
-                  return setNewParticipantName(e.target.value);
+                  setNewParticipantName(e.target.value);
+                  if (nameError) validateName(e.target.value);
+                }}
+                onBlur={(e) => {
+                  return validateName(e.target.value);
                 }}
                 placeholder='Enter participant name'
+                className={nameError ? 'border-red-500' : ''}
               />
+              {nameError && <p className='text-xs text-red-500 mt-1'>{nameError}</p>}
             </div>
             <div className='space-y-2'>
               <Label htmlFor='email'>Email</Label>
@@ -206,10 +241,16 @@ export default function AddParticipantDialog({
                 type='email'
                 value={newParticipantEmail}
                 onChange={(e) => {
-                  return setNewParticipantEmail(e.target.value);
+                  setNewParticipantEmail(e.target.value);
+                  if (emailError) validateEmail(e.target.value);
+                }}
+                onBlur={(e) => {
+                  return validateEmail(e.target.value);
                 }}
                 placeholder='Enter email address'
+                className={emailError ? 'border-red-500' : ''}
               />
+              {emailError && <p className='text-xs text-red-500 mt-1'>{emailError}</p>}
             </div>
             <div className='space-y-2'>
               <Label htmlFor={phoneInputId}>Phone (optional)</Label>
@@ -304,7 +345,11 @@ export default function AddParticipantDialog({
             </div>
 
             <div className='flex gap-2'>
-              <Button onClick={handleAddParticipant} className='flex-1 gap-1'>
+              <Button
+                onClick={handleAddParticipant}
+                className='flex-1 gap-1'
+                disabled={!isFormValid}
+              >
                 <UserPlus className='h-4 w-4' />
                 Add Participant
               </Button>
@@ -442,7 +487,7 @@ const FlagComponent = ({ country, countryName }: RPNInput.FlagProps) => {
   const Flag = flags[country];
 
   return (
-    <span className='w-5 overflow-hidden rounded-sm'>
+    <span className='w-5 rounded-sm'>
       {Flag ? <Flag title={countryName} /> : <PhoneIcon size={16} aria-hidden='true' />}
     </span>
   );
