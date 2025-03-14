@@ -5,11 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { useProject } from '@/contexts/ProjectContext';
 import { cn } from '@/lib/utils';
+import { newRequest } from '@/utils/newRequest';
 import { ChevronDownIcon, PhoneIcon, Plus, Search, UserPlus, X } from 'lucide-react';
 import { useId, useState } from 'react';
 import * as RPNInput from 'react-phone-number-input';
 import flags from 'react-phone-number-input/flags';
+import { toast } from 'sonner';
 
 interface Role {
   id: string;
@@ -54,6 +57,8 @@ export default function AddParticipantDialog({
   const [customFields, setCustomFields] = useState<{ key: string; value: string }[]>([]);
   const [newFieldName, setNewFieldName] = useState('');
   const phoneInputId = useId();
+  const { project } = useProject();
+  const [isLoading, setIsLoading] = useState(false);
 
   // Form validation
   const [nameError, setNameError] = useState('');
@@ -139,14 +144,18 @@ export default function AddParticipantDialog({
     return true;
   };
 
-  const handleAddParticipant = () => {
+  const handleAddParticipant = async () => {
     const isNameValid = validateName(newParticipantName);
     const isEmailValid = validateEmail(newParticipantEmail);
 
-    if (!isNameValid || !isEmailValid) return;
+    if (!isNameValid || !isEmailValid) {
+      toast.error('Validation Error', {
+        description: 'Please fix the errors in the form before submitting.',
+      });
+      return;
+    }
 
     // Default role and permissions
-
     const newParticipant: Participant = {
       id: Date.now().toString(),
       name: newParticipantName,
@@ -154,23 +163,54 @@ export default function AddParticipantDialog({
       phone: newParticipantPhone,
       dateAdded: new Date().toISOString().split('T')[0],
       notes: newParticipantNotes,
-      ...customFields.reduce((acc, field) => {
-        return { ...acc, [field.key]: field.value };
-      }, {}),
+      customFields: customFields,
     };
 
-    console.log('🚀 newParticipant:', newParticipant);
+    try {
+      setIsLoading(true);
+      const response = await newRequest.post('/participants', {
+        participant: newParticipant,
+        projectId: project?._id,
+      });
 
-    onAddParticipant(newParticipant);
-    resetForm();
+      console.log('🚀 response:', response);
+
+      console.log('🚀 newParticipant:', newParticipant);
+      onAddParticipant(newParticipant);
+      resetForm();
+
+      toast.success('Participant Added', {
+        description: `${newParticipantName} has been added to the project successfully.`,
+      });
+    } catch (error) {
+      console.error('Error adding participant:', error);
+      toast.error('Error Adding Participant', {
+        description: 'There was a problem adding the participant. Please try again.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleAddExistingContact = (contact: (typeof previousContacts)[0]) => {
+  const handleAddExistingContact = async (contact: (typeof previousContacts)[0]) => {
     const newParticipant: Participant = {
       ...contact,
       dateAdded: new Date().toISOString().split('T')[0],
     };
-    onAddParticipant(newParticipant);
+
+    try {
+      setIsLoading(true);
+      onAddParticipant(newParticipant);
+      toast.success('Participant Added', {
+        description: `${contact.name} has been added to the project successfully.`,
+      });
+    } catch (error) {
+      toast.error('Error Adding Participant', {
+        description: 'There was a problem adding the existing contact. Please try again.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const resetForm = () => {
@@ -189,6 +229,13 @@ export default function AddParticipantDialog({
     if (newFieldName.trim() !== '') {
       setCustomFields([...customFields, { key: newFieldName, value: '' }]);
       setNewFieldName('');
+      toast.success('Custom Field Added', {
+        description: `New field "${newFieldName}" has been added.`,
+      });
+    } else {
+      toast.warning('Invalid Field Name', {
+        description: 'Field name cannot be empty.',
+      });
     }
   };
 
@@ -199,9 +246,13 @@ export default function AddParticipantDialog({
   };
 
   const handleRemoveCustomField = (index: number) => {
+    const fieldName = customFields[index].key;
     const updatedFields = [...customFields];
     updatedFields.splice(index, 1);
     setCustomFields(updatedFields);
+    toast.info('Field Removed', {
+      description: `Field "${fieldName}" has been removed.`,
+    });
   };
 
   return (
@@ -348,9 +399,10 @@ export default function AddParticipantDialog({
               <Button
                 onClick={handleAddParticipant}
                 className='flex-1 gap-1'
-                disabled={!isFormValid}
+                disabled={!isFormValid || isLoading}
+                isLoading={isLoading}
               >
-                <UserPlus className='h-4 w-4' />
+                {!isLoading && <UserPlus className='h-4 w-4' />}
                 Add Participant
               </Button>
             </div>
@@ -402,8 +454,10 @@ export default function AddParticipantDialog({
                           return handleAddExistingContact(contact);
                         }}
                         className='h-8 gap-1'
+                        disabled={isLoading}
+                        isLoading={isLoading}
                       >
-                        <UserPlus className='h-3.5 w-3.5' />
+                        {!isLoading && <UserPlus className='h-3.5 w-3.5' />}
                         <span className='hidden sm:inline'>Add</span>
                       </Button>
                     </div>
