@@ -323,12 +323,19 @@ export default function ProjectHeader() {
     const role = predefinedRoles.find((r) => {
       return r.name === roleName;
     });
-    return role ? (
-      <Badge variant='outline' className={`${role.color} font-normal capitalize`}>
-        {roleName || 'Client'}
-      </Badge>
-    ) : (
-      <Badge variant='outline' className='bg-gray-100 text-gray-800 font-normal capitalize'>
+
+    // Default colors for standard roles if not found in predefinedRoles
+    const defaultColors = {
+      CLIENT: 'bg-blue-100 text-blue-800',
+      COLLABORATOR: 'bg-indigo-100 text-indigo-800',
+      'TEAM MEMBER': 'bg-green-100 text-green-800',
+      moderator: 'bg-purple-100 text-purple-800',
+    };
+
+    const badgeColor = role ? role.color : defaultColors[roleName] || 'bg-gray-100 text-gray-800';
+
+    return (
+      <Badge variant='outline' className={`${badgeColor} font-normal capitalize`}>
         {roleName || 'Client'}
       </Badge>
     );
@@ -432,7 +439,6 @@ export default function ProjectHeader() {
               <div className='flex flex-wrap items-center gap-4'>
                 {/* Participants */}
                 {project.participants.map((participant) => {
-                  console.log('🚀 participant:', participant);
                   return (
                     <DropdownMenu key={participant._id}>
                       <DropdownMenuTrigger asChild>
@@ -461,13 +467,6 @@ export default function ProjectHeader() {
                             </div>
                             <div className='flex items-center gap-1.5 mt-0.5'>
                               {getRoleBadge(participant.role)}
-                              {participant.status && (
-                                <span>
-                                  {getStatusBadge(
-                                    participant.status as 'active' | 'pending' | 'inactive',
-                                  )}
-                                </span>
-                              )}
                             </div>
                           </div>
                         </div>
@@ -505,7 +504,6 @@ export default function ProjectHeader() {
 
                 {/* Collaborators */}
                 {collaborators.map((collaborator) => {
-                  console.log('🚀 collaborator:', collaborator);
                   return (
                     <DropdownMenu key={collaborator._id}>
                       <DropdownMenuTrigger asChild>
@@ -529,18 +527,18 @@ export default function ProjectHeader() {
                               <p className='text-sm font-medium capitalize'>
                                 {collaborator.name.length > 15
                                   ? `${collaborator.name.substring(0, 15)}...`
-                                  : collaborator.name}
+                                  : collaborator.name}{' '}
                               </p>
                             </div>
                             <div className='flex items-center gap-1.5 mt-0.5'>
                               {getRoleBadge(collaborator.role)}
-                              {collaborator.status && (
-                                <span>
-                                  {getStatusBadge(
-                                    collaborator.status as 'active' | 'pending' | 'inactive',
-                                  )}
-                                </span>
-                              )}
+
+                              <Badge
+                                variant='outline'
+                                className='bg-indigo-100 text-indigo-800 font-normal'
+                              >
+                                Collaborator
+                              </Badge>
                             </div>
                           </div>
                         </div>
@@ -610,7 +608,7 @@ export default function ProjectHeader() {
                                     : team.name
                                   : team.email
                                   ? team.email.split('@')[0]
-                                  : 'Team'}
+                                  : 'Team'}{' '}
                               </p>
                             </div>
                             <div className='flex items-center gap-1.5 mt-0.5'>
@@ -812,7 +810,6 @@ export default function ProjectHeader() {
                   })}
                 </div>
               )}
-
               {/* Collaborators Section */}
               {collaborators.length > 0 && (
                 <div>
@@ -839,7 +836,9 @@ export default function ProjectHeader() {
                             )}
                           </Avatar>
                           <div>
-                            <p className='text-sm font-medium'>{collaborator.name}</p>
+                            <p className='text-sm font-medium'>
+                              {collaborator.name} | Collaborator
+                            </p>
                             <p className='text-xs text-muted-foreground'>
                               {collaborator.email || 'No email'}
                             </p>
@@ -860,7 +859,6 @@ export default function ProjectHeader() {
                   })}
                 </div>
               )}
-
               {project.participants.length === 0 && collaborators.length === 0 && (
                 <div className='text-center text-muted-foreground py-4'>
                   No project members found
