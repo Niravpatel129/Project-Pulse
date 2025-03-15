@@ -56,7 +56,7 @@ export default function AddParticipantDialog({
 
   const filteredContacts = previousContacts.filter((contact) => {
     return (
-      contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contact.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (contact.email && contact.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
@@ -280,7 +280,7 @@ export default function AddParticipantDialog({
                         <Avatar className='h-10 w-10 border border-gray-100 shadow-sm'>
                           <AvatarFallback className='bg-primary/10 text-primary font-medium'>
                             {contact.name
-                              .split(' ')
+                              ?.split(' ')
                               .map((name) => {
                                 return name[0];
                               })

@@ -24,14 +24,9 @@ import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Mail, Search, UserPlus, Users } from 'lucide-react';
 import { useState } from 'react';
-
-interface Role {
-  id: string;
-  name: string;
-  permissions: string[];
-  color: string;
-  description?: string;
-}
+import { toast } from 'sonner';
+import { Badge } from '../ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 interface Participant {
   id: string;
@@ -103,73 +98,26 @@ export default function AddTeamDialog({
     },
   ];
 
-  // Mock workspace team members data
-  const mockWorkspaceMembers = [
-    {
-      id: '1',
-      name: 'Alex Johnson',
-      email: 'alex.johnson@example.com',
-      avatar: 'https://i.pravatar.cc/150?u=alex',
-      role: 'Designer',
-      lastActive: '2 hours ago',
-    },
-    {
-      id: '2',
-      name: 'Sarah Williams',
-      email: 'sarah.w@example.com',
-      avatar: 'https://i.pravatar.cc/150?u=sarah',
-      role: 'Developer',
-      lastActive: '5 mins ago',
-    },
-    {
-      id: '3',
-      name: 'Michael Chen',
-      email: 'michael.c@example.com',
-      avatar: 'https://i.pravatar.cc/150?u=michael',
-      role: 'Product Manager',
-      lastActive: 'Just now',
-    },
-    {
-      id: '4',
-      name: 'Emily Rodriguez',
-      email: 'emily.r@example.com',
-      avatar: 'https://i.pravatar.cc/150?u=emily',
-      role: 'Marketing',
-      lastActive: 'Yesterday',
-    },
-    {
-      id: '5',
-      name: 'David Kim',
-      email: 'david.k@example.com',
-      avatar: 'https://i.pravatar.cc/150?u=david',
-      role: 'Content Writer',
-      lastActive: '3 days ago',
-    },
-    {
-      id: '6',
-      name: 'Jessica Lee',
-      email: 'jessica.l@example.com',
-      avatar: 'https://i.pravatar.cc/150?u=jessica',
-      role: 'UX Researcher',
-      lastActive: '1 week ago',
-    },
-  ];
-
   // Fetch workspace team members
-  const { data: workspaceMembers, isLoading } = useQuery({
+  const { data: workspaceMembersResponse, isLoading } = useQuery({
     queryKey: ['workspaceMembers'],
-    queryFn: () => {
-      // In a real app, this would be an API call
-      // For now, return mock data
-      return Promise.resolve(mockWorkspaceMembers);
+    queryFn: async () => {
+      const response = await newRequest.get('/workspaces/members');
+      return response.data;
     },
   });
 
+  const workspaceMembers = workspaceMembersResponse?.data || [];
+
   const filteredMembers = workspaceMembers?.filter((member) => {
+    const memberName = member.user?.name || '';
+    const memberEmail = member.user?.email || '';
+    const memberRole = member.role || '';
+
     return (
-      member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.role?.toLowerCase().includes(searchQuery.toLowerCase())
+      memberName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      memberEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      memberRole.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
 
@@ -186,9 +134,45 @@ export default function AddTeamDialog({
       resetCollaboratorForm();
       // Invalidate relevant queries to refetch data
       queryClient.invalidateQueries({ queryKey: ['participants'] });
+      queryClient.invalidateQueries({ queryKey: ['collaborators', project._id] });
+      queryClient.invalidateQueries({ queryKey: ['project', project._id] });
     },
     onError: (error) => {
       console.error('Failed to add collaborator:', error);
+      // You could add error handling/notification here
+    },
+  });
+
+  const addTeamMutation = useMutation({
+    mutationFn: (teamMembers: Participant[]) => {
+      return newRequest.post(`/projects/${project._id}/team`, { members: teamMembers });
+    },
+    onSuccess: (response) => {
+      toast.success('Team members added successfully');
+      resetTeamForm();
+      queryClient.invalidateQueries({ queryKey: ['participants'] });
+    },
+    onError: (error) => {
+      console.error('Failed to add team members:', error);
+      toast.error('Failed to add team members');
+    },
+  });
+
+  const inviteToWorkspaceMutation = useMutation({
+    mutationFn: (inviteData: { email: string; role: string }) => {
+      return newRequest.post('/workspaces/invite', inviteData);
+    },
+    onSuccess: () => {
+      setInviteEmail('');
+      setInviteRole('MODERATOR');
+      setInviteModalOpen(false);
+      // Optionally show success notification
+      toast.success('Invitation sent successfully');
+
+      queryClient.invalidateQueries({ queryKey: ['workspaceMembers'] });
+    },
+    onError: (error) => {
+      console.error('Failed to send invitation:', error);
       // You could add error handling/notification here
     },
   });
@@ -228,40 +212,48 @@ export default function AddTeamDialog({
   const handleAddTeam = () => {
     if (selectedTeamMembers.length === 0) return;
 
-    // Add selected team members to the project
-    selectedTeamMembers.forEach((memberId) => {
-      const member = workspaceMembers.find((m) => {
-        return m.id === memberId;
-      });
-      if (!member) return;
+    // Create an array of team members to add
+    const teamMembersToAdd = selectedTeamMembers
+      .map((memberId) => {
+        const member = workspaceMembers.find((m) => {
+          return m._id === memberId;
+        });
+        if (!member) return null;
 
-      const rolePermissions =
-        predefinedRoles.find((r) => {
-          return r.name === teamRole.toUpperCase();
-        })?.permissions || [];
+        const rolePermissions =
+          predefinedRoles.find((r) => {
+            return r.name === teamRole.toUpperCase();
+          })?.permissions || [];
 
-      const newTeamMember: Participant = {
-        id: member.id,
-        name: member.name,
-        role: teamRole.toUpperCase(),
-        email: member.email,
-        status: 'pending',
-        permissions: rolePermissions,
-        dateAdded: new Date().toISOString().split('T')[0],
-      };
+        return {
+          id: member.user._id,
+          name: member.user?.name || member?.email?.split('@')[0],
+          role: teamRole.toUpperCase(),
+          email: member.user?.email,
+          status: 'pending',
+          permissions: rolePermissions,
+          dateAdded: new Date().toISOString().split('T')[0],
+        };
+      })
+      .filter(Boolean) as Participant[];
 
-      onAddParticipant(newTeamMember);
+    // Use the mutation to add team members
+    addTeamMutation.mutate(teamMembersToAdd);
+
+    // Also update the UI through the callback
+    teamMembersToAdd.forEach((member) => {
+      onAddParticipant(member);
     });
-
-    resetTeamForm();
   };
 
   const handleInviteToWorkspace = () => {
-    // In a real app, this would send an invitation email
-    console.log(`Inviting ${inviteEmail} to workspace with role ${inviteRole}`);
-    setInviteEmail('');
-    setInviteRole('MODERATOR');
-    setInviteModalOpen(false);
+    if (!inviteEmail.trim()) return;
+
+    // Use the mutation to send the invitation
+    inviteToWorkspaceMutation.mutate({
+      email: inviteEmail,
+      role: inviteRole,
+    });
   };
 
   const getInitials = (name: string) => {
@@ -456,18 +448,34 @@ export default function AddTeamDialog({
                 <Label className='text-sm font-medium'>Team Members</Label>
               </div>
 
-              <div className='max-h-60 overflow-y-auto space-y-1 rounded-md'>
+              <div className='max-h-60 overflow-y-auto space-y-1 rounded-md scrollbar-hide'>
                 <div className='mb-4'>
                   <Dialog open={inviteModalOpen} onOpenChange={setInviteModalOpen}>
                     <DialogTrigger asChild>
                       <Button variant='outline' size='default' className='w-full'>
                         <Mail className='mr-2 h-4 w-4' />
-                        Invite New Member
+                        Invite User
                       </Button>
                     </DialogTrigger>
                     <DialogContent className='sm:max-w-md'>
                       <DialogHeader>
-                        <DialogTitle>Invite to Workspace</DialogTitle>
+                        <DialogTitle className='flex items-center'>
+                          Invite to Workspace
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge
+                                variant='outline'
+                                className='ml-2 h-5 w-5 rounded-full bg-muted p-0 text-xs cursor-help'
+                              >
+                                ?
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              This invitation grants access to your entire workspace, not only this
+                              specific project
+                            </TooltipContent>
+                          </Tooltip>
+                        </DialogTitle>
                         <DialogDescription>
                           Send an invitation to join your workspace.
                         </DialogDescription>
@@ -513,53 +521,39 @@ export default function AddTeamDialog({
                   <p className='text-center py-4 text-sm text-gray-500'>Loading team members...</p>
                 ) : filteredMembers && filteredMembers.length > 0 ? (
                   filteredMembers.map((member) => {
+                    const memberName = member.user?.name || 'Unknown';
+                    const memberEmail = member.user?.email || '';
+                    const memberRole = member.role || '';
+                    const memberId = member._id;
+
                     return (
                       <div
-                        key={member.id}
+                        key={memberId}
                         className={`flex items-center p-2 rounded-md hover:bg-gray-50 cursor-pointer transition-colors ${
-                          selectedTeamMembers.includes(member.id) ? 'bg-gray-50' : ''
+                          selectedTeamMembers.includes(memberId) ? 'bg-gray-50' : ''
                         }`}
                         onClick={() => {
-                          return toggleTeamMember(member.id);
+                          return toggleTeamMember(memberId);
                         }}
                       >
                         <Checkbox
-                          id={`member-${member.id}`}
-                          checked={selectedTeamMembers.includes(member.id)}
+                          id={`member-${memberId}`}
+                          checked={selectedTeamMembers.includes(memberId)}
                           className='mr-3'
                           onCheckedChange={() => {
-                            return toggleTeamMember(member.id);
+                            return toggleTeamMember(memberId);
                           }}
                         />
                         <Avatar className='h-8 w-8 mr-3'>
-                          <AvatarImage src={member.avatar} alt={member.name} />
-                          <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
+                          <AvatarImage src={member.user?.avatar} alt={memberName} />
+                          <AvatarFallback>{getInitials(memberName)}</AvatarFallback>
                         </Avatar>
                         <div className='flex-1 min-w-0'>
-                          <p className='text-sm font-medium truncate'>{member.name}</p>
-                          <p className='text-xs text-gray-500 truncate'>{member.email}</p>
+                          <p className='text-sm font-medium truncate'>{memberName}</p>
+                          <p className='text-xs text-gray-500 truncate'>{memberEmail}</p>
                         </div>
                         <div className='flex items-center gap-2'>
-                          <Select
-                            defaultValue={teamRole}
-                            onValueChange={(value) => {
-                              return setTeamRole(value);
-                            }}
-                            value={teamRole}
-                          >
-                            <SelectTrigger className='h-7 w-28 text-xs'>
-                              <SelectValue placeholder='Role' />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {predefinedRoles.map((role) => {
-                                return (
-                                  <SelectItem key={role.id} value={role.name}>
-                                    {role.name}
-                                  </SelectItem>
-                                );
-                              })}
-                            </SelectContent>
-                          </Select>
+                          <Badge variant='outline'>{memberRole}</Badge>
                         </div>
                       </div>
                     );

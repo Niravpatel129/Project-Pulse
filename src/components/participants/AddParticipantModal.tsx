@@ -23,10 +23,12 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { newRequest } from '@/utils/newRequest';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PlusCircle, X } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import * as z from 'zod';
 
 interface Participant {
@@ -97,6 +99,7 @@ export default function AddParticipantModal({
     [],
   );
   const [newFieldName, setNewFieldName] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize form
   const form = useForm<z.infer<typeof participantSchema>>({
@@ -115,13 +118,12 @@ export default function AddParticipantModal({
   // Handle form submission
   const onSubmit = (values: z.infer<typeof participantSchema>) => {
     // Create new participant with form values and any custom fields
-    const customFieldsObj = customFields.reduce(
-      (acc, field) => {return {
+    const customFieldsObj = customFields.reduce((acc, field) => {
+      return {
         ...acc,
         [field.name]: field.value,
-      }},
-      {},
-    );
+      };
+    }, {});
 
     const newParticipant: Participant = {
       id: `new-${Date.now()}`,
@@ -140,12 +142,34 @@ export default function AddParticipantModal({
   };
 
   // Handle adding an existing participant
-  const handleAddExisting = () => {
+  const handleAddExisting = async () => {
     if (selectedParticipant) {
-      const participant = EXISTING_PARTICIPANTS.find((p) => {return p.id === selectedParticipant});
-      if (participant) {
-        onParticipantAdded(participant);
-        onClose();
+      try {
+        setIsSubmitting(true);
+        const participant = EXISTING_PARTICIPANTS.find((p) => {
+          return p.id === selectedParticipant;
+        });
+
+        if (participant) {
+          // Make a POST request to add the existing participant to the project
+          await newRequest.post(`/projects/${projectId}/participants`, {
+            participantId: participant.id,
+          });
+
+          toast.success('Participant added successfully', {
+            description: `${participant.name} has been added to the project`,
+          });
+
+          onParticipantAdded(participant);
+          onClose();
+        }
+      } catch (error) {
+        console.error('Error adding existing participant:', error);
+        toast.error('Failed to add participant', {
+          description: 'There was an error adding the participant to the project',
+        });
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
@@ -163,16 +187,29 @@ export default function AddParticipantModal({
 
   // Update custom field value
   const updateCustomField = (id: string, value: string) => {
-    setCustomFields(customFields.map((field) => {return (field.id === id ? { ...field, value } : field)}));
+    setCustomFields(
+      customFields.map((field) => {
+        return field.id === id ? { ...field, value } : field;
+      }),
+    );
   };
 
   // Remove a custom field
   const removeCustomField = (id: string) => {
-    setCustomFields(customFields.filter((field) => {return field.id !== id}));
+    setCustomFields(
+      customFields.filter((field) => {
+        return field.id !== id;
+      }),
+    );
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {return !open && onClose()}}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        return !open && onClose();
+      }}
+    >
       <DialogContent className='sm:max-w-[600px] max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>Add Participant to Project</DialogTitle>
@@ -195,71 +232,81 @@ export default function AddParticipantModal({
                   <FormField
                     control={form.control}
                     name='name'
-                    render={({ field }) => {return (
-                      <FormItem>
-                        <FormLabel>Name*</FormLabel>
-                        <FormControl>
-                          <Input placeholder='Full name' {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}}
+                    render={({ field }) => {
+                      return (
+                        <FormItem>
+                          <FormLabel>Name*</FormLabel>
+                          <FormControl>
+                            <Input placeholder='Full name' {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
 
                   <FormField
                     control={form.control}
                     name='email'
-                    render={({ field }) => {return (
-                      <FormItem>
-                        <FormLabel>Email*</FormLabel>
-                        <FormControl>
-                          <Input placeholder='Email address' {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}}
+                    render={({ field }) => {
+                      return (
+                        <FormItem>
+                          <FormLabel>Email*</FormLabel>
+                          <FormControl>
+                            <Input placeholder='Email address' {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
 
                   <FormField
                     control={form.control}
                     name='phone'
-                    render={({ field }) => {return (
-                      <FormItem>
-                        <FormLabel>Phone</FormLabel>
-                        <FormControl>
-                          <Input placeholder='Phone number' {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}}
+                    render={({ field }) => {
+                      return (
+                        <FormItem>
+                          <FormLabel>Phone</FormLabel>
+                          <FormControl>
+                            <Input placeholder='Phone number' {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
 
                   <FormField
                     control={form.control}
                     name='website'
-                    render={({ field }) => {return (
-                      <FormItem>
-                        <FormLabel>Website</FormLabel>
-                        <FormControl>
-                          <Input placeholder='Website URL' {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}}
+                    render={({ field }) => {
+                      return (
+                        <FormItem>
+                          <FormLabel>Website</FormLabel>
+                          <FormControl>
+                            <Input placeholder='Website URL' {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
 
                   <FormField
                     control={form.control}
                     name='jobTitle'
-                    render={({ field }) => {return (
-                      <FormItem>
-                        <FormLabel>Job Title</FormLabel>
-                        <FormControl>
-                          <Input placeholder='Job title' {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}}
+                    render={({ field }) => {
+                      return (
+                        <FormItem>
+                          <FormLabel>Job Title</FormLabel>
+                          <FormControl>
+                            <Input placeholder='Job title' {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                 </div>
 
@@ -268,32 +315,36 @@ export default function AddParticipantModal({
                   <FormField
                     control={form.control}
                     name='mailingAddress'
-                    render={({ field }) => {return (
-                      <FormItem>
-                        <FormLabel>Mailing Address</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder='Street address, city, state, zip' {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}}
+                    render={({ field }) => {
+                      return (
+                        <FormItem>
+                          <FormLabel>Mailing Address</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder='Street address, city, state, zip' {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
 
                   <FormField
                     control={form.control}
                     name='comments'
-                    render={({ field }) => {return (
-                      <FormItem>
-                        <FormLabel>Comments</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder='Additional notes about this participant'
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}}
+                    render={({ field }) => {
+                      return (
+                        <FormItem>
+                          <FormLabel>Comments</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder='Additional notes about this participant'
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                 </div>
 
@@ -304,33 +355,41 @@ export default function AddParticipantModal({
                     <FormDescription>Add additional information as needed</FormDescription>
                   </div>
 
-                  {customFields.map((field) => {return (
-                    <div key={field.id} className='flex gap-2 items-start'>
-                      <div className='flex-1'>
-                        <Label>{field.name}</Label>
-                        <Input
-                          value={field.value}
-                          onChange={(e) => {return updateCustomField(field.id, e.target.value)}}
-                          placeholder={`Enter ${field.name}`}
-                        />
+                  {customFields.map((field) => {
+                    return (
+                      <div key={field.id} className='flex gap-2 items-start'>
+                        <div className='flex-1'>
+                          <Label>{field.name}</Label>
+                          <Input
+                            value={field.value}
+                            onChange={(e) => {
+                              return updateCustomField(field.id, e.target.value);
+                            }}
+                            placeholder={`Enter ${field.name}`}
+                          />
+                        </div>
+                        <Button
+                          type='button'
+                          variant='ghost'
+                          size='icon'
+                          onClick={() => {
+                            return removeCustomField(field.id);
+                          }}
+                          className='mt-6'
+                        >
+                          <X className='h-4 w-4' />
+                        </Button>
                       </div>
-                      <Button
-                        type='button'
-                        variant='ghost'
-                        size='icon'
-                        onClick={() => {return removeCustomField(field.id)}}
-                        className='mt-6'
-                      >
-                        <X className='h-4 w-4' />
-                      </Button>
-                    </div>
-                  )})}
+                    );
+                  })}
 
                   <div className='flex gap-2'>
                     <Input
                       placeholder="Add new field (e.g., 'LinkedIn Profile')"
                       value={newFieldName}
-                      onChange={(e) => {return setNewFieldName(e.target.value)}}
+                      onChange={(e) => {
+                        return setNewFieldName(e.target.value);
+                      }}
                       className='flex-1'
                     />
                     <Button
@@ -366,31 +425,33 @@ export default function AddParticipantModal({
                 onValueChange={setSelectedParticipant}
                 className='space-y-2'
               >
-                {EXISTING_PARTICIPANTS.map((participant) => {return (
-                  <div
-                    key={participant.id}
-                    className='flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-muted'
-                  >
-                    <RadioGroupItem id={participant.id} value={participant.id} />
-                    <div className='flex-1 space-y-1'>
-                      <Label htmlFor={participant.id} className='font-medium cursor-pointer'>
-                        {participant.name}
-                      </Label>
-                      <p className='text-sm text-muted-foreground'>{participant.email}</p>
-                      {participant.jobTitle && (
-                        <p className='text-xs text-muted-foreground'>{participant.jobTitle}</p>
-                      )}
+                {EXISTING_PARTICIPANTS.map((participant) => {
+                  return (
+                    <div
+                      key={participant.id}
+                      className='flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-muted'
+                    >
+                      <RadioGroupItem id={participant.id} value={participant.id} />
+                      <div className='flex-1 space-y-1'>
+                        <Label htmlFor={participant.id} className='font-medium cursor-pointer'>
+                          {participant.name}
+                        </Label>
+                        <p className='text-sm text-muted-foreground'>{participant.email}</p>
+                        {participant.jobTitle && (
+                          <p className='text-xs text-muted-foreground'>{participant.jobTitle}</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )})}
+                  );
+                })}
               </RadioGroup>
 
               <DialogFooter className='mt-6'>
                 <Button type='button' variant='outline' onClick={onClose}>
                   Cancel
                 </Button>
-                <Button onClick={handleAddExisting} disabled={!selectedParticipant}>
-                  Add Selected Participant
+                <Button onClick={handleAddExisting} disabled={!selectedParticipant || isSubmitting}>
+                  {isSubmitting ? 'Adding...' : 'Add Selected Participant'}
                 </Button>
               </DialogFooter>
             </div>

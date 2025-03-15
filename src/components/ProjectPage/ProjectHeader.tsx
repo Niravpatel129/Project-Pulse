@@ -57,6 +57,16 @@ interface Collaborator {
   status?: 'active' | 'pending' | 'inactive';
 }
 
+interface Team {
+  id: string;
+  _id: string;
+  name: string;
+  avatar?: string;
+  members?: number;
+  description?: string;
+  email?: string;
+}
+
 interface Role {
   id: string;
   name: string;
@@ -89,6 +99,17 @@ export default function ProjectHeader() {
     queryFn: async () => {
       if (!project?._id) return [];
       const response = await newRequest.get(`/projects/${project._id}/collaborators`);
+      return response.data.data || [];
+    },
+    enabled: !!project?._id,
+  });
+
+  // Use React Query to manage teams state
+  const { data: teams = [] } = useQuery<Team[]>({
+    queryKey: ['teams', project?._id],
+    queryFn: async () => {
+      if (!project?._id) return [];
+      const response = await newRequest.get(`/projects/${project._id}/team`);
       return response.data.data || [];
     },
     enabled: !!project?._id,
@@ -156,6 +177,8 @@ export default function ProjectHeader() {
           }),
         };
       });
+      queryClient.invalidateQueries({ queryKey: ['project', project?._id] });
+      queryClient.invalidateQueries({ queryKey: ['participants'] });
     },
     onError: (error) => {
       console.error('Error removing participant:', error);
@@ -178,9 +201,33 @@ export default function ProjectHeader() {
           return c._id !== collaboratorId;
         });
       });
+      queryClient.invalidateQueries({ queryKey: ['collaborators', project?._id] });
+      queryClient.invalidateQueries({ queryKey: ['project', project?._id] });
     },
     onError: (error) => {
       console.error('Error removing collaborator:', error);
+    },
+  });
+
+  const removeTeamMutation = useMutation({
+    mutationFn: async (teamId: string) => {
+      const response = await newRequest.delete(`/projects/${project?._id}/team/${teamId}`);
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to remove team');
+      }
+      return teamId;
+    },
+    onSuccess: (teamId) => {
+      queryClient.setQueryData<Team[]>(['teams', project?._id], (oldData = []) => {
+        return oldData.filter((t) => {
+          return t._id !== teamId;
+        });
+      });
+      queryClient.invalidateQueries({ queryKey: ['teams', project?._id] });
+      queryClient.invalidateQueries({ queryKey: ['project', project?._id] });
+    },
+    onError: (error) => {
+      console.error('Error removing team:', error);
     },
   });
 
@@ -197,6 +244,14 @@ export default function ProjectHeader() {
       loading: 'Removing collaborator...',
       success: 'Collaborator removed successfully',
       error: 'Failed to remove collaborator',
+    });
+  };
+
+  const handleRemoveTeam = (teamId: string) => {
+    toast.promise(removeTeamMutation.mutateAsync(teamId), {
+      loading: 'Removing team...',
+      success: 'Team removed successfully',
+      error: 'Failed to remove team',
     });
   };
 
@@ -277,10 +332,6 @@ export default function ProjectHeader() {
         {roleName || 'Client'}
       </Badge>
     );
-  };
-
-  const handleSendEmail = () => {
-    toast.info('Email functionality coming soon');
   };
 
   const handleShowParticipants = () => {
@@ -381,6 +432,7 @@ export default function ProjectHeader() {
               <div className='flex flex-wrap items-center gap-4'>
                 {/* Participants */}
                 {project.participants.map((participant) => {
+                  console.log('🚀 participant:', participant);
                   return (
                     <DropdownMenu key={participant._id}>
                       <DropdownMenuTrigger asChild>
@@ -441,7 +493,7 @@ export default function ProjectHeader() {
                         <DropdownMenuItem
                           className='cursor-pointer text-red-500'
                           onClick={() => {
-                            return handleRemoveCollaborator(participant._id);
+                            return handleRemoveParticipant(participant._id);
                           }}
                         >
                           Remove from project
@@ -453,6 +505,7 @@ export default function ProjectHeader() {
 
                 {/* Collaborators */}
                 {collaborators.map((collaborator) => {
+                  console.log('🚀 collaborator:', collaborator);
                   return (
                     <DropdownMenu key={collaborator._id}>
                       <DropdownMenuTrigger asChild>
@@ -523,13 +576,95 @@ export default function ProjectHeader() {
                   );
                 })}
 
+                {/* Teams */}
+                {teams.map((team) => {
+                  console.log('🚀 team:', team);
+                  return (
+                    <DropdownMenu key={team.id}>
+                      <DropdownMenuTrigger asChild>
+                        <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg cursor-pointer hover:bg-gray-50'>
+                          <Avatar className='h-8 w-8 border-2 border-green-200 hover:border-green-300 transition-colors bg-green-100'>
+                            {team.avatar ? (
+                              <AvatarImage src={team.avatar} alt={team.name} />
+                            ) : (
+                              <AvatarFallback className='bg-green-100 text-green-800 font-medium'>
+                                {team.name
+                                  ? team.name
+                                      .split(' ')
+                                      .map((n) => {
+                                        return n.charAt(0).toUpperCase();
+                                      })
+                                      .join('')
+                                  : team.email
+                                  ? team.email.split('@')[0].charAt(0).toUpperCase()
+                                  : 'T'}
+                              </AvatarFallback>
+                            )}
+                          </Avatar>
+                          <div className='hidden sm:block'>
+                            <div className='flex items-center gap-1'>
+                              <p className='text-sm font-medium capitalize'>
+                                {team.name
+                                  ? team.name.length > 15
+                                    ? `${team.name.substring(0, 15)}...`
+                                    : team.name
+                                  : team.email
+                                  ? team.email.split('@')[0]
+                                  : 'Team'}
+                              </p>
+                            </div>
+                            <div className='flex items-center gap-1.5 mt-0.5'>
+                              <Badge
+                                variant='outline'
+                                className='bg-green-100 text-green-800 font-normal'
+                              >
+                                Team
+                              </Badge>
+                              {team.members && (
+                                <Badge
+                                  variant='outline'
+                                  className='bg-gray-100 text-gray-800 font-normal'
+                                >
+                                  {team.members} members
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align='end' className='w-48'>
+                        <DropdownMenuItem
+                          className='cursor-pointer'
+                          onClick={() => {
+                            toast.info('View team details');
+                          }}
+                        >
+                          <Users className='h-4 w-4 mr-2' />
+                          View team details
+                        </DropdownMenuItem>
+                        <DropdownMenuLabel className='px-2 py-1.5 text-xs text-gray-500'>
+                          <hr />
+                        </DropdownMenuLabel>
+                        <DropdownMenuItem
+                          className='cursor-pointer text-red-500'
+                          onClick={() => {
+                            return handleRemoveTeam(team.id);
+                          }}
+                        >
+                          Remove from project
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                })}
+
                 {/* Add Participant Button with Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant='outline'
                       size='icon'
-                      className='rounded-full h-8 w-8 ml-2 border-dashed hover:border-primary hover:bg-primary/5 transition-colors'
+                      className='rounded-full h-8 w-8 border-dashed hover:border-primary hover:bg-primary/5 transition-colors'
                     >
                       <Plus className='h-4 w-4' />
                       <span className='sr-only'>Add participant</span>
