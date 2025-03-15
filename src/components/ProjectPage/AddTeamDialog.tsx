@@ -151,6 +151,8 @@ export default function AddTeamDialog({
       toast.success('Team members added successfully');
       resetTeamForm();
       queryClient.invalidateQueries({ queryKey: ['participants'] });
+      queryClient.invalidateQueries({ queryKey: ['teams', project._id] });
+      queryClient.invalidateQueries({ queryKey: ['project', project._id] });
     },
     onError: (error) => {
       console.error('Failed to add team members:', error);
