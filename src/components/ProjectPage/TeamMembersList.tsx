@@ -20,14 +20,14 @@ interface Role {
 const predefinedRoles: Role[] = [
   {
     id: '1',
-    name: 'ADMIN',
+    name: 'admin',
     permissions: ['manage_team', 'manage_project', 'view_all'],
     color: 'bg-red-100 text-red-800',
     description: 'Full access to all project features',
   },
   {
     id: '2',
-    name: 'MODERATOR',
+    name: 'moderator',
     permissions: ['manage_content', 'view_all'],
     color: 'bg-blue-100 text-blue-800',
     description: 'Can manage content and view all project details',
@@ -91,7 +91,7 @@ export default function TeamMembersList() {
                   <Badge
                     variant='secondary'
                     className={
-                      participant.role === 'ADMIN'
+                      participant.role === 'admin'
                         ? 'bg-red-100 text-red-800'
                         : 'bg-blue-100 text-blue-800'
                     }

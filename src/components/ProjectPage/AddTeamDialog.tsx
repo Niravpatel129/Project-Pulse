@@ -66,7 +66,7 @@ export default function AddTeamDialog({
   const queryClient = useQueryClient();
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState('MODERATOR');
+  const [inviteRole, setInviteRole] = useState('moderator');
 
   // Collaborator fields
   const [collaboratorName, setCollaboratorName] = useState('');
@@ -79,7 +79,7 @@ export default function AddTeamDialog({
   const [companyWebsite, setCompanyWebsite] = useState('');
 
   // Team fields
-  const [teamRole, setTeamRole] = useState(selectedRole || 'MODERATOR');
+  const [teamRole, setTeamRole] = useState(selectedRole || 'moderator');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTeamMembers, setSelectedTeamMembers] = useState<string[]>([]);
 
@@ -166,7 +166,7 @@ export default function AddTeamDialog({
     },
     onSuccess: () => {
       setInviteEmail('');
-      setInviteRole('MODERATOR');
+      setInviteRole('moderator');
       setInviteModalOpen(false);
       // Optionally show success notification
       toast.success('Invitation sent successfully');
@@ -189,13 +189,13 @@ export default function AddTeamDialog({
 
     const rolePermissions =
       predefinedRoles.find((r) => {
-        return r.name === collaboratorRole.toUpperCase();
+        return r.name === collaboratorRole.toLowerCase();
       })?.permissions || [];
 
     const newCollaborator: Participant = {
       id: Date.now().toString(),
       name: collaboratorName,
-      role: collaboratorRole.toUpperCase(),
+      role: collaboratorRole.toLowerCase(),
       email: collaboratorEmail,
       phone: collaboratorPhone,
       mailingAddress: collaboratorAddress,
@@ -224,13 +224,13 @@ export default function AddTeamDialog({
 
         const rolePermissions =
           predefinedRoles.find((r) => {
-            return r.name === teamRole.toUpperCase();
+            return r.name === teamRole.toLowerCase();
           })?.permissions || [];
 
         return {
           id: member.user._id,
           name: member.user?.name || member?.email?.split('@')[0],
-          role: teamRole.toUpperCase(),
+          role: teamRole.toLowerCase(),
           email: member.user?.email,
           status: 'pending',
           permissions: rolePermissions,
@@ -291,7 +291,7 @@ export default function AddTeamDialog({
   };
 
   const resetTeamForm = () => {
-    setTeamRole(selectedRole || 'MODERATOR');
+    setTeamRole(selectedRole || 'moderator');
     setSelectedTeamMembers([]);
     setSearchQuery('');
     onOpenChange(false);
@@ -344,14 +344,14 @@ export default function AddTeamDialog({
               <Select
                 value={collaboratorRole}
                 onValueChange={setCollaboratorRole}
-                defaultValue='MODERATOR'
+                defaultValue='moderator'
               >
                 <SelectTrigger className='h-7 w-full text-xs min-w-[150px]'>
                   <SelectValue placeholder='Select a role' />
                 </SelectTrigger>
                 <SelectContent className='w-full'>
-                  <SelectItem value='ADMIN'>Admin</SelectItem>
-                  <SelectItem value='MODERATOR'>Moderator</SelectItem>
+                  <SelectItem value='admin'>Admin</SelectItem>
+                  <SelectItem value='moderator'>Moderator</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -502,8 +502,8 @@ export default function AddTeamDialog({
                               <SelectValue placeholder='Select a role' />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value='ADMIN'>Admin</SelectItem>
-                              <SelectItem value='MODERATOR'>Moderator</SelectItem>
+                              <SelectItem value='admin'>Admin</SelectItem>
+                              <SelectItem value='moderator'>Moderator</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
