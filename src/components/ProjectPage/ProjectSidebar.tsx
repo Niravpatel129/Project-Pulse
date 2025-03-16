@@ -1,7 +1,6 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +12,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -22,13 +20,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 
 import { useProject, type Project } from '@/contexts/ProjectContext';
-import { Copy, Link as LinkIcon, Lock, Mail, PlusCircle, Share2, X } from 'lucide-react';
-import { useState } from 'react';
+import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Lock, Mail, Save, Share2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface Task {
   _id: string | number;
@@ -45,12 +44,11 @@ interface TimeEntry {
 }
 
 interface SharingSettings {
-  privacyLevel: 'signup_required' | 'email_restricted' | 'public';
+  accessType: 'signup_required' | 'email_restricted' | 'public';
   requirePassword: boolean;
   password: string;
-  teamMembers: string[];
-  customMessage: string;
   expirationDays: string;
+  customMessage: string;
   allowedEmails: string[];
 }
 
@@ -60,15 +58,14 @@ export function ProjectSidebar({
   onUpdateProject: (data: Partial<Project>) => Promise<void>;
 }) {
   const { project } = useProject();
-  console.log('🚀 project:', project);
   const [tasks, setTasks] = useState<Task[]>(project?.tasks || []);
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [isClientPortalDialogOpen, setIsClientPortalDialogOpen] = useState(false);
+  const [isSendEmailDialogOpen, setIsSendEmailDialogOpen] = useState(false);
   const [sharingSettings, setSharingSettings] = useState<SharingSettings>({
-    privacyLevel: 'signup_required',
+    accessType: 'signup_required',
     requirePassword: false,
     password: '',
-    teamMembers: [],
     customMessage: '',
     expirationDays: '30',
     allowedEmails:
@@ -89,7 +86,84 @@ export function ProjectSidebar({
     })?.email || '',
   );
   const [allowedEmailInput, setAllowedEmailInput] = useState('');
-  const portalURL = `https://pulse.example.com/client/${project?._id || 'project-id'}`;
+  const [portalURL, setPortalURL] = useState('');
+  const [validationErrors, setValidationErrors] = useState<{
+    accessType?: string;
+    passwordProtected?: string;
+  }>({});
+
+  // Fetch initial sharing settings and portal URL
+  const { data: sharingData, isLoading: isLoadingSharingData } = useQuery({
+    queryKey: ['projectSharing', project?._id],
+    queryFn: async () => {
+      if (!project?._id) return null;
+
+      const [settings] = await Promise.all([
+        newRequest.get(`/projects/${project._id}/sharing/settings`),
+      ]);
+
+      return {
+        settings: settings.data,
+      };
+    },
+    enabled: !!project?._id,
+  });
+
+  // Update state when data is fetched using useEffect to prevent re-renders
+  useEffect(() => {
+    if (sharingData && !isLoadingSharingData && sharingData.settings) {
+      setSharingSettings(sharingData.settings);
+    }
+  }, [sharingData, isLoadingSharingData]);
+
+  const saveSettingsMutation = useMutation({
+    mutationFn: async () => {
+      if (!project?._id) throw new Error('Project ID is required');
+      return newRequest.put(`/projects/${project._id}/sharing/settings`, {
+        accessType: sharingSettings.accessType,
+        passwordProtected: sharingSettings.requirePassword,
+        password: sharingSettings.requirePassword ? sharingSettings.password : null,
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Sharing settings saved successfully',
+      });
+    },
+    onError: (error: any) => {
+      const errorMessage = error?.response?.data?.message || 'Failed to save sharing settings';
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const sendPortalLinkMutation = useMutation({
+    mutationFn: async () => {
+      if (!project?._id) throw new Error('Project ID is required');
+      return newRequest.post(`/projects/${project._id}/sharing/send-link`, {
+        email: clientEmail,
+        settings: sharingSettings,
+      });
+    },
+    onSuccess: (response) => {
+      toast({
+        title: 'Success',
+        description: response.data.message || 'Portal link has been sent successfully',
+      });
+      setIsSendEmailDialogOpen(false);
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to send portal link',
+        variant: 'destructive',
+      });
+    },
+  });
 
   const handleStageChange = async (value: string) => {
     await onUpdateProject?.({ stage: value });
@@ -110,14 +184,27 @@ export function ProjectSidebar({
     setTimeEntries([...timeEntries, { id: Date.now(), description, duration }]);
   };
 
-  const handleSharingSettingsChange = (
+  const handleSharingSettingsChange = async (
     key: keyof SharingSettings,
     value: string | boolean | string[],
   ) => {
-    setSharingSettings({
+    const newSettings = {
       ...sharingSettings,
       [key]: value,
-    });
+    };
+    setSharingSettings(newSettings);
+
+    // Clear validation errors when fields are updated
+    if (key === 'accessType' && validationErrors.accessType) {
+      setValidationErrors((prev) => {
+        return { ...prev, accessType: undefined };
+      });
+    }
+    if (key === 'requirePassword' && validationErrors.passwordProtected) {
+      setValidationErrors((prev) => {
+        return { ...prev, passwordProtected: undefined };
+      });
+    }
   };
 
   const copyLinkToClipboard = () => {
@@ -128,8 +215,30 @@ export function ProjectSidebar({
     });
   };
 
-  const sendClientPortalEmail = () => {
-    // In a real app, this would call an API endpoint to send the email
+  const validateSettings = () => {
+    const errors: { accessType?: string; passwordProtected?: string } = {};
+
+    if (!sharingSettings.accessType) {
+      errors.accessType = 'Access type is required';
+    }
+
+    if (sharingSettings.requirePassword && !sharingSettings.password) {
+      errors.passwordProtected = 'Password is required when password protection is enabled';
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const saveSettings = () => {
+    if (validateSettings()) {
+      saveSettingsMutation.mutate();
+    }
+  };
+
+  const sendClientPortalEmail = async () => {
+    if (!project?._id) return;
+
     if (!clientEmail) {
       toast({
         title: 'Email required',
@@ -139,26 +248,29 @@ export function ProjectSidebar({
       return;
     }
 
-    // If privacy level is email_restricted, validate that we have at least one allowed email
     if (
-      sharingSettings.privacyLevel === 'email_restricted' &&
+      sharingSettings.accessType === 'email_restricted' &&
       sharingSettings.allowedEmails.length === 0
     ) {
       toast({
         title: 'No allowed emails',
         description:
-          'You need to add at least one allowed email address when using "Specific Email Addresses Only"',
+          'You need to add at least one allowed email address when using "Invited participants only"',
         variant: 'destructive',
       });
       return;
     }
 
-    // Success case
-    toast({
-      title: 'Portal link sent',
-      description: `Client portal link has been sent to ${clientEmail}`,
-    });
-    setIsClientPortalDialogOpen(false);
+    if (!validateSettings()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please fix the errors in the sharing settings',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    sendPortalLinkMutation.mutate();
   };
 
   const addAllowedEmail = () => {
@@ -203,15 +315,15 @@ export function ProjectSidebar({
   };
 
   // Function to handle the privacy level change
-  const handlePrivacyLevelChange = (value: SharingSettings['privacyLevel']) => {
-    handleSharingSettingsChange('privacyLevel', value);
+  const handlePrivacyLevelChange = (value: SharingSettings['accessType']) => {
+    handleSharingSettingsChange('accessType', value);
 
     // Clear allowed emails when changing from email_restricted to another mode
     if (value !== 'email_restricted') {
       setSharingSettings((prev) => {
         return {
           ...prev,
-          privacyLevel: value,
+          accessType: value,
           allowedEmails: [],
         };
       });
@@ -243,243 +355,69 @@ export function ProjectSidebar({
               </DialogDescription>
             </DialogHeader>
 
-            <Tabs defaultValue='email' className='mt-4'>
-              <TabsList className='grid grid-cols-2 w-full'>
-                <TabsTrigger value='email'>Send Email</TabsTrigger>
-                <TabsTrigger value='settings'>Portal Settings</TabsTrigger>
-              </TabsList>
+            <div className='space-y-4 py-2'>
+              <div className='space-y-3'>
+                <div className='space-y-1.5'>
+                  <Label>
+                    Access Type <span className='text-red-500'>*</span>
+                  </Label>
+                  <Select
+                    value={sharingSettings.accessType}
+                    onValueChange={handlePrivacyLevelChange}
+                  >
+                    <SelectTrigger className={validationErrors.accessType ? 'border-red-500' : ''}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='public'>Public Link (Anyone with link)</SelectItem>
+                      <SelectItem value='signup_required'>Require Account Signup</SelectItem>
+                      <SelectItem value='email_restricted'>Email Addresses Only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {validationErrors.accessType && (
+                    <p className='text-xs text-red-500'>{validationErrors.accessType}</p>
+                  )}
+                </div>
 
-              <TabsContent value='email' className='space-y-4 py-2'>
                 <div className='flex items-center justify-between'>
-                  <div className='text-sm font-medium mb-1'>Client Portal Link</div>
-                  <Button variant='outline' size='sm' onClick={copyLinkToClipboard} className='h-8'>
-                    <Copy className='h-3.5 w-3.5 mr-1' />
-                    Copy
-                  </Button>
-                </div>
-                <div className='flex items-center space-x-2 px-3 py-2 bg-gray-50 rounded-md text-sm'>
-                  <LinkIcon className='h-3.5 w-3.5 text-gray-500' />
-                  <span className='text-gray-700 text-xs truncate'>{portalURL}</span>
-                </div>
-
-                <div className='space-y-2 pt-2'>
-                  <Label htmlFor='client-email'>Client Email</Label>
-                  <Input
-                    id='client-email'
-                    type='email'
-                    placeholder='client@example.com'
-                    value={clientEmail}
-                    onChange={(e) => {
-                      return setClientEmail(e.target.value);
-                    }}
-                  />
-                </div>
-
-                <div className='space-y-2'>
-                  <Label htmlFor='email-message'>Message (Optional)</Label>
-                  <Textarea
-                    id='email-message'
-                    placeholder='Add a personal message to your client...'
-                    rows={3}
-                    value={sharingSettings.customMessage}
-                    onChange={(e) => {
-                      return handleSharingSettingsChange('customMessage', e.target.value);
-                    }}
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value='settings' className='space-y-4 py-2'>
-                <div className='space-y-3'>
-                  <div className='space-y-1.5'>
-                    <Label>Access Type</Label>
-                    <Select
-                      value={sharingSettings.privacyLevel}
-                      onValueChange={handlePrivacyLevelChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value='public'>Public Link (Anyone with link)</SelectItem>
-                        <SelectItem value='signup_required'>Require Account Signup</SelectItem>
-                        <SelectItem value='email_restricted'>
-                          Specific Email Addresses Only
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className='space-y-0.5'>
+                    <Label>
+                      Password Protection <span className='text-red-500'>*</span>
+                    </Label>
+                    <p className='text-xs text-muted-foreground'>
+                      Require a password to access the portal
+                    </p>
                   </div>
+                  <Switch
+                    checked={sharingSettings.requirePassword}
+                    onCheckedChange={(checked) => {
+                      return handleSharingSettingsChange('requirePassword', checked);
+                    }}
+                  />
+                </div>
 
-                  {sharingSettings.privacyLevel === 'email_restricted' && (
-                    <div className='space-y-2'>
-                      <div className='flex items-center justify-between'>
-                        <Label>Allowed Email Addresses</Label>
-                        {clientEmail && !sharingSettings.allowedEmails.includes(clientEmail) && (
-                          <Button
-                            type='button'
-                            variant='outline'
-                            size='sm'
-                            className='h-7 text-xs'
-                            onClick={() => {
-                              // Add the currently entered client email to allowed emails
-                              setSharingSettings({
-                                ...sharingSettings,
-                                allowedEmails: [...sharingSettings.allowedEmails, clientEmail],
-                              });
-                              toast({
-                                title: 'Email added',
-                                description: `${clientEmail} added to allowed emails`,
-                              });
-                            }}
-                          >
-                            Add Client Email
-                          </Button>
-                        )}
-                      </div>
-                      <div className='flex space-x-2'>
-                        <Input
-                          placeholder='client@example.com'
-                          value={allowedEmailInput}
-                          onChange={(e) => {
-                            return setAllowedEmailInput(e.target.value);
-                          }}
-                          onKeyDown={handleAllowedEmailKeyDown}
-                        />
-                        <Button
-                          type='button'
-                          variant='secondary'
-                          onClick={addAllowedEmail}
-                          className='shrink-0'
-                        >
-                          Add
-                        </Button>
-                      </div>
-                      <div className='mt-2 space-y-1'>
-                        {sharingSettings.allowedEmails.length === 0 ? (
-                          <p className='text-xs text-muted-foreground py-2'>
-                            No email addresses added yet. Portal will not be accessible.
-                          </p>
-                        ) : (
-                          <div className='bg-muted/50 rounded-md p-1 max-h-28 overflow-y-auto'>
-                            {sharingSettings.allowedEmails.map((email, index) => {
-                              return (
-                                <div
-                                  key={index}
-                                  className='flex items-center justify-between py-1 px-2 text-sm bg-background/50 rounded my-1'
-                                >
-                                  <span className='truncate'>{email}</span>
-                                  <Button
-                                    size='sm'
-                                    variant='ghost'
-                                    className='h-7 w-7 p-0'
-                                    onClick={() => {
-                                      return removeAllowedEmail(email);
-                                    }}
-                                  >
-                                    <X className='h-3.5 w-3.5' />
-                                    <span className='sr-only'>Remove</span>
-                                  </Button>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className='flex items-center justify-between'>
-                    <div className='space-y-0.5'>
-                      <Label>Password Protection</Label>
-                      <p className='text-xs text-muted-foreground'>
-                        Require a password to access the portal
-                      </p>
-                    </div>
-                    <Switch
-                      checked={sharingSettings.requirePassword}
-                      onCheckedChange={(checked) => {
-                        return handleSharingSettingsChange('requirePassword', checked);
+                {sharingSettings.requirePassword && (
+                  <div className='space-y-1.5'>
+                    <Label htmlFor='portal-password'>
+                      Portal Password <span className='text-red-500'>*</span>
+                    </Label>
+                    <Input
+                      id='portal-password'
+                      type='password'
+                      placeholder='Enter a secure password'
+                      value={sharingSettings.password}
+                      onChange={(e) => {
+                        return handleSharingSettingsChange('password', e.target.value);
                       }}
+                      className={validationErrors.passwordProtected ? 'border-red-500' : ''}
                     />
+                    {validationErrors.passwordProtected && (
+                      <p className='text-xs text-red-500'>{validationErrors.passwordProtected}</p>
+                    )}
                   </div>
-
-                  {sharingSettings.requirePassword && (
-                    <div className='space-y-1.5'>
-                      <Label htmlFor='portal-password'>Portal Password</Label>
-                      <Input
-                        id='portal-password'
-                        type='password'
-                        placeholder='Enter a secure password'
-                        value={sharingSettings.password}
-                        onChange={(e) => {
-                          return handleSharingSettingsChange('password', e.target.value);
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  <div className='space-y-1.5'>
-                    <Label>Link Expiration</Label>
-                    <Select
-                      value={sharingSettings.expirationDays}
-                      onValueChange={(value) => {
-                        return handleSharingSettingsChange('expirationDays', value);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value='7'>7 days</SelectItem>
-                        <SelectItem value='30'>30 days</SelectItem>
-                        <SelectItem value='90'>90 days</SelectItem>
-                        <SelectItem value='never'>Never expires</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className='space-y-1.5'>
-                    <div className='flex items-center justify-between'>
-                      <Label>Team Members with Access</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant='outline' size='sm' className='h-8'>
-                            <PlusCircle className='h-3.5 w-3.5 mr-1' />
-                            Add
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className='w-60 p-0'>
-                          <div className='p-2'>
-                            <div className='space-y-2'>
-                              {['Jane Cooper', 'Wade Warren', 'Robert Fox'].map((name, i) => {
-                                return (
-                                  <div key={i} className='flex items-center space-x-2'>
-                                    <Checkbox id={`member-${i}`} />
-                                    <Label htmlFor={`member-${i}`}>{name}</Label>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                            <Button size='sm' className='w-full mt-2'>
-                              Add Selected
-                            </Button>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <div className='bg-gray-50 rounded-md p-1'>
-                      {sharingSettings.teamMembers.length === 0 ? (
-                        <p className='text-xs text-muted-foreground py-2 px-2'>
-                          No team members added yet
-                        </p>
-                      ) : (
-                        <div className='space-y-1'>{/* Would render team members here */}</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
+                )}
+              </div>
+            </div>
 
             <DialogFooter className='mt-4'>
               <Button
@@ -490,9 +428,97 @@ export function ProjectSidebar({
               >
                 Cancel
               </Button>
-              <Button onClick={sendClientPortalEmail}>
+              <Button
+                onClick={saveSettings}
+                disabled={saveSettingsMutation.isPending}
+                className='mr-2'
+              >
+                <Save className='mr-2 h-4 w-4' />
+                {saveSettingsMutation.isPending ? 'Saving...' : 'Save Settings'}
+              </Button>
+              <Button
+                onClick={() => {
+                  if (validateSettings()) {
+                    setIsClientPortalDialogOpen(false);
+                    setIsSendEmailDialogOpen(true);
+                  }
+                }}
+              >
                 <Mail className='mr-2 h-4 w-4' />
                 Send Portal Link
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isSendEmailDialogOpen} onOpenChange={setIsSendEmailDialogOpen}>
+          <DialogContent className='sm:max-w-[550px]'>
+            <DialogHeader>
+              <DialogTitle>Send Client Portal Link</DialogTitle>
+              <DialogDescription>Send your client access to their project portal</DialogDescription>
+            </DialogHeader>
+
+            <div className='space-y-4 py-2'>
+              <div className='space-y-2'>
+                <div className='flex items-center space-x-2'>
+                  <Label htmlFor='email-to' className='w-16'>
+                    To:
+                  </Label>
+                  <Input
+                    id='email-to'
+                    type='email'
+                    placeholder='client@example.com'
+                    value={clientEmail}
+                    onChange={(e) => {
+                      return setClientEmail(e.target.value);
+                    }}
+                    className='flex-1'
+                  />
+                </div>
+
+                <div className='flex items-center space-x-2'>
+                  <Label htmlFor='email-subject' className='w-16'>
+                    Subject:
+                  </Label>
+                  <Input
+                    id='email-subject'
+                    type='text'
+                    value={`Access your project portal: ${project?.name || 'Project'}`}
+                    readOnly
+                    className='flex-1 bg-gray-50'
+                  />
+                </div>
+
+                <div className='mt-8'>
+                  <Textarea
+                    id='email-message'
+                    placeholder='Add a personal message to your client...'
+                    rows={12}
+                    value={
+                      sharingSettings.customMessage ||
+                      `Hi,\n\nI've created a project portal for you to track our progress. You can access it using the link below:\n\n${portalURL}\n\nPlease let me know if you have any questions.\n\nBest regards`
+                    }
+                    onChange={(e) => {
+                      return handleSharingSettingsChange('customMessage', e.target.value);
+                    }}
+                    className='w-full'
+                  />
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className='mt-4'>
+              <Button
+                variant='outline'
+                onClick={() => {
+                  return setIsSendEmailDialogOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button onClick={sendClientPortalEmail} disabled={sendPortalLinkMutation.isPending}>
+                <Mail className='mr-2 h-4 w-4' />
+                {sendPortalLinkMutation.isPending ? 'Sending...' : 'Send Email'}
               </Button>
             </DialogFooter>
           </DialogContent>
