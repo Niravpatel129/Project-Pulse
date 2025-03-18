@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { cn } from '@/lib/utils';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import Link from 'next/link';
@@ -86,7 +87,7 @@ export function Navigation() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
-
+  const { workspace } = useWorkspace();
   const navigation = [
     {
       href: '/',
@@ -162,9 +163,8 @@ export function Navigation() {
       <div className='w-full mx-auto flex items-center justify-between'>
         {/* Logo on the left */}
         <div className='flex items-center'>
-          <Link href='/' className='flex items-center gap-2 font-semibold text-[#484848]'>
-            <CiBoxList className='h-6 w-6' />
-            <span className='text-base'>Pulse</span>
+          <Link href='/' className='flex items-center gap-2 font-thin text-[#484848]'>
+            <span className='text-base'>{workspace?.name}</span>
           </Link>
         </div>
 

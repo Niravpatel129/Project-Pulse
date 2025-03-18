@@ -35,16 +35,13 @@ export default function ProjectMain() {
     };
   }, []);
 
-  // Determine if we're on tablet size (between mobile and desktop)
-  const isTablet = windowWidth >= 768 && windowWidth < 1024;
-
   const handleUpdateProject = async (data: Partial<Project>) => {
     await updateProject(data);
   };
 
   return (
     <div className='min-h-screen w-full'>
-      <div className='bg-white'>
+      <div className=''>
         <div className=''>
           <div className='lg:hidden flex justify-end py-3'>
             <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>

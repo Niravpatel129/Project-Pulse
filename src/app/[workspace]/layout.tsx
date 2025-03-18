@@ -36,7 +36,9 @@ export default function DashboardLayout({
     <div className='flex min-h-screen flex-col'>
       {showNavigation && <Navigation />}
       {/* Main Content */}
-      <main className='flex-1 p-3 sm:p-4 md:p-0 lg:p-8 bg-[#eff6fd]'>{children}</main>
+      <main className='flex-1 bg-[#eff6fd] p-3 pt-1 px-6 sm:p-4 sm:pt-2 sm:px-8 md:px-10 md:py-0 lg:p-8 lg:pt-4 lg:px-12 xl:px-16'>
+        {children}
+      </main>
     </div>
   );
 }

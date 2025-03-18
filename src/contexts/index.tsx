@@ -4,6 +4,7 @@ export { InventoryProvider, useInventory } from './InventoryContext';
 export { InvoicesProvider, useInvoices } from './InvoicesContext';
 export { ProjectFilesProvider, useProjectFiles } from './ProjectFilesContext';
 export { TemplatesProvider, useTemplates } from './TemplatesContext';
+export { useWorkspace, WorkspaceProvider } from './WorkspaceContext';
 
 // Combined provider for easier application wrapping
 import React, { ReactNode } from 'react';
@@ -13,6 +14,7 @@ import { InventoryProvider } from './InventoryContext';
 import { InvoicesProvider } from './InvoicesContext';
 import { ProjectFilesProvider } from './ProjectFilesContext';
 import { TemplatesProvider } from './TemplatesContext';
+import { WorkspaceProvider } from './WorkspaceContext';
 
 interface AppProviderProps {
   children: ReactNode;
@@ -23,13 +25,15 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, initialApiCo
   return (
     <AuthProvider>
       <ApiProvider initialConfig={initialApiConfig}>
-        <ProjectFilesProvider>
-          <InventoryProvider>
-            <InvoicesProvider>
-              <TemplatesProvider>{children}</TemplatesProvider>
-            </InvoicesProvider>
-          </InventoryProvider>
-        </ProjectFilesProvider>
+        <WorkspaceProvider>
+          <ProjectFilesProvider>
+            <InventoryProvider>
+              <InvoicesProvider>
+                <TemplatesProvider>{children}</TemplatesProvider>
+              </InvoicesProvider>
+            </InventoryProvider>
+          </ProjectFilesProvider>
+        </WorkspaceProvider>
       </ApiProvider>
     </AuthProvider>
   );
