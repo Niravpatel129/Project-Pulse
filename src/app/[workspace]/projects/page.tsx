@@ -28,6 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { newRequest } from '@/utils/newRequest';
 import {
   AlertCircle,
@@ -41,6 +42,7 @@ import {
   Search,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 // Fallback mock data in case API fails
@@ -167,6 +169,7 @@ const MOCK_PROJECTS = [
 ];
 
 export default function ProjectsPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [projects, setProjects] = useState([]);
@@ -278,6 +281,11 @@ export default function ProjectsPage() {
     }
   };
 
+  // Function to navigate to project details
+  const navigateToProject = (projectId: string) => {
+    router.push(`/projects/${projectId}`);
+  };
+
   // Function to render status badge with appropriate color
   const renderStatusBadge = (status: string) => {
     let className = '';
@@ -330,244 +338,268 @@ export default function ProjectsPage() {
   };
 
   return (
-    <div className='container mx-auto py-8'>
-      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-8'>
-        <div>
-          <h1 className='text-3xl font-bold'>Projects</h1>
-          <p className='text-muted-foreground mt-1'>
-            Manage and track all your client projects in one place
-          </p>
-        </div>
-        <div className='flex space-x-2'>
-          <Button variant='outline'>
-            <Download className='mr-2 h-4 w-4' />
-            Export
-          </Button>
-          <Button asChild>
-            <Link href='/projects/new'>
-              <Plus className='mr-2 h-4 w-4' />
-              New Project
-            </Link>
-          </Button>
-        </div>
-      </div>
-
-      {/* Filters and search */}
-      <div className='flex flex-col md:flex-row gap-4 mb-8'>
-        <div className='relative flex-1'>
-          <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
-          <Input
-            placeholder='Search projects...'
-            className='pl-8'
-            value={searchQuery}
-            onChange={(e) => {
-              return setSearchQuery(e.target.value);
-            }}
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className='w-full md:w-[180px]'>
-            <SelectValue placeholder='Filter by stage' />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Stage</SelectLabel>
-              <SelectItem value='all'>All Stages</SelectItem>
-              <SelectItem value='Initial Contact'>Initial Contact</SelectItem>
-              <SelectItem value='Needs Analysis'>Needs Analysis</SelectItem>
-              <SelectItem value='Proposal'>Proposal</SelectItem>
-              <SelectItem value='Negotiation'>Negotiation</SelectItem>
-              <SelectItem value='Closed Won'>Closed Won</SelectItem>
-              <SelectItem value='Closed Lost'>Closed Lost</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Loading state */}
-      {loading ? (
-        <div className='text-center py-12'>
-          <div className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-4 animate-pulse'>
-            <Search className='h-6 w-6 text-muted-foreground' />
+    <BlockWrapper>
+      <div className='container mx-auto py-8'>
+        <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-8'>
+          <div>
+            <h1 className='text-3xl font-bold'>Projects</h1>
+            <p className='text-muted-foreground mt-1'>
+              Manage and track all your client projects in one place
+            </p>
           </div>
-          <h3 className='text-lg font-medium'>Loading projects...</h3>
-        </div>
-      ) : error ? (
-        <div className='rounded-md bg-amber-50 p-4 mb-4'>
-          <div className='flex'>
-            <div className='flex-shrink-0'>
-              <AlertCircle className='h-5 w-5 text-amber-400' />
-            </div>
-            <div className='ml-3'>
-              <h3 className='text-sm font-medium text-amber-800'>{error}</h3>
-            </div>
-          </div>
-        </div>
-      ) : sortedProjects.length > 0 ? (
-        <div className='rounded-md border shadow-sm'>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>
-                  <SortableColumnHeader column='name' label='Project Name' />
-                </TableHead>
-                <TableHead>
-                  <SortableColumnHeader column='client' label='Client' />
-                </TableHead>
-                <TableHead>
-                  <SortableColumnHeader column='type' label='Type' />
-                </TableHead>
-                <TableHead>
-                  <SortableColumnHeader column='manager' label='Manager' />
-                </TableHead>
-                <TableHead>
-                  <SortableColumnHeader column='status' label='Status' />
-                </TableHead>
-                <TableHead>
-                  <SortableColumnHeader column='stage' label='Stage' />
-                </TableHead>
-                <TableHead className='text-right'>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedProjects.map((project) => {
-                console.log('🚀 project:', project);
-                return (
-                  <TableRow key={project._id}>
-                    <TableCell className='font-medium'>
-                      <Link
-                        href={`/projects/${project._id}`}
-                        className='hover:underline text-primary'
-                      >
-                        {project.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{project?.participants[0]?.participant?.name}</TableCell>
-                    <TableCell>{project?.projectType}</TableCell>
-                    <TableCell>{project?.manager?.name}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant='ghost' className='h-8 px-2 py-1'>
-                            {renderStatusBadge(project.status)}
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align='start'>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              return handleStatusChange(project.id, 'Not Started');
-                            }}
-                            className='flex items-center'
-                          >
-                            {renderStatusBadge('Not Started')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              return handleStatusChange(project.id, 'On Track');
-                            }}
-                            className='flex items-center'
-                          >
-                            {renderStatusBadge('On Track')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              return handleStatusChange(project.id, 'At Risk');
-                            }}
-                            className='flex items-center'
-                          >
-                            {renderStatusBadge('At Risk')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              return handleStatusChange(project.id, 'Delayed');
-                            }}
-                            className='flex items-center'
-                          >
-                            {renderStatusBadge('Delayed')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              return handleStatusChange(project.id, 'Completed');
-                            }}
-                            className='flex items-center'
-                          >
-                            {renderStatusBadge('Completed')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          project.stage === 'Closed Won'
-                            ? 'bg-green-100 text-green-800'
-                            : project.stage === 'Proposal'
-                            ? 'bg-blue-100 text-blue-800'
-                            : project.stage === 'Negotiation'
-                            ? 'bg-amber-100 text-amber-800'
-                            : project.stage === 'Needs Analysis'
-                            ? 'bg-purple-100 text-purple-800'
-                            : 'bg-slate-100 text-slate-800'
-                        }`}
-                      >
-                        {project.stage}
-                      </span>
-                    </TableCell>
-                    <TableCell className='text-right'>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant='ghost' size='icon' className='h-8 w-8'>
-                            <MoreHorizontal className='h-4 w-4' />
-                            <span className='sr-only'>Actions</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align='end'>
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem asChild>
-                            <Link href={`/projects/${project.id}`}>View Details</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/projects/${project.id}/edit`}>Edit Project</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              return handleDeleteProject(project.id);
-                            }}
-                            className='text-destructive focus:text-destructive'
-                          >
-                            Delete Project
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      ) : (
-        <div className='text-center py-12'>
-          <div className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-4'>
-            <Search className='h-6 w-6 text-muted-foreground' />
-          </div>
-          <h3 className='text-lg font-medium'>No projects found</h3>
-          <p className='text-muted-foreground mt-2 mb-4'>
-            {searchQuery || statusFilter !== 'all'
-              ? "Try adjusting your search or filter to find what you're looking for."
-              : 'Get started by creating your first project.'}
-          </p>
-          {!searchQuery && statusFilter === 'all' && (
+          <div className='flex space-x-2'>
+            <Button variant='outline'>
+              <Download className='mr-2 h-4 w-4' />
+              Export
+            </Button>
             <Button asChild>
               <Link href='/projects/new'>
                 <Plus className='mr-2 h-4 w-4' />
                 New Project
               </Link>
             </Button>
-          )}
+          </div>
         </div>
-      )}
-    </div>
+
+        {/* Filters and search */}
+        <div className='flex flex-col md:flex-row gap-4 mb-8'>
+          <div className='relative flex-1'>
+            <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
+            <Input
+              placeholder='Search projects...'
+              className='pl-8'
+              value={searchQuery}
+              onChange={(e) => {
+                return setSearchQuery(e.target.value);
+              }}
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className='w-full md:w-[180px]'>
+              <SelectValue placeholder='Filter by stage' />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Stage</SelectLabel>
+                <SelectItem value='all'>All Stages</SelectItem>
+                <SelectItem value='Initial Contact'>Initial Contact</SelectItem>
+                <SelectItem value='Needs Analysis'>Needs Analysis</SelectItem>
+                <SelectItem value='Proposal'>Proposal</SelectItem>
+                <SelectItem value='Negotiation'>Negotiation</SelectItem>
+                <SelectItem value='Closed Won'>Closed Won</SelectItem>
+                <SelectItem value='Closed Lost'>Closed Lost</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Loading state */}
+        {loading ? (
+          <div className='text-center py-12'>
+            <div className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-4 animate-pulse'>
+              <Search className='h-6 w-6 text-muted-foreground' />
+            </div>
+            <h3 className='text-lg font-medium'>Loading projects...</h3>
+          </div>
+        ) : error ? (
+          <div className='rounded-md bg-amber-50 p-4 mb-4'>
+            <div className='flex'>
+              <div className='flex-shrink-0'>
+                <AlertCircle className='h-5 w-5 text-amber-400' />
+              </div>
+              <div className='ml-3'>
+                <h3 className='text-sm font-medium text-amber-800'>{error}</h3>
+              </div>
+            </div>
+          </div>
+        ) : sortedProjects.length > 0 ? (
+          <div className='rounded-md border shadow-sm'>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>
+                    <SortableColumnHeader column='name' label='Project Name' />
+                  </TableHead>
+                  <TableHead>
+                    <SortableColumnHeader column='client' label='Client' />
+                  </TableHead>
+                  <TableHead>
+                    <SortableColumnHeader column='type' label='Type' />
+                  </TableHead>
+                  <TableHead>
+                    <SortableColumnHeader column='manager' label='Manager' />
+                  </TableHead>
+                  <TableHead>
+                    <SortableColumnHeader column='status' label='Status' />
+                  </TableHead>
+                  <TableHead>
+                    <SortableColumnHeader column='stage' label='Stage' />
+                  </TableHead>
+                  <TableHead className='text-right'>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedProjects.map((project) => {
+                  console.log('🚀 project:', project);
+                  return (
+                    <TableRow
+                      key={project._id}
+                      className='cursor-pointer transition-colors hover:bg-muted/50'
+                      onClick={(e) => {
+                        // Prevent navigation if clicking on status dropdown or actions
+                        if (
+                          e.target instanceof HTMLElement &&
+                          !e.target.closest('.status-dropdown') &&
+                          !e.target.closest('.actions-dropdown')
+                        ) {
+                          navigateToProject(project._id);
+                        }
+                      }}
+                    >
+                      <TableCell className='font-medium'>
+                        <span className=''>{project.name}</span>
+                      </TableCell>
+                      <TableCell>{project?.participants[0]?.participant?.name}</TableCell>
+                      <TableCell>{project?.projectType}</TableCell>
+                      <TableCell>{project?.manager?.name}</TableCell>
+                      <TableCell>
+                        <div
+                          className='status-dropdown'
+                          onClick={(e) => {
+                            return e.stopPropagation();
+                          }}
+                        >
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant='ghost' className='h-8 px-2 py-1'>
+                                {renderStatusBadge(project.status)}
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align='start'>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  return handleStatusChange(project.id, 'Not Started');
+                                }}
+                                className='flex items-center'
+                              >
+                                {renderStatusBadge('Not Started')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  return handleStatusChange(project.id, 'On Track');
+                                }}
+                                className='flex items-center'
+                              >
+                                {renderStatusBadge('On Track')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  return handleStatusChange(project.id, 'At Risk');
+                                }}
+                                className='flex items-center'
+                              >
+                                {renderStatusBadge('At Risk')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  return handleStatusChange(project.id, 'Delayed');
+                                }}
+                                className='flex items-center'
+                              >
+                                {renderStatusBadge('Delayed')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  return handleStatusChange(project.id, 'Completed');
+                                }}
+                                className='flex items-center'
+                              >
+                                {renderStatusBadge('Completed')}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            project.stage === 'Closed Won'
+                              ? 'bg-green-100 text-green-800'
+                              : project.stage === 'Proposal'
+                              ? 'bg-blue-100 text-blue-800'
+                              : project.stage === 'Negotiation'
+                              ? 'bg-amber-100 text-amber-800'
+                              : project.stage === 'Needs Analysis'
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-slate-100 text-slate-800'
+                          }`}
+                        >
+                          {project.stage}
+                        </span>
+                      </TableCell>
+                      <TableCell className='text-right'>
+                        <div
+                          className='actions-dropdown'
+                          onClick={(e) => {
+                            return e.stopPropagation();
+                          }}
+                        >
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant='ghost' size='icon' className='h-8 w-8'>
+                                <MoreHorizontal className='h-4 w-4' />
+                                <span className='sr-only'>Actions</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align='end'>
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem asChild>
+                                <Link href={`/projects/${project._id}`}>View Details</Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link href={`/projects/${project._id}/edit`}>Edit Project</Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  return handleDeleteProject(project.id);
+                                }}
+                                className='text-destructive focus:text-destructive'
+                              >
+                                Delete Project
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <div className='text-center py-12'>
+            <div className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-4'>
+              <Search className='h-6 w-6 text-muted-foreground' />
+            </div>
+            <h3 className='text-lg font-medium'>No projects found</h3>
+            <p className='text-muted-foreground mt-2 mb-4'>
+              {searchQuery || statusFilter !== 'all'
+                ? "Try adjusting your search or filter to find what you're looking for."
+                : 'Get started by creating your first project.'}
+            </p>
+            {!searchQuery && statusFilter === 'all' && (
+              <Button asChild>
+                <Link href='/projects/new'>
+                  <Plus className='mr-2 h-4 w-4' />
+                  New Project
+                </Link>
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+    </BlockWrapper>
   );
 }
