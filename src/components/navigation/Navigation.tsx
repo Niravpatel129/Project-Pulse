@@ -16,6 +16,8 @@ import { cn } from '@/lib/utils';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { VscChevronDown } from 'react-icons/vsc';
+
 import {
   CiBoxes,
   CiBoxList,
@@ -228,14 +230,19 @@ export function Navigation() {
               <Button
                 variant='ghost'
                 size='icon'
-                className='relative rounded-full h-8 w-8 border border-[#484848]'
+                className='relative h-10 w-10 p-0 overflow-visible focus:bg-transparent focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0'
               >
-                <Avatar className='h-8 w-8'>
-                  <AvatarImage src='/avatars/sarah.jpg' alt={user?.name || 'User'} />
-                  <AvatarFallback className='bg-[#484848] text-white'>
-                    {user?.name?.substring(0, 2) || 'U'}
-                  </AvatarFallback>
-                </Avatar>
+                <div className='h-8 w-8 rounded-full -[#484848 ] overflow-hidden'>
+                  <Avatar className='h-full w-full'>
+                    <AvatarImage src='/avatars/sarah.jpg' alt={user?.name || 'User'} />
+                    <AvatarFallback className='bg-white text-xs text-[#484848]'>
+                      {/* icon instead of text */}
+                      <CiUser className='h-4 w-4' />
+                      {/* chevron down   */}
+                      <VscChevronDown className='h-4 w-4' />
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end' className='w-56'>

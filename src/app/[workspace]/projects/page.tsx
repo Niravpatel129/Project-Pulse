@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/table';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircle,
   ArrowUpDown,
@@ -43,7 +44,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 // Fallback mock data in case API fails
 const MOCK_PROJECTS = [
@@ -170,36 +171,97 @@ const MOCK_PROJECTS = [
 
 export default function ProjectsPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [projects, setProjects] = useState([]);
   const [sortColumn, setSortColumn] = useState('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
-  useEffect(() => {
-    const fetchProjects = async () => {
+  // Fetch projects with React Query
+  const {
+    data: projects = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['projects'],
+    queryFn: async () => {
       try {
-        setLoading(true);
-
         const response = await newRequest.get('/projects');
         console.log('🚀 response:', response);
-
-        if (response.data.data) {
-          setProjects(response.data.data);
-        }
+        return response.data.data || [];
       } catch (err) {
         console.error('Failed to fetch projects:', err);
-        setError('Failed to load projects. Using mock data instead.');
-        setProjects(MOCK_PROJECTS);
-      } finally {
-        setLoading(false);
+        return MOCK_PROJECTS;
       }
-    };
+    },
+  });
 
-    fetchProjects();
-  }, []);
+  // Delete project mutation
+  const deleteProjectMutation = useMutation({
+    mutationFn: (projectId: number) => {
+      return newRequest.delete(`/projects/${projectId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+    onError: (err) => {
+      console.error('Failed to delete project:', err);
+    },
+    // Optimistic update
+    onMutate: async (projectId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['projects'] });
+
+      // Snapshot the previous value
+      const previousProjects = queryClient.getQueryData(['projects']);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(['projects'], (old: any[]) => {
+        return old.filter((project) => {
+          return project.id !== projectId;
+        });
+      });
+
+      // Return a context object with the snapshot
+      return { previousProjects };
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
+
+  // Update project status mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ projectId, newStatus }: { projectId: number; newStatus: string }) => {
+      return newRequest.patch(`/projects/${projectId}`, { status: newStatus });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+    onError: (err) => {
+      console.error('Failed to update project status:', err);
+    },
+    // Optimistic update
+    onMutate: async ({ projectId, newStatus }) => {
+      await queryClient.cancelQueries({ queryKey: ['projects'] });
+
+      const previousProjects = queryClient.getQueryData(['projects']);
+
+      queryClient.setQueryData(['projects'], (old: any[]) => {
+        return old.map((project) => {
+          if (project.id === projectId) {
+            return { ...project, status: newStatus };
+          }
+          return project;
+        });
+      });
+
+      return { previousProjects };
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
 
   // Function to handle column sorting
   const handleSort = (column: string) => {
@@ -215,10 +277,10 @@ export default function ProjectsPage() {
   const filteredProjects = projects?.filter((project) => {
     const matchesSearch =
       project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.client.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.leadSource.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.manager.toLowerCase().includes(searchQuery.toLowerCase());
+      project.type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.client?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.leadSource?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.manager?.name?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus = statusFilter === 'all' || project.stage === statusFilter;
 
@@ -237,8 +299,8 @@ export default function ProjectsPage() {
         (a[sortColumn as keyof typeof a] as number) - (b[sortColumn as keyof typeof b] as number);
     } else {
       // String comparison
-      const aValue = String(a[sortColumn as keyof typeof a]).toLowerCase();
-      const bValue = String(b[sortColumn as keyof typeof b]).toLowerCase();
+      const aValue = String(a[sortColumn as keyof typeof a] || '').toLowerCase();
+      const bValue = String(b[sortColumn as keyof typeof b] || '').toLowerCase();
       comparison = aValue.localeCompare(bValue);
     }
 
@@ -246,39 +308,13 @@ export default function ProjectsPage() {
   });
 
   // Function to handle project deletion
-  const handleDeleteProject = async (projectId: number) => {
-    setProjects(
-      projects?.filter((project) => {
-        return project.id !== projectId;
-      }),
-    );
-    try {
-      await newRequest.delete(`/projects/${projectId}`);
-    } catch (err) {
-      console.error('Failed to delete project:', err);
-    }
+  const handleDeleteProject = (projectId: number) => {
+    deleteProjectMutation.mutate(projectId);
   };
 
   // Function to handle status change
-  const handleStatusChange = async (projectId: number, newStatus: string) => {
-    try {
-      // Update local state first for immediate UI feedback
-      setProjects(
-        projects.map((project) => {
-          if (project.id === projectId) {
-            return { ...project, status: newStatus };
-          }
-          return project;
-        }),
-      );
-
-      // Then update on the server
-      await newRequest.patch(`/projects/${projectId}`, { status: newStatus });
-    } catch (err) {
-      console.error('Failed to update project status:', err);
-      // Revert the change if the API call fails
-      // You might want to fetch the projects again or handle this differently
-    }
+  const handleStatusChange = (projectId: number, newStatus: string) => {
+    updateStatusMutation.mutate({ projectId, newStatus });
   };
 
   // Function to navigate to project details
@@ -394,7 +430,7 @@ export default function ProjectsPage() {
         </div>
 
         {/* Loading state */}
-        {loading ? (
+        {isLoading ? (
           <div className='text-center py-12'>
             <div className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-4 animate-pulse'>
               <Search className='h-6 w-6 text-muted-foreground' />
@@ -408,7 +444,9 @@ export default function ProjectsPage() {
                 <AlertCircle className='h-5 w-5 text-amber-400' />
               </div>
               <div className='ml-3'>
-                <h3 className='text-sm font-medium text-amber-800'>{error}</h3>
+                <h3 className='text-sm font-medium text-amber-800'>
+                  Failed to load projects. Using mock data instead.
+                </h3>
               </div>
             </div>
           </div>
