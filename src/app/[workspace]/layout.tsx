@@ -3,7 +3,7 @@
 import { Navigation } from '@/components/navigation/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 export default function DashboardLayout({
   children,
@@ -12,7 +12,6 @@ export default function DashboardLayout({
 }>) {
   const pathname = usePathname();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
   const { isAuthenticated, loading } = useAuth();
 
   // Check if user is logged in
@@ -24,8 +23,6 @@ export default function DashboardLayout({
       !pathname.includes('/register')
     ) {
       router.push('/login');
-    } else if (!loading) {
-      setIsLoading(false);
     }
   }, [isAuthenticated, loading, pathname, router]);
 
