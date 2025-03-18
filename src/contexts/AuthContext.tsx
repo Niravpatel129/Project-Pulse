@@ -1,7 +1,6 @@
 'use client';
 
 import { newRequest } from '@/utils/newRequest';
-import { useQueryClient } from '@tanstack/react-query';
 import { deleteCookie, setCookie } from 'cookies-next';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -43,7 +42,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const queryClient = useQueryClient();
 
   // Load user from cookie on initial render
   useEffect(() => {

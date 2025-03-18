@@ -12,10 +12,34 @@ export function middleware(request: NextRequest) {
   const subdomain = hostname.split('.')[0];
   const isCustomSubdomain = !['www', 'localhost:3000', 'pulse-app'].includes(subdomain);
 
+  // Check if user is authenticated
+  // Check for auth token in cookies - our auth system stores it as 'user' cookie
+  const userCookie = request.cookies.get('user')?.value;
+  console.log('🚀 userCookie:', userCookie);
+
+  // Also check localStorage via headers (though this won't work in middleware)
+  // This is just for debugging purposes
+  const authHeader = request.headers.get('Authorization');
+  console.log('🚀 authHeader:', authHeader);
+
+  const isAuthenticated = !!userCookie;
+
   // Handle subdomain routing
   if (isCustomSubdomain) {
     // Extract workspace from the subdomain
     const workspace = subdomain;
+
+    // If not authenticated and not already on login page, redirect to login
+    if (!isAuthenticated && !path.includes('/login') && !path.includes('/register')) {
+      // Store the original URL to redirect back after login
+      const redirectUrl = new URL('/login', request.url);
+      redirectUrl.searchParams.set('redirect', request.url);
+
+      // Also store the current URL in localStorage for redirect after login
+      // (this will be handled client-side since we can't set localStorage here)
+      console.log('Redirecting unauthenticated user to login');
+      return NextResponse.redirect(redirectUrl);
+    }
 
     // If path is root, redirect to workspace path
     if (path === '/') {
@@ -28,8 +52,6 @@ export function middleware(request: NextRequest) {
       return NextResponse.rewrite(new URL(`/${workspace}${path}`, request.url));
     }
   }
-
-  // Get the token from cookies
 
   return NextResponse.next();
 }

@@ -49,8 +49,7 @@ export default function LoginPage() {
       // Set success message
       setSuccessMsg('Login successful! Redirecting...');
 
-      // Show success message
-      toast.success('Login successful! Redirecting...');
+      router.push('/');
     } catch (err) {
       console.error('Login error:', err);
       const message =

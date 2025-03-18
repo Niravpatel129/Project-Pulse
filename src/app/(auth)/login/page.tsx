@@ -49,8 +49,7 @@ export default function LoginPage() {
       // Set success message
       setSuccessMsg('Login successful! Redirecting...');
 
-      // Show success message
-      toast.success('Login successful! Redirecting...');
+      router.push('/');
     } catch (err) {
       console.error('Login error:', err);
       const message =
@@ -93,7 +92,9 @@ export default function LoginPage() {
                 required
                 placeholder='Email address'
                 value={email}
-                onChange={(e) => {return setEmail(e.target.value)}}
+                onChange={(e) => {
+                  return setEmail(e.target.value);
+                }}
               />
             </div>
             <div>
@@ -108,7 +109,9 @@ export default function LoginPage() {
                 required
                 placeholder='Password'
                 value={password}
-                onChange={(e) => {return setPassword(e.target.value)}}
+                onChange={(e) => {
+                  return setPassword(e.target.value);
+                }}
               />
             </div>
           </div>
