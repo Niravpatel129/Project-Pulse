@@ -19,15 +19,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 
 import { useProject, type Project } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Lock, Mail, Save, Share2 } from 'lucide-react';
+import { Lock, Mail, Share2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { ShareDialog } from './FileComponents/ShareDialog';
 
 interface Task {
   _id: string | number;
@@ -62,23 +62,25 @@ export function ProjectSidebar({
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [isClientPortalDialogOpen, setIsClientPortalDialogOpen] = useState(false);
   const [isSendEmailDialogOpen, setIsSendEmailDialogOpen] = useState(false);
-  const [sharingSettings, setSharingSettings] = useState<SharingSettings>({
-    accessType: 'signup_required',
-    requirePassword: false,
-    password: '',
-    customMessage: '',
-    expirationDays: '30',
-    allowedEmails:
-      project?.participants
-        ?.filter((p) => {
-          return p.role === 'client';
-        })
-        .map((p) => {
-          return p.email;
-        })
-        .filter((email): email is string => {
-          return email !== undefined;
-        }) || [],
+  const [sharingSettings, setSharingSettings] = useState<SharingSettings>(() => {
+    return {
+      accessType: 'signup_required',
+      requirePassword: false,
+      password: '',
+      customMessage: '',
+      expirationDays: '30',
+      allowedEmails:
+        project?.participants
+          ?.filter((p) => {
+            return p.role === 'client';
+          })
+          .map((p) => {
+            return p.email;
+          })
+          .filter((email): email is string => {
+            return email !== undefined;
+          }) || [],
+    };
   });
   const [clientEmail, setClientEmail] = useState(
     project?.participants?.find((p) => {
@@ -347,108 +349,17 @@ export function ProjectSidebar({
               Send client portal link
             </Button>
           </DialogTrigger>
-          <DialogContent className='sm:max-w-[500px]'>
-            <DialogHeader>
-              <DialogTitle>Share Client Portal</DialogTitle>
-              <DialogDescription>
-                Configure sharing settings and send your client a portal link
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className='space-y-4 py-2'>
-              <div className='space-y-3'>
-                <div className='space-y-1.5'>
-                  <Label>
-                    Access Type <span className='text-red-500'>*</span>
-                  </Label>
-                  <Select
-                    value={sharingSettings.accessType}
-                    onValueChange={handlePrivacyLevelChange}
-                  >
-                    <SelectTrigger className={validationErrors.accessType ? 'border-red-500' : ''}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='public'>Public Link (Anyone with link)</SelectItem>
-                      <SelectItem value='signup_required'>Require Account Signup</SelectItem>
-                      <SelectItem value='email_restricted'>Email Addresses Only</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {validationErrors.accessType && (
-                    <p className='text-xs text-red-500'>{validationErrors.accessType}</p>
-                  )}
-                </div>
-
-                <div className='flex items-center justify-between'>
-                  <div className='space-y-0.5'>
-                    <Label>
-                      Password Protection <span className='text-red-500'>*</span>
-                    </Label>
-                    <p className='text-xs text-muted-foreground'>
-                      Require a password to access the portal
-                    </p>
-                  </div>
-                  <Switch
-                    checked={sharingSettings.requirePassword}
-                    onCheckedChange={(checked) => {
-                      return handleSharingSettingsChange('requirePassword', checked);
-                    }}
-                  />
-                </div>
-
-                {sharingSettings.requirePassword && (
-                  <div className='space-y-1.5'>
-                    <Label htmlFor='portal-password'>
-                      Portal Password <span className='text-red-500'>*</span>
-                    </Label>
-                    <Input
-                      id='portal-password'
-                      type='password'
-                      placeholder='Enter a secure password'
-                      value={sharingSettings.password}
-                      onChange={(e) => {
-                        return handleSharingSettingsChange('password', e.target.value);
-                      }}
-                      className={validationErrors.passwordProtected ? 'border-red-500' : ''}
-                    />
-                    {validationErrors.passwordProtected && (
-                      <p className='text-xs text-red-500'>{validationErrors.passwordProtected}</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <DialogFooter className='mt-4'>
-              <Button
-                variant='outline'
-                onClick={() => {
-                  return setIsClientPortalDialogOpen(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={saveSettings}
-                disabled={saveSettingsMutation.isPending}
-                className='mr-2'
-              >
-                <Save className='mr-2 h-4 w-4' />
-                {saveSettingsMutation.isPending ? 'Saving...' : 'Save Settings'}
-              </Button>
-              <Button
-                onClick={() => {
-                  if (validateSettings()) {
-                    setIsClientPortalDialogOpen(false);
-                    setIsSendEmailDialogOpen(true);
-                  }
-                }}
-              >
-                <Mail className='mr-2 h-4 w-4' />
-                Send Portal Link
-              </Button>
-            </DialogFooter>
-          </DialogContent>
+          <ShareDialog
+            projectId={project?._id || ''}
+            initialSettings={sharingSettings}
+            onClose={() => {
+              return setIsClientPortalDialogOpen(false);
+            }}
+            onSendEmail={() => {
+              setIsClientPortalDialogOpen(false);
+              setIsSendEmailDialogOpen(true);
+            }}
+          />
         </Dialog>
 
         <Dialog open={isSendEmailDialogOpen} onOpenChange={setIsSendEmailDialogOpen}>
@@ -508,14 +419,6 @@ export function ProjectSidebar({
             </div>
 
             <DialogFooter className='mt-4'>
-              <Button
-                variant='outline'
-                onClick={() => {
-                  return setIsSendEmailDialogOpen(false);
-                }}
-              >
-                Cancel
-              </Button>
               <Button onClick={sendClientPortalEmail} disabled={sendPortalLinkMutation.isPending}>
                 <Mail className='mr-2 h-4 w-4' />
                 {sendPortalLinkMutation.isPending ? 'Sending...' : 'Send Email'}
