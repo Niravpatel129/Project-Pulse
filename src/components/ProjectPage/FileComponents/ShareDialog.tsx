@@ -59,7 +59,7 @@ export function ShareDialog({
     passwordProtected?: string;
   }>({});
 
-  const currentUrl = window.location.href;
+  const currentUrl = window.location.origin;
   const portalUrl = `${currentUrl}/portal/${projectId}`;
 
   // Handle copy to clipboard
@@ -285,9 +285,6 @@ export function ShareDialog({
           )}
         </div>
         <div className='flex gap-2'>
-          <Button variant='outline' onClick={onClose}>
-            Cancel
-          </Button>
           <Button onClick={onSendEmail}>
             <Mail className='mr-2 h-4 w-4' />
             Send Portal Access
