@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
+import { AnimatePresence, motion } from 'framer-motion';
 import { FileText, Mail, User } from 'lucide-react';
 import { EmailCard } from './EmailCard';
 import { EmailComponent } from './EmailComponent';
@@ -145,7 +146,7 @@ export default function ProjectHome() {
           {isLoadingActivities || isLoadingEmails ? (
             <div className='text-sm text-gray-500'>Loading activities and emails...</div>
           ) : (
-            <>
+            <AnimatePresence mode='popLayout'>
               {sortedTimelineItems.map((item) => {
                 if (item.type === 'activity') {
                   const activity = item.data as Activity;
@@ -155,43 +156,58 @@ export default function ProjectHome() {
                   else if (activity.type === 'email' || activity.type === 'message') icon = 'mail';
 
                   return (
-                    <Card key={`activity-${activity._id}`} className='p-3'>
-                      <div className='flex items-center gap-3'>
-                        <div className='flex-shrink-0 bg-gray-100 p-2 rounded-full'>
-                          {icon === 'user' && <User className='h-4 w-4 text-gray-500' />}
-                          {icon === 'file-text' && <FileText className='h-4 w-4 text-gray-500' />}
-                          {icon === 'mail' && <Mail className='h-4 w-4 text-gray-500' />}
+                    <motion.div
+                      key={`activity-${activity._id}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Card className='p-3'>
+                        <div className='flex items-center gap-3'>
+                          <div className='flex-shrink-0 bg-gray-100 p-2 rounded-full'>
+                            {icon === 'user' && <User className='h-4 w-4 text-gray-500' />}
+                            {icon === 'file-text' && <FileText className='h-4 w-4 text-gray-500' />}
+                            {icon === 'mail' && <Mail className='h-4 w-4 text-gray-500' />}
+                          </div>
+                          <div className='flex-1'>
+                            <p className='text-sm font-medium'>{activity.description}</p>
+                            <p className='text-xs text-gray-500'>
+                              {new Date(activity.createdAt).toLocaleString()}
+                            </p>
+                          </div>
                         </div>
-                        <div className='flex-1'>
-                          <p className='text-sm font-medium'>{activity.description}</p>
-                          <p className='text-xs text-gray-500'>
-                            {new Date(activity.createdAt).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    </Card>
+                      </Card>
+                    </motion.div>
                   );
                 } else {
                   const email = item.data as Email;
                   return (
-                    <EmailCard
+                    <motion.div
                       key={`email-${email._id}`}
-                      email={{
-                        id: email._id,
-                        from: {
-                          name: email.sentBy.name,
-                          email: email.sentBy.email,
-                        },
-                        to: email.to.join(', '),
-                        subject: email.subject,
-                        content: email.body,
-                        date: email.sentAt || email.createdAt,
-                      }}
-                    />
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <EmailCard
+                        email={{
+                          id: email._id,
+                          from: {
+                            name: email.sentBy.name,
+                            email: email.sentBy.email,
+                          },
+                          to: email.to.join(', '),
+                          subject: email.subject,
+                          content: email.body,
+                          date: email.sentAt || email.createdAt,
+                        }}
+                      />
+                    </motion.div>
                   );
                 }
               })}
-            </>
+            </AnimatePresence>
           )}
         </div>
       </div>
