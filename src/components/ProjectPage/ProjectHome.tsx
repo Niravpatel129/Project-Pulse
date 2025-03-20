@@ -8,33 +8,47 @@ import { FileText, Mail, User } from 'lucide-react';
 import { EmailComponent } from './EmailComponent';
 import { EmailList } from './EmailList';
 
+interface ActivityUser {
+  _id: string;
+  name: string;
+  email: string;
+}
+
+interface ActivityProject {
+  _id: string;
+  name: string;
+}
+
 interface Activity {
-  id: number;
-  icon: 'user' | 'file-text' | 'mail' | 'payment' | 'milestone';
+  _id: string;
+  user: ActivityUser;
+  workspace: string;
+  project: ActivityProject;
+  type: string;
+  action: string;
   description: string;
-  date: string;
-  actor?: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
+  entityId: string;
+  entityType: string;
+  metadata: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface ActivitiesResponse {
-  items: Activity[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+  statusCode: number;
+  data: Activity[];
+  message: string;
+  success: boolean;
 }
 
 export default function ProjectHome() {
   const { project } = useProject();
+  console.log('🚀 project:', project);
   const { data: activitiesData, isLoading: isLoadingActivities } = useQuery({
-    queryKey: ['recentActivities'],
+    queryKey: ['recentActivities', project?._id],
     queryFn: async () => {
       const response = await newRequest.get<ActivitiesResponse>(
-        `/activities/recent/${project?._id}`,
+        `/activities/recent/${project._id}`,
         {
           params: {
             limit: 5,
@@ -43,9 +57,10 @@ export default function ProjectHome() {
       );
       return response.data;
     },
+    enabled: !!project?._id,
   });
 
-  const recentActivities = activitiesData?.items || [];
+  const recentActivities = activitiesData?.data || [];
 
   return (
     <div className='space-y-6'>
@@ -61,18 +76,24 @@ export default function ProjectHome() {
             <>
               {/* Activities */}
               {recentActivities.map((activity) => {
+                // Determine icon based on activity type/action
+                let icon = 'file-text';
+                if (activity.type === 'user') icon = 'user';
+                else if (activity.type === 'email' || activity.type === 'message') icon = 'mail';
+
                 return (
-                  <Card key={`activity-${activity.id}`} className='p-3'>
+                  <Card key={`activity-${activity._id}`} className='p-3'>
                     <div className='flex items-center gap-3'>
                       <div className='flex-shrink-0 bg-gray-100 p-2 rounded-full'>
-                        {activity.icon === 'user' && <User className='h-4 w-4 text-gray-500' />}
-                        {activity.icon === 'file-text' && (
-                          <FileText className='h-4 w-4 text-gray-500' />
-                        )}
+                        {icon === 'user' && <User className='h-4 w-4 text-gray-500' />}
+                        {icon === 'file-text' && <FileText className='h-4 w-4 text-gray-500' />}
+                        {icon === 'mail' && <Mail className='h-4 w-4 text-gray-500' />}
                       </div>
                       <div className='flex-1'>
                         <p className='text-sm font-medium'>{activity.description}</p>
-                        <p className='text-xs text-gray-500'>{activity.date}</p>
+                        <p className='text-xs text-gray-500'>
+                          {new Date(activity.createdAt).toLocaleString()}
+                        </p>
                       </div>
                     </div>
                   </Card>
