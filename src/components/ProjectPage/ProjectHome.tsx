@@ -84,15 +84,13 @@ export default function ProjectHome() {
   const { project } = useProject();
 
   const { data: emailsData, isLoading: isLoadingEmails } = useQuery({
-    queryKey: ['emails', project?._id],
+    queryKey: ['emailHistory', project?._id],
     queryFn: async () => {
       const response = await newRequest.get<EmailsResponse>(`/emails/history/${project._id}`);
       return response.data;
     },
     enabled: !!project?._id,
   });
-
-  console.log('🚀 emailsData:', emailsData);
 
   const { data: activitiesData, isLoading: isLoadingActivities } = useQuery({
     queryKey: ['recentActivities', project?._id],
