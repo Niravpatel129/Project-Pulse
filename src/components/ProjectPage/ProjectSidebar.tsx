@@ -58,8 +58,6 @@ export function ProjectSidebar({
   onUpdateProject: (data: Partial<Project>) => Promise<void>;
 }) {
   const { project } = useProject();
-  const [tasks, setTasks] = useState<Task[]>(project?.tasks || []);
-  const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [isClientPortalDialogOpen, setIsClientPortalDialogOpen] = useState(false);
   const [isSendEmailDialogOpen, setIsSendEmailDialogOpen] = useState(false);
   const [sharingSettings, setSharingSettings] = useState<SharingSettings>(() => {
@@ -87,7 +85,7 @@ export function ProjectSidebar({
       return p.role === 'client';
     })?.email || '',
   );
-  const [allowedEmailInput, setAllowedEmailInput] = useState('');
+
   const [portalURL, setPortalURL] = useState('');
   const [validationErrors, setValidationErrors] = useState<{
     accessType?: string;
@@ -118,7 +116,7 @@ export function ProjectSidebar({
     }
   }, [sharingData, isLoadingSharingData]);
 
-  const saveSettingsMutation = useMutation({
+  useMutation({
     mutationFn: async () => {
       if (!project?._id) throw new Error('Project ID is required');
       return newRequest.put(`/projects/${project._id}/sharing/settings`, {
@@ -134,6 +132,8 @@ export function ProjectSidebar({
       });
     },
     onError: (error: any) => {
+      if (!error) return;
+
       const errorMessage = error?.response?.data?.message || 'Failed to save sharing settings';
       toast({
         title: 'Error',
@@ -175,15 +175,12 @@ export function ProjectSidebar({
     await onUpdateProject?.({ leadSource: value });
   };
 
-  const addTask = (title: string) => {
-    setTasks([
-      ...tasks,
-      { _id: Date.now(), title, description: '', status: 'pending', dueDate: '' },
-    ]);
+  const handleProjectTypeChange = async (value: string) => {
+    await onUpdateProject?.({ projectType: value });
   };
 
-  const addTimeEntry = (description: string, duration: number) => {
-    setTimeEntries([...timeEntries, { id: Date.now(), description, duration }]);
+  const handleProjectStatusChange = async (value: string) => {
+    await onUpdateProject?.({ projectStatus: value });
   };
 
   const handleSharingSettingsChange = async (
@@ -209,14 +206,6 @@ export function ProjectSidebar({
     }
   };
 
-  const copyLinkToClipboard = () => {
-    navigator.clipboard.writeText(portalURL);
-    toast({
-      title: 'Link copied to clipboard',
-      description: 'You can now share this link with your client',
-    });
-  };
-
   const validateSettings = () => {
     const errors: { accessType?: string; passwordProtected?: string } = {};
 
@@ -230,12 +219,6 @@ export function ProjectSidebar({
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
-  };
-
-  const saveSettings = () => {
-    if (validateSettings()) {
-      saveSettingsMutation.mutate();
-    }
   };
 
   const sendClientPortalEmail = async () => {
@@ -275,65 +258,8 @@ export function ProjectSidebar({
     sendPortalLinkMutation.mutate();
   };
 
-  const addAllowedEmail = () => {
-    if (!allowedEmailInput) return;
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(allowedEmailInput)) {
-      toast({
-        title: 'Invalid email',
-        description: 'Please enter a valid email address',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // Add email to the allowed list
-    setSharingSettings({
-      ...sharingSettings,
-      allowedEmails: [...sharingSettings.allowedEmails, allowedEmailInput],
-    });
-
-    // Clear the input
-    setAllowedEmailInput('');
-  };
-
-  const removeAllowedEmail = (email: string) => {
-    setSharingSettings({
-      ...sharingSettings,
-      allowedEmails: sharingSettings.allowedEmails.filter((e) => {
-        return e !== email;
-      }),
-    });
-  };
-
-  const handleAllowedEmailKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Allow adding email with Enter key
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addAllowedEmail();
-    }
-  };
-
-  // Function to handle the privacy level change
-  const handlePrivacyLevelChange = (value: SharingSettings['accessType']) => {
-    handleSharingSettingsChange('accessType', value);
-
-    // Clear allowed emails when changing from email_restricted to another mode
-    if (value !== 'email_restricted') {
-      setSharingSettings((prev) => {
-        return {
-          ...prev,
-          accessType: value,
-          allowedEmails: [],
-        };
-      });
-    }
-  };
-
   return (
-    <div className='w-full max-w-full md:w-80 space-y-6 overflow-hidden p-1'>
+    <div className='w-full max-w-full lg:w-80 space-y-6 overflow-hidden p-1 md:w-full'>
       <div className='rounded-lg bg-gray-50 p-4'>
         <div className='mb-4 flex items-center gap-2'>
           <Lock className='h-4 w-4' />
@@ -426,72 +352,83 @@ export function ProjectSidebar({
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
 
-      <div className='space-y-4'>
-        <div className='space-y-2'>
-          <label className='text-sm font-medium'>Stage</label>
-          <Select value={project?.stage || 'Initial Contact'} onValueChange={handleStageChange}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='Initial Contact'>Initial Contact</SelectItem>
-              <SelectItem value='Proposal'>Proposal</SelectItem>
-              <SelectItem value='Negotiation'>Negotiation</SelectItem>
-              <SelectItem value='Closed Won'>Closed Won</SelectItem>
-              <SelectItem value='Closed Lost'>Closed Lost</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <div className='mt-4'>
+          <div className='space-y-4'>
+            <div className='space-y-2'>
+              <label className='text-sm font-medium'>Stage</label>
+              <Select value={project?.stage || 'Initial Contact'} onValueChange={handleStageChange}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='Initial Contact'>Initial Contact</SelectItem>
+                  <SelectItem value='Proposal'>Proposal</SelectItem>
+                  <SelectItem value='Negotiation'>Negotiation</SelectItem>
+                  <SelectItem value='Closed Won'>Closed Won</SelectItem>
+                  <SelectItem value='Closed Lost'>Closed Lost</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className='space-y-2'>
-          <label className='text-sm font-medium'>Lead Source</label>
-          <Select value={project?.leadSource || 'Referral'} onValueChange={handleLeadSourceChange}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='Referral'>Referral</SelectItem>
-              <SelectItem value='Website'>Website</SelectItem>
-              <SelectItem value='Social Media'>Social Media</SelectItem>
-              <SelectItem value='Email Campaign'>Email Campaign</SelectItem>
-              <SelectItem value='Conference'>Conference</SelectItem>
-              <SelectItem value='Other'>Other</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+            <div className='space-y-2'>
+              <label className='text-sm font-medium'>Lead Source</label>
+              <Select
+                value={project?.leadSource || 'Referral'}
+                onValueChange={handleLeadSourceChange}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='Referral'>Referral</SelectItem>
+                  <SelectItem value='Website'>Website</SelectItem>
+                  <SelectItem value='Social Media'>Social Media</SelectItem>
+                  <SelectItem value='Email Campaign'>Email Campaign</SelectItem>
+                  <SelectItem value='Conference'>Conference</SelectItem>
+                  <SelectItem value='Other'>Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className='space-y-2'>
-          <label className='text-sm font-medium'>Project Type</label>
-          <Select value={project?.projectType || 'Research'}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='Research'>Research</SelectItem>
-              <SelectItem value='Development'>Development</SelectItem>
-              <SelectItem value='Design'>Design</SelectItem>
-              <SelectItem value='Marketing'>Marketing</SelectItem>
-              <SelectItem value='Consulting'>Consulting</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+            <div className='space-y-2'>
+              <label className='text-sm font-medium'>Project Type</label>
+              <Select
+                value={project?.projectType || 'Research'}
+                onValueChange={handleProjectTypeChange}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='Research'>Research</SelectItem>
+                  <SelectItem value='Development'>Development</SelectItem>
+                  <SelectItem value='Design'>Design</SelectItem>
+                  <SelectItem value='Marketing'>Marketing</SelectItem>
+                  <SelectItem value='Consulting'>Consulting</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className='space-y-2'>
-          <label className='text-sm font-medium'>Status</label>
-          <Select value={project?.projectStatus || 'planning'}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='planning'>Planning</SelectItem>
-              <SelectItem value='in_progress'>In Progress</SelectItem>
-              <SelectItem value='review'>Review</SelectItem>
-              <SelectItem value='completed'>Completed</SelectItem>
-              <SelectItem value='on_hold'>On Hold</SelectItem>
-            </SelectContent>
-          </Select>
+            <div className='space-y-2'>
+              <label className='text-sm font-medium'>Status</label>
+              <Select
+                value={project?.projectStatus || 'planning'}
+                onValueChange={handleProjectStatusChange}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='planning'>Planning</SelectItem>
+                  <SelectItem value='in_progress'>In Progress</SelectItem>
+                  <SelectItem value='review'>Review</SelectItem>
+                  <SelectItem value='completed'>Completed</SelectItem>
+                  <SelectItem value='on_hold'>On Hold</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
       </div>
     </div>
