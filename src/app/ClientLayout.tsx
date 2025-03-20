@@ -19,7 +19,7 @@ export default function ClientLayout({
       <QueryClientProvider client={queryClient}>
         <AppProvider>
           <LoadingProvider>
-            <TooltipProvider>
+            <TooltipProvider delayDuration={0}>
               <div className='flex flex-col min-h-screen'>
                 <main className='flex-1'>{children}</main>
               </div>

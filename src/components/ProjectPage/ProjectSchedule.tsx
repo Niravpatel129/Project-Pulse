@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { addHours, format, parseISO } from 'date-fns';
@@ -661,19 +661,17 @@ export default function ProjectSchedule() {
                                   return m._id === memberId;
                                 });
                                 return (
-                                  <TooltipProvider key={memberId}>
-                                    <Tooltip>
-                                      <TooltipTrigger>
-                                        <Badge variant='outline' className='bg-blue-50'>
-                                          {member?.name.split(' ')[0]}
-                                        </Badge>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>{member?.name}</p>
-                                        <p className='text-xs text-gray-500'>{member?.role}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
+                                  <Tooltip key={memberId}>
+                                    <TooltipTrigger>
+                                      <Badge variant='outline' className='bg-blue-50'>
+                                        {member?.name.split(' ')[0]}
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{member?.name}</p>
+                                      <p className='text-xs text-gray-500'>{member?.role}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
                                 );
                               })}
                             </div>

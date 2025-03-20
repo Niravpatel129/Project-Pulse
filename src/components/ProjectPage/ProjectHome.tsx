@@ -5,8 +5,8 @@ import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
 import { FileText, Mail, User } from 'lucide-react';
+import { EmailCard } from './EmailCard';
 import { EmailComponent } from './EmailComponent';
-import { EmailList } from './EmailList';
 
 interface ActivityUser {
   _id: string;
@@ -41,9 +41,59 @@ interface ActivitiesResponse {
   success: boolean;
 }
 
+interface EmailSender {
+  _id: string;
+  name: string;
+  email: string;
+}
+
+interface Email {
+  _id: string;
+  projectId: string;
+  subject: string;
+  body: string;
+  to: string[];
+  cc: string[];
+  bcc: string[];
+  attachments: string[];
+  sentBy: EmailSender;
+  status: string;
+  sentAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface EmailsResponse {
+  success: boolean;
+  emails: Email[];
+  pagination: {
+    total: number;
+    page: number;
+    pages: number;
+  };
+}
+
+// Combined type for chronological sorting
+interface TimelineItem {
+  type: 'activity' | 'email';
+  timestamp: string;
+  data: Activity | Email;
+}
+
 export default function ProjectHome() {
   const { project } = useProject();
-  console.log('🚀 project:', project);
+
+  const { data: emailsData, isLoading: isLoadingEmails } = useQuery({
+    queryKey: ['emails', project?._id],
+    queryFn: async () => {
+      const response = await newRequest.get<EmailsResponse>(`/emails/history/${project._id}`);
+      return response.data;
+    },
+    enabled: !!project?._id,
+  });
+
+  console.log('🚀 emailsData:', emailsData);
+
   const { data: activitiesData, isLoading: isLoadingActivities } = useQuery({
     queryKey: ['recentActivities', project?._id],
     queryFn: async () => {
@@ -61,6 +111,30 @@ export default function ProjectHome() {
   });
 
   const recentActivities = activitiesData?.data || [];
+  const recentEmails = emailsData?.emails || [];
+
+  // Combine activities and emails into a single timeline
+  const timelineItems: TimelineItem[] = [
+    ...recentActivities.map((activity) => {
+      return {
+        type: 'activity' as const,
+        timestamp: activity.createdAt,
+        data: activity,
+      };
+    }),
+    ...recentEmails.map((email) => {
+      return {
+        type: 'email' as const,
+        timestamp: email.sentAt || email.createdAt,
+        data: email,
+      };
+    }),
+  ];
+
+  // Sort combined items by timestamp (newest first)
+  const sortedTimelineItems = timelineItems.sort((a, b) => {
+    return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+  });
 
   return (
     <div className='space-y-6'>
@@ -70,38 +144,55 @@ export default function ProjectHome() {
       <div className='space-y-4'>
         <h3 className='text-sm font-medium'>Recent activity & messages</h3>
         <div className='space-y-3'>
-          {isLoadingActivities ? (
-            <div className='text-sm text-gray-500'>Loading activities...</div>
+          {isLoadingActivities || isLoadingEmails ? (
+            <div className='text-sm text-gray-500'>Loading activities and emails...</div>
           ) : (
             <>
-              {/* Activities */}
-              {recentActivities.map((activity) => {
-                // Determine icon based on activity type/action
-                let icon = 'file-text';
-                if (activity.type === 'user') icon = 'user';
-                else if (activity.type === 'email' || activity.type === 'message') icon = 'mail';
+              {sortedTimelineItems.map((item) => {
+                if (item.type === 'activity') {
+                  const activity = item.data as Activity;
+                  // Determine icon based on activity type/action
+                  let icon = 'file-text';
+                  if (activity.type === 'user') icon = 'user';
+                  else if (activity.type === 'email' || activity.type === 'message') icon = 'mail';
 
-                return (
-                  <Card key={`activity-${activity._id}`} className='p-3'>
-                    <div className='flex items-center gap-3'>
-                      <div className='flex-shrink-0 bg-gray-100 p-2 rounded-full'>
-                        {icon === 'user' && <User className='h-4 w-4 text-gray-500' />}
-                        {icon === 'file-text' && <FileText className='h-4 w-4 text-gray-500' />}
-                        {icon === 'mail' && <Mail className='h-4 w-4 text-gray-500' />}
+                  return (
+                    <Card key={`activity-${activity._id}`} className='p-3'>
+                      <div className='flex items-center gap-3'>
+                        <div className='flex-shrink-0 bg-gray-100 p-2 rounded-full'>
+                          {icon === 'user' && <User className='h-4 w-4 text-gray-500' />}
+                          {icon === 'file-text' && <FileText className='h-4 w-4 text-gray-500' />}
+                          {icon === 'mail' && <Mail className='h-4 w-4 text-gray-500' />}
+                        </div>
+                        <div className='flex-1'>
+                          <p className='text-sm font-medium'>{activity.description}</p>
+                          <p className='text-xs text-gray-500'>
+                            {new Date(activity.createdAt).toLocaleString()}
+                          </p>
+                        </div>
                       </div>
-                      <div className='flex-1'>
-                        <p className='text-sm font-medium'>{activity.description}</p>
-                        <p className='text-xs text-gray-500'>
-                          {new Date(activity.createdAt).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
-                );
+                    </Card>
+                  );
+                } else {
+                  const email = item.data as Email;
+                  return (
+                    <EmailCard
+                      key={`email-${email._id}`}
+                      email={{
+                        id: email._id,
+                        from: {
+                          name: email.sentBy.name,
+                          email: email.sentBy.email,
+                        },
+                        to: email.to.join(', '),
+                        subject: email.subject,
+                        content: email.body,
+                        date: email.sentAt || email.createdAt,
+                      }}
+                    />
+                  );
+                }
               })}
-
-              {/* Email List */}
-              <EmailList />
             </>
           )}
         </div>
