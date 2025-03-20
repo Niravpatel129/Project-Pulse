@@ -309,6 +309,11 @@ export default function ProjectsPage() {
 
   // Function to handle project deletion
   const handleDeleteProject = (projectId: number) => {
+    console.log('🚀 projectId:', projectId);
+    if (!projectId) {
+      return null;
+    }
+
     deleteProjectMutation.mutate(projectId);
   };
 
@@ -516,7 +521,7 @@ export default function ProjectsPage() {
                             <DropdownMenuContent align='start'>
                               <DropdownMenuItem
                                 onClick={() => {
-                                  return handleStatusChange(project.id, 'Not Started');
+                                  return handleStatusChange(project._id, 'Not Started');
                                 }}
                                 className='flex items-center'
                               >
@@ -524,7 +529,7 @@ export default function ProjectsPage() {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {
-                                  return handleStatusChange(project.id, 'On Track');
+                                  return handleStatusChange(project._id, 'On Track');
                                 }}
                                 className='flex items-center'
                               >
@@ -532,7 +537,7 @@ export default function ProjectsPage() {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {
-                                  return handleStatusChange(project.id, 'At Risk');
+                                  return handleStatusChange(project._id, 'At Risk');
                                 }}
                                 className='flex items-center'
                               >
@@ -540,7 +545,7 @@ export default function ProjectsPage() {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {
-                                  return handleStatusChange(project.id, 'Delayed');
+                                  return handleStatusChange(project._id, 'Delayed');
                                 }}
                                 className='flex items-center'
                               >
@@ -548,7 +553,7 @@ export default function ProjectsPage() {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {
-                                  return handleStatusChange(project.id, 'Completed');
+                                  return handleStatusChange(project._id, 'Completed');
                                 }}
                                 className='flex items-center'
                               >
@@ -600,7 +605,7 @@ export default function ProjectsPage() {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {
-                                  return handleDeleteProject(project.id);
+                                  return handleDeleteProject(project._id);
                                 }}
                                 className='text-destructive focus:text-destructive'
                               >

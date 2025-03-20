@@ -1,3 +1,4 @@
+import { activities } from '@/api/services/activities';
 import { useCallback, useState } from 'react';
 import { api } from '../api/client';
 import { inventory } from '../api/services/inventory';
@@ -35,20 +36,28 @@ export function useApi() {
   const withLoadingAndErrors = useCallback(
     <T, Args extends unknown[]>(key: string, apiCall: (...args: Args) => Promise<T>) => {
       return async (...args: Args): Promise<T | null> => {
-        setLoading((prev) => {return { ...prev, [key]: true }});
-        setErrors((prev) => {return { ...prev, [key]: null }});
+        setLoading((prev) => {
+          return { ...prev, [key]: true };
+        });
+        setErrors((prev) => {
+          return { ...prev, [key]: null };
+        });
 
         try {
           const result = await apiCall(...args);
           return result;
         } catch (error) {
-          setErrors((prev) => {return {
-            ...prev,
-            [key]: error instanceof Error ? error : new Error(String(error)),
-          }});
+          setErrors((prev) => {
+            return {
+              ...prev,
+              [key]: error instanceof Error ? error : new Error(String(error)),
+            };
+          });
           return null;
         } finally {
-          setLoading((prev) => {return { ...prev, [key]: false }});
+          setLoading((prev) => {
+            return { ...prev, [key]: false };
+          });
         }
       };
     },
@@ -80,17 +89,19 @@ export function useApi() {
         'inventory.getUsageReports',
         async () => {
           const response = await inventory.getInventoryUsageReports();
-          return response.items.map((item) => {return {
-            item: {
-              id: item.itemId,
-              name: item.itemName,
-              sku: '',
-              stock: 0,
-            },
-            usageCount: item.quantity,
-            projectCount: item.projectId ? 1 : 0,
-            projects: item.projectId ? [item.projectId] : [],
-          }});
+          return response.items.map((item) => {
+            return {
+              item: {
+                id: item.itemId,
+                name: item.itemName,
+                sku: '',
+                stock: 0,
+              },
+              usageCount: item.quantity,
+              projectCount: item.projectId ? 1 : 0,
+              projects: item.projectId ? [item.projectId] : [],
+            };
+          });
         },
       ),
       getCategories: withLoadingAndErrors(
@@ -160,6 +171,12 @@ export function useApi() {
         projectFiles.createTemplateFromProjectFile,
       ),
     },
+    activities: {
+      getRecentActivities: withLoadingAndErrors(
+        'activities.getRecentActivities',
+        activities.getRecentActivities,
+      ),
+    },
   };
 
   // Helper to check if any API calls are currently loading
@@ -176,13 +193,20 @@ export function useApi() {
       }
 
       // Check if any of the specified API calls are loading
-      return keys.some((key) => {return !!loading[key]});
+      return keys.some((key) => {
+        return !!loading[key];
+      });
     },
     [loading],
   );
 
   // Helper to get error for a specific API call
-  const getError = useCallback((key: string) => {return errors[key] || null}, [errors]);
+  const getError = useCallback(
+    (key: string) => {
+      return errors[key] || null;
+    },
+    [errors],
+  );
 
   // Helper to clear errors
   const clearErrors = useCallback((keys?: string | string[]) => {
