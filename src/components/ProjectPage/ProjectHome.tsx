@@ -56,7 +56,7 @@ interface Email {
   to: string[];
   cc: string[];
   bcc: string[];
-  attachments: string[];
+  attachments: any[];
   sentBy: EmailSender;
   status: string;
   sentAt: string;
@@ -201,6 +201,7 @@ export default function ProjectHome() {
                           subject: email.subject,
                           content: email.body,
                           date: email.sentAt || email.createdAt,
+                          attachments: email.attachments,
                         }}
                       />
                     </motion.div>

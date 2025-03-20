@@ -5,13 +5,20 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useProject } from '@/contexts/ProjectContext';
 import { useEmails } from '@/hooks/useEmails';
 import { format } from 'date-fns';
-import { Reply, Send, X } from 'lucide-react';
+import { Download, FileIcon, ImageIcon, PaperclipIcon, Reply, Send, X } from 'lucide-react';
 import { useState } from 'react';
 import { Descendant } from 'slate';
 import { toast } from 'sonner';
 import { EmailEditor } from './EmailComponents/EmailEditor';
 
-interface Email {
+interface Attachment {
+  name: string;
+  size: number;
+  type: string;
+  url: string;
+}
+
+interface EmailData {
   id: string;
   from: {
     name: string;
@@ -21,6 +28,11 @@ interface Email {
   subject: string;
   content: string;
   date: string;
+  attachments?: Attachment[];
+}
+
+interface EmailCardProps {
+  email?: EmailData;
 }
 
 export function EmailCard({
@@ -35,8 +47,10 @@ export function EmailCard({
     content:
       'Hi, I hope this email finds you well! I want to follow up regarding the email I sent you about the information you requested...',
     date: 'Thu, Mar 6, 2025',
+    attachments: [],
   },
-}) {
+}: EmailCardProps) {
+  console.log('🚀 email:', email);
   const [isReplying, setIsReplying] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const [editorValue, setEditorValue] = useState<Descendant[]>([
@@ -83,6 +97,19 @@ export function EmailCard({
     }
   };
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image')) {
+      return <ImageIcon className='h-4 w-4 text-blue-500' />;
+    }
+    return <FileIcon className='h-4 w-4 text-gray-500' />;
+  };
+
   return (
     <div className='space-y-4'>
       <div className='space-y-0'>
@@ -117,8 +144,48 @@ export function EmailCard({
               </div>
               <div className='text-sm text-gray-500'>To: {email.to}</div>
               <h3 className='text-base font-medium mt-1'>{email.subject}</h3>
-              <p className='text-sm text-gray-600 mt-4 border-t pt-4 pb-8'>{email.content}</p>
-              <div className='flex justify-end'>
+              <p className='text-sm text-gray-600 mt-4 border-t pt-4'>{email.content}</p>
+
+              {/* Attachments section */}
+              {email.attachments && email.attachments.length > 0 && (
+                <div className='mt-4 border-t pt-4'>
+                  <div className='flex items-center gap-2 mb-2'>
+                    <PaperclipIcon className='h-4 w-4 text-gray-500' />
+                    <span className='text-sm font-medium'>
+                      Attachments ({email.attachments.length})
+                    </span>
+                  </div>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
+                    {email.attachments.map((attachment, index) => {
+                      return (
+                        <div
+                          key={`${email.id}-attachment-${index}`}
+                          className='flex items-center gap-2 p-2 rounded-md border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors'
+                        >
+                          {getFileIcon(attachment.type)}
+                          <div className='flex-1 min-w-0'>
+                            <div className='text-sm font-medium truncate'>{attachment.name}</div>
+                            <div className='text-xs text-gray-500'>
+                              {formatFileSize(attachment.size)}
+                            </div>
+                          </div>
+                          <a
+                            href={attachment.url}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='p-1 rounded-full hover:bg-gray-200'
+                            title='Download attachment'
+                          >
+                            <Download className='h-4 w-4 text-gray-600' />
+                          </a>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className='flex justify-end mt-4'>
                 <Button
                   variant='outline'
                   size='sm'
