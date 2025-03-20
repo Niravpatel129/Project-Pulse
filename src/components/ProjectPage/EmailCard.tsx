@@ -162,7 +162,17 @@ export function EmailCard({
                           key={`${email.id}-attachment-${index}`}
                           className='flex items-center gap-2 p-2 rounded-md border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors'
                         >
-                          {getFileIcon(attachment.type)}
+                          {attachment.type.startsWith('image') ? (
+                            <div className='w-10 h-10 flex-shrink-0 rounded overflow-hidden'>
+                              <img
+                                src={attachment.url}
+                                alt={attachment.name}
+                                className='w-full h-full object-cover'
+                              />
+                            </div>
+                          ) : (
+                            getFileIcon(attachment.type)
+                          )}
                           <div className='flex-1 min-w-0'>
                             <div className='text-sm font-medium truncate'>{attachment.name}</div>
                             <div className='text-xs text-gray-500'>
