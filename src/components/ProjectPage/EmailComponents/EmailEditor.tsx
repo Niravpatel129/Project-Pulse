@@ -16,6 +16,7 @@ type CustomText = {
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
+  list?: boolean;
 };
 
 declare module 'slate' {
@@ -28,9 +29,10 @@ declare module 'slate' {
 interface EmailEditorProps {
   initialValue: Descendant[];
   onChange: (value: Descendant[], plainText: string) => void;
+  height?: string;
 }
 
-export const EmailEditor = ({ initialValue, onChange }: EmailEditorProps) => {
+export const EmailEditor = ({ initialValue, onChange, height = '350px' }: EmailEditorProps) => {
   // Create a Slate editor object that won't change across renders
   const editor = useMemo(() => {
     return withHistory(withReact(createEditor()));
@@ -126,38 +128,44 @@ export const EmailEditor = ({ initialValue, onChange }: EmailEditorProps) => {
 
   return (
     <div className='border rounded-md'>
-      <div className='flex items-center gap-1 p-1 border-b bg-gray-50'>
+      <div className='border-b p-2 flex gap-1'>
         <Button
-          type='button'
-          variant={isMarkActive('bold') ? 'default' : 'ghost'}
+          variant='ghost'
           size='sm'
           onClick={toggleBold}
+          className={isMarkActive('bold') ? 'bg-gray-100' : ''}
         >
           <Bold className='h-4 w-4' />
         </Button>
         <Button
-          type='button'
-          variant={isMarkActive('italic') ? 'default' : 'ghost'}
+          variant='ghost'
           size='sm'
           onClick={toggleItalic}
+          className={isMarkActive('italic') ? 'bg-gray-100' : ''}
         >
           <Italic className='h-4 w-4' />
         </Button>
         <Button
-          type='button'
-          variant={isMarkActive('underline') ? 'default' : 'ghost'}
+          variant='ghost'
           size='sm'
           onClick={toggleUnderline}
+          className={isMarkActive('underline') ? 'bg-gray-100' : ''}
         >
           <Underline className='h-4 w-4' />
         </Button>
-        <Button type='button' variant='ghost' size='sm' onClick={toggleList}>
+        <Button
+          variant='ghost'
+          size='sm'
+          onClick={toggleList}
+          className={isMarkActive('list') ? 'bg-gray-100' : ''}
+        >
           <List className='h-4 w-4' />
         </Button>
-        <Button type='button' variant='ghost' size='sm' onClick={insertLink}>
+        <Button variant='ghost' size='sm' onClick={insertLink}>
           <Link className='h-4 w-4' />
         </Button>
       </div>
+
       <Slate
         editor={editor}
         initialValue={initialValue}
@@ -184,7 +192,7 @@ export const EmailEditor = ({ initialValue, onChange }: EmailEditorProps) => {
           renderElement={renderElement}
           renderLeaf={renderLeaf}
           style={{
-            minHeight: '350px',
+            minHeight: height,
             padding: '10px',
           }}
         />
