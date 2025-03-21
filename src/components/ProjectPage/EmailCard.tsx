@@ -12,7 +12,6 @@ import {
   Download,
   FileIcon,
   ImageIcon,
-  Mail,
   PaperclipIcon,
   Reply,
   Send,
@@ -70,6 +69,7 @@ export function EmailCard({
   const [isReplying, setIsReplying] = useState(false);
   const [isThreadExpanded, setIsThreadExpanded] = useState(true);
   const [replyContent, setReplyContent] = useState('');
+  const [isHovering, setIsHovering] = useState(false);
   const [editorValue, setEditorValue] = useState<Descendant[]>([
     {
       type: 'paragraph',
@@ -142,6 +142,12 @@ export function EmailCard({
             email.messageCount && email.messageCount > 1 && '',
             depth > 0 && 'border-l-2 border-blue-200 mt-2',
           )}
+          onMouseEnter={() => {
+            return setIsHovering(true);
+          }}
+          onMouseLeave={() => {
+            return setIsHovering(false);
+          }}
         >
           <div className='flex items-start gap-4'>
             <Avatar className='h-10 w-10'>
@@ -166,12 +172,6 @@ export function EmailCard({
                   <span className='text-gray-500'>({email.from?.email})</span>
                 </div>
                 <div className='flex items-center gap-2'>
-                  {email.messageCount && email.messageCount > 1 && (
-                    <div className='flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-xs font-medium'>
-                      <Mail className='h-3 w-3' />
-                      {email.messageCount} messages
-                    </div>
-                  )}
                   <Tooltip>
                     <TooltipTrigger>
                       <span className='text-sm text-gray-500'>
@@ -262,7 +262,7 @@ export function EmailCard({
                 </div>
               )}
 
-              <div className='flex justify-end mt-4'>
+              <div className='flex justify-end mt-4 h-8'>
                 <Button
                   variant='outline'
                   size='sm'
@@ -270,6 +270,10 @@ export function EmailCard({
                     e.stopPropagation();
                     setIsReplying(!isReplying);
                   }}
+                  className={cn(
+                    'transition-opacity duration-200',
+                    isHovering || isReplying ? 'opacity-100' : 'opacity-0',
+                  )}
                 >
                   <Reply className='h-4 w-4 mr-2' />
                   {isReplying ? 'Cancel Reply' : 'Reply'}
