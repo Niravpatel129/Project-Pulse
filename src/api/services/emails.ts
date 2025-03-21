@@ -23,6 +23,13 @@ export interface SendEmailRequest {
   body: string;
   projectId: string;
   attachments?: File[];
+  inReplyTo?: string;
+  references?: string[];
+  trackingData?: {
+    shortProjectId: string;
+    shortThreadId: string;
+    shortUserId: string;
+  };
 }
 
 /**
@@ -41,6 +48,9 @@ export const emails = {
     formData.append('subject', data.subject);
     formData.append('body', data.body);
     formData.append('projectId', data.projectId);
+    if (data.inReplyTo) formData.append('inReplyTo', data.inReplyTo);
+    if (data.references) formData.append('references', JSON.stringify(data.references));
+    if (data.trackingData) formData.append('trackingData', JSON.stringify(data.trackingData));
 
     if (data.attachments) {
       data.attachments.forEach((file) => {

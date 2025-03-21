@@ -43,6 +43,13 @@ interface EmailData {
   messageCount?: number;
   replies?: EmailData[];
   direction?: 'inbound' | 'outbound';
+  messageId?: string;
+  references?: string[];
+  trackingData?: {
+    shortProjectId: string;
+    shortThreadId: string;
+    shortUserId: string;
+  };
 }
 
 interface EmailCardProps {
@@ -93,6 +100,9 @@ export function EmailCard({
         subject: `Re: ${email.subject}`,
         body: replyContent,
         projectId: project?._id || '',
+        inReplyTo: email.messageId,
+        references: email.references || [],
+        trackingData: email.trackingData,
       });
 
       toast.success('Reply sent', {
