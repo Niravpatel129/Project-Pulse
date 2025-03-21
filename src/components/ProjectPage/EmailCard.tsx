@@ -4,8 +4,20 @@ import { Card } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useProject } from '@/contexts/ProjectContext';
 import { useEmails } from '@/hooks/useEmails';
+import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { Download, FileIcon, ImageIcon, Mail, PaperclipIcon, Reply, Send, X } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  Download,
+  FileIcon,
+  ImageIcon,
+  Mail,
+  PaperclipIcon,
+  Reply,
+  Send,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { Descendant } from 'slate';
 import { toast } from 'sonner';
@@ -30,10 +42,13 @@ interface EmailData {
   date: string;
   attachments?: Attachment[];
   messageCount?: number;
+  replies?: EmailData[];
+  direction?: 'inbound' | 'outbound';
 }
 
 interface EmailCardProps {
   email?: EmailData;
+  depth?: number;
 }
 
 export function EmailCard({
@@ -50,9 +65,10 @@ export function EmailCard({
     date: 'Thu, Mar 6, 2025',
     attachments: [],
   },
+  depth = 0,
 }: EmailCardProps) {
-  console.log('🚀 email:', email);
   const [isReplying, setIsReplying] = useState(false);
+  const [isThreadExpanded, setIsThreadExpanded] = useState(true);
   const [replyContent, setReplyContent] = useState('');
   const [editorValue, setEditorValue] = useState<Descendant[]>([
     {
@@ -119,10 +135,22 @@ export function EmailCard({
   return (
     <div className='space-y-4'>
       <div className='space-y-0'>
-        <Card key={email.id} className='p-4'>
+        <Card
+          key={email.id}
+          className={cn(
+            'p-4 transition-all duration-200',
+            email.messageCount && email.messageCount > 1 && '',
+            depth > 0 && 'border-l-2 border-blue-200 mt-2',
+          )}
+        >
           <div className='flex items-start gap-4'>
             <Avatar className='h-10 w-10'>
-              <AvatarFallback className='bg-gray-100'>
+              <AvatarFallback
+                className={cn(
+                  'bg-gray-100',
+                  email.direction === 'inbound' ? 'bg-blue-50 text-blue-600' : 'bg-gray-100',
+                )}
+              >
                 {email.from?.name
                   ?.split(' ')
                   .map((n) => {
@@ -137,25 +165,43 @@ export function EmailCard({
                   <span className='font-medium'>{email.from?.name}</span>
                   <span className='text-gray-500'>({email.from?.email})</span>
                 </div>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <span className='text-sm text-gray-500'>
-                      {format(new Date(email.date), 'MMM d, yyyy')}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <span>{format(new Date(email.date), 'MMM d, yyyy hh:mm a')}</span>
-                  </TooltipContent>
-                </Tooltip>
+                <div className='flex items-center gap-2'>
+                  {email.messageCount && email.messageCount > 1 && (
+                    <div className='flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-xs font-medium'>
+                      <Mail className='h-3 w-3' />
+                      {email.messageCount} messages
+                    </div>
+                  )}
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <span className='text-sm text-gray-500'>
+                        {format(new Date(email.date), 'MMM d, yyyy')}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <span>{format(new Date(email.date), 'MMM d, yyyy hh:mm a')}</span>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
               </div>
               <div className='text-sm text-gray-500'>To: {email.to}</div>
               <div className='flex items-center gap-2 mt-1'>
                 <h3 className='text-base font-medium'>{email.subject}</h3>
                 {email.messageCount && email.messageCount > 1 && (
-                  <div className='flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-xs font-medium'>
-                    <Mail className='h-3 w-3' />
-                    {email.messageCount} messages
-                  </div>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    className='h-6 px-2'
+                    onClick={() => {
+                      return setIsThreadExpanded(!isThreadExpanded);
+                    }}
+                  >
+                    {isThreadExpanded ? (
+                      <ChevronUp className='h-4 w-4' />
+                    ) : (
+                      <ChevronDown className='h-4 w-4' />
+                    )}
+                  </Button>
                 )}
               </div>
               {isHTML(email.content) ? (
@@ -232,6 +278,15 @@ export function EmailCard({
             </div>
           </div>
         </Card>
+
+        {/* Nested Replies */}
+        {email.replies && email.replies.length > 0 && isThreadExpanded && (
+          <div className='ml-8 mt-2 space-y-4'>
+            {email.replies.map((reply) => {
+              return <EmailCard key={reply.id} email={reply} depth={depth + 1} />;
+            })}
+          </div>
+        )}
 
         {isReplying && (
           <div className='relative'>

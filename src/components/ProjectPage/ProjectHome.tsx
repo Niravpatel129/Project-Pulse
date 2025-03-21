@@ -69,9 +69,7 @@ interface EmailMessage {
   unmatched: boolean;
   createdAt: string;
   updatedAt: string;
-  children: EmailMessage[];
-  depth: number;
-  parentId: string | null;
+  replies: EmailMessage[];
 }
 
 interface EmailThread {
@@ -161,7 +159,7 @@ export default function ProjectHome() {
       {/* Combined Activity and Email Feed */}
       <div className='space-y-4'>
         <h3 className='text-sm font-medium'>Recent activity & messages</h3>
-        <div className='space-y-3'>
+        <div className='space-y-4'>
           {isLoadingActivities || isLoadingEmails ? (
             <div className='text-sm text-gray-500'>Loading activities and emails...</div>
           ) : (
@@ -201,7 +199,7 @@ export default function ProjectHome() {
                   );
                 } else {
                   const thread = item.data as EmailThread;
-                  const latestMessage = thread.messages[thread.messages.length - 1];
+                  const latestMessage = thread.messages[0];
                   return (
                     <motion.div
                       key={`email-${thread.threadId || latestMessage._id}`}
@@ -223,6 +221,22 @@ export default function ProjectHome() {
                           date: latestMessage.sentAt || latestMessage.createdAt,
                           attachments: latestMessage.attachments,
                           messageCount: thread.messageCount,
+                          replies: latestMessage.replies.map((reply) => {
+                            return {
+                              id: reply._id,
+                              from: {
+                                name: reply.from,
+                                email: reply.from,
+                              },
+                              to: reply.to.join(', '),
+                              subject: reply.subject,
+                              content: reply.body,
+                              date: reply.sentAt || reply.createdAt,
+                              attachments: reply.attachments,
+                              direction: reply.direction as 'inbound' | 'outbound',
+                            };
+                          }),
+                          direction: latestMessage.direction as 'inbound' | 'outbound',
                         }}
                       />
                     </motion.div>
