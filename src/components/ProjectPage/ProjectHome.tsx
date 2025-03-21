@@ -194,8 +194,8 @@ export default function ProjectHome() {
                         email={{
                           id: email._id,
                           from: {
-                            name: email.sentBy.name,
-                            email: email.sentBy.email,
+                            name: email.sentBy?.name,
+                            email: email.sentBy?.email,
                           },
                           to: email.to.join(', '),
                           subject: email.subject,

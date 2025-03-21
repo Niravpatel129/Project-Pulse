@@ -117,8 +117,8 @@ export function EmailCard({
           <div className='flex items-start gap-4'>
             <Avatar className='h-10 w-10'>
               <AvatarFallback className='bg-gray-100'>
-                {email.from.name
-                  .split(' ')
+                {email.from?.name
+                  ?.split(' ')
                   .map((n) => {
                     return n[0];
                   })
@@ -128,8 +128,8 @@ export function EmailCard({
             <div className='flex-1 min-w-0'>
               <div className='flex items-center justify-between'>
                 <div className='flex items-center gap-2'>
-                  <span className='font-medium'>{email.from.name}</span>
-                  <span className='text-gray-500'>({email.from.email})</span>
+                  <span className='font-medium'>{email.from?.name}</span>
+                  <span className='text-gray-500'>({email.from?.email})</span>
                 </div>
                 <Tooltip>
                   <TooltipTrigger>
