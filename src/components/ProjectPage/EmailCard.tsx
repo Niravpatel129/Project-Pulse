@@ -5,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useProject } from '@/contexts/ProjectContext';
 import { useEmails } from '@/hooks/useEmails';
 import { format } from 'date-fns';
-import { Download, FileIcon, ImageIcon, PaperclipIcon, Reply, Send, X } from 'lucide-react';
+import { Download, FileIcon, ImageIcon, Mail, PaperclipIcon, Reply, Send, X } from 'lucide-react';
 import { useState } from 'react';
 import { Descendant } from 'slate';
 import { toast } from 'sonner';
@@ -29,6 +29,7 @@ interface EmailData {
   content: string;
   date: string;
   attachments?: Attachment[];
+  messageCount?: number;
 }
 
 interface EmailCardProps {
@@ -110,6 +111,11 @@ export function EmailCard({
     return <FileIcon className='h-4 w-4 text-gray-500' />;
   };
 
+  // Function to check if content is HTML
+  const isHTML = (str: string) => {
+    return /<[a-z][\s\S]*>/i.test(str);
+  };
+
   return (
     <div className='space-y-4'>
       <div className='space-y-0'>
@@ -143,8 +149,23 @@ export function EmailCard({
                 </Tooltip>
               </div>
               <div className='text-sm text-gray-500'>To: {email.to}</div>
-              <h3 className='text-base font-medium mt-1'>{email.subject}</h3>
-              <p className='text-sm text-gray-600 mt-4 border-t pt-4'>{email.content}</p>
+              <div className='flex items-center gap-2 mt-1'>
+                <h3 className='text-base font-medium'>{email.subject}</h3>
+                {email.messageCount && email.messageCount > 1 && (
+                  <div className='flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-xs font-medium'>
+                    <Mail className='h-3 w-3' />
+                    {email.messageCount} messages
+                  </div>
+                )}
+              </div>
+              {isHTML(email.content) ? (
+                <div
+                  className='text-sm text-gray-600 mt-4 border-t pt-4 email-content'
+                  dangerouslySetInnerHTML={{ __html: email.content }}
+                />
+              ) : (
+                <p className='text-sm text-gray-600 mt-4 border-t pt-4'>{email.content}</p>
+              )}
 
               {/* Attachments section */}
               {email.attachments && email.attachments.length > 0 && (

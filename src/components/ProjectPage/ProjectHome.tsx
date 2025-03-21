@@ -48,7 +48,7 @@ interface EmailSender {
   email: string;
 }
 
-interface Email {
+interface EmailMessage {
   _id: string;
   projectId: string;
   subject: string;
@@ -56,17 +56,36 @@ interface Email {
   to: string[];
   cc: string[];
   bcc: string[];
+  from: string;
   attachments: any[];
   sentBy: EmailSender;
   status: string;
   sentAt: string;
+  messageId: string;
+  references: string[];
+  trackingAddress: string;
+  direction: string;
+  openCount: number;
+  unmatched: boolean;
   createdAt: string;
   updatedAt: string;
+  children: EmailMessage[];
+  depth: number;
+  parentId: string | null;
+}
+
+interface EmailThread {
+  threadId: string | null;
+  subject: string;
+  lastMessageAt: number;
+  messageCount: number;
+  participants: string[];
+  messages: EmailMessage[];
 }
 
 interface EmailsResponse {
   success: boolean;
-  emails: Email[];
+  threads: EmailThread[];
   pagination: {
     total: number;
     page: number;
@@ -78,7 +97,7 @@ interface EmailsResponse {
 interface TimelineItem {
   type: 'activity' | 'email';
   timestamp: string;
-  data: Activity | Email;
+  data: Activity | EmailThread;
 }
 
 export default function ProjectHome() {
@@ -110,9 +129,9 @@ export default function ProjectHome() {
   });
 
   const recentActivities = activitiesData?.data || [];
-  const recentEmails = emailsData?.emails || [];
+  const emailThreads = emailsData?.threads || [];
 
-  // Combine activities and emails into a single timeline
+  // Combine activities and email threads into a single timeline
   const timelineItems: TimelineItem[] = [
     ...recentActivities.map((activity) => {
       return {
@@ -121,11 +140,11 @@ export default function ProjectHome() {
         data: activity,
       };
     }),
-    ...recentEmails.map((email) => {
+    ...emailThreads.map((thread) => {
       return {
         type: 'email' as const,
-        timestamp: email.sentAt || email.createdAt,
-        data: email,
+        timestamp: new Date(thread.lastMessageAt).toISOString(),
+        data: thread,
       };
     }),
   ];
@@ -181,10 +200,11 @@ export default function ProjectHome() {
                     </motion.div>
                   );
                 } else {
-                  const email = item.data as Email;
+                  const thread = item.data as EmailThread;
+                  const latestMessage = thread.messages[thread.messages.length - 1];
                   return (
                     <motion.div
-                      key={`email-${email._id}`}
+                      key={`email-${thread.threadId || latestMessage._id}`}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
@@ -192,16 +212,17 @@ export default function ProjectHome() {
                     >
                       <EmailCard
                         email={{
-                          id: email._id,
+                          id: latestMessage._id,
                           from: {
-                            name: email.sentBy?.name,
-                            email: email.sentBy?.email,
+                            name: latestMessage.sentBy?.name,
+                            email: latestMessage.from,
                           },
-                          to: email.to.join(', '),
-                          subject: email.subject,
-                          content: email.body,
-                          date: email.sentAt || email.createdAt,
-                          attachments: email.attachments,
+                          to: latestMessage.to.join(', '),
+                          subject: thread.subject,
+                          content: latestMessage.body,
+                          date: latestMessage.sentAt || latestMessage.createdAt,
+                          attachments: latestMessage.attachments,
+                          messageCount: thread.messageCount,
                         }}
                       />
                     </motion.div>
