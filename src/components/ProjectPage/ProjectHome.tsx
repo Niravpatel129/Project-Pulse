@@ -70,6 +70,11 @@ interface EmailMessage {
   createdAt: string;
   updatedAt: string;
   replies: EmailMessage[];
+  trackingData?: {
+    shortProjectId: string;
+    shortThreadId: string;
+    shortUserId: string;
+  };
 }
 
 interface EmailThread {
@@ -221,6 +226,9 @@ export default function ProjectHome() {
                           date: latestMessage.sentAt || latestMessage.createdAt,
                           attachments: latestMessage.attachments,
                           messageCount: thread.messageCount,
+                          messageId: latestMessage.messageId,
+                          references: latestMessage.references,
+                          trackingData: latestMessage.trackingData,
                           replies: latestMessage.replies.map((reply) => {
                             return {
                               id: reply._id,
@@ -234,6 +242,9 @@ export default function ProjectHome() {
                               date: reply.sentAt || reply.createdAt,
                               attachments: reply.attachments,
                               direction: reply.direction as 'inbound' | 'outbound',
+                              messageId: reply.messageId,
+                              references: reply.references,
+                              trackingData: reply.trackingData,
                             };
                           }),
                           direction: latestMessage.direction as 'inbound' | 'outbound',
