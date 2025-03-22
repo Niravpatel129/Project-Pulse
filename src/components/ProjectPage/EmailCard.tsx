@@ -17,6 +17,7 @@ import {
   Send,
   X,
 } from 'lucide-react';
+import Image from 'next/image';
 import { useState } from 'react';
 import { Descendant } from 'slate';
 import { toast } from 'sonner';
@@ -241,10 +242,12 @@ export function EmailCard({
                         >
                           {attachment.type.startsWith('image') ? (
                             <div className='w-10 h-10 flex-shrink-0 rounded overflow-hidden'>
-                              <img
+                              <Image
                                 src={attachment.url}
                                 alt={attachment.name}
                                 className='w-full h-full object-cover'
+                                width={40}
+                                height={40}
                               />
                             </div>
                           ) : (
