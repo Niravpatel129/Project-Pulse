@@ -78,7 +78,9 @@ export function useEmails(projectId: string) {
         });
       }
 
-      return newRequest.post('/emails/send', formData);
+      // Use /emails/reply endpoint if this is a reply to an existing email
+      const endpoint = data.inReplyTo ? '/emails/reply' : '/emails/send';
+      return newRequest.post(endpoint, formData);
     },
     onSuccess: () => {
       // Invalidate and refetch email history

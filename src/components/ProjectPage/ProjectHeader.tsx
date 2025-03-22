@@ -441,7 +441,7 @@ export default function ProjectHeader() {
                 {project.participants.map((participant) => {
                   return (
                     <DropdownMenu key={participant._id}>
-                      <DropdownMenuTrigger asChild>
+                      <DropdownMenuTrigger className='w-auto'>
                         <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg cursor-pointer hover:bg-gray-50'>
                           <Avatar className='h-8 w-8 border-2 border-transparent hover:border-gray-300 transition-colors bg-gray-200'>
                             {participant.avatar ? (
@@ -471,9 +471,9 @@ export default function ProjectHeader() {
                           </div>
                         </div>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align='end' className='w-48'>
+                      <DropdownMenuContent align='center' className='w-64'>
                         <DropdownMenuItem
-                          className='cursor-pointer'
+                          className='cursor-pointer '
                           onClick={() => {
                             if (participant.email) {
                               navigator.clipboard?.writeText(participant.email);
@@ -482,8 +482,8 @@ export default function ProjectHeader() {
                           }}
                         >
                           <Mail className='h-4 w-4 mr-2' />
-                          {participant.email && participant.email.length > 20
-                            ? `${participant.email.substring(0, 20)}...`
+                          {participant.email && participant.email.length > 30
+                            ? `${participant.email.substring(0, 30)}...`
                             : participant.email || 'No email'}
                         </DropdownMenuItem>
                         <DropdownMenuLabel className='px-2 py-1.5 text-xs text-gray-500'>
@@ -506,7 +506,7 @@ export default function ProjectHeader() {
                 {collaborators.map((collaborator) => {
                   return (
                     <DropdownMenu key={collaborator._id}>
-                      <DropdownMenuTrigger asChild>
+                      <DropdownMenuTrigger className='w-auto'>
                         <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg cursor-pointer hover:bg-gray-50'>
                           <Avatar className='h-8 w-8 border-2 border-indigo-200 hover:border-indigo-300 transition-colors bg-indigo-100'>
                             {collaborator.avatar ? (
@@ -543,7 +543,7 @@ export default function ProjectHeader() {
                           </div>
                         </div>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align='end' className='w-48'>
+                      <DropdownMenuContent align='center' className='w-64'>
                         <DropdownMenuItem
                           className='cursor-pointer'
                           onClick={() => {
@@ -554,8 +554,8 @@ export default function ProjectHeader() {
                           }}
                         >
                           <Mail className='h-4 w-4 mr-2' />
-                          {collaborator.email && collaborator.email.length > 20
-                            ? `${collaborator.email.substring(0, 20)}...`
+                          {collaborator.email && collaborator.email.length > 30
+                            ? `${collaborator.email.substring(0, 30)}...`
                             : collaborator.email || 'No email'}
                         </DropdownMenuItem>
                         <DropdownMenuLabel className='px-2 py-1.5 text-xs text-gray-500'>
@@ -579,7 +579,7 @@ export default function ProjectHeader() {
                   console.log('🚀 team:', team);
                   return (
                     <DropdownMenu key={team.id}>
-                      <DropdownMenuTrigger asChild>
+                      <DropdownMenuTrigger className='w-auto'>
                         <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg cursor-pointer hover:bg-gray-50'>
                           <Avatar className='h-8 w-8 border-2 border-green-200 hover:border-green-300 transition-colors bg-green-100'>
                             {team.avatar ? (
@@ -630,7 +630,7 @@ export default function ProjectHeader() {
                           </div>
                         </div>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align='end' className='w-48'>
+                      <DropdownMenuContent align='center' className='w-64'>
                         <DropdownMenuItem
                           className='cursor-pointer'
                           onClick={() => {

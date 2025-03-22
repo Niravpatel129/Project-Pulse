@@ -73,7 +73,6 @@ export function ProjectProvider({
         return response.data.data;
       } catch (err) {
         console.error('Error fetching project:', err);
-        setError('Failed to load project data');
         throw err;
       }
     },
