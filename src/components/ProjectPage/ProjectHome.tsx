@@ -103,6 +103,27 @@ interface TimelineItem {
   data: Activity | EmailThread;
 }
 
+// Helper function to recursively map email messages
+const mapEmailMessage = (message: EmailMessage) => {
+  return {
+    id: message._id,
+    from: {
+      name: message.sentBy?.name || message.from,
+      email: message.from,
+    },
+    to: message.to.join(', '),
+    subject: message.subject,
+    content: message.body,
+    date: message.sentAt || message.createdAt,
+    attachments: message.attachments,
+    direction: message.direction as 'inbound' | 'outbound',
+    messageId: message.messageId,
+    references: message.references,
+    trackingData: message.trackingData,
+    replies: message.replies.map(mapEmailMessage),
+  };
+};
+
 export default function ProjectHome() {
   const { project } = useProject();
 
@@ -229,24 +250,7 @@ export default function ProjectHome() {
                           messageId: latestMessage.messageId,
                           references: latestMessage.references,
                           trackingData: latestMessage.trackingData,
-                          replies: latestMessage.replies.map((reply) => {
-                            return {
-                              id: reply._id,
-                              from: {
-                                name: reply.from,
-                                email: reply.from,
-                              },
-                              to: reply.to.join(', '),
-                              subject: reply.subject,
-                              content: reply.body,
-                              date: reply.sentAt || reply.createdAt,
-                              attachments: reply.attachments,
-                              direction: reply.direction as 'inbound' | 'outbound',
-                              messageId: reply.messageId,
-                              references: reply.references,
-                              trackingData: reply.trackingData,
-                            };
-                          }),
+                          replies: latestMessage.replies.map(mapEmailMessage),
                           direction: latestMessage.direction as 'inbound' | 'outbound',
                         }}
                       />

@@ -143,6 +143,14 @@ export function EmailCard({
     return /<[a-z][\s\S]*>/i.test(str);
   };
 
+  // Recursive function to check if there are any replies in the chain
+  const hasReplies = (email: EmailData): boolean => {
+    if (!email.replies || email.replies.length === 0) {
+      return false;
+    }
+    return true;
+  };
+
   return (
     <div className='space-y-4'>
       <div className='space-y-0'>
@@ -198,7 +206,7 @@ export function EmailCard({
               <div className='text-sm text-gray-500'>To: {email.to}</div>
               <div className='flex items-center gap-2 mt-1'>
                 <h3 className='text-base font-medium'>{email.subject}</h3>
-                {email.messageCount && email.messageCount > 1 && (
+                {(email.messageCount && email.messageCount > 1) || hasReplies(email) ? (
                   <Button
                     variant='ghost'
                     size='sm'
@@ -213,7 +221,7 @@ export function EmailCard({
                       <ChevronDown className='h-4 w-4' />
                     )}
                   </Button>
-                )}
+                ) : null}
               </div>
               {isHTML(email.content) ? (
                 <div
@@ -296,7 +304,7 @@ export function EmailCard({
           </div>
         </Card>
 
-        {/* Nested Replies */}
+        {/* Nested Replies - Recursively render all replies */}
         {email.replies && email.replies.length > 0 && isThreadExpanded && (
           <div className='ml-8 mt-2 space-y-4'>
             {email.replies.map((reply) => {
