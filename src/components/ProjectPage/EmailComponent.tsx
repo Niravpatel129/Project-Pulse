@@ -90,40 +90,6 @@ export const EmailComponent = ({ initialSubject = '', initialMessage = '' }) => 
     }
   };
 
-  // const addRecipient = (type: 'to' | 'cc' | 'bcc') => {
-  //   console.log('Adding recipient:', {
-  //     type,
-  //     selectedParticipant,
-  //     recipients,
-  //     selectedCcParticipant,
-  //     selectedBccParticipant,
-  //   });
-
-  //   if (type === 'to' && selectedParticipant) {
-  //     console.log('Adding to recipient:', selectedParticipant);
-  //     if (!recipients.includes(selectedParticipant)) {
-  //       const newRecipients = [...recipients, selectedParticipant];
-  //       console.log('Updated recipients array:', newRecipients);
-  //       setRecipients(newRecipients);
-  //     }
-  //     setSelectedParticipant('');
-
-  //     console.log('Recipients after adding:', recipients);
-  //   } else if (type === 'cc' && selectedCcParticipant) {
-  //     console.log('Adding cc recipient:', selectedCcParticipant);
-  //     if (!cc.includes(selectedCcParticipant)) {
-  //       setCc([...cc, selectedCcParticipant]);
-  //     }
-  //     setSelectedCcParticipant('');
-  //   } else if (type === 'bcc' && selectedBccParticipant) {
-  //     console.log('Adding bcc recipient:', selectedBccParticipant);
-  //     if (!bcc.includes(selectedBccParticipant)) {
-  //       setBcc([...bcc, selectedBccParticipant]);
-  //     }
-  //     setSelectedBccParticipant('');
-  //   }
-  // };
-
   const removeRecipient = (recipient: string, type: 'to' | 'cc' | 'bcc') => {
     if (type === 'to') {
       setRecipients(
@@ -514,9 +480,17 @@ export const EmailComponent = ({ initialSubject = '', initialMessage = '' }) => 
                   </Button>
                 </div>
 
-                <Button type='button' onClick={handleSendEmail} disabled={isSending}>
+                <Button
+                  type='button'
+                  onClick={handleSendEmail}
+                  disabled={isSending}
+                  className={isSending ? 'opacity-50 cursor-not-allowed' : ''}
+                >
                   {isSending ? (
-                    <>Sending...</>
+                    <div className='flex items-center'>
+                      <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2'></div>
+                      Sending...
+                    </div>
                   ) : (
                     <>
                       <Send className='h-4 w-4 mr-2' />
