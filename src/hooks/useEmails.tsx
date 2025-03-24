@@ -34,6 +34,8 @@ interface SendEmailRequest {
     shortThreadId: string;
     shortUserId: string;
   };
+  shortEmailId?: string;
+  emailId?: string;
 }
 
 export function useEmails(projectId: string) {
@@ -71,7 +73,8 @@ export function useEmails(projectId: string) {
       if (data.inReplyTo) formData.append('inReplyTo', data.inReplyTo);
       if (data.references) formData.append('references', JSON.stringify(data.references));
       if (data.trackingData) formData.append('trackingData', JSON.stringify(data.trackingData));
-
+      if (data.shortEmailId) formData.append('shortEmailId', data.shortEmailId);
+      if (data.emailId) formData.append('emailId', data.emailId);
       if (data.attachments) {
         data.attachments.forEach((file) => {
           formData.append('attachments', file);
@@ -79,7 +82,7 @@ export function useEmails(projectId: string) {
       }
 
       // Use /emails/reply endpoint if this is a reply to an existing email
-      const endpoint = data.inReplyTo ? '/emails/reply' : '/emails/send';
+      const endpoint = data.shortEmailId ? '/emails/reply' : '/emails/send';
       return newRequest.post(endpoint, formData);
     },
     onSuccess: () => {

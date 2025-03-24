@@ -5,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useProject } from '@/contexts/ProjectContext';
 import { useEmails } from '@/hooks/useEmails';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import parse from 'html-react-parser';
 import {
   ChevronDown,
@@ -52,6 +52,7 @@ interface EmailData {
     shortThreadId: string;
     shortUserId: string;
   };
+  shortEmailId?: string;
 }
 
 interface EmailCardProps {
@@ -105,6 +106,8 @@ export function EmailCard({
         inReplyTo: email.messageId,
         references: email.references || [],
         trackingData: email.trackingData,
+        shortEmailId: email.shortEmailId,
+        emailId: email.id,
       });
 
       toast.success('Reply sent', {
@@ -152,6 +155,9 @@ export function EmailCard({
     return true;
   };
 
+  // Check if this is an outbound email (sent by the current user)
+  const isOutboundEmail = email.direction === 'outbound';
+
   return (
     <div className='space-y-4'>
       <div className='space-y-0'>
@@ -160,7 +166,7 @@ export function EmailCard({
           className={cn(
             'p-4 transition-all duration-200',
             email.messageCount && email.messageCount > 1 && '',
-            depth > 0 && 'border-l-2 border-blue-200 mt-2',
+            depth > 0 && 'border-l-2 mt-2',
           )}
           onMouseEnter={() => {
             return setIsHovering(true);
@@ -195,7 +201,7 @@ export function EmailCard({
                   <Tooltip>
                     <TooltipTrigger>
                       <span className='text-sm text-gray-500'>
-                        {format(new Date(email.date), 'MMM d, yyyy')}
+                        {formatDistanceToNow(new Date(email.date), { addSuffix: true })}
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -224,7 +230,7 @@ export function EmailCard({
                   </Button>
                 ) : null}
               </div>
-              <div className='mt-4 border-t pt-4'>
+              <div className='mt-4'>
                 {isHTML(email.content) ? (
                   <div
                     className='text-sm text-gray-600 email-content'
@@ -291,40 +297,43 @@ export function EmailCard({
                 </div>
               )}
 
-              <div className='flex justify-end mt-4 h-8'>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsReplying(!isReplying);
-                  }}
-                  className={cn(
-                    'transition-opacity duration-200',
-                    isHovering || isReplying ? 'opacity-100' : 'opacity-0',
-                    'invisible',
-                  )}
-                  aria-hidden='true'
-                >
-                  <Reply className='h-4 w-4 mr-2' />
-                  {isReplying ? 'Cancel Reply' : 'Reply'}
-                </Button>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsReplying(!isReplying);
-                  }}
-                  className={cn(
-                    'transition-opacity duration-200 absolute',
-                    isHovering || isReplying ? 'opacity-100' : 'opacity-0',
-                  )}
-                >
-                  <Reply className='h-4 w-4 mr-2' />
-                  {isReplying ? 'Cancel Reply' : 'Reply'}
-                </Button>
-              </div>
+              {/* Only show reply button for inbound emails */}
+              {!isOutboundEmail && (
+                <div className='flex justify-end mt-4 h-8'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsReplying(!isReplying);
+                    }}
+                    className={cn(
+                      'transition-opacity duration-200',
+                      isHovering || isReplying ? 'opacity-100' : 'opacity-0',
+                      'invisible',
+                    )}
+                    aria-hidden='true'
+                  >
+                    <Reply className='h-4 w-4 mr-2' />
+                    {isReplying ? 'Cancel Reply' : 'Reply'}
+                  </Button>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsReplying(!isReplying);
+                    }}
+                    className={cn(
+                      'transition-opacity duration-200 absolute',
+                      isHovering || isReplying ? 'opacity-100' : 'opacity-0',
+                    )}
+                  >
+                    <Reply className='h-4 w-4 mr-2' />
+                    {isReplying ? 'Cancel Reply' : 'Reply'}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </Card>

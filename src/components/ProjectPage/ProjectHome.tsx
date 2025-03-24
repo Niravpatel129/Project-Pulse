@@ -70,6 +70,9 @@ interface EmailMessage {
   createdAt: string;
   updatedAt: string;
   replies: EmailMessage[];
+  replyEmailId?: {
+    shortEmailId: string;
+  };
   trackingData?: {
     shortProjectId: string;
     shortThreadId: string;
@@ -105,6 +108,8 @@ interface TimelineItem {
 
 // Helper function to recursively map email messages
 const mapEmailMessage = (message: EmailMessage) => {
+  console.log('🚀 message:', message);
+
   return {
     id: message._id,
     from: {
@@ -120,6 +125,7 @@ const mapEmailMessage = (message: EmailMessage) => {
     messageId: message.messageId,
     references: message.references,
     trackingData: message.trackingData,
+    shortEmailId: message?.replyEmailId?.shortEmailId,
     replies: message.replies.map(mapEmailMessage),
   };
 };
