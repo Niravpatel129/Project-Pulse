@@ -2,9 +2,10 @@ import { newRequest } from '@/utils/newRequest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface EmailTemplate {
-  _id: string;
+  _id?: string;
   name: string;
   subject: string;
+  id?: string;
   body: string;
   createdAt: string;
   updatedAt: string;
@@ -53,6 +54,9 @@ interface EmailsHookReturn {
     emailId?: string;
   }) => Promise<any>;
   toggleReadStatus: (emailId: string) => Promise<any>;
+  isSending?: boolean;
+  saveTemplate?: (template: EmailTemplate) => Promise<any>;
+  isSavingTemplate?: boolean;
 }
 
 export function useEmails(projectId: string): EmailsHookReturn {
