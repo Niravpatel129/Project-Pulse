@@ -216,6 +216,7 @@ export function EmailCard({
                   </Tooltip>
                 </div>
               </div>
+              <div className='text-sm text-gray-500'>To: {email.to}</div>
               <div className='flex items-center gap-2 mt-1'>
                 <h3 className='text-base font-medium'>{email.subject}</h3>
                 {(email.messageCount && email.messageCount > 1) || hasReplies(email) ? (
