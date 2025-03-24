@@ -23,6 +23,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { Descendant } from 'slate';
 import { toast } from 'sonner';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { EmailEditor } from './EmailComponents/EmailEditor';
 
 interface Attachment {
@@ -201,13 +202,15 @@ export function EmailCard({
     }
   };
 
+  console.log('🚀 email:', email);
+
   return (
     <div className='relative'>
       <div className='flex gap-4'>
         {/* Timeline connector for replies */}
         {depth > 0 && (
-          <div className='relative flex-shrink-0 w-4'>
-            <div className='absolute left-2 top-0 bottom-0 w-[0px] bg-gray-200 rounded-full' />
+          <div className='relative flex-shrink-0 w-8'>
+            <div className='absolute left-4 top-0 bottom-0 w-[1px] bg-gray-200' />
             <div className='sticky top-0 flex flex-col items-center'>
               {email.decisionRequired && (
                 <div className='mt-1 w-2 h-2 rounded-full bg-yellow-400 border-2 border-white relative z-10' />
@@ -217,30 +220,24 @@ export function EmailCard({
         )}
 
         {/* Email content */}
-        <div className='flex-1 min-w-0 space-y-4'>
+        <div className='flex-1 min-w-0'>
           <Card
             className={cn(
-              'p-4 transition-all duration-200',
-              email.isRead ? 'bg-white shadow-sm' : '',
+              'border border-gray-200 bg-white shadow-sm transition-all duration-200',
+              email.isRead ? 'bg-white' : 'bg-gray-50/80',
               email.status === 'urgent' && 'border-l-4 border-red-500',
               email.status === 'blocked' && 'border-l-4 border-orange-500',
               email.status === 'resolved' && 'border-l-4 border-green-500',
             )}
-            onMouseEnter={() => {
-              return setIsHovering(true);
-            }}
-            onMouseLeave={() => {
-              return setIsHovering(false);
-            }}
           >
             {/* Header with metadata */}
-            <div className='flex items-start justify-between mb-3'>
-              <div className='flex items-center gap-2'>
+            <div className='flex items-start justify-between p-4 border-b border-gray-100'>
+              <div className='flex items-center gap-3'>
                 <Avatar className='h-8 w-8'>
                   <AvatarFallback
                     className={cn(
                       'bg-gray-100',
-                      email.direction === 'inbound' ? 'bg-blue-50 text-blue-600' : 'bg-gray-100',
+                      email.direction === 'inbound' ? 'bg-gray-100 text-gray-600' : 'bg-gray-100',
                     )}
                   >
                     {email.from?.name
@@ -256,7 +253,7 @@ export function EmailCard({
                     <span
                       className={cn(
                         'font-medium',
-                        email.isRead ? 'text-gray-900' : 'text-gray-600',
+                        email.isRead ? 'text-gray-900' : 'text-gray-900',
                       )}
                     >
                       {email.sentBy?.name || email.sentBy?.email.split('@')[0]}
@@ -269,37 +266,35 @@ export function EmailCard({
                 </div>
               </div>
               <div className='flex items-center gap-2'>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  className={cn(
-                    'h-6 px-2 transition-opacity duration-200',
-                    isHovering ? 'opacity-100' : 'opacity-0',
-                  )}
-                  onClick={handleMarkReadUnread}
-                >
-                  {email.isRead ? (
-                    <>
-                      <MailOpen className='h-4 w-4 text-blue-500' />
-                      <span className='ml-1 text-xs text-blue-500'>Mark as read</span>
-                    </>
-                  ) : (
-                    <>
-                      <Mail className='h-4 w-4 text-gray-500' />
-                      <span className='ml-1 text-xs text-gray-500'>Mark as unread</span>
-                    </>
-                  )}
-                </Button>
-                {email.messageCount && email.messageCount > 1 && (
-                  <span className='text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full'>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      className='h-8 px-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+                      onClick={handleMarkReadUnread}
+                    >
+                      {email.isRead ? (
+                        <MailOpen className='h-4 w-4' />
+                      ) : (
+                        <Mail className='h-4 w-4' />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {email.isRead ? 'Mark as unread' : 'Mark as read'}
+                  </TooltipContent>
+                </Tooltip>
+                {/* {email.messageCount && email.messageCount > 1 && (
+                  <span className='text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full'>
                     {email.messageCount} messages
                   </span>
-                )}
+                )} */}
                 {(email.messageCount && email.messageCount > 1) || hasReplies(email) ? (
                   <Button
                     variant='ghost'
                     size='sm'
-                    className='h-6 px-2'
+                    className='h-8 px-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100'
                     onClick={() => {
                       return setIsThreadExpanded(!isThreadExpanded);
                     }}
@@ -315,40 +310,42 @@ export function EmailCard({
             </div>
 
             {/* Subject and status */}
-            <div className='flex items-center gap-2 mb-3'>
-              <h3
-                className={cn(
-                  'text-base font-medium',
-                  email.isRead ? 'text-gray-900' : 'text-gray-600',
-                )}
-              >
-                {email.subject}
-              </h3>
-              {email.status && (
-                <span
+            <div className='px-4 py-3 border-b border-gray-100'>
+              <div className='flex items-center gap-2'>
+                <h3
                   className={cn(
-                    'px-2 py-0.5 text-xs font-medium rounded-full border',
-                    getStatusColor(email.status),
+                    'text-base font-medium',
+                    email.isRead ? 'text-gray-900' : 'text-gray-900',
                   )}
                 >
-                  {email.status.charAt(0).toUpperCase() + email.status.slice(1)}
-                </span>
-              )}
+                  {email.subject}
+                </h3>
+                {email.status && (
+                  <span
+                    className={cn(
+                      'px-2 py-0.5 text-xs font-medium rounded-full border',
+                      getStatusColor(email.status),
+                    )}
+                  >
+                    {email.status.charAt(0).toUpperCase() + email.status.slice(1)}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Content */}
-            <div className='mb-3'>
+            <div className='px-4 py-3'>
               {isHTML(email.content) ? (
                 <div
                   className={cn(
-                    'text-sm email-content',
-                    email.isRead ? 'text-gray-900' : 'text-gray-600',
+                    'text-sm email-content prose prose-sm max-w-none',
+                    email.isRead ? 'text-gray-900' : 'text-gray-900',
                   )}
                 >
                   {parse(email.content)}
                 </div>
               ) : (
-                <p className={cn('text-sm', email.isRead ? 'text-gray-900' : 'text-gray-600')}>
+                <p className={cn('text-sm', email.isRead ? 'text-gray-900' : 'text-gray-900')}>
                   {email.content}
                 </p>
               )}
@@ -356,7 +353,7 @@ export function EmailCard({
 
             {/* Attachments */}
             {email.attachments && email.attachments.length > 0 && (
-              <div className='mb-3'>
+              <div className='px-4 py-3 border-t border-gray-100'>
                 <div className='flex items-center gap-2 mb-2'>
                   <PaperclipIcon className='h-4 w-4 text-gray-500' />
                   <span className='text-sm font-medium'>
@@ -407,7 +404,7 @@ export function EmailCard({
 
             {/* Reply button */}
             {!isOutboundEmail && (
-              <div className='flex justify-end'>
+              <div className='px-4 py-3 border-t border-gray-100'>
                 <Button
                   variant='outline'
                   size='sm'
@@ -430,7 +427,7 @@ export function EmailCard({
           {/* Reply Editor */}
           {isReplying && (
             <div className='mt-4'>
-              <Card className='border-2 border-blue-200'>
+              <Card className='border-2 border-gray-200'>
                 <div className='p-4 space-y-4'>
                   <div className='flex justify-between items-center'>
                     <div>
@@ -472,7 +469,7 @@ export function EmailCard({
 
           {/* Nested Replies */}
           {email.replies && email.replies.length > 0 && isThreadExpanded && (
-            <div className='space-y-4'>
+            <div className='mt-4 space-y-4'>
               {email.replies.map((reply) => {
                 return <EmailCard key={reply.id} email={reply} depth={depth + 1} />;
               })}

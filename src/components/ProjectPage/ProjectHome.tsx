@@ -78,6 +78,7 @@ interface EmailMessage {
     shortThreadId: string;
     shortUserId: string;
   };
+  isRead: boolean;
 }
 
 interface EmailThread {
@@ -87,6 +88,7 @@ interface EmailThread {
   messageCount: number;
   participants: string[];
   messages: EmailMessage[];
+  isRead: boolean;
 }
 
 interface EmailsResponse {
@@ -128,6 +130,7 @@ const mapEmailMessage = (message: EmailMessage) => {
     trackingData: message.trackingData,
     shortEmailId: message?.replyEmailId?.shortEmailId,
     replies: message.replies.map(mapEmailMessage),
+    isRead: message.isRead,
   };
 };
 
@@ -273,6 +276,7 @@ export default function ProjectHome() {
                           sentBy: latestMessage.sentBy,
                           isLatestInThread: true,
                           threadId: thread.threadId,
+                          isRead: latestMessage.isRead,
                         }}
                       />
                     </motion.div>
