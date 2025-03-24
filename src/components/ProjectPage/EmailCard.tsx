@@ -46,6 +46,10 @@ interface EmailData {
   replies?: EmailData[];
   direction?: 'inbound' | 'outbound';
   messageId?: string;
+  sentBy?: {
+    name: string;
+    email: string;
+  };
   references?: string[];
   trackingData?: {
     shortProjectId: string;
@@ -194,8 +198,10 @@ export function EmailCard({
             <div className='flex-1 min-w-0'>
               <div className='flex items-center justify-between'>
                 <div className='flex items-center gap-2'>
-                  <span className='font-medium'>{email.from?.name}</span>
-                  <span className='text-gray-500'>({email.from?.email})</span>
+                  <span className='font-medium'>
+                    {email.sentBy?.name || email.sentBy?.email.split('@')[0]}
+                  </span>
+                  <span className='text-gray-500'>({email.sentBy?.email})</span>
                 </div>
                 <div className='flex items-center gap-2'>
                   <Tooltip>
@@ -210,7 +216,6 @@ export function EmailCard({
                   </Tooltip>
                 </div>
               </div>
-              <div className='text-sm text-gray-500'>To: {email.to}</div>
               <div className='flex items-center gap-2 mt-1'>
                 <h3 className='text-base font-medium'>{email.subject}</h3>
                 {(email.messageCount && email.messageCount > 1) || hasReplies(email) ? (

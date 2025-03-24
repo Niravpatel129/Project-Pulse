@@ -119,6 +119,7 @@ const mapEmailMessage = (message: EmailMessage) => {
     to: message.to.join(', '),
     subject: message.subject,
     content: message.body,
+    sentBy: message.sentBy,
     date: message.sentAt || message.createdAt,
     attachments: message.attachments,
     direction: message.direction as 'inbound' | 'outbound',
@@ -258,6 +259,7 @@ export default function ProjectHome() {
                           trackingData: latestMessage.trackingData,
                           replies: latestMessage.replies.map(mapEmailMessage),
                           direction: latestMessage.direction as 'inbound' | 'outbound',
+                          sentBy: latestMessage.sentBy,
                         }}
                       />
                     </motion.div>
