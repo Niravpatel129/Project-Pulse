@@ -165,8 +165,8 @@ export function Navigation() {
       <div className='w-full mx-auto flex items-center justify-between'>
         {/* Logo on the left */}
         <div className='flex items-center'>
-          <Link href='/' className='flex items-center gap-2 font-thin text-[#484848]'>
-            <span className='text-base'>{workspace?.name}</span>
+          <Link href='/' className='flex items-center gap-2 text-[#000000]'>
+            <span className='font-medium font-sans '>{workspace?.name}</span>
           </Link>
         </div>
 
