@@ -6,6 +6,7 @@ import { useProject } from '@/contexts/ProjectContext';
 import { useEmails } from '@/hooks/useEmails';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import parse from 'html-react-parser';
 import {
   ChevronDown,
   ChevronUp,
@@ -223,14 +224,21 @@ export function EmailCard({
                   </Button>
                 ) : null}
               </div>
-              {isHTML(email.content) ? (
-                <div
-                  className='text-sm text-gray-600 mt-4 border-t pt-4 email-content'
-                  dangerouslySetInnerHTML={{ __html: email.content }}
-                />
-              ) : (
-                <p className='text-sm text-gray-600 mt-4 border-t pt-4'>{email.content}</p>
-              )}
+              <div className='mt-4 border-t pt-4'>
+                {isHTML(email.content) ? (
+                  <div
+                    className='text-sm text-gray-600 email-content'
+                    style={{
+                      position: 'relative',
+                      zIndex: 1,
+                    }}
+                  >
+                    {parse(email.content)}
+                  </div>
+                ) : (
+                  <p className='text-sm text-gray-600'>{email.content}</p>
+                )}
+              </div>
 
               {/* Attachments section */}
               {email.attachments && email.attachments.length > 0 && (
@@ -293,6 +301,23 @@ export function EmailCard({
                   }}
                   className={cn(
                     'transition-opacity duration-200',
+                    isHovering || isReplying ? 'opacity-100' : 'opacity-0',
+                    'invisible',
+                  )}
+                  aria-hidden='true'
+                >
+                  <Reply className='h-4 w-4 mr-2' />
+                  {isReplying ? 'Cancel Reply' : 'Reply'}
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsReplying(!isReplying);
+                  }}
+                  className={cn(
+                    'transition-opacity duration-200 absolute',
                     isHovering || isReplying ? 'opacity-100' : 'opacity-0',
                   )}
                 >
