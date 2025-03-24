@@ -6,6 +6,7 @@ import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { FileText, Mail, User } from 'lucide-react';
+import { useState } from 'react';
 import { EmailCard } from './EmailCard';
 import { EmailComponent } from './EmailComponent';
 
@@ -136,6 +137,7 @@ const mapEmailMessage = (message: EmailMessage) => {
 
 export default function ProjectHome() {
   const { project } = useProject();
+  const [hasAnimated, setHasAnimated] = useState(false);
 
   const { data: emailsData, isLoading: isLoadingEmails } = useQuery({
     queryKey: ['emailHistory', project?._id],
@@ -218,10 +220,10 @@ export default function ProjectHome() {
                   return (
                     <motion.div
                       key={`activity-${activity._id}`}
-                      initial={{ opacity: 0, y: 20 }}
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.2 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.1 }}
                     >
                       {/* line across */}
                       <Card className='p-3'>
