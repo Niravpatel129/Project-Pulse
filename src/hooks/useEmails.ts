@@ -5,10 +5,10 @@ export interface EmailTemplate {
   _id?: string;
   name: string;
   subject: string;
-  id?: string;
+  id: string;
   body: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface EmailHistoryItem {
@@ -52,10 +52,13 @@ interface EmailsHookReturn {
     };
     shortEmailId?: string;
     emailId?: string;
+    cc?: string[];
+    bcc?: string[];
+    attachments?: File[];
   }) => Promise<any>;
   toggleReadStatus: (emailId: string) => Promise<any>;
   isSending?: boolean;
-  saveTemplate?: (template: EmailTemplate) => Promise<any>;
+  saveTemplate?: (template: Omit<EmailTemplate, 'id'>) => Promise<any>;
   isSavingTemplate?: boolean;
 }
 
@@ -102,6 +105,9 @@ export function useEmails(projectId: string): EmailsHookReturn {
     };
     shortEmailId?: string;
     emailId?: string;
+    cc?: string[];
+    bcc?: string[];
+    attachments?: File[];
   }) => {
     try {
       const response = await newRequest.post('/emails/send', emailData);

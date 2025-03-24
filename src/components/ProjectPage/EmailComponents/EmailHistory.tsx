@@ -1,15 +1,5 @@
 import { Card } from '@/components/ui/card';
-
-interface EmailHistoryItem {
-  id: string;
-  to: string[];
-  cc?: string[];
-  bcc?: string[];
-  subject: string;
-  body: string;
-  sentAt: string;
-  sentBy: string;
-}
+import { EmailHistoryItem } from '@/hooks/useEmails';
 
 interface EmailHistoryProps {
   history: EmailHistoryItem[];
@@ -30,13 +20,21 @@ export const EmailHistory = ({ history, isLoading, formatDate }: EmailHistoryPro
     <div className='space-y-3'>
       {history.map((email) => {
         return (
-          <Card key={email.id} className='p-4'>
-            <div className='flex justify-between items-start'>
-              <h4 className='font-medium'>{email.subject}</h4>
-              <span className='text-xs text-gray-500'>{formatDate(email.sentAt)}</span>
+          <Card key={email._id} className='p-4'>
+            <div className='flex justify-between items-start mb-2'>
+              <div>
+                <div className='font-medium'>{email.subject}</div>
+                <div className='text-sm text-gray-500'>
+                  To: {email.to.join(', ')}
+                  {email.cc?.length ? ` • CC: ${email.cc.join(', ')}` : ''}
+                  {email.bcc?.length ? ` • BCC: ${email.bcc.join(', ')}` : ''}
+                </div>
+              </div>
+              <div className='text-sm text-gray-500'>
+                {formatDate(email.sentAt)} • {email.sentBy.name}
+              </div>
             </div>
-            <div className='text-sm mt-1'>To: {email.to.join(', ')}</div>
-            <div className='text-sm text-gray-600 mt-2'>{email.body}</div>
+            <div className='text-sm text-gray-600 line-clamp-3'>{email.body}</div>
           </Card>
         );
       })}
