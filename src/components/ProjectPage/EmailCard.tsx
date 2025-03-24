@@ -206,8 +206,8 @@ export function EmailCard({
       <div className='flex gap-4'>
         {/* Timeline connector for replies */}
         {depth > 0 && (
-          <div className='relative flex-shrink-0 w-10'>
-            <div className='absolute left-5 top-0 bottom-0 w-[1px] bg-gray-200 rounded-full' />
+          <div className='relative flex-shrink-0 w-4'>
+            <div className='absolute left-2 top-0 bottom-0 w-[0px] bg-gray-200 rounded-full' />
             <div className='sticky top-0 flex flex-col items-center'>
               {email.decisionRequired && (
                 <div className='mt-1 w-2 h-2 rounded-full bg-yellow-400 border-2 border-white relative z-10' />

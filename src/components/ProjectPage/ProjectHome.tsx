@@ -220,6 +220,7 @@ export default function ProjectHome() {
                       exit={{ opacity: 0, y: -20 }}
                       transition={{ duration: 0.2 }}
                     >
+                      {/* line across */}
                       <Card className='p-3'>
                         <div className='flex items-center gap-3'>
                           <div className='flex-shrink-0 bg-gray-100 p-2 rounded-full'>
