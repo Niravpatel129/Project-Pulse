@@ -171,11 +171,18 @@ export default function ProjectHome() {
         data: activity,
       };
     }),
+    // Only include the latest message from each thread
     ...emailThreads.map((thread) => {
+      const latestMessage = thread.messages[0];
       return {
         type: 'email' as const,
         timestamp: new Date(thread.lastMessageAt).toISOString(),
-        data: thread,
+        data: {
+          ...thread,
+          // Include the full thread data but mark the latest message
+          latestMessage,
+          isLatestInThread: true,
+        },
       };
     }),
   ];
@@ -231,8 +238,11 @@ export default function ProjectHome() {
                     </motion.div>
                   );
                 } else {
-                  const thread = item.data as EmailThread;
-                  const latestMessage = thread.messages[0];
+                  const thread = item.data as EmailThread & {
+                    latestMessage: EmailMessage;
+                    isLatestInThread: boolean;
+                  };
+                  const latestMessage = thread.latestMessage;
                   return (
                     <motion.div
                       key={`email-${thread.threadId || latestMessage._id}`}
@@ -260,6 +270,8 @@ export default function ProjectHome() {
                           replies: latestMessage.replies.map(mapEmailMessage),
                           direction: latestMessage.direction as 'inbound' | 'outbound',
                           sentBy: latestMessage.sentBy,
+                          isLatestInThread: true,
+                          threadId: thread.threadId,
                         }}
                       />
                     </motion.div>

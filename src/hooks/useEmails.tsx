@@ -102,6 +102,19 @@ export function useEmails(projectId: string) {
     },
   });
 
+  // Mutation for toggling email read status
+  const toggleReadStatusMutation = useMutation({
+    mutationFn: (emailId: string) => {
+      return newRequest.patch(`/emails/${emailId}/toggle-read-status`, {
+        projectId,
+      });
+    },
+    onSuccess: () => {
+      // Invalidate and refetch email history
+      queryClient.invalidateQueries({ queryKey: ['emailHistory', projectId] });
+    },
+  });
+
   return {
     templates: templatesQuery.data || [],
     isLoadingTemplates: templatesQuery.isLoading,
@@ -118,5 +131,7 @@ export function useEmails(projectId: string) {
     saveTemplate: saveTemplateMutation.mutate,
     isSavingTemplate: saveTemplateMutation.isPending,
     saveTemplateError: saveTemplateMutation.error,
+
+    toggleReadStatus: toggleReadStatusMutation.mutate,
   };
 }
