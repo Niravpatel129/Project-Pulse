@@ -286,7 +286,6 @@ export default function ProjectsPage() {
 
     return matchesSearch && matchesStatus;
   });
-  console.log('🚀 projects:', projects);
 
   // Sort the filtered projects
   const sortedProjects = [...filteredProjects].sort((a, b) => {
@@ -309,7 +308,6 @@ export default function ProjectsPage() {
 
   // Function to handle project deletion
   const handleDeleteProject = (projectId: number) => {
-    console.log('🚀 projectId:', projectId);
     if (!projectId) {
       return null;
     }
@@ -483,7 +481,6 @@ export default function ProjectsPage() {
               </TableHeader>
               <TableBody>
                 {sortedProjects.map((project) => {
-                  console.log('🚀 project:', project);
                   return (
                     <TableRow
                       key={project._id}

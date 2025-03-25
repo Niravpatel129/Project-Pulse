@@ -107,7 +107,6 @@ export default function ProjectSchedule() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [meetingToDelete, setMeetingToDelete] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('upcoming');
-  console.log('🚀 project:', project);
 
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
     {
@@ -430,7 +429,6 @@ export default function ProjectSchedule() {
   };
 
   const filteredMeetings = () => {
-    console.log('🚀 meetings:', meetings);
     switch (activeTab) {
       case 'all':
         return meetings;

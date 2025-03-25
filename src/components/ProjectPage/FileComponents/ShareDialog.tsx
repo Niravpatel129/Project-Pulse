@@ -58,9 +58,15 @@ export function ShareDialog({
     accessType?: string;
     passwordProtected?: string;
   }>({});
+  const [portalUrl, setPortalUrl] = useState<string>('');
 
-  const currentUrl = window.location.origin;
-  const portalUrl = `${currentUrl}/portal/${projectId}`;
+  // Set portal URL after component mounts to avoid SSR issues with window
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const currentUrl = window.location.origin;
+      setPortalUrl(`${currentUrl}/portal/${projectId}`);
+    }
+  }, [projectId]);
 
   // Handle copy to clipboard
   const handleCopyUrl = async () => {
@@ -159,6 +165,13 @@ export function ShareDialog({
     }
   };
 
+  // Handle opening portal in new tab
+  const handleOpenPortal = () => {
+    if (typeof window !== 'undefined' && portalUrl) {
+      window.open(portalUrl, '_blank');
+    }
+  };
+
   return (
     <DialogContent className='sm:max-w-[500px]'>
       <DialogHeader>
@@ -189,14 +202,7 @@ export function ShareDialog({
                   <Copy className='h-4 w-4' />
                 )}
               </Button>
-              <Button
-                variant='outline'
-                size='icon'
-                onClick={() => {
-                  return window.open(portalUrl, '_blank');
-                }}
-                className='shrink-0'
-              >
+              <Button variant='outline' size='icon' onClick={handleOpenPortal} className='shrink-0'>
                 <ExternalLink className='h-4 w-4' />
               </Button>
             </div>
