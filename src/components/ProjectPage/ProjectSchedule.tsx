@@ -669,7 +669,7 @@ export default function ProjectSchedule() {
 
   return (
     <div className='space-y-4'>
-      <div className='grid grid-cols-1 lg:grid-cols-3 gap-4'>
+      <div className='flex justify-between gap-8 flex-col lg:flex-row'>
         {/* Left side - Calendar view */}
         <div className='w-full lg:w-1/3 xl:w-1/4 mb-6 lg:mb-0 min-w-[350px]'>
           <div className='w-full overflow-hidden'>
