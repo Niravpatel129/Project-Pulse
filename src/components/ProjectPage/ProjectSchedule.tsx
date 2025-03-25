@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
@@ -24,19 +23,24 @@ import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useProject } from '@/contexts/ProjectContext';
+import { regions, timezones } from '@/lib/timezones';
 import { newRequest } from '@/utils/newRequest';
-import { addHours, format, parseISO } from 'date-fns';
-import { CalendarIcon, Clock, MoreHorizontal, Plus, Users } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { CalendarIcon, Clock, Mail, MoreHorizontal, Plus, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Calendar } from '../ui/calendar';
+import ClientInviteDialog from './ClientInviteDialog';
 
 type TeamMember = {
   _id: string;
@@ -114,8 +118,7 @@ export default function ProjectSchedule() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [meetingToDelete, setMeetingToDelete] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('upcoming');
-  const [startDateRange, setStartDateRange] = useState<Date | undefined>(new Date());
-  const [endDateRange, setEndDateRange] = useState<Date | undefined>(addHours(new Date(), 30 * 24));
+  console.log('🚀 project:', project);
 
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
     {
@@ -386,15 +389,6 @@ export default function ProjectSchedule() {
     }
   };
 
-  const handleSendInvite = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Logic to send invitation email to client
-    // In a real app, this would call an API endpoint
-
-    toast.error(`Invitation sent to ${clientEmail}`);
-    setShowInviteDialog(false);
-  };
-
   const handleDeleteMeeting = async (meetingId: string) => {
     try {
       // Make API call to delete the meeting
@@ -470,6 +464,220 @@ export default function ProjectSchedule() {
     }
   };
 
+  const [availabilitySlots, setAvailabilitySlots] = useState<{
+    [key: string]: { start: string; end: string }[];
+  }>({
+    sunday: [{ start: '09:00', end: '17:00' }],
+    monday: [{ start: '09:00', end: '17:00' }],
+    tuesday: [{ start: '09:00', end: '17:00' }],
+    wednesday: [{ start: '09:00', end: '17:00' }],
+    thursday: [{ start: '09:00', end: '17:00' }],
+    friday: [{ start: '09:00', end: '17:00' }],
+    saturday: [{ start: '09:00', end: '17:00' }],
+  });
+
+  const handleAddTimeSlot = (day: string) => {
+    setAvailabilitySlots((prev) => {
+      return {
+        ...prev,
+        [day]: [...prev[day], { start: '09:00', end: '17:00' }],
+      };
+    });
+  };
+
+  const handleRemoveTimeSlot = (day: string, index: number) => {
+    setAvailabilitySlots((prev) => {
+      return {
+        ...prev,
+        [day]: prev[day].filter((_, i) => {
+          return i !== index;
+        }),
+      };
+    });
+  };
+
+  const handleTimeChange = (day: string, index: number, type: 'start' | 'end', value: string) => {
+    setAvailabilitySlots((prev) => {
+      return {
+        ...prev,
+        [day]: prev[day].map((slot, i) => {
+          return i === index ? { ...slot, [type]: value } : slot;
+        }),
+      };
+    });
+  };
+
+  const [selectedTimezone, setSelectedTimezone] = useState('America/Toronto');
+  const [availableWhenever, setAvailableWhenever] = useState(false);
+
+  // Render a day's availability slots
+  const renderDayAvailability = (day: string, label: string, defaultChecked: boolean = false) => {
+    return (
+      <div className='flex items-center justify-between py-3 hover:bg-gray-50/50 rounded-lg px-2'>
+        <div className='flex items-center space-x-4 min-w-[120px]'>
+          <Switch id={day} defaultChecked={defaultChecked} />
+          <Label htmlFor={day} className='font-medium'>
+            {label}
+          </Label>
+        </div>
+        <div className='flex-1 flex flex-col space-y-2'>
+          {availabilitySlots[day].map((slot, index) => {
+            return (
+              <div key={index} className='flex items-center justify-end space-x-2'>
+                <Select
+                  value={slot.start}
+                  onValueChange={(value) => {
+                    return handleTimeChange(day, index, 'start', value);
+                  }}
+                >
+                  <SelectTrigger className='w-[110px]'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='00:00'>12:00 AM</SelectItem>
+                    <SelectItem value='00:30'>12:30 AM</SelectItem>
+                    <SelectItem value='01:00'>1:00 AM</SelectItem>
+                    <SelectItem value='01:30'>1:30 AM</SelectItem>
+                    <SelectItem value='02:00'>2:00 AM</SelectItem>
+                    <SelectItem value='02:30'>2:30 AM</SelectItem>
+                    <SelectItem value='03:00'>3:00 AM</SelectItem>
+                    <SelectItem value='03:30'>3:30 AM</SelectItem>
+                    <SelectItem value='04:00'>4:00 AM</SelectItem>
+                    <SelectItem value='04:30'>4:30 AM</SelectItem>
+                    <SelectItem value='05:00'>5:00 AM</SelectItem>
+                    <SelectItem value='05:30'>5:30 AM</SelectItem>
+                    <SelectItem value='06:00'>6:00 AM</SelectItem>
+                    <SelectItem value='06:30'>6:30 AM</SelectItem>
+                    <SelectItem value='07:00'>7:00 AM</SelectItem>
+                    <SelectItem value='07:30'>7:30 AM</SelectItem>
+                    <SelectItem value='08:00'>8:00 AM</SelectItem>
+                    <SelectItem value='08:30'>8:30 AM</SelectItem>
+                    <SelectItem value='09:00'>9:00 AM</SelectItem>
+                    <SelectItem value='09:30'>9:30 AM</SelectItem>
+                    <SelectItem value='10:00'>10:00 AM</SelectItem>
+                    <SelectItem value='10:30'>10:30 AM</SelectItem>
+                    <SelectItem value='11:00'>11:00 AM</SelectItem>
+                    <SelectItem value='11:30'>11:30 AM</SelectItem>
+                    <SelectItem value='12:00'>12:00 PM</SelectItem>
+                    <SelectItem value='12:30'>12:30 PM</SelectItem>
+                    <SelectItem value='13:00'>1:00 PM</SelectItem>
+                    <SelectItem value='13:30'>1:30 PM</SelectItem>
+                    <SelectItem value='14:00'>2:00 PM</SelectItem>
+                    <SelectItem value='14:30'>2:30 PM</SelectItem>
+                    <SelectItem value='15:00'>3:00 PM</SelectItem>
+                    <SelectItem value='15:30'>3:30 PM</SelectItem>
+                    <SelectItem value='16:00'>4:00 PM</SelectItem>
+                    <SelectItem value='16:30'>4:30 PM</SelectItem>
+                    <SelectItem value='17:00'>5:00 PM</SelectItem>
+                    <SelectItem value='17:30'>5:30 PM</SelectItem>
+                    <SelectItem value='18:00'>6:00 PM</SelectItem>
+                    <SelectItem value='18:30'>6:30 PM</SelectItem>
+                    <SelectItem value='19:00'>7:00 PM</SelectItem>
+                    <SelectItem value='19:30'>7:30 PM</SelectItem>
+                    <SelectItem value='20:00'>8:00 PM</SelectItem>
+                    <SelectItem value='20:30'>8:30 PM</SelectItem>
+                    <SelectItem value='21:00'>9:00 PM</SelectItem>
+                    <SelectItem value='21:30'>9:30 PM</SelectItem>
+                    <SelectItem value='22:00'>10:00 PM</SelectItem>
+                    <SelectItem value='22:30'>10:30 PM</SelectItem>
+                    <SelectItem value='23:00'>11:00 PM</SelectItem>
+                    <SelectItem value='23:30'>11:30 PM</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span className='text-gray-500'>-</span>
+                <Select
+                  value={slot.end}
+                  onValueChange={(value) => {
+                    return handleTimeChange(day, index, 'end', value);
+                  }}
+                >
+                  <SelectTrigger className='w-[110px]'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='00:00'>12:00 AM</SelectItem>
+                    <SelectItem value='00:30'>12:30 AM</SelectItem>
+                    <SelectItem value='01:00'>1:00 AM</SelectItem>
+                    <SelectItem value='01:30'>1:30 AM</SelectItem>
+                    <SelectItem value='02:00'>2:00 AM</SelectItem>
+                    <SelectItem value='02:30'>2:30 AM</SelectItem>
+                    <SelectItem value='03:00'>3:00 AM</SelectItem>
+                    <SelectItem value='03:30'>3:30 AM</SelectItem>
+                    <SelectItem value='04:00'>4:00 AM</SelectItem>
+                    <SelectItem value='04:30'>4:30 AM</SelectItem>
+                    <SelectItem value='05:00'>5:00 AM</SelectItem>
+                    <SelectItem value='05:30'>5:30 AM</SelectItem>
+                    <SelectItem value='06:00'>6:00 AM</SelectItem>
+                    <SelectItem value='06:30'>6:30 AM</SelectItem>
+                    <SelectItem value='07:00'>7:00 AM</SelectItem>
+                    <SelectItem value='07:30'>7:30 AM</SelectItem>
+                    <SelectItem value='08:00'>8:00 AM</SelectItem>
+                    <SelectItem value='08:30'>8:30 AM</SelectItem>
+                    <SelectItem value='09:00'>9:00 AM</SelectItem>
+                    <SelectItem value='09:30'>9:30 AM</SelectItem>
+                    <SelectItem value='10:00'>10:00 AM</SelectItem>
+                    <SelectItem value='10:30'>10:30 AM</SelectItem>
+                    <SelectItem value='11:00'>11:00 AM</SelectItem>
+                    <SelectItem value='11:30'>11:30 AM</SelectItem>
+                    <SelectItem value='12:00'>12:00 PM</SelectItem>
+                    <SelectItem value='12:30'>12:30 PM</SelectItem>
+                    <SelectItem value='13:00'>1:00 PM</SelectItem>
+                    <SelectItem value='13:30'>1:30 PM</SelectItem>
+                    <SelectItem value='14:00'>2:00 PM</SelectItem>
+                    <SelectItem value='14:30'>2:30 PM</SelectItem>
+                    <SelectItem value='15:00'>3:00 PM</SelectItem>
+                    <SelectItem value='15:30'>3:30 PM</SelectItem>
+                    <SelectItem value='16:00'>4:00 PM</SelectItem>
+                    <SelectItem value='16:30'>4:30 PM</SelectItem>
+                    <SelectItem value='17:00'>5:00 PM</SelectItem>
+                    <SelectItem value='17:30'>5:30 PM</SelectItem>
+                    <SelectItem value='18:00'>6:00 PM</SelectItem>
+                    <SelectItem value='18:30'>6:30 PM</SelectItem>
+                    <SelectItem value='19:00'>7:00 PM</SelectItem>
+                    <SelectItem value='19:30'>7:30 PM</SelectItem>
+                    <SelectItem value='20:00'>8:00 PM</SelectItem>
+                    <SelectItem value='20:30'>8:30 PM</SelectItem>
+                    <SelectItem value='21:00'>9:00 PM</SelectItem>
+                    <SelectItem value='21:30'>9:30 PM</SelectItem>
+                    <SelectItem value='22:00'>10:00 PM</SelectItem>
+                    <SelectItem value='22:30'>10:30 PM</SelectItem>
+                    <SelectItem value='23:00'>11:00 PM</SelectItem>
+                    <SelectItem value='23:30'>11:30 PM</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className='flex items-center space-x-1'>
+                  {index === 0 ? (
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='h-8 w-8 hover:bg-gray-100'
+                      onClick={() => {
+                        return handleAddTimeSlot(day);
+                      }}
+                    >
+                      <Plus className='h-4 w-4' />
+                    </Button>
+                  ) : (
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='h-8 w-8 hover:bg-gray-100'
+                      onClick={() => {
+                        return handleRemoveTimeSlot(day, index);
+                      }}
+                    >
+                      <X className='h-4 w-4' />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className='container'>
       <div className='flex flex-col lg:flex-row gap-6'>
@@ -507,7 +715,7 @@ export default function ProjectSchedule() {
                     Create Meeting
                   </Button>
 
-                  {/* <Button
+                  <Button
                     variant='outline'
                     onClick={() => {
                       return setShowInviteDialog(true);
@@ -527,7 +735,7 @@ export default function ProjectSchedule() {
                   >
                     <Clock className='mr-2 h-4 w-4' />
                     Manage Availability
-                  </Button> */}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -742,35 +950,57 @@ export default function ProjectSchedule() {
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                   <div className='grid gap-2'>
                     <Label htmlFor='startTime'>Start Time</Label>
-                    <Select value={meetingStartTime} onValueChange={setMeetingStartTime}>
-                      <SelectTrigger id='startTime'>
-                        <SelectValue placeholder='Select time' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value='09:00'>9:00 AM</SelectItem>
-                        <SelectItem value='09:30'>9:30 AM</SelectItem>
-                        <SelectItem value='10:00'>10:00 AM</SelectItem>
-                        <SelectItem value='10:30'>10:30 AM</SelectItem>
-                        <SelectItem value='11:00'>11:00 AM</SelectItem>
-                        <SelectItem value='11:30'>11:30 AM</SelectItem>
-                        <SelectItem value='12:00'>12:00 PM</SelectItem>
-                        <SelectItem value='12:30'>12:30 PM</SelectItem>
-                        <SelectItem value='13:00'>1:00 PM</SelectItem>
-                        <SelectItem value='13:30'>1:30 PM</SelectItem>
-                        <SelectItem value='14:00'>2:00 PM</SelectItem>
-                        <SelectItem value='14:30'>2:30 PM</SelectItem>
-                        <SelectItem value='15:00'>3:00 PM</SelectItem>
-                        <SelectItem value='15:30'>3:30 PM</SelectItem>
-                        <SelectItem value='16:00'>4:00 PM</SelectItem>
-                        <SelectItem value='16:30'>4:30 PM</SelectItem>
-                        <SelectItem value='17:00'>5:00 PM</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className='relative'>
+                      <Input
+                        id='startTime'
+                        value={meetingStartTime}
+                        onChange={(e) => {
+                          return setMeetingStartTime(e.target.value);
+                        }}
+                        onFocus={(e) => {
+                          return e.target.select();
+                        }}
+                        className='w-full'
+                      />
+                      <div className='absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto'>
+                        {Array.from({ length: 48 }, (_, i) => {
+                          const hour = Math.floor(i / 2);
+                          const minute = (i % 2) * 30;
+                          const time = `${hour.toString().padStart(2, '0')}:${minute
+                            .toString()
+                            .padStart(2, '0')}`;
+                          const displayTime = new Date(`2000-01-01T${time}`).toLocaleTimeString(
+                            'en-US',
+                            {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true,
+                            },
+                          );
+                          return (
+                            <div
+                              key={time}
+                              className='px-3 py-2 cursor-pointer hover:bg-gray-100'
+                              onClick={() => {
+                                return setMeetingStartTime(time);
+                              }}
+                            >
+                              {displayTime}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
 
                   <div className='grid gap-2'>
                     <Label htmlFor='duration'>Duration</Label>
-                    <Select value={meetingDuration} onValueChange={setMeetingDuration}>
+                    <Select
+                      value={meetingDuration}
+                      onValueChange={(value) => {
+                        return setMeetingDuration(value);
+                      }}
+                    >
                       <SelectTrigger id='duration'>
                         <SelectValue placeholder='Select duration' />
                       </SelectTrigger>
@@ -789,15 +1019,7 @@ export default function ProjectSchedule() {
                   <Select
                     value={meetingType}
                     onValueChange={(value: 'inperson' | 'phone' | 'video' | 'other') => {
-                      setMeetingType(value);
-                      // Reset details when type changes but maintain controlled inputs
-                      setMeetingTypeDetails({
-                        videoType: '',
-                        videoLink: '',
-                        phoneNumber: '',
-                        location: '',
-                        otherDetails: '',
-                      });
+                      return setMeetingType(value);
                     }}
                   >
                     <SelectTrigger id='type'>
@@ -940,240 +1162,1122 @@ export default function ProjectSchedule() {
           </DialogContent>
         </Dialog>
 
-        {/* Send Client Invite Dialog */}
-        <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-          <DialogContent className='sm:max-w-[500px] max-h-[90vh] overflow-y-auto'>
-            <DialogHeader>
-              <DialogTitle>Send Client Invite</DialogTitle>
-              <DialogDescription>
-                Allow your client to book a meeting from your available times
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSendInvite}>
-              <div className='grid gap-4 py-4'>
-                <div className='grid gap-2'>
-                  <Label htmlFor='clientEmail'>Client Email</Label>
-                  <Input
-                    id='clientEmail'
-                    type='email'
-                    value={clientEmail}
-                    onChange={(e) => {
-                      return setClientEmail(e.target.value);
-                    }}
-                    placeholder='client@example.com'
-                    required
-                  />
-                </div>
-
-                <div className='grid gap-2'>
-                  <Label>Available Team Members</Label>
-                  <div className='flex flex-wrap gap-2'>
-                    {teamMembers.map((member) => {
-                      return (
-                        <div key={member._id} className='flex items-center space-x-2'>
-                          <Checkbox
-                            id={`invite-member-${member._id}`}
-                            checked={selectedTeamMembers.includes(member._id)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setSelectedTeamMembers([...selectedTeamMembers, member._id]);
-                              } else {
-                                setSelectedTeamMembers(
-                                  selectedTeamMembers.filter((id) => {
-                                    return id !== member._id;
-                                  }),
-                                );
-                              }
-                            }}
-                          />
-                          <Label htmlFor={`invite-member-${member._id}`} className='text-sm'>
-                            {member.name} ({member.role})
-                          </Label>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className='grid gap-2'>
-                  <Label>Date Range (Optional)</Label>
-                  <div className='flex flex-col sm:flex-row items-center gap-2'>
-                    <div className='w-full'>
-                      <DatePicker
-                        date={startDateRange}
-                        setDate={setStartDateRange}
-                        placeholder='Start date'
-                      />
-                    </div>
-                    <span className='hidden sm:inline'>to</span>
-                    <span className='inline sm:hidden my-1'>to</span>
-                    <div className='w-full'>
-                      <DatePicker
-                        date={endDateRange}
-                        setDate={setEndDateRange}
-                        placeholder='End date'
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className='grid gap-2'>
-                  <Label htmlFor='meetingPurpose'>Meeting Purpose</Label>
-                  <Input
-                    id='meetingPurpose'
-                    placeholder={`Discuss ${project?.name || 'project'} details`}
-                  />
-                </div>
-
-                <div className='grid gap-2'>
-                  <Label htmlFor='meetingDuration'>Meeting Duration</Label>
-                  <Select defaultValue='60'>
-                    <SelectTrigger id='meetingDuration'>
-                      <SelectValue placeholder='Select duration' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='30'>30 minutes</SelectItem>
-                      <SelectItem value='60'>1 hour</SelectItem>
-                      <SelectItem value='90'>1.5 hours</SelectItem>
-                      <SelectItem value='120'>2 hours</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter className='flex-col sm:flex-row gap-2'>
-                <Button type='submit'>Send Invite</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        {/* Replace the old Send Client Invite Dialog with the new component */}
+        <ClientInviteDialog
+          open={showInviteDialog}
+          onOpenChange={setShowInviteDialog}
+          projectName={project?.name}
+          participants={project?.participants || []}
+        />
 
         {/* Manage Availability Dialog */}
         <Dialog open={showAvailabilityDialog} onOpenChange={setShowAvailabilityDialog}>
-          <DialogContent className='sm:max-w-[600px] max-h-[90vh] overflow-y-auto'>
+          <DialogContent className='sm:max-w-[900px] max-h-[90vh] overflow-y-auto'>
             <DialogHeader>
               <DialogTitle>Manage Availability Settings</DialogTitle>
-              <DialogDescription>
-                Configure team availability and scheduling options
-              </DialogDescription>
+              <DialogDescription>Set your weekly availability for meetings</DialogDescription>
             </DialogHeader>
             <div className='py-4'>
-              <Tabs defaultValue='general'>
+              <Tabs defaultValue='availability'>
                 <TabsList className='w-full flex flex-wrap sm:flex-nowrap'>
-                  <TabsTrigger value='general' className='flex-1'>
-                    General Settings
-                  </TabsTrigger>
-                  <TabsTrigger value='team' className='flex-1'>
-                    Team Availability
+                  <TabsTrigger value='availability' className='flex-1'>
+                    Availability
                   </TabsTrigger>
                   <TabsTrigger value='sync' className='flex-1'>
                     Calendar Sync
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value='general' className='mt-4 space-y-4'>
-                  <div className='space-y-2'>
-                    <h3 className='text-sm font-medium'>Meeting Duration Options</h3>
-                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
-                      <div className='flex items-center space-x-2'>
-                        <Checkbox id='duration30' defaultChecked />
-                        <Label htmlFor='duration30'>30 minutes</Label>
+                <TabsContent value='availability' className='mt-4'>
+                  <div className='flex gap-8'>
+                    {/* Left side - Weekly schedule */}
+                    <div className='flex-1 space-y-6'>
+                      <div className='flex items-center justify-between'>
+                        <h3 className='text-sm font-medium'>Weekly Hours</h3>
                       </div>
-                      <div className='flex items-center space-x-2'>
-                        <Checkbox id='duration60' defaultChecked />
-                        <Label htmlFor='duration60'>1 hour</Label>
-                      </div>
-                      <div className='flex items-center space-x-2'>
-                        <Checkbox id='duration90' defaultChecked />
-                        <Label htmlFor='duration90'>1.5 hours</Label>
-                      </div>
-                      <div className='flex items-center space-x-2'>
-                        <Checkbox id='duration120' defaultChecked />
-                        <Label htmlFor='duration120'>2 hours</Label>
+
+                      <div className='space-y-1'>
+                        {/* Sunday */}
+                        <div className='flex items-center justify-between py-3 hover:bg-gray-50/50 rounded-lg px-2'>
+                          <div className='flex items-center space-x-4 min-w-[120px]'>
+                            <Switch id='sunday' />
+                            <Label htmlFor='sunday' className='font-medium'>
+                              Sunday
+                            </Label>
+                          </div>
+                          <div className='flex-1 flex flex-col space-y-2'>
+                            {availabilitySlots.sunday.map((slot, index) => {
+                              return (
+                                <div
+                                  key={index}
+                                  className='flex items-center justify-end space-x-2'
+                                >
+                                  <Select
+                                    value={slot.start}
+                                    onValueChange={(value) => {
+                                      return handleTimeChange('sunday', index, 'start', value);
+                                    }}
+                                  >
+                                    <SelectTrigger className='w-[110px]'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value='00:00'>12:00 AM</SelectItem>
+                                      <SelectItem value='00:30'>12:30 AM</SelectItem>
+                                      <SelectItem value='01:00'>1:00 AM</SelectItem>
+                                      <SelectItem value='01:30'>1:30 AM</SelectItem>
+                                      <SelectItem value='02:00'>2:00 AM</SelectItem>
+                                      <SelectItem value='02:30'>2:30 AM</SelectItem>
+                                      <SelectItem value='03:00'>3:00 AM</SelectItem>
+                                      <SelectItem value='03:30'>3:30 AM</SelectItem>
+                                      <SelectItem value='04:00'>4:00 AM</SelectItem>
+                                      <SelectItem value='04:30'>4:30 AM</SelectItem>
+                                      <SelectItem value='05:00'>5:00 AM</SelectItem>
+                                      <SelectItem value='05:30'>5:30 AM</SelectItem>
+                                      <SelectItem value='06:00'>6:00 AM</SelectItem>
+                                      <SelectItem value='06:30'>6:30 AM</SelectItem>
+                                      <SelectItem value='07:00'>7:00 AM</SelectItem>
+                                      <SelectItem value='07:30'>7:30 AM</SelectItem>
+                                      <SelectItem value='08:00'>8:00 AM</SelectItem>
+                                      <SelectItem value='08:30'>8:30 AM</SelectItem>
+                                      <SelectItem value='09:00'>9:00 AM</SelectItem>
+                                      <SelectItem value='09:30'>9:30 AM</SelectItem>
+                                      <SelectItem value='10:00'>10:00 AM</SelectItem>
+                                      <SelectItem value='10:30'>10:30 AM</SelectItem>
+                                      <SelectItem value='11:00'>11:00 AM</SelectItem>
+                                      <SelectItem value='11:30'>11:30 AM</SelectItem>
+                                      <SelectItem value='12:00'>12:00 PM</SelectItem>
+                                      <SelectItem value='12:30'>12:30 PM</SelectItem>
+                                      <SelectItem value='13:00'>1:00 PM</SelectItem>
+                                      <SelectItem value='13:30'>1:30 PM</SelectItem>
+                                      <SelectItem value='14:00'>2:00 PM</SelectItem>
+                                      <SelectItem value='14:30'>2:30 PM</SelectItem>
+                                      <SelectItem value='15:00'>3:00 PM</SelectItem>
+                                      <SelectItem value='15:30'>3:30 PM</SelectItem>
+                                      <SelectItem value='16:00'>4:00 PM</SelectItem>
+                                      <SelectItem value='16:30'>4:30 PM</SelectItem>
+                                      <SelectItem value='17:00'>5:00 PM</SelectItem>
+                                      <SelectItem value='17:30'>5:30 PM</SelectItem>
+                                      <SelectItem value='18:00'>6:00 PM</SelectItem>
+                                      <SelectItem value='18:30'>6:30 PM</SelectItem>
+                                      <SelectItem value='19:00'>7:00 PM</SelectItem>
+                                      <SelectItem value='19:30'>7:30 PM</SelectItem>
+                                      <SelectItem value='20:00'>8:00 PM</SelectItem>
+                                      <SelectItem value='20:30'>8:30 PM</SelectItem>
+                                      <SelectItem value='21:00'>9:00 PM</SelectItem>
+                                      <SelectItem value='21:30'>9:30 PM</SelectItem>
+                                      <SelectItem value='22:00'>10:00 PM</SelectItem>
+                                      <SelectItem value='22:30'>10:30 PM</SelectItem>
+                                      <SelectItem value='23:00'>11:00 PM</SelectItem>
+                                      <SelectItem value='23:30'>11:30 PM</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <span className='text-gray-500'>-</span>
+                                  <Select
+                                    value={slot.end}
+                                    onValueChange={(value) => {
+                                      return handleTimeChange('sunday', index, 'end', value);
+                                    }}
+                                  >
+                                    <SelectTrigger className='w-[110px]'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value='00:00'>12:00 AM</SelectItem>
+                                      <SelectItem value='00:30'>12:30 AM</SelectItem>
+                                      <SelectItem value='01:00'>1:00 AM</SelectItem>
+                                      <SelectItem value='01:30'>1:30 AM</SelectItem>
+                                      <SelectItem value='02:00'>2:00 AM</SelectItem>
+                                      <SelectItem value='02:30'>2:30 AM</SelectItem>
+                                      <SelectItem value='03:00'>3:00 AM</SelectItem>
+                                      <SelectItem value='03:30'>3:30 AM</SelectItem>
+                                      <SelectItem value='04:00'>4:00 AM</SelectItem>
+                                      <SelectItem value='04:30'>4:30 AM</SelectItem>
+                                      <SelectItem value='05:00'>5:00 AM</SelectItem>
+                                      <SelectItem value='05:30'>5:30 AM</SelectItem>
+                                      <SelectItem value='06:00'>6:00 AM</SelectItem>
+                                      <SelectItem value='06:30'>6:30 AM</SelectItem>
+                                      <SelectItem value='07:00'>7:00 AM</SelectItem>
+                                      <SelectItem value='07:30'>7:30 AM</SelectItem>
+                                      <SelectItem value='08:00'>8:00 AM</SelectItem>
+                                      <SelectItem value='08:30'>8:30 AM</SelectItem>
+                                      <SelectItem value='09:00'>9:00 AM</SelectItem>
+                                      <SelectItem value='09:30'>9:30 AM</SelectItem>
+                                      <SelectItem value='10:00'>10:00 AM</SelectItem>
+                                      <SelectItem value='10:30'>10:30 AM</SelectItem>
+                                      <SelectItem value='11:00'>11:00 AM</SelectItem>
+                                      <SelectItem value='11:30'>11:30 AM</SelectItem>
+                                      <SelectItem value='12:00'>12:00 PM</SelectItem>
+                                      <SelectItem value='12:30'>12:30 PM</SelectItem>
+                                      <SelectItem value='13:00'>1:00 PM</SelectItem>
+                                      <SelectItem value='13:30'>1:30 PM</SelectItem>
+                                      <SelectItem value='14:00'>2:00 PM</SelectItem>
+                                      <SelectItem value='14:30'>2:30 PM</SelectItem>
+                                      <SelectItem value='15:00'>3:00 PM</SelectItem>
+                                      <SelectItem value='15:30'>3:30 PM</SelectItem>
+                                      <SelectItem value='16:00'>4:00 PM</SelectItem>
+                                      <SelectItem value='16:30'>4:30 PM</SelectItem>
+                                      <SelectItem value='17:00'>5:00 PM</SelectItem>
+                                      <SelectItem value='17:30'>5:30 PM</SelectItem>
+                                      <SelectItem value='18:00'>6:00 PM</SelectItem>
+                                      <SelectItem value='18:30'>6:30 PM</SelectItem>
+                                      <SelectItem value='19:00'>7:00 PM</SelectItem>
+                                      <SelectItem value='19:30'>7:30 PM</SelectItem>
+                                      <SelectItem value='20:00'>8:00 PM</SelectItem>
+                                      <SelectItem value='20:30'>8:30 PM</SelectItem>
+                                      <SelectItem value='21:00'>9:00 PM</SelectItem>
+                                      <SelectItem value='21:30'>9:30 PM</SelectItem>
+                                      <SelectItem value='22:00'>10:00 PM</SelectItem>
+                                      <SelectItem value='22:30'>10:30 PM</SelectItem>
+                                      <SelectItem value='23:00'>11:00 PM</SelectItem>
+                                      <SelectItem value='23:30'>11:30 PM</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Monday */}
+                        <div className='flex items-center justify-between py-3 hover:bg-gray-50/50 rounded-lg px-2'>
+                          <div className='flex items-center space-x-4 min-w-[120px]'>
+                            <Switch id='monday' defaultChecked />
+                            <Label htmlFor='monday' className='font-medium'>
+                              Monday
+                            </Label>
+                          </div>
+                          <div className='flex-1 flex flex-col space-y-2'>
+                            {availabilitySlots.monday.map((slot, index) => {
+                              return (
+                                <div
+                                  key={index}
+                                  className='flex items-center justify-end space-x-2'
+                                >
+                                  <Select
+                                    value={slot.start}
+                                    onValueChange={(value) => {
+                                      return handleTimeChange('monday', index, 'start', value);
+                                    }}
+                                  >
+                                    <SelectTrigger className='w-[110px]'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value='00:00'>12:00 AM</SelectItem>
+                                      <SelectItem value='00:30'>12:30 AM</SelectItem>
+                                      <SelectItem value='01:00'>1:00 AM</SelectItem>
+                                      <SelectItem value='01:30'>1:30 AM</SelectItem>
+                                      <SelectItem value='02:00'>2:00 AM</SelectItem>
+                                      <SelectItem value='02:30'>2:30 AM</SelectItem>
+                                      <SelectItem value='03:00'>3:00 AM</SelectItem>
+                                      <SelectItem value='03:30'>3:30 AM</SelectItem>
+                                      <SelectItem value='04:00'>4:00 AM</SelectItem>
+                                      <SelectItem value='04:30'>4:30 AM</SelectItem>
+                                      <SelectItem value='05:00'>5:00 AM</SelectItem>
+                                      <SelectItem value='05:30'>5:30 AM</SelectItem>
+                                      <SelectItem value='06:00'>6:00 AM</SelectItem>
+                                      <SelectItem value='06:30'>6:30 AM</SelectItem>
+                                      <SelectItem value='07:00'>7:00 AM</SelectItem>
+                                      <SelectItem value='07:30'>7:30 AM</SelectItem>
+                                      <SelectItem value='08:00'>8:00 AM</SelectItem>
+                                      <SelectItem value='08:30'>8:30 AM</SelectItem>
+                                      <SelectItem value='09:00'>9:00 AM</SelectItem>
+                                      <SelectItem value='09:30'>9:30 AM</SelectItem>
+                                      <SelectItem value='10:00'>10:00 AM</SelectItem>
+                                      <SelectItem value='10:30'>10:30 AM</SelectItem>
+                                      <SelectItem value='11:00'>11:00 AM</SelectItem>
+                                      <SelectItem value='11:30'>11:30 AM</SelectItem>
+                                      <SelectItem value='12:00'>12:00 PM</SelectItem>
+                                      <SelectItem value='12:30'>12:30 PM</SelectItem>
+                                      <SelectItem value='13:00'>1:00 PM</SelectItem>
+                                      <SelectItem value='13:30'>1:30 PM</SelectItem>
+                                      <SelectItem value='14:00'>2:00 PM</SelectItem>
+                                      <SelectItem value='14:30'>2:30 PM</SelectItem>
+                                      <SelectItem value='15:00'>3:00 PM</SelectItem>
+                                      <SelectItem value='15:30'>3:30 PM</SelectItem>
+                                      <SelectItem value='16:00'>4:00 PM</SelectItem>
+                                      <SelectItem value='16:30'>4:30 PM</SelectItem>
+                                      <SelectItem value='17:00'>5:00 PM</SelectItem>
+                                      <SelectItem value='17:30'>5:30 PM</SelectItem>
+                                      <SelectItem value='18:00'>6:00 PM</SelectItem>
+                                      <SelectItem value='18:30'>6:30 PM</SelectItem>
+                                      <SelectItem value='19:00'>7:00 PM</SelectItem>
+                                      <SelectItem value='19:30'>7:30 PM</SelectItem>
+                                      <SelectItem value='20:00'>8:00 PM</SelectItem>
+                                      <SelectItem value='20:30'>8:30 PM</SelectItem>
+                                      <SelectItem value='21:00'>9:00 PM</SelectItem>
+                                      <SelectItem value='21:30'>9:30 PM</SelectItem>
+                                      <SelectItem value='22:00'>10:00 PM</SelectItem>
+                                      <SelectItem value='22:30'>10:30 PM</SelectItem>
+                                      <SelectItem value='23:00'>11:00 PM</SelectItem>
+                                      <SelectItem value='23:30'>11:30 PM</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <span className='text-gray-500'>-</span>
+                                  <Select
+                                    value={slot.end}
+                                    onValueChange={(value) => {
+                                      return handleTimeChange('monday', index, 'end', value);
+                                    }}
+                                  >
+                                    <SelectTrigger className='w-[110px]'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value='00:00'>12:00 AM</SelectItem>
+                                      <SelectItem value='00:30'>12:30 AM</SelectItem>
+                                      <SelectItem value='01:00'>1:00 AM</SelectItem>
+                                      <SelectItem value='01:30'>1:30 AM</SelectItem>
+                                      <SelectItem value='02:00'>2:00 AM</SelectItem>
+                                      <SelectItem value='02:30'>2:30 AM</SelectItem>
+                                      <SelectItem value='03:00'>3:00 AM</SelectItem>
+                                      <SelectItem value='03:30'>3:30 AM</SelectItem>
+                                      <SelectItem value='04:00'>4:00 AM</SelectItem>
+                                      <SelectItem value='04:30'>4:30 AM</SelectItem>
+                                      <SelectItem value='05:00'>5:00 AM</SelectItem>
+                                      <SelectItem value='05:30'>5:30 AM</SelectItem>
+                                      <SelectItem value='06:00'>6:00 AM</SelectItem>
+                                      <SelectItem value='06:30'>6:30 AM</SelectItem>
+                                      <SelectItem value='07:00'>7:00 AM</SelectItem>
+                                      <SelectItem value='07:30'>7:30 AM</SelectItem>
+                                      <SelectItem value='08:00'>8:00 AM</SelectItem>
+                                      <SelectItem value='08:30'>8:30 AM</SelectItem>
+                                      <SelectItem value='09:00'>9:00 AM</SelectItem>
+                                      <SelectItem value='09:30'>9:30 AM</SelectItem>
+                                      <SelectItem value='10:00'>10:00 AM</SelectItem>
+                                      <SelectItem value='10:30'>10:30 AM</SelectItem>
+                                      <SelectItem value='11:00'>11:00 AM</SelectItem>
+                                      <SelectItem value='11:30'>11:30 AM</SelectItem>
+                                      <SelectItem value='12:00'>12:00 PM</SelectItem>
+                                      <SelectItem value='12:30'>12:30 PM</SelectItem>
+                                      <SelectItem value='13:00'>1:00 PM</SelectItem>
+                                      <SelectItem value='13:30'>1:30 PM</SelectItem>
+                                      <SelectItem value='14:00'>2:00 PM</SelectItem>
+                                      <SelectItem value='14:30'>2:30 PM</SelectItem>
+                                      <SelectItem value='15:00'>3:00 PM</SelectItem>
+                                      <SelectItem value='15:30'>3:30 PM</SelectItem>
+                                      <SelectItem value='16:00'>4:00 PM</SelectItem>
+                                      <SelectItem value='16:30'>4:30 PM</SelectItem>
+                                      <SelectItem value='17:00'>5:00 PM</SelectItem>
+                                      <SelectItem value='17:30'>5:30 PM</SelectItem>
+                                      <SelectItem value='18:00'>6:00 PM</SelectItem>
+                                      <SelectItem value='18:30'>6:30 PM</SelectItem>
+                                      <SelectItem value='19:00'>7:00 PM</SelectItem>
+                                      <SelectItem value='19:30'>7:30 PM</SelectItem>
+                                      <SelectItem value='20:00'>8:00 PM</SelectItem>
+                                      <SelectItem value='20:30'>8:30 PM</SelectItem>
+                                      <SelectItem value='21:00'>9:00 PM</SelectItem>
+                                      <SelectItem value='21:30'>9:30 PM</SelectItem>
+                                      <SelectItem value='22:00'>10:00 PM</SelectItem>
+                                      <SelectItem value='22:30'>10:30 PM</SelectItem>
+                                      <SelectItem value='23:00'>11:00 PM</SelectItem>
+                                      <SelectItem value='23:30'>11:30 PM</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Tuesday */}
+                        <div className='flex items-center justify-between py-3 hover:bg-gray-50/50 rounded-lg px-2'>
+                          <div className='flex items-center space-x-4 min-w-[120px]'>
+                            <Switch id='tuesday' defaultChecked />
+                            <Label htmlFor='tuesday' className='font-medium'>
+                              Tuesday
+                            </Label>
+                          </div>
+                          <div className='flex-1 flex flex-col space-y-2'>
+                            {availabilitySlots.tuesday.map((slot, index) => {
+                              return (
+                                <div
+                                  key={index}
+                                  className='flex items-center justify-end space-x-2'
+                                >
+                                  <Select
+                                    value={slot.start}
+                                    onValueChange={(value) => {
+                                      return handleTimeChange('tuesday', index, 'start', value);
+                                    }}
+                                  >
+                                    <SelectTrigger className='w-[110px]'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value='00:00'>12:00 AM</SelectItem>
+                                      <SelectItem value='00:30'>12:30 AM</SelectItem>
+                                      <SelectItem value='01:00'>1:00 AM</SelectItem>
+                                      <SelectItem value='01:30'>1:30 AM</SelectItem>
+                                      <SelectItem value='02:00'>2:00 AM</SelectItem>
+                                      <SelectItem value='02:30'>2:30 AM</SelectItem>
+                                      <SelectItem value='03:00'>3:00 AM</SelectItem>
+                                      <SelectItem value='03:30'>3:30 AM</SelectItem>
+                                      <SelectItem value='04:00'>4:00 AM</SelectItem>
+                                      <SelectItem value='04:30'>4:30 AM</SelectItem>
+                                      <SelectItem value='05:00'>5:00 AM</SelectItem>
+                                      <SelectItem value='05:30'>5:30 AM</SelectItem>
+                                      <SelectItem value='06:00'>6:00 AM</SelectItem>
+                                      <SelectItem value='06:30'>6:30 AM</SelectItem>
+                                      <SelectItem value='07:00'>7:00 AM</SelectItem>
+                                      <SelectItem value='07:30'>7:30 AM</SelectItem>
+                                      <SelectItem value='08:00'>8:00 AM</SelectItem>
+                                      <SelectItem value='08:30'>8:30 AM</SelectItem>
+                                      <SelectItem value='09:00'>9:00 AM</SelectItem>
+                                      <SelectItem value='09:30'>9:30 AM</SelectItem>
+                                      <SelectItem value='10:00'>10:00 AM</SelectItem>
+                                      <SelectItem value='10:30'>10:30 AM</SelectItem>
+                                      <SelectItem value='11:00'>11:00 AM</SelectItem>
+                                      <SelectItem value='11:30'>11:30 AM</SelectItem>
+                                      <SelectItem value='12:00'>12:00 PM</SelectItem>
+                                      <SelectItem value='12:30'>12:30 PM</SelectItem>
+                                      <SelectItem value='13:00'>1:00 PM</SelectItem>
+                                      <SelectItem value='13:30'>1:30 PM</SelectItem>
+                                      <SelectItem value='14:00'>2:00 PM</SelectItem>
+                                      <SelectItem value='14:30'>2:30 PM</SelectItem>
+                                      <SelectItem value='15:00'>3:00 PM</SelectItem>
+                                      <SelectItem value='15:30'>3:30 PM</SelectItem>
+                                      <SelectItem value='16:00'>4:00 PM</SelectItem>
+                                      <SelectItem value='16:30'>4:30 PM</SelectItem>
+                                      <SelectItem value='17:00'>5:00 PM</SelectItem>
+                                      <SelectItem value='17:30'>5:30 PM</SelectItem>
+                                      <SelectItem value='18:00'>6:00 PM</SelectItem>
+                                      <SelectItem value='18:30'>6:30 PM</SelectItem>
+                                      <SelectItem value='19:00'>7:00 PM</SelectItem>
+                                      <SelectItem value='19:30'>7:30 PM</SelectItem>
+                                      <SelectItem value='20:00'>8:00 PM</SelectItem>
+                                      <SelectItem value='20:30'>8:30 PM</SelectItem>
+                                      <SelectItem value='21:00'>9:00 PM</SelectItem>
+                                      <SelectItem value='21:30'>9:30 PM</SelectItem>
+                                      <SelectItem value='22:00'>10:00 PM</SelectItem>
+                                      <SelectItem value='22:30'>10:30 PM</SelectItem>
+                                      <SelectItem value='23:00'>11:00 PM</SelectItem>
+                                      <SelectItem value='23:30'>11:30 PM</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <span className='text-gray-500'>-</span>
+                                  <Select
+                                    value={slot.end}
+                                    onValueChange={(value) => {
+                                      return handleTimeChange('tuesday', index, 'end', value);
+                                    }}
+                                  >
+                                    <SelectTrigger className='w-[110px]'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value='00:00'>12:00 AM</SelectItem>
+                                      <SelectItem value='00:30'>12:30 AM</SelectItem>
+                                      <SelectItem value='01:00'>1:00 AM</SelectItem>
+                                      <SelectItem value='01:30'>1:30 AM</SelectItem>
+                                      <SelectItem value='02:00'>2:00 AM</SelectItem>
+                                      <SelectItem value='02:30'>2:30 AM</SelectItem>
+                                      <SelectItem value='03:00'>3:00 AM</SelectItem>
+                                      <SelectItem value='03:30'>3:30 AM</SelectItem>
+                                      <SelectItem value='04:00'>4:00 AM</SelectItem>
+                                      <SelectItem value='04:30'>4:30 AM</SelectItem>
+                                      <SelectItem value='05:00'>5:00 AM</SelectItem>
+                                      <SelectItem value='05:30'>5:30 AM</SelectItem>
+                                      <SelectItem value='06:00'>6:00 AM</SelectItem>
+                                      <SelectItem value='06:30'>6:30 AM</SelectItem>
+                                      <SelectItem value='07:00'>7:00 AM</SelectItem>
+                                      <SelectItem value='07:30'>7:30 AM</SelectItem>
+                                      <SelectItem value='08:00'>8:00 AM</SelectItem>
+                                      <SelectItem value='08:30'>8:30 AM</SelectItem>
+                                      <SelectItem value='09:00'>9:00 AM</SelectItem>
+                                      <SelectItem value='09:30'>9:30 AM</SelectItem>
+                                      <SelectItem value='10:00'>10:00 AM</SelectItem>
+                                      <SelectItem value='10:30'>10:30 AM</SelectItem>
+                                      <SelectItem value='11:00'>11:00 AM</SelectItem>
+                                      <SelectItem value='11:30'>11:30 AM</SelectItem>
+                                      <SelectItem value='12:00'>12:00 PM</SelectItem>
+                                      <SelectItem value='12:30'>12:30 PM</SelectItem>
+                                      <SelectItem value='13:00'>1:00 PM</SelectItem>
+                                      <SelectItem value='13:30'>1:30 PM</SelectItem>
+                                      <SelectItem value='14:00'>2:00 PM</SelectItem>
+                                      <SelectItem value='14:30'>2:30 PM</SelectItem>
+                                      <SelectItem value='15:00'>3:00 PM</SelectItem>
+                                      <SelectItem value='15:30'>3:30 PM</SelectItem>
+                                      <SelectItem value='16:00'>4:00 PM</SelectItem>
+                                      <SelectItem value='16:30'>4:30 PM</SelectItem>
+                                      <SelectItem value='17:00'>5:00 PM</SelectItem>
+                                      <SelectItem value='17:30'>5:30 PM</SelectItem>
+                                      <SelectItem value='18:00'>6:00 PM</SelectItem>
+                                      <SelectItem value='18:30'>6:30 PM</SelectItem>
+                                      <SelectItem value='19:00'>7:00 PM</SelectItem>
+                                      <SelectItem value='19:30'>7:30 PM</SelectItem>
+                                      <SelectItem value='20:00'>8:00 PM</SelectItem>
+                                      <SelectItem value='20:30'>8:30 PM</SelectItem>
+                                      <SelectItem value='21:00'>9:00 PM</SelectItem>
+                                      <SelectItem value='21:30'>9:30 PM</SelectItem>
+                                      <SelectItem value='22:00'>10:00 PM</SelectItem>
+                                      <SelectItem value='22:30'>10:30 PM</SelectItem>
+                                      <SelectItem value='23:00'>11:00 PM</SelectItem>
+                                      <SelectItem value='23:30'>11:30 PM</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Wednesday */}
+                        <div className='flex items-center justify-between py-3 hover:bg-gray-50/50 rounded-lg px-2'>
+                          <div className='flex items-center space-x-4 min-w-[120px]'>
+                            <Switch id='wednesday' defaultChecked />
+                            <Label htmlFor='wednesday' className='font-medium'>
+                              Wednesday
+                            </Label>
+                          </div>
+                          <div className='flex-1 flex flex-col space-y-2'>
+                            {availabilitySlots.wednesday.map((slot, index) => {
+                              return (
+                                <div
+                                  key={index}
+                                  className='flex items-center justify-end space-x-2'
+                                >
+                                  <Select
+                                    value={slot.start}
+                                    onValueChange={(value) => {
+                                      return handleTimeChange('wednesday', index, 'start', value);
+                                    }}
+                                  >
+                                    <SelectTrigger className='w-[110px]'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value='00:00'>12:00 AM</SelectItem>
+                                      <SelectItem value='00:30'>12:30 AM</SelectItem>
+                                      <SelectItem value='01:00'>1:00 AM</SelectItem>
+                                      <SelectItem value='01:30'>1:30 AM</SelectItem>
+                                      <SelectItem value='02:00'>2:00 AM</SelectItem>
+                                      <SelectItem value='02:30'>2:30 AM</SelectItem>
+                                      <SelectItem value='03:00'>3:00 AM</SelectItem>
+                                      <SelectItem value='03:30'>3:30 AM</SelectItem>
+                                      <SelectItem value='04:00'>4:00 AM</SelectItem>
+                                      <SelectItem value='04:30'>4:30 AM</SelectItem>
+                                      <SelectItem value='05:00'>5:00 AM</SelectItem>
+                                      <SelectItem value='05:30'>5:30 AM</SelectItem>
+                                      <SelectItem value='06:00'>6:00 AM</SelectItem>
+                                      <SelectItem value='06:30'>6:30 AM</SelectItem>
+                                      <SelectItem value='07:00'>7:00 AM</SelectItem>
+                                      <SelectItem value='07:30'>7:30 AM</SelectItem>
+                                      <SelectItem value='08:00'>8:00 AM</SelectItem>
+                                      <SelectItem value='08:30'>8:30 AM</SelectItem>
+                                      <SelectItem value='09:00'>9:00 AM</SelectItem>
+                                      <SelectItem value='09:30'>9:30 AM</SelectItem>
+                                      <SelectItem value='10:00'>10:00 AM</SelectItem>
+                                      <SelectItem value='10:30'>10:30 AM</SelectItem>
+                                      <SelectItem value='11:00'>11:00 AM</SelectItem>
+                                      <SelectItem value='11:30'>11:30 AM</SelectItem>
+                                      <SelectItem value='12:00'>12:00 PM</SelectItem>
+                                      <SelectItem value='12:30'>12:30 PM</SelectItem>
+                                      <SelectItem value='13:00'>1:00 PM</SelectItem>
+                                      <SelectItem value='13:30'>1:30 PM</SelectItem>
+                                      <SelectItem value='14:00'>2:00 PM</SelectItem>
+                                      <SelectItem value='14:30'>2:30 PM</SelectItem>
+                                      <SelectItem value='15:00'>3:00 PM</SelectItem>
+                                      <SelectItem value='15:30'>3:30 PM</SelectItem>
+                                      <SelectItem value='16:00'>4:00 PM</SelectItem>
+                                      <SelectItem value='16:30'>4:30 PM</SelectItem>
+                                      <SelectItem value='17:00'>5:00 PM</SelectItem>
+                                      <SelectItem value='17:30'>5:30 PM</SelectItem>
+                                      <SelectItem value='18:00'>6:00 PM</SelectItem>
+                                      <SelectItem value='18:30'>6:30 PM</SelectItem>
+                                      <SelectItem value='19:00'>7:00 PM</SelectItem>
+                                      <SelectItem value='19:30'>7:30 PM</SelectItem>
+                                      <SelectItem value='20:00'>8:00 PM</SelectItem>
+                                      <SelectItem value='20:30'>8:30 PM</SelectItem>
+                                      <SelectItem value='21:00'>9:00 PM</SelectItem>
+                                      <SelectItem value='21:30'>9:30 PM</SelectItem>
+                                      <SelectItem value='22:00'>10:00 PM</SelectItem>
+                                      <SelectItem value='22:30'>10:30 PM</SelectItem>
+                                      <SelectItem value='23:00'>11:00 PM</SelectItem>
+                                      <SelectItem value='23:30'>11:30 PM</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <span className='text-gray-500'>-</span>
+                                  <Select
+                                    value={slot.end}
+                                    onValueChange={(value) => {
+                                      return handleTimeChange('wednesday', index, 'end', value);
+                                    }}
+                                  >
+                                    <SelectTrigger className='w-[110px]'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value='00:00'>12:00 AM</SelectItem>
+                                      <SelectItem value='00:30'>12:30 AM</SelectItem>
+                                      <SelectItem value='01:00'>1:00 AM</SelectItem>
+                                      <SelectItem value='01:30'>1:30 AM</SelectItem>
+                                      <SelectItem value='02:00'>2:00 AM</SelectItem>
+                                      <SelectItem value='02:30'>2:30 AM</SelectItem>
+                                      <SelectItem value='03:00'>3:00 AM</SelectItem>
+                                      <SelectItem value='03:30'>3:30 AM</SelectItem>
+                                      <SelectItem value='04:00'>4:00 AM</SelectItem>
+                                      <SelectItem value='04:30'>4:30 AM</SelectItem>
+                                      <SelectItem value='05:00'>5:00 AM</SelectItem>
+                                      <SelectItem value='05:30'>5:30 AM</SelectItem>
+                                      <SelectItem value='06:00'>6:00 AM</SelectItem>
+                                      <SelectItem value='06:30'>6:30 AM</SelectItem>
+                                      <SelectItem value='07:00'>7:00 AM</SelectItem>
+                                      <SelectItem value='07:30'>7:30 AM</SelectItem>
+                                      <SelectItem value='08:00'>8:00 AM</SelectItem>
+                                      <SelectItem value='08:30'>8:30 AM</SelectItem>
+                                      <SelectItem value='09:00'>9:00 AM</SelectItem>
+                                      <SelectItem value='09:30'>9:30 AM</SelectItem>
+                                      <SelectItem value='10:00'>10:00 AM</SelectItem>
+                                      <SelectItem value='10:30'>10:30 AM</SelectItem>
+                                      <SelectItem value='11:00'>11:00 AM</SelectItem>
+                                      <SelectItem value='11:30'>11:30 AM</SelectItem>
+                                      <SelectItem value='12:00'>12:00 PM</SelectItem>
+                                      <SelectItem value='12:30'>12:30 PM</SelectItem>
+                                      <SelectItem value='13:00'>1:00 PM</SelectItem>
+                                      <SelectItem value='13:30'>1:30 PM</SelectItem>
+                                      <SelectItem value='14:00'>2:00 PM</SelectItem>
+                                      <SelectItem value='14:30'>2:30 PM</SelectItem>
+                                      <SelectItem value='15:00'>3:00 PM</SelectItem>
+                                      <SelectItem value='15:30'>3:30 PM</SelectItem>
+                                      <SelectItem value='16:00'>4:00 PM</SelectItem>
+                                      <SelectItem value='16:30'>4:30 PM</SelectItem>
+                                      <SelectItem value='17:00'>5:00 PM</SelectItem>
+                                      <SelectItem value='17:30'>5:30 PM</SelectItem>
+                                      <SelectItem value='18:00'>6:00 PM</SelectItem>
+                                      <SelectItem value='18:30'>6:30 PM</SelectItem>
+                                      <SelectItem value='19:00'>7:00 PM</SelectItem>
+                                      <SelectItem value='19:30'>7:30 PM</SelectItem>
+                                      <SelectItem value='20:00'>8:00 PM</SelectItem>
+                                      <SelectItem value='20:30'>8:30 PM</SelectItem>
+                                      <SelectItem value='21:00'>9:00 PM</SelectItem>
+                                      <SelectItem value='21:30'>9:30 PM</SelectItem>
+                                      <SelectItem value='22:00'>10:00 PM</SelectItem>
+                                      <SelectItem value='22:30'>10:30 PM</SelectItem>
+                                      <SelectItem value='23:00'>11:00 PM</SelectItem>
+                                      <SelectItem value='23:30'>11:30 PM</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Thursday */}
+                        <div className='flex items-center justify-between py-3 hover:bg-gray-50/50 rounded-lg px-2'>
+                          <div className='flex items-center space-x-4 min-w-[120px]'>
+                            <Switch id='thursday' defaultChecked />
+                            <Label htmlFor='thursday' className='font-medium'>
+                              Thursday
+                            </Label>
+                          </div>
+                          <div className='flex-1 flex flex-col space-y-2'>
+                            {availabilitySlots.thursday.map((slot, index) => {
+                              return (
+                                <div
+                                  key={index}
+                                  className='flex items-center justify-end space-x-2'
+                                >
+                                  <Select
+                                    value={slot.start}
+                                    onValueChange={(value) => {
+                                      return handleTimeChange('thursday', index, 'start', value);
+                                    }}
+                                  >
+                                    <SelectTrigger className='w-[110px]'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value='00:00'>12:00 AM</SelectItem>
+                                      <SelectItem value='00:30'>12:30 AM</SelectItem>
+                                      <SelectItem value='01:00'>1:00 AM</SelectItem>
+                                      <SelectItem value='01:30'>1:30 AM</SelectItem>
+                                      <SelectItem value='02:00'>2:00 AM</SelectItem>
+                                      <SelectItem value='02:30'>2:30 AM</SelectItem>
+                                      <SelectItem value='03:00'>3:00 AM</SelectItem>
+                                      <SelectItem value='03:30'>3:30 AM</SelectItem>
+                                      <SelectItem value='04:00'>4:00 AM</SelectItem>
+                                      <SelectItem value='04:30'>4:30 AM</SelectItem>
+                                      <SelectItem value='05:00'>5:00 AM</SelectItem>
+                                      <SelectItem value='05:30'>5:30 AM</SelectItem>
+                                      <SelectItem value='06:00'>6:00 AM</SelectItem>
+                                      <SelectItem value='06:30'>6:30 AM</SelectItem>
+                                      <SelectItem value='07:00'>7:00 AM</SelectItem>
+                                      <SelectItem value='07:30'>7:30 AM</SelectItem>
+                                      <SelectItem value='08:00'>8:00 AM</SelectItem>
+                                      <SelectItem value='08:30'>8:30 AM</SelectItem>
+                                      <SelectItem value='09:00'>9:00 AM</SelectItem>
+                                      <SelectItem value='09:30'>9:30 AM</SelectItem>
+                                      <SelectItem value='10:00'>10:00 AM</SelectItem>
+                                      <SelectItem value='10:30'>10:30 AM</SelectItem>
+                                      <SelectItem value='11:00'>11:00 AM</SelectItem>
+                                      <SelectItem value='11:30'>11:30 AM</SelectItem>
+                                      <SelectItem value='12:00'>12:00 PM</SelectItem>
+                                      <SelectItem value='12:30'>12:30 PM</SelectItem>
+                                      <SelectItem value='13:00'>1:00 PM</SelectItem>
+                                      <SelectItem value='13:30'>1:30 PM</SelectItem>
+                                      <SelectItem value='14:00'>2:00 PM</SelectItem>
+                                      <SelectItem value='14:30'>2:30 PM</SelectItem>
+                                      <SelectItem value='15:00'>3:00 PM</SelectItem>
+                                      <SelectItem value='15:30'>3:30 PM</SelectItem>
+                                      <SelectItem value='16:00'>4:00 PM</SelectItem>
+                                      <SelectItem value='16:30'>4:30 PM</SelectItem>
+                                      <SelectItem value='17:00'>5:00 PM</SelectItem>
+                                      <SelectItem value='17:30'>5:30 PM</SelectItem>
+                                      <SelectItem value='18:00'>6:00 PM</SelectItem>
+                                      <SelectItem value='18:30'>6:30 PM</SelectItem>
+                                      <SelectItem value='19:00'>7:00 PM</SelectItem>
+                                      <SelectItem value='19:30'>7:30 PM</SelectItem>
+                                      <SelectItem value='20:00'>8:00 PM</SelectItem>
+                                      <SelectItem value='20:30'>8:30 PM</SelectItem>
+                                      <SelectItem value='21:00'>9:00 PM</SelectItem>
+                                      <SelectItem value='21:30'>9:30 PM</SelectItem>
+                                      <SelectItem value='22:00'>10:00 PM</SelectItem>
+                                      <SelectItem value='22:30'>10:30 PM</SelectItem>
+                                      <SelectItem value='23:00'>11:00 PM</SelectItem>
+                                      <SelectItem value='23:30'>11:30 PM</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <span className='text-gray-500'>-</span>
+                                  <Select
+                                    value={slot.end}
+                                    onValueChange={(value) => {
+                                      return handleTimeChange('thursday', index, 'end', value);
+                                    }}
+                                  >
+                                    <SelectTrigger className='w-[110px]'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value='00:00'>12:00 AM</SelectItem>
+                                      <SelectItem value='00:30'>12:30 AM</SelectItem>
+                                      <SelectItem value='01:00'>1:00 AM</SelectItem>
+                                      <SelectItem value='01:30'>1:30 AM</SelectItem>
+                                      <SelectItem value='02:00'>2:00 AM</SelectItem>
+                                      <SelectItem value='02:30'>2:30 AM</SelectItem>
+                                      <SelectItem value='03:00'>3:00 AM</SelectItem>
+                                      <SelectItem value='03:30'>3:30 AM</SelectItem>
+                                      <SelectItem value='04:00'>4:00 AM</SelectItem>
+                                      <SelectItem value='04:30'>4:30 AM</SelectItem>
+                                      <SelectItem value='05:00'>5:00 AM</SelectItem>
+                                      <SelectItem value='05:30'>5:30 AM</SelectItem>
+                                      <SelectItem value='06:00'>6:00 AM</SelectItem>
+                                      <SelectItem value='06:30'>6:30 AM</SelectItem>
+                                      <SelectItem value='07:00'>7:00 AM</SelectItem>
+                                      <SelectItem value='07:30'>7:30 AM</SelectItem>
+                                      <SelectItem value='08:00'>8:00 AM</SelectItem>
+                                      <SelectItem value='08:30'>8:30 AM</SelectItem>
+                                      <SelectItem value='09:00'>9:00 AM</SelectItem>
+                                      <SelectItem value='09:30'>9:30 AM</SelectItem>
+                                      <SelectItem value='10:00'>10:00 AM</SelectItem>
+                                      <SelectItem value='10:30'>10:30 AM</SelectItem>
+                                      <SelectItem value='11:00'>11:00 AM</SelectItem>
+                                      <SelectItem value='11:30'>11:30 AM</SelectItem>
+                                      <SelectItem value='12:00'>12:00 PM</SelectItem>
+                                      <SelectItem value='12:30'>12:30 PM</SelectItem>
+                                      <SelectItem value='13:00'>1:00 PM</SelectItem>
+                                      <SelectItem value='13:30'>1:30 PM</SelectItem>
+                                      <SelectItem value='14:00'>2:00 PM</SelectItem>
+                                      <SelectItem value='14:30'>2:30 PM</SelectItem>
+                                      <SelectItem value='15:00'>3:00 PM</SelectItem>
+                                      <SelectItem value='15:30'>3:30 PM</SelectItem>
+                                      <SelectItem value='16:00'>4:00 PM</SelectItem>
+                                      <SelectItem value='16:30'>4:30 PM</SelectItem>
+                                      <SelectItem value='17:00'>5:00 PM</SelectItem>
+                                      <SelectItem value='17:30'>5:30 PM</SelectItem>
+                                      <SelectItem value='18:00'>6:00 PM</SelectItem>
+                                      <SelectItem value='18:30'>6:30 PM</SelectItem>
+                                      <SelectItem value='19:00'>7:00 PM</SelectItem>
+                                      <SelectItem value='19:30'>7:30 PM</SelectItem>
+                                      <SelectItem value='20:00'>8:00 PM</SelectItem>
+                                      <SelectItem value='20:30'>8:30 PM</SelectItem>
+                                      <SelectItem value='21:00'>9:00 PM</SelectItem>
+                                      <SelectItem value='21:30'>9:30 PM</SelectItem>
+                                      <SelectItem value='22:00'>10:00 PM</SelectItem>
+                                      <SelectItem value='22:30'>10:30 PM</SelectItem>
+                                      <SelectItem value='23:00'>11:00 PM</SelectItem>
+                                      <SelectItem value='23:30'>11:30 PM</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Friday */}
+                        <div className='flex items-center justify-between py-3 hover:bg-gray-50/50 rounded-lg px-2'>
+                          <div className='flex items-center space-x-4 min-w-[120px]'>
+                            <Switch id='friday' defaultChecked />
+                            <Label htmlFor='friday' className='font-medium'>
+                              Friday
+                            </Label>
+                          </div>
+                          <div className='flex-1 flex flex-col space-y-2'>
+                            {availabilitySlots.friday.map((slot, index) => {
+                              return (
+                                <div
+                                  key={index}
+                                  className='flex items-center justify-end space-x-2'
+                                >
+                                  <Select
+                                    value={slot.start}
+                                    onValueChange={(value) => {
+                                      return handleTimeChange('friday', index, 'start', value);
+                                    }}
+                                  >
+                                    <SelectTrigger className='w-[110px]'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value='00:00'>12:00 AM</SelectItem>
+                                      <SelectItem value='00:30'>12:30 AM</SelectItem>
+                                      <SelectItem value='01:00'>1:00 AM</SelectItem>
+                                      <SelectItem value='01:30'>1:30 AM</SelectItem>
+                                      <SelectItem value='02:00'>2:00 AM</SelectItem>
+                                      <SelectItem value='02:30'>2:30 AM</SelectItem>
+                                      <SelectItem value='03:00'>3:00 AM</SelectItem>
+                                      <SelectItem value='03:30'>3:30 AM</SelectItem>
+                                      <SelectItem value='04:00'>4:00 AM</SelectItem>
+                                      <SelectItem value='04:30'>4:30 AM</SelectItem>
+                                      <SelectItem value='05:00'>5:00 AM</SelectItem>
+                                      <SelectItem value='05:30'>5:30 AM</SelectItem>
+                                      <SelectItem value='06:00'>6:00 AM</SelectItem>
+                                      <SelectItem value='06:30'>6:30 AM</SelectItem>
+                                      <SelectItem value='07:00'>7:00 AM</SelectItem>
+                                      <SelectItem value='07:30'>7:30 AM</SelectItem>
+                                      <SelectItem value='08:00'>8:00 AM</SelectItem>
+                                      <SelectItem value='08:30'>8:30 AM</SelectItem>
+                                      <SelectItem value='09:00'>9:00 AM</SelectItem>
+                                      <SelectItem value='09:30'>9:30 AM</SelectItem>
+                                      <SelectItem value='10:00'>10:00 AM</SelectItem>
+                                      <SelectItem value='10:30'>10:30 AM</SelectItem>
+                                      <SelectItem value='11:00'>11:00 AM</SelectItem>
+                                      <SelectItem value='11:30'>11:30 AM</SelectItem>
+                                      <SelectItem value='12:00'>12:00 PM</SelectItem>
+                                      <SelectItem value='12:30'>12:30 PM</SelectItem>
+                                      <SelectItem value='13:00'>1:00 PM</SelectItem>
+                                      <SelectItem value='13:30'>1:30 PM</SelectItem>
+                                      <SelectItem value='14:00'>2:00 PM</SelectItem>
+                                      <SelectItem value='14:30'>2:30 PM</SelectItem>
+                                      <SelectItem value='15:00'>3:00 PM</SelectItem>
+                                      <SelectItem value='15:30'>3:30 PM</SelectItem>
+                                      <SelectItem value='16:00'>4:00 PM</SelectItem>
+                                      <SelectItem value='16:30'>4:30 PM</SelectItem>
+                                      <SelectItem value='17:00'>5:00 PM</SelectItem>
+                                      <SelectItem value='17:30'>5:30 PM</SelectItem>
+                                      <SelectItem value='18:00'>6:00 PM</SelectItem>
+                                      <SelectItem value='18:30'>6:30 PM</SelectItem>
+                                      <SelectItem value='19:00'>7:00 PM</SelectItem>
+                                      <SelectItem value='19:30'>7:30 PM</SelectItem>
+                                      <SelectItem value='20:00'>8:00 PM</SelectItem>
+                                      <SelectItem value='20:30'>8:30 PM</SelectItem>
+                                      <SelectItem value='21:00'>9:00 PM</SelectItem>
+                                      <SelectItem value='21:30'>9:30 PM</SelectItem>
+                                      <SelectItem value='22:00'>10:00 PM</SelectItem>
+                                      <SelectItem value='22:30'>10:30 PM</SelectItem>
+                                      <SelectItem value='23:00'>11:00 PM</SelectItem>
+                                      <SelectItem value='23:30'>11:30 PM</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <span className='text-gray-500'>-</span>
+                                  <Select
+                                    value={slot.end}
+                                    onValueChange={(value) => {
+                                      return handleTimeChange('friday', index, 'end', value);
+                                    }}
+                                  >
+                                    <SelectTrigger className='w-[110px]'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value='00:00'>12:00 AM</SelectItem>
+                                      <SelectItem value='00:30'>12:30 AM</SelectItem>
+                                      <SelectItem value='01:00'>1:00 AM</SelectItem>
+                                      <SelectItem value='01:30'>1:30 AM</SelectItem>
+                                      <SelectItem value='02:00'>2:00 AM</SelectItem>
+                                      <SelectItem value='02:30'>2:30 AM</SelectItem>
+                                      <SelectItem value='03:00'>3:00 AM</SelectItem>
+                                      <SelectItem value='03:30'>3:30 AM</SelectItem>
+                                      <SelectItem value='04:00'>4:00 AM</SelectItem>
+                                      <SelectItem value='04:30'>4:30 AM</SelectItem>
+                                      <SelectItem value='05:00'>5:00 AM</SelectItem>
+                                      <SelectItem value='05:30'>5:30 AM</SelectItem>
+                                      <SelectItem value='06:00'>6:00 AM</SelectItem>
+                                      <SelectItem value='06:30'>6:30 AM</SelectItem>
+                                      <SelectItem value='07:00'>7:00 AM</SelectItem>
+                                      <SelectItem value='07:30'>7:30 AM</SelectItem>
+                                      <SelectItem value='08:00'>8:00 AM</SelectItem>
+                                      <SelectItem value='08:30'>8:30 AM</SelectItem>
+                                      <SelectItem value='09:00'>9:00 AM</SelectItem>
+                                      <SelectItem value='09:30'>9:30 AM</SelectItem>
+                                      <SelectItem value='10:00'>10:00 AM</SelectItem>
+                                      <SelectItem value='10:30'>10:30 AM</SelectItem>
+                                      <SelectItem value='11:00'>11:00 AM</SelectItem>
+                                      <SelectItem value='11:30'>11:30 AM</SelectItem>
+                                      <SelectItem value='12:00'>12:00 PM</SelectItem>
+                                      <SelectItem value='12:30'>12:30 PM</SelectItem>
+                                      <SelectItem value='13:00'>1:00 PM</SelectItem>
+                                      <SelectItem value='13:30'>1:30 PM</SelectItem>
+                                      <SelectItem value='14:00'>2:00 PM</SelectItem>
+                                      <SelectItem value='14:30'>2:30 PM</SelectItem>
+                                      <SelectItem value='15:00'>3:00 PM</SelectItem>
+                                      <SelectItem value='15:30'>3:30 PM</SelectItem>
+                                      <SelectItem value='16:00'>4:00 PM</SelectItem>
+                                      <SelectItem value='16:30'>4:30 PM</SelectItem>
+                                      <SelectItem value='17:00'>5:00 PM</SelectItem>
+                                      <SelectItem value='17:30'>5:30 PM</SelectItem>
+                                      <SelectItem value='18:00'>6:00 PM</SelectItem>
+                                      <SelectItem value='18:30'>6:30 PM</SelectItem>
+                                      <SelectItem value='19:00'>7:00 PM</SelectItem>
+                                      <SelectItem value='19:30'>7:30 PM</SelectItem>
+                                      <SelectItem value='20:00'>8:00 PM</SelectItem>
+                                      <SelectItem value='20:30'>8:30 PM</SelectItem>
+                                      <SelectItem value='21:00'>9:00 PM</SelectItem>
+                                      <SelectItem value='21:30'>9:30 PM</SelectItem>
+                                      <SelectItem value='22:00'>10:00 PM</SelectItem>
+                                      <SelectItem value='22:30'>10:30 PM</SelectItem>
+                                      <SelectItem value='23:00'>11:00 PM</SelectItem>
+                                      <SelectItem value='23:30'>11:30 PM</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Saturday */}
+                        <div className='flex items-center justify-between py-3 hover:bg-gray-50/50 rounded-lg px-2'>
+                          <div className='flex items-center space-x-4 min-w-[120px]'>
+                            <Switch id='saturday' defaultChecked />
+                            <Label htmlFor='saturday' className='font-medium'>
+                              Saturday
+                            </Label>
+                          </div>
+                          <div className='flex-1 flex flex-col space-y-2'>
+                            {availabilitySlots.saturday.map((slot, index) => {
+                              return (
+                                <div
+                                  key={index}
+                                  className='flex items-center justify-end space-x-2'
+                                >
+                                  <Select
+                                    value={slot.start}
+                                    onValueChange={(value) => {
+                                      return handleTimeChange('saturday', index, 'start', value);
+                                    }}
+                                  >
+                                    <SelectTrigger className='w-[110px]'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value='00:00'>12:00 AM</SelectItem>
+                                      <SelectItem value='00:30'>12:30 AM</SelectItem>
+                                      <SelectItem value='01:00'>1:00 AM</SelectItem>
+                                      <SelectItem value='01:30'>1:30 AM</SelectItem>
+                                      <SelectItem value='02:00'>2:00 AM</SelectItem>
+                                      <SelectItem value='02:30'>2:30 AM</SelectItem>
+                                      <SelectItem value='03:00'>3:00 AM</SelectItem>
+                                      <SelectItem value='03:30'>3:30 AM</SelectItem>
+                                      <SelectItem value='04:00'>4:00 AM</SelectItem>
+                                      <SelectItem value='04:30'>4:30 AM</SelectItem>
+                                      <SelectItem value='05:00'>5:00 AM</SelectItem>
+                                      <SelectItem value='05:30'>5:30 AM</SelectItem>
+                                      <SelectItem value='06:00'>6:00 AM</SelectItem>
+                                      <SelectItem value='06:30'>6:30 AM</SelectItem>
+                                      <SelectItem value='07:00'>7:00 AM</SelectItem>
+                                      <SelectItem value='07:30'>7:30 AM</SelectItem>
+                                      <SelectItem value='08:00'>8:00 AM</SelectItem>
+                                      <SelectItem value='08:30'>8:30 AM</SelectItem>
+                                      <SelectItem value='09:00'>9:00 AM</SelectItem>
+                                      <SelectItem value='09:30'>9:30 AM</SelectItem>
+                                      <SelectItem value='10:00'>10:00 AM</SelectItem>
+                                      <SelectItem value='10:30'>10:30 AM</SelectItem>
+                                      <SelectItem value='11:00'>11:00 AM</SelectItem>
+                                      <SelectItem value='11:30'>11:30 AM</SelectItem>
+                                      <SelectItem value='12:00'>12:00 PM</SelectItem>
+                                      <SelectItem value='12:30'>12:30 PM</SelectItem>
+                                      <SelectItem value='13:00'>1:00 PM</SelectItem>
+                                      <SelectItem value='13:30'>1:30 PM</SelectItem>
+                                      <SelectItem value='14:00'>2:00 PM</SelectItem>
+                                      <SelectItem value='14:30'>2:30 PM</SelectItem>
+                                      <SelectItem value='15:00'>3:00 PM</SelectItem>
+                                      <SelectItem value='15:30'>3:30 PM</SelectItem>
+                                      <SelectItem value='16:00'>4:00 PM</SelectItem>
+                                      <SelectItem value='16:30'>4:30 PM</SelectItem>
+                                      <SelectItem value='17:00'>5:00 PM</SelectItem>
+                                      <SelectItem value='17:30'>5:30 PM</SelectItem>
+                                      <SelectItem value='18:00'>6:00 PM</SelectItem>
+                                      <SelectItem value='18:30'>6:30 PM</SelectItem>
+                                      <SelectItem value='19:00'>7:00 PM</SelectItem>
+                                      <SelectItem value='19:30'>7:30 PM</SelectItem>
+                                      <SelectItem value='20:00'>8:00 PM</SelectItem>
+                                      <SelectItem value='20:30'>8:30 PM</SelectItem>
+                                      <SelectItem value='21:00'>9:00 PM</SelectItem>
+                                      <SelectItem value='21:30'>9:30 PM</SelectItem>
+                                      <SelectItem value='22:00'>10:00 PM</SelectItem>
+                                      <SelectItem value='22:30'>10:30 PM</SelectItem>
+                                      <SelectItem value='23:00'>11:00 PM</SelectItem>
+                                      <SelectItem value='23:30'>11:30 PM</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <span className='text-gray-500'>-</span>
+                                  <Select
+                                    value={slot.end}
+                                    onValueChange={(value) => {
+                                      return handleTimeChange('saturday', index, 'end', value);
+                                    }}
+                                  >
+                                    <SelectTrigger className='w-[110px]'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value='00:00'>12:00 AM</SelectItem>
+                                      <SelectItem value='00:30'>12:30 AM</SelectItem>
+                                      <SelectItem value='01:00'>1:00 AM</SelectItem>
+                                      <SelectItem value='01:30'>1:30 AM</SelectItem>
+                                      <SelectItem value='02:00'>2:00 AM</SelectItem>
+                                      <SelectItem value='02:30'>2:30 AM</SelectItem>
+                                      <SelectItem value='03:00'>3:00 AM</SelectItem>
+                                      <SelectItem value='03:30'>3:30 AM</SelectItem>
+                                      <SelectItem value='04:00'>4:00 AM</SelectItem>
+                                      <SelectItem value='04:30'>4:30 AM</SelectItem>
+                                      <SelectItem value='05:00'>5:00 AM</SelectItem>
+                                      <SelectItem value='05:30'>5:30 AM</SelectItem>
+                                      <SelectItem value='06:00'>6:00 AM</SelectItem>
+                                      <SelectItem value='06:30'>6:30 AM</SelectItem>
+                                      <SelectItem value='07:00'>7:00 AM</SelectItem>
+                                      <SelectItem value='07:30'>7:30 AM</SelectItem>
+                                      <SelectItem value='08:00'>8:00 AM</SelectItem>
+                                      <SelectItem value='08:30'>8:30 AM</SelectItem>
+                                      <SelectItem value='09:00'>9:00 AM</SelectItem>
+                                      <SelectItem value='09:30'>9:30 AM</SelectItem>
+                                      <SelectItem value='10:00'>10:00 AM</SelectItem>
+                                      <SelectItem value='10:30'>10:30 AM</SelectItem>
+                                      <SelectItem value='11:00'>11:00 AM</SelectItem>
+                                      <SelectItem value='11:30'>11:30 AM</SelectItem>
+                                      <SelectItem value='12:00'>12:00 PM</SelectItem>
+                                      <SelectItem value='12:30'>12:30 PM</SelectItem>
+                                      <SelectItem value='13:00'>1:00 PM</SelectItem>
+                                      <SelectItem value='13:30'>1:30 PM</SelectItem>
+                                      <SelectItem value='14:00'>2:00 PM</SelectItem>
+                                      <SelectItem value='14:30'>2:30 PM</SelectItem>
+                                      <SelectItem value='15:00'>3:00 PM</SelectItem>
+                                      <SelectItem value='15:30'>3:30 PM</SelectItem>
+                                      <SelectItem value='16:00'>4:00 PM</SelectItem>
+                                      <SelectItem value='16:30'>4:30 PM</SelectItem>
+                                      <SelectItem value='17:00'>5:00 PM</SelectItem>
+                                      <SelectItem value='17:30'>5:30 PM</SelectItem>
+                                      <SelectItem value='18:00'>6:00 PM</SelectItem>
+                                      <SelectItem value='18:30'>6:30 PM</SelectItem>
+                                      <SelectItem value='19:00'>7:00 PM</SelectItem>
+                                      <SelectItem value='19:30'>7:30 PM</SelectItem>
+                                      <SelectItem value='20:00'>8:00 PM</SelectItem>
+                                      <SelectItem value='20:30'>8:30 PM</SelectItem>
+                                      <SelectItem value='21:00'>9:00 PM</SelectItem>
+                                      <SelectItem value='21:30'>9:30 PM</SelectItem>
+                                      <SelectItem value='22:00'>10:00 PM</SelectItem>
+                                      <SelectItem value='22:30'>10:30 PM</SelectItem>
+                                      <SelectItem value='23:00'>11:00 PM</SelectItem>
+                                      <SelectItem value='23:30'>11:30 PM</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className='space-y-2'>
-                    <h3 className='text-sm font-medium'>Schedule Restrictions</h3>
-                    <div className='space-y-2'>
-                      <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2'>
-                        <Label htmlFor='min-notice'>Minimum notice (hours)</Label>
-                        <Input
-                          id='min-notice'
-                          type='number'
-                          className='w-full sm:w-20'
-                          defaultValue={1}
-                        />
-                      </div>
-                      <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2'>
-                        <Label htmlFor='max-days'>Maximum days in advance</Label>
-                        <Input
-                          id='max-days'
-                          type='number'
-                          className='w-full sm:w-20'
-                          defaultValue={30}
-                        />
+                    {/* Right side - Settings */}
+                    <div className='w-[300px] flex flex-col space-y-6 border-l border-border p-6'>
+                      <div>
+                        <h3 className='mb-4 text-lg font-semibold'>Scheduling Settings</h3>
+                        <div className='space-y-6'>
+                          <div className='space-y-2'>
+                            <Label>Timezone</Label>
+                            <Select value={selectedTimezone} onValueChange={setSelectedTimezone}>
+                              <SelectTrigger className='w-[268px]'>
+                                <SelectValue placeholder='Select your timezone' />
+                              </SelectTrigger>
+                              <SelectContent className='w-[268px]'>
+                                {regions.map((region) => {
+                                  return (
+                                    <SelectGroup key={region}>
+                                      <SelectLabel>{region}</SelectLabel>
+                                      {timezones
+                                        .filter((tz) => {
+                                          return tz.region === region;
+                                        })
+                                        .map((tz) => {
+                                          return (
+                                            <SelectItem key={tz.value} value={tz.value}>
+                                              {tz.label} ({tz.offset})
+                                            </SelectItem>
+                                          );
+                                        })}
+                                    </SelectGroup>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className='space-y-2'>
+                            <Label>Minimum Scheduling Notice</Label>
+                            <Select defaultValue='24'>
+                              <SelectTrigger className='w-[268px]'>
+                                <SelectValue placeholder='Select minimum notice' />
+                              </SelectTrigger>
+                              <SelectContent className='w-[268px]'>
+                                <SelectItem value='0'>No minimum</SelectItem>
+                                <SelectItem value='1'>1 hour before</SelectItem>
+                                <SelectItem value='24'>24 hours before</SelectItem>
+                                <SelectItem value='48'>48 hours before</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className='space-y-2'>
+                            <Label>Buffer Time Between Meetings</Label>
+                            <Select defaultValue='0'>
+                              <SelectTrigger className='w-[268px]'>
+                                <SelectValue placeholder='Select buffer time' />
+                              </SelectTrigger>
+                              <SelectContent className='w-[268px]'>
+                                <SelectItem value='0'>No buffer</SelectItem>
+                                <SelectItem value='5'>5 minutes</SelectItem>
+                                <SelectItem value='10'>10 minutes</SelectItem>
+                                <SelectItem value='15'>15 minutes</SelectItem>
+                                <SelectItem value='30'>30 minutes</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className='space-y-4'>
+                            {/* Additional Settings */}
+                            <div className='space-y-3'>
+                              <div className='flex items-center space-x-2'>
+                                <Checkbox id='prevent-overlap' />
+                                <Label htmlFor='prevent-overlap' className='text-sm'>
+                                  Prevent overlapping meetings
+                                </Label>
+                              </div>
+                              <div className='flex items-center space-x-2'>
+                                <Checkbox id='require-confirmation' />
+                                <Label htmlFor='require-confirmation' className='text-sm'>
+                                  Require confirmation
+                                </Label>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-
-                  <div className='space-y-2'>
-                    <h3 className='text-sm font-medium'>Buffer Time</h3>
-                    <div className='space-y-2'>
-                      <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2'>
-                        <Label htmlFor='buffer-before'>Before meetings (minutes)</Label>
-                        <Input
-                          id='buffer-before'
-                          type='number'
-                          className='w-full sm:w-20'
-                          defaultValue={15}
-                        />
-                      </div>
-                      <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2'>
-                        <Label htmlFor='buffer-after'>After meetings (minutes)</Label>
-                        <Input
-                          id='buffer-after'
-                          type='number'
-                          className='w-full sm:w-20'
-                          defaultValue={15}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value='team' className='mt-4'>
-                  <div className='space-y-4'>
-                    <p className='text-sm text-gray-500'>
-                      Configure when your team is available for meetings. Individual settings can be
-                      managed in each team member&apos;s profile.
-                    </p>
-
-                    <div className='rounded-md border'>
-                      <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between border-b p-3 gap-2'>
-                        <div className='font-medium'>Jane Smith</div>
-                        <Button variant='outline' size='sm'>
-                          View Calendar
-                        </Button>
-                      </div>
-                      <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between border-b p-3 gap-2'>
-                        <div className='font-medium'>John Doe</div>
-                        <Button variant='outline' size='sm'>
-                          View Calendar
-                        </Button>
-                      </div>
-                      <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 gap-2'>
-                        <div className='font-medium'>Sarah Johnson</div>
-                        <Button variant='outline' size='sm'>
-                          View Calendar
-                        </Button>
-                      </div>
-                    </div>
-
-                    <Button variant='outline' className='w-full'>
-                      <Users className='mr-2 h-4 w-4' />
-                      Add Team Member
-                    </Button>
                   </div>
                 </TabsContent>
 

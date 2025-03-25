@@ -13,6 +13,8 @@ interface DatePickerProps {
   setDate: (date: Date | undefined) => void;
   className?: string;
   placeholder?: string;
+  minDate?: Date;
+  maxDate?: Date;
 }
 
 export function DatePicker({
@@ -20,6 +22,8 @@ export function DatePicker({
   setDate,
   className,
   placeholder = 'Pick a date',
+  minDate,
+  maxDate,
 }: DatePickerProps) {
   return (
     <Popover>
@@ -36,8 +40,15 @@ export function DatePicker({
           {date ? format(date, 'PPP') : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className='w-auto p-0'>
-        <Calendar mode='single' selected={date} onSelect={setDate} initialFocus />
+      <PopoverContent className='w-auto min-w-[320px] p-0'>
+        <Calendar
+          mode='single'
+          selected={date}
+          onSelect={setDate}
+          initialFocus
+          fromDate={minDate}
+          toDate={maxDate}
+        />
       </PopoverContent>
     </Popover>
   );

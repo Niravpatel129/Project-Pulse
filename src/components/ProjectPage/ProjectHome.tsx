@@ -6,7 +6,6 @@ import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { FileText, Mail, User } from 'lucide-react';
-import { useState } from 'react';
 import { EmailCard } from './EmailCard';
 import { EmailComponent } from './EmailComponent';
 
@@ -137,7 +136,6 @@ const mapEmailMessage = (message: EmailMessage) => {
 
 export default function ProjectHome() {
   const { project } = useProject();
-  const [hasAnimated, setHasAnimated] = useState(false);
 
   const { data: emailsData, isLoading: isLoadingEmails } = useQuery({
     queryKey: ['emailHistory', project?._id],
