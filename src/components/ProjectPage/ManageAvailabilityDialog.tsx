@@ -79,7 +79,7 @@ export default function ManageAvailabilityDialog({
                     <h3 className='text-sm font-medium'>Weekly Hours</h3>
                   </div>
 
-                  <WeeklyAvailability availabilitySlots={settings.availabilitySlots} />
+                  <WeeklyAvailability />
                 </div>
 
                 {/* Right side - Settings */}

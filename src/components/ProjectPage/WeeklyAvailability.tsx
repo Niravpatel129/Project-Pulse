@@ -13,27 +13,23 @@ import { Plus, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo } from 'react';
 
 interface WeeklyAvailabilityProps {
-  availabilitySlots: AvailabilitySettings['availabilitySlots'];
   handleDayToggle?: (day: string, isEnabled: boolean) => void;
 }
 
-export default function WeeklyAvailability({
-  availabilitySlots,
-  handleDayToggle,
-}: WeeklyAvailabilityProps) {
+export default function WeeklyAvailability({ handleDayToggle }: WeeklyAvailabilityProps) {
   const { updateAvailability, settings, setSettings } = useAvailability();
 
   // Ensure the component uses the passed availabilitySlots prop
   useEffect(() => {
-    if (availabilitySlots && Object.keys(availabilitySlots).length > 0) {
+    if (settings.availabilitySlots && Object.keys(settings.availabilitySlots).length > 0) {
       setSettings((prevSettings) => {
         return {
           ...prevSettings,
-          availabilitySlots,
+          availabilitySlots: settings.availabilitySlots,
         };
       });
     }
-  }, [availabilitySlots, setSettings]);
+  }, [settings.availabilitySlots, setSettings]);
 
   const days = useMemo(() => {
     return [

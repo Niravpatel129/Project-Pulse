@@ -58,9 +58,6 @@ export function useAvailability() {
     queryKey: ['availability'],
     queryFn: async () => {
       const response = await newRequest.get('/availability/settings');
-      console.log('🚀 response.data:', response.data);
-
-      // Directly use the backend structure
       setSettings(response.data);
       return response.data;
     },
@@ -72,13 +69,9 @@ export function useAvailability() {
       return response.data;
     },
     onMutate: async (newSettings) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['availability'] });
-
-      // Snapshot the previous value
       const previousSettings = settings;
 
-      // Optimistically update to the new value
       setSettings((current) => {
         return {
           ...current,
@@ -86,18 +79,15 @@ export function useAvailability() {
         };
       });
 
-      // Return a context object with the snapshotted value
       return { previousSettings };
     },
-    onError: (err, newSettings, context) => {
-      // If the mutation fails, use the context returned from onMutate to roll back
+    onError: (err, _, context) => {
       if (context?.previousSettings) {
         setSettings(context.previousSettings);
       }
       return err instanceof Error ? err.message : 'Failed to update availability settings';
     },
     onSuccess: () => {
-      // Don't update settings from response since PUT doesn't return full settings
       queryClient.invalidateQueries({ queryKey: ['availability'] });
       return true;
     },
@@ -113,13 +103,7 @@ export function useAvailability() {
             [day]: {
               ...prev.availabilitySlots[day],
               slots: prev.availabilitySlots[day].slots.map((slot, i) => {
-                if (i === index) {
-                  return {
-                    ...slot,
-                    [type]: value,
-                  };
-                }
-                return slot;
+                return i === index ? { ...slot, [type]: value } : slot;
               }),
             },
           },
