@@ -22,6 +22,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { regions, timezones } from '@/lib/timezones';
 import { useState } from 'react';
+import { FcGoogle } from 'react-icons/fc';
 import WeeklyAvailability from './WeeklyAvailability';
 
 type TimeSlot = {
@@ -45,6 +46,7 @@ export default function ManageAvailabilityDialog({
   onSave,
 }: ManageAvailabilityDialogProps) {
   const [selectedTimezone, setSelectedTimezone] = useState('');
+  const [activeTab, setActiveTab] = useState('availability');
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlots>({
     sunday: [{ start: '09:00', end: '17:00' }],
     monday: [{ start: '09:00', end: '17:00' }],
@@ -80,7 +82,7 @@ export default function ManageAvailabilityDialog({
           <DialogDescription>Set your weekly availability for meetings</DialogDescription>
         </DialogHeader>
         <div className='py-4'>
-          <Tabs defaultValue='availability'>
+          <Tabs defaultValue='availability' onValueChange={setActiveTab}>
             <TabsList className='w-full flex flex-wrap sm:flex-nowrap'>
               <TabsTrigger value='availability' className='flex-1'>
                 Availability
@@ -201,30 +203,15 @@ export default function ManageAvailabilityDialog({
                 <Card>
                   <CardHeader className='py-3'>
                     <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2'>
-                      <CardTitle className='text-base'>Google Calendar</CardTitle>
-                      <Button variant='outline' size='sm'>
-                        Connect
-                      </Button>
-                    </div>
-                  </CardHeader>
-                </Card>
-
-                <Card>
-                  <CardHeader className='py-3'>
-                    <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2'>
-                      <CardTitle className='text-base'>Microsoft Outlook</CardTitle>
-                      <Button variant='outline' size='sm'>
-                        Connect
-                      </Button>
-                    </div>
-                  </CardHeader>
-                </Card>
-
-                <Card>
-                  <CardHeader className='py-3'>
-                    <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2'>
-                      <CardTitle className='text-base'>Apple Calendar</CardTitle>
-                      <Button variant='outline' size='sm'>
+                      <div className='flex items-center gap-2'>
+                        <FcGoogle className='w-5 h-5' />
+                        <CardTitle className='text-base'>Google Calendar</CardTitle>
+                      </div>
+                      <Button
+                        variant='default'
+                        size='sm'
+                        className='bg-black hover:bg-black/90 text-white'
+                      >
                         Connect
                       </Button>
                     </div>
@@ -235,7 +222,7 @@ export default function ManageAvailabilityDialog({
           </Tabs>
         </div>
         <DialogFooter className='flex-col sm:flex-row gap-2'>
-          <Button onClick={onSave}>Save Changes</Button>
+          {activeTab === 'availability' && <Button onClick={onSave}>Save Changes</Button>}
         </DialogFooter>
       </DialogContent>
     </Dialog>
