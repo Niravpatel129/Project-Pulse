@@ -235,7 +235,7 @@ export function EmailCard({
                   <AvatarFallback
                     className={cn(
                       'bg-gray-100',
-                      email.direction === 'inbound' ? 'bg-gray-100 text-gray-600' : 'bg-gray-100',
+                      email.direction === 'inbound' ? 'bg-blue-100 text-gray-600' : 'bg-gray-100',
                     )}
                   >
                     {email.from?.name
