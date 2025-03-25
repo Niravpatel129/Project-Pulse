@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -7,6 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Plus } from 'lucide-react';
 
 type TimeSlot = {
   start: string;
@@ -26,14 +28,15 @@ export default function WeeklyAvailability({
   availabilitySlots,
   handleTimeChange,
 }: WeeklyAvailabilityProps) {
+  console.log('🚀 availabilitySlots:', availabilitySlots);
   const days = [
-    { id: 'sunday', label: 'Sunday' },
-    { id: 'monday', label: 'Monday', defaultChecked: true },
-    { id: 'tuesday', label: 'Tuesday', defaultChecked: true },
-    { id: 'wednesday', label: 'Wednesday', defaultChecked: true },
-    { id: 'thursday', label: 'Thursday', defaultChecked: true },
-    { id: 'friday', label: 'Friday', defaultChecked: true },
-    { id: 'saturday', label: 'Saturday' },
+    { id: 'sunday', label: 'Sunday', isEnabled: true },
+    { id: 'monday', label: 'Monday', isEnabled: true },
+    { id: 'tuesday', label: 'Tuesday', isEnabled: true },
+    { id: 'wednesday', label: 'Wednesday', isEnabled: true },
+    { id: 'thursday', label: 'Thursday', isEnabled: true },
+    { id: 'friday', label: 'Friday', isEnabled: true },
+    { id: 'saturday', label: 'Saturday', isEnabled: true },
   ];
 
   const timeOptions = Array.from({ length: 48 }, (_, i) => {
@@ -48,6 +51,19 @@ export default function WeeklyAvailability({
     return { value: time, label: displayTime };
   });
 
+  const addTimeSlot = (day: string) => {
+    const newSlots = [...availabilitySlots[day], { start: '09:00', end: '17:00' }];
+    const updatedSlots = {
+      ...availabilitySlots,
+      [day]: newSlots,
+    };
+    // We need to update the parent component with the new slots
+    // For now, we'll just update the last added slot
+    const newIndex = newSlots.length - 1;
+    handleTimeChange(day, newIndex, 'start', '09:00');
+    handleTimeChange(day, newIndex, 'end', '17:00');
+  };
+
   return (
     <div className='space-y-1'>
       {days.map((day) => {
@@ -57,7 +73,7 @@ export default function WeeklyAvailability({
             className='flex items-center justify-between py-3 hover:bg-gray-50/50 rounded-lg px-2'
           >
             <div className='flex items-center space-x-4 min-w-[120px]'>
-              <Switch id={day.id} defaultChecked={day.defaultChecked} />
+              <Switch id={day.id} defaultChecked={day.isEnabled} />
               <Label htmlFor={day.id} className='font-medium'>
                 {day.label}
               </Label>
@@ -105,6 +121,18 @@ export default function WeeklyAvailability({
                         })}
                       </SelectContent>
                     </Select>
+                    <div className='flex justify-end'>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        className='h-8 w-8 p-0'
+                        onClick={() => {
+                          return addTimeSlot(day.id);
+                        }}
+                      >
+                        <Plus className='h-4 w-4' />
+                      </Button>
+                    </div>
                   </div>
                 );
               })}

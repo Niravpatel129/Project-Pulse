@@ -202,8 +202,6 @@ export function EmailCard({
     }
   };
 
-  console.log('🚀 email:', email);
-
   return (
     <div className='relative'>
       <div className='flex gap-4'>

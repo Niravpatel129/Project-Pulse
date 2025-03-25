@@ -5,7 +5,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -20,20 +19,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAvailability } from '@/hooks/useAvailability';
 import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
 import { regions, timezones } from '@/lib/timezones';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FcCheckmark, FcGoogle } from 'react-icons/fc';
+import { toast } from 'sonner';
 import WeeklyAvailability from './WeeklyAvailability';
-
-type TimeSlot = {
-  start: string;
-  end: string;
-};
-
-type AvailabilitySlots = {
-  [key: string]: TimeSlot[];
-};
 
 interface ManageAvailabilityDialogProps {
   open: boolean;
@@ -46,35 +38,33 @@ export default function ManageAvailabilityDialog({
   onOpenChange,
   onSave,
 }: ManageAvailabilityDialogProps) {
-  const [selectedTimezone, setSelectedTimezone] = useState('');
   const [activeTab, setActiveTab] = useState('availability');
-  const { isConnected, isLoading, error, connectGoogleCalendar, disconnectGoogleCalendar } =
-    useGoogleCalendar();
-  const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlots>({
-    sunday: [{ start: '09:00', end: '17:00' }],
-    monday: [{ start: '09:00', end: '17:00' }],
-    tuesday: [{ start: '09:00', end: '17:00' }],
-    wednesday: [{ start: '09:00', end: '17:00' }],
-    thursday: [{ start: '09:00', end: '17:00' }],
-    friday: [{ start: '09:00', end: '17:00' }],
-    saturday: [{ start: '09:00', end: '17:00' }],
-  });
+  const {
+    isConnected,
+    isLoading: isGoogleLoading,
+    error: googleError,
+    connectGoogleCalendar,
+    disconnectGoogleCalendar,
+  } = useGoogleCalendar();
+  const { settings, isLoading, error, fetchAvailability, updateAvailability, updateTimeSlot } =
+    useAvailability();
+  console.log('🚀 settings:', settings);
 
-  const handleTimeChange = (day: string, index: number, type: 'start' | 'end', value: string) => {
-    setAvailabilitySlots((prev) => {
-      return {
-        ...prev,
-        [day]: prev[day].map((slot, i) => {
-          if (i === index) {
-            return {
-              ...slot,
-              [type]: value,
-            };
-          }
-          return slot;
-        }),
-      };
-    });
+  useEffect(() => {
+    if (open) {
+      fetchAvailability();
+    }
+  }, [open, fetchAvailability]);
+
+  const handleSave = async () => {
+    try {
+      await updateAvailability(settings);
+      toast.success('Availability settings updated successfully');
+      onSave();
+      onOpenChange(false);
+    } catch (error) {
+      toast.error('Failed to update availability settings');
+    }
   };
 
   return (
@@ -104,8 +94,8 @@ export default function ManageAvailabilityDialog({
                   </div>
 
                   <WeeklyAvailability
-                    availabilitySlots={availabilitySlots}
-                    handleTimeChange={handleTimeChange}
+                    availabilitySlots={settings.availabilitySlots}
+                    handleTimeChange={updateTimeSlot}
                   />
                 </div>
 
@@ -116,7 +106,12 @@ export default function ManageAvailabilityDialog({
                     <div className='space-y-6'>
                       <div className='space-y-2'>
                         <Label>Timezone</Label>
-                        <Select value={selectedTimezone} onValueChange={setSelectedTimezone}>
+                        <Select
+                          value={settings.timezone}
+                          onValueChange={(value) => {
+                            return updateAvailability({ timezone: value });
+                          }}
+                        >
                           <SelectTrigger className='w-[268px]'>
                             <SelectValue placeholder='Select your timezone' />
                           </SelectTrigger>
@@ -145,7 +140,12 @@ export default function ManageAvailabilityDialog({
 
                       <div className='space-y-2'>
                         <Label>Minimum Scheduling Notice</Label>
-                        <Select defaultValue='24'>
+                        <Select
+                          value={settings.minimumNotice.toString()}
+                          onValueChange={(value) => {
+                            return updateAvailability({ minimumNotice: parseInt(value) });
+                          }}
+                        >
                           <SelectTrigger className='w-[268px]'>
                             <SelectValue placeholder='Select minimum notice' />
                           </SelectTrigger>
@@ -160,7 +160,12 @@ export default function ManageAvailabilityDialog({
 
                       <div className='space-y-2'>
                         <Label>Buffer Time Between Meetings</Label>
-                        <Select defaultValue='0'>
+                        <Select
+                          value={settings.bufferTime.toString()}
+                          onValueChange={(value) => {
+                            return updateAvailability({ bufferTime: parseInt(value) });
+                          }}
+                        >
                           <SelectTrigger className='w-[268px]'>
                             <SelectValue placeholder='Select buffer time' />
                           </SelectTrigger>
@@ -178,13 +183,27 @@ export default function ManageAvailabilityDialog({
                         {/* Additional Settings */}
                         <div className='space-y-3'>
                           <div className='flex items-center space-x-2'>
-                            <Checkbox id='prevent-overlap' />
+                            <Checkbox
+                              id='prevent-overlap'
+                              checked={settings.preventOverlap}
+                              onCheckedChange={(checked) => {
+                                return updateAvailability({ preventOverlap: checked as boolean });
+                              }}
+                            />
                             <Label htmlFor='prevent-overlap' className='text-sm'>
                               Prevent overlapping meetings
                             </Label>
                           </div>
                           <div className='flex items-center space-x-2'>
-                            <Checkbox id='require-confirmation' />
+                            <Checkbox
+                              id='require-confirmation'
+                              checked={settings.requireConfirmation}
+                              onCheckedChange={(checked) => {
+                                return updateAvailability({
+                                  requireConfirmation: checked as boolean,
+                                });
+                              }}
+                            />
                             <Label htmlFor='require-confirmation' className='text-sm'>
                               Require confirmation
                             </Label>
@@ -215,15 +234,15 @@ export default function ManageAvailabilityDialog({
                           </>
                         )}
                       </div>
-                      {error && <p className='text-sm text-red-500'>{error}</p>}
+                      {googleError && <p className='text-sm text-red-500'>{googleError}</p>}
                       <Button
                         variant='default'
                         size='sm'
                         className='bg-black hover:bg-black/90 text-white'
                         onClick={isConnected ? disconnectGoogleCalendar : connectGoogleCalendar}
-                        disabled={isLoading}
+                        disabled={isGoogleLoading}
                       >
-                        {isLoading ? 'Connecting...' : isConnected ? 'Disconnect' : 'Connect'}
+                        {isGoogleLoading ? 'Connecting...' : isConnected ? 'Disconnect' : 'Connect'}
                       </Button>
                     </div>
                   </CardHeader>
@@ -232,9 +251,13 @@ export default function ManageAvailabilityDialog({
             </TabsContent>
           </Tabs>
         </div>
-        <DialogFooter className='flex-col sm:flex-row gap-2'>
-          {activeTab === 'availability' && <Button onClick={onSave}>Save Changes</Button>}
-        </DialogFooter>
+        {/* <DialogFooter className='flex-col sm:flex-row gap-2'>
+          {activeTab === 'availability' && (
+            <Button onClick={handleSave} disabled={isLoading}>
+              {isLoading ? 'Saving...' : 'Save Changes'}
+            </Button>
+          )}
+        </DialogFooter> */}
       </DialogContent>
     </Dialog>
   );
