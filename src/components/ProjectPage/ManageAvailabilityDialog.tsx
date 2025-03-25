@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
 import { regions, timezones } from '@/lib/timezones';
 import { useState } from 'react';
 import { FcGoogle } from 'react-icons/fc';
@@ -47,6 +48,8 @@ export default function ManageAvailabilityDialog({
 }: ManageAvailabilityDialogProps) {
   const [selectedTimezone, setSelectedTimezone] = useState('');
   const [activeTab, setActiveTab] = useState('availability');
+  const { isConnected, isLoading, error, connectGoogleCalendar, disconnectGoogleCalendar } =
+    useGoogleCalendar();
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlots>({
     sunday: [{ start: '09:00', end: '17:00' }],
     monday: [{ start: '09:00', end: '17:00' }],
@@ -207,12 +210,15 @@ export default function ManageAvailabilityDialog({
                         <FcGoogle className='w-5 h-5' />
                         <CardTitle className='text-base'>Google Calendar</CardTitle>
                       </div>
+                      {error && <p className='text-sm text-red-500'>{error}</p>}
                       <Button
                         variant='default'
                         size='sm'
                         className='bg-black hover:bg-black/90 text-white'
+                        onClick={isConnected ? disconnectGoogleCalendar : connectGoogleCalendar}
+                        disabled={isLoading}
                       >
-                        Connect
+                        {isLoading ? 'Connecting...' : isConnected ? 'Disconnect' : 'Connect'}
                       </Button>
                     </div>
                   </CardHeader>
