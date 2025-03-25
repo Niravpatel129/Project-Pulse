@@ -23,7 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
 import { regions, timezones } from '@/lib/timezones';
 import { useState } from 'react';
-import { FcGoogle } from 'react-icons/fc';
+import { FcCheckmark, FcGoogle } from 'react-icons/fc';
 import WeeklyAvailability from './WeeklyAvailability';
 
 type TimeSlot = {
@@ -206,9 +206,14 @@ export default function ManageAvailabilityDialog({
                 <Card>
                   <CardHeader className='py-3'>
                     <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2'>
-                      <div className='flex items-center gap-2'>
+                      <div className='flex items-center gap-2 justify-center'>
                         <FcGoogle className='w-5 h-5' />
                         <CardTitle className='text-base'>Google Calendar</CardTitle>
+                        {isConnected && (
+                          <>
+                            <FcCheckmark className='w-5 h-5 text-green-500' />
+                          </>
+                        )}
                       </div>
                       {error && <p className='text-sm text-red-500'>{error}</p>}
                       <Button
