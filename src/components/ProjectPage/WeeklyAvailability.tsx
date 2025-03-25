@@ -10,7 +10,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { AvailabilitySettings, useAvailability } from '@/hooks/useAvailability';
 import { Plus, Trash2 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 interface WeeklyAvailabilityProps {
   availabilitySlots: AvailabilitySettings['availabilitySlots'];
@@ -35,108 +35,122 @@ export default function WeeklyAvailability({
     }
   }, [availabilitySlots, setSettings]);
 
-  const days = [
-    { id: 'sunday', label: 'Sunday' },
-    { id: 'monday', label: 'Monday' },
-    { id: 'tuesday', label: 'Tuesday' },
-    { id: 'wednesday', label: 'Wednesday' },
-    { id: 'thursday', label: 'Thursday' },
-    { id: 'friday', label: 'Friday' },
-    { id: 'saturday', label: 'Saturday' },
-  ];
+  const days = useMemo(() => {
+    return [
+      { id: 'sunday', label: 'Sunday' },
+      { id: 'monday', label: 'Monday' },
+      { id: 'tuesday', label: 'Tuesday' },
+      { id: 'wednesday', label: 'Wednesday' },
+      { id: 'thursday', label: 'Thursday' },
+      { id: 'friday', label: 'Friday' },
+      { id: 'saturday', label: 'Saturday' },
+    ];
+  }, []);
 
-  const timeOptions = Array.from({ length: 48 }, (_, i) => {
-    const hour = Math.floor(i / 2);
-    const minute = (i % 2) * 30;
-    const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-    const displayTime = new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
+  const timeOptions = useMemo(() => {
+    return Array.from({ length: 48 }, (_, i) => {
+      const hour = Math.floor(i / 2);
+      const minute = (i % 2) * 30;
+      const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      const displayTime = new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+      return { value: time, label: displayTime };
     });
-    return { value: time, label: displayTime };
-  });
+  }, []);
 
-  const addTimeSlot = (day: string) => {
-    const newSlots = [...settings.availabilitySlots[day].slots, { start: '09:00', end: '17:00' }];
-    const updatedSlots = {
-      ...settings.availabilitySlots,
-      [day]: {
-        ...settings.availabilitySlots[day],
-        slots: newSlots,
-      },
-    };
-
-    updateAvailability({
-      ...settings,
-      availabilitySlots: updatedSlots as AvailabilitySettings['availabilitySlots'],
-    });
-  };
-
-  const removeTimeSlot = (day: string, index: number) => {
-    const newSlots = settings.availabilitySlots[day].slots.filter((_, i) => {
-      return i !== index;
-    });
-    const updatedSlots = {
-      ...settings.availabilitySlots,
-      [day]: {
-        ...settings.availabilitySlots[day],
-        slots: newSlots,
-      },
-    };
-
-    updateAvailability({
-      ...settings,
-      availabilitySlots: updatedSlots as AvailabilitySettings['availabilitySlots'],
-    });
-  };
-
-  const onDayToggle = (day: string, isEnabled: boolean) => {
-    if (handleDayToggle) {
-      handleDayToggle(day, isEnabled);
-    } else {
+  const addTimeSlot = useCallback(
+    (day: string) => {
+      const newSlots = [...settings.availabilitySlots[day].slots, { start: '09:00', end: '17:00' }];
       const updatedSlots = {
         ...settings.availabilitySlots,
         [day]: {
           ...settings.availabilitySlots[day],
-          isEnabled,
+          slots: newSlots,
         },
       };
 
       updateAvailability({
-        ...settings,
         availabilitySlots: updatedSlots as AvailabilitySettings['availabilitySlots'],
       });
-    }
-  };
+    },
+    [settings.availabilitySlots, updateAvailability],
+  );
 
-  const handleTimeChange = (day: string, index: number, type: 'start' | 'end', value: string) => {
-    const updatedSlots = {
-      ...settings.availabilitySlots,
-      [day]: {
-        ...settings.availabilitySlots[day],
-        slots: settings.availabilitySlots[day].slots.map((slot, i) => {
-          if (i === index) {
-            return {
-              ...slot,
-              [type]: value,
-            };
-          }
-          return slot;
-        }),
-      },
-    };
+  const removeTimeSlot = useCallback(
+    (day: string, index: number) => {
+      const newSlots = settings.availabilitySlots[day].slots.filter((_, i) => {
+        return i !== index;
+      });
+      const updatedSlots = {
+        ...settings.availabilitySlots,
+        [day]: {
+          ...settings.availabilitySlots[day],
+          slots: newSlots,
+        },
+      };
 
-    setSettings({
-      ...settings,
-      availabilitySlots: updatedSlots as AvailabilitySettings['availabilitySlots'],
-    });
+      updateAvailability({
+        availabilitySlots: updatedSlots as AvailabilitySettings['availabilitySlots'],
+      });
+    },
+    [settings.availabilitySlots, updateAvailability],
+  );
 
-    updateAvailability({
-      ...settings,
-      availabilitySlots: updatedSlots as AvailabilitySettings['availabilitySlots'],
-    });
-  };
+  const onDayToggle = useCallback(
+    (day: string, isEnabled: boolean) => {
+      if (handleDayToggle) {
+        handleDayToggle(day, isEnabled);
+      } else {
+        const updatedSlots = {
+          ...settings.availabilitySlots,
+          [day]: {
+            ...settings.availabilitySlots[day],
+            isEnabled,
+          },
+        };
+
+        updateAvailability({
+          availabilitySlots: updatedSlots as AvailabilitySettings['availabilitySlots'],
+        });
+      }
+    },
+    [handleDayToggle, settings.availabilitySlots, updateAvailability],
+  );
+
+  const handleTimeChange = useCallback(
+    (day: string, index: number, type: 'start' | 'end', value: string) => {
+      const updatedSlots = {
+        ...settings.availabilitySlots,
+        [day]: {
+          ...settings.availabilitySlots[day],
+          slots: settings.availabilitySlots[day].slots.map((slot, i) => {
+            if (i === index) {
+              return {
+                ...slot,
+                [type]: value,
+              };
+            }
+            return slot;
+          }),
+        },
+      };
+
+      setSettings((prev) => {
+        return {
+          ...prev,
+          availabilitySlots: updatedSlots as AvailabilitySettings['availabilitySlots'],
+        };
+      });
+
+      updateAvailability({
+        availabilitySlots: updatedSlots as AvailabilitySettings['availabilitySlots'],
+      });
+    },
+    [settings.availabilitySlots, setSettings, updateAvailability],
+  );
 
   return (
     <div className='space-y-1'>
