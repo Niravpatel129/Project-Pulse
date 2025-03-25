@@ -7,8 +7,13 @@ export type TimeSlot = {
   end: string;
 };
 
+export type DayAvailability = {
+  isEnabled: boolean;
+  slots: TimeSlot[];
+};
+
 export type AvailabilitySlots = {
-  [key: string]: TimeSlot[];
+  [key: string]: DayAvailability;
 };
 
 export type AvailabilitySettings = {
@@ -17,7 +22,15 @@ export type AvailabilitySettings = {
   bufferTime: number;
   preventOverlap: boolean;
   requireConfirmation: boolean;
-  availabilitySlots: AvailabilitySlots;
+  availabilitySlots: {
+    sunday: DayAvailability;
+    monday: DayAvailability;
+    tuesday: DayAvailability;
+    wednesday: DayAvailability;
+    thursday: DayAvailability;
+    friday: DayAvailability;
+    saturday: DayAvailability;
+  };
 };
 
 const defaultSettings: AvailabilitySettings = {
@@ -27,13 +40,13 @@ const defaultSettings: AvailabilitySettings = {
   preventOverlap: false,
   requireConfirmation: false,
   availabilitySlots: {
-    sunday: [{ start: '09:00', end: '17:00' }],
-    monday: [{ start: '09:00', end: '17:00' }],
-    tuesday: [{ start: '09:00', end: '17:00' }],
-    wednesday: [{ start: '09:00', end: '17:00' }],
-    thursday: [{ start: '09:00', end: '17:00' }],
-    friday: [{ start: '09:00', end: '17:00' }],
-    saturday: [{ start: '09:00', end: '17:00' }],
+    sunday: { isEnabled: true, slots: [{ start: '09:00', end: '17:00' }] },
+    monday: { isEnabled: true, slots: [{ start: '09:00', end: '17:00' }] },
+    tuesday: { isEnabled: true, slots: [{ start: '09:00', end: '17:00' }] },
+    wednesday: { isEnabled: true, slots: [{ start: '09:00', end: '17:00' }] },
+    thursday: { isEnabled: true, slots: [{ start: '09:00', end: '17:00' }] },
+    friday: { isEnabled: true, slots: [{ start: '09:00', end: '17:00' }] },
+    saturday: { isEnabled: true, slots: [{ start: '09:00', end: '17:00' }] },
   },
 };
 
@@ -46,6 +59,8 @@ export function useAvailability() {
     queryFn: async () => {
       const response = await newRequest.get('/availability/settings');
       console.log('🚀 response.data:', response.data);
+
+      // Directly use the backend structure
       setSettings(response.data);
       return response.data;
     },
@@ -56,13 +71,35 @@ export function useAvailability() {
       const response = await newRequest.put('/availability/settings', newSettings);
       return response.data;
     },
-    onSuccess: (data) => {
-      setSettings(data);
+    onMutate: async (newSettings) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['availability'] });
+
+      // Snapshot the previous value
+      const previousSettings = settings;
+
+      // Optimistically update to the new value
+      setSettings((current) => {
+        return {
+          ...current,
+          ...newSettings,
+        };
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousSettings };
+    },
+    onError: (err, newSettings, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousSettings) {
+        setSettings(context.previousSettings);
+      }
+      return err instanceof Error ? err.message : 'Failed to update availability settings';
+    },
+    onSuccess: () => {
+      // Don't update settings from response since PUT doesn't return full settings
       queryClient.invalidateQueries({ queryKey: ['availability'] });
       return true;
-    },
-    onError: (err) => {
-      return err instanceof Error ? err.message : 'Failed to update availability settings';
     },
   });
 
@@ -73,15 +110,18 @@ export function useAvailability() {
           ...prev,
           availabilitySlots: {
             ...prev.availabilitySlots,
-            [day]: prev.availabilitySlots[day].map((slot, i) => {
-              if (i === index) {
-                return {
-                  ...slot,
-                  [type]: value,
-                };
-              }
-              return slot;
-            }),
+            [day]: {
+              ...prev.availabilitySlots[day],
+              slots: prev.availabilitySlots[day].slots.map((slot, i) => {
+                if (i === index) {
+                  return {
+                    ...slot,
+                    [type]: value,
+                  };
+                }
+                return slot;
+              }),
+            },
           },
         };
       });
@@ -100,5 +140,6 @@ export function useAvailability() {
     fetchAvailability,
     updateAvailability,
     updateTimeSlot,
+    setSettings,
   };
 }

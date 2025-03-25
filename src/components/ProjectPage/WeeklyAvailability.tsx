@@ -8,35 +8,41 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Plus } from 'lucide-react';
-
-type TimeSlot = {
-  start: string;
-  end: string;
-};
-
-type AvailabilitySlots = {
-  [key: string]: TimeSlot[];
-};
+import { AvailabilitySettings, useAvailability } from '@/hooks/useAvailability';
+import { Plus, Trash2 } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface WeeklyAvailabilityProps {
-  availabilitySlots: AvailabilitySlots;
-  handleTimeChange: (day: string, index: number, type: 'start' | 'end', value: string) => void;
+  availabilitySlots: AvailabilitySettings['availabilitySlots'];
+  handleDayToggle?: (day: string, isEnabled: boolean) => void;
 }
 
 export default function WeeklyAvailability({
   availabilitySlots,
-  handleTimeChange,
+  handleDayToggle,
 }: WeeklyAvailabilityProps) {
-  console.log('🚀 availabilitySlots:', availabilitySlots);
+  const { updateAvailability, settings, setSettings } = useAvailability();
+
+  // Ensure the component uses the passed availabilitySlots prop
+  useEffect(() => {
+    if (availabilitySlots && Object.keys(availabilitySlots).length > 0) {
+      setSettings((prevSettings) => {
+        return {
+          ...prevSettings,
+          availabilitySlots,
+        };
+      });
+    }
+  }, [availabilitySlots, setSettings]);
+
   const days = [
-    { id: 'sunday', label: 'Sunday', isEnabled: true },
-    { id: 'monday', label: 'Monday', isEnabled: true },
-    { id: 'tuesday', label: 'Tuesday', isEnabled: true },
-    { id: 'wednesday', label: 'Wednesday', isEnabled: true },
-    { id: 'thursday', label: 'Thursday', isEnabled: true },
-    { id: 'friday', label: 'Friday', isEnabled: true },
-    { id: 'saturday', label: 'Saturday', isEnabled: true },
+    { id: 'sunday', label: 'Sunday' },
+    { id: 'monday', label: 'Monday' },
+    { id: 'tuesday', label: 'Tuesday' },
+    { id: 'wednesday', label: 'Wednesday' },
+    { id: 'thursday', label: 'Thursday' },
+    { id: 'friday', label: 'Friday' },
+    { id: 'saturday', label: 'Saturday' },
   ];
 
   const timeOptions = Array.from({ length: 48 }, (_, i) => {
@@ -52,34 +58,111 @@ export default function WeeklyAvailability({
   });
 
   const addTimeSlot = (day: string) => {
-    const newSlots = [...availabilitySlots[day], { start: '09:00', end: '17:00' }];
+    const newSlots = [...settings.availabilitySlots[day].slots, { start: '09:00', end: '17:00' }];
     const updatedSlots = {
-      ...availabilitySlots,
-      [day]: newSlots,
+      ...settings.availabilitySlots,
+      [day]: {
+        ...settings.availabilitySlots[day],
+        slots: newSlots,
+      },
     };
-    // We need to update the parent component with the new slots
-    // For now, we'll just update the last added slot
-    const newIndex = newSlots.length - 1;
-    handleTimeChange(day, newIndex, 'start', '09:00');
-    handleTimeChange(day, newIndex, 'end', '17:00');
+
+    updateAvailability({
+      ...settings,
+      availabilitySlots: updatedSlots as AvailabilitySettings['availabilitySlots'],
+    });
+  };
+
+  const removeTimeSlot = (day: string, index: number) => {
+    const newSlots = settings.availabilitySlots[day].slots.filter((_, i) => {
+      return i !== index;
+    });
+    const updatedSlots = {
+      ...settings.availabilitySlots,
+      [day]: {
+        ...settings.availabilitySlots[day],
+        slots: newSlots,
+      },
+    };
+
+    updateAvailability({
+      ...settings,
+      availabilitySlots: updatedSlots as AvailabilitySettings['availabilitySlots'],
+    });
+  };
+
+  const onDayToggle = (day: string, isEnabled: boolean) => {
+    if (handleDayToggle) {
+      handleDayToggle(day, isEnabled);
+    } else {
+      const updatedSlots = {
+        ...settings.availabilitySlots,
+        [day]: {
+          ...settings.availabilitySlots[day],
+          isEnabled,
+        },
+      };
+
+      updateAvailability({
+        ...settings,
+        availabilitySlots: updatedSlots as AvailabilitySettings['availabilitySlots'],
+      });
+    }
+  };
+
+  const handleTimeChange = (day: string, index: number, type: 'start' | 'end', value: string) => {
+    const updatedSlots = {
+      ...settings.availabilitySlots,
+      [day]: {
+        ...settings.availabilitySlots[day],
+        slots: settings.availabilitySlots[day].slots.map((slot, i) => {
+          if (i === index) {
+            return {
+              ...slot,
+              [type]: value,
+            };
+          }
+          return slot;
+        }),
+      },
+    };
+
+    setSettings({
+      ...settings,
+      availabilitySlots: updatedSlots as AvailabilitySettings['availabilitySlots'],
+    });
+
+    updateAvailability({
+      ...settings,
+      availabilitySlots: updatedSlots as AvailabilitySettings['availabilitySlots'],
+    });
   };
 
   return (
     <div className='space-y-1'>
       {days.map((day) => {
+        const daySlots = settings.availabilitySlots[day.id]?.slots || [];
+        const isEnabled = settings.availabilitySlots[day.id]?.isEnabled ?? true;
+
         return (
           <div
             key={day.id}
-            className='flex items-center justify-between py-3 hover:bg-gray-50/50 rounded-lg px-2'
+            className='flex items-base justify-between py-3 hover:bg-gray-50/50 rounded-lg px-2'
           >
-            <div className='flex items-center space-x-4 min-w-[120px]'>
-              <Switch id={day.id} defaultChecked={day.isEnabled} />
+            <div className='flex space-x-4 min-w-[120px]'>
+              <Switch
+                id={day.id}
+                checked={isEnabled}
+                onCheckedChange={(checked) => {
+                  return onDayToggle(day.id, checked);
+                }}
+              />
               <Label htmlFor={day.id} className='font-medium'>
                 {day.label}
               </Label>
             </div>
             <div className='flex-1 flex flex-col space-y-2'>
-              {availabilitySlots[day.id].map((slot, index) => {
+              {daySlots.map((slot, index) => {
                 return (
                   <div key={index} className='flex items-center justify-end space-x-2'>
                     <Select
@@ -121,7 +204,7 @@ export default function WeeklyAvailability({
                         })}
                       </SelectContent>
                     </Select>
-                    <div className='flex justify-end'>
+                    {index === 0 ? (
                       <Button
                         variant='ghost'
                         size='sm'
@@ -132,7 +215,18 @@ export default function WeeklyAvailability({
                       >
                         <Plus className='h-4 w-4' />
                       </Button>
-                    </div>
+                    ) : (
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        className='h-8 w-8 p-0 text-red-500 hover:text-red-600'
+                        onClick={() => {
+                          return removeTimeSlot(day.id, index);
+                        }}
+                      >
+                        <Trash2 className='h-4 w-4' />
+                      </Button>
+                    )}
                   </div>
                 );
               })}

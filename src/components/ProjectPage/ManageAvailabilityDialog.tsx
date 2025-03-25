@@ -24,7 +24,6 @@ import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
 import { regions, timezones } from '@/lib/timezones';
 import { useEffect, useState } from 'react';
 import { FcCheckmark, FcGoogle } from 'react-icons/fc';
-import { toast } from 'sonner';
 import WeeklyAvailability from './WeeklyAvailability';
 
 interface ManageAvailabilityDialogProps {
@@ -46,26 +45,13 @@ export default function ManageAvailabilityDialog({
     connectGoogleCalendar,
     disconnectGoogleCalendar,
   } = useGoogleCalendar();
-  const { settings, isLoading, error, fetchAvailability, updateAvailability, updateTimeSlot } =
-    useAvailability();
-  console.log('🚀 settings:', settings);
+  const { settings, isLoading, error, fetchAvailability, updateAvailability } = useAvailability();
 
   useEffect(() => {
     if (open) {
       fetchAvailability();
     }
   }, [open, fetchAvailability]);
-
-  const handleSave = async () => {
-    try {
-      await updateAvailability(settings);
-      toast.success('Availability settings updated successfully');
-      onSave();
-      onOpenChange(false);
-    } catch (error) {
-      toast.error('Failed to update availability settings');
-    }
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -93,10 +79,7 @@ export default function ManageAvailabilityDialog({
                     <h3 className='text-sm font-medium'>Weekly Hours</h3>
                   </div>
 
-                  <WeeklyAvailability
-                    availabilitySlots={settings.availabilitySlots}
-                    handleTimeChange={updateTimeSlot}
-                  />
+                  <WeeklyAvailability availabilitySlots={settings.availabilitySlots} />
                 </div>
 
                 {/* Right side - Settings */}
