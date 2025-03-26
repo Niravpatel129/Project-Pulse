@@ -3,9 +3,10 @@
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProject, type Project } from '@/contexts/ProjectContext';
-import { CalendarDays, CreditCard, Home, Menu, PanelsTopLeft } from 'lucide-react';
+import { CalendarDays, CreditCard, Home, LineChart, Menu, PanelsTopLeft } from 'lucide-react';
+import Link from 'next/link';
+import { useParams, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import ProjectActivity from './ProjectActivity';
 import ProjectFiles from './ProjectFiles';
@@ -17,12 +18,29 @@ import { ProjectSidebar } from './ProjectSidebar';
 import TimelineExample from './TimelineExample';
 
 export default function ProjectMain() {
-  const [activeTab, setActiveTab] = useState('home');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== 'undefined' ? window.innerWidth : 0,
   );
   const { project, updateProject } = useProject();
+  const params = useParams();
+  const pathname = usePathname();
+  const projectId = params.id as string;
+
+  // Extract the tab from the pathname or default to 'home'
+  const getActiveTab = () => {
+    const segments = pathname.split('/');
+    const lastSegment = segments[segments.length - 1];
+
+    // If the last segment is the project ID, then we're at the root project route
+    if (lastSegment === projectId) {
+      return 'home';
+    }
+
+    return lastSegment;
+  };
+
+  const activeTab = getActiveTab();
 
   useEffect(() => {
     const handleResize = () => {
@@ -38,6 +56,9 @@ export default function ProjectMain() {
   const handleUpdateProject = async (data: Partial<Project>) => {
     await updateProject(data);
   };
+
+  // Build base URL for project tabs
+  const baseUrl = `/projects/${projectId}`;
 
   return (
     <div className='min-h-screen w-full'>
@@ -62,20 +83,28 @@ export default function ProjectMain() {
             </Sheet>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
+          <div className='w-full'>
             <ScrollArea>
-              <TabsList className='text-foreground mb-3 h-auto gap-2 rounded-none bg-transparent px-0 py-1'>
-                <TabsTrigger
-                  value='home'
-                  className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
+              <div className='text-foreground mb-3 h-auto gap-2 rounded-none bg-transparent px-0 py-1 flex'>
+                <Link
+                  href={baseUrl}
+                  className={`hover:bg-accent hover:text-foreground relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 ${
+                    activeTab === 'home'
+                      ? 'after:bg-primary bg-transparent shadow-none font-semibold'
+                      : 'after:opacity-0 hover:after:opacity-50'
+                  } px-3 py-2 rounded flex items-center`}
                 >
                   <Home className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
                   Home
-                </TabsTrigger>
+                </Link>
 
-                <TabsTrigger
-                  value='schedule'
-                  className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
+                <Link
+                  href={`${baseUrl}/schedule`}
+                  className={`hover:bg-accent hover:text-foreground relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 ${
+                    activeTab === 'schedule'
+                      ? 'after:bg-primary bg-transparent shadow-none font-semibold'
+                      : 'after:opacity-0 hover:after:opacity-50'
+                  } px-3 py-2 rounded flex items-center`}
                 >
                   <CalendarDays
                     className='-ms-0.5 me-1.5 opacity-60'
@@ -83,11 +112,27 @@ export default function ProjectMain() {
                     aria-hidden='true'
                   />
                   Schedule
-                </TabsTrigger>
+                </Link>
 
-                <TabsTrigger
-                  value='modules'
-                  className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
+                <Link
+                  href={`${baseUrl}/timeline`}
+                  className={`hover:bg-accent hover:text-foreground relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 ${
+                    activeTab === 'timeline'
+                      ? 'after:bg-primary bg-transparent shadow-none font-semibold'
+                      : 'after:opacity-0 hover:after:opacity-50'
+                  } px-3 py-2 rounded flex items-center`}
+                >
+                  <LineChart className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
+                  Timeline
+                </Link>
+
+                <Link
+                  href={`${baseUrl}/modules`}
+                  className={`hover:bg-accent hover:text-foreground relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 ${
+                    activeTab === 'modules'
+                      ? 'after:bg-primary bg-transparent shadow-none font-semibold'
+                      : 'after:opacity-0 hover:after:opacity-50'
+                  } px-3 py-2 rounded flex items-center`}
                 >
                   <PanelsTopLeft
                     className='-ms-0.5 me-1.5 opacity-60'
@@ -98,40 +143,31 @@ export default function ProjectMain() {
                   <Badge className='bg-primary/15 ms-1.5 min-w-5 px-1' variant='secondary'>
                     {5}
                   </Badge>
-                </TabsTrigger>
-                <TabsTrigger
-                  value='payments'
-                  className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
+                </Link>
+
+                <Link
+                  href={`${baseUrl}/payments`}
+                  className={`hover:bg-accent hover:text-foreground relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 ${
+                    activeTab === 'payments'
+                      ? 'after:bg-primary bg-transparent shadow-none font-semibold'
+                      : 'after:opacity-0 hover:after:opacity-50'
+                  } px-3 py-2 rounded flex items-center`}
                 >
                   <CreditCard className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
                   Payments
-                </TabsTrigger>
-              </TabsList>
+                </Link>
+              </div>
               <ScrollBar orientation='horizontal' />
             </ScrollArea>
             <div className='flex flex-col gap-6 py-2 md:flex-row relative'>
               <div className='w-full lg:flex-1 md:px-2'>
-                <TabsContent value='activity'>
-                  <ProjectActivity />
-                </TabsContent>
-                <TabsContent value='home'>
-                  <ProjectHome />
-                </TabsContent>
-                <TabsContent value='timeline'>
-                  <TimelineExample />
-                </TabsContent>
-                <TabsContent value='schedule'>
-                  <ProjectSchedule />
-                </TabsContent>
-                <TabsContent value='files'>
-                  <ProjectFiles />
-                </TabsContent>
-                <TabsContent value='modules'>
-                  <ProjectModules />
-                </TabsContent>
-                <TabsContent value='payments'>
-                  <ProjectPayments />
-                </TabsContent>
+                {activeTab === 'activity' && <ProjectActivity />}
+                {activeTab === 'home' && <ProjectHome />}
+                {activeTab === 'timeline' && <TimelineExample />}
+                {activeTab === 'schedule' && <ProjectSchedule />}
+                {activeTab === 'files' && <ProjectFiles />}
+                {activeTab === 'modules' && <ProjectModules />}
+                {activeTab === 'payments' && <ProjectPayments />}
               </div>
 
               {/* Desktop Sidebar - only visible on lg and larger screens */}
@@ -139,7 +175,7 @@ export default function ProjectMain() {
                 <ProjectSidebar onUpdateProject={handleUpdateProject} />
               </div>
             </div>
-          </Tabs>
+          </div>
         </div>
       </div>
     </div>

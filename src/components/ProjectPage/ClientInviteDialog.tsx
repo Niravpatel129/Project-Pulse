@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { newRequest } from '@/utils/newRequest';
 import { addHours } from 'date-fns';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -53,6 +54,15 @@ export default function ClientInviteDialog({
     e.preventDefault();
     // Logic to send invitation email to client
     // In a real app, this would call an API endpoint
+
+    newRequest.post('/schedule-meeting/invite', {
+      clientEmail: selectedClientEmail,
+      meetingPurpose,
+      meetingDuration,
+      startDateRange,
+      endDateRange,
+    });
+
     toast.success(`Invitation sent to ${selectedClientEmail}`);
     onOpenChange(false);
   };
@@ -87,9 +97,9 @@ export default function ClientInviteDialog({
             </div>
 
             <div className='grid gap-2'>
-              <Label>Date Range (Optional)</Label>
+              <Label>Date Range</Label>
               <div className='flex flex-col sm:flex-row items-center gap-2'>
-                <div className='w-full sm:w-[200px]'>
+                <div className='w-full'>
                   <DatePicker
                     date={startDateRange}
                     setDate={setStartDateRange}
@@ -100,7 +110,7 @@ export default function ClientInviteDialog({
                 </div>
                 <span className='hidden sm:inline'>to</span>
                 <span className='inline sm:hidden my-1'>to</span>
-                <div className='w-full sm:w-[200px]'>
+                <div className='w-full'>
                   <DatePicker
                     date={endDateRange}
                     setDate={setEndDateRange}
