@@ -10,11 +10,11 @@ const getLocalUrl = () => {
   if (hostname === 'localhost') return 'http://localhost:3004';
 
   const subdomain = hostname.split('.')[0];
-  return `http://${subdomain}.toastify.io:3004`;
+  return `http://${subdomain}.hourblock.com:3004`;
 };
 
 export const connectionUrl =
-  IS_PRODUCTION || IS_MOBILE ? 'https://www.api.toastify.io' : getLocalUrl();
+  IS_PRODUCTION || IS_MOBILE ? 'https://www.api.hourblock.com' : getLocalUrl();
 
 export const newRequest = axios.create({
   baseURL: `${connectionUrl}/api`,

@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { addHours } from 'date-fns';
 import { useState } from 'react';
@@ -49,22 +50,27 @@ export default function ClientInviteDialog({
   const [selectedClientEmail, setSelectedClientEmail] = useState<string>('');
   const [meetingPurpose, setMeetingPurpose] = useState<string>('');
   const [meetingDuration, setMeetingDuration] = useState<string>('60');
+  const { project } = useProject();
 
-  const handleSendInvite = (e: React.FormEvent) => {
+  const handleSendInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     // Logic to send invitation email to client
     // In a real app, this would call an API endpoint
+    try {
+      const response = await newRequest.post('/schedule/invite', {
+        clientEmail: selectedClientEmail,
+        meetingPurpose,
+        meetingDuration,
+        startDateRange,
+        endDateRange,
+        projectId: project?._id,
+      });
 
-    newRequest.post('/schedule-meeting/invite', {
-      clientEmail: selectedClientEmail,
-      meetingPurpose,
-      meetingDuration,
-      startDateRange,
-      endDateRange,
-    });
-
-    toast.success(`Invitation sent to ${selectedClientEmail}`);
-    onOpenChange(false);
+      toast.success(`Invitation sent to ${selectedClientEmail}`);
+      onOpenChange(false);
+    } catch (error) {
+      toast.error('Failed to send invitation');
+    }
   };
 
   return (

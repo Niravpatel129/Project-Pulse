@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useProject, type Project } from '@/contexts/ProjectContext';
-import { CalendarDays, CreditCard, Home, LineChart, Menu, PanelsTopLeft } from 'lucide-react';
+import { CalendarDays, CreditCard, Home, Menu, PanelsTopLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -112,18 +112,6 @@ export default function ProjectMain() {
                     aria-hidden='true'
                   />
                   Schedule
-                </Link>
-
-                <Link
-                  href={`${baseUrl}/timeline`}
-                  className={`hover:bg-accent hover:text-foreground relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 ${
-                    activeTab === 'timeline'
-                      ? 'after:bg-primary bg-transparent shadow-none font-semibold'
-                      : 'after:opacity-0 hover:after:opacity-50'
-                  } px-3 py-2 rounded flex items-center`}
-                >
-                  <LineChart className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
-                  Timeline
                 </Link>
 
                 <Link
