@@ -14,7 +14,7 @@ const getLocalUrl = () => {
 };
 
 export const connectionUrl =
-  IS_PRODUCTION || IS_MOBILE ? 'https://www.api.hourblock.com' : getLocalUrl();
+  IS_PRODUCTION || IS_MOBILE ? 'https://api.hourblock.com' : getLocalUrl();
 
 export const newRequest = axios.create({
   baseURL: `${connectionUrl}/api`,
