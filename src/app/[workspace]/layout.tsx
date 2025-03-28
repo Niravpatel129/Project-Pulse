@@ -26,11 +26,12 @@ export default function DashboardLayout({
     }
   }, [isAuthenticated, loading, pathname, router]);
 
-  // Check if the current path is login or register
+  // Check if the current path is login or register or portal
   const isAuthPage = pathname.includes('/login') || pathname.includes('/register');
+  const isPortalPage = pathname.includes('/portal');
 
   // Determine if we should show navigation
-  const showNavigation = !isAuthPage && (loading || isAuthenticated);
+  const showNavigation = !isAuthPage && !isPortalPage && (loading || isAuthenticated);
 
   return (
     <div className='flex min-h-screen flex-col'>
