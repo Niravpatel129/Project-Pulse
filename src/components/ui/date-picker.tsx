@@ -15,6 +15,7 @@ interface DatePickerProps {
   placeholder?: string;
   minDate?: Date;
   maxDate?: Date;
+  disabled?: boolean;
 }
 
 export function DatePicker({
@@ -24,6 +25,7 @@ export function DatePicker({
   placeholder = 'Pick a date',
   minDate,
   maxDate,
+  disabled,
 }: DatePickerProps) {
   return (
     <Popover>
@@ -34,6 +36,7 @@ export function DatePicker({
             'w-full justify-start text-left font-normal',
             !date && 'text-muted-foreground',
             className,
+            disabled && 'opacity-50 cursor-not-allowed',
           )}
         >
           <CalendarIcon className='mr-2 h-4 w-4' />
