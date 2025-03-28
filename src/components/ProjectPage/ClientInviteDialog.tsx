@@ -48,7 +48,6 @@ type ClientMultiSelectProps = {
   selectedEmails: string[];
   onChange: (emails: string[]) => void;
   disabled?: boolean;
-  error?: string;
 };
 
 function ClientMultiSelect({
@@ -56,7 +55,6 @@ function ClientMultiSelect({
   selectedEmails,
   onChange,
   disabled,
-  error,
 }: ClientMultiSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -92,11 +90,10 @@ function ClientMultiSelect({
   };
 
   return (
-    <div className='relative space-y-2' ref={containerRef}>
+    <div className='relative' ref={containerRef}>
       <div
         className={cn(
           'relative flex min-h-[2.5rem] w-full flex-wrap items-center gap-1 rounded-md border border-input bg-background px-2 py-1.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 transition-all duration-200 cursor-pointer',
-          error && 'border-red-500',
           disabled && 'opacity-50 cursor-not-allowed',
         )}
         onClick={() => {
@@ -111,8 +108,8 @@ function ClientMultiSelect({
           }
         }}
       >
-        {selectedEmails.length === 0 ? (
-          <span className='text-muted-foreground px-2'>Select clients to invite</span>
+        {!selectedEmails.length ? (
+          <span className='text-muted-foreground px-2'>Select clients</span>
         ) : (
           <>
             {selectedEmails.map((email) => {
@@ -128,11 +125,7 @@ function ClientMultiSelect({
                     className='ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5 transition-colors duration-200'
                     onClick={(e) => {
                       e.stopPropagation();
-                      onChange(
-                        selectedEmails.filter((e) => {
-                          return e !== email;
-                        }),
-                      );
+                      toggleEmail(email);
                     }}
                     disabled={disabled}
                   >
@@ -151,64 +144,61 @@ function ClientMultiSelect({
         />
       </div>
 
-      <div
-        className={cn(
-          'absolute left-0 right-0 z-50 mt-1 rounded-md border bg-popover text-popover-foreground shadow-md outline-none transition-all duration-200',
-          isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none',
-        )}
-      >
-        <div className='p-1'>
-          <Input
-            placeholder='Search clients...'
-            value={searchQuery}
-            onChange={(e) => {
-              return setSearchQuery(e.target.value);
-            }}
-            className='mb-1'
-            onClick={(e) => {
-              return e.stopPropagation();
-            }}
-          />
-          <ScrollArea className='max-h-[200px] transition-all duration-200'>
-            <div className='space-y-1'>
-              {filteredParticipants.length === 0 ? (
-                <div className='py-2 text-center text-sm text-muted-foreground'>
-                  No clients found
+      {isOpen && (
+        <div className='absolute left-0 right-0 top-full mt-1 z-[100]'>
+          <div className='rounded-md border bg-popover text-popover-foreground shadow-md outline-none'>
+            <div className='p-1'>
+              <Input
+                placeholder='Search clients...'
+                value={searchQuery}
+                onChange={(e) => {
+                  return setSearchQuery(e.target.value);
+                }}
+                className='mb-1'
+                onClick={(e) => {
+                  return e.stopPropagation();
+                }}
+              />
+              <ScrollArea className='max-h-[200px]'>
+                <div className='space-y-1'>
+                  {filteredParticipants.length === 0 ? (
+                    <div className='py-2 text-center text-sm text-muted-foreground'>
+                      No clients found
+                    </div>
+                  ) : (
+                    filteredParticipants.map((participant) => {
+                      const isSelected = selectedEmails.includes(participant.email);
+                      return (
+                        <button
+                          key={participant._id}
+                          type='button'
+                          className={cn(
+                            'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors duration-200',
+                            isSelected && 'bg-accent',
+                          )}
+                          onClick={() => {
+                            return participant.email && toggleEmail(participant.email);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              'h-4 w-4 transition-opacity duration-200',
+                              isSelected ? 'opacity-100' : 'opacity-0',
+                            )}
+                          />
+                          <span className='flex-1 text-left'>
+                            {participant.email || 'No email available'}
+                          </span>
+                        </button>
+                      );
+                    })
+                  )}
                 </div>
-              ) : (
-                filteredParticipants.map((participant) => {
-                  return (
-                    <button
-                      key={participant._id}
-                      type='button'
-                      className={cn(
-                        'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors duration-200',
-                        selectedEmails.includes(participant.email) && 'bg-accent',
-                      )}
-                      onClick={() => {
-                        return participant.email && toggleEmail(participant.email);
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          'h-4 w-4 transition-opacity duration-200',
-                          participant.email && selectedEmails.includes(participant.email)
-                            ? 'opacity-100'
-                            : 'opacity-0',
-                        )}
-                      />
-                      <span className='flex-1 text-left'>
-                        {participant.email || 'No email available'}
-                      </span>
-                    </button>
-                  );
-                })
-              )}
+              </ScrollArea>
             </div>
-          </ScrollArea>
+          </div>
         </div>
-      </div>
-      {error && <p className='text-sm text-red-500'>{error}</p>}
+      )}
     </div>
   );
 }
@@ -227,8 +217,8 @@ export default function ClientInviteDialog({
     setStartDateRange,
     endDateRange,
     setEndDateRange,
-    selectedClientEmails,
-    setSelectedClientEmails,
+    primaryClientEmail,
+    setPrimaryClientEmail,
     meetingPurpose,
     setMeetingPurpose,
     meetingLocation,
@@ -296,17 +286,36 @@ export default function ClientInviteDialog({
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Select one or more clients to invite</p>
+                      <p>Select the client who will book the meeting</p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <ClientMultiSelect
-                  participants={participants}
-                  selectedEmails={selectedClientEmails}
-                  onChange={setSelectedClientEmails}
-                  disabled={isFormDisabled}
-                  error={errors.clientEmail}
-                />
+                <div className='space-y-2'>
+                  <Select
+                    value={primaryClientEmail}
+                    onValueChange={setPrimaryClientEmail}
+                    disabled={isFormDisabled}
+                  >
+                    <SelectTrigger
+                      id='primaryClient'
+                      className={errors.primaryClientEmail ? 'border-red-500' : ''}
+                    >
+                      <SelectValue placeholder='Select client' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {participants.map((participant) => {
+                        return (
+                          <SelectItem key={participant._id} value={participant.email || ''}>
+                            {participant.email || 'No email available'}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  {errors.primaryClientEmail && (
+                    <p className='text-sm text-red-500'>{errors.primaryClientEmail}</p>
+                  )}
+                </div>
               </div>
 
               {/* Step 2: When to Meet */}

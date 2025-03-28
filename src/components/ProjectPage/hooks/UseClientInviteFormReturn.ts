@@ -29,8 +29,8 @@ type UseClientInviteFormReturn = {
   setStartDateRange: (date: Date | undefined) => void;
   endDateRange: Date | undefined;
   setEndDateRange: (date: Date | undefined) => void;
-  selectedClientEmails: string[];
-  setSelectedClientEmails: (emails: string[]) => void;
+  primaryClientEmail: string | undefined;
+  setPrimaryClientEmail: (email: string | undefined) => void;
   meetingPurpose: string;
   setMeetingPurpose: (purpose: string) => void;
   meetingLocation: string;
@@ -64,7 +64,7 @@ function useClientInviteForm({
 }: UseClientInviteFormProps): UseClientInviteFormReturn {
   const [startDateRange, setStartDateRange] = useState<Date | undefined>(new Date());
   const [endDateRange, setEndDateRange] = useState<Date | undefined>(addHours(new Date(), 30 * 24));
-  const [selectedClientEmails, setSelectedClientEmails] = useState<string[]>([]);
+  const [primaryClientEmail, setPrimaryClientEmail] = useState<string | undefined>();
   const [meetingPurpose, setMeetingPurpose] = useState<string>('');
   const [meetingLocation, setMeetingLocation] = useState<string>('video');
   const [videoPlatform, setVideoPlatform] = useState<string>('google-meet');
@@ -140,8 +140,8 @@ function useClientInviteForm({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (selectedClientEmails.length === 0) {
-      newErrors.clientEmail = 'Please select at least one client';
+    if (!primaryClientEmail) {
+      newErrors.primaryClientEmail = 'Please select a primary client';
     }
 
     if (!meetingPurpose.trim()) {
@@ -186,7 +186,7 @@ function useClientInviteForm({
   const resetForm = useCallback(() => {
     setStartDateRange(new Date());
     setEndDateRange(addHours(new Date(), 30 * 24));
-    setSelectedClientEmails([]);
+    setPrimaryClientEmail(undefined);
     setMeetingPurpose('');
     setMeetingLocation('video');
     setVideoPlatform('google-meet');
@@ -207,7 +207,7 @@ function useClientInviteForm({
     setIsSubmitting(true);
     try {
       const response = await newRequest.post('/schedule/invite', {
-        clientEmails: selectedClientEmails,
+        primaryClientEmail,
         meetingPurpose,
         meetingDuration,
         startDateRange,
@@ -227,11 +227,7 @@ function useClientInviteForm({
         }),
       });
 
-      toast.success(
-        `Invitation sent to ${selectedClientEmails.length} client${
-          selectedClientEmails.length > 1 ? 's' : ''
-        }`,
-      );
+      toast.success(`Invitation sent to ${primaryClientEmail}`);
       onSuccess();
       resetForm();
     } catch (error) {
@@ -270,8 +266,8 @@ function useClientInviteForm({
     setStartDateRange,
     endDateRange,
     setEndDateRange,
-    selectedClientEmails,
-    setSelectedClientEmails,
+    primaryClientEmail,
+    setPrimaryClientEmail,
     meetingPurpose,
     setMeetingPurpose,
     meetingLocation,
