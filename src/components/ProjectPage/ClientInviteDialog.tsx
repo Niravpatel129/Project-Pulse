@@ -257,6 +257,7 @@ export default function ClientInviteDialog({
       return onOpenChange(false);
     },
   });
+  console.log('🚀 googleStatus:', googleStatus);
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
@@ -412,10 +413,20 @@ export default function ClientInviteDialog({
                   </Select>
                   {videoPlatform === 'google-meet' && (
                     <div className='space-y-2'>
-                      {googleStatus?.isConnected ? (
+                      {googleStatus?.connected ? (
                         <div className='flex items-center gap-2 text-sm text-green-600'>
                           <span>✓</span>
-                          <span>Connected to Google Calendar</span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className='cursor-help'>Connected to Google Calendar</span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>
+                                Google Meet links will be automatically created and included in your
+                                meeting invitations
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
                         </div>
                       ) : (
                         <div className='space-y-2'>

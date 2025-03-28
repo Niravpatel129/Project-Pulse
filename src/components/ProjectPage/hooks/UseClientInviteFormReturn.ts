@@ -4,15 +4,23 @@ import { addHours, isBefore, isValid } from 'date-fns';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 
+type IntegrationStatus = {
+  connected: boolean;
+  isExpired: boolean;
+  services: {
+    calendar: {
+      connected: boolean;
+      isExpired: boolean;
+      calendarId: string;
+      isSynced: boolean;
+    };
+  };
+};
+
 type UseClientInviteFormProps = {
   projectName?: string;
   projectId?: string;
   onSuccess: () => void;
-};
-
-type IntegrationStatus = {
-  isConnected: boolean;
-  platform: 'google' | 'zoom';
 };
 
 type UseClientInviteFormReturn = {
@@ -72,7 +80,7 @@ function useClientInviteForm({
   const { data: googleStatus } = useQuery({
     queryKey: ['google-integration'],
     queryFn: async () => {
-      const response = await newRequest.get('/integrations/google/status');
+      const response = await newRequest.get('/calendar/google/status');
       return response.data as IntegrationStatus;
     },
   });
@@ -81,19 +89,41 @@ function useClientInviteForm({
   const connectMutation = useMutation({
     mutationFn: async (platform: 'google') => {
       setIsConnecting(true);
-      // Simulate API call
-      await new Promise((resolve) => {
-        return setTimeout(resolve, 2000);
-      });
-      return { success: true, platform };
+      try {
+        // First check if user is already connected
+        const statusResponse = await newRequest.get('/calendar/google/status');
+        const status = statusResponse.data as IntegrationStatus;
+
+        if (
+          status.connected &&
+          status.services.calendar.connected &&
+          !status.services.calendar.isExpired
+        ) {
+          return { success: true, platform };
+        }
+
+        // If not connected or expired, initiate the Google OAuth flow
+        const response = await newRequest.post('/calendar/google/connect');
+        // Redirect to Google OAuth URL if provided in response
+        if (response.data.authUrl) {
+          window.location.href = response.data.authUrl;
+          return { success: false, platform };
+        }
+
+        return { success: true, platform };
+      } catch (error) {
+        throw error;
+      } finally {
+        setIsConnecting(false);
+      }
     },
     onSuccess: (data) => {
-      toast.success('Google connected successfully');
-      setIsConnecting(false);
+      if (data.success) {
+        toast.success('Google connected successfully');
+      }
     },
-    onError: () => {
-      toast.error('Failed to connect. Please try again.');
-      setIsConnecting(false);
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to connect. Please try again.');
     },
   });
 
