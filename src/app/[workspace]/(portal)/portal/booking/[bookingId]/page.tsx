@@ -1,7 +1,10 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { CustomCalendar } from '@/components/ui/custom-calendar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { newRequest } from '@/utils/newRequest';
+import { format } from 'date-fns';
 import { CalendarX, Clock, MapPin, Users } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -60,10 +63,12 @@ export default function BookingPage() {
   const [error, setError] = useState<string | null>(null);
   const [booking, setBooking] = useState<Booking | null>(null);
   const [availability, setAvailability] = useState<Availability | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [timeSearch, setTimeSearch] = useState('');
+  const [selectedTimeRange, setSelectedTimeRange] = useState<string>('all');
 
   useEffect(() => {
     const fetchBookingDetails = async () => {
@@ -188,6 +193,34 @@ export default function BookingPage() {
     }
   };
 
+  const getTimeRange = (time: string): string => {
+    const hour = parseInt(time.split(':')[0]);
+    if (hour < 12) return 'morning';
+    if (hour < 17) return 'afternoon';
+    return 'evening';
+  };
+
+  const filterTimeSlots = (slots: TimeSlot[]): TimeSlot[] => {
+    return slots.filter((slot) => {
+      const matchesSearch =
+        timeSearch === '' ||
+        slot.start.toLowerCase().includes(timeSearch.toLowerCase()) ||
+        slot.end.toLowerCase().includes(timeSearch.toLowerCase());
+
+      const matchesRange =
+        selectedTimeRange === 'all' || getTimeRange(slot.start) === selectedTimeRange;
+
+      return matchesSearch && matchesRange;
+    });
+  };
+
+  const timeRanges = [
+    { id: 'all', label: 'All Times' },
+    { id: 'morning', label: 'Morning (12am - 12pm)' },
+    { id: 'afternoon', label: 'Afternoon (12pm - 5pm)' },
+    { id: 'evening', label: 'Evening (5pm - 12am)' },
+  ];
+
   if (isLoading) {
     return (
       <div className='flex items-center justify-center min-h-screen'>
@@ -218,113 +251,113 @@ export default function BookingPage() {
   return (
     <div className='min-h-screen bg-gray-50'>
       <div className='container mx-auto py-8 px-4'>
-        <div className='max-w-3xl mx-auto space-y-6'>
+        <div className='max-w-4xl mx-auto space-y-6'>
           <div className='bg-white rounded-xl shadow-sm border border-gray-100 p-6'>
             <div className='flex items-start justify-between'>
-              <div>
-                <h1 className='text-2xl font-bold text-gray-900 mb-2'>{booking?.meetingPurpose}</h1>
-                <div className='space-y-3 mt-4'>
-                  <div className='flex items-center text-gray-600'>
-                    <Clock className='w-4 h-4 mr-2 text-gray-400' />
-                    <span>{booking?.meetingDuration} minutes</span>
+              <div className='space-y-4'>
+                <div>
+                  <h1 className='text-2xl font-bold text-gray-900 mb-2'>
+                    {booking?.meetingPurpose}
+                  </h1>
+                  <p className='text-gray-500 text-sm'>
+                    Select a time slot that works best for you
+                  </p>
+                </div>
+                <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
+                  <div className='flex items-center text-gray-600 bg-gray-50 p-3 rounded-lg'>
+                    <Clock className='w-5 h-5 mr-2 text-primary' />
+                    <div>
+                      <p className='text-sm text-gray-500'>Duration</p>
+                      <p className='font-medium'>{booking?.meetingDuration} minutes</p>
+                    </div>
                   </div>
-                  <div className='flex items-center text-gray-600'>
-                    <MapPin className='w-4 h-4 mr-2 text-gray-400' />
-                    <span>
-                      {booking?.meetingLocation === 'other'
-                        ? booking?.customLocation
-                        : booking?.meetingLocation}
-                    </span>
+                  <div className='flex items-center text-gray-600 bg-gray-50 p-3 rounded-lg'>
+                    <MapPin className='w-5 h-5 mr-2 text-primary' />
+                    <div>
+                      <p className='text-sm text-gray-500'>Location</p>
+                      <p className='font-medium'>
+                        {booking?.meetingLocation === 'other'
+                          ? booking?.customLocation
+                          : booking?.meetingLocation}
+                      </p>
+                    </div>
                   </div>
-                  <div className='flex items-center text-gray-600'>
-                    <Users className='w-4 h-4 mr-2 text-gray-400' />
-                    <span>1-on-1 Meeting</span>
+                  <div className='flex items-center text-gray-600 bg-gray-50 p-3 rounded-lg'>
+                    <Users className='w-5 h-5 mr-2 text-primary' />
+                    <div>
+                      <p className='text-sm text-gray-500'>Type</p>
+                      <p className='font-medium'>1-on-1 Meeting</p>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className='text-sm text-gray-500'>{availability?.timezone}</div>
+              <div className='text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-full'>
+                {availability?.timezone}
+              </div>
             </div>
           </div>
 
           <div className='bg-white rounded-xl shadow-sm border border-gray-100 p-6'>
-            <h2 className='text-lg font-semibold text-gray-900 mb-6'>Select a Date & Time</h2>
-
-            <div className='grid grid-cols-7 gap-2 mb-8'>
-              {Array.from({ length: 7 }, (_, i) => {
-                const date = new Date();
-                date.setDate(date.getDate() + i);
-                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-                const dayKey = dayName.toLowerCase().substring(0, 3);
-                const fullDayKey = {
-                  sun: 'sunday',
-                  mon: 'monday',
-                  tue: 'tuesday',
-                  wed: 'wednesday',
-                  thu: 'thursday',
-                  fri: 'friday',
-                  sat: 'saturday',
-                }[dayKey];
-
-                const isEnabled = availability?.availabilitySlots[fullDayKey]?.isEnabled;
-                const isSelected = selectedDate?.toDateString() === date.toDateString();
-                const isToday = date.toDateString() === new Date().toDateString();
-
-                return (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      return isEnabled && handleDateSelect(date);
+            <div className='rounded-md border'>
+              <div className='flex max-sm:flex-col'>
+                <div className='flex-1 p-4 sm:p-6'>
+                  <CustomCalendar
+                    selected={selectedDate}
+                    onSelect={(newDate) => {
+                      if (newDate) {
+                        setSelectedDate(newDate);
+                        setSelectedTimeSlot(null);
+                      }
                     }}
-                    className={`text-center p-3 rounded-lg transition-all duration-200 ${
-                      isSelected
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : isEnabled
-                        ? 'hover:bg-gray-50 border border-gray-100'
-                        : 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                    } ${isToday ? 'border-2 border-primary' : ''}`}
-                  >
-                    <div className='text-sm font-medium'>{dayName}</div>
-                    <div className='text-lg font-semibold mt-1'>{date.getDate()}</div>
-                  </button>
-                );
-              })}
-            </div>
-
-            {selectedDate && (
-              <div className='mt-8'>
-                <h3 className='text-sm font-medium text-gray-900 mb-4'>Available Time Slots</h3>
-                <div className='grid grid-cols-2 sm:grid-cols-3 gap-3'>
-                  {generateTimeSlots(selectedDate).map((slot, index) => {
-                    return (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          return handleTimeSlotSelect(slot);
-                        }}
-                        className={`p-3 rounded-lg text-sm transition-all duration-200 ${
-                          selectedTimeSlot?.start === slot.start
-                            ? 'bg-primary text-primary-foreground shadow-sm'
-                            : 'hover:bg-gray-50 border border-gray-100'
-                        }`}
-                      >
-                        {slot.start} - {slot.end}
-                      </button>
-                    );
-                  })}
+                    disabled={[{ before: new Date() }]}
+                    className='w-full'
+                  />
+                </div>
+                <div className='relative w-full max-sm:h-64 sm:w-80 border-t sm:border-t-0 sm:border-l'>
+                  <div className='absolute inset-0 py-4'>
+                    <ScrollArea className='h-full'>
+                      <div className='space-y-3'>
+                        <div className='flex h-8 shrink-0 items-center px-4'>
+                          <p className='text-sm font-medium'>
+                            {selectedDate && format(selectedDate, 'EEEE, d')}
+                          </p>
+                        </div>
+                        <div className='grid gap-2 px-4 max-sm:grid-cols-2'>
+                          {generateTimeSlots(selectedDate || new Date()).map((slot, index) => {
+                            return (
+                              <Button
+                                key={index}
+                                variant={
+                                  selectedTimeSlot?.start === slot.start ? 'default' : 'outline'
+                                }
+                                size='sm'
+                                className='w-full h-9'
+                                onClick={() => {
+                                  return setSelectedTimeSlot(slot);
+                                }}
+                              >
+                                {slot.start}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </ScrollArea>
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
 
             {selectedTimeSlot && !bookingSuccess && (
               <div className='mt-8 flex justify-end'>
                 <Button
                   onClick={handleConfirmBooking}
                   disabled={isSubmitting}
-                  className='w-full sm:w-auto px-8'
+                  className='w-full sm:w-auto px-8 py-6 text-base'
                 >
                   {isSubmitting ? (
                     <div className='flex items-center'>
-                      <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2'></div>
+                      <div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2'></div>
                       Confirming...
                     </div>
                   ) : (
@@ -337,9 +370,9 @@ export default function BookingPage() {
             {bookingSuccess && (
               <div className='mt-8 p-6 bg-green-50 rounded-lg border border-green-100'>
                 <div className='flex items-center mb-4'>
-                  <div className='w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-3'>
+                  <div className='w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3'>
                     <svg
-                      className='w-4 h-4 text-green-600'
+                      className='w-5 h-5 text-green-600'
                       fill='none'
                       stroke='currentColor'
                       viewBox='0 0 24 24'
@@ -352,7 +385,7 @@ export default function BookingPage() {
                       />
                     </svg>
                   </div>
-                  <h3 className='text-green-800 font-medium'>Booking Confirmed!</h3>
+                  <h3 className='text-green-800 font-medium text-lg'>Booking Confirmed!</h3>
                 </div>
                 <p className='text-green-700 text-sm mb-6'>
                   Your meeting has been scheduled for{' '}
@@ -382,12 +415,16 @@ export default function BookingPage() {
               <div className='text-sm text-gray-500 space-y-2'>
                 {availability?.availabilitySlots.monday?.slots[0] &&
                   availability?.availabilitySlots.friday?.slots[0] && (
-                    <p>
+                    <p className='flex items-center'>
+                      <Clock className='w-4 h-4 mr-2' />
                       Available {availability.availabilitySlots.monday.slots[0].start} -{' '}
                       {availability.availabilitySlots.friday.slots[0].end}
                     </p>
                   )}
-                <p>Minimum notice: {availability?.minimumNotice} hours</p>
+                <p className='flex items-center'>
+                  <CalendarX className='w-4 h-4 mr-2' />
+                  Minimum notice: {availability?.minimumNotice} hours
+                </p>
               </div>
             </div>
           </div>
