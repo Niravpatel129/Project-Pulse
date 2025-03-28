@@ -22,12 +22,9 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useProject } from '@/contexts/ProjectContext';
 import { cn } from '@/lib/utils';
-import { newRequest } from '@/utils/newRequest';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { addHours, isBefore, isValid } from 'date-fns';
 import { Check, ChevronsUpDown, Info, Loader2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import useClientInviteForm from './hooks/UseClientInviteFormReturn';
 
 type Participant = {
   _id: string;
@@ -43,11 +40,6 @@ type ClientInviteDialogProps = {
   onOpenChange: (open: boolean) => void;
   projectName?: string;
   participants: Participant[];
-};
-
-type IntegrationStatus = {
-  isConnected: boolean;
-  platform: 'google' | 'zoom';
 };
 
 type ClientMultiSelectProps = {
@@ -102,10 +94,21 @@ function ClientMultiSelect({
     <div className='relative space-y-2' ref={containerRef}>
       <div
         className={cn(
-          'relative flex min-h-[2.5rem] w-full flex-wrap items-center gap-1 rounded-md border border-input bg-background px-2 py-1.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
+          'relative flex min-h-[2.5rem] w-full flex-wrap items-center gap-1 rounded-md border border-input bg-background px-2 py-1.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 transition-all duration-200 cursor-pointer',
           error && 'border-red-500',
           disabled && 'opacity-50 cursor-not-allowed',
         )}
+        onClick={() => {
+          return !disabled && setIsOpen(!isOpen);
+        }}
+        role='button'
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (!disabled && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            setIsOpen(!isOpen);
+          }
+        }}
       >
         {selectedEmails.length === 0 ? (
           <span className='text-muted-foreground px-2'>Select clients to invite</span>
@@ -113,11 +116,15 @@ function ClientMultiSelect({
           <>
             {selectedEmails.map((email) => {
               return (
-                <Badge key={email} variant='secondary' className='flex items-center gap-1'>
+                <Badge
+                  key={email}
+                  variant='secondary'
+                  className='flex items-center gap-1 transition-all duration-200 animate-in fade-in-0 slide-in-from-left-1'
+                >
                   {email}
                   <button
                     type='button'
-                    className='ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5'
+                    className='ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5 transition-colors duration-200'
                     onClick={(e) => {
                       e.stopPropagation();
                       onChange(
@@ -135,69 +142,71 @@ function ClientMultiSelect({
             })}
           </>
         )}
-        <button
-          type='button'
-          className='absolute right-2 top-1/2 -translate-y-1/2'
-          onClick={() => {
-            return setIsOpen(!isOpen);
-          }}
-          disabled={disabled}
-        >
-          <ChevronsUpDown className='h-4 w-4 opacity-50' />
-        </button>
+        <ChevronsUpDown
+          className={cn(
+            'h-4 w-4 opacity-50 transition-transform duration-200 ml-auto',
+            isOpen && 'rotate-180',
+          )}
+        />
       </div>
 
-      {isOpen && (
-        <div className='absolute left-0 right-0 z-50 mt-1 rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in'>
-          <div className='p-1'>
-            <Input
-              placeholder='Search clients...'
-              value={searchQuery}
-              onChange={(e) => {
-                return setSearchQuery(e.target.value);
-              }}
-              className='mb-1'
-            />
-            <ScrollArea className='max-h-[200px]'>
-              <div className='space-y-1'>
-                {filteredParticipants.length === 0 ? (
-                  <div className='py-2 text-center text-sm text-muted-foreground'>
-                    No clients found
-                  </div>
-                ) : (
-                  filteredParticipants.map((participant) => {
-                    return (
-                      <button
-                        key={participant._id}
-                        type='button'
+      <div
+        className={cn(
+          'absolute left-0 right-0 z-50 mt-1 rounded-md border bg-popover text-popover-foreground shadow-md outline-none transition-all duration-200',
+          isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none',
+        )}
+      >
+        <div className='p-1'>
+          <Input
+            placeholder='Search clients...'
+            value={searchQuery}
+            onChange={(e) => {
+              return setSearchQuery(e.target.value);
+            }}
+            className='mb-1'
+            onClick={(e) => {
+              return e.stopPropagation();
+            }}
+          />
+          <ScrollArea className='max-h-[200px] transition-all duration-200'>
+            <div className='space-y-1'>
+              {filteredParticipants.length === 0 ? (
+                <div className='py-2 text-center text-sm text-muted-foreground'>
+                  No clients found
+                </div>
+              ) : (
+                filteredParticipants.map((participant) => {
+                  return (
+                    <button
+                      key={participant._id}
+                      type='button'
+                      className={cn(
+                        'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors duration-200',
+                        selectedEmails.includes(participant.email) && 'bg-accent',
+                      )}
+                      onClick={() => {
+                        return participant.email && toggleEmail(participant.email);
+                      }}
+                    >
+                      <Check
                         className={cn(
-                          'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground',
-                          selectedEmails.includes(participant.email) && 'bg-accent',
+                          'h-4 w-4 transition-opacity duration-200',
+                          participant.email && selectedEmails.includes(participant.email)
+                            ? 'opacity-100'
+                            : 'opacity-0',
                         )}
-                        onClick={() => {
-                          return participant.email && toggleEmail(participant.email);
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            'h-4 w-4',
-                            participant.email && selectedEmails.includes(participant.email)
-                              ? 'opacity-100'
-                              : 'opacity-0',
-                          )}
-                        />
-                        <span className='flex-1 text-left'>
-                          {participant.email || 'No email available'}
-                        </span>
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-            </ScrollArea>
-          </div>
+                      />
+                      <span className='flex-1 text-left'>
+                        {participant.email || 'No email available'}
+                      </span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </ScrollArea>
         </div>
-      )}
+      </div>
       {error && <p className='text-sm text-red-500'>{error}</p>}
     </div>
   );
@@ -209,204 +218,55 @@ export default function ClientInviteDialog({
   projectName,
   participants,
 }: ClientInviteDialogProps) {
-  const [startDateRange, setStartDateRange] = useState<Date | undefined>(new Date());
-  const [endDateRange, setEndDateRange] = useState<Date | undefined>(addHours(new Date(), 30 * 24));
-  const [selectedClientEmails, setSelectedClientEmails] = useState<string[]>([]);
-  const [meetingPurpose, setMeetingPurpose] = useState<string>('');
-  const [meetingLocation, setMeetingLocation] = useState<string>('video');
-  const [videoPlatform, setVideoPlatform] = useState<string>('zoom');
-  const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const [phoneNumberType, setPhoneNumberType] = useState<string>('client-provided');
-  const [customLocation, setCustomLocation] = useState<string>('');
-  const [meetingDuration, setMeetingDuration] = useState<string>('60');
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const { project } = useProject();
-  const [isConnecting, setIsConnecting] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // Reset form when dialog closes
-  useEffect(() => {
-    if (!open) {
+  const {
+    startDateRange,
+    setStartDateRange,
+    endDateRange,
+    setEndDateRange,
+    selectedClientEmails,
+    setSelectedClientEmails,
+    meetingPurpose,
+    setMeetingPurpose,
+    meetingLocation,
+    setMeetingLocation,
+    videoPlatform,
+    setVideoPlatform,
+    phoneNumber,
+    setPhoneNumber,
+    phoneNumberType,
+    setPhoneNumberType,
+    customLocation,
+    setCustomLocation,
+    meetingDuration,
+    setMeetingDuration,
+    errors,
+    setErrors,
+    isFormDisabled,
+    isSubmitting,
+    handleSendInvite,
+    handleConnect,
+    isConnecting,
+    googleStatus,
+    resetForm,
+  } = useClientInviteForm({
+    projectName,
+    projectId: project?._id,
+    onSuccess: () => {
+      return onOpenChange(false);
+    },
+  });
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
       resetForm();
     }
-  }, [open]);
-
-  // Reset irrelevant fields when meeting location changes
-  useEffect(() => {
-    setErrors({});
-    switch (meetingLocation) {
-      case 'video':
-        setPhoneNumber('');
-        setPhoneNumberType('client-provided');
-        break;
-      case 'phone':
-        setVideoPlatform('zoom');
-        setCustomLocation('');
-        break;
-      case 'in-person':
-      case 'other':
-        setVideoPlatform('zoom');
-        setPhoneNumber('');
-        setPhoneNumberType('client-provided');
-        break;
-    }
-  }, [meetingLocation]);
-
-  // Check integration status
-  const { data: googleStatus } = useQuery({
-    queryKey: ['google-integration'],
-    queryFn: async () => {
-      const response = await newRequest.get('/integrations/google/status');
-      return response.data as IntegrationStatus;
-    },
-  });
-
-  const { data: zoomStatus } = useQuery({
-    queryKey: ['zoom-integration'],
-    queryFn: async () => {
-      const response = await newRequest.get('/integrations/zoom/status');
-      return response.data as IntegrationStatus;
-    },
-  });
-
-  // Mock connection mutation
-  const connectMutation = useMutation({
-    mutationFn: async (platform: 'google' | 'zoom') => {
-      setIsConnecting(true);
-      // Simulate API call
-      await new Promise((resolve) => {
-        return setTimeout(resolve, 2000);
-      });
-      return { success: true, platform };
-    },
-    onSuccess: (data) => {
-      toast.success(`${data.platform === 'google' ? 'Google' : 'Zoom'} connected successfully`);
-      setIsConnecting(false);
-    },
-    onError: () => {
-      toast.error('Failed to connect. Please try again.');
-      setIsConnecting(false);
-    },
-  });
-
-  const handleConnect = (platform: 'google' | 'zoom') => {
-    connectMutation.mutate(platform);
+    onOpenChange(newOpen);
   };
-
-  const validatePhoneNumber = (number: string): boolean => {
-    // Basic international phone number validation
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    return phoneRegex.test(number.replace(/\s+/g, ''));
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (selectedClientEmails.length === 0) {
-      newErrors.clientEmail = 'Please select at least one client';
-    }
-
-    if (!meetingPurpose.trim()) {
-      newErrors.meetingPurpose = 'Please enter a meeting purpose';
-    }
-
-    if (!startDateRange || !isValid(startDateRange)) {
-      newErrors.startDate = 'Please select a valid start date';
-    }
-
-    if (!endDateRange || !isValid(endDateRange)) {
-      newErrors.endDate = 'Please select a valid end date';
-    }
-
-    if (startDateRange && endDateRange && isBefore(endDateRange, startDateRange)) {
-      newErrors.dateRange = 'End date must be after start date';
-    }
-
-    if (meetingLocation === 'video' && videoPlatform === 'custom' && !customLocation.trim()) {
-      newErrors.customLocation = 'Please enter the video platform name';
-    }
-
-    if (
-      meetingLocation === 'phone' &&
-      phoneNumberType === 'custom' &&
-      !validatePhoneNumber(phoneNumber)
-    ) {
-      newErrors.phoneNumber = 'Please enter a valid phone number';
-    }
-
-    if (
-      (meetingLocation === 'in-person' || meetingLocation === 'other') &&
-      !customLocation.trim()
-    ) {
-      newErrors.customLocation = 'Please enter the location details';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const resetForm = () => {
-    setStartDateRange(new Date());
-    setEndDateRange(addHours(new Date(), 30 * 24));
-    setSelectedClientEmails([]);
-    setMeetingPurpose('');
-    setMeetingLocation('video');
-    setVideoPlatform('zoom');
-    setPhoneNumber('');
-    setPhoneNumberType('client-provided');
-    setCustomLocation('');
-    setMeetingDuration('60');
-    setErrors({});
-  };
-
-  const handleSendInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const response = await newRequest.post('/schedule/invite', {
-        clientEmails: selectedClientEmails,
-        meetingPurpose,
-        meetingDuration,
-        startDateRange,
-        endDateRange,
-        projectId: project?._id,
-        meetingLocation,
-        ...(meetingLocation === 'video' && {
-          videoPlatform,
-          customLocation: videoPlatform === 'custom' ? customLocation : undefined,
-        }),
-        ...(meetingLocation === 'phone' && {
-          phoneNumberType,
-          phoneNumber: phoneNumberType === 'custom' ? phoneNumber : undefined,
-        }),
-        ...((meetingLocation === 'in-person' || meetingLocation === 'other') && {
-          customLocation,
-        }),
-      });
-
-      toast.success(
-        `Invitation sent to ${selectedClientEmails.length} client${
-          selectedClientEmails.length > 1 ? 's' : ''
-        }`,
-      );
-      onOpenChange(false);
-      resetForm();
-    } catch (error) {
-      toast.error('Failed to send invitation');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const isFormDisabled = isSubmitting || isConnecting;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className='sm:max-w-[500px] max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>Send Client Invite</DialogTitle>
@@ -546,7 +406,6 @@ export default function ClientInviteDialog({
                       <SelectValue placeholder='Select video platform' />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value='zoom'>Zoom</SelectItem>
                       <SelectItem value='google-meet'>Google Meet</SelectItem>
                       <SelectItem value='custom'>Other Platform</SelectItem>
                     </SelectContent>
@@ -580,41 +439,6 @@ export default function ClientInviteDialog({
                               </>
                             ) : (
                               'Connect Google Calendar'
-                            )}
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {videoPlatform === 'zoom' && (
-                    <div className='space-y-2'>
-                      {zoomStatus?.isConnected ? (
-                        <div className='flex items-center gap-2 text-sm text-green-600'>
-                          <span>✓</span>
-                          <span>Connected to Zoom</span>
-                        </div>
-                      ) : (
-                        <div className='space-y-2'>
-                          <p className='text-sm text-muted-foreground'>
-                            Connect your Zoom account to schedule meetings directly
-                          </p>
-                          <Button
-                            type='button'
-                            variant='outline'
-                            size='sm'
-                            onClick={() => {
-                              return handleConnect('zoom');
-                            }}
-                            disabled={isConnecting}
-                            className='w-full'
-                          >
-                            {isConnecting ? (
-                              <>
-                                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                                Connecting...
-                              </>
-                            ) : (
-                              'Connect Zoom'
                             )}
                           </Button>
                         </div>
