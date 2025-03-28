@@ -22,9 +22,10 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useProject } from '@/contexts/ProjectContext';
 import { cn } from '@/lib/utils';
-import { Check, ChevronsUpDown, Info, Loader2, X } from 'lucide-react';
+import { Calendar, Check, ChevronsUpDown, Info, Loader2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import useClientInviteForm from './hooks/UseClientInviteFormReturn';
+import ManageAvailabilityDialog from './ManageAvailabilityDialog';
 
 type Participant = {
   _id: string;
@@ -219,6 +220,7 @@ export default function ClientInviteDialog({
   participants,
 }: ClientInviteDialogProps) {
   const { project } = useProject();
+  const [showAvailabilityDialog, setShowAvailabilityDialog] = useState(false);
 
   const {
     startDateRange,
@@ -267,332 +269,359 @@ export default function ClientInviteDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className='sm:max-w-[500px] max-h-[90vh] overflow-y-auto'>
-        <DialogHeader>
-          <DialogTitle>Send Client Invite</DialogTitle>
-          <DialogDescription>
-            Allow your clients to book a meeting from your available times
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSendInvite}>
-          <div className='grid gap-6 py-4'>
-            {/* Client Selection Section */}
-            <div className='space-y-4'>
-              <div className='flex items-center gap-2'>
-                <Label htmlFor='clientEmail'>Client Selection</Label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className='cursor-help'>
-                      <Info className='h-4 w-4 text-muted-foreground' />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Select one or more clients to invite</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              <ClientMultiSelect
-                participants={participants}
-                selectedEmails={selectedClientEmails}
-                onChange={setSelectedClientEmails}
-                disabled={isFormDisabled}
-                error={errors.clientEmail}
-              />
-            </div>
-
-            {/* Meeting Details Section */}
-            <div className='space-y-4'>
-              <div className='flex items-center gap-2'>
-                <Label>Meeting Details</Label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className='cursor-help'>
-                      <Info className='h-4 w-4 text-muted-foreground' />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Set the meeting schedule and purpose</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-
-              <div className='grid gap-2'>
-                <Label>Date Range</Label>
-                <div className='flex flex-col sm:flex-row items-center gap-2'>
-                  <div className='w-full'>
-                    <DatePicker
-                      date={startDateRange}
-                      setDate={setStartDateRange}
-                      placeholder='Start date'
-                      minDate={new Date()}
-                      maxDate={endDateRange}
-                      className={errors.startDate ? 'border-red-500' : ''}
-                      disabled={isFormDisabled}
-                    />
-                    {errors.startDate && <p className='text-sm text-red-500'>{errors.startDate}</p>}
-                  </div>
-                  <span className='hidden sm:inline'>to</span>
-                  <span className='inline sm:hidden my-1'>to</span>
-                  <div className='w-full'>
-                    <DatePicker
-                      date={endDateRange}
-                      setDate={setEndDateRange}
-                      placeholder='End date'
-                      minDate={startDateRange || new Date()}
-                      className={errors.endDate ? 'border-red-500' : ''}
-                      disabled={isFormDisabled}
-                    />
-                    {errors.endDate && <p className='text-sm text-red-500'>{errors.endDate}</p>}
-                  </div>
+    <>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className='sm:max-w-[500px] max-h-[90vh] overflow-y-auto'>
+          <DialogHeader>
+            <DialogTitle>Send Client Invite</DialogTitle>
+            <DialogDescription>
+              Allow your clients to book a meeting from your available times
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSendInvite}>
+            <div className='grid gap-6 py-4'>
+              {/* Client Selection Section */}
+              <div className='space-y-4'>
+                <div className='flex items-center gap-2'>
+                  <Label htmlFor='clientEmail'>Client Selection</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className='cursor-help'>
+                        <Info className='h-4 w-4 text-muted-foreground' />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Select one or more clients to invite</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
-                {errors.dateRange && <p className='text-sm text-red-500'>{errors.dateRange}</p>}
+                <ClientMultiSelect
+                  participants={participants}
+                  selectedEmails={selectedClientEmails}
+                  onChange={setSelectedClientEmails}
+                  disabled={isFormDisabled}
+                  error={errors.clientEmail}
+                />
               </div>
 
-              <div className='grid gap-2'>
-                <Label htmlFor='meetingPurpose'>Meeting Purpose</Label>
-                <Input
-                  id='meetingPurpose'
-                  value={meetingPurpose}
-                  onChange={(e) => {
-                    return setMeetingPurpose(e.target.value);
-                  }}
-                  placeholder={`Discuss ${projectName || 'project'} details`}
-                  className={errors.meetingPurpose ? 'border-red-500' : ''}
+              {/* Meeting Details Section */}
+              <div className='space-y-4'>
+                <div className='flex items-center gap-2'>
+                  <Label>Meeting Details</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className='cursor-help'>
+                        <Info className='h-4 w-4 text-muted-foreground' />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Set the meeting schedule and purpose</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+
+                <div className='grid gap-2'>
+                  <div className='flex items-center justify-between'>
+                    <Label>Date Range</Label>
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => {
+                        return setShowAvailabilityDialog(true);
+                      }}
+                      className='h-8 px-2 text-sm'
+                    >
+                      <Calendar className='mr-2 h-4 w-4' />
+                      Manage Availability
+                    </Button>
+                  </div>
+                  <div className='flex flex-col sm:flex-row items-center gap-2'>
+                    <div className='w-full'>
+                      <DatePicker
+                        date={startDateRange}
+                        setDate={setStartDateRange}
+                        placeholder='Start date'
+                        minDate={new Date()}
+                        maxDate={endDateRange}
+                        className={errors.startDate ? 'border-red-500' : ''}
+                        disabled={isFormDisabled}
+                      />
+                      {errors.startDate && (
+                        <p className='text-sm text-red-500'>{errors.startDate}</p>
+                      )}
+                    </div>
+                    <span className='hidden sm:inline'>to</span>
+                    <span className='inline sm:hidden my-1'>to</span>
+                    <div className='w-full'>
+                      <DatePicker
+                        date={endDateRange}
+                        setDate={setEndDateRange}
+                        placeholder='End date'
+                        minDate={startDateRange || new Date()}
+                        className={errors.endDate ? 'border-red-500' : ''}
+                        disabled={isFormDisabled}
+                      />
+                      {errors.endDate && <p className='text-sm text-red-500'>{errors.endDate}</p>}
+                    </div>
+                  </div>
+                  {errors.dateRange && <p className='text-sm text-red-500'>{errors.dateRange}</p>}
+                </div>
+
+                <div className='grid gap-2'>
+                  <Label htmlFor='meetingPurpose'>Meeting Purpose</Label>
+                  <Input
+                    id='meetingPurpose'
+                    value={meetingPurpose}
+                    onChange={(e) => {
+                      return setMeetingPurpose(e.target.value);
+                    }}
+                    placeholder={`Discuss ${projectName || 'project'} details`}
+                    className={errors.meetingPurpose ? 'border-red-500' : ''}
+                    disabled={isFormDisabled}
+                  />
+                  {errors.meetingPurpose && (
+                    <p className='text-sm text-red-500'>{errors.meetingPurpose}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Meeting Location Section */}
+              <div className='space-y-4'>
+                <div className='flex items-center gap-2'>
+                  <Label>Meeting Location</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className='cursor-help'>
+                        <Info className='h-4 w-4 text-muted-foreground' />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Choose how you want to meet</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+
+                <Select
+                  value={meetingLocation}
+                  onValueChange={setMeetingLocation}
                   disabled={isFormDisabled}
-                />
-                {errors.meetingPurpose && (
-                  <p className='text-sm text-red-500'>{errors.meetingPurpose}</p>
+                >
+                  <SelectTrigger id='meetingLocation'>
+                    <SelectValue placeholder='Select meeting location' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='video'>Video Call</SelectItem>
+                    <SelectItem value='phone'>Phone Call</SelectItem>
+                    <SelectItem value='in-person'>In Person</SelectItem>
+                    <SelectItem value='other'>Other</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {meetingLocation === 'video' && (
+                  <div className='grid gap-2'>
+                    <Label htmlFor='videoPlatform'>Video Platform</Label>
+                    <Select value={videoPlatform} onValueChange={setVideoPlatform}>
+                      <SelectTrigger id='videoPlatform'>
+                        <SelectValue placeholder='Select video platform' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='google-meet'>Google Meet</SelectItem>
+                        <SelectItem value='custom'>Other Platform</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {videoPlatform === 'google-meet' && (
+                      <div className='space-y-2'>
+                        {googleStatus?.connected ? (
+                          <div className='flex items-center gap-2 text-sm text-green-600'>
+                            <span>✓</span>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className='cursor-help'>Connected to Google Calendar</span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  Google Meet links will be automatically created and included in
+                                  your meeting invitations
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        ) : (
+                          <div className='space-y-2'>
+                            <p className='text-sm text-muted-foreground'>
+                              Connect your Google account to schedule meetings directly
+                            </p>
+                            <Button
+                              type='button'
+                              variant='outline'
+                              size='sm'
+                              onClick={() => {
+                                return handleConnect('google');
+                              }}
+                              disabled={isConnecting}
+                              className='w-full'
+                            >
+                              {isConnecting ? (
+                                <>
+                                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                                  Connecting...
+                                </>
+                              ) : (
+                                'Connect Google Calendar'
+                              )}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {videoPlatform === 'custom' && (
+                      <div>
+                        <Input
+                          placeholder='Enter video platform name'
+                          value={customLocation}
+                          onChange={(e) => {
+                            return setCustomLocation(e.target.value);
+                          }}
+                          className={errors.customLocation ? 'border-red-500' : ''}
+                        />
+                        {errors.customLocation && (
+                          <p className='text-sm text-red-500'>{errors.customLocation}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {meetingLocation === 'phone' && (
+                  <div className='grid gap-2'>
+                    <Label htmlFor='phoneNumberType'>Phone Number</Label>
+                    <Select value={phoneNumberType} onValueChange={setPhoneNumberType}>
+                      <SelectTrigger id='phoneNumberType'>
+                        <SelectValue placeholder='Select phone number source' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='client-provided'>
+                          Client will provide their number
+                        </SelectItem>
+                        <SelectItem value='custom'>Specify a number</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {phoneNumberType === 'custom' && (
+                      <div className='space-y-2'>
+                        <Input
+                          type='tel'
+                          placeholder='Enter phone number (e.g., +1 234 567 8900)'
+                          value={phoneNumber}
+                          onChange={(e) => {
+                            return setPhoneNumber(e.target.value);
+                          }}
+                          className={errors.phoneNumber ? 'border-red-500' : ''}
+                        />
+                        {errors.phoneNumber && (
+                          <p className='text-sm text-red-500'>{errors.phoneNumber}</p>
+                        )}
+                        <p className='text-sm text-muted-foreground'>
+                          Please include country code for international numbers
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {meetingLocation === 'in-person' && (
+                  <div className='grid gap-2'>
+                    <Label htmlFor='inPersonLocation'>Meeting Location</Label>
+                    <Input
+                      id='inPersonLocation'
+                      placeholder='Enter physical meeting location'
+                      value={customLocation}
+                      onChange={(e) => {
+                        return setCustomLocation(e.target.value);
+                      }}
+                      className={errors.customLocation ? 'border-red-500' : ''}
+                    />
+                    {errors.customLocation && (
+                      <p className='text-sm text-red-500'>{errors.customLocation}</p>
+                    )}
+                  </div>
+                )}
+
+                {meetingLocation === 'other' && (
+                  <div className='grid gap-2'>
+                    <Label htmlFor='customLocation'>Meeting Details</Label>
+                    <Input
+                      id='customLocation'
+                      placeholder='Specify meeting location or instructions'
+                      value={customLocation}
+                      onChange={(e) => {
+                        return setCustomLocation(e.target.value);
+                      }}
+                      className={errors.customLocation ? 'border-red-500' : ''}
+                    />
+                    {errors.customLocation && (
+                      <p className='text-sm text-red-500'>{errors.customLocation}</p>
+                    )}
+                  </div>
                 )}
               </div>
-            </div>
 
-            {/* Meeting Location Section */}
-            <div className='space-y-4'>
-              <div className='flex items-center gap-2'>
-                <Label>Meeting Location</Label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className='cursor-help'>
-                      <Info className='h-4 w-4 text-muted-foreground' />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Choose how you want to meet</p>
-                  </TooltipContent>
-                </Tooltip>
+              {/* Meeting Duration Section */}
+              <div className='space-y-4'>
+                <div className='flex items-center gap-2'>
+                  <Label htmlFor='meetingDuration'>Meeting Duration</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className='cursor-help'>
+                        <Info className='h-4 w-4 text-muted-foreground' />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Set the expected meeting duration</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Select
+                  value={meetingDuration}
+                  onValueChange={setMeetingDuration}
+                  disabled={isFormDisabled}
+                >
+                  <SelectTrigger id='meetingDuration'>
+                    <SelectValue placeholder='Select duration' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='30'>30 minutes</SelectItem>
+                    <SelectItem value='60'>1 hour</SelectItem>
+                    <SelectItem value='90'>1.5 hours</SelectItem>
+                    <SelectItem value='120'>2 hours</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-
-              <Select
-                value={meetingLocation}
-                onValueChange={setMeetingLocation}
-                disabled={isFormDisabled}
-              >
-                <SelectTrigger id='meetingLocation'>
-                  <SelectValue placeholder='Select meeting location' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='video'>Video Call</SelectItem>
-                  <SelectItem value='phone'>Phone Call</SelectItem>
-                  <SelectItem value='in-person'>In Person</SelectItem>
-                  <SelectItem value='other'>Other</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {meetingLocation === 'video' && (
-                <div className='grid gap-2'>
-                  <Label htmlFor='videoPlatform'>Video Platform</Label>
-                  <Select value={videoPlatform} onValueChange={setVideoPlatform}>
-                    <SelectTrigger id='videoPlatform'>
-                      <SelectValue placeholder='Select video platform' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='google-meet'>Google Meet</SelectItem>
-                      <SelectItem value='custom'>Other Platform</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {videoPlatform === 'google-meet' && (
-                    <div className='space-y-2'>
-                      {googleStatus?.connected ? (
-                        <div className='flex items-center gap-2 text-sm text-green-600'>
-                          <span>✓</span>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className='cursor-help'>Connected to Google Calendar</span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>
-                                Google Meet links will be automatically created and included in your
-                                meeting invitations
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </div>
-                      ) : (
-                        <div className='space-y-2'>
-                          <p className='text-sm text-muted-foreground'>
-                            Connect your Google account to schedule meetings directly
-                          </p>
-                          <Button
-                            type='button'
-                            variant='outline'
-                            size='sm'
-                            onClick={() => {
-                              return handleConnect('google');
-                            }}
-                            disabled={isConnecting}
-                            className='w-full'
-                          >
-                            {isConnecting ? (
-                              <>
-                                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                                Connecting...
-                              </>
-                            ) : (
-                              'Connect Google Calendar'
-                            )}
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {videoPlatform === 'custom' && (
-                    <div>
-                      <Input
-                        placeholder='Enter video platform name'
-                        value={customLocation}
-                        onChange={(e) => {
-                          return setCustomLocation(e.target.value);
-                        }}
-                        className={errors.customLocation ? 'border-red-500' : ''}
-                      />
-                      {errors.customLocation && (
-                        <p className='text-sm text-red-500'>{errors.customLocation}</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {meetingLocation === 'phone' && (
-                <div className='grid gap-2'>
-                  <Label htmlFor='phoneNumberType'>Phone Number</Label>
-                  <Select value={phoneNumberType} onValueChange={setPhoneNumberType}>
-                    <SelectTrigger id='phoneNumberType'>
-                      <SelectValue placeholder='Select phone number source' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='client-provided'>
-                        Client will provide their number
-                      </SelectItem>
-                      <SelectItem value='custom'>Specify a number</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {phoneNumberType === 'custom' && (
-                    <div className='space-y-2'>
-                      <Input
-                        type='tel'
-                        placeholder='Enter phone number (e.g., +1 234 567 8900)'
-                        value={phoneNumber}
-                        onChange={(e) => {
-                          return setPhoneNumber(e.target.value);
-                        }}
-                        className={errors.phoneNumber ? 'border-red-500' : ''}
-                      />
-                      {errors.phoneNumber && (
-                        <p className='text-sm text-red-500'>{errors.phoneNumber}</p>
-                      )}
-                      <p className='text-sm text-muted-foreground'>
-                        Please include country code for international numbers
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {meetingLocation === 'in-person' && (
-                <div className='grid gap-2'>
-                  <Label htmlFor='inPersonLocation'>Meeting Location</Label>
-                  <Input
-                    id='inPersonLocation'
-                    placeholder='Enter physical meeting location'
-                    value={customLocation}
-                    onChange={(e) => {
-                      return setCustomLocation(e.target.value);
-                    }}
-                    className={errors.customLocation ? 'border-red-500' : ''}
-                  />
-                  {errors.customLocation && (
-                    <p className='text-sm text-red-500'>{errors.customLocation}</p>
-                  )}
-                </div>
-              )}
-
-              {meetingLocation === 'other' && (
-                <div className='grid gap-2'>
-                  <Label htmlFor='customLocation'>Meeting Details</Label>
-                  <Input
-                    id='customLocation'
-                    placeholder='Specify meeting location or instructions'
-                    value={customLocation}
-                    onChange={(e) => {
-                      return setCustomLocation(e.target.value);
-                    }}
-                    className={errors.customLocation ? 'border-red-500' : ''}
-                  />
-                  {errors.customLocation && (
-                    <p className='text-sm text-red-500'>{errors.customLocation}</p>
-                  )}
-                </div>
-              )}
             </div>
+            <DialogFooter className='flex-col sm:flex-row gap-2 mt-6'>
+              <Button type='submit' disabled={isFormDisabled} className='w-full sm:w-auto'>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    Sending Invite...
+                  </>
+                ) : (
+                  'Send Invite'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-            {/* Meeting Duration Section */}
-            <div className='space-y-4'>
-              <div className='flex items-center gap-2'>
-                <Label htmlFor='meetingDuration'>Meeting Duration</Label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className='cursor-help'>
-                      <Info className='h-4 w-4 text-muted-foreground' />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Set the expected meeting duration</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              <Select
-                value={meetingDuration}
-                onValueChange={setMeetingDuration}
-                disabled={isFormDisabled}
-              >
-                <SelectTrigger id='meetingDuration'>
-                  <SelectValue placeholder='Select duration' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='30'>30 minutes</SelectItem>
-                  <SelectItem value='60'>1 hour</SelectItem>
-                  <SelectItem value='90'>1.5 hours</SelectItem>
-                  <SelectItem value='120'>2 hours</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter className='flex-col sm:flex-row gap-2 mt-6'>
-            <Button type='submit' disabled={isFormDisabled} className='w-full sm:w-auto'>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  Sending Invite...
-                </>
-              ) : (
-                'Send Invite'
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <ManageAvailabilityDialog
+        open={showAvailabilityDialog}
+        onOpenChange={setShowAvailabilityDialog}
+        onSave={() => {
+          // Optionally handle any updates after saving availability
+          setShowAvailabilityDialog(false);
+        }}
+      />
+    </>
   );
 }
