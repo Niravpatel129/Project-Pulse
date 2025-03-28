@@ -1,5 +1,6 @@
 'use client';
 
+import { Attachment as ApiAttachment } from '@/api/models';
 import { Card } from '@/components/ui/card';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
@@ -20,6 +21,13 @@ interface ActivityProject {
   name: string;
 }
 
+interface EmailAttachment {
+  name: string;
+  size: number;
+  type: string;
+  url: string;
+}
+
 interface Activity {
   _id: string;
   user: ActivityUser;
@@ -30,7 +38,7 @@ interface Activity {
   description: string;
   entityId: string;
   entityType: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -57,7 +65,7 @@ interface EmailMessage {
   cc: string[];
   bcc: string[];
   from: string;
-  attachments: any[];
+  attachments: ApiAttachment[];
   sentBy: EmailSender;
   status: string;
   sentAt: string;
@@ -131,6 +139,15 @@ const mapEmailMessage = (message: EmailMessage) => {
     shortEmailId: message?.replyEmailId?.shortEmailId,
     replies: message.replies.map(mapEmailMessage),
     isRead: message.isRead,
+  };
+};
+
+const mapApiAttachmentToEmailAttachment = (apiAttachment: ApiAttachment): EmailAttachment => {
+  return {
+    name: apiAttachment.fileName,
+    size: apiAttachment.fileSize,
+    type: apiAttachment.fileType,
+    url: apiAttachment.downloadUrl,
   };
 };
 
@@ -266,7 +283,9 @@ export default function ProjectHome() {
                           subject: thread.subject,
                           content: latestMessage.body,
                           date: latestMessage.sentAt || latestMessage.createdAt,
-                          attachments: latestMessage.attachments,
+                          attachments: latestMessage.attachments.map(
+                            mapApiAttachmentToEmailAttachment,
+                          ),
                           messageCount: thread.messageCount,
                           messageId: latestMessage.messageId,
                           references: latestMessage.references,

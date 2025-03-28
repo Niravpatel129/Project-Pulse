@@ -30,3 +30,12 @@ export interface APIError {
   };
   message?: string;
 }
+
+export interface SharingSettings {
+  accessType: 'signup_required' | 'email_restricted' | 'public';
+  requirePassword: boolean;
+  password: string;
+  customMessage: string;
+  expirationDays: string;
+  allowedEmails: string[];
+}

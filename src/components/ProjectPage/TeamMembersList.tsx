@@ -17,6 +17,16 @@ interface Role {
   description?: string;
 }
 
+interface Participant {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  dateAdded: string;
+  notes?: string;
+  customFields?: { key: string; value: string }[];
+}
+
 const predefinedRoles: Role[] = [
   {
     id: '1',
@@ -39,7 +49,7 @@ export default function TeamMembersList() {
   const [isAddTeamDialogOpen, setIsAddTeamDialogOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState('');
 
-  const handleAddParticipant = (participant: any) => {
+  const handleAddParticipant = (participant: Participant) => {
     // The participant will be added through the mutation in AddTeamDialog
     // We just need to close the dialog
     setIsAddTeamDialogOpen(false);

@@ -18,8 +18,9 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
 import { useDebounce } from '@/hooks/useDebounce';
+import { updateProjectSharingSettings } from '@/lib/api/projects';
 import { Check, Copy, ExternalLink, Loader2, Mail } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface SharingSettings {
   accessType: 'signup_required' | 'email_restricted' | 'public';
@@ -92,44 +93,7 @@ export function ShareDialog({
   // Debounce the settings changes to avoid too many API calls
   const debouncedSettings = useDebounce(settings, 1000);
 
-  // Auto-save when settings change
-  useEffect(() => {
-    const saveSettings = async () => {
-      if (!validateSettings()) return;
-
-      setIsSaving(true);
-      try {
-        await fetch(`/api/projects/${projectId}/sharing/settings`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            accessType: settings.accessType,
-            passwordProtected: settings.requirePassword,
-            password: settings.requirePassword ? settings.password : null,
-          }),
-        });
-
-        setShowSavedIndicator(true);
-        setTimeout(() => {
-          return setShowSavedIndicator(false);
-        }, 2000);
-      } catch (error) {
-        toast({
-          title: 'Error',
-          description: 'Failed to save sharing settings',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsSaving(false);
-      }
-    };
-
-    saveSettings();
-  }, [debouncedSettings, projectId]);
-
-  const validateSettings = () => {
+  const validateSettings = useCallback(() => {
     const errors: { accessType?: string; passwordProtected?: string } = {};
 
     if (!settings.accessType) {
@@ -142,7 +106,32 @@ export function ShareDialog({
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
-  };
+  }, [settings.accessType, settings.requirePassword, settings.password]);
+
+  useEffect(() => {
+    const saveSettings = async () => {
+      if (!validateSettings()) return;
+
+      setIsSaving(true);
+      try {
+        await updateProjectSharingSettings(projectId, debouncedSettings);
+        toast({
+          title: 'Success',
+          description: 'Sharing settings updated successfully',
+        });
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to save sharing settings',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsSaving(false);
+      }
+    };
+
+    saveSettings();
+  }, [debouncedSettings, projectId, validateSettings]);
 
   const handleSettingsChange = (key: keyof SharingSettings, value: string | boolean | string[]) => {
     setSettings((prev) => {

@@ -42,10 +42,40 @@ interface ManageAvailabilityDialogProps {
   onSave: () => void;
 }
 
+interface TimeSlot {
+  start: string;
+  end: string;
+}
+
+interface DayAvailability {
+  isEnabled: boolean;
+  slots: TimeSlot[];
+}
+
+interface AvailabilitySettings {
+  timezone: string;
+  minimumNotice: number;
+  bufferTime: number;
+  preventOverlap: boolean;
+  requireConfirmation: boolean;
+  availabilitySlots: {
+    sunday: DayAvailability;
+    monday: DayAvailability;
+    tuesday: DayAvailability;
+    wednesday: DayAvailability;
+    thursday: DayAvailability;
+    friday: DayAvailability;
+    saturday: DayAvailability;
+  };
+}
+
 // Settings Context to avoid prop drilling
 type SettingsContextType = {
-  settings: any;
-  updateSetting: (key: string, value: any) => void;
+  settings: AvailabilitySettings;
+  updateSetting: (
+    key: keyof AvailabilitySettings,
+    value: AvailabilitySettings[keyof AvailabilitySettings],
+  ) => void;
   isLoading: boolean;
 };
 
@@ -487,7 +517,7 @@ export default function ManageAvailabilityDialog({
 
   // Update a single setting locally and queue for API update
   const updateSetting = useCallback(
-    (key: string, value: any) => {
+    (key: keyof AvailabilitySettings, value: AvailabilitySettings[keyof AvailabilitySettings]) => {
       setSettings((prev) => {
         return {
           ...prev,
@@ -504,7 +534,7 @@ export default function ManageAvailabilityDialog({
   );
 
   // Settings context value
-  const settingsContextValue = useMemo(() => {
+  const settingsContextValue = useMemo<SettingsContextType>(() => {
     return {
       settings,
       updateSetting,

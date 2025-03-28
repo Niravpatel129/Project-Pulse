@@ -52,6 +52,15 @@ interface SharingSettings {
   allowedEmails: string[];
 }
 
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
 export function ProjectSidebar({
   onUpdateProject,
 }: {
@@ -116,7 +125,7 @@ export function ProjectSidebar({
     }
   }, [sharingData, isLoadingSharingData]);
 
-  useMutation({
+  const updateSharingSettingsMutation = useMutation({
     mutationFn: async () => {
       if (!project?._id) throw new Error('Project ID is required');
       return newRequest.put(`/projects/${project._id}/sharing/settings`, {
@@ -131,10 +140,11 @@ export function ProjectSidebar({
         description: 'Sharing settings saved successfully',
       });
     },
-    onError: (error: any) => {
+    onError: (error: ApiError) => {
       if (!error) return;
 
-      const errorMessage = error?.response?.data?.message || 'Failed to save sharing settings';
+      const errorMessage =
+        error?.response?.data?.message || error.message || 'Failed to save sharing settings';
       toast({
         title: 'Error',
         description: errorMessage,

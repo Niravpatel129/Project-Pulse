@@ -1,3 +1,4 @@
+import { Attachment } from '@/api/models';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -19,7 +20,7 @@ export interface EmailHistoryItem {
   cc: string[];
   bcc: string[];
   from: string;
-  attachments: any[];
+  attachments: Attachment[];
   sentBy: {
     _id: string;
     name: string;
@@ -29,6 +30,23 @@ export interface EmailHistoryItem {
   sentAt: string;
   createdAt: string;
   updatedAt: string;
+}
+
+interface EmailResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    emailId: string;
+    messageId: string;
+  };
+}
+
+interface TemplateResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    templateId: string;
+  };
 }
 
 interface EmailsHookReturn {
@@ -55,10 +73,10 @@ interface EmailsHookReturn {
     cc?: string[];
     bcc?: string[];
     attachments?: File[];
-  }) => Promise<any>;
-  toggleReadStatus: (emailId: string) => Promise<any>;
+  }) => Promise<EmailResponse>;
+  toggleReadStatus: (emailId: string) => Promise<EmailResponse>;
   isSending?: boolean;
-  saveTemplate?: (template: Omit<EmailTemplate, 'id'>) => Promise<any>;
+  saveTemplate?: (template: Omit<EmailTemplate, 'id'>) => Promise<TemplateResponse>;
   isSavingTemplate?: boolean;
 }
 
