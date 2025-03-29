@@ -97,7 +97,7 @@ export default function BookingPage() {
   const [guestInfo, setGuestInfo] = useState<GuestInfo>({
     name: '',
     email: '',
-    guestEmails: [''],
+    guestEmails: [],
     notes: '',
   });
 
@@ -448,13 +448,17 @@ export default function BookingPage() {
                       id='email'
                       type='email'
                       value={guestInfo.email}
-                      disabled
-                      className='bg-gray-50'
+                      onChange={(e) => {
+                        return setGuestInfo({ ...guestInfo, email: e.target.value });
+                      }}
                     />
                   </div>
 
                   <div className='space-y-2'>
-                    <Label>Guest Email(s)</Label>
+                    <Label className='flex items-center'>
+                      <span>Guest Email(s)</span>
+                      <span className='text-sm text-gray-500 ml-2'>(Optional)</span>
+                    </Label>
                     <div className='space-y-2'>
                       {guestInfo.guestEmails.map((email, index) => {
                         return (
@@ -467,18 +471,16 @@ export default function BookingPage() {
                               }}
                               placeholder='Enter guest email'
                             />
-                            {index > 0 && (
-                              <Button
-                                variant='ghost'
-                                size='icon'
-                                onClick={() => {
-                                  return handleRemoveGuestEmail(index);
-                                }}
-                                className='text-gray-500 hover:text-gray-700'
-                              >
-                                <X className='w-4 h-4' />
-                              </Button>
-                            )}
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              onClick={() => {
+                                return handleRemoveGuestEmail(index);
+                              }}
+                              className='text-gray-500 hover:text-gray-700'
+                            >
+                              <X className='w-4 h-4' />
+                            </Button>
                           </div>
                         );
                       })}
@@ -490,7 +492,7 @@ export default function BookingPage() {
                           className='w-full'
                         >
                           <Plus className='w-4 h-4 mr-2' />
-                          Add Another Guest
+                          Add Guest Email
                         </Button>
                       )}
                     </div>
