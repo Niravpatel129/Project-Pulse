@@ -77,6 +77,7 @@ export function useProjectSchedule() {
   const [meetingStartTime, setMeetingStartTime] = useState('09:00');
   const [meetingDuration, setMeetingDuration] = useState('60');
   const [meetingType, setMeetingType] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
   const [meetingTypeDetails, setMeetingTypeDetails] = useState<{
     videoType?: string;
     videoLink?: string;
@@ -230,6 +231,7 @@ export function useProjectSchedule() {
           },
         );
         setMeetings(fetchedMeetings);
+        setIsLoading(false);
       } catch (error) {
         console.error('Error fetching meetings:', error);
       }
@@ -443,6 +445,7 @@ export function useProjectSchedule() {
     handleCreateMeeting,
     handleDeleteMeeting,
     resetMeetingForm,
+    isLoading,
     getStatusColor,
     filteredMeetings,
     handleResendRequest,
