@@ -20,6 +20,7 @@ type APIMeeting = {
   meetingPurpose: string;
   meetingDuration: number;
   videoPlatform?: string;
+  meetLink?: string;
   dateRange: {
     start: string;
     end: string;
@@ -194,6 +195,7 @@ export function useProjectSchedule() {
         const response = await newRequest.get(`/schedule?projectId=${project._id}`);
         const fetchedMeetings = response.data.data.bookingRequests.map(
           (meeting: APIMeeting): TransformedMeeting => {
+            console.log('🚀 meeting:', meeting);
             return {
               _id: meeting._id,
               title: meeting.meetingPurpose,
@@ -217,7 +219,7 @@ export function useProjectSchedule() {
               type: meeting.meetingLocation,
               typeDetails: {
                 videoType: meeting.videoPlatform,
-                videoLink: '',
+                videoLink: meeting.meetLink || '',
                 phoneNumber: '',
                 location: '',
                 otherDetails: '',

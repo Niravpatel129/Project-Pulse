@@ -22,7 +22,8 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProject } from '@/contexts/ProjectContext';
 import { useProjectSchedule } from '@/hooks/useProjectSchedule';
 import { format, parseISO } from 'date-fns';
-import { CalendarIcon, Clock, Mail, MoreHorizontal, Plus, X } from 'lucide-react';
+import { CalendarIcon, Clock, Link2Icon, Mail, MoreHorizontal, Plus, X } from 'lucide-react';
+import Link from 'next/link';
 import { useState } from 'react';
 import { Calendar } from '../ui/calendar';
 import ClientInviteDialog from './ClientInviteDialog';
@@ -421,7 +422,31 @@ export default function ProjectSchedule() {
                                   <>
                                     {meeting.type === 'video' && meeting.typeDetails.videoType && (
                                       <span className='ml-1'>
-                                        • {meeting.typeDetails.videoType.replace('-', ' ')}
+                                        •{' '}
+                                        {!meeting.typeDetails.videoLink ? (
+                                          meeting.typeDetails.videoType.replace('-', ' ')
+                                        ) : (
+                                          <Link
+                                            href={meeting.typeDetails.videoLink}
+                                            target='_blank'
+                                            rel='noopener noreferrer'
+                                            className='ml-1 hover:text-gray-900 inline-flex items-center gap-1'
+                                          >
+                                            <span className='inline-flex items-center gap-1'>
+                                              {meeting.typeDetails.videoType.replace('-', ' ')}{' '}
+                                              <Link2Icon className='w-4 h-4' />
+                                            </span>
+                                          </Link>
+                                        )}
+                                        {/* {meeting.typeDetails.videoLink && (
+                                          <Link
+                                            href={meeting.typeDetails.videoLink}
+                                            target='_blank'
+                                            className='text-gray-500'
+                                          >
+                                            <ExternalLink className='w-4 h-4' />
+                                          </Link>
+                                        )} */}
                                       </span>
                                     )}
                                     {meeting.type === 'phone' &&
