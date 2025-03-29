@@ -55,11 +55,8 @@ export default function ProjectSchedule() {
     setShowAvailabilityDialog,
     showDeleteDialog,
     setShowDeleteDialog,
-    meetingToDelete,
     setMeetingToDelete,
-    activeTab,
     setActiveTab,
-    meetings,
     selectedTeamMembers,
     setSelectedTeamMembers,
     meetingTitle,
@@ -313,64 +310,50 @@ export default function ProjectSchedule() {
               <CardContent className='px-1 sm:px-6'>
                 <div className='w-full flex justify-center'>
                   <div className='w-full'>
-                    {isLoading ? (
-                      <Skeleton className='h-[350px] w-full rounded-md' />
-                    ) : (
-                      <Calendar
-                        mode='single'
-                        selected={selectedDate}
-                        onSelect={(date) => {
-                          return date && setSelectedDate(date);
-                        }}
-                        className='rounded-md border w-full'
-                      />
-                    )}
+                    <Calendar
+                      mode='single'
+                      selected={selectedDate}
+                      onSelect={(date) => {
+                        return date && setSelectedDate(date);
+                      }}
+                      className='rounded-md border w-full'
+                    />
                   </div>
                 </div>
 
                 <div className='mt-4 flex flex-col space-y-2'>
-                  {isLoading ? (
-                    <>
-                      <Skeleton className='h-10 w-full' />
-                      <Skeleton className='h-10 w-full' />
-                      <Skeleton className='h-10 w-full' />
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        onClick={() => {
-                          resetMeetingForm();
-                          setShowMeetingDialog(true);
-                        }}
-                        className='w-full text-sm'
-                      >
-                        <Plus className='mr-2 h-4 w-4' />
-                        Create Meeting
-                      </Button>
+                  <Button
+                    onClick={() => {
+                      resetMeetingForm();
+                      setShowMeetingDialog(true);
+                    }}
+                    className='w-full text-sm'
+                  >
+                    <Plus className='mr-2 h-4 w-4' />
+                    Create Meeting
+                  </Button>
 
-                      <Button
-                        variant='outline'
-                        onClick={() => {
-                          return setShowInviteDialog(true);
-                        }}
-                        className='w-full text-sm'
-                      >
-                        <Mail className='mr-2 h-4 w-4' />
-                        Send Client Invite
-                      </Button>
+                  <Button
+                    variant='outline'
+                    onClick={() => {
+                      return setShowInviteDialog(true);
+                    }}
+                    className='w-full text-sm'
+                  >
+                    <Mail className='mr-2 h-4 w-4' />
+                    Send Client Invite
+                  </Button>
 
-                      <Button
-                        variant='outline'
-                        onClick={() => {
-                          return setShowAvailabilityDialog(true);
-                        }}
-                        className='w-full text-sm'
-                      >
-                        <Clock className='mr-2 h-4 w-4' />
-                        Manage Availability
-                      </Button>
-                    </>
-                  )}
+                  <Button
+                    variant='outline'
+                    onClick={() => {
+                      return setShowAvailabilityDialog(true);
+                    }}
+                    className='w-full text-sm'
+                  >
+                    <Clock className='mr-2 h-4 w-4' />
+                    Manage Availability
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -382,18 +365,14 @@ export default function ProjectSchedule() {
           <CardHeader>
             <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
               <CardTitle>Meetings</CardTitle>
-              {isLoading ? (
-                <Skeleton className='h-10 w-[300px]' />
-              ) : (
-                <Tabs defaultValue='all' className='w-full md:w-auto' onValueChange={setActiveTab}>
-                  <TabsList className='w-full md:w-auto'>
-                    <TabsTrigger value='all'>All</TabsTrigger>
-                    <TabsTrigger value='upcoming'>Upcoming</TabsTrigger>
-                    <TabsTrigger value='pending'>Pending Requests</TabsTrigger>
-                    <TabsTrigger value='past'>Past</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              )}
+              <Tabs defaultValue='all' className='w-full md:w-auto' onValueChange={setActiveTab}>
+                <TabsList className='w-full md:w-auto'>
+                  <TabsTrigger value='all'>All</TabsTrigger>
+                  <TabsTrigger value='upcoming'>Upcoming</TabsTrigger>
+                  <TabsTrigger value='pending'>Pending Requests</TabsTrigger>
+                  <TabsTrigger value='past'>Past</TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
             <CardDescription>
               View and manage all your scheduled meetings and requests
