@@ -527,6 +527,7 @@ export default function BookingPage() {
                           setSelectedTimeSlot(null);
                         }
                       }}
+                      maxDate={booking?.dateRange?.end ? new Date(booking?.dateRange?.end) : null}
                       disabled={[{ before: new Date() }]}
                       className='w-full'
                     />

@@ -3,6 +3,7 @@ import {
   eachDayOfInterval,
   endOfMonth,
   format,
+  isAfter,
   isBefore,
   isSameDay,
   isSameMonth,
@@ -17,10 +18,19 @@ interface CustomCalendarProps {
   selected: Date | null;
   onSelect: (date: Date | null) => void;
   disabled?: { before: Date }[];
+  minDate?: Date;
+  maxDate?: Date;
   className?: string;
 }
 
-export function CustomCalendar({ selected, onSelect, disabled, className }: CustomCalendarProps) {
+export function CustomCalendar({
+  selected,
+  onSelect,
+  disabled,
+  minDate,
+  maxDate,
+  className,
+}: CustomCalendarProps) {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today);
 
@@ -43,6 +53,8 @@ export function CustomCalendar({ selected, onSelect, disabled, className }: Cust
   };
 
   const isDateDisabled = (date: Date) => {
+    if (minDate && isBefore(date, minDate)) return true;
+    if (maxDate && isAfter(date, maxDate)) return true;
     if (!disabled) return false;
     return disabled.some(({ before }) => {
       return isBefore(date, before);
@@ -50,13 +62,33 @@ export function CustomCalendar({ selected, onSelect, disabled, className }: Cust
   };
 
   const isPreviousMonthDisabled = () => {
+    if (minDate) {
+      const firstDayOfPreviousMonth = new Date(
+        currentMonth.getFullYear(),
+        currentMonth.getMonth() - 1,
+        1,
+      );
+      return isBefore(firstDayOfPreviousMonth, minDate);
+    }
     if (!disabled) return false;
     const firstDayOfCurrentMonth = startOfMonth(currentMonth);
     return isBefore(firstDayOfCurrentMonth, disabled[0].before);
   };
 
+  const isNextMonthDisabled = () => {
+    if (maxDate) {
+      const firstDayOfNextMonth = new Date(
+        currentMonth.getFullYear(),
+        currentMonth.getMonth() + 1,
+        1,
+      );
+      return isAfter(firstDayOfNextMonth, maxDate);
+    }
+    return false;
+  };
+
   return (
-    <div className={cn('w-full', className)}>
+    <div className={cn('w-full select-none', className)}>
       <div className='flex items-center justify-between mb-4'>
         <h2 className='text-lg font-semibold'>{format(currentMonth, 'MMMM yyyy')}</h2>
         <div className='flex gap-2'>
@@ -68,7 +100,12 @@ export function CustomCalendar({ selected, onSelect, disabled, className }: Cust
           >
             <ChevronLeft className='h-4 w-4' />
           </Button>
-          <Button variant='outline' size='icon' onClick={nextMonth}>
+          <Button
+            variant='outline'
+            size='icon'
+            onClick={nextMonth}
+            disabled={isNextMonthDisabled()}
+          >
             <ChevronRight className='h-4 w-4' />
           </Button>
         </div>
@@ -85,9 +122,7 @@ export function CustomCalendar({ selected, onSelect, disabled, className }: Cust
           const isSelected = selected && isSameDay(day, selected);
           const isCurrentMonth = isSameMonth(day, currentMonth);
           const isCurrentDay = isToday(day);
-          const isDateDisabled = disabled?.some(({ before }) => {
-            return isBefore(day, before);
-          });
+          const dateDisabled = isDateDisabled(day);
 
           return (
             <Button
@@ -97,9 +132,9 @@ export function CustomCalendar({ selected, onSelect, disabled, className }: Cust
                 'h-12 w-full p-0 font-normal',
                 !isCurrentMonth && 'text-muted-foreground/50',
                 isCurrentDay && 'bg-accent text-accent-foreground',
-                isDateDisabled && 'opacity-50 cursor-not-allowed',
+                dateDisabled && 'opacity-50 cursor-not-allowed',
               )}
-              disabled={isDateDisabled}
+              disabled={dateDisabled}
               onClick={() => {
                 return onSelect(day);
               }}
