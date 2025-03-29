@@ -22,9 +22,20 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProject } from '@/contexts/ProjectContext';
 import { useProjectSchedule } from '@/hooks/useProjectSchedule';
 import { format, parseISO } from 'date-fns';
-import { CalendarIcon, Clock, Link2Icon, Mail, MoreHorizontal, Plus, X } from 'lucide-react';
+import {
+  CalendarIcon,
+  Clock,
+  Copy,
+  Link2Icon,
+  Mail,
+  MoreHorizontal,
+  Plus,
+  Trash,
+  X,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Calendar } from '../ui/calendar';
 import ClientInviteDialog from './ClientInviteDialog';
 import CreateMeetingDialog from './CreateMeetingDialog';
@@ -474,15 +485,15 @@ export default function ProjectSchedule() {
                           </div>
                         </div>
 
-                        <div className='border-t bg-gray-50 p-4 sm:w-1/3 sm:border-l sm:border-t-0'>
-                          <div className='flex justify-between items-start'>
+                        <div className='border-t bg-gray-50 p-4 sm:w-1/3 sm:border-l sm:border-t-0 relative'>
+                          <div className='flex justify-between items-start '>
                             <h4 className='text-sm font-medium text-gray-600'>Request Details</h4>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
                                   variant='ghost'
                                   size='sm'
-                                  className='h-8 w-8 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                                  className='absolute right-1 top-1 h-8 w-8 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                                 >
                                   <MoreHorizontal className='h-4 w-4' />
                                   <span className='sr-only'>Meeting options</span>
@@ -496,7 +507,21 @@ export default function ProjectSchedule() {
                                         return handleResendRequest(meeting._id);
                                       }}
                                     >
-                                      Resend Request
+                                      <Mail className='w-4 h-4' /> Resend Request
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        if (navigator.clipboard) {
+                                          navigator.clipboard.writeText(
+                                            `${process.env.NEXT_PUBLIC_APP_URL}/portal/booking/${meeting._id}`,
+                                          );
+                                          toast.success('Share link copied to clipboard');
+                                        } else {
+                                          toast.error('Clipboard not supported');
+                                        }
+                                      }}
+                                    >
+                                      <Copy className='w-4 h-4' /> Copy Share Link
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                       onClick={() => {
@@ -506,7 +531,7 @@ export default function ProjectSchedule() {
                                       }}
                                       className='text-red-600'
                                     >
-                                      Delete Request
+                                      <Trash className='w-4 h-4' /> Delete Request
                                     </DropdownMenuItem>
                                   </>
                                 ) : (
@@ -518,7 +543,7 @@ export default function ProjectSchedule() {
                                     }}
                                     className='text-red-600'
                                   >
-                                    Delete Meeting
+                                    <Trash className='w-4 h-4' /> Delete Meeting
                                   </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
