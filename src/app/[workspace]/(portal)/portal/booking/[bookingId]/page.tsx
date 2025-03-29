@@ -5,7 +5,7 @@ import { CustomCalendar } from '@/components/ui/custom-calendar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { newRequest } from '@/utils/newRequest';
 import { format } from 'date-fns';
-import { CalendarX, Clock, MapPin } from 'lucide-react';
+import { CalendarX, ChevronRight, Clock, MapPin } from 'lucide-react';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -254,7 +254,7 @@ export default function BookingPage() {
   }
 
   return (
-    <div className='min-h-screen bg-gray-50'>
+    <div className='min-h-screen bg-gray-50 overflow-hidden'>
       <div className='container mx-auto py-8 px-4'>
         <div className='max-w-4xl mx-auto space-y-6'>
           <div className='bg-white rounded-xl shadow-sm border border-gray-100 p-6'>
@@ -353,18 +353,35 @@ export default function BookingPage() {
                         <div className='grid gap-2 px-4 max-sm:grid-cols-2'>
                           {generateTimeSlots(selectedDate || new Date()).map((slot, index) => {
                             return (
-                              <Button
-                                key={index}
-                                variant={
-                                  selectedTimeSlot?.start === slot.start ? 'default' : 'outline'
-                                }
-                                className='w-full h-14'
-                                onClick={() => {
-                                  return setSelectedTimeSlot(slot);
-                                }}
-                              >
-                                {slot.start}
-                              </Button>
+                              <div key={index} className='flex items-center justify-between gap-2'>
+                                <Button
+                                  variant={
+                                    selectedTimeSlot?.start === slot.start ? 'default' : 'outline'
+                                  }
+                                  className='w-full h-14'
+                                  onClick={() => {
+                                    return setSelectedTimeSlot(slot);
+                                  }}
+                                >
+                                  {slot.start}
+                                </Button>
+                                <div
+                                  className='overflow-hidden'
+                                  style={{
+                                    width:
+                                      selectedTimeSlot?.start === slot.start && !bookingSuccess
+                                        ? '60px'
+                                        : '0px',
+                                    transition: 'width 0.3s ease-in-out 0.1s',
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  <Button variant='outline' className='w-14 h-14'>
+                                    <span className='sr-only'>Next</span>
+                                    <ChevronRight className='w-4 h-4' />
+                                  </Button>
+                                </div>
+                              </div>
                             );
                           })}
                         </div>
@@ -374,7 +391,7 @@ export default function BookingPage() {
                 </div>
               </div>
             </div>
-
+            {/* 
             {selectedTimeSlot && !bookingSuccess && (
               <div className='mt-8 flex justify-end'>
                 <Button
@@ -393,7 +410,7 @@ export default function BookingPage() {
                   )}
                 </Button>
               </div>
-            )}
+            )} */}
 
             {bookingSuccess && (
               <div className='mt-8 p-6 bg-green-50 rounded-lg border border-green-100'>
