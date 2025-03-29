@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { format, parseISO } from 'date-fns';
@@ -48,54 +47,56 @@ type MeetingParticipant = {
   email?: string;
 };
 
-type Meeting = {
+type APIMeeting = {
+  _id: string;
+  meetingPurpose: string;
+  meetingDuration: number;
+  videoPlatform?: string;
+  dateRange: {
+    start: string;
+    end: string;
+  };
+  meetingLocation: string;
+  status: 'pending' | 'scheduled' | 'completed' | 'cancelled';
+  scheduledTime: string | null;
+  createdBy: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  createdAt: string;
+};
+
+type TransformedMeeting = {
   _id: string;
   title: string;
-  description?: string;
+  description: string;
   date: string;
   startTime: string;
   endTime: string;
-  location?: string;
   status: 'pending' | 'scheduled' | 'completed' | 'cancelled';
-  type: string;
-  typeDetails: {
-    videoType?: string;
-    videoLink?: string;
-    phoneNumber?: string;
-    location?: string;
-    otherDetails?: string;
-  };
-  project?: string;
-  organizer?: {
+  createdBy: {
     _id: string;
+    name: string;
     email: string;
   };
-  clientEmail?: string;
-  participants: string[];
+  type: string;
+  typeDetails: {
+    videoType: string;
+    videoLink: string;
+    phoneNumber: string;
+    location: string;
+    otherDetails: string;
+  };
+  createdAt: string;
+  meetingDuration: number;
 };
 
 type APIResponse = {
-  _id: string;
-  title: string;
-  description?: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  location?: string;
-  status: 'pending' | 'scheduled' | 'completed' | 'cancelled';
-  type?: string;
-  typeDetails?: {
-    videoType?: string;
-    videoLink?: string;
-    phoneNumber?: string;
-    location?: string;
-    otherDetails?: string;
+  status: string;
+  data: {
+    bookingRequests: APIMeeting[];
   };
-  organizer?: {
-    _id: string;
-    email: string;
-  };
-  participants?: MeetingParticipant[];
 };
 
 export default function ProjectSchedule() {
@@ -107,6 +108,7 @@ export default function ProjectSchedule() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [meetingToDelete, setMeetingToDelete] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('upcoming');
+  const [meetings, setMeetings] = useState<TransformedMeeting[]>([]);
 
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
     {
@@ -202,8 +204,6 @@ export default function ProjectSchedule() {
     }
   }, [project]);
 
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
-
   // Fetch meetings from API
   useEffect(() => {
     const fetchMeetings = async () => {
@@ -211,31 +211,43 @@ export default function ProjectSchedule() {
       if (!project?._id) return;
 
       try {
-        const response = await newRequest.get(`/meetings?projectId=${project._id}`);
-        const fetchedMeetings = response.data.map((meeting: APIResponse) => {
-          return {
-            _id: meeting._id,
-            title: meeting.title,
-            description: meeting.description,
-            date: meeting.date.split('T')[0], // Extract date part only
-            startTime: meeting.startTime,
-            endTime: meeting.endTime,
-            status: meeting.status,
-            clientEmail: meeting.organizer?.email,
-            participants:
-              meeting.participants?.map((p) => {
-                return p._id;
-              }) || [],
-            type: meeting.type || 'other',
-            typeDetails: meeting.typeDetails || {
-              videoType: '',
-              videoLink: '',
-              phoneNumber: '',
-              location: meeting.location || '',
-              otherDetails: '',
-            },
-          };
-        });
+        const response = await newRequest.get(`/schedule?projectId=${project._id}`);
+        console.log('🚀 response:', response);
+        const fetchedMeetings = response.data.data.bookingRequests.map(
+          (meeting: APIMeeting): TransformedMeeting => {
+            return {
+              _id: meeting._id,
+              title: meeting.meetingPurpose,
+              description: '', // No description in new format
+              date: meeting.scheduledTime
+                ? meeting.scheduledTime.split('T')[0]
+                : meeting.dateRange.start.split('T')[0],
+              startTime: meeting.scheduledTime
+                ? meeting.scheduledTime.split('T')[1].substring(0, 5)
+                : '09:00',
+              endTime: meeting.scheduledTime
+                ? new Date(
+                    new Date(meeting.scheduledTime).getTime() + meeting.meetingDuration * 60000,
+                  )
+                    .toISOString()
+                    .split('T')[1]
+                    .substring(0, 5)
+                : '10:00',
+              status: meeting.status,
+              createdBy: meeting.createdBy,
+              type: meeting.meetingLocation,
+              typeDetails: {
+                videoType: meeting.videoPlatform,
+                videoLink: '',
+                phoneNumber: '',
+                location: '',
+                otherDetails: '',
+              },
+              createdAt: meeting.createdAt,
+              meetingDuration: meeting.meetingDuration,
+            };
+          },
+        );
         setMeetings(fetchedMeetings);
       } catch (error) {
         console.error('Error fetching meetings:', error);
@@ -290,46 +302,6 @@ export default function ProjectSchedule() {
       .toString()
       .padStart(2, '0')}`;
 
-    // Check if selected team members are available at this time
-    const dayOfWeek = format(selectedDate, 'EEEE').toLowerCase();
-    const unavailableMembers = selectedTeamMembers.filter((memberId) => {
-      const member = teamMembers.find((m) => {
-        return m._id === memberId;
-      });
-      if (!member) return false;
-
-      // Check if member has availability for this day
-      const dayAvailability = member.availableTimes.find((a) => {
-        return a.day === dayOfWeek;
-      });
-      if (!dayAvailability) return true; // Not available on this day
-
-      // Check if meeting time falls within available slots
-      return !dayAvailability.slots.some((slot) => {
-        const slotStart = slot.start.split(':').map(Number);
-        const slotEnd = slot.end.split(':').map(Number);
-        const meetingStartMinutes = startHour * 60 + startMinute;
-        const meetingEndMinutes = endHour * 60 + endMinute;
-        const slotStartMinutes = slotStart[0] * 60 + slotStart[1];
-        const slotEndMinutes = slotEnd[0] * 60 + slotEnd[1];
-
-        return meetingStartMinutes >= slotStartMinutes && meetingEndMinutes <= slotEndMinutes;
-      });
-    });
-
-    if (unavailableMembers.length > 0) {
-      const unavailableNames = unavailableMembers
-        .map((id) => {
-          return teamMembers.find((m) => {
-            return m._id === id;
-          })?.name;
-        })
-        .join(', ');
-
-      toast.error(`Some team members are not available at this time: ${unavailableNames}`);
-      return;
-    }
-
     const newMeeting = {
       _id: Date.now().toString(),
       title: meetingTitle,
@@ -338,8 +310,11 @@ export default function ProjectSchedule() {
       startTime: meetingStartTime,
       endTime,
       status: 'scheduled',
-      clientEmail: clientEmail || undefined,
-      participants: selectedTeamMembers,
+      createdBy: {
+        _id: 'current-user-id', // TODO: Get actual user ID
+        name: 'Current User', // TODO: Get actual user name
+        email: 'current@example.com', // TODO: Get actual user email
+      },
       type: meetingType,
       typeDetails: meetingTypeDetails,
     };
@@ -363,10 +338,11 @@ export default function ProjectSchedule() {
           startTime: createdMeeting.startTime,
           endTime: createdMeeting.endTime,
           status: createdMeeting.status,
-          clientEmail: createdMeeting.organizer?.email,
-          participants: selectedTeamMembers,
+          createdBy: createdMeeting.createdBy,
           type: createdMeeting.type,
           typeDetails: createdMeeting.typeDetails,
+          createdAt: createdMeeting.createdAt,
+          meetingDuration: createdMeeting.meetingDuration,
         },
       ]);
       resetMeetingForm();
@@ -434,6 +410,7 @@ export default function ProjectSchedule() {
         return meetings;
       case 'scheduled':
         return meetings.filter((meeting) => {
+          if (!meeting.date) return false;
           const meetingDate = parseISO(meeting.date);
           return meetingDate >= new Date() && meeting.status !== 'cancelled';
         });
@@ -443,6 +420,7 @@ export default function ProjectSchedule() {
         });
       case 'past':
         return meetings.filter((meeting) => {
+          if (!meeting.date) return false;
           const meetingDate = parseISO(meeting.date);
           return meetingDate < new Date() || meeting.status === 'cancelled';
         });
@@ -665,6 +643,31 @@ export default function ProjectSchedule() {
     );
   };
 
+  const handleResendRequest = async (meetingId: string) => {
+    try {
+      // TODO: Implement resend request API call
+      toast.success('Request resent successfully');
+    } catch (error) {
+      console.error('Error resending request:', error);
+      toast.error('Failed to resend request');
+    }
+  };
+
+  const handleDeleteRequest = async (meetingId: string) => {
+    try {
+      await newRequest.delete(`/meetings/${meetingId}`);
+      setMeetings(
+        meetings.filter((meeting) => {
+          return meeting._id !== meetingId;
+        }),
+      );
+      toast.success('Request deleted successfully');
+    } catch (error) {
+      console.error('Error deleting request:', error);
+      toast.error('Failed to delete request');
+    }
+  };
+
   return (
     <div className='space-y-4'>
       <div className='flex justify-between gap-8 flex-col lg:flex-row'>
@@ -738,12 +741,14 @@ export default function ProjectSchedule() {
                 <TabsList className='w-full md:w-auto'>
                   <TabsTrigger value='all'>All</TabsTrigger>
                   <TabsTrigger value='upcoming'>Upcoming</TabsTrigger>
-                  <TabsTrigger value='pending'>Pending</TabsTrigger>
+                  <TabsTrigger value='pending'>Pending Requests</TabsTrigger>
                   <TabsTrigger value='past'>Past</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
-            <CardDescription>View and manage all your scheduled meetings</CardDescription>
+            <CardDescription>
+              View and manage all your scheduled meetings and requests
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {filteredMeetings().length > 0 ? (
@@ -760,24 +765,40 @@ export default function ProjectSchedule() {
                                 {meeting.status.charAt(0).toUpperCase() + meeting.status.slice(1)}
                               </Badge>
                             </div>
-                            <p className='mt-1 text-sm text-gray-600'>{meeting.description}</p>
+                            <div className='mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-600'>
+                              <div className='flex items-center'>
+                                <Clock className='mr-1 h-4 w-4' />
+                                <span>Duration: {meeting.meetingDuration} minutes</span>
+                              </div>
+                              <div className='flex items-center'>
+                                <CalendarIcon className='mr-1 h-4 w-4' />
+                                <span>
+                                  Requested:{' '}
+                                  {format(parseISO(meeting.createdAt), 'MMM d, yyyy h:mm a')}
+                                </span>
+                              </div>
+                            </div>
                           </div>
 
                           <div className='mt-4 flex flex-wrap items-center gap-2 md:gap-4'>
-                            <div className='flex items-center'>
-                              <CalendarIcon className='mr-1 h-4 w-4 text-gray-500' />
-                              <span className='text-sm'>
-                                {format(parseISO(meeting.date), 'MMM d, yyyy')}
-                              </span>
-                            </div>
-                            <div className='flex items-center'>
-                              <Clock className='mr-1 h-4 w-4 text-gray-500' />
-                              <span className='text-sm'>
-                                {meeting.startTime} - {meeting.endTime}
-                              </span>
-                            </div>
+                            {meeting.status === 'scheduled' && (
+                              <>
+                                <div className='flex items-center'>
+                                  <CalendarIcon className='mr-1 h-4 w-4 text-gray-500' />
+                                  <span className='text-sm'>
+                                    {format(parseISO(meeting.date), 'MMM d, yyyy')}
+                                  </span>
+                                </div>
+                                <div className='flex items-center'>
+                                  <Clock className='mr-1 h-4 w-4 text-gray-500' />
+                                  <span className='text-sm'>
+                                    {meeting.startTime} - {meeting.endTime}
+                                  </span>
+                                </div>
+                              </>
+                            )}
                             {meeting.type && (
-                              <div className='text-sm text-gray-600'>
+                              <div className='text-sm text-gray-600 capitalize'>
                                 {meeting.type.charAt(0).toUpperCase() + meeting.type.slice(1)}
                                 {meeting.typeDetails && (
                                   <>
@@ -813,7 +834,7 @@ export default function ProjectSchedule() {
 
                         <div className='border-t bg-gray-50 p-4 sm:w-1/3 sm:border-l sm:border-t-0'>
                           <div className='flex justify-between items-start'>
-                            <h4 className='text-sm font-medium text-gray-600'>Participants</h4>
+                            <h4 className='text-sm font-medium text-gray-600'>Request Details</h4>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
@@ -826,49 +847,61 @@ export default function ProjectSchedule() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align='end'>
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setMeetingToDelete(meeting._id);
-                                    setShowDeleteDialog(true);
-                                    handleDeleteMeeting(meeting._id);
-                                  }}
-                                >
-                                  Delete Meeting
-                                </DropdownMenuItem>
+                                {meeting.status === 'pending' ? (
+                                  <>
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        return handleResendRequest(meeting._id);
+                                      }}
+                                    >
+                                      Resend Request
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setMeetingToDelete(meeting._id);
+                                        setShowDeleteDialog(true);
+                                        handleDeleteRequest(meeting._id);
+                                      }}
+                                      className='text-red-600'
+                                    >
+                                      Delete Request
+                                    </DropdownMenuItem>
+                                  </>
+                                ) : (
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setMeetingToDelete(meeting._id);
+                                      setShowDeleteDialog(true);
+                                      handleDeleteMeeting(meeting._id);
+                                    }}
+                                    className='text-red-600'
+                                  >
+                                    Delete Meeting
+                                  </DropdownMenuItem>
+                                )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
 
-                          {meeting.clientEmail && (
-                            <div className='mt-2'>
-                              <div className='text-sm font-medium'>Client</div>
-                              <div className='text-sm text-gray-600 break-words'>
-                                {meeting.clientEmail}
-                              </div>
+                          <div className='mt-2'>
+                            <div className='text-sm font-medium'>Requested By</div>
+                            <div className='text-sm text-gray-600 break-words'>
+                              {meeting.createdBy.name} ({meeting.createdBy.email})
                             </div>
-                          )}
+                          </div>
 
                           <div className='mt-2'>
-                            <div className='text-sm font-medium'>Team Members</div>
-                            <div className='mt-1 flex flex-wrap gap-1'>
-                              {meeting.participants.map((memberId) => {
-                                const member = teamMembers.find((m) => {
-                                  return m._id === memberId;
-                                });
-                                return (
-                                  <Tooltip key={memberId}>
-                                    <TooltipTrigger>
-                                      <Badge variant='outline' className='bg-blue-50'>
-                                        {member?.name.split(' ')[0]}
-                                      </Badge>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>{member?.name}</p>
-                                      <p className='text-xs text-gray-500'>{member?.role}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                );
-                              })}
+                            <div className='text-sm font-medium'>Status</div>
+                            <div className='text-sm text-gray-600'>
+                              {meeting.status === 'pending' ? (
+                                <span className='text-yellow-600'>Awaiting Response</span>
+                              ) : meeting.status === 'scheduled' ? (
+                                <span className='text-green-600'>Confirmed</span>
+                              ) : meeting.status === 'cancelled' ? (
+                                <span className='text-red-600'>Cancelled</span>
+                              ) : (
+                                <span className='text-gray-600'>Completed</span>
+                              )}
                             </div>
                           </div>
                         </div>
