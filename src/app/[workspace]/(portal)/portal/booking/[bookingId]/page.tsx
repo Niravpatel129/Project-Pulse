@@ -5,7 +5,8 @@ import { CustomCalendar } from '@/components/ui/custom-calendar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { newRequest } from '@/utils/newRequest';
 import { format } from 'date-fns';
-import { CalendarX, Clock, MapPin, Users } from 'lucide-react';
+import { CalendarX, Clock, MapPin } from 'lucide-react';
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -46,6 +47,10 @@ type Booking = {
   meetingLocation: string;
   customLocation?: string;
   status: string;
+  bookingBy: {
+    name: string;
+    avatar?: string;
+  };
 };
 
 type TimeSlot = {
@@ -256,9 +261,25 @@ export default function BookingPage() {
             <div className='flex items-start justify-between'>
               <div className='space-y-4'>
                 <div>
-                  <h1 className='text-2xl font-bold text-gray-900 mb-2'>
-                    {booking?.meetingPurpose}
-                  </h1>
+                  <div className='flex items-center gap-3 mb-2'>
+                    {booking?.bookingBy?.avatar && (
+                      <Image
+                        src={booking.bookingBy.avatar}
+                        alt={booking.bookingBy.name}
+                        className='w-8 h-8 rounded-full'
+                        width={32}
+                        height={32}
+                      />
+                    )}
+                    <div>
+                      <h1 className='text-2xl font-bold text-gray-900'>
+                        {booking?.meetingPurpose}
+                      </h1>
+                      <p className='text-gray-500 text-sm'>
+                        {booking?.bookingBy?.name} requested the meeting
+                      </p>
+                    </div>
+                  </div>
                   <p className='text-gray-500 text-sm'>
                     Select a time slot that works best for you
                   </p>
@@ -283,10 +304,17 @@ export default function BookingPage() {
                     </div>
                   </div>
                   <div className='flex items-center text-gray-600 bg-gray-50 p-3 rounded-lg'>
-                    <Users className='w-5 h-5 mr-2 text-primary' />
+                    <CalendarX className='w-5 h-5 mr-2 text-primary' />
                     <div>
-                      <p className='text-sm text-gray-500'>Type</p>
-                      <p className='font-medium'>1-on-1 Meeting</p>
+                      <p className='text-sm text-gray-500'>Preferred Date Range</p>
+                      <p className='font-medium'>
+                        {booking?.dateRange?.start && booking?.dateRange?.end
+                          ? `${format(new Date(booking.dateRange.start), 'MMM d')} - ${format(
+                              new Date(booking.dateRange.end),
+                              'MMM d',
+                            )}`
+                          : 'Flexible'}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -330,8 +358,7 @@ export default function BookingPage() {
                                 variant={
                                   selectedTimeSlot?.start === slot.start ? 'default' : 'outline'
                                 }
-                                size='sm'
-                                className='w-full h-9'
+                                className='w-full h-14'
                                 onClick={() => {
                                   return setSelectedTimeSlot(slot);
                                 }}
@@ -354,6 +381,7 @@ export default function BookingPage() {
                   onClick={handleConfirmBooking}
                   disabled={isSubmitting}
                   className='w-full sm:w-auto px-8 py-6 text-base'
+                  variant='default'
                 >
                   {isSubmitting ? (
                     <div className='flex items-center'>
