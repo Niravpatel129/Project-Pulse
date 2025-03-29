@@ -618,11 +618,11 @@ export default function BookingPage() {
           )}
 
           {bookingSuccess && (
-            <div className='mt-8 p-6 bg-green-50 rounded-lg border border-green-100'>
-              <div className='flex items-center mb-4'>
-                <div className='w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3'>
+            <div className='mt-8 p-8 bg-white rounded-xl shadow-sm border border-gray-100'>
+              <div className='max-w-2xl mx-auto text-center space-y-6'>
+                <div className='w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4'>
                   <svg
-                    className='w-5 h-5 text-green-600'
+                    className='w-8 h-8 text-green-600'
                     fill='none'
                     stroke='currentColor'
                     viewBox='0 0 24 24'
@@ -635,29 +635,72 @@ export default function BookingPage() {
                     />
                   </svg>
                 </div>
-                <h3 className='text-green-800 font-medium text-lg'>Booking Confirmed!</h3>
+
+                <div className='space-y-2'>
+                  <h3 className='text-2xl font-semibold text-gray-900'>You are scheduled</h3>
+                  <p className='text-gray-600'>
+                    A calendar invitation has been sent to your email address.
+                  </p>
+                </div>
+
+                <div className='bg-gray-50 rounded-lg p-6 space-y-4 text-left'>
+                  <div className='flex items-center justify-between'>
+                    <div className='flex items-center gap-3'>
+                      {booking?.bookingBy?.avatar && (
+                        <Image
+                          src={booking.bookingBy.avatar}
+                          alt={booking.bookingBy.name}
+                          className='w-10 h-10 rounded-full'
+                          width={40}
+                          height={40}
+                        />
+                      )}
+                      <div>
+                        <h4 className='font-medium text-gray-900'>{booking?.meetingPurpose}</h4>
+                        <p className='text-sm text-gray-500'>{booking?.bookingBy?.name}</p>
+                      </div>
+                    </div>
+                    <Button variant='outline' size='sm'>
+                      Open Invitation
+                    </Button>
+                  </div>
+
+                  <div className='space-y-2'>
+                    <div className='flex items-center gap-2 text-gray-600'>
+                      <Clock className='w-4 h-4' />
+                      <span>{booking?.meetingDuration} Minute Meeting</span>
+                    </div>
+                    <div className='flex items-center gap-2 text-gray-600'>
+                      <CalendarX className='w-4 h-4' />
+                      <span>
+                        {selectedTimeSlot?.start} - {selectedTimeSlot?.end},{' '}
+                        {selectedDate?.toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          month: 'long',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                    <div className='flex items-center gap-2 text-gray-600'>
+                      <Globe className='w-4 h-4' />
+                      <span>{availability?.timezone}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className='pt-4'>
+                  <Button
+                    onClick={() => {
+                      return router.push('/');
+                    }}
+                    variant='outline'
+                    className='w-full sm:w-auto'
+                  >
+                    Return Home
+                  </Button>
+                </div>
               </div>
-              <p className='text-green-700 text-sm mb-6'>
-                Your meeting has been scheduled for{' '}
-                <span className='font-medium'>
-                  {selectedDate?.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </span>{' '}
-                at {selectedTimeSlot?.start}.
-              </p>
-              <Button
-                onClick={() => {
-                  return router.push('/');
-                }}
-                variant='outline'
-                className='w-full sm:w-auto'
-              >
-                Return Home
-              </Button>
             </div>
           )}
         </div>
