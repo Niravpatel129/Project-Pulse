@@ -1,16 +1,24 @@
 import { Button } from '@/components/ui/button';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { GoogleCalendarTimePicker } from '@/components/ui/google-calendar-time-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { format } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { timezones } from '@/lib/timezones';
+import { addMinutes, format } from 'date-fns';
+import { Calendar, Globe, MapPin, Users, Video } from 'lucide-react';
+import { useState } from 'react';
 
 type TeamMember = {
   _id: string;
@@ -57,6 +65,21 @@ interface CreateMeetingDialogProps {
   }) => void;
 }
 
+const MEETING_TYPES = [
+  { value: 'video', label: 'Video Call', icon: Video },
+  { value: 'in-person', label: 'In Person', icon: MapPin },
+  { value: 'phone', label: 'Phone Call', icon: Globe },
+];
+
+const DURATION_OPTIONS = [
+  { value: '15', label: '15 minutes' },
+  { value: '30', label: '30 minutes' },
+  { value: '45', label: '45 minutes' },
+  { value: '60', label: '1 hour' },
+  { value: '90', label: '1.5 hours' },
+  { value: '120', label: '2 hours' },
+];
+
 export default function CreateMeetingDialog({
   open,
   onOpenChange,
@@ -78,181 +101,408 @@ export default function CreateMeetingDialog({
   meetingTypeDetails,
   setMeetingTypeDetails,
 }: CreateMeetingDialogProps) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-[500px] max-h-[90vh] overflow-y-auto'>
-        <DialogHeader>
-          <DialogTitle>Create New Meeting</DialogTitle>
-          <DialogDescription>
-            Schedule a meeting on {format(selectedDate, 'MMMM d, yyyy')}
-          </DialogDescription>
-        </DialogHeader>
+  const [step, setStep] = useState(1);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedTimezone, setSelectedTimezone] = useState(() => {
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return (
+      timezones.find((tz) => {
+        return tz.value === userTimezone;
+      })?.value || 'UTC'
+    );
+  });
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedEndTime, setSelectedEndTime] = useState('');
+  const [isAllDay, setIsAllDay] = useState(false);
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date } | undefined>({
+    from: selectedDate,
+    to: selectedDate,
+  });
 
-        <form onSubmit={onCreateMeeting} className='space-y-6'>
-          <div className='space-y-4'>
-            <div className='grid gap-2'>
-              <Label htmlFor='title'>Meeting Title</Label>
-              <Input
-                id='title'
-                value={meetingTitle}
-                onChange={(e) => {
-                  return setMeetingTitle(e.target.value);
-                }}
-                placeholder='Project Status Update'
-              />
-            </div>
+  const handleNext = () => {
+    if (step === 1 && !meetingTitle) return;
+    if (step === 2 && (!meetingStartTime || !selectedEndTime)) return;
+    if (step === 3 && selectedTeamMembers.length === 0) return;
 
-            <div className='grid gap-2'>
-              <Label htmlFor='description'>Description (Optional)</Label>
-              <Input
-                id='description'
-                value={meetingDescription}
-                onChange={(e) => {
-                  return setMeetingDescription(e.target.value);
-                }}
-                placeholder='Weekly project progress review and discussion'
-              />
-            </div>
+    setStep((prev) => {
+      return Math.min(prev + 1, 3);
+    });
+  };
 
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-              <div className='grid gap-2'>
-                <Label htmlFor='startTime'>Start Time</Label>
-                <div className='relative'>
-                  <Input
-                    id='startTime'
-                    value={meetingStartTime}
-                    onChange={(e) => {
-                      return setMeetingStartTime(e.target.value);
-                    }}
-                    onFocus={(e) => {
-                      return e.target.select();
-                    }}
-                    className='w-full'
-                  />
+  const handleBack = () => {
+    setStep((prev) => {
+      return Math.max(prev - 1, 1);
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await onCreateMeeting(e);
+    onOpenChange(false);
+  };
+
+  const handleDateSelect = (date: Date | undefined, isEndDate: boolean = false) => {
+    if (date) {
+      if (isEndDate) {
+        setDateRange((prev) => {
+          return { ...prev!, to: date };
+        });
+      } else {
+        setDateRange((prev) => {
+          return { from: date, to: prev?.to || date };
+        });
+      }
+      if (!isAllDay) {
+        setMeetingStartTime('');
+        setSelectedEndTime('');
+      }
+    }
+  };
+
+  const handleStartTimeSelect = (time: string) => {
+    setMeetingStartTime(time);
+    const [hours, minutes] = time.split(':').map(Number);
+    const startDate = new Date(dateRange?.from || selectedDate);
+    startDate.setHours(hours, minutes, 0, 0);
+
+    const duration = parseInt(meetingDuration) || 30;
+    const endDate = addMinutes(startDate, duration);
+    setSelectedEndTime(
+      endDate.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }),
+    );
+  };
+
+  const renderStepContent = () => {
+    switch (step) {
+      case 1:
+        return (
+          <div className='space-y-6'>
+            <div className='space-y-4'>
+              <div className='space-y-2'>
+                <Label>Title</Label>
+                <Input
+                  value={meetingTitle}
+                  onChange={(e) => {
+                    return setMeetingTitle(e.target.value);
+                  }}
+                  placeholder='Add title'
+                  className='w-full'
+                />
+              </div>
+
+              <div className='space-y-2'>
+                <Label>Description</Label>
+                <Textarea
+                  value={meetingDescription}
+                  onChange={(e) => {
+                    return setMeetingDescription(e.target.value);
+                  }}
+                  placeholder='Add description'
+                  className='w-full'
+                />
+              </div>
+
+              <div className='space-y-2'>
+                <Label>Meeting Type</Label>
+                <div className='grid grid-cols-3 gap-2'>
+                  {MEETING_TYPES.map((type) => {
+                    const Icon = type.icon;
+                    return (
+                      <Button
+                        key={type.value}
+                        variant={meetingType === type.value ? 'default' : 'outline'}
+                        className='flex flex-col items-center gap-2 h-auto py-3'
+                        onClick={() => {
+                          return setMeetingType(type.value);
+                        }}
+                      >
+                        <Icon className='w-5 h-5' />
+                        <span className='text-xs'>{type.label}</span>
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
-
-              <div className='grid gap-2'>
-                <Label htmlFor='duration'>Duration</Label>
-                <Input
-                  id='duration'
-                  value={meetingDuration}
-                  onChange={(e) => {
-                    return setMeetingDuration(e.target.value);
-                  }}
-                  placeholder='30'
-                />
-              </div>
-            </div>
-
-            <div className='grid gap-2'>
-              <Label htmlFor='type'>Meeting Type</Label>
-              <Input
-                id='type'
-                value={meetingType}
-                onChange={(e) => {
-                  return setMeetingType(e.target.value);
-                }}
-                placeholder='Video Call'
-              />
-            </div>
-
-            {meetingType === 'Video Call' && (
-              <div className='grid gap-2'>
-                <Label htmlFor='videoType'>Video Platform</Label>
-                <Input
-                  id='videoType'
-                  value={meetingTypeDetails.videoType}
-                  onChange={(e) => {
-                    return setMeetingTypeDetails({
-                      ...meetingTypeDetails,
-                      videoType: e.target.value,
-                    });
-                  }}
-                  placeholder='Zoom'
-                />
-                <Label htmlFor='videoLink'>Meeting Link</Label>
-                <Input
-                  id='videoLink'
-                  value={meetingTypeDetails.videoLink}
-                  onChange={(e) => {
-                    return setMeetingTypeDetails({
-                      ...meetingTypeDetails,
-                      videoLink: e.target.value,
-                    });
-                  }}
-                  placeholder='https://zoom.us/j/123456789'
-                />
-              </div>
-            )}
-
-            {meetingType === 'Phone Call' && (
-              <div className='grid gap-2'>
-                <Label htmlFor='phoneNumber'>Phone Number</Label>
-                <Input
-                  id='phoneNumber'
-                  value={meetingTypeDetails.phoneNumber}
-                  onChange={(e) => {
-                    return setMeetingTypeDetails({
-                      ...meetingTypeDetails,
-                      phoneNumber: e.target.value,
-                    });
-                  }}
-                  placeholder='+1 (555) 123-4567'
-                />
-              </div>
-            )}
-
-            {meetingType === 'In Person' && (
-              <div className='grid gap-2'>
-                <Label htmlFor='location'>Location</Label>
-                <Input
-                  id='location'
-                  value={meetingTypeDetails.location}
-                  onChange={(e) => {
-                    return setMeetingTypeDetails({
-                      ...meetingTypeDetails,
-                      location: e.target.value,
-                    });
-                  }}
-                  placeholder='Office Conference Room'
-                />
-              </div>
-            )}
-
-            <div className='grid gap-2'>
-              <Label>Participants</Label>
-              {teamMembers.map((member) => {
-                return (
-                  <div key={member._id} className='flex items-center space-x-2'>
-                    <Checkbox
-                      id={`member-${member._id}`}
-                      checked={selectedTeamMembers.includes(member._id)}
-                      defaultChecked={true}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedTeamMembers([...selectedTeamMembers, member._id]);
-                        } else {
-                          setSelectedTeamMembers(
-                            selectedTeamMembers.filter((id) => {
-                              return id !== member._id;
-                            }),
-                          );
-                        }
-                      }}
-                    />
-                    <Label htmlFor={`member-${member._id}`} className='text-sm'>
-                      {member.name} ({member.role})
-                    </Label>
-                  </div>
-                );
-              })}
             </div>
           </div>
-          <DialogFooter className='flex-col sm:flex-row gap-2'>
-            <Button type='submit'>Create Meeting</Button>
-          </DialogFooter>
-        </form>
+        );
+
+      case 2:
+        return (
+          <div className='space-y-6'>
+            <div className='flex justify-between items-center'>
+              <div className='space-y-2'>
+                <Label>Timezone</Label>
+                <Select value={selectedTimezone} onValueChange={setSelectedTimezone}>
+                  <SelectTrigger className='w-[200px]'>
+                    <SelectValue placeholder='Select timezone' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timezones.map((tz) => {
+                      return (
+                        <SelectItem key={tz.value} value={tz.value}>
+                          {tz.label}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className='space-y-4'>
+              <div className='grid grid-cols-2 gap-4'>
+                <div className='space-y-2'>
+                  <Label>Start date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant='outline' className='w-full justify-start font-normal'>
+                        <Calendar className='mr-2 h-4 w-4' />
+                        {format(dateRange?.from || selectedDate, 'MMM d, yyyy')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className='w-[300px] p-0' align='start'>
+                      <CalendarComponent
+                        mode='single'
+                        selected={dateRange?.from}
+                        onSelect={(date) => {
+                          return handleDateSelect(date);
+                        }}
+                        className=''
+                        month={currentMonth}
+                        onMonthChange={setCurrentMonth}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                {!isAllDay && (
+                  <div className='space-y-2'>
+                    <Label>Start time</Label>
+                    <GoogleCalendarTimePicker
+                      value={meetingStartTime}
+                      onChange={setMeetingStartTime}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className='grid grid-cols-2 gap-4'>
+                <div className='space-y-2'>
+                  <Label>End date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant='outline' className='w-full justify-start font-normal'>
+                        <Calendar className='mr-2 h-4 w-4' />
+                        {format(dateRange?.to || selectedDate, 'MMM d, yyyy')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className='w-[300px] p-0' align='start'>
+                      <CalendarComponent
+                        mode='single'
+                        selected={dateRange?.to}
+                        onSelect={(date) => {
+                          return handleDateSelect(date, true);
+                        }}
+                        className=''
+                        month={currentMonth}
+                        onMonthChange={setCurrentMonth}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                {!isAllDay && (
+                  <div className='space-y-2'>
+                    <Label>End time</Label>
+                    <GoogleCalendarTimePicker
+                      value={selectedEndTime}
+                      onChange={setSelectedEndTime}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className='flex items-center space-x-2'>
+              <Checkbox
+                id='all-day'
+                checked={isAllDay}
+                onCheckedChange={(checked) => {
+                  setIsAllDay(checked as boolean);
+                  if (checked) {
+                    setMeetingStartTime('');
+                    setSelectedEndTime('');
+                  }
+                }}
+              />
+              <Label htmlFor='all-day'>All day</Label>
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className='space-y-6'>
+            <div className='space-y-4'>
+              <div className='flex items-center gap-2'>
+                <Users className='h-4 w-4' />
+                <h4 className='font-medium'>Select Participants</h4>
+              </div>
+              <ScrollArea className='h-[400px] rounded-md border p-4'>
+                <div className='space-y-2'>
+                  {teamMembers.map((member) => {
+                    return (
+                      <div key={member._id} className='flex items-center space-x-2'>
+                        <Checkbox
+                          id={`member-${member._id}`}
+                          checked={selectedTeamMembers.includes(member._id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedTeamMembers([...selectedTeamMembers, member._id]);
+                            } else {
+                              setSelectedTeamMembers(
+                                selectedTeamMembers.filter((id) => {
+                                  return id !== member._id;
+                                }),
+                              );
+                            }
+                          }}
+                        />
+                        <Label htmlFor={`member-${member._id}`} className='text-sm'>
+                          {member.name} ({member.role})
+                        </Label>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className='max-w-4xl h-[90vh] p-0'>
+        <div className='flex h-full'>
+          {/* Left Sidebar */}
+          <div className='w-80 border-r p-6 space-y-6'>
+            <div>
+              <DialogTitle className='text-xl'>Create Meeting</DialogTitle>
+              <DialogDescription>
+                {format(dateRange?.from || selectedDate, 'EEEE, MMMM d, yyyy')}
+              </DialogDescription>
+            </div>
+
+            <div className='space-y-4'>
+              {meetingType === 'video' && (
+                <div className='space-y-2'>
+                  <Label>Video Platform</Label>
+                  <Input
+                    value={meetingTypeDetails.videoType}
+                    onChange={(e) => {
+                      return setMeetingTypeDetails({
+                        ...meetingTypeDetails,
+                        videoType: e.target.value,
+                      });
+                    }}
+                    placeholder='e.g., Zoom, Google Meet'
+                  />
+                  <Label>Meeting Link</Label>
+                  <Input
+                    value={meetingTypeDetails.videoLink}
+                    onChange={(e) => {
+                      return setMeetingTypeDetails({
+                        ...meetingTypeDetails,
+                        videoLink: e.target.value,
+                      });
+                    }}
+                    placeholder='https://'
+                  />
+                </div>
+              )}
+
+              {meetingType === 'in-person' && (
+                <div className='space-y-2'>
+                  <Label>Location</Label>
+                  <Input
+                    value={meetingTypeDetails.location}
+                    onChange={(e) => {
+                      return setMeetingTypeDetails({
+                        ...meetingTypeDetails,
+                        location: e.target.value,
+                      });
+                    }}
+                    placeholder='Enter location'
+                  />
+                </div>
+              )}
+
+              {meetingType === 'phone' && (
+                <div className='space-y-2'>
+                  <Label>Phone Number</Label>
+                  <Input
+                    value={meetingTypeDetails.phoneNumber}
+                    onChange={(e) => {
+                      return setMeetingTypeDetails({
+                        ...meetingTypeDetails,
+                        phoneNumber: e.target.value,
+                      });
+                    }}
+                    placeholder='Enter phone number'
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className='flex-1 p-6'>
+            <div className='flex justify-between items-center mb-6'>
+              <div className='flex items-center gap-4'>
+                <div className='flex items-center gap-2'>
+                  {[1, 2, 3].map((s) => {
+                    return (
+                      <div
+                        key={s}
+                        className={`w-2 h-2 rounded-full ${s === step ? 'bg-primary' : 'bg-muted'}`}
+                      />
+                    );
+                  })}
+                </div>
+                <div>
+                  <h3 className='font-medium'>
+                    {step === 1
+                      ? 'Meeting Details'
+                      : step === 2
+                      ? 'Select Date & Time'
+                      : 'Select Participants'}
+                  </h3>
+                </div>
+              </div>
+              <div className='flex items-center gap-2'>
+                <Button variant='outline' onClick={handleBack} disabled={step === 1}>
+                  Back
+                </Button>
+                <Button onClick={handleNext} disabled={step === 3}>
+                  Next
+                </Button>
+                <Button onClick={handleSubmit} disabled={step !== 3}>
+                  Create Meeting
+                </Button>
+              </div>
+            </div>
+
+            {renderStepContent()}
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
