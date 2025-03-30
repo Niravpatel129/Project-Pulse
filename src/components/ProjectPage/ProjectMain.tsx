@@ -5,6 +5,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useProject, type Project } from '@/contexts/ProjectContext';
 import { CalendarDays, CreditCard, Home, Menu, PanelsTopLeft } from 'lucide-react';
+import Link from 'next/link';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { Suspense, useEffect, useState, useTransition } from 'react';
 import ProjectActivity from './ProjectActivity';
@@ -93,10 +94,9 @@ export default function ProjectMain() {
           <div className='w-full'>
             <ScrollArea>
               <div className='text-foreground mb-3 h-auto gap-2 rounded-none bg-transparent px-0 py-1 flex'>
-                <button
-                  onClick={() => {
-                    return handleTabChange(baseUrl);
-                  }}
+                <Link
+                  href={baseUrl}
+                  prefetch={true}
                   className={`hover:bg-accent hover:text-foreground relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 ${
                     activeTab === 'home'
                       ? 'after:bg-primary bg-transparent shadow-none font-semibold'
@@ -105,7 +105,7 @@ export default function ProjectMain() {
                 >
                   <Home className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
                   Home
-                </button>
+                </Link>
 
                 <button
                   onClick={() => {
