@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { FileText, Mail, User } from 'lucide-react';
 import { EmailCard } from './EmailCard';
 import { EmailComponent } from './EmailComponent';
@@ -233,13 +233,7 @@ export default function ProjectHome() {
                   else if (activity.type === 'email' || activity.type === 'message') icon = 'mail';
 
                   return (
-                    <motion.div
-                      key={`activity-${activity._id}`}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.1 }}
-                    >
+                    <div key={`activity-${activity._id}`}>
                       {/* line across */}
                       <Card className='p-3'>
                         <div className='flex items-center gap-3'>
@@ -256,7 +250,7 @@ export default function ProjectHome() {
                           </div>
                         </div>
                       </Card>
-                    </motion.div>
+                    </div>
                   );
                 } else {
                   const thread = item.data as EmailThread & {
@@ -265,13 +259,7 @@ export default function ProjectHome() {
                   };
                   const latestMessage = thread.latestMessage;
                   return (
-                    <motion.div
-                      key={`email-${thread.threadId || latestMessage._id}`}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.15, ease: 'easeOut' }}
-                    >
+                    <div key={`email-${thread.threadId || latestMessage._id}`} className='w-full'>
                       <EmailCard
                         email={{
                           id: latestMessage._id,
@@ -298,7 +286,7 @@ export default function ProjectHome() {
                           isRead: latestMessage.isRead,
                         }}
                       />
-                    </motion.div>
+                    </div>
                   );
                 }
               })}

@@ -96,6 +96,7 @@ export default function ProjectMain() {
               <div className='text-foreground mb-3 h-auto gap-2 rounded-none bg-transparent px-0 py-1 flex'>
                 <Link
                   href={baseUrl}
+                  scroll={false}
                   prefetch={true}
                   className={`hover:bg-accent hover:text-foreground relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 ${
                     activeTab === 'home'
@@ -107,10 +108,10 @@ export default function ProjectMain() {
                   Home
                 </Link>
 
-                <button
-                  onClick={() => {
-                    return handleTabChange(`${baseUrl}/schedule`);
-                  }}
+                <Link
+                  href={`${baseUrl}/schedule`}
+                  scroll={false}
+                  prefetch={true}
                   className={`hover:bg-accent hover:text-foreground relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 ${
                     activeTab === 'schedule'
                       ? 'after:bg-primary bg-transparent shadow-none font-semibold'
@@ -123,12 +124,12 @@ export default function ProjectMain() {
                     aria-hidden='true'
                   />
                   Schedule
-                </button>
+                </Link>
 
-                <button
-                  onClick={() => {
-                    return handleTabChange(`${baseUrl}/modules`);
-                  }}
+                <Link
+                  href={`${baseUrl}/modules`}
+                  scroll={false}
+                  prefetch={true}
                   className={`hover:bg-accent hover:text-foreground relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 ${
                     activeTab === 'modules'
                       ? 'after:bg-primary bg-transparent shadow-none font-semibold'
@@ -144,12 +145,12 @@ export default function ProjectMain() {
                   <Badge className='bg-primary/15 ms-1.5 min-w-5 px-1' variant='secondary'>
                     {5}
                   </Badge>
-                </button>
+                </Link>
 
-                <button
-                  onClick={() => {
-                    return handleTabChange(`${baseUrl}/payments`);
-                  }}
+                <Link
+                  href={`${baseUrl}/payments`}
+                  scroll={false}
+                  prefetch={true}
                   className={`hover:bg-accent hover:text-foreground relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 ${
                     activeTab === 'payments'
                       ? 'after:bg-primary bg-transparent shadow-none font-semibold'
@@ -158,7 +159,7 @@ export default function ProjectMain() {
                 >
                   <CreditCard className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
                   Payments
-                </button>
+                </Link>
               </div>
               <ScrollBar orientation='horizontal' />
             </ScrollArea>

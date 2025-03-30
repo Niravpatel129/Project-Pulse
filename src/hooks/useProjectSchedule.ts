@@ -1,5 +1,6 @@
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -62,6 +63,7 @@ type TransformedMeeting = {
 };
 
 export function useProjectSchedule() {
+  const queryClient = useQueryClient();
   const { project } = useProject();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showMeetingDialog, setShowMeetingDialog] = useState(false);
@@ -70,14 +72,12 @@ export function useProjectSchedule() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [meetingToDelete, setMeetingToDelete] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('upcoming');
-  const [meetings, setMeetings] = useState<TransformedMeeting[]>([]);
   const [selectedTeamMembers, setSelectedTeamMembers] = useState<string[]>([]);
   const [meetingTitle, setMeetingTitle] = useState('');
   const [meetingDescription, setMeetingDescription] = useState('');
   const [meetingStartTime, setMeetingStartTime] = useState('09:00');
   const [meetingDuration, setMeetingDuration] = useState('60');
   const [meetingType, setMeetingType] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
   const [meetingTypeDetails, setMeetingTypeDetails] = useState<{
     videoType?: string;
     videoLink?: string;
@@ -92,6 +92,84 @@ export function useProjectSchedule() {
     otherDetails: '',
   });
   const [clientEmail, setClientEmail] = useState('');
+
+  const transformMeeting = (meeting: APIMeeting): TransformedMeeting => {
+    return {
+      _id: meeting._id,
+      title: meeting.meetingPurpose,
+      description: '',
+      date: meeting.scheduledTime
+        ? meeting.scheduledTime.split('T')[0]
+        : meeting.dateRange.start.split('T')[0],
+      startTime: meeting.scheduledTime
+        ? meeting.scheduledTime.split('T')[1].substring(0, 5)
+        : '09:00',
+      endTime: meeting.scheduledTime
+        ? new Date(new Date(meeting.scheduledTime).getTime() + meeting.meetingDuration * 60000)
+            .toISOString()
+            .split('T')[1]
+            .substring(0, 5)
+        : '10:00',
+      status: meeting.status,
+      createdBy: meeting.createdBy,
+      type: meeting.meetingLocation,
+      typeDetails: {
+        videoType: meeting.videoPlatform,
+        videoLink: meeting.meetLink || '',
+        phoneNumber: '',
+        location: '',
+        otherDetails: '',
+      },
+      createdAt: meeting.createdAt,
+      meetingDuration: meeting.meetingDuration,
+    };
+  };
+
+  const { data: meetings = [], isLoading } = useQuery({
+    queryKey: ['meetings', project?._id],
+    queryFn: async () => {
+      if (!project?._id) return [];
+      const response = await newRequest.get(`/schedule?projectId=${project._id}`);
+      return response.data.data.bookingRequests.map(transformMeeting);
+    },
+    enabled: !!project?._id,
+  });
+
+  const createMeetingMutation = useMutation({
+    mutationFn: async (newMeeting: any) => {
+      const response = await newRequest.post('/meetings', {
+        projectId: project?._id,
+        meeting: newMeeting,
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['meetings', project?._id] });
+      resetMeetingForm();
+      setShowMeetingDialog(false);
+      toast.success('Meeting created successfully');
+    },
+    onError: (error) => {
+      console.error('Error creating meeting:', error);
+      toast.error('Failed to create meeting. Please try again.');
+    },
+  });
+
+  const deleteMeetingMutation = useMutation({
+    mutationFn: (meetingId: string) => {
+      return newRequest.delete(`/meetings/${meetingId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['meetings', project?._id] });
+      setMeetingToDelete(null);
+      setShowDeleteDialog(false);
+      toast.success('Meeting deleted successfully');
+    },
+    onError: (error) => {
+      console.error('Error deleting meeting:', error);
+      toast.error('Failed to delete meeting. Please try again.');
+    },
+  });
 
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
     {
@@ -150,7 +228,6 @@ export function useProjectSchedule() {
     },
   ]);
 
-  // Update team members when project data changes
   useEffect(() => {
     if (project?.participants && project.participants.length > 0) {
       const updatedTeamMembers = project.participants.map((participant, index) => {
@@ -187,60 +264,6 @@ export function useProjectSchedule() {
     }
   }, [project]);
 
-  // Fetch meetings from API
-  useEffect(() => {
-    const fetchMeetings = async () => {
-      if (!project?._id) return;
-
-      try {
-        const response = await newRequest.get(`/schedule?projectId=${project._id}`);
-        const fetchedMeetings = response.data.data.bookingRequests.map(
-          (meeting: APIMeeting): TransformedMeeting => {
-            console.log('🚀 meeting:', meeting);
-            return {
-              _id: meeting._id,
-              title: meeting.meetingPurpose,
-              description: '',
-              date: meeting.scheduledTime
-                ? meeting.scheduledTime.split('T')[0]
-                : meeting.dateRange.start.split('T')[0],
-              startTime: meeting.scheduledTime
-                ? meeting.scheduledTime.split('T')[1].substring(0, 5)
-                : '09:00',
-              endTime: meeting.scheduledTime
-                ? new Date(
-                    new Date(meeting.scheduledTime).getTime() + meeting.meetingDuration * 60000,
-                  )
-                    .toISOString()
-                    .split('T')[1]
-                    .substring(0, 5)
-                : '10:00',
-              status: meeting.status,
-              createdBy: meeting.createdBy,
-              type: meeting.meetingLocation,
-              typeDetails: {
-                videoType: meeting.videoPlatform,
-                videoLink: meeting.meetLink || '',
-                phoneNumber: '',
-                location: '',
-                otherDetails: '',
-              },
-              createdAt: meeting.createdAt,
-              meetingDuration: meeting.meetingDuration,
-            };
-          },
-        );
-        setMeetings(fetchedMeetings);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error fetching meetings:', error);
-      }
-    };
-
-    fetchMeetings();
-  }, [project]);
-
-  // Set all team members as selected when opening the meeting dialog
   useEffect(() => {
     if (showMeetingDialog) {
       const allTeamMemberIds = teamMembers.map((member) => {
@@ -253,7 +276,6 @@ export function useProjectSchedule() {
   const handleCreateMeeting = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Calculate end time based on start time and duration
     const [startHour, startMinute] = meetingStartTime.split(':').map(Number);
     const durationMinutes = parseInt(meetingDuration);
 
@@ -281,54 +303,11 @@ export function useProjectSchedule() {
       typeDetails: meetingTypeDetails,
     };
 
-    try {
-      const response = await newRequest.post('/meetings', {
-        projectId: project?._id,
-        meeting: newMeeting,
-      });
-
-      const createdMeeting = response.data;
-      setMeetings([
-        ...meetings,
-        {
-          _id: createdMeeting._id,
-          title: createdMeeting.title,
-          description: createdMeeting.description,
-          date: createdMeeting.date.split('T')[0],
-          startTime: createdMeeting.startTime,
-          endTime: createdMeeting.endTime,
-          status: createdMeeting.status,
-          createdBy: createdMeeting.createdBy,
-          type: createdMeeting.type,
-          typeDetails: createdMeeting.typeDetails,
-          createdAt: createdMeeting.createdAt,
-          meetingDuration: createdMeeting.meetingDuration,
-        },
-      ]);
-      resetMeetingForm();
-      setShowMeetingDialog(false);
-    } catch (error) {
-      console.error('Error creating meeting:', error);
-      toast.error('Failed to create meeting. Please try again.');
-    }
+    createMeetingMutation.mutate(newMeeting);
   };
 
-  const handleDeleteMeeting = async (meetingId: string) => {
-    try {
-      await newRequest.delete(`/meetings/${meetingId}`);
-      setMeetings(
-        meetings.filter((meeting) => {
-          return meeting._id !== meetingId;
-        }),
-      );
-      toast.success('Meeting deleted successfully');
-    } catch (error) {
-      console.error('Error deleting meeting:', error);
-      toast.error('Failed to delete meeting. Please try again.');
-    } finally {
-      setMeetingToDelete(null);
-      setShowDeleteDialog(false);
-    }
+  const handleDeleteMeeting = (meetingId: string) => {
+    deleteMeetingMutation.mutate(meetingId);
   };
 
   const resetMeetingForm = () => {
@@ -397,18 +376,7 @@ export function useProjectSchedule() {
   };
 
   const handleDeleteRequest = async (meetingId: string) => {
-    try {
-      await newRequest.delete(`/meetings/${meetingId}`);
-      setMeetings(
-        meetings.filter((meeting) => {
-          return meeting._id !== meetingId;
-        }),
-      );
-      toast.success('Request deleted successfully');
-    } catch (error) {
-      console.error('Error deleting request:', error);
-      toast.error('Failed to delete request');
-    }
+    deleteMeetingMutation.mutate(meetingId);
   };
 
   return {
