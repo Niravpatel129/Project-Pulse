@@ -22,6 +22,13 @@ export default function LoginPage() {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
+  useEffect(() => {
+    if (isDev) {
+      setEmail('niravpatelp129@gmail.com');
+      setPassword(DEV_CREDENTIALS.password);
+    }
+  }, [isDev]);
+
   // Use auth hook
   const { login, isAuthenticated, error, loading, reloadAuth } = useAuth();
   const router = useRouter();
