@@ -5,9 +5,8 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useProject, type Project } from '@/contexts/ProjectContext';
 import { CalendarDays, CreditCard, Home, Menu, PanelsTopLeft } from 'lucide-react';
-import Link from 'next/link';
-import { useParams, usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useParams, usePathname, useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState, useTransition } from 'react';
 import ProjectActivity from './ProjectActivity';
 import ProjectFiles from './ProjectFiles';
 import ProjectHome from './ProjectHome';
@@ -25,6 +24,8 @@ export default function ProjectMain() {
   const { project, updateProject } = useProject();
   const params = useParams();
   const pathname = usePathname();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const projectId = params.id as string;
 
   // Extract the tab from the pathname or default to 'home'
@@ -60,6 +61,12 @@ export default function ProjectMain() {
   // Build base URL for project tabs
   const baseUrl = `/projects/${projectId}`;
 
+  const handleTabChange = (path: string) => {
+    startTransition(() => {
+      router.push(path);
+    });
+  };
+
   return (
     <div className='min-h-screen w-full'>
       <div className=''>
@@ -86,8 +93,10 @@ export default function ProjectMain() {
           <div className='w-full'>
             <ScrollArea>
               <div className='text-foreground mb-3 h-auto gap-2 rounded-none bg-transparent px-0 py-1 flex'>
-                <Link
-                  href={baseUrl}
+                <button
+                  onClick={() => {
+                    return handleTabChange(baseUrl);
+                  }}
                   className={`hover:bg-accent hover:text-foreground relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 ${
                     activeTab === 'home'
                       ? 'after:bg-primary bg-transparent shadow-none font-semibold'
@@ -96,10 +105,12 @@ export default function ProjectMain() {
                 >
                   <Home className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
                   Home
-                </Link>
+                </button>
 
-                <Link
-                  href={`${baseUrl}/schedule`}
+                <button
+                  onClick={() => {
+                    return handleTabChange(`${baseUrl}/schedule`);
+                  }}
                   className={`hover:bg-accent hover:text-foreground relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 ${
                     activeTab === 'schedule'
                       ? 'after:bg-primary bg-transparent shadow-none font-semibold'
@@ -112,10 +123,12 @@ export default function ProjectMain() {
                     aria-hidden='true'
                   />
                   Schedule
-                </Link>
+                </button>
 
-                <Link
-                  href={`${baseUrl}/modules`}
+                <button
+                  onClick={() => {
+                    return handleTabChange(`${baseUrl}/modules`);
+                  }}
                   className={`hover:bg-accent hover:text-foreground relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 ${
                     activeTab === 'modules'
                       ? 'after:bg-primary bg-transparent shadow-none font-semibold'
@@ -131,10 +144,12 @@ export default function ProjectMain() {
                   <Badge className='bg-primary/15 ms-1.5 min-w-5 px-1' variant='secondary'>
                     {5}
                   </Badge>
-                </Link>
+                </button>
 
-                <Link
-                  href={`${baseUrl}/payments`}
+                <button
+                  onClick={() => {
+                    return handleTabChange(`${baseUrl}/payments`);
+                  }}
                   className={`hover:bg-accent hover:text-foreground relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 ${
                     activeTab === 'payments'
                       ? 'after:bg-primary bg-transparent shadow-none font-semibold'
@@ -143,19 +158,23 @@ export default function ProjectMain() {
                 >
                   <CreditCard className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
                   Payments
-                </Link>
+                </button>
               </div>
               <ScrollBar orientation='horizontal' />
             </ScrollArea>
             <div className='flex flex-col gap-6 py-2 md:flex-row relative'>
               <div className='w-full lg:flex-1 md:px-2'>
-                {activeTab === 'activity' && <ProjectActivity />}
-                {activeTab === 'home' && <ProjectHome />}
-                {activeTab === 'timeline' && <TimelineExample />}
-                {activeTab === 'schedule' && <ProjectSchedule />}
-                {activeTab === 'files' && <ProjectFiles />}
-                {activeTab === 'modules' && <ProjectModules />}
-                {activeTab === 'payments' && <ProjectPayments />}
+                <Suspense
+                  fallback={<div className='w-full h-32 animate-pulse bg-gray-100 rounded-lg' />}
+                >
+                  {activeTab === 'activity' && <ProjectActivity />}
+                  {activeTab === 'home' && <ProjectHome />}
+                  {activeTab === 'timeline' && <TimelineExample />}
+                  {activeTab === 'schedule' && <ProjectSchedule />}
+                  {activeTab === 'files' && <ProjectFiles />}
+                  {activeTab === 'modules' && <ProjectModules />}
+                  {activeTab === 'payments' && <ProjectPayments />}
+                </Suspense>
               </div>
 
               {/* Desktop Sidebar - only visible on lg and larger screens */}
