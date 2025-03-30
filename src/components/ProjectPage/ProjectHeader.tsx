@@ -11,6 +11,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -87,14 +88,14 @@ interface ProjectData {
 }
 
 export default function ProjectHeader() {
-  const { project, error } = useProject();
+  const { project, error, loading: isLoadingProject } = useProject();
   const queryClient = useQueryClient();
   const [isSticky, setIsSticky] = useState(false);
   const bannerRef = useRef<HTMLDivElement>(null);
   const [showParticipantsDialog, setShowParticipantsDialog] = useState(false);
 
   // Use React Query to manage collaborators state
-  const { data: collaborators = [] } = useQuery<Collaborator[]>({
+  const { data: collaborators = [], isLoading: isLoadingCollaborators } = useQuery<Collaborator[]>({
     queryKey: ['collaborators', project?._id],
     queryFn: async () => {
       if (!project?._id) return [];
@@ -105,7 +106,7 @@ export default function ProjectHeader() {
   });
 
   // Use React Query to manage teams state
-  const { data: teams = [] } = useQuery<Team[]>({
+  const { data: teams = [], isLoading: isLoadingTeams } = useQuery<Team[]>({
     queryKey: ['teams', project?._id],
     queryFn: async () => {
       if (!project?._id) return [];
@@ -349,44 +350,99 @@ export default function ProjectHeader() {
     toast.info(`Current status: ${project.projectStatus || 'Active'}`);
   };
 
+  const ParticipantSkeleton = () => {
+    return (
+      <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg'>
+        <Skeleton className='h-8 w-8 rounded-full' />
+        <div className='hidden sm:block space-y-2'>
+          <Skeleton className='h-4 w-24' />
+          <Skeleton className='h-3 w-16' />
+        </div>
+      </div>
+    );
+  };
+
+  const CollaboratorSkeleton = () => {
+    return (
+      <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg'>
+        <Skeleton className='h-8 w-8 rounded-full bg-indigo-100' />
+        <div className='hidden sm:block space-y-2'>
+          <Skeleton className='h-4 w-24' />
+          <Skeleton className='h-3 w-16' />
+        </div>
+      </div>
+    );
+  };
+
+  const TeamSkeleton = () => {
+    return (
+      <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg'>
+        <Skeleton className='h-8 w-8 rounded-full bg-green-100' />
+        <div className='hidden sm:block space-y-2'>
+          <Skeleton className='h-4 w-24' />
+          <Skeleton className='h-3 w-16' />
+        </div>
+      </div>
+    );
+  };
+
   if (error) return <div className='text-red-500'>{error}</div>;
-  if (!project) return <></>;
+
+  const ProjectBannerSkeleton = () => {
+    return (
+      <div className='w-full'>
+        <div className='container mx-auto px-4 py-1 sm:py-1'>
+          <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4'>
+            <Skeleton className='h-8 w-8 sm:h-16 sm:w-16 rounded-md' />
+            <div className='space-y-2'>
+              <Skeleton className='h-6 w-48' />
+              <Skeleton className='h-4 w-64' />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <BlockWrapper>
       <div className=''>
         {/* Project Banner */}
-        <div ref={bannerRef} className=' w-full'>
-          <div className='container mx-auto px-4 py-1 sm:py-1'>
-            <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4'>
-              <div className='relative h-8 w-8 sm:h-16 sm:w-16 rounded-md overflow-hidden'>
-                <Image
-                  src='https://picsum.photos/200'
-                  alt='Project Thumbnail'
-                  fill
-                  className='object-cover'
-                  priority
-                />
-              </div>
-              <div>
-                <h1 className='text-xl sm:text-2xl font-medium capitalize'>{project.name}</h1>
-                <p className='text-xs sm:text-sm text-muted-foreground'>
-                  {/* Format the creation date in a readable format */}
-                  {project.projectType} - Created on{' '}
-                  {new Date(project.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </p>
+        <div ref={bannerRef} className='w-full'>
+          {isLoadingProject ? (
+            <ProjectBannerSkeleton />
+          ) : (
+            <div className='container mx-auto px-4 py-1 sm:py-1'>
+              <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4'>
+                <div className='relative h-8 w-8 sm:h-16 sm:w-16 rounded-md overflow-hidden'>
+                  <Image
+                    src='https://picsum.photos/200'
+                    alt='Project Thumbnail'
+                    fill
+                    className='object-cover'
+                    priority
+                  />
+                </div>
+                <div>
+                  <h1 className='text-xl sm:text-2xl font-medium capitalize'>{project?.name}</h1>
+                  <p className='text-xs sm:text-sm text-muted-foreground'>
+                    {project?.projectType} - Created on{' '}
+                    {project?.createdAt &&
+                      new Date(project.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Sticky Banner that appears when scrolling */}
         {isSticky && (
-          <div className='fixed bg-white top-0 left-0 right-0 z-50  shadow-md border-b'>
+          <div className='fixed bg-white top-0 left-0 right-0 z-50 shadow-md border-b'>
             <div className='container mx-auto px-4 py-2'>
               <div className='flex items-center justify-between'>
                 <div className='flex items-center gap-3'>
@@ -399,9 +455,9 @@ export default function ProjectHeader() {
                       priority
                     />
                   </div>
-                  <h2 className='text-lg font-medium capitalize'>{project.name}</h2>
+                  <h2 className='text-lg font-medium capitalize'>{project?.name}</h2>
                   <Badge variant='outline' className='ml-2 bg-gray-100 text-gray-800'>
-                    {project.projectType}
+                    {project?.projectType}
                   </Badge>
                 </div>
                 <div className='flex items-center gap-2'>
@@ -423,7 +479,7 @@ export default function ProjectHeader() {
                     <Clock className='h-4 w-4' />
                     <span className='hidden sm:inline'>Project Status</span>
                     <Badge variant='outline' className='ml-2 bg-gray-100 text-gray-800'>
-                      {project.projectStatus || 'Active'}
+                      {project?.projectStatus || 'Active'}
                     </Badge>
                   </Button>
                 </div>
@@ -438,223 +494,247 @@ export default function ProjectHeader() {
             <div className='flex flex-wrap items-center gap-4'>
               <div className='flex flex-wrap items-center gap-4'>
                 {/* Participants */}
-                {project.participants.map((participant) => {
-                  return (
-                    <DropdownMenu key={participant._id}>
-                      <DropdownMenuTrigger className='w-auto'>
-                        <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg cursor-pointer hover:bg-gray-50'>
-                          <Avatar className='h-8 w-8 border-2 border-transparent hover:border-gray-300 transition-colors bg-gray-200'>
-                            {participant.avatar ? (
-                              <AvatarImage src={participant.avatar} alt={participant.name} />
-                            ) : (
-                              <AvatarFallback className='bg-gray-200 text-gray-800 font-medium'>
-                                {participant.name
-                                  .split(' ')
-                                  .map((n) => {
-                                    return n.charAt(0).toUpperCase();
-                                  })
-                                  .join('')}
-                              </AvatarFallback>
-                            )}
-                          </Avatar>
-                          <div className='hidden sm:block'>
-                            <div className='flex items-center gap-1'>
-                              <p className='text-sm font-medium capitalize'>
-                                {participant.name.length > 15
-                                  ? `${participant.name.substring(0, 15)}...`
-                                  : participant.name}
-                              </p>
-                            </div>
-                            <div className='flex items-center gap-1.5 mt-0.5'>
-                              {getRoleBadge(participant.role)}
+                {isLoadingProject ? (
+                  <>
+                    <ParticipantSkeleton />
+                    <ParticipantSkeleton />
+                    <ParticipantSkeleton />
+                  </>
+                ) : (
+                  project?.participants?.map((participant) => {
+                    return (
+                      <DropdownMenu key={participant._id}>
+                        <DropdownMenuTrigger className='w-auto'>
+                          <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg cursor-pointer hover:bg-gray-50'>
+                            <Avatar className='h-8 w-8 border-2 border-transparent hover:border-gray-300 transition-colors bg-gray-200'>
+                              {participant.avatar ? (
+                                <AvatarImage src={participant.avatar} alt={participant.name} />
+                              ) : (
+                                <AvatarFallback className='bg-gray-200 text-gray-800 font-medium'>
+                                  {participant.name
+                                    .split(' ')
+                                    .map((n) => {
+                                      return n.charAt(0).toUpperCase();
+                                    })
+                                    .join('')}
+                                </AvatarFallback>
+                              )}
+                            </Avatar>
+                            <div className='hidden sm:block'>
+                              <div className='flex items-center gap-1'>
+                                <p className='text-sm font-medium capitalize'>
+                                  {participant.name.length > 15
+                                    ? `${participant.name.substring(0, 15)}...`
+                                    : participant.name}
+                                </p>
+                              </div>
+                              <div className='flex items-center gap-1.5 mt-0.5'>
+                                {getRoleBadge(participant.role)}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align='center' className='w-64'>
-                        <DropdownMenuItem
-                          className='cursor-pointer '
-                          onClick={() => {
-                            if (participant.email) {
-                              navigator.clipboard?.writeText(participant.email);
-                              toast.success('Email copied to clipboard');
-                            }
-                          }}
-                        >
-                          <Mail className='h-4 w-4 mr-2' />
-                          {participant.email && participant.email.length > 30
-                            ? `${participant.email.substring(0, 30)}...`
-                            : participant.email || 'No email'}
-                        </DropdownMenuItem>
-                        <DropdownMenuLabel className='px-2 py-1.5 text-xs text-gray-500'>
-                          <hr />
-                        </DropdownMenuLabel>
-                        <DropdownMenuItem
-                          className='cursor-pointer text-red-500'
-                          onClick={() => {
-                            return handleRemoveParticipant(participant._id);
-                          }}
-                        >
-                          Remove from project
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  );
-                })}
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='center' className='w-64'>
+                          <DropdownMenuItem
+                            className='cursor-pointer '
+                            onClick={() => {
+                              if (participant.email) {
+                                navigator.clipboard?.writeText(participant.email);
+                                toast.success('Email copied to clipboard');
+                              }
+                            }}
+                          >
+                            <Mail className='h-4 w-4 mr-2' />
+                            {participant.email && participant.email.length > 30
+                              ? `${participant.email.substring(0, 30)}...`
+                              : participant.email || 'No email'}
+                          </DropdownMenuItem>
+                          <DropdownMenuLabel className='px-2 py-1.5 text-xs text-gray-500'>
+                            <hr />
+                          </DropdownMenuLabel>
+                          <DropdownMenuItem
+                            className='cursor-pointer text-red-500'
+                            onClick={() => {
+                              return handleRemoveParticipant(participant._id);
+                            }}
+                          >
+                            Remove from project
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    );
+                  })
+                )}
 
                 {/* Collaborators */}
-                {collaborators.map((collaborator) => {
-                  return (
-                    <DropdownMenu key={collaborator._id}>
-                      <DropdownMenuTrigger className='w-auto'>
-                        <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg cursor-pointer hover:bg-gray-50'>
-                          <Avatar className='h-8 w-8 border-2 border-indigo-200 hover:border-indigo-300 transition-colors bg-indigo-100'>
-                            {collaborator.avatar ? (
-                              <AvatarImage src={collaborator.avatar} alt={collaborator.name} />
-                            ) : (
-                              <AvatarFallback className='bg-indigo-100 text-indigo-800 font-medium'>
-                                {collaborator.name
-                                  .split(' ')
-                                  .map((n) => {
-                                    return n.charAt(0).toUpperCase();
-                                  })
-                                  .join('')}
-                              </AvatarFallback>
-                            )}
-                          </Avatar>
-                          <div className='hidden sm:block'>
-                            <div className='flex items-center gap-1'>
-                              <p className='text-sm font-medium capitalize'>
-                                {collaborator.name.length > 15
-                                  ? `${collaborator.name.substring(0, 15)}...`
-                                  : collaborator.name}{' '}
-                              </p>
-                            </div>
-                            <div className='flex items-center gap-1.5 mt-0.5'>
-                              {getRoleBadge(collaborator.role)}
+                {isLoadingCollaborators ? (
+                  <>
+                    {/* <ParticipantSkeleton />
+                    <ParticipantSkeleton />
+                    <ParticipantSkeleton />
+                    <ParticipantSkeleton /> */}
+                  </>
+                ) : (
+                  collaborators.map((collaborator) => {
+                    return (
+                      <DropdownMenu key={collaborator._id}>
+                        <DropdownMenuTrigger className='w-auto'>
+                          <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg cursor-pointer hover:bg-gray-50'>
+                            <Avatar className='h-8 w-8 border-2 border-indigo-200 hover:border-indigo-300 transition-colors bg-indigo-100'>
+                              {collaborator.avatar ? (
+                                <AvatarImage src={collaborator.avatar} alt={collaborator.name} />
+                              ) : (
+                                <AvatarFallback className='bg-indigo-100 text-indigo-800 font-medium'>
+                                  {collaborator.name
+                                    .split(' ')
+                                    .map((n) => {
+                                      return n.charAt(0).toUpperCase();
+                                    })
+                                    .join('')}
+                                </AvatarFallback>
+                              )}
+                            </Avatar>
+                            <div className='hidden sm:block'>
+                              <div className='flex items-center gap-1'>
+                                <p className='text-sm font-medium capitalize'>
+                                  {collaborator.name.length > 15
+                                    ? `${collaborator.name.substring(0, 15)}...`
+                                    : collaborator.name}{' '}
+                                </p>
+                              </div>
+                              <div className='flex items-center gap-1.5 mt-0.5'>
+                                {getRoleBadge(collaborator.role)}
 
-                              <Badge
-                                variant='outline'
-                                className='bg-indigo-100 text-indigo-800 font-normal'
-                              >
-                                Collaborator
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align='center' className='w-64'>
-                        <DropdownMenuItem
-                          className='cursor-pointer'
-                          onClick={() => {
-                            if (collaborator.email) {
-                              navigator.clipboard?.writeText(collaborator.email);
-                              toast.success('Email copied to clipboard');
-                            }
-                          }}
-                        >
-                          <Mail className='h-4 w-4 mr-2' />
-                          {collaborator.email && collaborator.email.length > 30
-                            ? `${collaborator.email.substring(0, 30)}...`
-                            : collaborator.email || 'No email'}
-                        </DropdownMenuItem>
-                        <DropdownMenuLabel className='px-2 py-1.5 text-xs text-gray-500'>
-                          <hr />
-                        </DropdownMenuLabel>
-                        <DropdownMenuItem
-                          className='cursor-pointer text-red-500'
-                          onClick={() => {
-                            return handleRemoveCollaborator(collaborator._id);
-                          }}
-                        >
-                          Remove from project
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  );
-                })}
-
-                {/* Teams */}
-                {teams.map((team) => {
-                  console.log('🚀 team:', team);
-                  return (
-                    <DropdownMenu key={team.id}>
-                      <DropdownMenuTrigger className='w-auto'>
-                        <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg cursor-pointer hover:bg-gray-50'>
-                          <Avatar className='h-8 w-8 border-2 border-green-200 hover:border-green-300 transition-colors bg-green-100'>
-                            {team.avatar ? (
-                              <AvatarImage src={team.avatar} alt={team.name} />
-                            ) : (
-                              <AvatarFallback className='bg-green-100 text-green-800 font-medium'>
-                                {team.name
-                                  ? team.name
-                                      .split(' ')
-                                      .map((n) => {
-                                        return n.charAt(0).toUpperCase();
-                                      })
-                                      .join('')
-                                  : team.email
-                                  ? team.email.split('@')[0].charAt(0).toUpperCase()
-                                  : 'T'}
-                              </AvatarFallback>
-                            )}
-                          </Avatar>
-                          <div className='hidden sm:block'>
-                            <div className='flex items-center gap-1'>
-                              <p className='text-sm font-medium capitalize'>
-                                {team.name
-                                  ? team.name.length > 15
-                                    ? `${team.name.substring(0, 15)}...`
-                                    : team.name
-                                  : team.email
-                                  ? team.email.split('@')[0]
-                                  : 'Team'}{' '}
-                              </p>
-                            </div>
-                            <div className='flex items-center gap-1.5 mt-0.5'>
-                              <Badge
-                                variant='outline'
-                                className='bg-green-100 text-green-800 font-normal'
-                              >
-                                Team
-                              </Badge>
-                              {team.members && (
                                 <Badge
                                   variant='outline'
-                                  className='bg-gray-100 text-gray-800 font-normal'
+                                  className='bg-indigo-100 text-indigo-800 font-normal'
                                 >
-                                  {team.members} members
+                                  Collaborator
                                 </Badge>
-                              )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align='center' className='w-64'>
-                        <DropdownMenuItem
-                          className='cursor-pointer'
-                          onClick={() => {
-                            toast.info('View team details');
-                          }}
-                        >
-                          <Users className='h-4 w-4 mr-2' />
-                          View team details
-                        </DropdownMenuItem>
-                        <DropdownMenuLabel className='px-2 py-1.5 text-xs text-gray-500'>
-                          <hr />
-                        </DropdownMenuLabel>
-                        <DropdownMenuItem
-                          className='cursor-pointer text-red-500'
-                          onClick={() => {
-                            return handleRemoveTeam(team.id);
-                          }}
-                        >
-                          Remove from project
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  );
-                })}
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='center' className='w-64'>
+                          <DropdownMenuItem
+                            className='cursor-pointer'
+                            onClick={() => {
+                              if (collaborator.email) {
+                                navigator.clipboard?.writeText(collaborator.email);
+                                toast.success('Email copied to clipboard');
+                              }
+                            }}
+                          >
+                            <Mail className='h-4 w-4 mr-2' />
+                            {collaborator.email && collaborator.email.length > 30
+                              ? `${collaborator.email.substring(0, 30)}...`
+                              : collaborator.email || 'No email'}
+                          </DropdownMenuItem>
+                          <DropdownMenuLabel className='px-2 py-1.5 text-xs text-gray-500'>
+                            <hr />
+                          </DropdownMenuLabel>
+                          <DropdownMenuItem
+                            className='cursor-pointer text-red-500'
+                            onClick={() => {
+                              return handleRemoveCollaborator(collaborator._id);
+                            }}
+                          >
+                            Remove from project
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    );
+                  })
+                )}
+
+                {/* Teams */}
+                {isLoadingTeams ? (
+                  <>
+                    {/* <TeamSkeleton />
+                    <TeamSkeleton />
+                    <TeamSkeleton /> */}
+                  </>
+                ) : (
+                  teams.map((team) => {
+                    return (
+                      <DropdownMenu key={team.id}>
+                        <DropdownMenuTrigger className='w-auto'>
+                          <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg cursor-pointer hover:bg-gray-50'>
+                            <Avatar className='h-8 w-8 border-2 border-green-200 hover:border-green-300 transition-colors bg-green-100'>
+                              {team.avatar ? (
+                                <AvatarImage src={team.avatar} alt={team.name} />
+                              ) : (
+                                <AvatarFallback className='bg-green-100 text-green-800 font-medium'>
+                                  {team.name
+                                    ? team.name
+                                        .split(' ')
+                                        .map((n) => {
+                                          return n.charAt(0).toUpperCase();
+                                        })
+                                        .join('')
+                                    : team.email
+                                    ? team.email.split('@')[0].charAt(0).toUpperCase()
+                                    : 'T'}
+                                </AvatarFallback>
+                              )}
+                            </Avatar>
+                            <div className='hidden sm:block'>
+                              <div className='flex items-center gap-1'>
+                                <p className='text-sm font-medium capitalize'>
+                                  {team.name
+                                    ? team.name.length > 15
+                                      ? `${team.name.substring(0, 15)}...`
+                                      : team.name
+                                    : team.email
+                                    ? team.email.split('@')[0]
+                                    : 'Team'}{' '}
+                                </p>
+                              </div>
+                              <div className='flex items-center gap-1.5 mt-0.5'>
+                                <Badge
+                                  variant='outline'
+                                  className='bg-green-100 text-green-800 font-normal'
+                                >
+                                  Team
+                                </Badge>
+                                {team.members && (
+                                  <Badge
+                                    variant='outline'
+                                    className='bg-gray-100 text-gray-800 font-normal'
+                                  >
+                                    {team.members} members
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='center' className='w-64'>
+                          <DropdownMenuItem
+                            className='cursor-pointer'
+                            onClick={() => {
+                              toast.info('View team details');
+                            }}
+                          >
+                            <Users className='h-4 w-4 mr-2' />
+                            View team details
+                          </DropdownMenuItem>
+                          <DropdownMenuLabel className='px-2 py-1.5 text-xs text-gray-500'>
+                            <hr />
+                          </DropdownMenuLabel>
+                          <DropdownMenuItem
+                            className='cursor-pointer text-red-500'
+                            onClick={() => {
+                              return handleRemoveTeam(team.id);
+                            }}
+                          >
+                            Remove from project
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    );
+                  })
+                )}
 
                 {/* Add Participant Button with Dropdown */}
                 <DropdownMenu>
@@ -763,7 +843,37 @@ export default function ProjectHeader() {
             <div className='max-h-[60vh] overflow-y-auto'>
               <div className='space-y-4 py-2'>
                 {/* Participants Section */}
-                {project.participants.length > 0 && (
+                {isLoadingProject ? (
+                  <div>
+                    <h3 className='text-sm font-medium text-muted-foreground mb-2'>Participants</h3>
+                    <div className='space-y-2'>
+                      <div className='flex items-center justify-between p-2 rounded-lg'>
+                        <div className='flex items-center gap-3'>
+                          <Skeleton className='h-8 w-8 rounded-full' />
+                          <div className='space-y-2'>
+                            <Skeleton className='h-4 w-32' />
+                            <Skeleton className='h-3 w-24' />
+                          </div>
+                        </div>
+                        <div className='flex items-center gap-2'>
+                          <Skeleton className='h-5 w-16' />
+                        </div>
+                      </div>
+                      <div className='flex items-center justify-between p-2 rounded-lg'>
+                        <div className='flex items-center gap-3'>
+                          <Skeleton className='h-8 w-8 rounded-full' />
+                          <div className='space-y-2'>
+                            <Skeleton className='h-4 w-32' />
+                            <Skeleton className='h-3 w-24' />
+                          </div>
+                        </div>
+                        <div className='flex items-center gap-2'>
+                          <Skeleton className='h-5 w-16' />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : project?.participants?.length > 0 ? (
                   <div>
                     <h3 className='text-sm font-medium text-muted-foreground mb-2'>Participants</h3>
                     {project.participants.map((participant) => {
@@ -808,9 +918,41 @@ export default function ProjectHeader() {
                       );
                     })}
                   </div>
-                )}
+                ) : null}
                 {/* Collaborators Section */}
-                {collaborators.length > 0 && (
+                {isLoadingCollaborators ? (
+                  <div>
+                    <h3 className='text-sm font-medium text-muted-foreground mb-2'>
+                      Collaborators
+                    </h3>
+                    <div className='space-y-2'>
+                      <div className='flex items-center justify-between p-2 rounded-lg'>
+                        <div className='flex items-center gap-3'>
+                          <Skeleton className='h-8 w-8 rounded-full bg-indigo-100' />
+                          <div className='space-y-2'>
+                            <Skeleton className='h-4 w-32' />
+                            <Skeleton className='h-3 w-24' />
+                          </div>
+                        </div>
+                        <div className='flex items-center gap-2'>
+                          <Skeleton className='h-5 w-16' />
+                        </div>
+                      </div>
+                      <div className='flex items-center justify-between p-2 rounded-lg'>
+                        <div className='flex items-center gap-3'>
+                          <Skeleton className='h-8 w-8 rounded-full bg-indigo-100' />
+                          <div className='space-y-2'>
+                            <Skeleton className='h-4 w-32' />
+                            <Skeleton className='h-3 w-24' />
+                          </div>
+                        </div>
+                        <div className='flex items-center gap-2'>
+                          <Skeleton className='h-5 w-16' />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : collaborators.length > 0 ? (
                   <div>
                     <h3 className='text-sm font-medium text-muted-foreground mb-2'>
                       Collaborators
@@ -859,12 +1001,14 @@ export default function ProjectHeader() {
                       );
                     })}
                   </div>
-                )}
-                {project.participants.length === 0 && collaborators.length === 0 && (
-                  <div className='text-center text-muted-foreground py-4'>
-                    No project members found
-                  </div>
-                )}
+                ) : null}
+                {!project?.participants?.length &&
+                  !collaborators?.length &&
+                  !isLoadingCollaborators && (
+                    <div className='text-center text-muted-foreground py-4'>
+                      No project members found
+                    </div>
+                  )}
               </div>
             </div>
           </DialogContent>

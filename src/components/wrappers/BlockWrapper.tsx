@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function BlockWrapper({
   children,
-  className,
+  className = '',
 }: {
   children: React.ReactNode;
   className?: string;
