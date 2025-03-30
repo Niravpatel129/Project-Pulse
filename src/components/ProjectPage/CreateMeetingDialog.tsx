@@ -1,23 +1,14 @@
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { GoogleCalendarTimePicker } from '@/components/ui/google-calendar-time-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
-import { timezones } from '@/lib/timezones';
 import { addMinutes, format } from 'date-fns';
-import { Calendar, Globe, MapPin, Users, Video } from 'lucide-react';
+import { Calendar, Globe, MapPin, Video } from 'lucide-react';
 import { useState } from 'react';
 
 type TeamMember = {
@@ -103,14 +94,6 @@ export default function CreateMeetingDialog({
 }: CreateMeetingDialogProps) {
   const [step, setStep] = useState(1);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [selectedTimezone, setSelectedTimezone] = useState(() => {
-    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    return (
-      timezones.find((tz) => {
-        return tz.value === userTimezone;
-      })?.value || 'UTC'
-    );
-  });
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedEndTime, setSelectedEndTime] = useState('');
   const [isAllDay, setIsAllDay] = useState(false);
@@ -176,10 +159,15 @@ export default function CreateMeetingDialog({
     );
   };
 
-  const renderStepContent = () => {
-    switch (step) {
-      case 1:
-        return (
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className='w-full overflow-y-auto'>
+        <SheetHeader>
+          <SheetTitle>Create Meeting</SheetTitle>
+        </SheetHeader>
+
+        <div className='mt-6 space-y-8'>
+          {/* Step 1: Meeting Details */}
           <div className='space-y-6'>
             <div className='space-y-4'>
               <div className='space-y-2'>
@@ -195,7 +183,7 @@ export default function CreateMeetingDialog({
               </div>
 
               <div className='space-y-2'>
-                <Label>Description</Label>
+                <Label>Description (optional)</Label>
                 <Textarea
                   value={meetingDescription}
                   onChange={(e) => {
@@ -229,31 +217,71 @@ export default function CreateMeetingDialog({
               </div>
             </div>
           </div>
-        );
 
-      case 2:
-        return (
+          {/* Meeting Type Details */}
           <div className='space-y-6'>
-            <div className='flex justify-between items-center'>
+            {meetingType === 'video' && (
               <div className='space-y-2'>
-                <Label>Timezone</Label>
-                <Select value={selectedTimezone} onValueChange={setSelectedTimezone}>
-                  <SelectTrigger className='w-[200px]'>
-                    <SelectValue placeholder='Select timezone' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {timezones.map((tz) => {
-                      return (
-                        <SelectItem key={tz.value} value={tz.value}>
-                          {tz.label}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
+                <Label>Video Platform</Label>
+                <Input
+                  value={meetingTypeDetails.videoType}
+                  onChange={(e) => {
+                    return setMeetingTypeDetails({
+                      ...meetingTypeDetails,
+                      videoType: e.target.value,
+                    });
+                  }}
+                  placeholder='e.g., Zoom, Google Meet'
+                />
+                <Label>Meeting Link</Label>
+                <Input
+                  value={meetingTypeDetails.videoLink}
+                  onChange={(e) => {
+                    return setMeetingTypeDetails({
+                      ...meetingTypeDetails,
+                      videoLink: e.target.value,
+                    });
+                  }}
+                  placeholder='https://'
+                />
               </div>
-            </div>
+            )}
 
+            {meetingType === 'in-person' && (
+              <div className='space-y-2'>
+                <Label>Location</Label>
+                <Input
+                  value={meetingTypeDetails.location}
+                  onChange={(e) => {
+                    return setMeetingTypeDetails({
+                      ...meetingTypeDetails,
+                      location: e.target.value,
+                    });
+                  }}
+                  placeholder='Enter location'
+                />
+              </div>
+            )}
+
+            {meetingType === 'phone' && (
+              <div className='space-y-2'>
+                <Label>Phone Number</Label>
+                <Input
+                  value={meetingTypeDetails.phoneNumber}
+                  onChange={(e) => {
+                    return setMeetingTypeDetails({
+                      ...meetingTypeDetails,
+                      phoneNumber: e.target.value,
+                    });
+                  }}
+                  placeholder='Enter phone number'
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Step 2: Date & Time */}
+          <div className='space-y-6'>
             <div className='space-y-4'>
               <div className='grid grid-cols-2 gap-4'>
                 <div className='space-y-2'>
@@ -341,169 +369,21 @@ export default function CreateMeetingDialog({
               <Label htmlFor='all-day'>All day</Label>
             </div>
           </div>
-        );
 
-      case 3:
-        return (
-          <div className='space-y-6'>
-            <div className='space-y-4'>
-              <div className='flex items-center gap-2'>
-                <Users className='h-4 w-4' />
-                <h4 className='font-medium'>Select Participants</h4>
-              </div>
-              <ScrollArea className='h-[400px] rounded-md border p-4'>
-                <div className='space-y-2'>
-                  {teamMembers.map((member) => {
-                    return (
-                      <div key={member._id} className='flex items-center space-x-2'>
-                        <Checkbox
-                          id={`member-${member._id}`}
-                          checked={selectedTeamMembers.includes(member._id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedTeamMembers([...selectedTeamMembers, member._id]);
-                            } else {
-                              setSelectedTeamMembers(
-                                selectedTeamMembers.filter((id) => {
-                                  return id !== member._id;
-                                }),
-                              );
-                            }
-                          }}
-                        />
-                        <Label htmlFor={`member-${member._id}`} className='text-sm'>
-                          {member.name} ({member.role})
-                        </Label>
-                      </div>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-4xl h-[90vh] p-0'>
-        <div className='flex h-full'>
-          {/* Left Sidebar */}
-          <div className='w-80 border-r p-6 space-y-6'>
-            <div>
-              <DialogTitle className='text-xl'>Create Meeting</DialogTitle>
-              <DialogDescription>
-                {format(dateRange?.from || selectedDate, 'EEEE, MMMM d, yyyy')}
-              </DialogDescription>
-            </div>
-
-            <div className='space-y-4'>
-              {meetingType === 'video' && (
-                <div className='space-y-2'>
-                  <Label>Video Platform</Label>
-                  <Input
-                    value={meetingTypeDetails.videoType}
-                    onChange={(e) => {
-                      return setMeetingTypeDetails({
-                        ...meetingTypeDetails,
-                        videoType: e.target.value,
-                      });
-                    }}
-                    placeholder='e.g., Zoom, Google Meet'
-                  />
-                  <Label>Meeting Link</Label>
-                  <Input
-                    value={meetingTypeDetails.videoLink}
-                    onChange={(e) => {
-                      return setMeetingTypeDetails({
-                        ...meetingTypeDetails,
-                        videoLink: e.target.value,
-                      });
-                    }}
-                    placeholder='https://'
-                  />
-                </div>
-              )}
-
-              {meetingType === 'in-person' && (
-                <div className='space-y-2'>
-                  <Label>Location</Label>
-                  <Input
-                    value={meetingTypeDetails.location}
-                    onChange={(e) => {
-                      return setMeetingTypeDetails({
-                        ...meetingTypeDetails,
-                        location: e.target.value,
-                      });
-                    }}
-                    placeholder='Enter location'
-                  />
-                </div>
-              )}
-
-              {meetingType === 'phone' && (
-                <div className='space-y-2'>
-                  <Label>Phone Number</Label>
-                  <Input
-                    value={meetingTypeDetails.phoneNumber}
-                    onChange={(e) => {
-                      return setMeetingTypeDetails({
-                        ...meetingTypeDetails,
-                        phoneNumber: e.target.value,
-                      });
-                    }}
-                    placeholder='Enter phone number'
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className='flex-1 p-6'>
-            <div className='flex justify-between items-center mb-6'>
-              <div className='flex items-center gap-4'>
-                <div className='flex items-center gap-2'>
-                  {[1, 2, 3].map((s) => {
-                    return (
-                      <div
-                        key={s}
-                        className={`w-2 h-2 rounded-full ${s === step ? 'bg-primary' : 'bg-muted'}`}
-                      />
-                    );
-                  })}
-                </div>
-                <div>
-                  <h3 className='font-medium'>
-                    {step === 1
-                      ? 'Meeting Details'
-                      : step === 2
-                      ? 'Select Date & Time'
-                      : 'Select Participants'}
-                  </h3>
-                </div>
-              </div>
-              <div className='flex items-center gap-2'>
-                <Button variant='outline' onClick={handleBack} disabled={step === 1}>
-                  Back
-                </Button>
-                <Button onClick={handleNext} disabled={step === 3}>
-                  Next
-                </Button>
-                <Button onClick={handleSubmit} disabled={step !== 3}>
-                  Create Meeting
-                </Button>
-              </div>
-            </div>
-
-            {renderStepContent()}
+          {/* Action Buttons */}
+          <div className='flex justify-end gap-2 pt-4 border-t'>
+            <Button
+              variant='outline'
+              onClick={() => {
+                return onOpenChange(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit}>Create Meeting</Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
