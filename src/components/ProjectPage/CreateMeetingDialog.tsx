@@ -167,7 +167,7 @@ export default function CreateMeetingDialog({
     const newErrors: Record<string, string> = {};
 
     // Title validation
-    if (!meetingTitle.trim()) {
+    if (!meetingTitle?.trim()) {
       newErrors.title = 'Please enter a meeting title';
     }
 
@@ -228,9 +228,31 @@ export default function CreateMeetingDialog({
       newErrors.participants = 'Please add at least one participant';
     }
 
+    // Clear any errors that are no longer relevant
+    const currentErrors = { ...errors };
+    Object.keys(currentErrors).forEach((key) => {
+      if (!newErrors[key]) {
+        delete currentErrors[key];
+      }
+    });
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  // Add useEffect to validate form on relevant changes
+  useEffect(() => {
+    validateForm();
+  }, [
+    meetingTitle,
+    meetingType,
+    meetingTypeDetails,
+    dateRange,
+    meetingStartTime,
+    selectedEndTime,
+    selectedTeamMembers,
+    isAllDay,
+  ]);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     if (!validateForm()) {
@@ -859,9 +881,34 @@ export default function CreateMeetingDialog({
           >
             Cancel
           </Button>
-          <Button onClick={handleFormSubmit} disabled={Object.keys(errors).length > 0}>
-            Create Meeting
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <Button onClick={handleFormSubmit} disabled={Object.keys(errors).length > 0}>
+                  Create Meeting
+                </Button>
+              </div>
+            </TooltipTrigger>
+            {Object.keys(errors).length > 0 && (
+              <TooltipContent side='top' className='max-w-[300px]'>
+                <div className='space-y-1'>
+                  <p className='font-medium'>Missing required fields:</p>
+                  <ul className='text-sm space-y-0.5'>
+                    {Object.entries(errors).map(([field, message]) => {
+                      return (
+                        <li
+                          key={field}
+                          className='text-muted-foreground bg-gray-100 rounded-md p-1'
+                        >
+                          {message}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              </TooltipContent>
+            )}
+          </Tooltip>
         </SheetFooter>
       </SheetContent>
     </Sheet>
