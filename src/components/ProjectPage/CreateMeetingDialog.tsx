@@ -30,7 +30,7 @@ type TeamMember = {
   email: string;
   role: string;
   avatar?: string;
-  availableTimes: {
+  availableTimes?: {
     day: string;
     slots: { start: string; end: string }[];
   }[];
@@ -112,9 +112,9 @@ export default function CreateMeetingDialog({
   setIsAllDay,
 }: CreateMeetingDialogProps) {
   const { isConnecting, googleStatus, handleConnect } = useGoogleIntegration();
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [hasInteracted, setHasInteracted] = useState(false);
   const [validatedFields, setValidatedFields] = useState<Set<string>>(new Set());
+  const [blurredFields, setBlurredFields] = useState<Set<string>>(new Set());
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
     from: selectedDate,
     to: selectedDate,
@@ -123,7 +123,33 @@ export default function CreateMeetingDialog({
   const [selectedEndTime, setSelectedEndTime] = useState('');
   const [manualEmail, setManualEmail] = useState('');
   const [showManualEmailInput, setShowManualEmailInput] = useState(false);
+  const { project } = useProject();
   const [filteredParticipants, setFilteredParticipants] = useState<TeamMember[]>([]);
+
+  // Update filtered participants when search query or project participants change
+  useEffect(() => {
+    if (!project?.participants) return;
+
+    const searchLower = searchQuery.toLowerCase();
+    const filtered = project.participants
+      .map((p) => {
+        return {
+          _id: p._id,
+          name: p.name,
+          email: p.email || '',
+          role: p.role,
+          avatar: p.avatar,
+          availableTimes: [],
+        };
+      })
+      .filter((participant) => {
+        return (
+          participant.name.toLowerCase().includes(searchLower) ||
+          participant.email.toLowerCase().includes(searchLower)
+        );
+      });
+    setFilteredParticipants(filtered);
+  }, [searchQuery, project?.participants]);
 
   // Initialize meetingTypeDetails when meetingType changes
   useEffect(() => {
@@ -163,84 +189,56 @@ export default function CreateMeetingDialog({
     handleStartTimeSelect,
   } = useCreateMeeting({ selectedDate, onCreateMeeting });
 
-  const { project } = useProject();
+  const handleFormSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      await handleSubmit(e);
+      onOpenChange(false);
+    },
+    [handleSubmit, onOpenChange],
+  );
 
-  const validateForm = useCallback(() => {
-    if (!hasInteracted) return true;
+  // Add new memoized button disabled state
+  const isButtonDisabled = useMemo(() => {
+    // Check if all required fields have valid values
+    const hasValidTitle = meetingTitle?.trim().length > 0;
+    const hasValidMeetingType = meetingType?.length > 0;
+    const hasValidDateRange = dateRange?.from && dateRange?.to && dateRange.to >= dateRange.from;
+    const hasValidParticipants = selectedTeamMembers.length > 0;
 
-    const newErrors: Record<string, string> = {};
-
-    // Only validate fields that have been interacted with
-    if (validatedFields.has('title') && !meetingTitle?.trim()) {
-      newErrors.title = 'Please enter a meeting title';
-    }
-
-    if (validatedFields.has('meetingType')) {
-      if (!meetingType) {
-        newErrors.meetingType = 'Please select a meeting type';
-      } else {
-        // Validate meeting type specific details only if the type has been selected
-        switch (meetingType) {
-          case 'video':
-            if (
-              meetingTypeDetails.videoPlatform === 'custom' &&
-              !meetingTypeDetails.customLocation?.trim()
-            ) {
-              newErrors.customLocation = 'Please enter the video platform name';
-            }
-            break;
-          case 'phone':
-            if (!meetingTypeDetails.phoneNumber?.trim()) {
-              newErrors.phoneNumber = 'Please enter a phone number';
-            } else if (
-              !/^\+?[1-9]\d{1,14}$/.test(meetingTypeDetails.phoneNumber.replace(/\s+/g, ''))
-            ) {
-              newErrors.phoneNumber = 'Please enter a valid phone number';
-            }
-            break;
-          case 'in-person':
-          case 'other':
-            if (!meetingTypeDetails.customLocation?.trim()) {
-              newErrors.customLocation =
-                meetingType === 'in-person'
-                  ? 'Please enter the physical meeting location'
-                  : 'Please specify meeting location or instructions';
-            }
-            break;
-        }
+    // Check meeting type specific requirements
+    const hasValidMeetingTypeDetails = (() => {
+      if (!meetingType) return false;
+      switch (meetingType) {
+        case 'video':
+          return (
+            meetingTypeDetails.videoPlatform === 'google-meet' ||
+            (meetingTypeDetails.videoPlatform === 'custom' &&
+              meetingTypeDetails.customLocation?.trim().length > 0)
+          );
+        case 'phone':
+          return (
+            meetingTypeDetails.phoneNumber?.trim().length > 0 &&
+            /^\+?[1-9]\d{1,14}$/.test(meetingTypeDetails.phoneNumber.replace(/\s+/g, ''))
+          );
+        case 'in-person':
+        case 'other':
+          return meetingTypeDetails.customLocation?.trim().length > 0;
+        default:
+          return false;
       }
-    }
+    })();
 
-    if (validatedFields.has('dateRange')) {
-      if (!dateRange?.from || !dateRange?.to) {
-        newErrors.dateRange = 'Please select a date range';
-      } else if (dateRange.to < dateRange.from) {
-        newErrors.dateRange = 'End date must be after start date';
-      }
-    }
+    // Check time requirements if not all-day
+    const hasValidTime = isAllDay || (meetingStartTime?.length > 0 && selectedEndTime?.length > 0);
 
-    // Time validation only if date range has been validated and it's not an all-day meeting
-    if (
-      validatedFields.has('dateRange') &&
-      !isAllDay &&
-      meetingType &&
-      dateRange?.from &&
-      dateRange?.to
-    ) {
-      if (!meetingStartTime) {
-        newErrors.startTime = 'Please select a start time';
-      }
-      if (!selectedEndTime) {
-        newErrors.endTime = 'Please select an end time';
-      }
-    }
-
-    if (validatedFields.has('participants') && selectedTeamMembers.length === 0) {
-      newErrors.participants = 'Please add at least one participant';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return !(
+      hasValidTitle &&
+      hasValidMeetingType &&
+      hasValidMeetingTypeDetails &&
+      hasValidDateRange &&
+      hasValidTime &&
+      hasValidParticipants
+    );
   }, [
     meetingTitle,
     meetingType,
@@ -250,59 +248,91 @@ export default function CreateMeetingDialog({
     selectedEndTime,
     selectedTeamMembers,
     isAllDay,
-    hasInteracted,
-    validatedFields,
   ]);
 
-  // Handle field validation
-  const handleFieldValidation = useCallback(
-    (field: string) => {
-      setValidatedFields((prev) => {
-        return new Set([...prev, field]);
-      });
-      if (!hasInteracted) {
-        setHasInteracted(true);
-      }
-    },
-    [hasInteracted],
-  );
+  // Helper function to check if a field should show validation
+  const shouldShowValidation = (field: string) => {
+    return blurredFields.has(field);
+  };
 
-  // Optimize validation effect with debounce
-  useEffect(() => {
-    if (!hasInteracted) return;
-
-    const timeoutId = setTimeout(() => {
-      validateForm();
-    }, 300); // 300ms debounce
-
-    return () => {
-      return clearTimeout(timeoutId);
-    };
-  }, [validateForm, hasInteracted]);
-
-  const handleFormSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      if (!validateForm()) {
-        return;
-      }
-      await handleSubmit(e);
-      onOpenChange(false);
-    },
-    [validateForm, handleSubmit, onOpenChange],
-  );
-
-  // Memoize error messages rendering
+  // Add new memoized error messages for tooltip
   const errorMessages = useMemo(() => {
-    if (Object.keys(errors).length === 0) return null;
+    if (!isButtonDisabled) return null;
+
+    const messages: string[] = [];
+
+    // Only show messages for fields that have been interacted with
+    if (shouldShowValidation('title') && !meetingTitle?.trim()) {
+      messages.push('Please enter a meeting title');
+    }
+    if (shouldShowValidation('meetingType') && !meetingType) {
+      messages.push('Please select a meeting type');
+    }
+    if (
+      shouldShowValidation('dateRange') &&
+      (!dateRange?.from || !dateRange?.to || dateRange.to < dateRange.from)
+    ) {
+      messages.push('Please select a valid date range');
+    }
+    if (shouldShowValidation('startTime') && !isAllDay && !meetingStartTime) {
+      messages.push('Please select start time');
+    }
+    if (shouldShowValidation('endTime') && !isAllDay && !selectedEndTime) {
+      messages.push('Please select end time');
+    }
+    if (shouldShowValidation('participants') && selectedTeamMembers.length === 0) {
+      messages.push('Please add at least one participant');
+    }
+
+    // Meeting type specific messages
+    if (meetingType) {
+      switch (meetingType) {
+        case 'video':
+          if (
+            shouldShowValidation('customLocation') &&
+            meetingTypeDetails.videoPlatform === 'custom' &&
+            !meetingTypeDetails.customLocation?.trim()
+          ) {
+            messages.push('Please enter the video platform name');
+          }
+          break;
+        case 'phone':
+          if (shouldShowValidation('phoneNumber')) {
+            if (!meetingTypeDetails.phoneNumber?.trim()) {
+              messages.push('Please enter a phone number');
+            } else if (
+              !/^\+?[1-9]\d{1,14}$/.test(meetingTypeDetails.phoneNumber.replace(/\s+/g, ''))
+            ) {
+              messages.push('Please enter a valid phone number');
+            }
+          }
+          break;
+        case 'in-person':
+        case 'other':
+          if (
+            shouldShowValidation('customLocation') &&
+            !meetingTypeDetails.customLocation?.trim()
+          ) {
+            messages.push(
+              meetingType === 'in-person'
+                ? 'Please enter the physical meeting location'
+                : 'Please specify meeting location or instructions',
+            );
+          }
+          break;
+      }
+    }
+
+    if (messages.length === 0) return null;
 
     return (
-      <TooltipContent side='top' className='max-w-[300px]'>
+      <TooltipContent side='top' className='max-w-[300px] text-black  bg-gray-100'>
         <div className='space-y-1'>
           <p className='font-medium'>Missing required fields:</p>
           <ul className='text-sm space-y-0.5'>
-            {Object.entries(errors).map(([field, message]) => {
+            {messages.map((message, index) => {
               return (
-                <li key={field} className='text-muted-foreground bg-gray-100 rounded-md p-1'>
+                <li key={index} className='text-muted-foreground bg-gray-100 rounded-md p-1'>
                   {message}
                 </li>
               );
@@ -311,12 +341,19 @@ export default function CreateMeetingDialog({
         </div>
       </TooltipContent>
     );
-  }, [errors]);
-
-  // Memoize button disabled state
-  const isButtonDisabled = useMemo(() => {
-    return Object.keys(errors).length > 0;
-  }, [errors]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    isButtonDisabled,
+    meetingTitle,
+    meetingType,
+    meetingTypeDetails,
+    dateRange,
+    meetingStartTime,
+    selectedEndTime,
+    selectedTeamMembers,
+    isAllDay,
+    blurredFields,
+  ]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -342,21 +379,17 @@ export default function CreateMeetingDialog({
                   value={meetingTitle}
                   onChange={(e) => {
                     setMeetingTitle(e.target.value);
-                    handleFieldValidation('title');
-                    if (errors.title) {
-                      setErrors({ ...errors, title: '' });
-                    }
                   }}
                   onBlur={() => {
-                    handleFieldValidation('title');
-                    if (!meetingTitle.trim()) {
-                      setErrors({ ...errors, title: 'Please enter a meeting title' });
-                    }
+                    setBlurredFields((prev) => {
+                      return new Set([...prev, 'title']);
+                    });
                   }}
                   placeholder='Add title'
-                  className={`w-full ${errors.title ? 'border-red-500' : ''}`}
+                  className={`w-full ${
+                    shouldShowValidation('title') && !meetingTitle?.trim() ? 'border-red-500' : ''
+                  }`}
                 />
-                {errors.title && <p className='text-sm text-red-500'>{errors.title}</p>}
               </div>
 
               <div className='space-y-2'>
@@ -377,19 +410,24 @@ export default function CreateMeetingDialog({
                   value={meetingType}
                   onValueChange={(value) => {
                     setMeetingType(value);
-                    handleFieldValidation('meetingType');
-                    if (errors.meetingType) {
-                      setErrors({ ...errors, meetingType: '' });
-                    }
+                    setBlurredFields((prev) => {
+                      return new Set([...prev, 'meetingType']);
+                    });
                   }}
                   onOpenChange={(open) => {
                     if (!open && !meetingType) {
-                      handleFieldValidation('meetingType');
-                      setErrors({ ...errors, meetingType: 'Please select a meeting type' });
+                      setMeetingType('');
+                      setBlurredFields((prev) => {
+                        return new Set([...prev, 'meetingType']);
+                      });
                     }
                   }}
                 >
-                  <SelectTrigger className={errors.meetingType ? 'border-red-500' : ''}>
+                  <SelectTrigger
+                    className={
+                      shouldShowValidation('meetingType') && !meetingType ? 'border-red-500' : ''
+                    }
+                  >
                     <SelectValue placeholder='Select meeting type' />
                   </SelectTrigger>
                   <SelectContent>
@@ -406,7 +444,6 @@ export default function CreateMeetingDialog({
                     })}
                   </SelectContent>
                 </Select>
-                {errors.meetingType && <p className='text-sm text-red-500'>{errors.meetingType}</p>}
 
                 <div className='relative'>
                   {meetingType === 'video' && (
@@ -418,9 +455,9 @@ export default function CreateMeetingDialog({
                             ...meetingTypeDetails,
                             videoPlatform: value,
                           });
-                          if (errors.customLocation) {
-                            setErrors({ ...errors, customLocation: '' });
-                          }
+                          setBlurredFields((prev) => {
+                            return new Set([...prev, 'videoPlatform']);
+                          });
                         }}
                       >
                         <SelectTrigger>
@@ -441,25 +478,20 @@ export default function CreateMeetingDialog({
                                 ...meetingTypeDetails,
                                 customLocation: e.target.value,
                               });
-                              if (errors.customLocation) {
-                                setErrors({ ...errors, customLocation: '' });
-                              }
                             }}
                             onBlur={() => {
-                              if (!meetingTypeDetails.customLocation?.trim()) {
-                                setErrors({
-                                  ...errors,
-                                  customLocation: 'Please enter the video platform name',
-                                });
-                              }
+                              setBlurredFields((prev) => {
+                                return new Set([...prev, 'customLocation']);
+                              });
                             }}
                             className={`mt-2 animate-in fade-in duration-200 ${
-                              errors.customLocation ? 'border-red-500' : ''
+                              shouldShowValidation('customLocation') &&
+                              meetingTypeDetails.videoPlatform === 'custom' &&
+                              !meetingTypeDetails.customLocation?.trim()
+                                ? 'border-red-500'
+                                : ''
                             }`}
                           />
-                          {errors.customLocation && (
-                            <p className='text-sm text-red-500 mt-1'>{errors.customLocation}</p>
-                          )}
                         </div>
                       )}
                       {meetingTypeDetails.videoPlatform === 'google-meet' && (
@@ -521,31 +553,22 @@ export default function CreateMeetingDialog({
                             ...meetingTypeDetails,
                             phoneNumber: e.target.value,
                           });
-                          if (errors.phoneNumber) {
-                            setErrors({ ...errors, phoneNumber: '' });
-                          }
                         }}
                         onBlur={() => {
-                          if (!meetingTypeDetails.phoneNumber?.trim()) {
-                            setErrors({ ...errors, phoneNumber: 'Please enter a phone number' });
-                          } else if (
-                            !/^\+?[1-9]\d{1,14}$/.test(
-                              meetingTypeDetails.phoneNumber.replace(/\s+/g, ''),
-                            )
-                          ) {
-                            setErrors({
-                              ...errors,
-                              phoneNumber: 'Please enter a valid phone number',
-                            });
-                          }
+                          setBlurredFields((prev) => {
+                            return new Set([...prev, 'phoneNumber']);
+                          });
                         }}
                         className={`mt-2 animate-in fade-in duration-200 ${
-                          errors.phoneNumber ? 'border-red-500' : ''
+                          shouldShowValidation('phoneNumber') &&
+                          (!meetingTypeDetails.phoneNumber?.trim() ||
+                            !/^\+?[1-9]\d{1,14}$/.test(
+                              meetingTypeDetails.phoneNumber.replace(/\s+/g, ''),
+                            ))
+                            ? 'border-red-500'
+                            : ''
                         }`}
                       />
-                      {errors.phoneNumber && (
-                        <p className='text-sm text-red-500 mt-1'>{errors.phoneNumber}</p>
-                      )}
                     </div>
                   )}
 
@@ -563,26 +586,19 @@ export default function CreateMeetingDialog({
                             ...meetingTypeDetails,
                             customLocation: e.target.value,
                           });
-                          if (errors.customLocation) {
-                            setErrors({ ...errors, customLocation: '' });
-                          }
                         }}
                         onBlur={() => {
-                          if (!meetingTypeDetails.customLocation?.trim()) {
-                            setErrors({
-                              ...errors,
-                              customLocation:
-                                meetingType === 'in-person'
-                                  ? 'Please enter the physical meeting location'
-                                  : 'Please specify meeting location or instructions',
-                            });
-                          }
+                          setBlurredFields((prev) => {
+                            return new Set([...prev, 'customLocation']);
+                          });
                         }}
-                        className={errors.customLocation ? 'border-red-500' : ''}
+                        className={
+                          shouldShowValidation('customLocation') &&
+                          !meetingTypeDetails.customLocation?.trim()
+                            ? 'border-red-500'
+                            : ''
+                        }
                       />
-                      {errors.customLocation && (
-                        <p className='text-sm text-red-500 mt-1'>{errors.customLocation}</p>
-                      )}
                     </div>
                   )}
                 </div>
@@ -596,6 +612,7 @@ export default function CreateMeetingDialog({
                     {selectedTeamMembers.length > 0 ? (
                       <div className='flex flex-wrap gap-1.5 p-2 border rounded-md bg-muted/30 transition-all duration-300 animate-in fade-in-0'>
                         {selectedTeamMembers.map((participantId) => {
+                          console.log('🚀 selectedTeamMembers:', selectedTeamMembers);
                           const participant = project?.participants.find((p) => {
                             return p._id === participantId;
                           });
@@ -608,8 +625,22 @@ export default function CreateMeetingDialog({
                               >
                                 <span className='font-medium'>{participantId}</span>
                                 <div
-                                  onClick={() => {
-                                    return handleRemoveParticipant(participantId);
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    console.log('Removing participant:', participantId);
+                                    console.log(
+                                      'Current selectedTeamMembers:',
+                                      selectedTeamMembers,
+                                    );
+                                    setSelectedTeamMembers(
+                                      selectedTeamMembers.filter((id) => {
+                                        return id !== participantId;
+                                      }),
+                                    );
+                                    console.log(
+                                      'After removal - selectedTeamMembers:',
+                                      selectedTeamMembers,
+                                    );
                                   }}
                                   className='ml-0.5 hover:text-destructive transition-all duration-300 cursor-pointer hover:scale-110'
                                 >
@@ -638,8 +669,19 @@ export default function CreateMeetingDialog({
                               </Avatar>
                               <span className='font-medium'>{participant.name}</span>
                               <div
-                                onClick={() => {
-                                  return handleRemoveParticipant(participantId);
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  console.log('Removing participant:', participantId);
+                                  console.log('Current selectedTeamMembers:', selectedTeamMembers);
+                                  setSelectedTeamMembers(
+                                    selectedTeamMembers.filter((id) => {
+                                      return id !== participantId;
+                                    }),
+                                  );
+                                  console.log(
+                                    'After removal - selectedTeamMembers:',
+                                    selectedTeamMembers,
+                                  );
                                 }}
                                 className='ml-0.5 hover:text-destructive transition-all duration-300 cursor-pointer hover:scale-110'
                               >
@@ -652,16 +694,15 @@ export default function CreateMeetingDialog({
                     ) : (
                       <div
                         className={`flex items-center justify-center h-[40px] border rounded-md bg-muted/50 transition-all duration-300 animate-in fade-in-0 ${
-                          errors.participants ? 'border-red-500' : ''
+                          shouldShowValidation('participants') && !selectedTeamMembers.length
+                            ? 'border-red-500'
+                            : ''
                         }`}
                       >
                         <p className='text-sm text-muted-foreground'>No participants added yet</p>
                       </div>
                     )}
                   </div>
-                  {errors.participants && (
-                    <p className='text-sm text-red-500'>{errors.participants}</p>
-                  )}
 
                   {/* Participant Selection */}
                   <Popover
@@ -706,9 +747,6 @@ export default function CreateMeetingDialog({
                               ) {
                                 setSelectedTeamMembers([...selectedTeamMembers, searchQuery]);
                                 setSearchQuery('');
-                                if (errors.participants) {
-                                  setErrors({ ...errors, participants: '' });
-                                }
                               }
                             }}
                           />
@@ -730,19 +768,24 @@ export default function CreateMeetingDialog({
                               {filteredParticipants?.map((participant) => {
                                 const isSelected = selectedTeamMembers.includes(participant._id);
                                 return (
-                                  <button
+                                  <div
                                     key={participant._id}
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       if (isSelected) {
-                                        handleRemoveParticipant(participant._id);
+                                        setSelectedTeamMembers(
+                                          selectedTeamMembers.filter((id) => {
+                                            return id !== participant._id;
+                                          }),
+                                        );
                                       } else {
-                                        handleAddParticipant(participant._id);
-                                        if (errors.participants) {
-                                          setErrors({ ...errors, participants: '' });
-                                        }
+                                        setSelectedTeamMembers([
+                                          ...selectedTeamMembers,
+                                          participant._id,
+                                        ]);
                                       }
                                     }}
-                                    className={`w-full flex items-center gap-2 p-1.5 rounded transition-all duration-200 hover:bg-accent/50 ${
+                                    className={`w-full flex items-center gap-2 p-1.5 rounded transition-all duration-200 hover:bg-accent/50 cursor-pointer ${
                                       isSelected ? 'bg-accent' : ''
                                     }`}
                                   >
@@ -769,22 +812,20 @@ export default function CreateMeetingDialog({
                                       checked={isSelected}
                                       className='h-3.5 w-3.5 transition-all duration-200 hover:scale-110'
                                     />
-                                  </button>
+                                  </div>
                                 );
                               })}
 
                               {searchQuery &&
                                 searchQuery.includes('@') &&
                                 !selectedTeamMembers.includes(searchQuery) && (
-                                  <button
-                                    onClick={() => {
+                                  <div
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       setSelectedTeamMembers([...selectedTeamMembers, searchQuery]);
                                       setSearchQuery('');
-                                      if (errors.participants) {
-                                        setErrors({ ...errors, participants: '' });
-                                      }
                                     }}
-                                    className='text-sm w-full flex items-center gap-2 p-1.5 rounded transition-all duration-200 hover:bg-accent/50 text-primary animate-in slide-in-from-bottom-2'
+                                    className='text-sm w-full flex items-center gap-2 p-1.5 rounded transition-all duration-200 hover:bg-accent/50 cursor-pointer text-primary animate-in slide-in-from-bottom-2'
                                   >
                                     <UserPlus className='h-6 w-6 transition-transform duration-200 hover:scale-110' />
                                     <div className='flex-1 text-left'>
@@ -793,7 +834,7 @@ export default function CreateMeetingDialog({
                                         External participant
                                       </div>
                                     </div>
-                                  </button>
+                                  </div>
                                 )}
                             </>
                           )}
@@ -823,7 +864,10 @@ export default function CreateMeetingDialog({
                       <Button
                         variant='outline'
                         className={`w-full justify-start font-normal ${
-                          errors.dateRange ? 'border-red-500' : ''
+                          shouldShowValidation('dateRange') &&
+                          (!dateRange?.from || !dateRange?.to || dateRange.to < dateRange.from)
+                            ? 'border-red-500'
+                            : ''
                         }`}
                       >
                         <Calendar className='mr-2 h-4 w-4' />
@@ -836,9 +880,9 @@ export default function CreateMeetingDialog({
                         selected={dateRange?.from}
                         onSelect={(date) => {
                           handleDateSelect(date);
-                          if (errors.dateRange) {
-                            setErrors({ ...errors, dateRange: '' });
-                          }
+                          setBlurredFields((prev) => {
+                            return new Set([...prev, 'dateRange']);
+                          });
                         }}
                         className=''
                         month={currentMonth}
@@ -858,7 +902,10 @@ export default function CreateMeetingDialog({
                       <Button
                         variant='outline'
                         className={`w-full justify-start font-normal ${
-                          errors.dateRange ? 'border-red-500' : ''
+                          shouldShowValidation('dateRange') &&
+                          (!dateRange?.from || !dateRange?.to || dateRange.to < dateRange.from)
+                            ? 'border-red-500'
+                            : ''
                         }`}
                       >
                         <Calendar className='mr-2 h-4 w-4' />
@@ -871,9 +918,9 @@ export default function CreateMeetingDialog({
                         selected={dateRange?.to}
                         onSelect={(date) => {
                           handleDateSelect(date, true);
-                          if (errors.dateRange) {
-                            setErrors({ ...errors, dateRange: '' });
-                          }
+                          setBlurredFields((prev) => {
+                            return new Set([...prev, 'dateRange']);
+                          });
                         }}
                         className=''
                         month={currentMonth}
@@ -882,40 +929,49 @@ export default function CreateMeetingDialog({
                     </PopoverContent>
                   </Popover>
                 </div>
-                {errors.dateRange && <p className='text-sm text-red-500'>{errors.dateRange}</p>}
               </div>
 
               {!isAllDay && (
                 <div className='grid grid-cols-2 gap-4'>
                   <div className='space-y-2'>
                     <Label>Start time</Label>
-                    <div className={errors.startTime ? 'border border-red-500 rounded-md' : ''}>
+                    <div
+                      className={
+                        shouldShowValidation('startTime') && !meetingStartTime
+                          ? 'border border-red-500 rounded-md'
+                          : ''
+                      }
+                    >
                       <GoogleCalendarTimePicker
                         value={meetingStartTime}
                         onChange={(value) => {
                           setMeetingStartTime(value);
-                          if (errors.startTime) {
-                            setErrors({ ...errors, startTime: '' });
-                          }
+                          setBlurredFields((prev) => {
+                            return new Set([...prev, 'startTime']);
+                          });
                         }}
                       />
                     </div>
-                    {errors.startTime && <p className='text-sm text-red-500'>{errors.startTime}</p>}
                   </div>
                   <div className='space-y-2'>
                     <Label>End time</Label>
-                    <div className={errors.endTime ? 'border border-red-500 rounded-md' : ''}>
+                    <div
+                      className={
+                        shouldShowValidation('endTime') && !selectedEndTime
+                          ? 'border border-red-500 rounded-md'
+                          : ''
+                      }
+                    >
                       <GoogleCalendarTimePicker
                         value={selectedEndTime}
                         onChange={(value) => {
                           setSelectedEndTime(value);
-                          if (errors.endTime) {
-                            setErrors({ ...errors, endTime: '' });
-                          }
+                          setBlurredFields((prev) => {
+                            return new Set([...prev, 'endTime']);
+                          });
                         }}
                       />
                     </div>
-                    {errors.endTime && <p className='text-sm text-red-500'>{errors.endTime}</p>}
                   </div>
                 </div>
               )}
@@ -930,13 +986,6 @@ export default function CreateMeetingDialog({
                   if (checked) {
                     setMeetingStartTime('');
                     setSelectedEndTime('');
-                    // Clear time-related errors without triggering validation
-                    setErrors((prev) => {
-                      const newErrors = { ...prev };
-                      delete newErrors.startTime;
-                      delete newErrors.endTime;
-                      return newErrors;
-                    });
                   }
                 }}
               />
@@ -957,15 +1006,12 @@ export default function CreateMeetingDialog({
           <Tooltip>
             <TooltipTrigger asChild>
               <div>
-                <Button
-                  onClick={handleFormSubmit}
-                  disabled={hasInteracted && Object.keys(errors).length > 0}
-                >
+                <Button onClick={handleFormSubmit} disabled={isButtonDisabled}>
                   Create Meeting
                 </Button>
               </div>
             </TooltipTrigger>
-            {hasInteracted && errorMessages}
+            {errorMessages}
           </Tooltip>
         </SheetFooter>
       </SheetContent>

@@ -50,11 +50,15 @@ export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMee
   };
 
   const handleRemoveParticipant = (participantId: string) => {
-    setSelectedTeamMembers(
-      selectedTeamMembers.filter((id) => {
+    console.log('handleRemoveParticipant called with:', participantId);
+    console.log('Current selectedTeamMembers:', selectedTeamMembers);
+    setSelectedTeamMembers((prev) => {
+      const newMembers = prev.filter((id) => {
         return id !== participantId;
-      }),
-    );
+      });
+      console.log('New selectedTeamMembers:', newMembers);
+      return newMembers;
+    });
   };
 
   const handleAddManualEmail = () => {
