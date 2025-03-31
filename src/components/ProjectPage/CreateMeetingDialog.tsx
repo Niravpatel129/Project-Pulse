@@ -255,25 +255,6 @@ export default function CreateMeetingDialog({
 
                   {meetingType === 'phone' && (
                     <div className='mt-2 animate-in slide-in-from-top-2 duration-200'>
-                      <Select
-                        value={meetingTypeDetails.phoneNumberType}
-                        onValueChange={(value) => {
-                          setMeetingTypeDetails({
-                            ...meetingTypeDetails,
-                            phoneNumberType: value,
-                          });
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select phone number source' />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value='client-provided'>
-                            Client will provide their number
-                          </SelectItem>
-                          <SelectItem value='custom'>Specify a number</SelectItem>
-                        </SelectContent>
-                      </Select>
                       {meetingTypeDetails.phoneNumberType === 'custom' && (
                         <Input
                           type='tel'
@@ -331,14 +312,14 @@ export default function CreateMeetingDialog({
                                 className='flex items-center gap-1 px-2 py-0.5 text-xs transition-all duration-200 hover:bg-muted/50'
                               >
                                 <span className='font-medium'>{participantId}</span>
-                                <button
+                                <div
                                   onClick={() => {
                                     return handleRemoveParticipant(participantId);
                                   }}
-                                  className='ml-0.5 hover:text-destructive transition-colors duration-200'
+                                  className='ml-0.5 hover:text-destructive transition-colors duration-200 cursor-pointer'
                                 >
                                   <X className='h-3 w-3' />
-                                </button>
+                                </div>
                               </Badge>
                             );
                           }
@@ -361,14 +342,14 @@ export default function CreateMeetingDialog({
                                 </AvatarFallback>
                               </Avatar>
                               <span className='font-medium'>{participant.name}</span>
-                              <button
+                              <div
                                 onClick={() => {
                                   return handleRemoveParticipant(participantId);
                                 }}
-                                className='ml-0.5 hover:text-destructive transition-colors duration-200'
+                                className='ml-0.5 hover:text-destructive transition-colors duration-200 cursor-pointer'
                               >
                                 <X className='h-3 w-3' />
-                              </button>
+                              </div>
                             </Badge>
                           );
                         })}
@@ -506,67 +487,6 @@ export default function CreateMeetingDialog({
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Meeting Type Details - Remove video section since it's moved */}
-          <div className='space-y-6'>
-            {meetingType === 'phone' && (
-              <div className='space-y-2'>
-                <Label>Phone Number Source</Label>
-                <Select
-                  value={meetingTypeDetails.phoneNumberType}
-                  onValueChange={(value) => {
-                    setMeetingTypeDetails({
-                      ...meetingTypeDetails,
-                      phoneNumberType: value,
-                    });
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder='Select phone number source' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='client-provided'>
-                      Client will provide their number
-                    </SelectItem>
-                    <SelectItem value='custom'>Specify a number</SelectItem>
-                  </SelectContent>
-                </Select>
-                {meetingTypeDetails.phoneNumberType === 'custom' && (
-                  <Input
-                    type='tel'
-                    placeholder='Enter phone number (e.g., +1 234 567 8900)'
-                    value={meetingTypeDetails.phoneNumber}
-                    onChange={(e) => {
-                      setMeetingTypeDetails({
-                        ...meetingTypeDetails,
-                        phoneNumber: e.target.value,
-                      });
-                    }}
-                  />
-                )}
-              </div>
-            )}
-
-            {(meetingType === 'in-person' || meetingType === 'other') && (
-              <div className='space-y-2'>
-                <Label>Location</Label>
-                <Input
-                  placeholder={
-                    meetingType === 'in-person'
-                      ? 'Enter physical meeting location'
-                      : 'Specify meeting location or instructions'
-                  }
-                  value={meetingTypeDetails.customLocation}
-                  onChange={(e) => {
-                    setMeetingTypeDetails({
-                      ...meetingTypeDetails,
-                      customLocation: e.target.value,
-                    });
-                  }}
-                />
-              </div>
-            )}
           </div>
 
           {/* Step 2: Date & Time */}
