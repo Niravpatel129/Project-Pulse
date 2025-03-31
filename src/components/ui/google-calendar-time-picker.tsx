@@ -20,8 +20,10 @@ export function GoogleCalendarTimePicker({
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [showError, setShowError] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const timeSlotRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Generate time slots in 30-minute intervals
   const timeSlots = useMemo(() => {
@@ -82,12 +84,43 @@ export function GoogleCalendarTimePicker({
       }
     }
 
+    // Handle 12-hour format with just hour and period (e.g., "12pm", "2am")
+    const time12SimpleMatch = input.match(/^(\d{1,2})\s*(am|pm)$/i);
+    if (time12SimpleMatch) {
+      const [_, hours, period] = time12SimpleMatch;
+      let hour = parseInt(hours);
+      const minute = 0;
+
+      if (period.toLowerCase() === 'pm' && hour !== 12) {
+        hour += 12;
+      } else if (period.toLowerCase() === 'am' && hour === 12) {
+        hour = 0;
+      }
+
+      if (hour >= 0 && hour < 24) {
+        return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      }
+    }
+
     // Handle numeric input (e.g., "430" -> "4:30 AM")
     const numericMatch = input.match(/^(\d{1,4})$/);
     if (numericMatch) {
       const num = parseInt(numericMatch[1]);
-      const hours = Math.floor(num / 100);
-      const minutes = num % 100;
+      let hours, minutes;
+
+      if (num <= 23) {
+        // If number is <= 23, treat it as hours
+        hours = num;
+        minutes = 0;
+      } else if (num <= 2359) {
+        // If number is <= 2359, treat it as HHMM
+        hours = Math.floor(num / 100);
+        minutes = num % 100;
+      } else {
+        // If number is > 2359, treat first two digits as hours
+        hours = Math.floor(num / 100);
+        minutes = num % 100;
+      }
 
       if (hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60) {
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
@@ -101,12 +134,22 @@ export function GoogleCalendarTimePicker({
     const newValue = e.target.value;
     setInputValue(newValue);
     setError(null);
+    setShowError(false);
+
+    // Clear any existing timeout
+    if (errorTimeoutRef.current) {
+      clearTimeout(errorTimeoutRef.current);
+    }
 
     const parsedTime = parseTimeInput(newValue);
     if (parsedTime) {
       onChange(parsedTime);
     } else if (newValue) {
+      // Set error but delay showing it
       setError('Invalid time');
+      errorTimeoutRef.current = setTimeout(() => {
+        setShowError(true);
+      }, 500); // 500ms delay
     }
   };
 
@@ -194,44 +237,54 @@ export function GoogleCalendarTimePicker({
           {value ? displayTime : 'Select time'}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className='w-[var(--radix-popover-trigger-width)] p-0' align='start'>
-        <div className='space-y-1 p-2'>
-          <Input
-            ref={inputRef}
-            value={inputValue}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            onBlur={handleBlur}
-            placeholder='2:00 PM'
-            className={`w-full ${error ? 'border-red-500' : ''}`}
-            autoFocus
-          />
-          {error && <p className='text-sm text-red-500'>{error}</p>}
-          <ScrollArea className='h-[200px]'>
-            <div className='space-y-1'>
-              {timeSlots.map((time) => {
-                const [hours, minutes] = time.split(':').map(Number);
-                const displayTime = format(new Date().setHours(hours, minutes), 'h:mm a');
-                return (
-                  <Button
-                    key={time}
-                    ref={(el) => {
-                      timeSlotRefs.current[time] = el;
-                    }}
-                    variant={value === time ? 'default' : 'ghost'}
-                    className='w-full justify-start'
-                    onClick={() => {
-                      return handleTimeSelect(time);
-                    }}
-                  >
-                    {displayTime}
-                  </Button>
-                );
-              })}
+      <div className='relative'>
+        <PopoverContent className='w-[var(--radix-popover-trigger-width)] p-0' align='start'>
+          <div className='space-y-1 p-2'>
+            <div className='relative'>
+              {showError && (
+                <div className='absolute -top-8 w-full left-0 right-10 flex justify-center z-50'>
+                  <div className='bg-destructive text-destructive-foreground px-2 py-1 rounded text-sm whitespace-nowrap shadow-sm'>
+                    {error}
+                  </div>
+                </div>
+              )}
+              <Input
+                ref={inputRef}
+                value={inputValue}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                onBlur={handleBlur}
+                placeholder='2:00 PM'
+                className={`w-full ${showError ? 'border-destructive' : ''}`}
+                autoFocus
+              />
             </div>
-          </ScrollArea>
-        </div>
-      </PopoverContent>
+            <ScrollArea className='h-[200px]'>
+              <div className='space-y-1'>
+                {timeSlots.map((time) => {
+                  const [hours, minutes] = time.split(':').map(Number);
+                  const displayTime = format(new Date().setHours(hours, minutes), 'h:mm a');
+                  return (
+                    <Button
+                      key={time}
+                      ref={(el) => {
+                        timeSlotRefs.current[time] = el;
+                      }}
+                      variant={value === time ? 'default' : 'ghost'}
+                      className='w-full justify-start'
+                      onClick={() => {
+                        return handleTimeSelect(time);
+                      }}
+                    >
+                      {displayTime}
+                    </Button>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          </div>
+        </PopoverContent>
+      </div>
     </Popover>
   );
 }
