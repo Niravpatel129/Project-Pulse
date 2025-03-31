@@ -1,6 +1,6 @@
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
-import { addMinutes } from 'date-fns';
+import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useGoogleIntegration } from './useGoogleIntegration';
@@ -42,7 +42,6 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
   const [meetingTitle, setMeetingTitle] = useState('');
   const [meetingDescription, setMeetingDescription] = useState('');
   const [meetingType, setMeetingType] = useState('');
-  const [meetingDuration, setMeetingDuration] = useState('30');
   const [selectedTeamMembers, setSelectedTeamMembers] = useState<string[]>([]);
   const [meetingTypeDetails, setMeetingTypeDetails] = useState({
     videoPlatform: '',
@@ -161,12 +160,12 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
     });
   };
 
-  const createMeeting = async () => {
-    try {
+  const createMeetingMutation = useMutation({
+    mutationFn: async () => {
       const response = await newRequest.post('/schedule/book', {
         title: meetingTitle,
         type: meetingType,
-        duration: meetingDuration,
+        duration: (parseInt(selectedEndTime) - parseInt(meetingStartTime)) * 60,
         participants: selectedTeamMembers,
         startTime: meetingStartTime,
         endTime: selectedEndTime,
@@ -177,12 +176,16 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
         toDate: toDate,
         projectId: project?._id,
       });
+      return response.data;
+    },
+    onSuccess: () => {
       toast.success('Meeting created successfully');
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error('🚀 error:', error);
       toast.error('Failed to create meeting');
-    }
-  };
+    },
+  });
 
   const handleSubmit = async ({ onOpenChange, event }) => {
     event.preventDefault();
@@ -230,10 +233,6 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
       newErrors.meetingType = 'Meeting type is required';
     }
 
-    if (!meetingDuration) {
-      newErrors.meetingDuration = 'Meeting duration is required';
-    }
-
     if (selectedTeamMembers.length === 0) {
       newErrors.selectedTeamMembers = 'At least one participant is required';
     }
@@ -259,39 +258,26 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
         return value !== '';
       }),
     );
-    console.log('🚀 filteredErrors:', filteredErrors);
-    // Update errors state once with all validation results but delete empty errors
+
     setErrors(filteredErrors);
 
-    // Only proceed if there are no errors
     if (Object.values(filteredErrors).length > 0) {
       return;
     } else {
-      // If validation passes, close the dialog
       try {
-        await createMeeting();
+        const duration = parseInt(selectedEndTime) - parseInt(meetingStartTime);
+
+        if (duration < 0) {
+          toast.error('Meeting duration cannot be negative');
+          return;
+        }
+
+        await createMeetingMutation.mutateAsync();
         onOpenChange(false);
       } catch (error) {
         console.error('🚀 error:', error);
       }
     }
-  };
-
-  const handleStartTimeSelect = (time: string) => {
-    setMeetingStartTime(time);
-    const [hours, minutes] = time.split(':').map(Number);
-    const startDate = new Date(fromDate);
-    startDate.setHours(hours, minutes, 0, 0);
-
-    const duration = parseInt(meetingDuration) || 30;
-    const endDate = addMinutes(startDate, duration);
-    setSelectedEndTime(
-      endDate.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      }),
-    );
   };
 
   const handleAllDayChange = (checked: boolean) => {
@@ -316,7 +302,6 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
     meetingTitle,
     meetingDescription,
     meetingType,
-    meetingDuration,
     selectedTeamMembers,
     meetingTypeDetails,
     filteredParticipants,
@@ -339,7 +324,6 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
     setMeetingTitle,
     setMeetingDescription,
     setMeetingType,
-    setMeetingDuration,
     setSelectedTeamMembers,
     setMeetingTypeDetails,
     setErrors,
@@ -351,7 +335,6 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
     handleNext,
     handleBack,
     handleSubmit,
-    handleStartTimeSelect,
     handleAllDayChange,
     handleConnect,
 
