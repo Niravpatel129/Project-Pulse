@@ -219,7 +219,7 @@ export default function CreateMeetingDialog({
       }
     }
 
-    // Time validation only if date range has been validated
+    // Time validation only if date range has been validated and it's not an all-day meeting
     if (
       validatedFields.has('dateRange') &&
       !isAllDay &&
@@ -930,7 +930,13 @@ export default function CreateMeetingDialog({
                   if (checked) {
                     setMeetingStartTime('');
                     setSelectedEndTime('');
-                    setErrors({ ...errors, startTime: '', endTime: '' });
+                    // Clear time-related errors without triggering validation
+                    setErrors((prev) => {
+                      const newErrors = { ...prev };
+                      delete newErrors.startTime;
+                      delete newErrors.endTime;
+                      return newErrors;
+                    });
                   }
                 }}
               />
