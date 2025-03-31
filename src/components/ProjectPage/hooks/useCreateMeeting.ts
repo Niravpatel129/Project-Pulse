@@ -28,10 +28,12 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
   const [meetingStartTime, setMeetingStartTime] = useState('');
   const [selectedEndTime, setSelectedEndTime] = useState('');
   const [isAllDay, setIsAllDay] = useState(false);
-  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
-    from: selectedDate,
-    to: selectedDate,
-  });
+  // const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+  //   from: selectedDate,
+  //   to: selectedDate,
+  // });
+  const [fromDate, setFromDate] = useState<Date>(selectedDate);
+  const [toDate, setToDate] = useState<Date>(selectedDate);
   const [searchQuery, setSearchQuery] = useState('');
   const [manualEmail, setManualEmail] = useState('');
   const [showManualEmailInput, setShowManualEmailInput] = useState(false);
@@ -46,6 +48,8 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
     phoneNumber: '',
   });
   const [filteredParticipants, setFilteredParticipants] = useState<TeamMember[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  console.log('🚀 errors:', errors);
 
   // Initialize selectedTeamMembers with project participants
   useEffect(() => {
@@ -155,32 +159,98 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-  };
+  const handleSubmit = async ({ onOpenChange, event }) => {
+    event.preventDefault();
 
-  const handleDateSelect = (date: Date | undefined, isEndDate: boolean = false) => {
-    if (date) {
-      if (isEndDate) {
-        setDateRange((prev) => {
-          return { ...prev, to: date };
-        });
-      } else {
-        setDateRange((prev) => {
-          return { from: date, to: prev.to };
-        });
+    // Create a new errors object instead of updating the existing one multiple times
+    const newErrors = {
+      meetingTitle: '',
+      meetingType: '',
+      meetingDuration: '',
+      selectedTeamMembers: '',
+      meetingStartTime: '',
+      selectedEndTime: '',
+      fromDate: '',
+      toDate: '',
+      phoneNumber: '',
+      videoPlatform: '',
+      customLocation: '',
+    };
+
+    // phone number only required if meeting type is phone
+    if (meetingType === 'phone') {
+      if (!meetingTypeDetails.phoneNumber) {
+        newErrors.phoneNumber = 'Phone number is required';
       }
-      if (!isAllDay) {
-        setMeetingStartTime('');
-        setSelectedEndTime('');
+    }
+
+    if (meetingType === 'video') {
+      if (!meetingTypeDetails.videoPlatform || meetingTypeDetails.videoPlatform === '') {
+        newErrors.videoPlatform = 'Video platform is required';
       }
+    }
+
+    if (meetingType === 'in-person' || meetingType === 'other') {
+      if (!meetingTypeDetails.customLocation || meetingTypeDetails.customLocation === '') {
+        newErrors.customLocation = 'Custom location is required';
+      }
+    }
+
+    // Validate required fields
+    if (!meetingTitle) {
+      newErrors.meetingTitle = 'Meeting title is required';
+    }
+
+    if (!meetingType) {
+      newErrors.meetingType = 'Meeting type is required';
+    }
+
+    if (!meetingDuration) {
+      newErrors.meetingDuration = 'Meeting duration is required';
+    }
+
+    if (selectedTeamMembers.length === 0) {
+      newErrors.selectedTeamMembers = 'At least one participant is required';
+    }
+
+    if (!isAllDay && !meetingStartTime) {
+      newErrors.meetingStartTime = 'Meeting start time is required';
+    }
+
+    if (!isAllDay && !selectedEndTime) {
+      newErrors.selectedEndTime = 'Meeting end time is required';
+    }
+
+    if (!fromDate) {
+      newErrors.fromDate = 'From date is required';
+    }
+
+    if (!toDate) {
+      newErrors.toDate = 'To date is required';
+    }
+
+    const filteredErrors = Object.fromEntries(
+      Object.entries(newErrors).filter(([_, value]) => {
+        return value !== '';
+      }),
+    );
+    console.log('🚀 filteredErrors:', filteredErrors);
+    // Update errors state once with all validation results but delete empty errors
+    setErrors(filteredErrors);
+
+    // Only proceed if there are no errors
+    if (Object.values(filteredErrors).length > 0) {
+      return;
+    } else {
+      // If validation passes, close the dialog
+      onOpenChange(false);
     }
   };
 
   const handleStartTimeSelect = (time: string) => {
     setMeetingStartTime(time);
     const [hours, minutes] = time.split(':').map(Number);
-    const startDate = new Date(dateRange.from);
+    const startDate = new Date(fromDate);
     startDate.setHours(hours, minutes, 0, 0);
 
     const duration = parseInt(meetingDuration) || 30;
@@ -210,7 +280,6 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
     meetingStartTime,
     selectedEndTime,
     isAllDay,
-    dateRange,
     searchQuery,
     manualEmail,
     showManualEmailInput,
@@ -223,6 +292,8 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
     filteredParticipants,
     isConnecting,
     googleStatus,
+    fromDate,
+    toDate,
 
     // Setters
     setShowCalendar,
@@ -230,7 +301,8 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
     setMeetingStartTime,
     setSelectedEndTime,
     setIsAllDay,
-    setDateRange,
+    setFromDate,
+    setToDate,
     setSearchQuery,
     setManualEmail,
     setShowManualEmailInput,
@@ -240,6 +312,7 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
     setMeetingDuration,
     setSelectedTeamMembers,
     setMeetingTypeDetails,
+    setErrors,
 
     // Handlers
     handleAddParticipant,
@@ -248,9 +321,11 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
     handleNext,
     handleBack,
     handleSubmit,
-    handleDateSelect,
     handleStartTimeSelect,
     handleAllDayChange,
     handleConnect,
+
+    // errors
+    errors,
   };
 }

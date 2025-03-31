@@ -21,6 +21,7 @@ import { useProject } from '@/contexts/ProjectContext';
 import { format } from 'date-fns';
 import { Calendar, Globe, Loader2, MapPin, UserPlus, Video, X } from 'lucide-react';
 import { useCallback, useEffect } from 'react';
+import InputWithError from '../ui/input-with-error';
 import { useCreateMeeting } from './hooks/useCreateMeeting';
 
 const MEETING_TYPES = [
@@ -51,7 +52,6 @@ export default function CreateMeetingDialog({
     meetingTypeDetails,
     selectedTeamMembers,
     searchQuery,
-    dateRange,
     currentMonth,
     meetingStartTime,
     selectedEndTime,
@@ -59,6 +59,8 @@ export default function CreateMeetingDialog({
     filteredParticipants,
     isConnecting,
     googleStatus,
+    fromDate,
+    toDate,
 
     // Setters
     setMeetingTitle,
@@ -69,26 +71,29 @@ export default function CreateMeetingDialog({
     setCurrentMonth,
     setMeetingStartTime,
     setSelectedEndTime,
+    setFromDate,
+    setToDate,
 
+    setErrors,
     // Handlers
     handleAddParticipant,
     handleRemoveParticipant,
     handleSubmit,
-    handleDateSelect,
     handleAllDayChange,
     handleConnect,
+
+    errors,
   } = useCreateMeeting({ selectedDate });
 
   useEffect(() => {
-    handleDateSelect(selectedDate);
-    handleDateSelect(selectedDate, true);
+    setFromDate(selectedDate);
+    setToDate(selectedDate);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
   const handleFormSubmit = useCallback(
     async (e: React.FormEvent) => {
-      await handleSubmit(e);
-      onOpenChange(false);
+      await handleSubmit({ onOpenChange, event: e });
     },
     [handleSubmit, onOpenChange],
   );
@@ -106,13 +111,18 @@ export default function CreateMeetingDialog({
             <div className='space-y-4'>
               <div className='space-y-2'>
                 <Label>Title</Label>
-                <Input
+                <InputWithError
+                  label=''
                   value={meetingTitle}
                   onChange={(e) => {
+                    setErrors((prev) => {
+                      return { ...prev, meetingTitle: '' };
+                    });
                     return setMeetingTitle(e.target.value);
                   }}
                   placeholder='Add title'
                   className='w-full'
+                  error={errors.meetingTitle}
                 />
               </div>
 
@@ -130,7 +140,15 @@ export default function CreateMeetingDialog({
 
               <div className='space-y-2'>
                 <Label>Meeting Type</Label>
-                <Select value={meetingType} onValueChange={setMeetingType}>
+                <Select
+                  value={meetingType}
+                  onValueChange={(value) => {
+                    setErrors((prev) => {
+                      return { ...prev, meetingType: '' };
+                    });
+                    setMeetingType(value);
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder='Select meeting type' />
                   </SelectTrigger>
@@ -148,6 +166,9 @@ export default function CreateMeetingDialog({
                     })}
                   </SelectContent>
                 </Select>
+                {errors.meetingType && (
+                  <p className='text-sm text-destructive'>{errors.meetingType}</p>
+                )}
 
                 <div className='relative'>
                   {meetingType === 'video' && (
@@ -155,6 +176,9 @@ export default function CreateMeetingDialog({
                       <Select
                         value={meetingTypeDetails?.videoPlatform || ''}
                         onValueChange={(value) => {
+                          setErrors((prev) => {
+                            return { ...prev, videoPlatform: '' };
+                          });
                           setMeetingTypeDetails({
                             ...meetingTypeDetails,
                             videoPlatform: value,
@@ -171,7 +195,8 @@ export default function CreateMeetingDialog({
                       </Select>
                       {meetingTypeDetails?.videoPlatform === 'custom' && (
                         <div className='mt-2 animate-in fade-in duration-200'>
-                          <Input
+                          <InputWithError
+                            label=''
                             placeholder='Enter video platform name'
                             value={meetingTypeDetails?.customLocation || ''}
                             onChange={(e) => {
@@ -180,6 +205,7 @@ export default function CreateMeetingDialog({
                                 customLocation: e.target.value,
                               });
                             }}
+                            error={errors.videoPlatform}
                             className='mt-2 animate-in fade-in duration-200'
                           />
                         </div>
@@ -234,11 +260,16 @@ export default function CreateMeetingDialog({
 
                   {meetingType === 'phone' && (
                     <div className='mt-2 animate-in slide-in-from-top-2 duration-200'>
-                      <Input
+                      <InputWithError
+                        label=''
                         type='tel'
                         placeholder='Enter phone number (e.g., +1 234 567 8900)'
                         value={meetingTypeDetails?.phoneNumber || ''}
+                        error={errors.phoneNumber}
                         onChange={(e) => {
+                          setErrors((prev) => {
+                            return { ...prev, phoneNumber: '' };
+                          });
                           setMeetingTypeDetails({
                             ...meetingTypeDetails,
                             phoneNumber: e.target.value,
@@ -251,7 +282,8 @@ export default function CreateMeetingDialog({
 
                   {(meetingType === 'in-person' || meetingType === 'other') && (
                     <div className='mt-2 animate-in slide-in-from-top-2 duration-200'>
-                      <Input
+                      <InputWithError
+                        label=''
                         placeholder={
                           meetingType === 'in-person'
                             ? 'Enter physical meeting location'
@@ -259,11 +291,15 @@ export default function CreateMeetingDialog({
                         }
                         value={meetingTypeDetails?.customLocation || ''}
                         onChange={(e) => {
+                          setErrors((prev) => {
+                            return { ...prev, customLocation: '' };
+                          });
                           setMeetingTypeDetails({
                             ...meetingTypeDetails,
                             customLocation: e.target.value,
                           });
                         }}
+                        error={errors.customLocation}
                       />
                     </div>
                   )}
@@ -272,6 +308,9 @@ export default function CreateMeetingDialog({
 
               <div className='space-y-2'>
                 <Label>Participants</Label>
+                {errors.selectedTeamMembers && (
+                  <p className='text-sm text-destructive'>{errors.selectedTeamMembers}</p>
+                )}
                 <div className='space-y-4'>
                   {/* Selected Participants */}
                   <div className='min-h-[40px] transition-all duration-300'>
@@ -481,22 +520,22 @@ export default function CreateMeetingDialog({
                   <Popover
                     onOpenChange={(open) => {
                       if (!open) {
-                        handleDateSelect(dateRange?.from);
+                        setFromDate(selectedDate);
                       }
                     }}
                   >
                     <PopoverTrigger asChild>
                       <Button variant='outline' className='w-full justify-start font-normal'>
                         <Calendar className='mr-2 h-4 w-4' />
-                        {format(dateRange?.from || selectedDate, 'MMM d, yyyy')}
+                        {format(fromDate || selectedDate, 'MMM d, yyyy')}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className='w-[300px] p-0' align='start'>
                       <CalendarComponent
                         mode='single'
-                        selected={dateRange?.from}
+                        selected={fromDate}
                         onSelect={(date) => {
-                          return handleDateSelect(date);
+                          return setFromDate(date);
                         }}
                         className=''
                         month={currentMonth}
@@ -508,22 +547,22 @@ export default function CreateMeetingDialog({
                   <Popover
                     onOpenChange={(open) => {
                       if (!open) {
-                        handleDateSelect(dateRange?.to, true);
+                        setToDate(selectedDate);
                       }
                     }}
                   >
                     <PopoverTrigger asChild>
                       <Button variant='outline' className='w-full justify-start font-normal'>
                         <Calendar className='mr-2 h-4 w-4' />
-                        {format(dateRange?.to || selectedDate, 'MMM d, yyyy')}
+                        {format(toDate || selectedDate, 'MMM d, yyyy')}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className='w-[300px] p-0' align='start'>
                       <CalendarComponent
                         mode='single'
-                        selected={dateRange?.to}
+                        selected={toDate}
                         onSelect={(date) => {
-                          return handleDateSelect(date, true);
+                          return setToDate(date);
                         }}
                         className=''
                         month={currentMonth}
@@ -532,6 +571,8 @@ export default function CreateMeetingDialog({
                     </PopoverContent>
                   </Popover>
                 </div>
+                {errors.fromDate && <p className='text-sm text-destructive'>{errors.fromDate}</p>}
+                {errors.toDate && <p className='text-sm text-destructive'>{errors.toDate}</p>}
               </div>
 
               {!isAllDay && (
@@ -541,7 +582,12 @@ export default function CreateMeetingDialog({
                     <div>
                       <GoogleCalendarTimePicker
                         value={meetingStartTime}
-                        onChange={setMeetingStartTime}
+                        onChange={(e) => {
+                          setErrors((prev) => {
+                            return { ...prev, meetingStartTime: '' };
+                          });
+                          setMeetingStartTime(e);
+                        }}
                       />
                     </div>
                   </div>
@@ -550,11 +596,22 @@ export default function CreateMeetingDialog({
                     <div>
                       <GoogleCalendarTimePicker
                         value={selectedEndTime}
-                        onChange={setSelectedEndTime}
+                        onChange={(e) => {
+                          setErrors((prev) => {
+                            return { ...prev, selectedEndTime: '' };
+                          });
+                          setSelectedEndTime(e);
+                        }}
                       />
                     </div>
                   </div>
                 </div>
+              )}
+              {errors.meetingStartTime && (
+                <p className='text-sm text-destructive'>{errors.meetingStartTime}</p>
+              )}
+              {errors.selectedEndTime && (
+                <p className='text-sm text-destructive'>{errors.selectedEndTime}</p>
               )}
             </div>
 
