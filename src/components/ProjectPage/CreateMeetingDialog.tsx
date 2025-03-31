@@ -259,7 +259,7 @@ export default function CreateMeetingDialog({
                   {/* Selected Participants */}
                   <div className='min-h-[40px]'>
                     {selectedTeamMembers.length > 0 ? (
-                      <div className='flex flex-wrap gap-2 p-2 border rounded-md bg-muted/30'>
+                      <div className='flex flex-wrap gap-1.5 p-2 border rounded-md bg-muted/30'>
                         {selectedTeamMembers.map((participantId) => {
                           const participant = project?.participants.find((p) => {
                             return p._id === participantId;
@@ -270,26 +270,16 @@ export default function CreateMeetingDialog({
                               <Badge
                                 key={participantId}
                                 variant='secondary'
-                                className='flex items-center gap-1.5 px-2 py-1'
+                                className='flex items-center gap-1 px-2 py-0.5 text-xs'
                               >
-                                <Avatar className='h-5 w-5'>
-                                  <AvatarFallback>
-                                    {participantId.charAt(0).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className='flex flex-col items-start'>
-                                  <span className='text-sm font-medium'>{participantId}</span>
-                                  <span className='text-xs text-muted-foreground'>
-                                    External participant
-                                  </span>
-                                </div>
+                                <span className='font-medium'>{participantId}</span>
                                 <button
                                   onClick={() => {
                                     return handleRemoveParticipant(participantId);
                                   }}
-                                  className='ml-1 hover:text-destructive'
+                                  className='ml-0.5 hover:text-destructive'
                                 >
-                                  <X className='h-3.5 w-3.5' />
+                                  <X className='h-3 w-3' />
                                 </button>
                               </Badge>
                             );
@@ -300,9 +290,9 @@ export default function CreateMeetingDialog({
                             <Badge
                               key={participantId}
                               variant='secondary'
-                              className='flex items-center gap-1.5 px-2 py-1'
+                              className='flex items-center gap-1 px-2 py-0.5 text-xs'
                             >
-                              <Avatar className='h-5 w-5'>
+                              <Avatar className='h-4 w-4'>
                                 <AvatarImage src={participant.avatar} />
                                 <AvatarFallback>
                                   {participant.name
@@ -313,21 +303,14 @@ export default function CreateMeetingDialog({
                                     .join('')}
                                 </AvatarFallback>
                               </Avatar>
-                              <div className='flex flex-col items-start'>
-                                <span className='text-sm font-medium'>{participant.name}</span>
-                                {participant.email && (
-                                  <span className='text-xs text-muted-foreground'>
-                                    {participant.email}
-                                  </span>
-                                )}
-                              </div>
+                              <span className='font-medium'>{participant.name}</span>
                               <button
                                 onClick={() => {
                                   return handleRemoveParticipant(participantId);
                                 }}
-                                className='ml-1 hover:text-destructive'
+                                className='ml-0.5 hover:text-destructive'
                               >
-                                <X className='h-3.5 w-3.5' />
+                                <X className='h-3 w-3' />
                               </button>
                             </Badge>
                           );
@@ -343,8 +326,8 @@ export default function CreateMeetingDialog({
                   {/* Participant Selection */}
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant='outline' className='w-full justify-start'>
-                        <UserPlus className='mr-2 h-4 w-4' />
+                      <Button variant='outline' className='w-full justify-start h-8'>
+                        <UserPlus className='mr-2 h-3.5 w-3.5' />
                         {selectedTeamMembers.length > 0
                           ? 'Add More Participants'
                           : 'Add Participants'}
@@ -354,7 +337,7 @@ export default function CreateMeetingDialog({
                       className='w-[var(--radix-popover-trigger-width)] p-0 text-sm'
                       align='start'
                     >
-                      <div className='space-y-2 p-4'>
+                      <div className='space-y-2 p-3'>
                         <div className='flex items-center gap-2'>
                           <Input
                             placeholder='Search by name or email...'
@@ -362,7 +345,7 @@ export default function CreateMeetingDialog({
                             onChange={(e) => {
                               return setSearchQuery(e.target.value);
                             }}
-                            className='flex-1'
+                            className='flex-1 h-8'
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' && searchQuery && !searchQuery.includes('@')) {
                                 return;
@@ -381,11 +364,11 @@ export default function CreateMeetingDialog({
 
                         <div className='max-h-[300px] overflow-y-auto'>
                           {filteredParticipants?.length === 0 ? (
-                            <div className='flex flex-col items-center justify-center py-8 text-muted-foreground'>
-                              <UserPlus className='h-8 w-8 mb-2' />
+                            <div className='flex flex-col items-center justify-center py-6 text-muted-foreground'>
+                              <UserPlus className='h-6 w-6 mb-1.5' />
                               <p className='text-sm'>No participants found</p>
                               {searchQuery && (
-                                <p className='text-xs mt-1'>
+                                <p className='text-xs mt-0.5'>
                                   Try adjusting your search or add an email manually
                                 </p>
                               )}
@@ -404,11 +387,11 @@ export default function CreateMeetingDialog({
                                         handleAddParticipant(participant._id);
                                       }
                                     }}
-                                    className={`w-full flex items-center gap-3 p-2 rounded hover:bg-accent ${
+                                    className={`w-full flex items-center gap-2 p-1.5 rounded hover:bg-accent ${
                                       isSelected ? 'bg-accent' : ''
                                     }`}
                                   >
-                                    <Avatar className='h-8 w-8'>
+                                    <Avatar className='h-6 w-6'>
                                       <AvatarImage src={participant.avatar} />
                                       <AvatarFallback>
                                         {participant.name
@@ -420,14 +403,14 @@ export default function CreateMeetingDialog({
                                       </AvatarFallback>
                                     </Avatar>
                                     <div className='flex-1 text-left'>
-                                      <div className='font-medium'>{participant.name}</div>
+                                      <div className='text-sm font-medium'>{participant.name}</div>
                                       {participant.email && (
-                                        <div className='text-sm text-muted-foreground'>
+                                        <div className='text-xs text-muted-foreground'>
                                           {participant.email}
                                         </div>
                                       )}
                                     </div>
-                                    <Checkbox checked={isSelected} className='h-4 w-4' />
+                                    <Checkbox checked={isSelected} className='h-3.5 w-3.5' />
                                   </button>
                                 );
                               })}
@@ -440,12 +423,12 @@ export default function CreateMeetingDialog({
                                       setSelectedTeamMembers([...selectedTeamMembers, searchQuery]);
                                       setSearchQuery('');
                                     }}
-                                    className='text-sm w-full flex items-center gap-3 p-2 rounded hover:bg-accent text-primary'
+                                    className='text-sm w-full flex items-center gap-2 p-1.5 rounded hover:bg-accent text-primary'
                                   >
-                                    <UserPlus className='h-8 w-8' />
+                                    <UserPlus className='h-6 w-6' />
                                     <div className='flex-1 text-left'>
                                       <div className='font-medium'>Add {searchQuery}</div>
-                                      <div className='text-sm text-muted-foreground'>
+                                      <div className='text-xs text-muted-foreground'>
                                         External participant
                                       </div>
                                     </div>

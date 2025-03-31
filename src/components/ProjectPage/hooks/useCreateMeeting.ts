@@ -19,9 +19,10 @@ interface UseCreateMeetingProps {
 }
 
 export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMeetingProps) {
+  const { project } = useProject();
   const [step, setStep] = useState(1);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState<Date>(selectedDate);
   const [meetingStartTime, setMeetingStartTime] = useState('');
   const [selectedEndTime, setSelectedEndTime] = useState('');
   const [isAllDay, setIsAllDay] = useState(false);
@@ -36,15 +37,17 @@ export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMee
   const [meetingDescription, setMeetingDescription] = useState('');
   const [meetingType, setMeetingType] = useState('');
   const [meetingDuration, setMeetingDuration] = useState('30');
-  const [selectedTeamMembers, setSelectedTeamMembers] = useState<string[]>([]);
+  const [selectedTeamMembers, setSelectedTeamMembers] = useState<string[]>(
+    project?.participants.map((p) => {
+      return p._id;
+    }) || [],
+  );
   const [meetingTypeDetails, setMeetingTypeDetails] = useState<{
     videoPlatform?: string;
     customLocation?: string;
     phoneNumberType?: string;
     phoneNumber?: string;
   }>({});
-
-  const { project } = useProject();
 
   const handleAddParticipant = (participantId: string) => {
     if (!selectedTeamMembers.includes(participantId)) {
