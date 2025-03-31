@@ -255,20 +255,18 @@ export default function CreateMeetingDialog({
 
                   {meetingType === 'phone' && (
                     <div className='mt-2 animate-in slide-in-from-top-2 duration-200'>
-                      {meetingTypeDetails.phoneNumberType === 'custom' && (
-                        <Input
-                          type='tel'
-                          placeholder='Enter phone number (e.g., +1 234 567 8900)'
-                          value={meetingTypeDetails.phoneNumber}
-                          onChange={(e) => {
-                            setMeetingTypeDetails({
-                              ...meetingTypeDetails,
-                              phoneNumber: e.target.value,
-                            });
-                          }}
-                          className='mt-2 animate-in fade-in duration-200'
-                        />
-                      )}
+                      <Input
+                        type='tel'
+                        placeholder='Enter phone number (e.g., +1 234 567 8900)'
+                        value={meetingTypeDetails.phoneNumber}
+                        onChange={(e) => {
+                          setMeetingTypeDetails({
+                            ...meetingTypeDetails,
+                            phoneNumber: e.target.value,
+                          });
+                        }}
+                        className='mt-2 animate-in fade-in duration-200'
+                      />
                     </div>
                   )}
 

@@ -1,6 +1,6 @@
 import { useProject } from '@/contexts/ProjectContext';
 import { addMinutes } from 'date-fns';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type TeamMember = {
   _id: string;
@@ -45,9 +45,33 @@ export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMee
   const [meetingTypeDetails, setMeetingTypeDetails] = useState<{
     videoPlatform?: string;
     customLocation?: string;
-    phoneNumberType?: string;
     phoneNumber?: string;
   }>({});
+
+  // Initialize meetingTypeDetails when meetingType changes
+  useEffect(() => {
+    switch (meetingType) {
+      case 'video':
+        setMeetingTypeDetails({
+          videoPlatform: 'google-meet',
+          customLocation: '',
+        });
+        break;
+      case 'phone':
+        setMeetingTypeDetails({
+          phoneNumber: '',
+        });
+        break;
+      case 'in-person':
+      case 'other':
+        setMeetingTypeDetails({
+          customLocation: '',
+        });
+        break;
+      default:
+        setMeetingTypeDetails({});
+    }
+  }, [meetingType]);
 
   const handleAddParticipant = (participantId: string) => {
     if (!selectedTeamMembers.includes(participantId)) {
