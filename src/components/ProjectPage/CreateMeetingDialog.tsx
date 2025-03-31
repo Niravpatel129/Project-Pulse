@@ -20,7 +20,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useProject } from '@/contexts/ProjectContext';
 import { format } from 'date-fns';
 import { Calendar, Globe, Loader2, MapPin, UserPlus, Video, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCreateMeeting } from './hooks/useCreateMeeting';
 import { useGoogleIntegration } from './hooks/useGoogleIntegration';
 
@@ -113,6 +113,8 @@ export default function CreateMeetingDialog({
 }: CreateMeetingDialogProps) {
   const { isConnecting, googleStatus, handleConnect } = useGoogleIntegration();
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [hasInteracted, setHasInteracted] = useState(false);
+  const [validatedFields, setValidatedFields] = useState<Set<string>>(new Set());
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
     from: selectedDate,
     to: selectedDate,
@@ -163,58 +165,68 @@ export default function CreateMeetingDialog({
 
   const { project } = useProject();
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
+    if (!hasInteracted) return true;
+
     const newErrors: Record<string, string> = {};
 
-    // Title validation
-    if (!meetingTitle?.trim()) {
+    // Only validate fields that have been interacted with
+    if (validatedFields.has('title') && !meetingTitle?.trim()) {
       newErrors.title = 'Please enter a meeting title';
     }
 
-    // Meeting type validation
-    if (!meetingType) {
-      newErrors.meetingType = 'Please select a meeting type';
-    } else {
-      // Validate meeting type specific details
-      switch (meetingType) {
-        case 'video':
-          if (
-            meetingTypeDetails.videoPlatform === 'custom' &&
-            !meetingTypeDetails.customLocation?.trim()
-          ) {
-            newErrors.customLocation = 'Please enter the video platform name';
-          }
-          break;
-        case 'phone':
-          if (!meetingTypeDetails.phoneNumber?.trim()) {
-            newErrors.phoneNumber = 'Please enter a phone number';
-          } else if (
-            !/^\+?[1-9]\d{1,14}$/.test(meetingTypeDetails.phoneNumber.replace(/\s+/g, ''))
-          ) {
-            newErrors.phoneNumber = 'Please enter a valid phone number';
-          }
-          break;
-        case 'in-person':
-        case 'other':
-          if (!meetingTypeDetails.customLocation?.trim()) {
-            newErrors.customLocation =
-              meetingType === 'in-person'
-                ? 'Please enter the physical meeting location'
-                : 'Please specify meeting location or instructions';
-          }
-          break;
+    if (validatedFields.has('meetingType')) {
+      if (!meetingType) {
+        newErrors.meetingType = 'Please select a meeting type';
+      } else {
+        // Validate meeting type specific details only if the type has been selected
+        switch (meetingType) {
+          case 'video':
+            if (
+              meetingTypeDetails.videoPlatform === 'custom' &&
+              !meetingTypeDetails.customLocation?.trim()
+            ) {
+              newErrors.customLocation = 'Please enter the video platform name';
+            }
+            break;
+          case 'phone':
+            if (!meetingTypeDetails.phoneNumber?.trim()) {
+              newErrors.phoneNumber = 'Please enter a phone number';
+            } else if (
+              !/^\+?[1-9]\d{1,14}$/.test(meetingTypeDetails.phoneNumber.replace(/\s+/g, ''))
+            ) {
+              newErrors.phoneNumber = 'Please enter a valid phone number';
+            }
+            break;
+          case 'in-person':
+          case 'other':
+            if (!meetingTypeDetails.customLocation?.trim()) {
+              newErrors.customLocation =
+                meetingType === 'in-person'
+                  ? 'Please enter the physical meeting location'
+                  : 'Please specify meeting location or instructions';
+            }
+            break;
+        }
       }
     }
 
-    // Date validation
-    if (!dateRange?.from || !dateRange?.to) {
-      newErrors.dateRange = 'Please select a date range';
-    } else if (dateRange.to < dateRange.from) {
-      newErrors.dateRange = 'End date must be after start date';
+    if (validatedFields.has('dateRange')) {
+      if (!dateRange?.from || !dateRange?.to) {
+        newErrors.dateRange = 'Please select a date range';
+      } else if (dateRange.to < dateRange.from) {
+        newErrors.dateRange = 'End date must be after start date';
+      }
     }
 
-    // Time validation for non-all-day meetings
-    if (!isAllDay) {
+    // Time validation only if date range has been validated
+    if (
+      validatedFields.has('dateRange') &&
+      !isAllDay &&
+      meetingType &&
+      dateRange?.from &&
+      dateRange?.to
+    ) {
       if (!meetingStartTime) {
         newErrors.startTime = 'Please select a start time';
       }
@@ -223,26 +235,12 @@ export default function CreateMeetingDialog({
       }
     }
 
-    // Participants validation
-    if (selectedTeamMembers.length === 0) {
+    if (validatedFields.has('participants') && selectedTeamMembers.length === 0) {
       newErrors.participants = 'Please add at least one participant';
     }
 
-    // Clear any errors that are no longer relevant
-    const currentErrors = { ...errors };
-    Object.keys(currentErrors).forEach((key) => {
-      if (!newErrors[key]) {
-        delete currentErrors[key];
-      }
-    });
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  // Add useEffect to validate form on relevant changes
-  useEffect(() => {
-    validateForm();
   }, [
     meetingTitle,
     meetingType,
@@ -252,15 +250,73 @@ export default function CreateMeetingDialog({
     selectedEndTime,
     selectedTeamMembers,
     isAllDay,
+    hasInteracted,
+    validatedFields,
   ]);
 
-  const handleFormSubmit = async (e: React.FormEvent) => {
-    if (!validateForm()) {
-      return;
-    }
-    await handleSubmit(e);
-    onOpenChange(false);
-  };
+  // Handle field validation
+  const handleFieldValidation = useCallback(
+    (field: string) => {
+      setValidatedFields((prev) => {
+        return new Set([...prev, field]);
+      });
+      if (!hasInteracted) {
+        setHasInteracted(true);
+      }
+    },
+    [hasInteracted],
+  );
+
+  // Optimize validation effect with debounce
+  useEffect(() => {
+    if (!hasInteracted) return;
+
+    const timeoutId = setTimeout(() => {
+      validateForm();
+    }, 300); // 300ms debounce
+
+    return () => {
+      return clearTimeout(timeoutId);
+    };
+  }, [validateForm, hasInteracted]);
+
+  const handleFormSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      if (!validateForm()) {
+        return;
+      }
+      await handleSubmit(e);
+      onOpenChange(false);
+    },
+    [validateForm, handleSubmit, onOpenChange],
+  );
+
+  // Memoize error messages rendering
+  const errorMessages = useMemo(() => {
+    if (Object.keys(errors).length === 0) return null;
+
+    return (
+      <TooltipContent side='top' className='max-w-[300px]'>
+        <div className='space-y-1'>
+          <p className='font-medium'>Missing required fields:</p>
+          <ul className='text-sm space-y-0.5'>
+            {Object.entries(errors).map(([field, message]) => {
+              return (
+                <li key={field} className='text-muted-foreground bg-gray-100 rounded-md p-1'>
+                  {message}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </TooltipContent>
+    );
+  }, [errors]);
+
+  // Memoize button disabled state
+  const isButtonDisabled = useMemo(() => {
+    return Object.keys(errors).length > 0;
+  }, [errors]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -269,7 +325,14 @@ export default function CreateMeetingDialog({
           <SheetTitle>Create Meeting</SheetTitle>
         </SheetHeader>
 
-        <div className='flex-1 mt-6 space-y-8 overflow-y-auto p-1 scrollbar-hide'>
+        <div
+          className='flex-1 mt-6 space-y-8 overflow-y-auto p-1 scrollbar-hide'
+          onFocus={() => {
+            if (!hasInteracted) {
+              setHasInteracted(true);
+            }
+          }}
+        >
           {/* Step 1: Meeting Details */}
           <div className='space-y-6'>
             <div className='space-y-4'>
@@ -279,11 +342,13 @@ export default function CreateMeetingDialog({
                   value={meetingTitle}
                   onChange={(e) => {
                     setMeetingTitle(e.target.value);
+                    handleFieldValidation('title');
                     if (errors.title) {
                       setErrors({ ...errors, title: '' });
                     }
                   }}
                   onBlur={() => {
+                    handleFieldValidation('title');
                     if (!meetingTitle.trim()) {
                       setErrors({ ...errors, title: 'Please enter a meeting title' });
                     }
@@ -312,12 +377,14 @@ export default function CreateMeetingDialog({
                   value={meetingType}
                   onValueChange={(value) => {
                     setMeetingType(value);
+                    handleFieldValidation('meetingType');
                     if (errors.meetingType) {
                       setErrors({ ...errors, meetingType: '' });
                     }
                   }}
                   onOpenChange={(open) => {
                     if (!open && !meetingType) {
+                      handleFieldValidation('meetingType');
                       setErrors({ ...errors, meetingType: 'Please select a meeting type' });
                     }
                   }}
@@ -884,30 +951,15 @@ export default function CreateMeetingDialog({
           <Tooltip>
             <TooltipTrigger asChild>
               <div>
-                <Button onClick={handleFormSubmit} disabled={Object.keys(errors).length > 0}>
+                <Button
+                  onClick={handleFormSubmit}
+                  disabled={hasInteracted && Object.keys(errors).length > 0}
+                >
                   Create Meeting
                 </Button>
               </div>
             </TooltipTrigger>
-            {Object.keys(errors).length > 0 && (
-              <TooltipContent side='top' className='max-w-[300px]'>
-                <div className='space-y-1'>
-                  <p className='font-medium'>Missing required fields:</p>
-                  <ul className='text-sm space-y-0.5'>
-                    {Object.entries(errors).map(([field, message]) => {
-                      return (
-                        <li
-                          key={field}
-                          className='text-muted-foreground bg-gray-100 rounded-md p-1'
-                        >
-                          {message}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              </TooltipContent>
-            )}
+            {hasInteracted && errorMessages}
           </Tooltip>
         </SheetFooter>
       </SheetContent>
