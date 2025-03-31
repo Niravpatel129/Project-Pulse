@@ -18,9 +18,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useProject } from '@/contexts/ProjectContext';
-import { addMinutes, format } from 'date-fns';
+import { format } from 'date-fns';
 import { Calendar, Globe, Loader2, MapPin, UserPlus, Video, X } from 'lucide-react';
-import { useState } from 'react';
+import { useCreateMeeting } from './hooks/useCreateMeeting';
 import { useGoogleIntegration } from './hooks/useGoogleIntegration';
 
 type TeamMember = {
@@ -33,38 +33,6 @@ type TeamMember = {
     slots: { start: string; end: string }[];
   }[];
 };
-
-interface CreateMeetingDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  selectedDate: Date;
-  teamMembers: TeamMember[];
-  onCreateMeeting: (e: React.FormEvent) => Promise<void>;
-  meetingStartTime: string;
-  setMeetingStartTime: (time: string) => void;
-  meetingDuration: string;
-  setMeetingDuration: (duration: string) => void;
-  selectedTeamMembers: string[];
-  setSelectedTeamMembers: (members: string[]) => void;
-  meetingTitle: string;
-  setMeetingTitle: (title: string) => void;
-  meetingDescription: string;
-  setMeetingDescription: (description: string) => void;
-  meetingType: string;
-  setMeetingType: (type: string) => void;
-  meetingTypeDetails: {
-    videoPlatform?: string;
-    customLocation?: string;
-    phoneNumberType?: string;
-    phoneNumber?: string;
-  };
-  setMeetingTypeDetails: (details: {
-    videoPlatform?: string;
-    customLocation?: string;
-    phoneNumberType?: string;
-    phoneNumber?: string;
-  }) => void;
-}
 
 const MEETING_TYPES = [
   { value: 'video', label: 'Video Call', icon: Video },
@@ -82,128 +50,70 @@ const DURATION_OPTIONS = [
   { value: '120', label: '2 hours' },
 ];
 
+interface CreateMeetingDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  selectedDate: Date;
+  teamMembers: TeamMember[];
+  onCreateMeeting: (e: React.FormEvent) => Promise<void>;
+}
+
 export default function CreateMeetingDialog({
   open,
   onOpenChange,
   selectedDate,
   teamMembers,
   onCreateMeeting,
-  meetingStartTime,
-  setMeetingStartTime,
-  meetingDuration,
-  setMeetingDuration,
-  selectedTeamMembers,
-  setSelectedTeamMembers,
-  meetingTitle,
-  setMeetingTitle,
-  meetingDescription,
-  setMeetingDescription,
-  meetingType,
-  setMeetingType,
-  meetingTypeDetails,
-  setMeetingTypeDetails,
 }: CreateMeetingDialogProps) {
-  const [step, setStep] = useState(1);
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedEndTime, setSelectedEndTime] = useState('');
-  const [isAllDay, setIsAllDay] = useState(false);
-  const [dateRange, setDateRange] = useState<{ from: Date; to: Date } | undefined>({
-    from: selectedDate,
-    to: selectedDate,
-  });
-  const [searchQuery, setSearchQuery] = useState('');
-  const [manualEmail, setManualEmail] = useState('');
-  const [showManualEmailInput, setShowManualEmailInput] = useState(false);
-
   const { isConnecting, googleStatus, handleConnect } = useGoogleIntegration();
+  const {
+    step,
+    showCalendar,
+    currentMonth,
+    meetingStartTime,
+    selectedEndTime,
+    isAllDay,
+    dateRange,
+    searchQuery,
+    manualEmail,
+    showManualEmailInput,
+    meetingTitle,
+    meetingDescription,
+    meetingType,
+    meetingDuration,
+    selectedTeamMembers,
+    meetingTypeDetails,
+    filteredParticipants,
+    setShowCalendar,
+    setCurrentMonth,
+    setMeetingStartTime,
+    setSelectedEndTime,
+    setIsAllDay,
+    setDateRange,
+    setSearchQuery,
+    setManualEmail,
+    setShowManualEmailInput,
+    setMeetingTitle,
+    setMeetingDescription,
+    setMeetingType,
+    setMeetingDuration,
+    setSelectedTeamMembers,
+    setMeetingTypeDetails,
+    handleAddParticipant,
+    handleRemoveParticipant,
+    handleAddManualEmail,
+    handleNext,
+    handleBack,
+    handleSubmit,
+    handleDateSelect,
+    handleStartTimeSelect,
+  } = useCreateMeeting({ selectedDate, onCreateMeeting });
+
   const { project } = useProject();
 
-  const handleAddParticipant = (participantId: string) => {
-    if (!selectedTeamMembers.includes(participantId)) {
-      setSelectedTeamMembers([...selectedTeamMembers, participantId]);
-    }
-  };
-
-  const handleRemoveParticipant = (participantId: string) => {
-    setSelectedTeamMembers(
-      selectedTeamMembers.filter((id) => {
-        return id !== participantId;
-      }),
-    );
-  };
-
-  const handleAddManualEmail = () => {
-    if (manualEmail && !selectedTeamMembers.includes(manualEmail)) {
-      setSelectedTeamMembers([...selectedTeamMembers, manualEmail]);
-      setManualEmail('');
-      setShowManualEmailInput(false);
-    }
-  };
-
-  const filteredParticipants = project?.participants.filter((participant) => {
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      participant.name.toLowerCase().includes(searchLower) ||
-      participant.email?.toLowerCase().includes(searchLower)
-    );
-  });
-
-  const handleNext = () => {
-    if (step === 1 && !meetingTitle) return;
-    if (step === 2 && (!meetingStartTime || !selectedEndTime)) return;
-    if (step === 3 && selectedTeamMembers.length === 0) return;
-
-    setStep((prev) => {
-      return Math.min(prev + 1, 3);
-    });
-  };
-
-  const handleBack = () => {
-    setStep((prev) => {
-      return Math.max(prev - 1, 1);
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await onCreateMeeting(e);
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    await handleSubmit(e);
     onOpenChange(false);
-  };
-
-  const handleDateSelect = (date: Date | undefined, isEndDate: boolean = false) => {
-    if (date) {
-      if (isEndDate) {
-        setDateRange((prev) => {
-          return { ...prev!, to: date };
-        });
-      } else {
-        setDateRange((prev) => {
-          return { from: date, to: prev?.to || date };
-        });
-      }
-      if (!isAllDay) {
-        setMeetingStartTime('');
-        setSelectedEndTime('');
-      }
-    }
-  };
-
-  const handleStartTimeSelect = (time: string) => {
-    setMeetingStartTime(time);
-    const [hours, minutes] = time.split(':').map(Number);
-    const startDate = new Date(dateRange?.from || selectedDate);
-    startDate.setHours(hours, minutes, 0, 0);
-
-    const duration = parseInt(meetingDuration) || 30;
-    const endDate = addMinutes(startDate, duration);
-    setSelectedEndTime(
-      endDate.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      }),
-    );
   };
 
   return (
@@ -353,7 +263,6 @@ export default function CreateMeetingDialog({
                             className='flex-1'
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' && searchQuery && !searchQuery.includes('@')) {
-                                // If it's not a valid email, don't add it
                                 return;
                               }
                               if (
@@ -579,9 +488,9 @@ export default function CreateMeetingDialog({
           {/* Step 2: Date & Time */}
           <div className='space-y-6'>
             <div className='space-y-4'>
-              <div className='grid grid-cols-2 gap-4'>
-                <div className='space-y-2'>
-                  <Label>Start date</Label>
+              <div className='space-y-2'>
+                <Label>Date Range</Label>
+                <div className='flex items-center gap-2'>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant='outline' className='w-full justify-start font-normal'>
@@ -602,21 +511,7 @@ export default function CreateMeetingDialog({
                       />
                     </PopoverContent>
                   </Popover>
-                </div>
-                {!isAllDay && (
-                  <div className='space-y-2'>
-                    <Label>Start time</Label>
-                    <GoogleCalendarTimePicker
-                      value={meetingStartTime}
-                      onChange={setMeetingStartTime}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className='grid grid-cols-2 gap-4'>
-                <div className='space-y-2'>
-                  <Label>End date</Label>
+                  <span className='text-muted-foreground'>To</span>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant='outline' className='w-full justify-start font-normal'>
@@ -638,7 +533,17 @@ export default function CreateMeetingDialog({
                     </PopoverContent>
                   </Popover>
                 </div>
-                {!isAllDay && (
+              </div>
+
+              {!isAllDay && (
+                <div className='grid grid-cols-2 gap-4'>
+                  <div className='space-y-2'>
+                    <Label>Start time</Label>
+                    <GoogleCalendarTimePicker
+                      value={meetingStartTime}
+                      onChange={setMeetingStartTime}
+                    />
+                  </div>
                   <div className='space-y-2'>
                     <Label>End time</Label>
                     <GoogleCalendarTimePicker
@@ -646,8 +551,8 @@ export default function CreateMeetingDialog({
                       onChange={setSelectedEndTime}
                     />
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             <div className='flex items-center space-x-2'>
@@ -676,7 +581,7 @@ export default function CreateMeetingDialog({
             >
               Cancel
             </Button>
-            <Button onClick={handleSubmit}>Create Meeting</Button>
+            <Button onClick={handleFormSubmit}>Create Meeting</Button>
           </div>
         </div>
       </SheetContent>
