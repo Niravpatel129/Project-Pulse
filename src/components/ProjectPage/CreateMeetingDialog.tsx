@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useProject } from '@/contexts/ProjectContext';
@@ -118,12 +118,12 @@ export default function CreateMeetingDialog({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className='w-full overflow-y-auto min-w-[500px]'>
+      <SheetContent className='w-full overflow-y-auto min-w-[500px] flex flex-col'>
         <SheetHeader>
           <SheetTitle>Create Meeting</SheetTitle>
         </SheetHeader>
 
-        <div className='mt-6 space-y-8'>
+        <div className='flex-1 mt-6 space-y-8 overflow-y-auto p-1 scrollbar-hide'>
           {/* Step 1: Meeting Details */}
           <div className='space-y-6'>
             <div className='space-y-4'>
@@ -171,73 +171,173 @@ export default function CreateMeetingDialog({
                     })}
                   </SelectContent>
                 </Select>
+
+                {meetingType === 'video' && (
+                  <div className='mt-2'>
+                    <Select
+                      value={meetingTypeDetails.videoPlatform}
+                      onValueChange={(value) => {
+                        setMeetingTypeDetails({
+                          ...meetingTypeDetails,
+                          videoPlatform: value,
+                        });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder='Select video platform' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='google-meet'>Google Meet</SelectItem>
+                        <SelectItem value='custom'>Other Platform</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {meetingTypeDetails.videoPlatform === 'google-meet' && (
+                      <div className='mt-2'>
+                        {googleStatus?.connected ? (
+                          <div className='flex items-center gap-2 text-sm text-green-600'>
+                            <span>✓</span>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className='cursor-help'>Connected to Google Calendar</span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  Google Meet links will be automatically created and included in
+                                  your meeting invitations
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        ) : (
+                          <div className='space-y-2'>
+                            <p className='text-sm text-muted-foreground'>
+                              Connect your Google account to schedule meetings directly
+                            </p>
+                            <Button
+                              type='button'
+                              variant='outline'
+                              size='sm'
+                              onClick={() => {
+                                return handleConnect('google');
+                              }}
+                              disabled={isConnecting}
+                              className='w-full'
+                            >
+                              {isConnecting ? (
+                                <>
+                                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                                  Connecting...
+                                </>
+                              ) : (
+                                'Connect Google Calendar'
+                              )}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {meetingTypeDetails.videoPlatform === 'custom' && (
+                      <Input
+                        placeholder='Enter video platform name'
+                        value={meetingTypeDetails.customLocation}
+                        onChange={(e) => {
+                          setMeetingTypeDetails({
+                            ...meetingTypeDetails,
+                            customLocation: e.target.value,
+                          });
+                        }}
+                        className='mt-2'
+                      />
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className='space-y-2'>
                 <Label>Participants</Label>
                 <div className='space-y-4'>
                   {/* Selected Participants */}
-                  <div className='flex flex-wrap gap-2'>
-                    {selectedTeamMembers.map((participantId) => {
-                      // Check if it's a manual email (doesn't match project participant ID format)
-                      if (!participantId.includes('_')) {
-                        return (
-                          <Badge
-                            key={participantId}
-                            variant='secondary'
-                            className='flex items-center gap-1'
-                          >
-                            <Avatar className='h-4 w-4'>
-                              <AvatarFallback>
-                                {participantId.charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span>{participantId}</span>
-                            <button
-                              onClick={() => {
-                                return handleRemoveParticipant(participantId);
-                              }}
-                              className='ml-1 hover:text-destructive'
-                            >
-                              <X className='h-3 w-3' />
-                            </button>
-                          </Badge>
-                        );
-                      }
+                  <div className='min-h-[40px]'>
+                    {selectedTeamMembers.length > 0 ? (
+                      <div className='flex flex-wrap gap-2 p-2 border rounded-md bg-muted/30'>
+                        {selectedTeamMembers.map((participantId) => {
+                          const participant = project?.participants.find((p) => {
+                            return p._id === participantId;
+                          });
+                          if (!participant) {
+                            // This is an external participant (email only)
+                            return (
+                              <Badge
+                                key={participantId}
+                                variant='secondary'
+                                className='flex items-center gap-1.5 px-2 py-1'
+                              >
+                                <Avatar className='h-5 w-5'>
+                                  <AvatarFallback>
+                                    {participantId.charAt(0).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className='flex flex-col items-start'>
+                                  <span className='text-sm font-medium'>{participantId}</span>
+                                  <span className='text-xs text-muted-foreground'>
+                                    External participant
+                                  </span>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    return handleRemoveParticipant(participantId);
+                                  }}
+                                  className='ml-1 hover:text-destructive'
+                                >
+                                  <X className='h-3.5 w-3.5' />
+                                </button>
+                              </Badge>
+                            );
+                          }
 
-                      const participant = project?.participants.find((p) => {
-                        return p._id === participantId;
-                      });
-                      if (!participant) return null;
-                      return (
-                        <Badge
-                          key={participantId}
-                          variant='secondary'
-                          className='flex items-center gap-1'
-                        >
-                          <Avatar className='h-4 w-4'>
-                            <AvatarImage src={participant.avatar} />
-                            <AvatarFallback>
-                              {participant.name
-                                .split(' ')
-                                .map((n) => {
-                                  return n[0];
-                                })
-                                .join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span>{participant.name}</span>
-                          <button
-                            onClick={() => {
-                              return handleRemoveParticipant(participantId);
-                            }}
-                            className='ml-1 hover:text-destructive'
-                          >
-                            <X className='h-3 w-3' />
-                          </button>
-                        </Badge>
-                      );
-                    })}
+                          // This is a team member
+                          return (
+                            <Badge
+                              key={participantId}
+                              variant='secondary'
+                              className='flex items-center gap-1.5 px-2 py-1'
+                            >
+                              <Avatar className='h-5 w-5'>
+                                <AvatarImage src={participant.avatar} />
+                                <AvatarFallback>
+                                  {participant.name
+                                    .split(' ')
+                                    .map((n) => {
+                                      return n[0];
+                                    })
+                                    .join('')}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className='flex flex-col items-start'>
+                                <span className='text-sm font-medium'>{participant.name}</span>
+                                {participant.email && (
+                                  <span className='text-xs text-muted-foreground'>
+                                    {participant.email}
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => {
+                                  return handleRemoveParticipant(participantId);
+                                }}
+                                className='ml-1 hover:text-destructive'
+                              >
+                                <X className='h-3.5 w-3.5' />
+                              </button>
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className='flex items-center justify-center h-[40px] border rounded-md bg-muted/50'>
+                        <p className='text-sm text-muted-foreground'>No participants added yet</p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Participant Selection */}
@@ -245,7 +345,9 @@ export default function CreateMeetingDialog({
                     <PopoverTrigger asChild>
                       <Button variant='outline' className='w-full justify-start'>
                         <UserPlus className='mr-2 h-4 w-4' />
-                        Add Participants
+                        {selectedTeamMembers.length > 0
+                          ? 'Add More Participants'
+                          : 'Add Participants'}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
@@ -255,7 +357,7 @@ export default function CreateMeetingDialog({
                       <div className='space-y-2 p-4'>
                         <div className='flex items-center gap-2'>
                           <Input
-                            placeholder='Search or add email...'
+                            placeholder='Search by name or email...'
                             value={searchQuery}
                             onChange={(e) => {
                               return setSearchQuery(e.target.value);
@@ -278,63 +380,79 @@ export default function CreateMeetingDialog({
                         </div>
 
                         <div className='max-h-[300px] overflow-y-auto'>
-                          {filteredParticipants?.map((participant) => {
-                            const isSelected = selectedTeamMembers.includes(participant._id);
-                            return (
-                              <button
-                                key={participant._id}
-                                onClick={() => {
-                                  if (isSelected) {
-                                    handleRemoveParticipant(participant._id);
-                                  } else {
-                                    handleAddParticipant(participant._id);
-                                  }
-                                }}
-                                className={`w-full flex items-center gap-2 p-2 rounded hover:bg-accent ${
-                                  isSelected ? 'bg-accent' : ''
-                                }`}
-                              >
-                                <Avatar className='h-6 w-6'>
-                                  <AvatarImage src={participant.avatar} />
-                                  <AvatarFallback>
-                                    {participant.name
-                                      .split(' ')
-                                      .map((n) => {
-                                        return n[0];
-                                      })
-                                      .join('')}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className='flex-1 text-left'>
-                                  <div className='font-medium'>{participant.name}</div>
-                                  {participant.email && (
-                                    <div className='text-sm text-muted-foreground'>
-                                      {participant.email}
+                          {filteredParticipants?.length === 0 ? (
+                            <div className='flex flex-col items-center justify-center py-8 text-muted-foreground'>
+                              <UserPlus className='h-8 w-8 mb-2' />
+                              <p className='text-sm'>No participants found</p>
+                              {searchQuery && (
+                                <p className='text-xs mt-1'>
+                                  Try adjusting your search or add an email manually
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <>
+                              {filteredParticipants?.map((participant) => {
+                                const isSelected = selectedTeamMembers.includes(participant._id);
+                                return (
+                                  <button
+                                    key={participant._id}
+                                    onClick={() => {
+                                      if (isSelected) {
+                                        handleRemoveParticipant(participant._id);
+                                      } else {
+                                        handleAddParticipant(participant._id);
+                                      }
+                                    }}
+                                    className={`w-full flex items-center gap-3 p-2 rounded hover:bg-accent ${
+                                      isSelected ? 'bg-accent' : ''
+                                    }`}
+                                  >
+                                    <Avatar className='h-8 w-8'>
+                                      <AvatarImage src={participant.avatar} />
+                                      <AvatarFallback>
+                                        {participant.name
+                                          .split(' ')
+                                          .map((n) => {
+                                            return n[0];
+                                          })
+                                          .join('')}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className='flex-1 text-left'>
+                                      <div className='font-medium'>{participant.name}</div>
+                                      {participant.email && (
+                                        <div className='text-sm text-muted-foreground'>
+                                          {participant.email}
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
-                                </div>
-                                <Checkbox checked={isSelected} className='h-4 w-4' />
-                              </button>
-                            );
-                          })}
+                                    <Checkbox checked={isSelected} className='h-4 w-4' />
+                                  </button>
+                                );
+                              })}
 
-                          {/* Show "Add email" option if search query is a valid email and not already selected */}
-                          {searchQuery &&
-                            searchQuery.includes('@') &&
-                            !selectedTeamMembers.includes(searchQuery) && (
-                              <button
-                                onClick={() => {
-                                  setSelectedTeamMembers([...selectedTeamMembers, searchQuery]);
-                                  setSearchQuery('');
-                                }}
-                                className='text-sm w-full flex items-center gap-2 p-2 rounded hover:bg-accent text-primary'
-                              >
-                                <UserPlus className='h-6 w-6' />
-                                <div className='flex-1 text-left'>
-                                  <div className='font-medium'>Add {searchQuery}</div>
-                                </div>
-                              </button>
-                            )}
+                              {searchQuery &&
+                                searchQuery.includes('@') &&
+                                !selectedTeamMembers.includes(searchQuery) && (
+                                  <button
+                                    onClick={() => {
+                                      setSelectedTeamMembers([...selectedTeamMembers, searchQuery]);
+                                      setSearchQuery('');
+                                    }}
+                                    className='text-sm w-full flex items-center gap-3 p-2 rounded hover:bg-accent text-primary'
+                                  >
+                                    <UserPlus className='h-8 w-8' />
+                                    <div className='flex-1 text-left'>
+                                      <div className='font-medium'>Add {searchQuery}</div>
+                                      <div className='text-sm text-muted-foreground'>
+                                        External participant
+                                      </div>
+                                    </div>
+                                  </button>
+                                )}
+                            </>
+                          )}
                         </div>
                       </div>
                     </PopoverContent>
@@ -344,88 +462,8 @@ export default function CreateMeetingDialog({
             </div>
           </div>
 
-          {/* Meeting Type Details */}
+          {/* Meeting Type Details - Remove video section since it's moved */}
           <div className='space-y-6'>
-            {meetingType === 'video' && (
-              <div className='space-y-2'>
-                <Label>Video Platform</Label>
-                <Select
-                  value={meetingTypeDetails.videoPlatform}
-                  onValueChange={(value) => {
-                    setMeetingTypeDetails({
-                      ...meetingTypeDetails,
-                      videoPlatform: value,
-                    });
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder='Select video platform' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='google-meet'>Google Meet</SelectItem>
-                    <SelectItem value='custom'>Other Platform</SelectItem>
-                  </SelectContent>
-                </Select>
-                {meetingTypeDetails.videoPlatform === 'google-meet' && (
-                  <div className='space-y-2'>
-                    {googleStatus?.connected ? (
-                      <div className='flex items-center gap-2 text-sm text-green-600'>
-                        <span>✓</span>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className='cursor-help'>Connected to Google Calendar</span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              Google Meet links will be automatically created and included in your
-                              meeting invitations
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                    ) : (
-                      <div className='space-y-2'>
-                        <p className='text-sm text-muted-foreground'>
-                          Connect your Google account to schedule meetings directly
-                        </p>
-                        <Button
-                          type='button'
-                          variant='outline'
-                          size='sm'
-                          onClick={() => {
-                            return handleConnect('google');
-                          }}
-                          disabled={isConnecting}
-                          className='w-full'
-                        >
-                          {isConnecting ? (
-                            <>
-                              <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                              Connecting...
-                            </>
-                          ) : (
-                            'Connect Google Calendar'
-                          )}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {meetingTypeDetails.videoPlatform === 'custom' && (
-                  <Input
-                    placeholder='Enter video platform name'
-                    value={meetingTypeDetails.customLocation}
-                    onChange={(e) => {
-                      setMeetingTypeDetails({
-                        ...meetingTypeDetails,
-                        customLocation: e.target.value,
-                      });
-                    }}
-                  />
-                )}
-              </div>
-            )}
-
             {meetingType === 'phone' && (
               <div className='space-y-2'>
                 <Label>Phone Number Source</Label>
@@ -570,20 +608,19 @@ export default function CreateMeetingDialog({
               <Label htmlFor='all-day'>All day</Label>
             </div>
           </div>
-
-          {/* Action Buttons */}
-          <div className='flex justify-end gap-2 pt-4 border-t'>
-            <Button
-              variant='outline'
-              onClick={() => {
-                return onOpenChange(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleFormSubmit}>Create Meeting</Button>
-          </div>
         </div>
+
+        <SheetFooter className='mt-1 border-t pt-1'>
+          <Button
+            variant='outline'
+            onClick={() => {
+              return onOpenChange(false);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleFormSubmit}>Create Meeting</Button>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );
