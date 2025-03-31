@@ -249,7 +249,6 @@ export default function ClientInviteDialog({
       return onOpenChange(false);
     },
   });
-  console.log('🚀 googleStatus:', googleStatus);
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
