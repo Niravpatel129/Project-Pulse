@@ -29,6 +29,7 @@ type TeamMember = {
   name: string;
   email: string;
   role: string;
+  avatar?: string;
   availableTimes: {
     day: string;
     slots: { start: string; end: string }[];
@@ -57,6 +58,32 @@ interface CreateMeetingDialogProps {
   selectedDate: Date;
   teamMembers: TeamMember[];
   onCreateMeeting: (e: React.FormEvent) => Promise<void>;
+  meetingStartTime: string;
+  setMeetingStartTime: (time: string) => void;
+  meetingDuration: string;
+  setMeetingDuration: (duration: string) => void;
+  selectedTeamMembers: string[];
+  setSelectedTeamMembers: (members: string[]) => void;
+  meetingTitle: string;
+  setMeetingTitle: (title: string) => void;
+  meetingDescription: string;
+  setMeetingDescription: (description: string) => void;
+  meetingType: string;
+  setMeetingType: (type: string) => void;
+  meetingTypeDetails: {
+    videoPlatform?: string;
+    customLocation?: string;
+    phoneNumber?: string;
+  };
+  setMeetingTypeDetails: (details: {
+    videoPlatform?: string;
+    customLocation?: string;
+    phoneNumber?: string;
+  }) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  isAllDay: boolean;
+  setIsAllDay: (isAllDay: boolean) => void;
 }
 
 export default function CreateMeetingDialog({
@@ -65,42 +92,41 @@ export default function CreateMeetingDialog({
   selectedDate,
   teamMembers,
   onCreateMeeting,
+  meetingStartTime,
+  setMeetingStartTime,
+  meetingDuration,
+  setMeetingDuration,
+  selectedTeamMembers,
+  setSelectedTeamMembers,
+  meetingTitle,
+  setMeetingTitle,
+  meetingDescription,
+  setMeetingDescription,
+  meetingType,
+  setMeetingType,
+  meetingTypeDetails,
+  setMeetingTypeDetails,
+  searchQuery,
+  setSearchQuery,
+  isAllDay,
+  setIsAllDay,
 }: CreateMeetingDialogProps) {
   const { isConnecting, googleStatus, handleConnect } = useGoogleIntegration();
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+    from: selectedDate,
+    to: selectedDate,
+  });
+  const [currentMonth, setCurrentMonth] = useState<Date>(selectedDate);
+  const [selectedEndTime, setSelectedEndTime] = useState('');
+  const [manualEmail, setManualEmail] = useState('');
+  const [showManualEmailInput, setShowManualEmailInput] = useState(false);
+  const [filteredParticipants, setFilteredParticipants] = useState<TeamMember[]>([]);
+
   const {
     step,
     showCalendar,
-    currentMonth,
-    meetingStartTime,
-    selectedEndTime,
-    isAllDay,
-    dateRange,
-    searchQuery,
-    manualEmail,
-    showManualEmailInput,
-    meetingTitle,
-    meetingDescription,
-    meetingType,
-    meetingDuration,
-    selectedTeamMembers,
-    meetingTypeDetails,
-    filteredParticipants,
-    setShowCalendar,
-    setCurrentMonth,
-    setMeetingStartTime,
-    setSelectedEndTime,
-    setIsAllDay,
-    setDateRange,
-    setSearchQuery,
-    setManualEmail,
-    setShowManualEmailInput,
-    setMeetingTitle,
-    setMeetingDescription,
-    setMeetingType,
-    setMeetingDuration,
-    setSelectedTeamMembers,
-    setMeetingTypeDetails,
+    meetingTypeDetails: meetingTypeDetailsFromCreateMeeting,
     handleAddParticipant,
     handleRemoveParticipant,
     handleAddManualEmail,

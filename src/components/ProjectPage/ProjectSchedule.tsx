@@ -82,6 +82,8 @@ export default function ProjectSchedule() {
     isLoading,
   } = useProjectSchedule();
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isAllDay, setIsAllDay] = useState(false);
   const [availabilitySlots, setAvailabilitySlots] = useState<{
     [key: string]: { start: string; end: string }[];
   }>({
@@ -650,6 +652,10 @@ export default function ProjectSchedule() {
           setMeetingType={setMeetingType}
           meetingTypeDetails={meetingTypeDetails}
           setMeetingTypeDetails={setMeetingTypeDetails}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          isAllDay={isAllDay}
+          setIsAllDay={setIsAllDay}
         />
 
         {/* Keep the existing ClientInviteDialog */}
