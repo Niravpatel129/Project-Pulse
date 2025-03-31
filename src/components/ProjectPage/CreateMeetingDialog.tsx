@@ -172,73 +172,133 @@ export default function CreateMeetingDialog({
                   </SelectContent>
                 </Select>
 
-                {meetingType === 'video' && (
-                  <div className='mt-2'>
-                    <Select
-                      value={meetingTypeDetails.videoPlatform}
-                      onValueChange={(value) => {
-                        setMeetingTypeDetails({
-                          ...meetingTypeDetails,
-                          videoPlatform: value,
-                        });
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder='Select video platform' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value='google-meet'>Google Meet</SelectItem>
-                        <SelectItem value='custom'>Other Platform</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {meetingTypeDetails.videoPlatform === 'google-meet' && (
-                      <div className='mt-2'>
-                        {googleStatus?.connected ? (
-                          <div className='flex items-center gap-2 text-sm text-green-600'>
-                            <span>✓</span>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className='cursor-help'>Connected to Google Calendar</span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>
-                                  Google Meet links will be automatically created and included in
-                                  your meeting invitations
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </div>
-                        ) : (
-                          <div className='space-y-2'>
-                            <p className='text-sm text-muted-foreground'>
-                              Connect your Google account to schedule meetings directly
-                            </p>
-                            <Button
-                              type='button'
-                              variant='outline'
-                              size='sm'
-                              onClick={() => {
-                                return handleConnect('google');
-                              }}
-                              disabled={isConnecting}
-                              className='w-full'
-                            >
-                              {isConnecting ? (
-                                <>
-                                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                                  Connecting...
-                                </>
-                              ) : (
-                                'Connect Google Calendar'
-                              )}
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    {meetingTypeDetails.videoPlatform === 'custom' && (
+                <div className='relative'>
+                  {meetingType === 'video' && (
+                    <div className='mt-2 animate-in slide-in-from-top-2 duration-200'>
+                      <Select
+                        value={meetingTypeDetails.videoPlatform}
+                        onValueChange={(value) => {
+                          setMeetingTypeDetails({
+                            ...meetingTypeDetails,
+                            videoPlatform: value,
+                          });
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select video platform' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value='google-meet'>Google Meet</SelectItem>
+                          <SelectItem value='custom'>Other Platform</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {meetingTypeDetails.videoPlatform === 'google-meet' && (
+                        <div className='mt-2 animate-in fade-in duration-200'>
+                          {googleStatus?.connected ? (
+                            <div className='flex items-center gap-2 text-sm text-green-600'>
+                              <span>✓</span>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className='cursor-help'>Connected to Google Calendar</span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>
+                                    Google Meet links will be automatically created and included in
+                                    your meeting invitations
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
+                          ) : (
+                            <div className='space-y-2 animate-in fade-in duration-200'>
+                              <p className='text-sm text-muted-foreground'>
+                                Connect your Google account to schedule meetings directly
+                              </p>
+                              <Button
+                                type='button'
+                                variant='outline'
+                                size='sm'
+                                onClick={() => {
+                                  return handleConnect('google');
+                                }}
+                                disabled={isConnecting}
+                                className='w-full'
+                              >
+                                {isConnecting ? (
+                                  <>
+                                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                                    Connecting...
+                                  </>
+                                ) : (
+                                  'Connect Google Calendar'
+                                )}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {meetingTypeDetails.videoPlatform === 'custom' && (
+                        <Input
+                          placeholder='Enter video platform name'
+                          value={meetingTypeDetails.customLocation}
+                          onChange={(e) => {
+                            setMeetingTypeDetails({
+                              ...meetingTypeDetails,
+                              customLocation: e.target.value,
+                            });
+                          }}
+                          className='mt-2 animate-in fade-in duration-200'
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {meetingType === 'phone' && (
+                    <div className='mt-2 animate-in slide-in-from-top-2 duration-200'>
+                      <Select
+                        value={meetingTypeDetails.phoneNumberType}
+                        onValueChange={(value) => {
+                          setMeetingTypeDetails({
+                            ...meetingTypeDetails,
+                            phoneNumberType: value,
+                          });
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select phone number source' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value='client-provided'>
+                            Client will provide their number
+                          </SelectItem>
+                          <SelectItem value='custom'>Specify a number</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {meetingTypeDetails.phoneNumberType === 'custom' && (
+                        <Input
+                          type='tel'
+                          placeholder='Enter phone number (e.g., +1 234 567 8900)'
+                          value={meetingTypeDetails.phoneNumber}
+                          onChange={(e) => {
+                            setMeetingTypeDetails({
+                              ...meetingTypeDetails,
+                              phoneNumber: e.target.value,
+                            });
+                          }}
+                          className='mt-2 animate-in fade-in duration-200'
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {(meetingType === 'in-person' || meetingType === 'other') && (
+                    <div className='mt-2 animate-in slide-in-from-top-2 duration-200'>
                       <Input
-                        placeholder='Enter video platform name'
+                        placeholder={
+                          meetingType === 'in-person'
+                            ? 'Enter physical meeting location'
+                            : 'Specify meeting location or instructions'
+                        }
                         value={meetingTypeDetails.customLocation}
                         onChange={(e) => {
                           setMeetingTypeDetails({
@@ -246,11 +306,10 @@ export default function CreateMeetingDialog({
                             customLocation: e.target.value,
                           });
                         }}
-                        className='mt-2'
                       />
-                    )}
-                  </div>
-                )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className='space-y-2'>
@@ -259,25 +318,24 @@ export default function CreateMeetingDialog({
                   {/* Selected Participants */}
                   <div className='min-h-[40px]'>
                     {selectedTeamMembers.length > 0 ? (
-                      <div className='flex flex-wrap gap-1.5 p-2 border rounded-md bg-muted/30'>
+                      <div className='flex flex-wrap gap-1.5 p-2 border rounded-md bg-muted/30 transition-colors duration-200'>
                         {selectedTeamMembers.map((participantId) => {
                           const participant = project?.participants.find((p) => {
                             return p._id === participantId;
                           });
                           if (!participant) {
-                            // This is an external participant (email only)
                             return (
                               <Badge
                                 key={participantId}
                                 variant='secondary'
-                                className='flex items-center gap-1 px-2 py-0.5 text-xs'
+                                className='flex items-center gap-1 px-2 py-0.5 text-xs transition-all duration-200 hover:bg-muted/50'
                               >
                                 <span className='font-medium'>{participantId}</span>
                                 <button
                                   onClick={() => {
                                     return handleRemoveParticipant(participantId);
                                   }}
-                                  className='ml-0.5 hover:text-destructive'
+                                  className='ml-0.5 hover:text-destructive transition-colors duration-200'
                                 >
                                   <X className='h-3 w-3' />
                                 </button>
@@ -285,14 +343,13 @@ export default function CreateMeetingDialog({
                             );
                           }
 
-                          // This is a team member
                           return (
                             <Badge
                               key={participantId}
                               variant='secondary'
-                              className='flex items-center gap-1 px-2 py-0.5 text-xs'
+                              className='flex items-center gap-1 px-2 py-0.5 text-xs transition-all duration-200 hover:bg-muted/50'
                             >
-                              <Avatar className='h-4 w-4'>
+                              <Avatar className='h-4 w-4 transition-transform duration-200 hover:scale-110'>
                                 <AvatarImage src={participant.avatar} />
                                 <AvatarFallback>
                                   {participant.name
@@ -308,7 +365,7 @@ export default function CreateMeetingDialog({
                                 onClick={() => {
                                   return handleRemoveParticipant(participantId);
                                 }}
-                                className='ml-0.5 hover:text-destructive'
+                                className='ml-0.5 hover:text-destructive transition-colors duration-200'
                               >
                                 <X className='h-3 w-3' />
                               </button>
@@ -317,7 +374,7 @@ export default function CreateMeetingDialog({
                         })}
                       </div>
                     ) : (
-                      <div className='flex items-center justify-center h-[40px] border rounded-md bg-muted/50'>
+                      <div className='flex items-center justify-center h-[40px] border rounded-md bg-muted/50 transition-colors duration-200'>
                         <p className='text-sm text-muted-foreground'>No participants added yet</p>
                       </div>
                     )}
@@ -326,15 +383,18 @@ export default function CreateMeetingDialog({
                   {/* Participant Selection */}
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant='outline' className='w-full justify-start h-8'>
-                        <UserPlus className='mr-2 h-3.5 w-3.5' />
+                      <Button
+                        variant='outline'
+                        className='w-full justify-start h-8 transition-all duration-200 hover:bg-accent/50'
+                      >
+                        <UserPlus className='mr-2 h-3.5 w-3.5 transition-transform duration-200 group-hover:scale-110' />
                         {selectedTeamMembers.length > 0
                           ? 'Add More Participants'
                           : 'Add Participants'}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
-                      className='w-[var(--radix-popover-trigger-width)] p-0 text-sm'
+                      className='w-[var(--radix-popover-trigger-width)] p-0 text-sm animate-in slide-in-from-top-2 duration-200'
                       align='start'
                     >
                       <div className='space-y-2 p-3'>
@@ -345,7 +405,7 @@ export default function CreateMeetingDialog({
                             onChange={(e) => {
                               return setSearchQuery(e.target.value);
                             }}
-                            className='flex-1 h-8'
+                            className='flex-1 h-8 transition-all duration-200 focus:ring-2 focus:ring-primary/20'
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' && searchQuery && !searchQuery.includes('@')) {
                                 return;
@@ -364,7 +424,7 @@ export default function CreateMeetingDialog({
 
                         <div className='max-h-[300px] overflow-y-auto'>
                           {filteredParticipants?.length === 0 ? (
-                            <div className='flex flex-col items-center justify-center py-6 text-muted-foreground'>
+                            <div className='flex flex-col items-center justify-center py-6 text-muted-foreground animate-in fade-in duration-200'>
                               <UserPlus className='h-6 w-6 mb-1.5' />
                               <p className='text-sm'>No participants found</p>
                               {searchQuery && (
@@ -387,11 +447,11 @@ export default function CreateMeetingDialog({
                                         handleAddParticipant(participant._id);
                                       }
                                     }}
-                                    className={`w-full flex items-center gap-2 p-1.5 rounded hover:bg-accent ${
+                                    className={`w-full flex items-center gap-2 p-1.5 rounded transition-all duration-200 hover:bg-accent/50 ${
                                       isSelected ? 'bg-accent' : ''
                                     }`}
                                   >
-                                    <Avatar className='h-6 w-6'>
+                                    <Avatar className='h-6 w-6 transition-transform duration-200 hover:scale-110'>
                                       <AvatarImage src={participant.avatar} />
                                       <AvatarFallback>
                                         {participant.name
@@ -410,7 +470,10 @@ export default function CreateMeetingDialog({
                                         </div>
                                       )}
                                     </div>
-                                    <Checkbox checked={isSelected} className='h-3.5 w-3.5' />
+                                    <Checkbox
+                                      checked={isSelected}
+                                      className='h-3.5 w-3.5 transition-all duration-200 hover:scale-110'
+                                    />
                                   </button>
                                 );
                               })}
@@ -423,9 +486,9 @@ export default function CreateMeetingDialog({
                                       setSelectedTeamMembers([...selectedTeamMembers, searchQuery]);
                                       setSearchQuery('');
                                     }}
-                                    className='text-sm w-full flex items-center gap-2 p-1.5 rounded hover:bg-accent text-primary'
+                                    className='text-sm w-full flex items-center gap-2 p-1.5 rounded transition-all duration-200 hover:bg-accent/50 text-primary animate-in slide-in-from-bottom-2'
                                   >
-                                    <UserPlus className='h-6 w-6' />
+                                    <UserPlus className='h-6 w-6 transition-transform duration-200 hover:scale-110' />
                                     <div className='flex-1 text-left'>
                                       <div className='font-medium'>Add {searchQuery}</div>
                                       <div className='text-xs text-muted-foreground'>
