@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
 import { Clock } from 'lucide-react';
@@ -18,7 +19,6 @@ export function GoogleCalendarTimePicker({
 }: GoogleCalendarTimePickerProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState('');
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const timeSlotRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
@@ -105,10 +105,8 @@ export function GoogleCalendarTimePicker({
     const parsedTime = parseTimeInput(newValue);
     if (parsedTime) {
       onChange(parsedTime);
-      setIsDropdownOpen(true);
     } else if (newValue) {
       setError('Invalid time');
-      setIsDropdownOpen(false);
     }
   };
 
@@ -182,22 +180,8 @@ export function GoogleCalendarTimePicker({
   }, [inputValue, isEditing, error]);
 
   return (
-    <div className='relative'>
-      {isEditing ? (
-        <div className='space-y-1'>
-          <Input
-            ref={inputRef}
-            value={inputValue}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            onBlur={handleBlur}
-            placeholder='2:00 PM'
-            className={`w-full ${error ? 'border-red-500' : ''}`}
-            autoFocus
-          />
-          {error && <p className='text-sm text-red-500'>{error}</p>}
-        </div>
-      ) : (
+    <Popover open={isEditing} onOpenChange={setIsEditing} modal>
+      <PopoverTrigger asChild>
         <Button
           variant='outline'
           className='w-full justify-start text-left font-normal'
@@ -209,10 +193,20 @@ export function GoogleCalendarTimePicker({
           <Clock className='mr-2 h-4 w-4' />
           {value ? displayTime : 'Select time'}
         </Button>
-      )}
-
-      {isEditing && !error && (
-        <div className='absolute z-10 mt-1 w-full rounded-md border bg-popover p-2 shadow-md'>
+      </PopoverTrigger>
+      <PopoverContent className='w-[var(--radix-popover-trigger-width)] p-0' align='start'>
+        <div className='space-y-1 p-2'>
+          <Input
+            ref={inputRef}
+            value={inputValue}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onBlur={handleBlur}
+            placeholder='2:00 PM'
+            className={`w-full ${error ? 'border-red-500' : ''}`}
+            autoFocus
+          />
+          {error && <p className='text-sm text-red-500'>{error}</p>}
           <ScrollArea className='h-[200px]'>
             <div className='space-y-1'>
               {timeSlots.map((time) => {
@@ -237,7 +231,7 @@ export function GoogleCalendarTimePicker({
             </div>
           </ScrollArea>
         </div>
-      )}
-    </div>
+      </PopoverContent>
+    </Popover>
   );
 }

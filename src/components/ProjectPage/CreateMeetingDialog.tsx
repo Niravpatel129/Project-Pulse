@@ -20,7 +20,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useProject } from '@/contexts/ProjectContext';
 import { format } from 'date-fns';
 import { Calendar, Globe, Loader2, MapPin, UserPlus, Video, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useCreateMeeting } from './hooks/useCreateMeeting';
 import { useGoogleIntegration } from './hooks/useGoogleIntegration';
 
@@ -123,10 +123,34 @@ export default function CreateMeetingDialog({
   const [showManualEmailInput, setShowManualEmailInput] = useState(false);
   const [filteredParticipants, setFilteredParticipants] = useState<TeamMember[]>([]);
 
+  // Initialize meetingTypeDetails when meetingType changes
+  useEffect(() => {
+    switch (meetingType) {
+      case 'video':
+        setMeetingTypeDetails({
+          videoPlatform: 'google-meet',
+          customLocation: '',
+        });
+        break;
+      case 'phone':
+        setMeetingTypeDetails({
+          phoneNumber: '',
+        });
+        break;
+      case 'in-person':
+      case 'other':
+        setMeetingTypeDetails({
+          customLocation: '',
+        });
+        break;
+      default:
+        setMeetingTypeDetails({});
+    }
+  }, [meetingType, setMeetingTypeDetails]);
+
   const {
     step,
     showCalendar,
-    meetingTypeDetails: meetingTypeDetailsFromCreateMeeting,
     handleAddParticipant,
     handleRemoveParticipant,
     handleAddManualEmail,
@@ -551,7 +575,13 @@ export default function CreateMeetingDialog({
                   )}
 
                   {/* Participant Selection */}
-                  <Popover>
+                  <Popover
+                    onOpenChange={(open) => {
+                      if (!open) {
+                        setSearchQuery('');
+                      }
+                    }}
+                  >
                     <PopoverTrigger asChild>
                       <Button
                         variant='outline'
@@ -693,7 +723,13 @@ export default function CreateMeetingDialog({
               <div className='space-y-2'>
                 <Label>Date Range</Label>
                 <div className='flex items-center gap-2'>
-                  <Popover>
+                  <Popover
+                    onOpenChange={(open) => {
+                      if (!open) {
+                        handleDateSelect(dateRange?.from);
+                      }
+                    }}
+                  >
                     <PopoverTrigger asChild>
                       <Button
                         variant='outline'
@@ -722,7 +758,13 @@ export default function CreateMeetingDialog({
                     </PopoverContent>
                   </Popover>
                   <span className='text-muted-foreground'>To</span>
-                  <Popover>
+                  <Popover
+                    onOpenChange={(open) => {
+                      if (!open) {
+                        handleDateSelect(dateRange?.to, true);
+                      }
+                    }}
+                  >
                     <PopoverTrigger asChild>
                       <Button
                         variant='outline'
