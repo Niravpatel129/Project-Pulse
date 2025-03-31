@@ -1,13 +1,15 @@
 import { useProject } from '@/contexts/ProjectContext';
 import { addMinutes } from 'date-fns';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useGoogleIntegration } from './useGoogleIntegration';
 
 type TeamMember = {
   _id: string;
   name: string;
   email: string;
   role: string;
-  availableTimes: {
+  avatar?: string;
+  availableTimes?: {
     day: string;
     slots: { start: string; end: string }[];
   }[];
@@ -20,13 +22,14 @@ interface UseCreateMeetingProps {
 
 export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMeetingProps) {
   const { project } = useProject();
+  const { isConnecting, googleStatus, handleConnect } = useGoogleIntegration();
   const [step, setStep] = useState(1);
   const [showCalendar, setShowCalendar] = useState(false);
   const [currentMonth, setCurrentMonth] = useState<Date>(selectedDate);
   const [meetingStartTime, setMeetingStartTime] = useState('');
   const [selectedEndTime, setSelectedEndTime] = useState('');
   const [isAllDay, setIsAllDay] = useState(false);
-  const [dateRange, setDateRange] = useState<{ from: Date; to: Date } | undefined>({
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
     from: selectedDate,
     to: selectedDate,
   });
@@ -37,11 +40,83 @@ export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMee
   const [meetingDescription, setMeetingDescription] = useState('');
   const [meetingType, setMeetingType] = useState('');
   const [meetingDuration, setMeetingDuration] = useState('30');
-  const [selectedTeamMembers, setSelectedTeamMembers] = useState<string[]>(
-    project?.participants.map((p) => {
-      return p._id;
-    }) || [],
-  );
+  const [selectedTeamMembers, setSelectedTeamMembers] = useState<string[]>([]);
+  const [meetingTypeDetails, setMeetingTypeDetails] = useState({
+    videoPlatform: '',
+    customLocation: '',
+    phoneNumber: '',
+  });
+  const [filteredParticipants, setFilteredParticipants] = useState<TeamMember[]>([]);
+
+  // Initialize selectedTeamMembers with project participants
+  useEffect(() => {
+    if (project?.participants) {
+      setSelectedTeamMembers(
+        project.participants.map((p) => {
+          return p._id;
+        }),
+      );
+    }
+  }, [project?.participants]);
+
+  // Update filtered participants when search query or project participants change
+  useEffect(() => {
+    if (!project?.participants) return;
+
+    const searchLower = searchQuery.toLowerCase();
+    const filtered = project.participants
+      .map((p) => {
+        return {
+          _id: p._id,
+          name: p.name,
+          email: p.email || '',
+          role: p.role,
+          avatar: p.avatar,
+          availableTimes: [],
+        };
+      })
+      .filter((participant) => {
+        return (
+          participant.name.toLowerCase().includes(searchLower) ||
+          participant.email.toLowerCase().includes(searchLower)
+        );
+      });
+    setFilteredParticipants(filtered);
+  }, [searchQuery, project?.participants]);
+
+  // Initialize meetingTypeDetails when meetingType changes
+  useEffect(() => {
+    switch (meetingType) {
+      case 'video':
+        setMeetingTypeDetails({
+          videoPlatform: 'google-meet',
+          customLocation: '',
+          phoneNumber: '',
+        });
+        break;
+      case 'phone':
+        setMeetingTypeDetails({
+          videoPlatform: '',
+          customLocation: '',
+          phoneNumber: '',
+        });
+        break;
+      case 'in-person':
+      case 'other':
+        setMeetingTypeDetails({
+          videoPlatform: '',
+          customLocation: '',
+          phoneNumber: '',
+        });
+        break;
+      default:
+        setMeetingTypeDetails({
+          videoPlatform: '',
+          customLocation: '',
+          phoneNumber: '',
+        });
+    }
+  }, [meetingType]);
 
   const handleAddParticipant = (participantId: string) => {
     if (!selectedTeamMembers.includes(participantId)) {
@@ -50,14 +125,10 @@ export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMee
   };
 
   const handleRemoveParticipant = (participantId: string) => {
-    console.log('handleRemoveParticipant called with:', participantId);
-    console.log('Current selectedTeamMembers:', selectedTeamMembers);
     setSelectedTeamMembers((prev) => {
-      const newMembers = prev.filter((id) => {
+      return prev.filter((id) => {
         return id !== participantId;
       });
-      console.log('New selectedTeamMembers:', newMembers);
-      return newMembers;
     });
   };
 
@@ -68,14 +139,6 @@ export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMee
       setShowManualEmailInput(false);
     }
   };
-
-  const filteredParticipants = project?.participants.filter((participant) => {
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      participant.name.toLowerCase().includes(searchLower) ||
-      participant.email?.toLowerCase().includes(searchLower)
-    );
-  });
 
   const handleNext = () => {
     if (step === 1 && !meetingTitle) return;
@@ -102,11 +165,11 @@ export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMee
     if (date) {
       if (isEndDate) {
         setDateRange((prev) => {
-          return { ...prev!, to: date };
+          return { ...prev, to: date };
         });
       } else {
         setDateRange((prev) => {
-          return { from: date, to: prev?.to || date };
+          return { from: date, to: prev.to };
         });
       }
       if (!isAllDay) {
@@ -119,7 +182,7 @@ export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMee
   const handleStartTimeSelect = (time: string) => {
     setMeetingStartTime(time);
     const [hours, minutes] = time.split(':').map(Number);
-    const startDate = new Date(dateRange?.from || selectedDate);
+    const startDate = new Date(dateRange.from);
     startDate.setHours(hours, minutes, 0, 0);
 
     const duration = parseInt(meetingDuration) || 30;
@@ -133,7 +196,16 @@ export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMee
     );
   };
 
+  const handleAllDayChange = (checked: boolean) => {
+    setIsAllDay(checked);
+    if (checked) {
+      setMeetingStartTime('');
+      setSelectedEndTime('');
+    }
+  };
+
   return {
+    // State
     step,
     showCalendar,
     currentMonth,
@@ -149,6 +221,12 @@ export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMee
     meetingType,
     meetingDuration,
     selectedTeamMembers,
+    meetingTypeDetails,
+    filteredParticipants,
+    isConnecting,
+    googleStatus,
+
+    // Setters
     setShowCalendar,
     setCurrentMonth,
     setMeetingStartTime,
@@ -163,6 +241,9 @@ export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMee
     setMeetingType,
     setMeetingDuration,
     setSelectedTeamMembers,
+    setMeetingTypeDetails,
+
+    // Handlers
     handleAddParticipant,
     handleRemoveParticipant,
     handleAddManualEmail,
@@ -171,5 +252,7 @@ export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMee
     handleSubmit,
     handleDateSelect,
     handleStartTimeSelect,
+    handleAllDayChange,
+    handleConnect,
   };
 }

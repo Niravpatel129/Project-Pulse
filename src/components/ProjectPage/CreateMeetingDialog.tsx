@@ -20,7 +20,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useProject } from '@/contexts/ProjectContext';
 import { format } from 'date-fns';
 import { Calendar, Globe, Loader2, MapPin, UserPlus, Video, X } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useCreateMeeting } from './hooks/useCreateMeeting';
 import { useGoogleIntegration } from './hooks/useGoogleIntegration';
 
@@ -94,8 +94,6 @@ export default function CreateMeetingDialog({
   onCreateMeeting,
   meetingStartTime,
   setMeetingStartTime,
-  meetingDuration,
-  setMeetingDuration,
   selectedTeamMembers,
   setSelectedTeamMembers,
   meetingTitle,
@@ -112,21 +110,15 @@ export default function CreateMeetingDialog({
   setIsAllDay,
 }: CreateMeetingDialogProps) {
   const { isConnecting, googleStatus, handleConnect } = useGoogleIntegration();
-  const [hasInteracted, setHasInteracted] = useState(false);
-  const [validatedFields, setValidatedFields] = useState<Set<string>>(new Set());
-  const [blurredFields, setBlurredFields] = useState<Set<string>>(new Set());
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
     from: selectedDate,
     to: selectedDate,
   });
   const [currentMonth, setCurrentMonth] = useState<Date>(selectedDate);
   const [selectedEndTime, setSelectedEndTime] = useState('');
-  const [manualEmail, setManualEmail] = useState('');
-  const [showManualEmailInput, setShowManualEmailInput] = useState(false);
   const { project } = useProject();
   const [filteredParticipants, setFilteredParticipants] = useState<TeamMember[]>([]);
 
-  // Update filtered participants when search query or project participants change
   useEffect(() => {
     if (!project?.participants) return;
 
@@ -151,31 +143,6 @@ export default function CreateMeetingDialog({
     setFilteredParticipants(filtered);
   }, [searchQuery, project?.participants]);
 
-  // Initialize meetingTypeDetails when meetingType changes
-  useEffect(() => {
-    switch (meetingType) {
-      case 'video':
-        setMeetingTypeDetails({
-          videoPlatform: 'google-meet',
-          customLocation: '',
-        });
-        break;
-      case 'phone':
-        setMeetingTypeDetails({
-          phoneNumber: '',
-        });
-        break;
-      case 'in-person':
-      case 'other':
-        setMeetingTypeDetails({
-          customLocation: '',
-        });
-        break;
-      default:
-        setMeetingTypeDetails({});
-    }
-  }, [meetingType, setMeetingTypeDetails]);
-
   const {
     step,
     showCalendar,
@@ -187,6 +154,7 @@ export default function CreateMeetingDialog({
     handleSubmit,
     handleDateSelect,
     handleStartTimeSelect,
+    handleAllDayChange,
   } = useCreateMeeting({ selectedDate, onCreateMeeting });
 
   const handleFormSubmit = useCallback(
@@ -197,164 +165,6 @@ export default function CreateMeetingDialog({
     [handleSubmit, onOpenChange],
   );
 
-  // Add new memoized button disabled state
-  const isButtonDisabled = useMemo(() => {
-    // Check if all required fields have valid values
-    const hasValidTitle = meetingTitle?.trim().length > 0;
-    const hasValidMeetingType = meetingType?.length > 0;
-    const hasValidDateRange = dateRange?.from && dateRange?.to && dateRange.to >= dateRange.from;
-    const hasValidParticipants = selectedTeamMembers.length > 0;
-
-    // Check meeting type specific requirements
-    const hasValidMeetingTypeDetails = (() => {
-      if (!meetingType) return false;
-      switch (meetingType) {
-        case 'video':
-          return (
-            meetingTypeDetails.videoPlatform === 'google-meet' ||
-            (meetingTypeDetails.videoPlatform === 'custom' &&
-              meetingTypeDetails.customLocation?.trim().length > 0)
-          );
-        case 'phone':
-          return (
-            meetingTypeDetails.phoneNumber?.trim().length > 0 &&
-            /^\+?[1-9]\d{1,14}$/.test(meetingTypeDetails.phoneNumber.replace(/\s+/g, ''))
-          );
-        case 'in-person':
-        case 'other':
-          return meetingTypeDetails.customLocation?.trim().length > 0;
-        default:
-          return false;
-      }
-    })();
-
-    // Check time requirements if not all-day
-    const hasValidTime = isAllDay || (meetingStartTime?.length > 0 && selectedEndTime?.length > 0);
-
-    return !(
-      hasValidTitle &&
-      hasValidMeetingType &&
-      hasValidMeetingTypeDetails &&
-      hasValidDateRange &&
-      hasValidTime &&
-      hasValidParticipants
-    );
-  }, [
-    meetingTitle,
-    meetingType,
-    meetingTypeDetails,
-    dateRange,
-    meetingStartTime,
-    selectedEndTime,
-    selectedTeamMembers,
-    isAllDay,
-  ]);
-
-  // Helper function to check if a field should show validation
-  const shouldShowValidation = (field: string) => {
-    return blurredFields.has(field);
-  };
-
-  // Add new memoized error messages for tooltip
-  const errorMessages = useMemo(() => {
-    if (!isButtonDisabled) return null;
-
-    const messages: string[] = [];
-
-    // Only show messages for fields that have been interacted with
-    if (shouldShowValidation('title') && !meetingTitle?.trim()) {
-      messages.push('Please enter a meeting title');
-    }
-    if (shouldShowValidation('meetingType') && !meetingType) {
-      messages.push('Please select a meeting type');
-    }
-    if (
-      shouldShowValidation('dateRange') &&
-      (!dateRange?.from || !dateRange?.to || dateRange.to < dateRange.from)
-    ) {
-      messages.push('Please select a valid date range');
-    }
-    if (shouldShowValidation('startTime') && !isAllDay && !meetingStartTime) {
-      messages.push('Please select start time');
-    }
-    if (shouldShowValidation('endTime') && !isAllDay && !selectedEndTime) {
-      messages.push('Please select end time');
-    }
-    if (shouldShowValidation('participants') && selectedTeamMembers.length === 0) {
-      messages.push('Please add at least one participant');
-    }
-
-    // Meeting type specific messages
-    if (meetingType) {
-      switch (meetingType) {
-        case 'video':
-          if (
-            shouldShowValidation('customLocation') &&
-            meetingTypeDetails.videoPlatform === 'custom' &&
-            !meetingTypeDetails.customLocation?.trim()
-          ) {
-            messages.push('Please enter the video platform name');
-          }
-          break;
-        case 'phone':
-          if (shouldShowValidation('phoneNumber')) {
-            if (!meetingTypeDetails.phoneNumber?.trim()) {
-              messages.push('Please enter a phone number');
-            } else if (
-              !/^\+?[1-9]\d{1,14}$/.test(meetingTypeDetails.phoneNumber.replace(/\s+/g, ''))
-            ) {
-              messages.push('Please enter a valid phone number');
-            }
-          }
-          break;
-        case 'in-person':
-        case 'other':
-          if (
-            shouldShowValidation('customLocation') &&
-            !meetingTypeDetails.customLocation?.trim()
-          ) {
-            messages.push(
-              meetingType === 'in-person'
-                ? 'Please enter the physical meeting location'
-                : 'Please specify meeting location or instructions',
-            );
-          }
-          break;
-      }
-    }
-
-    if (messages.length === 0) return null;
-
-    return (
-      <TooltipContent side='top' className='max-w-[300px] text-black  bg-gray-100'>
-        <div className='space-y-1'>
-          <p className='font-medium'>Missing required fields:</p>
-          <ul className='text-sm space-y-0.5'>
-            {messages.map((message, index) => {
-              return (
-                <li key={index} className='text-muted-foreground bg-gray-100 rounded-md p-1'>
-                  {message}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </TooltipContent>
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    isButtonDisabled,
-    meetingTitle,
-    meetingType,
-    meetingTypeDetails,
-    dateRange,
-    meetingStartTime,
-    selectedEndTime,
-    selectedTeamMembers,
-    isAllDay,
-    blurredFields,
-  ]);
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className='w-full overflow-y-auto min-w-[500px] flex flex-col'>
@@ -362,40 +172,26 @@ export default function CreateMeetingDialog({
           <SheetTitle>Create Meeting</SheetTitle>
         </SheetHeader>
 
-        <div
-          className='flex-1 mt-6 space-y-8 overflow-y-auto p-1 scrollbar-hide'
-          onFocus={() => {
-            if (!hasInteracted) {
-              setHasInteracted(true);
-            }
-          }}
-        >
+        <div className='flex-1 mt-6 space-y-8 overflow-y-auto p-1 scrollbar-hide'>
           {/* Step 1: Meeting Details */}
           <div className='space-y-6'>
             <div className='space-y-4'>
               <div className='space-y-2'>
                 <Label>Title</Label>
                 <Input
-                  value={meetingTitle}
+                  value={meetingTitle || ''}
                   onChange={(e) => {
                     setMeetingTitle(e.target.value);
                   }}
-                  onBlur={() => {
-                    setBlurredFields((prev) => {
-                      return new Set([...prev, 'title']);
-                    });
-                  }}
                   placeholder='Add title'
-                  className={`w-full ${
-                    shouldShowValidation('title') && !meetingTitle?.trim() ? 'border-red-500' : ''
-                  }`}
+                  className='w-full'
                 />
               </div>
 
               <div className='space-y-2'>
                 <Label>Description (optional)</Label>
                 <Textarea
-                  value={meetingDescription}
+                  value={meetingDescription || ''}
                   onChange={(e) => {
                     setMeetingDescription(e.target.value);
                   }}
@@ -407,27 +203,12 @@ export default function CreateMeetingDialog({
               <div className='space-y-2'>
                 <Label>Meeting Type</Label>
                 <Select
-                  value={meetingType}
+                  value={meetingType || ''}
                   onValueChange={(value) => {
                     setMeetingType(value);
-                    setBlurredFields((prev) => {
-                      return new Set([...prev, 'meetingType']);
-                    });
-                  }}
-                  onOpenChange={(open) => {
-                    if (!open && !meetingType) {
-                      setMeetingType('');
-                      setBlurredFields((prev) => {
-                        return new Set([...prev, 'meetingType']);
-                      });
-                    }
                   }}
                 >
-                  <SelectTrigger
-                    className={
-                      shouldShowValidation('meetingType') && !meetingType ? 'border-red-500' : ''
-                    }
-                  >
+                  <SelectTrigger>
                     <SelectValue placeholder='Select meeting type' />
                   </SelectTrigger>
                   <SelectContent>
@@ -449,14 +230,11 @@ export default function CreateMeetingDialog({
                   {meetingType === 'video' && (
                     <div className='mt-2 animate-in slide-in-from-top-2 duration-200'>
                       <Select
-                        value={meetingTypeDetails.videoPlatform}
+                        value={meetingTypeDetails?.videoPlatform || ''}
                         onValueChange={(value) => {
                           setMeetingTypeDetails({
                             ...meetingTypeDetails,
                             videoPlatform: value,
-                          });
-                          setBlurredFields((prev) => {
-                            return new Set([...prev, 'videoPlatform']);
                           });
                         }}
                       >
@@ -468,33 +246,22 @@ export default function CreateMeetingDialog({
                           <SelectItem value='custom'>Other Platform</SelectItem>
                         </SelectContent>
                       </Select>
-                      {meetingTypeDetails.videoPlatform === 'custom' && (
+                      {meetingTypeDetails?.videoPlatform === 'custom' && (
                         <div className='mt-2 animate-in fade-in duration-200'>
                           <Input
                             placeholder='Enter video platform name'
-                            value={meetingTypeDetails.customLocation}
+                            value={meetingTypeDetails?.customLocation || ''}
                             onChange={(e) => {
                               setMeetingTypeDetails({
                                 ...meetingTypeDetails,
                                 customLocation: e.target.value,
                               });
                             }}
-                            onBlur={() => {
-                              setBlurredFields((prev) => {
-                                return new Set([...prev, 'customLocation']);
-                              });
-                            }}
-                            className={`mt-2 animate-in fade-in duration-200 ${
-                              shouldShowValidation('customLocation') &&
-                              meetingTypeDetails.videoPlatform === 'custom' &&
-                              !meetingTypeDetails.customLocation?.trim()
-                                ? 'border-red-500'
-                                : ''
-                            }`}
+                            className='mt-2 animate-in fade-in duration-200'
                           />
                         </div>
                       )}
-                      {meetingTypeDetails.videoPlatform === 'google-meet' && (
+                      {meetingTypeDetails?.videoPlatform === 'google-meet' && (
                         <div className='mt-2 animate-in fade-in duration-200'>
                           {googleStatus?.connected ? (
                             <div className='flex items-center gap-2 text-sm text-green-600'>
@@ -547,27 +314,14 @@ export default function CreateMeetingDialog({
                       <Input
                         type='tel'
                         placeholder='Enter phone number (e.g., +1 234 567 8900)'
-                        value={meetingTypeDetails.phoneNumber}
+                        value={meetingTypeDetails?.phoneNumber || ''}
                         onChange={(e) => {
                           setMeetingTypeDetails({
                             ...meetingTypeDetails,
                             phoneNumber: e.target.value,
                           });
                         }}
-                        onBlur={() => {
-                          setBlurredFields((prev) => {
-                            return new Set([...prev, 'phoneNumber']);
-                          });
-                        }}
-                        className={`mt-2 animate-in fade-in duration-200 ${
-                          shouldShowValidation('phoneNumber') &&
-                          (!meetingTypeDetails.phoneNumber?.trim() ||
-                            !/^\+?[1-9]\d{1,14}$/.test(
-                              meetingTypeDetails.phoneNumber.replace(/\s+/g, ''),
-                            ))
-                            ? 'border-red-500'
-                            : ''
-                        }`}
+                        className='mt-2 animate-in fade-in duration-200'
                       />
                     </div>
                   )}
@@ -580,24 +334,13 @@ export default function CreateMeetingDialog({
                             ? 'Enter physical meeting location'
                             : 'Specify meeting location or instructions'
                         }
-                        value={meetingTypeDetails.customLocation}
+                        value={meetingTypeDetails?.customLocation || ''}
                         onChange={(e) => {
                           setMeetingTypeDetails({
                             ...meetingTypeDetails,
                             customLocation: e.target.value,
                           });
                         }}
-                        onBlur={() => {
-                          setBlurredFields((prev) => {
-                            return new Set([...prev, 'customLocation']);
-                          });
-                        }}
-                        className={
-                          shouldShowValidation('customLocation') &&
-                          !meetingTypeDetails.customLocation?.trim()
-                            ? 'border-red-500'
-                            : ''
-                        }
                       />
                     </div>
                   )}
@@ -612,7 +355,6 @@ export default function CreateMeetingDialog({
                     {selectedTeamMembers.length > 0 ? (
                       <div className='flex flex-wrap gap-1.5 p-2 border rounded-md bg-muted/30 transition-all duration-300 animate-in fade-in-0'>
                         {selectedTeamMembers.map((participantId) => {
-                          console.log('🚀 selectedTeamMembers:', selectedTeamMembers);
                           const participant = project?.participants.find((p) => {
                             return p._id === participantId;
                           });
@@ -627,19 +369,10 @@ export default function CreateMeetingDialog({
                                 <div
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    console.log('Removing participant:', participantId);
-                                    console.log(
-                                      'Current selectedTeamMembers:',
-                                      selectedTeamMembers,
-                                    );
                                     setSelectedTeamMembers(
                                       selectedTeamMembers.filter((id) => {
                                         return id !== participantId;
                                       }),
-                                    );
-                                    console.log(
-                                      'After removal - selectedTeamMembers:',
-                                      selectedTeamMembers,
                                     );
                                   }}
                                   className='ml-0.5 hover:text-destructive transition-all duration-300 cursor-pointer hover:scale-110'
@@ -671,16 +404,10 @@ export default function CreateMeetingDialog({
                               <div
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  console.log('Removing participant:', participantId);
-                                  console.log('Current selectedTeamMembers:', selectedTeamMembers);
                                   setSelectedTeamMembers(
                                     selectedTeamMembers.filter((id) => {
                                       return id !== participantId;
                                     }),
-                                  );
-                                  console.log(
-                                    'After removal - selectedTeamMembers:',
-                                    selectedTeamMembers,
                                   );
                                 }}
                                 className='ml-0.5 hover:text-destructive transition-all duration-300 cursor-pointer hover:scale-110'
@@ -692,13 +419,7 @@ export default function CreateMeetingDialog({
                         })}
                       </div>
                     ) : (
-                      <div
-                        className={`flex items-center justify-center h-[40px] border rounded-md bg-muted/50 transition-all duration-300 animate-in fade-in-0 ${
-                          shouldShowValidation('participants') && !selectedTeamMembers.length
-                            ? 'border-red-500'
-                            : ''
-                        }`}
-                      >
+                      <div className='flex items-center justify-center h-[40px] border rounded-md bg-muted/50 transition-all duration-300 animate-in fade-in-0'>
                         <p className='text-sm text-muted-foreground'>No participants added yet</p>
                       </div>
                     )}
@@ -731,7 +452,7 @@ export default function CreateMeetingDialog({
                         <div className='flex items-center gap-2'>
                           <Input
                             placeholder='Search by name or email...'
-                            value={searchQuery}
+                            value={searchQuery || ''}
                             onChange={(e) => {
                               return setSearchQuery(e.target.value);
                             }}
@@ -861,15 +582,7 @@ export default function CreateMeetingDialog({
                     }}
                   >
                     <PopoverTrigger asChild>
-                      <Button
-                        variant='outline'
-                        className={`w-full justify-start font-normal ${
-                          shouldShowValidation('dateRange') &&
-                          (!dateRange?.from || !dateRange?.to || dateRange.to < dateRange.from)
-                            ? 'border-red-500'
-                            : ''
-                        }`}
-                      >
+                      <Button variant='outline' className='w-full justify-start font-normal'>
                         <Calendar className='mr-2 h-4 w-4' />
                         {format(dateRange?.from || selectedDate, 'MMM d, yyyy')}
                       </Button>
@@ -880,9 +593,6 @@ export default function CreateMeetingDialog({
                         selected={dateRange?.from}
                         onSelect={(date) => {
                           handleDateSelect(date);
-                          setBlurredFields((prev) => {
-                            return new Set([...prev, 'dateRange']);
-                          });
                         }}
                         className=''
                         month={currentMonth}
@@ -899,15 +609,7 @@ export default function CreateMeetingDialog({
                     }}
                   >
                     <PopoverTrigger asChild>
-                      <Button
-                        variant='outline'
-                        className={`w-full justify-start font-normal ${
-                          shouldShowValidation('dateRange') &&
-                          (!dateRange?.from || !dateRange?.to || dateRange.to < dateRange.from)
-                            ? 'border-red-500'
-                            : ''
-                        }`}
-                      >
+                      <Button variant='outline' className='w-full justify-start font-normal'>
                         <Calendar className='mr-2 h-4 w-4' />
                         {format(dateRange?.to || selectedDate, 'MMM d, yyyy')}
                       </Button>
@@ -918,9 +620,6 @@ export default function CreateMeetingDialog({
                         selected={dateRange?.to}
                         onSelect={(date) => {
                           handleDateSelect(date, true);
-                          setBlurredFields((prev) => {
-                            return new Set([...prev, 'dateRange']);
-                          });
                         }}
                         className=''
                         month={currentMonth}
@@ -935,40 +634,22 @@ export default function CreateMeetingDialog({
                 <div className='grid grid-cols-2 gap-4'>
                   <div className='space-y-2'>
                     <Label>Start time</Label>
-                    <div
-                      className={
-                        shouldShowValidation('startTime') && !meetingStartTime
-                          ? 'border border-red-500 rounded-md'
-                          : ''
-                      }
-                    >
+                    <div>
                       <GoogleCalendarTimePicker
-                        value={meetingStartTime}
+                        value={meetingStartTime || ''}
                         onChange={(value) => {
                           setMeetingStartTime(value);
-                          setBlurredFields((prev) => {
-                            return new Set([...prev, 'startTime']);
-                          });
                         }}
                       />
                     </div>
                   </div>
                   <div className='space-y-2'>
                     <Label>End time</Label>
-                    <div
-                      className={
-                        shouldShowValidation('endTime') && !selectedEndTime
-                          ? 'border border-red-500 rounded-md'
-                          : ''
-                      }
-                    >
+                    <div>
                       <GoogleCalendarTimePicker
-                        value={selectedEndTime}
+                        value={selectedEndTime || ''}
                         onChange={(value) => {
                           setSelectedEndTime(value);
-                          setBlurredFields((prev) => {
-                            return new Set([...prev, 'endTime']);
-                          });
                         }}
                       />
                     </div>
@@ -978,17 +659,7 @@ export default function CreateMeetingDialog({
             </div>
 
             <div className='flex items-center space-x-2'>
-              <Checkbox
-                id='all-day'
-                checked={isAllDay}
-                onCheckedChange={(checked) => {
-                  setIsAllDay(checked as boolean);
-                  if (checked) {
-                    setMeetingStartTime('');
-                    setSelectedEndTime('');
-                  }
-                }}
-              />
+              <Checkbox id='all-day' checked={isAllDay} onCheckedChange={handleAllDayChange} />
               <Label htmlFor='all-day'>All day</Label>
             </div>
           </div>
@@ -1003,16 +674,7 @@ export default function CreateMeetingDialog({
           >
             Cancel
           </Button>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div>
-                <Button onClick={handleFormSubmit} disabled={isButtonDisabled}>
-                  Create Meeting
-                </Button>
-              </div>
-            </TooltipTrigger>
-            {errorMessages}
-          </Tooltip>
+          <Button onClick={handleFormSubmit}>Create Meeting</Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>

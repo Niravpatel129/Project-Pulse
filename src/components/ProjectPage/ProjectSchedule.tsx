@@ -53,7 +53,6 @@ export default function ProjectSchedule() {
     setShowInviteDialog,
     showAvailabilityDialog,
     setShowAvailabilityDialog,
-    showDeleteDialog,
     setShowDeleteDialog,
     setMeetingToDelete,
     setActiveTab,
@@ -631,7 +630,6 @@ export default function ProjectSchedule() {
           </CardContent>
         </Card>
 
-        {/* Replace the old Create Meeting Dialog with the new component */}
         <CreateMeetingDialog
           open={showMeetingDialog}
           onOpenChange={setShowMeetingDialog}
