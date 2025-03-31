@@ -20,21 +20,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useProject } from '@/contexts/ProjectContext';
 import { format } from 'date-fns';
 import { Calendar, Globe, Loader2, MapPin, UserPlus, Video, X } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useCreateMeeting } from './hooks/useCreateMeeting';
-import { useGoogleIntegration } from './hooks/useGoogleIntegration';
-
-type TeamMember = {
-  _id: string;
-  name: string;
-  email: string;
-  role: string;
-  avatar?: string;
-  availableTimes?: {
-    day: string;
-    slots: { start: string; end: string }[];
-  }[];
-};
 
 const MEETING_TYPES = [
   { value: 'video', label: 'Video Call', icon: Video },
@@ -43,119 +30,60 @@ const MEETING_TYPES = [
   { value: 'other', label: 'Other', icon: Calendar },
 ];
 
-const DURATION_OPTIONS = [
-  { value: '15', label: '15 minutes' },
-  { value: '30', label: '30 minutes' },
-  { value: '45', label: '45 minutes' },
-  { value: '60', label: '1 hour' },
-  { value: '90', label: '1.5 hours' },
-  { value: '120', label: '2 hours' },
-];
-
 interface CreateMeetingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedDate: Date;
-  teamMembers: TeamMember[];
-  onCreateMeeting: (e: React.FormEvent) => Promise<void>;
-  meetingStartTime: string;
-  setMeetingStartTime: (time: string) => void;
-  meetingDuration: string;
-  setMeetingDuration: (duration: string) => void;
-  selectedTeamMembers: string[];
-  setSelectedTeamMembers: (members: string[]) => void;
-  meetingTitle: string;
-  setMeetingTitle: (title: string) => void;
-  meetingDescription: string;
-  setMeetingDescription: (description: string) => void;
-  meetingType: string;
-  setMeetingType: (type: string) => void;
-  meetingTypeDetails: {
-    videoPlatform?: string;
-    customLocation?: string;
-    phoneNumber?: string;
-  };
-  setMeetingTypeDetails: (details: {
-    videoPlatform?: string;
-    customLocation?: string;
-    phoneNumber?: string;
-  }) => void;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  isAllDay: boolean;
-  setIsAllDay: (isAllDay: boolean) => void;
 }
 
 export default function CreateMeetingDialog({
   open,
   onOpenChange,
   selectedDate,
-  teamMembers,
-  onCreateMeeting,
-  meetingStartTime,
-  setMeetingStartTime,
-  selectedTeamMembers,
-  setSelectedTeamMembers,
-  meetingTitle,
-  setMeetingTitle,
-  meetingDescription,
-  setMeetingDescription,
-  meetingType,
-  setMeetingType,
-  meetingTypeDetails,
-  setMeetingTypeDetails,
-  searchQuery,
-  setSearchQuery,
-  isAllDay,
-  setIsAllDay,
 }: CreateMeetingDialogProps) {
-  const { isConnecting, googleStatus, handleConnect } = useGoogleIntegration();
-  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
-    from: selectedDate,
-    to: selectedDate,
-  });
-  const [currentMonth, setCurrentMonth] = useState<Date>(selectedDate);
-  const [selectedEndTime, setSelectedEndTime] = useState('');
+  console.log('🚀 selectedDate:', selectedDate);
   const { project } = useProject();
-  const [filteredParticipants, setFilteredParticipants] = useState<TeamMember[]>([]);
-
-  useEffect(() => {
-    if (!project?.participants) return;
-
-    const searchLower = searchQuery.toLowerCase();
-    const filtered = project.participants
-      .map((p) => {
-        return {
-          _id: p._id,
-          name: p.name,
-          email: p.email || '',
-          role: p.role,
-          avatar: p.avatar,
-          availableTimes: [],
-        };
-      })
-      .filter((participant) => {
-        return (
-          participant.name.toLowerCase().includes(searchLower) ||
-          participant.email.toLowerCase().includes(searchLower)
-        );
-      });
-    setFilteredParticipants(filtered);
-  }, [searchQuery, project?.participants]);
-
   const {
-    step,
-    showCalendar,
+    // State
+    meetingTitle,
+    meetingDescription,
+    meetingType,
+    meetingTypeDetails,
+    selectedTeamMembers,
+    searchQuery,
+    dateRange,
+    currentMonth,
+    meetingStartTime,
+    selectedEndTime,
+    isAllDay,
+    filteredParticipants,
+    isConnecting,
+    googleStatus,
+
+    // Setters
+    setMeetingTitle,
+    setMeetingDescription,
+    setMeetingType,
+    setMeetingTypeDetails,
+    setSearchQuery,
+    setCurrentMonth,
+    setMeetingStartTime,
+    setSelectedEndTime,
+
+    // Handlers
     handleAddParticipant,
     handleRemoveParticipant,
-    handleAddManualEmail,
-    handleNext,
-    handleBack,
     handleSubmit,
     handleDateSelect,
-    handleStartTimeSelect,
     handleAllDayChange,
-  } = useCreateMeeting({ selectedDate, onCreateMeeting });
+    handleConnect,
+  } = useCreateMeeting({ selectedDate });
+
+  useEffect(() => {
+    handleDateSelect(selectedDate);
+    handleDateSelect(selectedDate, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate]);
 
   const handleFormSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -173,15 +101,15 @@ export default function CreateMeetingDialog({
         </SheetHeader>
 
         <div className='flex-1 mt-6 space-y-8 overflow-y-auto p-1 scrollbar-hide'>
-          {/* Step 1: Meeting Details */}
+          {/* Meeting Details */}
           <div className='space-y-6'>
             <div className='space-y-4'>
               <div className='space-y-2'>
                 <Label>Title</Label>
                 <Input
-                  value={meetingTitle || ''}
+                  value={meetingTitle}
                   onChange={(e) => {
-                    setMeetingTitle(e.target.value);
+                    return setMeetingTitle(e.target.value);
                   }}
                   placeholder='Add title'
                   className='w-full'
@@ -191,9 +119,9 @@ export default function CreateMeetingDialog({
               <div className='space-y-2'>
                 <Label>Description (optional)</Label>
                 <Textarea
-                  value={meetingDescription || ''}
+                  value={meetingDescription}
                   onChange={(e) => {
-                    setMeetingDescription(e.target.value);
+                    return setMeetingDescription(e.target.value);
                   }}
                   placeholder='Add description'
                   className='w-full'
@@ -202,12 +130,7 @@ export default function CreateMeetingDialog({
 
               <div className='space-y-2'>
                 <Label>Meeting Type</Label>
-                <Select
-                  value={meetingType || ''}
-                  onValueChange={(value) => {
-                    setMeetingType(value);
-                  }}
-                >
+                <Select value={meetingType} onValueChange={setMeetingType}>
                   <SelectTrigger>
                     <SelectValue placeholder='Select meeting type' />
                   </SelectTrigger>
@@ -369,11 +292,7 @@ export default function CreateMeetingDialog({
                                 <div
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setSelectedTeamMembers(
-                                      selectedTeamMembers.filter((id) => {
-                                        return id !== participantId;
-                                      }),
-                                    );
+                                    handleRemoveParticipant(participantId);
                                   }}
                                   className='ml-0.5 hover:text-destructive transition-all duration-300 cursor-pointer hover:scale-110'
                                 >
@@ -404,11 +323,7 @@ export default function CreateMeetingDialog({
                               <div
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setSelectedTeamMembers(
-                                    selectedTeamMembers.filter((id) => {
-                                      return id !== participantId;
-                                    }),
-                                  );
+                                  handleRemoveParticipant(participantId);
                                 }}
                                 className='ml-0.5 hover:text-destructive transition-all duration-300 cursor-pointer hover:scale-110'
                               >
@@ -452,7 +367,7 @@ export default function CreateMeetingDialog({
                         <div className='flex items-center gap-2'>
                           <Input
                             placeholder='Search by name or email...'
-                            value={searchQuery || ''}
+                            value={searchQuery}
                             onChange={(e) => {
                               return setSearchQuery(e.target.value);
                             }}
@@ -466,7 +381,7 @@ export default function CreateMeetingDialog({
                                 searchQuery &&
                                 !selectedTeamMembers.includes(searchQuery)
                               ) {
-                                setSelectedTeamMembers([...selectedTeamMembers, searchQuery]);
+                                handleAddParticipant(searchQuery);
                                 setSearchQuery('');
                               }
                             }}
@@ -494,16 +409,9 @@ export default function CreateMeetingDialog({
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       if (isSelected) {
-                                        setSelectedTeamMembers(
-                                          selectedTeamMembers.filter((id) => {
-                                            return id !== participant._id;
-                                          }),
-                                        );
+                                        handleRemoveParticipant(participant._id);
                                       } else {
-                                        setSelectedTeamMembers([
-                                          ...selectedTeamMembers,
-                                          participant._id,
-                                        ]);
+                                        handleAddParticipant(participant._id);
                                       }
                                     }}
                                     className={`w-full flex items-center gap-2 p-1.5 rounded transition-all duration-200 hover:bg-accent/50 cursor-pointer ${
@@ -529,10 +437,6 @@ export default function CreateMeetingDialog({
                                         </div>
                                       )}
                                     </div>
-                                    <Checkbox
-                                      checked={isSelected}
-                                      className='h-3.5 w-3.5 transition-all duration-200 hover:scale-110'
-                                    />
                                   </div>
                                 );
                               })}
@@ -543,7 +447,7 @@ export default function CreateMeetingDialog({
                                   <div
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      setSelectedTeamMembers([...selectedTeamMembers, searchQuery]);
+                                      handleAddParticipant(searchQuery);
                                       setSearchQuery('');
                                     }}
                                     className='text-sm w-full flex items-center gap-2 p-1.5 rounded transition-all duration-200 hover:bg-accent/50 cursor-pointer text-primary animate-in slide-in-from-bottom-2'
@@ -568,7 +472,7 @@ export default function CreateMeetingDialog({
             </div>
           </div>
 
-          {/* Step 2: Date & Time */}
+          {/* Date & Time */}
           <div className='space-y-6'>
             <div className='space-y-4'>
               <div className='space-y-2'>
@@ -592,7 +496,7 @@ export default function CreateMeetingDialog({
                         mode='single'
                         selected={dateRange?.from}
                         onSelect={(date) => {
-                          handleDateSelect(date);
+                          return handleDateSelect(date);
                         }}
                         className=''
                         month={currentMonth}
@@ -619,7 +523,7 @@ export default function CreateMeetingDialog({
                         mode='single'
                         selected={dateRange?.to}
                         onSelect={(date) => {
-                          handleDateSelect(date, true);
+                          return handleDateSelect(date, true);
                         }}
                         className=''
                         month={currentMonth}
@@ -636,10 +540,8 @@ export default function CreateMeetingDialog({
                     <Label>Start time</Label>
                     <div>
                       <GoogleCalendarTimePicker
-                        value={meetingStartTime || ''}
-                        onChange={(value) => {
-                          setMeetingStartTime(value);
-                        }}
+                        value={meetingStartTime}
+                        onChange={setMeetingStartTime}
                       />
                     </div>
                   </div>
@@ -647,10 +549,8 @@ export default function CreateMeetingDialog({
                     <Label>End time</Label>
                     <div>
                       <GoogleCalendarTimePicker
-                        value={selectedEndTime || ''}
-                        onChange={(value) => {
-                          setSelectedEndTime(value);
-                        }}
+                        value={selectedEndTime}
+                        onChange={setSelectedEndTime}
                       />
                     </div>
                   </div>

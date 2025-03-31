@@ -56,21 +56,6 @@ export default function ProjectSchedule() {
     setShowDeleteDialog,
     setMeetingToDelete,
     setActiveTab,
-    selectedTeamMembers,
-    setSelectedTeamMembers,
-    meetingTitle,
-    setMeetingTitle,
-    meetingDescription,
-    setMeetingDescription,
-    meetingStartTime,
-    setMeetingStartTime,
-    meetingDuration,
-    setMeetingDuration,
-    meetingType,
-    setMeetingType,
-    meetingTypeDetails,
-    setMeetingTypeDetails,
-    teamMembers,
     handleCreateMeeting,
     handleDeleteMeeting,
     resetMeetingForm,
@@ -634,26 +619,6 @@ export default function ProjectSchedule() {
           open={showMeetingDialog}
           onOpenChange={setShowMeetingDialog}
           selectedDate={selectedDate}
-          teamMembers={teamMembers}
-          onCreateMeeting={handleCreateMeeting}
-          meetingStartTime={meetingStartTime}
-          setMeetingStartTime={setMeetingStartTime}
-          meetingDuration={meetingDuration}
-          setMeetingDuration={setMeetingDuration}
-          selectedTeamMembers={selectedTeamMembers}
-          setSelectedTeamMembers={setSelectedTeamMembers}
-          meetingTitle={meetingTitle}
-          setMeetingTitle={setMeetingTitle}
-          meetingDescription={meetingDescription}
-          setMeetingDescription={setMeetingDescription}
-          meetingType={meetingType}
-          setMeetingType={setMeetingType}
-          meetingTypeDetails={meetingTypeDetails}
-          setMeetingTypeDetails={setMeetingTypeDetails}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          isAllDay={isAllDay}
-          setIsAllDay={setIsAllDay}
         />
 
         {/* Keep the existing ClientInviteDialog */}

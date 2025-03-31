@@ -17,10 +17,9 @@ type TeamMember = {
 
 interface UseCreateMeetingProps {
   selectedDate: Date;
-  onCreateMeeting: (e: React.FormEvent) => Promise<void>;
 }
 
-export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMeetingProps) {
+export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
   const { project } = useProject();
   const { isConnecting, googleStatus, handleConnect } = useGoogleIntegration();
   const [step, setStep] = useState(1);
@@ -158,7 +157,6 @@ export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMee
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onCreateMeeting(e);
   };
 
   const handleDateSelect = (date: Date | undefined, isEndDate: boolean = false) => {
