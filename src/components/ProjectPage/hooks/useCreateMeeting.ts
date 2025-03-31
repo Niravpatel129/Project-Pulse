@@ -1,6 +1,8 @@
 import { useProject } from '@/contexts/ProjectContext';
+import { newRequest } from '@/utils/newRequest';
 import { addMinutes } from 'date-fns';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { useGoogleIntegration } from './useGoogleIntegration';
 
 type TeamMember = {
@@ -159,6 +161,29 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
     });
   };
 
+  const createMeeting = async () => {
+    try {
+      const response = await newRequest.post('/schedule/book', {
+        title: meetingTitle,
+        type: meetingType,
+        duration: meetingDuration,
+        participants: selectedTeamMembers,
+        startTime: meetingStartTime,
+        endTime: selectedEndTime,
+        videoPlatform: meetingTypeDetails.videoPlatform,
+        customLocation: meetingTypeDetails.customLocation,
+        phoneNumber: meetingTypeDetails.phoneNumber,
+        fromDate: fromDate,
+        toDate: toDate,
+        projectId: project?._id,
+      });
+      toast.success('Meeting created successfully');
+    } catch (error) {
+      console.error('🚀 error:', error);
+      toast.error('Failed to create meeting');
+    }
+  };
+
   const handleSubmit = async ({ onOpenChange, event }) => {
     event.preventDefault();
 
@@ -243,7 +268,12 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
       return;
     } else {
       // If validation passes, close the dialog
-      onOpenChange(false);
+      try {
+        await createMeeting();
+        onOpenChange(false);
+      } catch (error) {
+        console.error('🚀 error:', error);
+      }
     }
   };
 
