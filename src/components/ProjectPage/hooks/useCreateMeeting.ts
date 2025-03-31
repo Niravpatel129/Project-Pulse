@@ -1,6 +1,6 @@
 import { useProject } from '@/contexts/ProjectContext';
 import { addMinutes } from 'date-fns';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type TeamMember = {
   _id: string;
@@ -26,7 +26,7 @@ export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMee
   const [meetingStartTime, setMeetingStartTime] = useState('');
   const [selectedEndTime, setSelectedEndTime] = useState('');
   const [isAllDay, setIsAllDay] = useState(false);
-  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date } | undefined>({
     from: selectedDate,
     to: selectedDate,
   });
@@ -50,54 +50,60 @@ export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMee
 
   // Initialize meetingTypeDetails when meetingType changes
   useEffect(() => {
-    const newDetails =
-      {
-        video: { videoPlatform: 'google-meet', customLocation: '' },
-        phone: { phoneNumber: '' },
-        'in-person': { customLocation: '' },
-        other: { customLocation: '' },
-      }[meetingType] || {};
-
-    setMeetingTypeDetails(newDetails);
+    switch (meetingType) {
+      case 'video':
+        setMeetingTypeDetails({
+          videoPlatform: 'google-meet',
+          customLocation: '',
+        });
+        break;
+      case 'phone':
+        setMeetingTypeDetails({
+          phoneNumber: '',
+        });
+        break;
+      case 'in-person':
+      case 'other':
+        setMeetingTypeDetails({
+          customLocation: '',
+        });
+        break;
+      default:
+        setMeetingTypeDetails({});
+    }
   }, [meetingType]);
 
-  const handleAddParticipant = useCallback((participantId: string) => {
-    setSelectedTeamMembers((prev) => {
-      return prev.includes(participantId) ? prev : [...prev, participantId];
-    });
-  }, []);
+  const handleAddParticipant = (participantId: string) => {
+    if (!selectedTeamMembers.includes(participantId)) {
+      setSelectedTeamMembers([...selectedTeamMembers, participantId]);
+    }
+  };
 
-  const handleRemoveParticipant = useCallback((participantId: string) => {
-    setSelectedTeamMembers((prev) => {
-      return prev.filter((id) => {
+  const handleRemoveParticipant = (participantId: string) => {
+    setSelectedTeamMembers(
+      selectedTeamMembers.filter((id) => {
         return id !== participantId;
-      });
-    });
-  }, []);
+      }),
+    );
+  };
 
-  const handleAddManualEmail = useCallback(() => {
+  const handleAddManualEmail = () => {
     if (manualEmail && !selectedTeamMembers.includes(manualEmail)) {
-      setSelectedTeamMembers((prev) => {
-        return [...prev, manualEmail];
-      });
+      setSelectedTeamMembers([...selectedTeamMembers, manualEmail]);
       setManualEmail('');
       setShowManualEmailInput(false);
     }
-  }, [manualEmail, selectedTeamMembers]);
+  };
 
-  const filteredParticipants = useMemo(() => {
-    if (!project?.participants || !searchQuery) return project?.participants || [];
-
+  const filteredParticipants = project?.participants.filter((participant) => {
     const searchLower = searchQuery.toLowerCase();
-    return project.participants.filter((participant) => {
-      return (
-        participant.name.toLowerCase().includes(searchLower) ||
-        participant.email?.toLowerCase().includes(searchLower)
-      );
-    });
-  }, [project?.participants, searchQuery]);
+    return (
+      participant.name.toLowerCase().includes(searchLower) ||
+      participant.email?.toLowerCase().includes(searchLower)
+    );
+  });
 
-  const handleNext = useCallback(() => {
+  const handleNext = () => {
     if (step === 1 && !meetingTitle) return;
     if (step === 2 && (!meetingStartTime || !selectedEndTime)) return;
     if (step === 3 && selectedTeamMembers.length === 0) return;
@@ -105,62 +111,53 @@ export function useCreateMeeting({ selectedDate, onCreateMeeting }: UseCreateMee
     setStep((prev) => {
       return Math.min(prev + 1, 3);
     });
-  }, [step, meetingTitle, meetingStartTime, selectedEndTime, selectedTeamMembers.length]);
+  };
 
-  const handleBack = useCallback(() => {
+  const handleBack = () => {
     setStep((prev) => {
       return Math.max(prev - 1, 1);
     });
-  }, []);
+  };
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      await onCreateMeeting(e);
-    },
-    [onCreateMeeting],
-  );
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await onCreateMeeting(e);
+  };
 
-  const handleDateSelect = useCallback(
-    (date: Date | undefined, isEndDate: boolean = false) => {
-      if (!date) return;
-
-      setDateRange((prev) => {
-        if (isEndDate) {
-          return { ...prev, to: date };
-        }
-        return { from: date, to: prev.to };
-      });
-
+  const handleDateSelect = (date: Date | undefined, isEndDate: boolean = false) => {
+    if (date) {
+      if (isEndDate) {
+        setDateRange((prev) => {
+          return { ...prev!, to: date };
+        });
+      } else {
+        setDateRange((prev) => {
+          return { from: date, to: prev?.to || date };
+        });
+      }
       if (!isAllDay) {
         setMeetingStartTime('');
         setSelectedEndTime('');
       }
-    },
-    [isAllDay],
-  );
+    }
+  };
 
-  const handleStartTimeSelect = useCallback(
-    (time: string) => {
-      setMeetingStartTime(time);
+  const handleStartTimeSelect = (time: string) => {
+    setMeetingStartTime(time);
+    const [hours, minutes] = time.split(':').map(Number);
+    const startDate = new Date(dateRange?.from || selectedDate);
+    startDate.setHours(hours, minutes, 0, 0);
 
-      const [hours, minutes] = time.split(':').map(Number);
-      const startDate = new Date(dateRange.from);
-      startDate.setHours(hours, minutes, 0, 0);
-
-      const duration = parseInt(meetingDuration) || 30;
-      const endDate = addMinutes(startDate, duration);
-
-      setSelectedEndTime(
-        endDate.toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-        }),
-      );
-    },
-    [dateRange.from, meetingDuration],
-  );
+    const duration = parseInt(meetingDuration) || 30;
+    const endDate = addMinutes(startDate, duration);
+    setSelectedEndTime(
+      endDate.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }),
+    );
+  };
 
   return {
     step,

@@ -295,9 +295,9 @@ export default function CreateMeetingDialog({
                 <Label>Participants</Label>
                 <div className='space-y-4'>
                   {/* Selected Participants */}
-                  <div className='min-h-[40px]'>
+                  <div className='min-h-[40px] transition-all duration-300'>
                     {selectedTeamMembers.length > 0 ? (
-                      <div className='flex flex-wrap gap-1.5 p-2 border rounded-md bg-muted/30 transition-colors duration-200'>
+                      <div className='flex flex-wrap gap-1.5 p-2 border rounded-md bg-muted/30 transition-all duration-300 animate-in fade-in-0'>
                         {selectedTeamMembers.map((participantId) => {
                           const participant = project?.participants.find((p) => {
                             return p._id === participantId;
@@ -307,14 +307,14 @@ export default function CreateMeetingDialog({
                               <Badge
                                 key={participantId}
                                 variant='secondary'
-                                className='flex items-center gap-1 px-2 py-0.5 text-xs transition-all duration-200 hover:bg-muted/50'
+                                className='flex items-center gap-1 px-2 py-0.5 text-xs transition-all duration-300 hover:bg-muted/50 animate-in slide-in-from-left-2'
                               >
                                 <span className='font-medium'>{participantId}</span>
                                 <div
                                   onClick={() => {
                                     return handleRemoveParticipant(participantId);
                                   }}
-                                  className='ml-0.5 hover:text-destructive transition-colors duration-200 cursor-pointer'
+                                  className='ml-0.5 hover:text-destructive transition-all duration-300 cursor-pointer hover:scale-110'
                                 >
                                   <X className='h-3 w-3' />
                                 </div>
@@ -326,9 +326,9 @@ export default function CreateMeetingDialog({
                             <Badge
                               key={participantId}
                               variant='secondary'
-                              className='flex items-center gap-1 px-2 py-0.5 text-xs transition-all duration-200 hover:bg-muted/50'
+                              className='flex items-center gap-1 px-2 py-0.5 text-xs transition-all duration-300 hover:bg-muted/50 animate-in slide-in-from-left-2'
                             >
-                              <Avatar className='h-4 w-4 transition-transform duration-200 hover:scale-110'>
+                              <Avatar className='h-4 w-4 transition-transform duration-300 hover:scale-110'>
                                 <AvatarImage src={participant.avatar} />
                                 <AvatarFallback>
                                   {participant.name
@@ -344,7 +344,7 @@ export default function CreateMeetingDialog({
                                 onClick={() => {
                                   return handleRemoveParticipant(participantId);
                                 }}
-                                className='ml-0.5 hover:text-destructive transition-colors duration-200 cursor-pointer'
+                                className='ml-0.5 hover:text-destructive transition-all duration-300 cursor-pointer hover:scale-110'
                               >
                                 <X className='h-3 w-3' />
                               </div>
@@ -353,7 +353,7 @@ export default function CreateMeetingDialog({
                         })}
                       </div>
                     ) : (
-                      <div className='flex items-center justify-center h-[40px] border rounded-md bg-muted/50 transition-colors duration-200'>
+                      <div className='flex items-center justify-center h-[40px] border rounded-md bg-muted/50 transition-all duration-300 animate-in fade-in-0'>
                         <p className='text-sm text-muted-foreground'>No participants added yet</p>
                       </div>
                     )}
