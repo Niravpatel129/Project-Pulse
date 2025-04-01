@@ -1,3 +1,4 @@
+import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -18,6 +19,7 @@ export type IntegrationStatus = {
 
 export function useGoogleIntegration() {
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
+  const { connectGoogleCalendar } = useGoogleCalendar();
 
   // Check integration status
   const { data: googleStatus } = useQuery({
@@ -45,15 +47,8 @@ export function useGoogleIntegration() {
           return { success: true, platform };
         }
 
-        // If not connected or expired, initiate the Google OAuth flow
-        const response = await newRequest.post('/calendar/google/connect');
-        // Redirect to Google OAuth URL if provided in response
-        if (response.data.authUrl) {
-          window.location.href = response.data.authUrl;
-          return { success: false, platform };
-        }
-
-        return { success: true, platform };
+        await connectGoogleCalendar();
+        return { success: false, platform };
       } catch (error) {
         throw error;
       } finally {

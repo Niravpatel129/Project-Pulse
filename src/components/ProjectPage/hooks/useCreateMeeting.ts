@@ -270,7 +270,7 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
       try {
         const duration = parseInt(selectedEndTime) - parseInt(meetingStartTime);
 
-        if (duration < 0) {
+        if (duration <= 0) {
           toast.error('Meeting duration cannot be negative');
           return;
         }
