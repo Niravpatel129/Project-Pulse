@@ -23,6 +23,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProject } from '@/contexts/ProjectContext';
 import { useProjectSchedule } from '@/hooks/useProjectSchedule';
 import { format, parseISO } from 'date-fns';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   CalendarIcon,
   Clock,
@@ -401,200 +402,224 @@ export default function ProjectSchedule() {
               </div>
             ) : filteredMeetings().length > 0 ? (
               <div className='space-y-4'>
-                {filteredMeetings().map((meeting, index) => {
-                  return (
-                    <Card key={index} className='overflow-hidden'>
-                      <div className='flex flex-col sm:flex-row'>
-                        <div className='flex w-full flex-col justify-between p-4 sm:w-2/3'>
-                          <div>
-                            <div className='flex flex-wrap items-center gap-2'>
-                              <h3 className='font-semibold'>{meeting.title}</h3>
-                              <Badge variant='outline' className={getStatusColor(meeting.status)}>
-                                {meeting.status.charAt(0).toUpperCase() + meeting.status.slice(1)}
-                              </Badge>
-                            </div>
-                            <div className='mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-600'>
-                              <div className='flex items-center'>
-                                <Clock className='mr-1 h-4 w-4' />
-                                <span>Duration: {meeting.meetingDuration} minutes</span>
-                              </div>
-                              <div className='flex items-center'>
-                                <CalendarIcon className='mr-1 h-4 w-4' />
-                                <span>
-                                  Requested:{' '}
-                                  {format(parseISO(meeting.createdAt), 'MMM d, yyyy h:mm a')}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className='mt-4 flex flex-wrap items-center gap-2 md:gap-4'>
-                            {meeting.status === 'scheduled' && (
-                              <>
-                                <div className='flex items-center'>
-                                  <CalendarIcon className='mr-1 h-4 w-4 text-gray-500' />
-                                  <span className='text-sm'>
-                                    {format(parseISO(meeting.date), 'MMM d, yyyy')}
-                                  </span>
-                                </div>
-                                <div className='flex items-center'>
-                                  <Clock className='mr-1 h-4 w-4 text-gray-500' />
-                                  <span className='text-sm'>
-                                    {meeting.startTime} - {meeting.endTime}
-                                  </span>
-                                </div>
-                              </>
-                            )}
-                            {meeting.type && (
-                              <div className='text-sm text-gray-600 capitalize'>
-                                {meeting.type.charAt(0).toUpperCase() + meeting.type.slice(1)}
-                                {meeting.typeDetails && (
-                                  <>
-                                    {meeting.type === 'video' && meeting.typeDetails.videoType && (
-                                      <span className='ml-1'>
-                                        •{' '}
-                                        {!meeting.typeDetails.videoLink ? (
-                                          meeting.typeDetails.videoType.replace('-', ' ')
-                                        ) : (
-                                          <Link
-                                            href={meeting.typeDetails.videoLink}
-                                            target='_blank'
-                                            rel='noopener noreferrer'
-                                            className='ml-1 hover:text-gray-900 inline-flex items-center gap-1'
-                                          >
-                                            <span className='inline-flex items-center gap-1'>
-                                              {meeting.typeDetails.videoType.replace('-', ' ')}{' '}
-                                              <Link2Icon className='w-4 h-4' />
-                                            </span>
-                                          </Link>
-                                        )}
-                                        {/* {meeting.typeDetails.videoLink && (
-                                          <Link
-                                            href={meeting.typeDetails.videoLink}
-                                            target='_blank'
-                                            className='text-gray-500'
-                                          >
-                                            <ExternalLink className='w-4 h-4' />
-                                          </Link>
-                                        )} */}
-                                      </span>
-                                    )}
-                                    {meeting.type === 'phone' &&
-                                      meeting.typeDetails.phoneNumber && (
-                                        <span className='ml-1'>
-                                          • {meeting.typeDetails.phoneNumber}
-                                        </span>
-                                      )}
-                                    {meeting.type === 'inperson' &&
-                                      meeting.typeDetails.location && (
-                                        <span className='ml-1'>
-                                          • {meeting.typeDetails.location}
-                                        </span>
-                                      )}
-                                    {meeting.type === 'other' &&
-                                      meeting.typeDetails.otherDetails && (
-                                        <span className='ml-1'>
-                                          • {meeting.typeDetails.otherDetails}
-                                        </span>
-                                      )}
-                                  </>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className='border-t bg-gray-50 p-4 sm:w-1/3 sm:border-l sm:border-t-0 relative'>
-                          <div className='flex justify-between items-start '>
-                            <h4 className='text-sm font-medium text-gray-600'>Request Details</h4>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant='ghost'
-                                  size='sm'
-                                  className='absolute right-1 top-1 h-8 w-8 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                                >
-                                  <MoreHorizontal className='h-4 w-4' />
-                                  <span className='sr-only'>Meeting options</span>
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align='end'>
-                                {meeting.status === 'pending' ? (
-                                  <>
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        return handleResendRequest(meeting._id);
-                                      }}
-                                    >
-                                      <Mail className='w-4 h-4' /> Resend Request
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        if (navigator.clipboard) {
-                                          navigator.clipboard.writeText(
-                                            `${process.env.NEXT_PUBLIC_APP_URL}/portal/booking/${meeting._id}`,
-                                          );
-                                          toast.success('Share link copied to clipboard');
-                                        } else {
-                                          toast.error('Clipboard not supported');
-                                        }
-                                      }}
-                                    >
-                                      <Copy className='w-4 h-4' /> Copy Share Link
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        setMeetingToDelete(meeting._id);
-                                        setShowDeleteDialog(true);
-                                        handleDeleteRequest(meeting._id);
-                                      }}
-                                      className='text-red-600'
-                                    >
-                                      <Trash className='w-4 h-4' /> Delete Request
-                                    </DropdownMenuItem>
-                                  </>
-                                ) : (
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setMeetingToDelete(meeting._id);
-                                      setShowDeleteDialog(true);
-                                      handleDeleteMeeting(meeting._id);
-                                    }}
-                                    className='text-red-600'
+                <AnimatePresence mode='popLayout'>
+                  {filteredMeetings().map((meeting, index) => {
+                    return (
+                      <motion.div
+                        key={meeting._id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{
+                          type: 'spring',
+                          stiffness: 300,
+                          damping: 25,
+                        }}
+                      >
+                        <Card className='overflow-hidden'>
+                          <div className='flex flex-col sm:flex-row'>
+                            <div className='flex w-full flex-col justify-between p-4 sm:w-2/3'>
+                              <div>
+                                <div className='flex flex-wrap items-center gap-2'>
+                                  <h3 className='font-semibold'>{meeting.title}</h3>
+                                  <Badge
+                                    variant='outline'
+                                    className={getStatusColor(meeting.status)}
                                   >
-                                    <Trash className='w-4 h-4' /> Delete Meeting
-                                  </DropdownMenuItem>
+                                    {meeting.status.charAt(0).toUpperCase() +
+                                      meeting.status.slice(1)}
+                                  </Badge>
+                                </div>
+                                <div className='mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-600'>
+                                  <div className='flex items-center'>
+                                    <Clock className='mr-1 h-4 w-4' />
+                                    <span>Duration: {meeting.meetingDuration} minutes</span>
+                                  </div>
+                                  <div className='flex items-center'>
+                                    <CalendarIcon className='mr-1 h-4 w-4' />
+                                    <span>
+                                      Requested:{' '}
+                                      {format(parseISO(meeting.createdAt), 'MMM d, yyyy h:mm a')}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className='mt-4 flex flex-wrap items-center gap-2 md:gap-4'>
+                                {meeting.status === 'scheduled' && (
+                                  <>
+                                    <div className='flex items-center'>
+                                      <CalendarIcon className='mr-1 h-4 w-4 text-gray-500' />
+                                      <span className='text-sm'>
+                                        {format(parseISO(meeting.date), 'MMM d, yyyy')}
+                                      </span>
+                                    </div>
+                                    <div className='flex items-center'>
+                                      <Clock className='mr-1 h-4 w-4 text-gray-500' />
+                                      <span className='text-sm'>
+                                        {meeting.startTime} - {meeting.endTime}
+                                      </span>
+                                    </div>
+                                  </>
                                 )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
+                                {meeting.type && (
+                                  <div className='text-sm text-gray-600 capitalize'>
+                                    {meeting.type.charAt(0).toUpperCase() + meeting.type.slice(1)}
+                                    {meeting.typeDetails && (
+                                      <>
+                                        {meeting.type === 'video' &&
+                                          meeting.typeDetails.videoType && (
+                                            <span className='ml-1'>
+                                              •{' '}
+                                              {!meeting.typeDetails.videoLink ? (
+                                                meeting.typeDetails.videoType.replace('-', ' ')
+                                              ) : (
+                                                <Link
+                                                  href={meeting.typeDetails.videoLink}
+                                                  target='_blank'
+                                                  rel='noopener noreferrer'
+                                                  className='ml-1 hover:text-gray-900 inline-flex items-center gap-1'
+                                                >
+                                                  <span className='inline-flex items-center gap-1'>
+                                                    {meeting.typeDetails.videoType.replace(
+                                                      '-',
+                                                      ' ',
+                                                    )}{' '}
+                                                    <Link2Icon className='w-4 h-4' />
+                                                  </span>
+                                                </Link>
+                                              )}
+                                              {/* {meeting.typeDetails.videoLink && (
+                                              <Link
+                                                href={meeting.typeDetails.videoLink}
+                                                target='_blank'
+                                                className='text-gray-500'
+                                              >
+                                                <ExternalLink className='w-4 h-4' />
+                                              </Link>
+                                            )} */}
+                                            </span>
+                                          )}
+                                        {meeting.type === 'phone' &&
+                                          meeting.typeDetails.phoneNumber && (
+                                            <span className='ml-1'>
+                                              • {meeting.typeDetails.phoneNumber}
+                                            </span>
+                                          )}
+                                        {meeting.type === 'inperson' &&
+                                          meeting.typeDetails.location && (
+                                            <span className='ml-1'>
+                                              • {meeting.typeDetails.location}
+                                            </span>
+                                          )}
+                                        {meeting.type === 'other' &&
+                                          meeting.typeDetails.otherDetails && (
+                                            <span className='ml-1'>
+                                              • {meeting.typeDetails.otherDetails}
+                                            </span>
+                                          )}
+                                      </>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
 
-                          <div className='mt-2'>
-                            <div className='text-sm font-medium'>Requested By</div>
-                            <div className='text-sm text-gray-600 break-words'>
-                              {meeting.createdBy.name} ({meeting.createdBy.email})
+                            <div className='border-t bg-gray-50 p-4 sm:w-1/3 sm:border-l sm:border-t-0 relative'>
+                              <div className='flex justify-between items-start '>
+                                <h4 className='text-sm font-medium text-gray-600'>
+                                  Request Details
+                                </h4>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant='ghost'
+                                      size='sm'
+                                      className='absolute right-1 top-1 h-8 w-8 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                                    >
+                                      <MoreHorizontal className='h-4 w-4' />
+                                      <span className='sr-only'>Meeting options</span>
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align='end'>
+                                    {meeting.status === 'pending' ? (
+                                      <>
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            return handleResendRequest(meeting._id);
+                                          }}
+                                        >
+                                          <Mail className='w-4 h-4' /> Resend Request
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            if (navigator.clipboard) {
+                                              navigator.clipboard.writeText(
+                                                `${process.env.NEXT_PUBLIC_APP_URL}/portal/booking/${meeting._id}`,
+                                              );
+                                              toast.success('Share link copied to clipboard');
+                                            } else {
+                                              toast.error('Clipboard not supported');
+                                            }
+                                          }}
+                                        >
+                                          <Copy className='w-4 h-4' /> Copy Share Link
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            setMeetingToDelete(meeting._id);
+                                            setShowDeleteDialog(true);
+                                            handleDeleteRequest(meeting._id);
+                                          }}
+                                          className='text-red-600'
+                                        >
+                                          <Trash className='w-4 h-4' /> Delete Request
+                                        </DropdownMenuItem>
+                                      </>
+                                    ) : (
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          setMeetingToDelete(meeting._id);
+                                          setShowDeleteDialog(true);
+                                          handleDeleteMeeting(meeting._id);
+                                        }}
+                                        className='text-red-600'
+                                      >
+                                        <Trash className='w-4 h-4' /> Delete Meeting
+                                      </DropdownMenuItem>
+                                    )}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+
+                              <div className='mt-2'>
+                                <div className='text-sm font-medium'>Requested By</div>
+                                <div className='text-sm text-gray-600 break-words'>
+                                  {meeting.createdBy.name} ({meeting.createdBy.email})
+                                </div>
+                              </div>
+
+                              <div className='mt-2'>
+                                <div className='text-sm font-medium'>Status</div>
+                                <div className='text-sm text-gray-600'>
+                                  {meeting.status === 'pending' ? (
+                                    <span className='text-yellow-600'>Awaiting Response</span>
+                                  ) : meeting.status === 'scheduled' ? (
+                                    <span className='text-green-600'>Confirmed</span>
+                                  ) : meeting.status === 'cancelled' ? (
+                                    <span className='text-red-600'>Cancelled</span>
+                                  ) : (
+                                    <span className='text-gray-600'>Completed</span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
-
-                          <div className='mt-2'>
-                            <div className='text-sm font-medium'>Status</div>
-                            <div className='text-sm text-gray-600'>
-                              {meeting.status === 'pending' ? (
-                                <span className='text-yellow-600'>Awaiting Response</span>
-                              ) : meeting.status === 'scheduled' ? (
-                                <span className='text-green-600'>Confirmed</span>
-                              ) : meeting.status === 'cancelled' ? (
-                                <span className='text-red-600'>Cancelled</span>
-                              ) : (
-                                <span className='text-gray-600'>Completed</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  );
-                })}
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
               </div>
             ) : (
               <div className='flex h-40 items-center justify-center rounded-lg border border-dashed'>
