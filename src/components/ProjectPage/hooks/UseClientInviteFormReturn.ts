@@ -1,4 +1,5 @@
 import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { addHours, isBefore, isValid } from 'date-fns';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
@@ -49,6 +50,7 @@ function useClientInviteForm({
   projectId,
   onSuccess,
 }: UseClientInviteFormProps): UseClientInviteFormReturn {
+  const queryClient = useQueryClient();
   const [startDateRange, setStartDateRange] = useState<Date | undefined>(new Date());
   const [endDateRange, setEndDateRange] = useState<Date | undefined>(addHours(new Date(), 30 * 24));
   const [primaryClientEmail, setPrimaryClientEmail] = useState<string | undefined>();
@@ -60,7 +62,6 @@ function useClientInviteForm({
   const [customLocation, setCustomLocation] = useState<string>('');
   const [meetingDuration, setMeetingDuration] = useState<string>('60');
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const { isConnecting, googleStatus, handleConnect } = useGoogleIntegration();
 
@@ -130,15 +131,8 @@ function useClientInviteForm({
     setErrors({});
   }, []);
 
-  const handleSendInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
+  const sendInviteMutation = useMutation({
+    mutationFn: async () => {
       const response = await newRequest.post('/schedule/invite', {
         primaryClientEmail,
         meetingPurpose,
@@ -159,15 +153,29 @@ function useClientInviteForm({
           customLocation,
         }),
       });
-
+      return response.data;
+    },
+    onSuccess: () => {
       toast.success(`Invitation sent to ${primaryClientEmail}`);
       onSuccess();
       resetForm();
-    } catch (error) {
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['schedule', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+    },
+    onError: () => {
       toast.error('Failed to send invitation');
-    } finally {
-      setIsSubmitting(false);
+    },
+  });
+
+  const handleSendInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
     }
+
+    sendInviteMutation.mutate();
   };
 
   const handleMeetingLocationChange = (value: string) => {
@@ -191,7 +199,7 @@ function useClientInviteForm({
     setMeetingLocation(value);
   };
 
-  const isFormDisabled = isSubmitting || isConnecting;
+  const isFormDisabled = sendInviteMutation.isPending || isConnecting;
 
   return {
     // Form state
@@ -218,7 +226,7 @@ function useClientInviteForm({
     errors,
     setErrors,
     isFormDisabled,
-    isSubmitting,
+    isSubmitting: sendInviteMutation.isPending,
     // Actions
     handleSendInvite,
     handleConnect,

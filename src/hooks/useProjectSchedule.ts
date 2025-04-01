@@ -126,7 +126,7 @@ export function useProjectSchedule() {
   };
 
   const { data: meetings = [], isLoading } = useQuery({
-    queryKey: ['meetings', project?._id],
+    queryKey: ['schedule', project?._id],
     queryFn: async () => {
       if (!project?._id) return [];
       const response = await newRequest.get(`/schedule?projectId=${project._id}`);
@@ -157,7 +157,7 @@ export function useProjectSchedule() {
 
   const deleteMeetingMutation = useMutation({
     mutationFn: (meetingId: string) => {
-      return newRequest.delete(`/schedule/${meetingId}`);
+      return newRequest.delete(`/schedule/booking/${meetingId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedule', project?._id] });

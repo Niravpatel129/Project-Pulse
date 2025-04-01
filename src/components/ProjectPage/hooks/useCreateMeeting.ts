@@ -1,6 +1,6 @@
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useGoogleIntegration } from './useGoogleIntegration';
@@ -23,6 +23,7 @@ interface UseCreateMeetingProps {
 
 export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
   const { project } = useProject();
+  const queryClient = useQueryClient();
   const { isConnecting, googleStatus, handleConnect } = useGoogleIntegration();
   const [step, setStep] = useState(1);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -180,6 +181,8 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
     },
     onSuccess: () => {
       toast.success('Meeting created successfully');
+
+      queryClient.invalidateQueries({ queryKey: ['schedule', project?._id] });
     },
     onError: (error) => {
       console.error('🚀 error:', error);
