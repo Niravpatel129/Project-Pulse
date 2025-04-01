@@ -157,10 +157,10 @@ export function useProjectSchedule() {
 
   const deleteMeetingMutation = useMutation({
     mutationFn: (meetingId: string) => {
-      return newRequest.delete(`/meetings/${meetingId}`);
+      return newRequest.delete(`/schedule/${meetingId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['meetings', project?._id] });
+      queryClient.invalidateQueries({ queryKey: ['schedule', project?._id] });
       setMeetingToDelete(null);
       setShowDeleteDialog(false);
       toast.success('Meeting deleted successfully');
