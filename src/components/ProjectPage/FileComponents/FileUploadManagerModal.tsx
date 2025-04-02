@@ -169,8 +169,8 @@ export default function FileUploadManagerModal({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side='bottom' className='h-screen w-screen overflow-y-auto'>
-        <CardHeader className='flex flex-row items-center justify-between'>
+      <SheetContent side='bottom' className='h-[90vh] max-h-[90vh] w-screen flex flex-col'>
+        <CardHeader className='flex flex-row items-center justify-between shrink-0'>
           <CardTitle className='text-lg font-bold'>My Storage</CardTitle>
           <Button size='sm' className='gap-1 mb-2' variant='outline'>
             <Upload className='h-4 w-4' />
@@ -179,10 +179,10 @@ export default function FileUploadManagerModal({
         </CardHeader>
 
         {/* Recent Files */}
-        <CardHeader className='pb-2'>
+        <CardHeader className='pb-2 shrink-0'>
           <div className='text-sm font-medium'>Recent Files</div>
         </CardHeader>
-        <CardContent>
+        <CardContent className='shrink-0'>
           <div className='grid grid-cols-2 sm:grid-cols-4 gap-4'>
             {recentFiles.map((file) => {
               return (
@@ -204,12 +204,12 @@ export default function FileUploadManagerModal({
         </CardContent>
 
         {/* All Files */}
-        <CardHeader className='pb-2'>
+        <CardHeader className='pb-2 shrink-0'>
           <CardTitle className='text-sm font-medium'>All Files</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className='flex-1 overflow-auto'>
           <Table>
-            <TableHeader>
+            <TableHeader className='sticky top-0 bg-background z-10'>
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead className='hidden sm:table-cell'>Type</TableHead>
