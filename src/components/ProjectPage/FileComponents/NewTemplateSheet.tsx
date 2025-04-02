@@ -635,7 +635,7 @@ Option 3`}
 
         {/* Create New Table Modal */}
         <Dialog open={isCreateTableModalOpen} onOpenChange={setIsCreateTableModalOpen}>
-          <DialogContent className='sm:max-w-[600px] p-1'>
+          <DialogContent className='sm:max-w-[600px]'>
             <DialogHeader>
               <DialogTitle>Create New Table</DialogTitle>
               <DialogDescription>
