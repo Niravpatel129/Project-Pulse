@@ -56,19 +56,13 @@ export type FileStatus =
 // Field types for templates
 export type FieldType =
   | 'text'
-  | 'textarea'
+  | 'longtext'
   | 'number'
-  | 'file'
-  | 'enum'
-  | 'select'
-  | 'link'
   | 'date'
-  | 'price'
-  | 'dimension'
-  | 'color'
-  | 'email'
-  | 'array'
-  | 'inventory_item';
+  | 'select'
+  | 'multiselect'
+  | 'file'
+  | 'relation';
 
 // ===================
 // Template Models
@@ -78,24 +72,12 @@ export interface TemplateField {
   id: string;
   name: string;
   type: FieldType;
-  required?: boolean;
-  options?: (string | { value: string; label: string })[]; // For enum/select type fields
-  defaultValue?: string | number;
+  required: boolean;
   description?: string;
-  fileTypes?: string[]; // For file type fields (e.g., ['png', 'svg'])
-  acceptTypes?: string[]; // For file type fields (e.g., ['image/png', 'image/jpeg'])
-  unit?: string; // For dimension or measurement fields (e.g., 'inches', 'cm')
-  formula?: string; // For calculated fields (e.g., price calculation formula)
-  inventoryCategory?: string; // For inventory_item fields, can filter by category
-  placeholder?: string; // Placeholder text for input fields
-  validations?: Record<
-    string,
-    string | number | boolean | RegExp | ((value: unknown) => boolean) | TemplateField[]
-  >; // Validation rules
-  multiple?: boolean; // Whether multiple values can be selected/entered
-  linkedToInventory?: boolean; // Whether field is linked to inventory items
-  minItems?: number; // Minimum number of items for array fields
-  maxItems?: number; // Maximum number of items for array fields
+  options?: string[];
+  multiple?: boolean;
+  relationType?: 'inventory' | 'customers' | 'orders';
+  lookupFields?: string[]; // Fields to show from the linked record
 }
 
 export interface Template extends BaseModel {
