@@ -1,3 +1,15 @@
+import {
+  CalendarIcon,
+  CheckSquare2Icon,
+  CheckSquareIcon,
+  ChevronDownIcon,
+  FileTextIcon,
+  HashIcon,
+  LinkIcon,
+  MailIcon,
+  PhoneIcon,
+  TextQuoteIcon,
+} from 'lucide-react';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -22,20 +34,7 @@ type Record = {
 type PropertyType = {
   id: string;
   name: string;
-  icon: string;
-};
-
-const propertyTypeIcons = {
-  text: 'Type',
-  number: 'Hash',
-  date: 'Calendar',
-  checkbox: 'CheckSquare',
-  select: 'ChevronDown',
-  multiselect: 'CheckSquare2',
-  url: 'Link',
-  email: 'Mail',
-  phone: 'Phone',
-  file: 'FileText',
+  icon: React.ElementType;
 };
 
 const iconOptions = [
@@ -54,16 +53,16 @@ const iconOptions = [
 ];
 
 const defaultPropertyTypes: PropertyType[] = [
-  { id: 'text', name: 'Text', icon: 'Type' },
-  { id: 'number', name: 'Number', icon: 'Hash' },
-  { id: 'date', name: 'Date', icon: 'Calendar' },
-  { id: 'checkbox', name: 'Checkbox', icon: 'CheckSquare' },
-  { id: 'select', name: 'Select', icon: 'ChevronDown' },
-  { id: 'multiselect', name: 'Multi-select', icon: 'CheckSquare2' },
-  { id: 'url', name: 'URL', icon: 'Link' },
-  { id: 'email', name: 'Email', icon: 'Mail' },
-  { id: 'phone', name: 'Phone', icon: 'Phone' },
-  { id: 'file', name: 'File', icon: 'FileText' },
+  { id: 'text', name: 'Text', icon: TextQuoteIcon },
+  { id: 'number', name: 'Number', icon: HashIcon },
+  { id: 'date', name: 'Date', icon: CalendarIcon },
+  { id: 'checkbox', name: 'Checkbox', icon: CheckSquareIcon },
+  { id: 'select', name: 'Select', icon: ChevronDownIcon },
+  { id: 'multiselect', name: 'Multi-select', icon: CheckSquare2Icon },
+  { id: 'url', name: 'URL', icon: LinkIcon },
+  { id: 'email', name: 'Email', icon: MailIcon },
+  { id: 'phone', name: 'Phone', icon: PhoneIcon },
+  { id: 'file', name: 'File', icon: FileTextIcon },
 ];
 
 export function useDatabase() {
