@@ -1,7 +1,7 @@
 'use client';
 
 import { formatDistanceToNow } from 'date-fns';
-import { Download, MoreVertical, Trash2, Upload } from 'lucide-react';
+import { Download, File, MoreVertical, Trash2, Upload } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -183,24 +183,34 @@ export default function FileUploadManagerModal({
           <div className='text-sm font-medium'>Recent Files</div>
         </CardHeader>
         <CardContent className='shrink-0'>
-          <div className='grid grid-cols-2 sm:grid-cols-4 gap-4'>
-            {recentFiles.map((file) => {
-              return (
-                <div
-                  key={file.id}
-                  className='flex flex-col items-center p-3 border rounded-lg hover:bg-muted/50 transition-colors'
-                >
-                  <FileTypeIcon type={file.type} />
-                  <span className='mt-2 text-xs font-medium text-muted-foreground'>
-                    {file.type}
-                  </span>
-                  <span className='mt-1 text-sm font-medium text-center truncate w-full'>
-                    {file.name}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+          {recentFiles.length > 0 ? (
+            <div className='grid grid-cols-2 sm:grid-cols-4 gap-4'>
+              {recentFiles.map((file) => {
+                return (
+                  <div
+                    key={file.id}
+                    className='flex flex-col items-center p-3 border rounded-lg hover:bg-muted/50 transition-colors'
+                  >
+                    <FileTypeIcon type={file.type} />
+                    <span className='mt-2 text-xs font-medium text-muted-foreground'>
+                      {file.type}
+                    </span>
+                    <span className='mt-1 text-sm font-medium text-center truncate w-full'>
+                      {file.name}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className='flex flex-col items-center justify-center p-8 text-center border rounded-lg bg-muted/10'>
+              <File className='h-10 w-10 text-muted-foreground mb-2' />
+              <h3 className='text-sm font-medium'>No recent files</h3>
+              <p className='text-xs text-muted-foreground mt-1'>
+                Upload files to see them appear here
+              </p>
+            </div>
+          )}
         </CardContent>
 
         {/* All Files */}
@@ -208,59 +218,75 @@ export default function FileUploadManagerModal({
           <CardTitle className='text-sm font-medium'>All Files</CardTitle>
         </CardHeader>
         <CardContent className='flex-1 overflow-auto'>
-          <Table>
-            <TableHeader className='sticky top-0 bg-background z-10'>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead className='hidden sm:table-cell'>Type</TableHead>
-                <TableHead className='hidden md:table-cell'>Size</TableHead>
-                <TableHead className='hidden md:table-cell'>Modified</TableHead>
-                <TableHead className='w-[50px]'></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {files.map((file) => {
-                return (
-                  <TableRow key={file.id}>
-                    <TableCell>
-                      <div className='flex items-center gap-2'>
-                        <span className='font-medium'>{file.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className='hidden sm:table-cell'>{file.type}</TableCell>
-                    <TableCell className='hidden md:table-cell'>{file.size}</TableCell>
-                    <TableCell className='hidden md:table-cell'>
-                      {formatDistanceToNow(file.modified, { addSuffix: true })}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant='ghost' size='icon'>
-                            <MoreVertical className='h-4 w-4' />
-                            <span className='sr-only'>Actions</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align='end'>
-                          <DropdownMenuItem>
-                            <Download className='h-4 w-4 mr-2' />
-                            Download
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              return handleRemoveFile(file.id);
-                            }}
-                          >
-                            <Trash2 className='h-4 w-4 mr-2' />
-                            Remove
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+          {files.length > 0 ? (
+            <Table>
+              <TableHeader className='sticky top-0 bg-background z-10'>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead className='hidden sm:table-cell'>Type</TableHead>
+                  <TableHead className='hidden md:table-cell'>Size</TableHead>
+                  <TableHead className='hidden md:table-cell'>Modified</TableHead>
+                  <TableHead className='w-[50px]'></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {files.map((file) => {
+                  return (
+                    <TableRow key={file.id}>
+                      <TableCell>
+                        <div className='flex items-center gap-2'>
+                          <span className='font-medium'>{file.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className='hidden sm:table-cell'>{file.type}</TableCell>
+                      <TableCell className='hidden md:table-cell'>{file.size}</TableCell>
+                      <TableCell className='hidden md:table-cell'>
+                        {formatDistanceToNow(file.modified, { addSuffix: true })}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant='ghost' size='icon'>
+                              <MoreVertical className='h-4 w-4' />
+                              <span className='sr-only'>Actions</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align='end'>
+                            <DropdownMenuItem>
+                              <Download className='h-4 w-4 mr-2' />
+                              Download
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                return handleRemoveFile(file.id);
+                              }}
+                            >
+                              <Trash2 className='h-4 w-4 mr-2' />
+                              Remove
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className='flex flex-col items-center justify-center h-full p-8 text-center'>
+              <div className='bg-muted/20 p-4 rounded-full mb-4'>
+                <File className='h-12 w-12 text-muted-foreground' />
+              </div>
+              <h3 className='text-lg font-medium mb-2'>No files uploaded yet</h3>
+              <p className='text-sm text-muted-foreground mb-4 max-w-md'>
+                Upload files to your storage to manage and organize them in one place.
+              </p>
+              <Button className='gap-2'>
+                <Upload className='h-4 w-4' />
+                Upload Your First File
+              </Button>
+            </div>
+          )}
         </CardContent>
       </SheetContent>
     </Sheet>
