@@ -13,7 +13,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ChevronRight, FilePlus, FileText, PaintRoller, Plus } from 'lucide-react';
+import { useState } from 'react';
 import { FcDocument } from 'react-icons/fc';
+import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 
 const fakeModules = [
   { name: 'Project Brief', description: 'Project overview document' },
@@ -24,6 +26,14 @@ const fakeModules = [
 ];
 
 export default function NewProjectModules() {
+  const [isFileUploadModalOpen, setIsFileUploadModalOpen] = useState(false);
+
+  const handleFileUpload = (files: File[]) => {
+    // Handle the uploaded files here
+    console.log('Uploaded files:', files);
+    // You can add your file upload logic here
+  };
+
   const renderProjectItem = (item) => {
     return (
       <div className='border rounded-xl w-full aspect-square max-w-[220px] hover:bg-muted/50 cursor-pointer flex flex-col'>
@@ -69,7 +79,12 @@ export default function NewProjectModules() {
           {/* Left side - Main menu */}
           <div className=''>
             <div className='p-2'>
-              <DropdownMenuItem className='flex items-center gap-2 px-2 py-2 cursor-pointer'>
+              <DropdownMenuItem
+                className='flex items-center gap-2 px-2 py-2 cursor-pointer'
+                onClick={() => {
+                  return setIsFileUploadModalOpen(true);
+                }}
+              >
                 <FilePlus className='h-4 w-4' />
                 <span className='text-sm'>Add File</span>
               </DropdownMenuItem>
@@ -125,7 +140,11 @@ export default function NewProjectModules() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className='min-w-[230px]' align='end'>
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                return setIsFileUploadModalOpen(true);
+              }}
+            >
               <>
                 <FileText className='h-4 w-4' />
                 <div className='text-sm text-popover-foreground'>New File</div>
@@ -184,6 +203,13 @@ export default function NewProjectModules() {
           <div className='flex justify-center'>{renderAddNewModule()}</div>
         </div>
       </div>
+
+      <FileUploadManagerModal
+        isOpen={isFileUploadModalOpen}
+        onClose={() => {
+          return setIsFileUploadModalOpen(false);
+        }}
+      />
     </div>
   );
 }
