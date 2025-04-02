@@ -226,7 +226,7 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
           <SheetTitle>Create New Database</SheetTitle>
         </SheetHeader>
 
-        <div className='mt-6 space-y-6 overflow-scroll h-full pb-36 scrollbar-hide'>
+        <div className='mt-6 space-y-6 overflow-scroll h-full pb-36 scrollbar-hide p-1'>
           {/* Basic Info */}
           <div className='space-y-4'>
             <div className='space-y-2'>
@@ -635,7 +635,7 @@ Option 3`}
 
         {/* Create New Table Modal */}
         <Dialog open={isCreateTableModalOpen} onOpenChange={setIsCreateTableModalOpen}>
-          <DialogContent className='sm:max-w-[600px]'>
+          <DialogContent className='sm:max-w-[600px] p-1'>
             <DialogHeader>
               <DialogTitle>Create New Table</DialogTitle>
               <DialogDescription>
