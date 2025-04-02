@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: {
     template: '%s | Pulse',
-    default: 'Pulse - Modern Project Management Platform',
+    default: 'Pulse',
   },
   description:
     'Streamline your workflows, manage projects, and collaborate with your team effectively using Pulse.',
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'Pulse - Modern Project Management Platform',
+    title: 'Pulse',
     description:
       'Streamline your workflows, manage projects, and collaborate with your team effectively.',
     url: 'https://pulse-app.com',
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Pulse - Modern Project Management Platform',
+    title: 'Pulse',
     description:
       'Streamline your workflows, manage projects, and collaborate with your team effectively.',
     creator: '@PulseApp',
