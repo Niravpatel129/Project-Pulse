@@ -1,12 +1,12 @@
 'use client';
 
-import type React from 'react';
-
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
   Table,
   TableBody,
@@ -17,253 +17,136 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
+import { useDatabase } from '@/hooks/useDatabase';
 import {
+  AlertCircle,
+  ArrowLeft,
+  Bell,
   BoxIcon,
+  Calendar,
   ChartLine,
+  CheckSquare,
+  CheckSquare2,
   ChevronDown,
   ChevronUp,
+  Clock,
+  FileText,
+  Hash,
+  Heart,
   HouseIcon,
+  Link,
+  Mail,
+  MapPin,
   PanelsTopLeftIcon,
+  Phone,
   Plus,
+  Save,
+  SearchIcon,
   SettingsIcon,
+  Star,
+  Tag,
+  Type,
   UsersRoundIcon,
   X,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
 
-type Column = {
-  id: string;
-  name: string;
-  sortable: boolean;
+const iconMap = {
+  AlertCircle: AlertCircle,
+  Bell: Bell,
+  Calendar: Calendar,
+  Clock: Clock,
+  FileText: FileText,
+  Heart: Heart,
+  Mail: Mail,
+  MapPin: MapPin,
+  Star: Star,
+  Tag: Tag,
+  Box: BoxIcon,
+  Users: UsersRoundIcon,
+  Type: Type,
+  Hash: Hash,
+  CheckSquare: CheckSquare,
+  CheckSquare2: CheckSquare2,
+  Link: Link,
+  Phone: Phone,
 };
 
-type Tag = {
-  id: string;
-  name: string;
+const propertyTypeColors = {
+  text: 'text-blue-500',
+  number: 'text-green-500',
+  date: 'text-purple-500',
+  checkbox: 'text-yellow-500',
+  select: 'text-red-500',
+  multiselect: 'text-indigo-500',
+  url: 'text-teal-500',
+  email: 'text-pink-500',
+  phone: 'text-orange-500',
+  file: 'text-gray-500',
 };
 
-type Record = {
-  id: number;
-  [key: string]: any;
-  selected: boolean;
+const propertyTypeIcons = {
+  text: 'Aa',
+  number: '123',
+  date: '📅',
+  checkbox: '✓',
+  select: '▼',
+  multiselect: '⊠',
+  url: '🔗',
+  email: '✉️',
+  phone: '📞',
+  file: '📎',
 };
 
 export default function DataTable() {
-  const [columns, setColumns] = useState<Column[]>([
-    { id: 'name', name: 'Name', sortable: true },
-    { id: 'leads', name: 'Leads', sortable: true },
-    { id: 'tags', name: 'Tags', sortable: true },
-  ]);
+  const {
+    columns,
+    records,
+    sortConfig,
+    editingCell,
+    newTagText,
+    allSelected,
+    isAddColumnSheetOpen,
+    propertySearchQuery,
+    inputRef,
+    selectedPropertyType,
+    newPropertyName,
+    newPropertyPrefix,
+    isIconPickerOpen,
+    propertyTypes,
+    iconOptions,
+    requestSort,
+    addNewRow,
+    addNewColumn,
+    saveNewColumn,
+    backToPropertySelection,
+    selectIcon,
+    startEditing,
+    stopEditing,
+    handleCellChange,
+    handleCellKeyDown,
+    addTag,
+    removeTag,
+    handleTagInputKeyDown,
+    toggleSelectAll,
+    toggleSelectRecord,
+    setNewTagText,
+    setIsAddColumnSheetOpen,
+    setPropertySearchQuery,
+    setNewPropertyName,
+    setNewPropertyPrefix,
+    setIsIconPickerOpen,
+  } = useDatabase();
 
-  const [records, setRecords] = useState<Record[]>([
-    {
-      id: 1,
-      name: 'Database Entry',
-      leads: '',
-      tags: [{ id: '1', name: 'sfs' }],
-      selected: false,
-    },
-  ]);
-
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(
-    null,
-  );
-  const [editingCell, setEditingCell] = useState<{
-    recordId: number | null;
-    columnId: string | null;
-  }>({
-    recordId: null,
-    columnId: null,
-  });
-  const [newTagText, setNewTagText] = useState<{ [key: number]: string }>({});
-  const [allSelected, setAllSelected] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // Focus input when editing starts
-  useEffect(() => {
-    if (editingCell.recordId !== null && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [editingCell]);
-
-  // Handle sorting
-  const requestSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
+  const renderPropertyTypeIcon = (type: string) => {
+    const Icon = iconMap[type as keyof typeof iconMap];
+    return Icon ? (
+      <Icon className={propertyTypeColors[type as keyof typeof propertyTypeColors]} size={16} />
+    ) : null;
   };
 
-  const getSortedRecords = () => {
-    if (!sortConfig) return records;
-
-    return [...records].sort((a, b) => {
-      if (sortConfig.key === 'tags') {
-        // Sort by first tag name or empty string if no tags
-        const aValue = a.tags.length > 0 ? a.tags[0].name : '';
-        const bValue = b.tags.length > 0 ? b.tags[0].name : '';
-
-        if (aValue < bValue) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
-        }
-        return 0;
-      } else {
-        // Sort by other column values
-        const aValue = a[sortConfig.key] || '';
-        const bValue = b[sortConfig.key] || '';
-
-        if (aValue < bValue) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
-        }
-        return 0;
-      }
-    });
-  };
-
-  // Add new row
-  const addNewRow = () => {
-    const newId =
-      records.length > 0
-        ? Math.max(
-            ...records.map((r) => {
-              return r.id;
-            }),
-          ) + 1
-        : 1;
-    const newRecord: Record = {
-      id: newId,
-      selected: false,
-    };
-
-    // Initialize all column values
-    columns.forEach((col) => {
-      if (col.id === 'tags') {
-        newRecord[col.id] = [];
-      } else {
-        newRecord[col.id] = '';
-      }
-    });
-
-    setRecords([...records, newRecord]);
-  };
-
-  // Add new column
-  const addNewColumn = () => {
-    const newId = `column${columns.length + 1}`;
-    setColumns([...columns, { id: newId, name: `Column ${columns.length + 1}`, sortable: true }]);
-
-    // Add the new column to all existing records
-    setRecords(
-      records.map((record) => {
-        return {
-          ...record,
-          [newId]: '',
-        };
-      }),
-    );
-  };
-
-  // Handle cell editing
-  const startEditing = (recordId: number, columnId: string) => {
-    if (columnId !== 'tags') {
-      setEditingCell({ recordId, columnId });
-    }
-  };
-
-  const stopEditing = () => {
-    setEditingCell({ recordId: null, columnId: null });
-  };
-
-  const handleCellChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    recordId: number,
-    columnId: string,
-  ) => {
-    setRecords(
-      records.map((record) => {
-        return record.id === recordId ? { ...record, [columnId]: e.target.value } : record;
-      }),
-    );
-  };
-
-  const handleCellKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === 'Escape') {
-      stopEditing();
-    }
-  };
-
-  // Handle tag management
-  const addTag = (recordId: number) => {
-    if (newTagText[recordId] && newTagText[recordId].trim() !== '') {
-      setRecords(
-        records.map((record) => {
-          if (record.id === recordId) {
-            const newTagId = `tag-${Date.now()}`;
-            return {
-              ...record,
-              tags: [...record.tags, { id: newTagId, name: newTagText[recordId].trim() }],
-            };
-          }
-          return record;
-        }),
-      );
-      setNewTagText({ ...newTagText, [recordId]: '' });
-    }
-  };
-
-  const removeTag = (recordId: number, tagId: string) => {
-    setRecords(
-      records.map((record) => {
-        if (record.id === recordId) {
-          return {
-            ...record,
-            tags: record.tags.filter((tag) => {
-              return tag.id !== tagId;
-            }),
-          };
-        }
-        return record;
-      }),
-    );
-  };
-
-  const handleTagInputKeyDown = (e: React.KeyboardEvent, recordId: number) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addTag(recordId);
-    }
-  };
-
-  // Handle selection
-  const toggleSelectAll = () => {
-    const newSelected = !allSelected;
-    setAllSelected(newSelected);
-    setRecords(
-      records.map((record) => {
-        return { ...record, selected: newSelected };
-      }),
-    );
-  };
-
-  const toggleSelectRecord = (recordId: number) => {
-    const updatedRecords = records.map((record) => {
-      return record.id === recordId ? { ...record, selected: !record.selected } : record;
-    });
-    setRecords(updatedRecords);
-
-    // Update allSelected state based on whether all records are selected
-    setAllSelected(
-      updatedRecords.every((r) => {
-        return r.selected;
-      }),
-    );
+  const renderIcon = (iconName: string) => {
+    const Icon = iconMap[iconName as keyof typeof iconMap];
+    return Icon ? <Icon size={16} /> : null;
   };
 
   return (
@@ -385,14 +268,21 @@ export default function DataTable() {
             })}
 
             <TableHead className='w-10'>
-              <Button variant='ghost' size='icon' className='h-8 w-8' onClick={addNewColumn}>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='h-8 w-8'
+                onClick={() => {
+                  return setIsAddColumnSheetOpen(true);
+                }}
+              >
                 <Plus className='h-4 w-4' />
               </Button>
             </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {getSortedRecords().map((record) => {
+          {records.map((record) => {
             return (
               <TableRow key={record.id} className='hover:bg-gray-50'>
                 <TableCell className='border-r p-0 text-center'>
@@ -410,14 +300,14 @@ export default function DataTable() {
                   return (
                     <TableCell
                       key={`${record.id}-${column.id}`}
-                      className='border-r'
+                      className='border-r min-h-[40px] h-[40px]'
                       onClick={() => {
                         return startEditing(record.id, column.id);
                       }}
                     >
                       {column.id === 'tags' ? (
                         <div className='flex flex-wrap gap-1 items-center'>
-                          {record.tags.map((tag: Tag) => {
+                          {record.tags.map((tag) => {
                             return (
                               <Badge
                                 key={tag.id}
@@ -470,25 +360,29 @@ export default function DataTable() {
                             </Button>
                           </div>
                         </div>
-                      ) : editingCell.recordId === record.id &&
-                        editingCell.columnId === column.id ? (
-                        <Input
-                          ref={inputRef}
-                          value={record[column.id] || ''}
-                          onChange={(e) => {
-                            return handleCellChange(e, record.id, column.id);
-                          }}
-                          onBlur={stopEditing}
-                          onKeyDown={handleCellKeyDown}
-                          className='h-8'
-                          autoFocus
-                        />
-                      ) : column.id === 'name' ? (
-                        <>
-                          {record.id}. {record[column.id]}
-                        </>
                       ) : (
-                        record[column.id]
+                        <div className='min-h-[28px] h-[28px] flex items-center w-full'>
+                          {editingCell.recordId === record.id &&
+                          editingCell.columnId === column.id ? (
+                            <Input
+                              ref={inputRef}
+                              value={record[column.id] || ''}
+                              onChange={(e) => {
+                                return handleCellChange(e, record.id, column.id);
+                              }}
+                              onBlur={stopEditing}
+                              onKeyDown={handleCellKeyDown}
+                              className='h-8 m-0 p-2 w-full'
+                              autoFocus
+                            />
+                          ) : column.id === 'name' ? (
+                            <>
+                              {record.id}. {record[column.id]}
+                            </>
+                          ) : (
+                            record[column.id]
+                          )}
+                        </div>
                       )}
                     </TableCell>
                   );
@@ -508,6 +402,150 @@ export default function DataTable() {
           {records.length} record{records.length !== 1 ? 's' : ''}
         </div>
       </div>
+
+      <Sheet open={isAddColumnSheetOpen} onOpenChange={setIsAddColumnSheetOpen}>
+        <SheetContent side='right' className='w-[400px] sm:w-[540px]'>
+          <SheetHeader>
+            <SheetTitle>{selectedPropertyType ? 'Configure property' : 'New property'}</SheetTitle>
+          </SheetHeader>
+          <div className='py-4'>
+            {selectedPropertyType ? (
+              <div className='space-y-4'>
+                <Button
+                  variant='outline'
+                  className='flex items-center gap-2 mb-4'
+                  onClick={backToPropertySelection}
+                >
+                  <ArrowLeft className='h-4 w-4' />
+                  Back to property types
+                </Button>
+
+                <div className='space-y-2'>
+                  <label className='text-sm font-medium'>Property Type</label>
+                  <Button
+                    variant='outline'
+                    className='w-full justify-start h-12 px-4'
+                    onClick={backToPropertySelection}
+                  >
+                    <div className='flex items-center'>
+                      <div className='mr-3 flex h-8 w-8 items-center justify-center rounded-md border'>
+                        {renderPropertyTypeIcon(selectedPropertyType.id)}
+                      </div>
+                      <div>{selectedPropertyType.name}</div>
+                    </div>
+                  </Button>
+                </div>
+
+                <div className='space-y-2'>
+                  <label htmlFor='property-name' className='text-sm font-medium'>
+                    Property Name
+                  </label>
+                  <Input
+                    id='property-name'
+                    value={newPropertyName}
+                    onChange={(e) => {
+                      return setNewPropertyName(e.target.value);
+                    }}
+                    placeholder='Enter property name'
+                  />
+                </div>
+
+                <div className='space-y-2'>
+                  <label htmlFor='property-prefix' className='text-sm font-medium'>
+                    Icon Prefix
+                  </label>
+                  <div className='flex items-center gap-2'>
+                    <Input
+                      id='property-prefix'
+                      value={newPropertyPrefix}
+                      onChange={(e) => {
+                        return setNewPropertyPrefix(e.target.value);
+                      }}
+                      placeholder='Select an icon'
+                      className='flex-1'
+                    />
+                    <Popover open={isIconPickerOpen} onOpenChange={setIsIconPickerOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant='outline'
+                          className='h-10 w-10 p-0 flex items-center justify-center'
+                        >
+                          {newPropertyPrefix ? (
+                            <Tag size={16} />
+                          ) : (
+                            <Plus size={16} className='text-muted-foreground' />
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className='w-64 p-2'>
+                        <div className='space-y-2'>
+                          <h4 className='font-medium text-sm'>Select an icon</h4>
+                          <div className='grid grid-cols-4 gap-2'>
+                            {iconOptions.map((option, index) => {
+                              return (
+                                <Button
+                                  key={index}
+                                  variant='outline'
+                                  className='h-10 w-full p-0 flex items-center justify-center'
+                                  onClick={() => {
+                                    return selectIcon(option.icon);
+                                  }}
+                                >
+                                  {renderIcon(option.icon)}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+
+                <Button className='w-full mt-4' onClick={saveNewColumn}>
+                  <Save className='mr-2 h-4 w-4' />
+                  Save Property
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className='relative mb-4'>
+                  <SearchIcon className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
+                  <Input
+                    placeholder='Search property types...'
+                    className='pl-8'
+                    value={propertySearchQuery}
+                    onChange={(e) => {
+                      return setPropertySearchQuery(e.target.value);
+                    }}
+                  />
+                </div>
+                <div className='grid grid-cols-1 gap-2'>
+                  {propertyTypes.map((type) => {
+                    return (
+                      <Button
+                        key={type.id}
+                        variant='outline'
+                        className='justify-start h-12 px-4'
+                        onClick={() => {
+                          return addNewColumn(type);
+                        }}
+                      >
+                        <div className='flex items-center'>
+                          <div className='mr-3 flex h-8 w-8 items-center justify-center rounded-md border'>
+                            {renderPropertyTypeIcon(type.id)}
+                          </div>
+                          <div>{type.name}</div>
+                        </div>
+                      </Button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </BlockWrapper>
   );
 }
