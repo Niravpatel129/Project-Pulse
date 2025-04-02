@@ -19,7 +19,6 @@ export const mockTemplates: Template[] = [
         type: 'text',
         required: true,
         description: 'The title to display on the banner',
-        placeholder: 'Enter banner title',
         defaultValue: '',
         validations: {
           minLength: 3,
@@ -29,10 +28,9 @@ export const mockTemplates: Template[] = [
       {
         id: 'f2',
         name: 'Description',
-        type: 'textarea',
+        type: 'text',
         required: false,
         description: 'Additional text to display on the banner',
-        placeholder: 'Enter description (optional)',
         defaultValue: '',
         validations: {
           maxLength: 200,
@@ -44,11 +42,7 @@ export const mockTemplates: Template[] = [
         type: 'select',
         required: true,
         description: 'Select the physical banner type',
-        options: [
-          { value: 'inventory-1', label: 'Standard Roll-up (85x200cm)' },
-          { value: 'inventory-2', label: 'Premium Roll-up (100x200cm)' },
-          { value: 'inventory-3', label: 'Desktop Banner (A3)' },
-        ],
+        options: ['inventory-1', 'inventory-2', 'inventory-3'],
         defaultValue: 'inventory-1',
         linkedToInventory: true,
       },
@@ -58,7 +52,6 @@ export const mockTemplates: Template[] = [
         type: 'file',
         required: true,
         description: 'Upload your logo (PNG or JPG, min 300dpi)',
-        acceptTypes: ['image/png', 'image/jpeg'],
         validations: {
           maxSize: 5000000, // 5MB
         },
@@ -66,7 +59,7 @@ export const mockTemplates: Template[] = [
       {
         id: 'f5',
         name: 'Background Color',
-        type: 'color',
+        type: 'text',
         required: false,
         description: 'Choose a background color',
         defaultValue: '#ffffff',
@@ -88,7 +81,6 @@ export const mockTemplates: Template[] = [
         type: 'text',
         required: true,
         description: 'Name to display on the business card',
-        placeholder: 'Enter full name',
         defaultValue: '',
         validations: {
           minLength: 2,
@@ -101,7 +93,6 @@ export const mockTemplates: Template[] = [
         type: 'text',
         required: true,
         description: 'Your job title',
-        placeholder: 'Enter job title',
         defaultValue: '',
         validations: {
           maxLength: 40,
@@ -113,7 +104,6 @@ export const mockTemplates: Template[] = [
         type: 'text',
         required: true,
         description: 'Contact phone number',
-        placeholder: 'Enter phone number',
         defaultValue: '',
         validations: {
           pattern: '^[+]?[(]?[0-9]{3}[)]?[-\\s.]?[0-9]{3}[-\\s.]?[0-9]{4,6}$',
@@ -122,10 +112,9 @@ export const mockTemplates: Template[] = [
       {
         id: 'f4',
         name: 'Email',
-        type: 'email',
+        type: 'text',
         required: true,
         description: 'Contact email address',
-        placeholder: 'Enter email address',
         defaultValue: '',
         validations: {
           pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
@@ -137,11 +126,7 @@ export const mockTemplates: Template[] = [
         type: 'select',
         required: true,
         description: 'Select the business card type',
-        options: [
-          { value: 'inventory-4', label: 'Standard (90x50mm)' },
-          { value: 'inventory-5', label: 'Premium (90x50mm, rounded corners)' },
-          { value: 'inventory-6', label: 'Folded (90x50mm folded)' },
-        ],
+        options: ['inventory-4', 'inventory-5', 'inventory-6'],
         defaultValue: 'inventory-4',
         linkedToInventory: true,
       },
@@ -162,7 +147,6 @@ export const mockTemplates: Template[] = [
         type: 'text',
         required: true,
         description: 'Main title of the brochure',
-        placeholder: 'Enter brochure title',
         defaultValue: '',
         validations: {
           minLength: 3,
@@ -172,12 +156,12 @@ export const mockTemplates: Template[] = [
       {
         id: 'f2',
         name: 'Content Sections',
-        type: 'array',
+        type: 'relation',
         required: true,
         description: 'Content sections for the brochure',
-        minItems: 1,
-        maxItems: 5,
         validations: {
+          minItems: 1,
+          maxItems: 5,
           itemFields: [
             {
               id: 'section_title',
@@ -191,7 +175,7 @@ export const mockTemplates: Template[] = [
             {
               id: 'section_content',
               name: 'Section Content',
-              type: 'textarea',
+              type: 'text',
               required: true,
               validations: {
                 maxLength: 300,
@@ -205,9 +189,7 @@ export const mockTemplates: Template[] = [
         name: 'Images',
         type: 'file',
         required: true,
-        multiple: true,
         description: 'Upload images for the brochure (PNG or JPG, min 300dpi)',
-        acceptTypes: ['image/png', 'image/jpeg'],
         validations: {
           maxSize: 10000000, // 10MB
           minItems: 1,
@@ -220,11 +202,7 @@ export const mockTemplates: Template[] = [
         type: 'select',
         required: true,
         description: 'Select the brochure paper type',
-        options: [
-          { value: 'inventory-7', label: 'Standard Gloss (150gsm)' },
-          { value: 'inventory-8', label: 'Premium Matte (170gsm)' },
-          { value: 'inventory-9', label: 'Recycled (120gsm)' },
-        ],
+        options: ['inventory-7', 'inventory-8', 'inventory-9'],
         defaultValue: 'inventory-7',
         linkedToInventory: true,
       },

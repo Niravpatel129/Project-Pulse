@@ -78,6 +78,17 @@ export interface TemplateField {
   multiple?: boolean;
   relationType?: 'inventory' | 'customers' | 'orders';
   lookupFields?: string[]; // Fields to show from the linked record
+  defaultValue?: string | number;
+  validations?: {
+    minLength?: number;
+    maxLength?: number;
+    pattern?: string;
+    maxSize?: number;
+    minItems?: number;
+    maxItems?: number;
+    itemFields?: TemplateField[];
+  };
+  linkedToInventory?: boolean;
 }
 
 export interface Template extends BaseModel {
