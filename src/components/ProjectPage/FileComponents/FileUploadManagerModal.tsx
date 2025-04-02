@@ -2,7 +2,6 @@
 
 import { formatDistanceToNow } from 'date-fns';
 import { Download, File, Info, MoreVertical, Trash2, Upload } from 'lucide-react';
-import { useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import {
   Table,
   TableBody,
@@ -21,9 +20,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { toast } from '@/components/ui/use-toast';
+import { useFileUploadManager } from './useFileUploadManager';
 
 function FileTypeIcon({ type }: { type: string }) {
+  // Extract file extension from content type or name
+  const fileType =
+    type.split('/')[1]?.toUpperCase() || type.split('.').pop()?.toUpperCase() || 'UNKNOWN';
+
   const color =
     {
       PDF: 'bg-red-500',
@@ -32,13 +35,15 @@ function FileTypeIcon({ type }: { type: string }) {
       IMG: 'bg-purple-500',
       PNG: 'bg-purple-500',
       JPG: 'bg-purple-500',
+      JPEG: 'bg-purple-500',
       ZIP: 'bg-yellow-500',
       MP3: 'bg-green-500',
       MP4: 'bg-pink-500',
       XLSX: 'bg-emerald-500',
       PPTX: 'bg-orange-500',
       CODE: 'bg-slate-500',
-    }[type] || 'bg-gray-500';
+      ICO: 'bg-purple-500',
+    }[fileType] || 'bg-gray-500';
 
   return (
     <div className='relative'>
@@ -52,12 +57,20 @@ function FileTypeIcon({ type }: { type: string }) {
         <div
           className={`${color} text-white text-[10px] font-bold py-1 px-1 rounded-sm mt-auto text-center`}
         >
-          .{type}
+          .{fileType}
         </div>
       </div>
       <div className='absolute top-0 right-0 w-3 h-3 bg-slate-200 rounded-bl-md'></div>
     </div>
   );
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 export default function FileUploadManagerModal({
@@ -67,114 +80,22 @@ export default function FileUploadManagerModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const [files, setFiles] = useState<
-    Array<{
-      id: number;
-      name: string;
-      type: string;
-      size: string;
-      modified: Date;
-    }>
-  >([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<{
-    id: number;
-    name: string;
-    type: string;
-    size: string;
-    modified: Date;
-  } | null>(null);
-  const [showDetails, setShowDetails] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleRemoveFile = (id: number) => {
-    setFiles(
-      files.filter((file) => {
-        return file.id !== id;
-      }),
-    );
-
-    if (selectedFile && selectedFile.id === id) {
-      setSelectedFile(null);
-      setShowDetails(false);
-    }
-  };
-
-  const handleViewDetails = (file: {
-    id: number;
-    name: string;
-    type: string;
-    size: string;
-    modified: Date;
-  }) => {
-    setSelectedFile(file);
-    setShowDetails(true);
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-
-    setIsUploading(true);
-
-    // Simulate upload delay
-    setTimeout(() => {
-      const uploadedFiles = Array.from(e.target.files || []).map((file, index) => {
-        // Get file extension
-        const fileExtension = file.name.split('.').pop()?.toUpperCase() || '';
-
-        // Format file size
-        const sizeInBytes = file.size;
-        let formattedSize = '';
-        if (sizeInBytes < 1024 * 1024) {
-          formattedSize = `${(sizeInBytes / 1024).toFixed(1)} KB`;
-        } else if (sizeInBytes < 1024 * 1024 * 1024) {
-          formattedSize = `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
-        } else {
-          formattedSize = `${(sizeInBytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-        }
-
-        return {
-          id:
-            Math.max(
-              ...files.map((f) => {
-                return f.id;
-              }),
-              0,
-            ) +
-            index +
-            1,
-          name: file.name,
-          type: fileExtension,
-          size: formattedSize,
-          modified: new Date(),
-        };
-      });
-
-      setFiles((prevFiles) => {
-        return [...uploadedFiles, ...prevFiles];
-      });
-      setIsUploading(false);
-
-      toast({
-        title: 'Files uploaded successfully',
-        description: `${uploadedFiles.length} file${
-          uploadedFiles.length > 1 ? 's' : ''
-        } added to your storage.`,
-      });
-
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }, 1500);
-  };
-
-  const triggerFileUpload = () => {
-    fileInputRef.current?.click();
-  };
+  const {
+    files,
+    isUploading,
+    selectedFile,
+    showDetails,
+    fileInputRef,
+    handleRemoveFile,
+    handleViewDetails,
+    handleFileUpload,
+    triggerFileUpload,
+    setShowDetails,
+  } = useFileUploadManager();
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetTitle>My Storage</SheetTitle>
       <SheetContent
         side='bottom'
         className='h-[90vh] max-h-[90vh] w-screen flex flex-col rounded-t-2xl'
@@ -223,18 +144,18 @@ export default function FileUploadManagerModal({
                       {files.slice(0, 4).map((file) => {
                         return (
                           <div
-                            key={file.id}
+                            key={file._id}
                             className='flex flex-col items-center p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer'
                             onClick={() => {
                               return handleViewDetails(file);
                             }}
                           >
-                            <FileTypeIcon type={file.type} />
+                            <FileTypeIcon type={file.contentType} />
                             <span className='mt-2 text-xs font-medium text-muted-foreground'>
-                              {file.type}
+                              {file.contentType.split('/')[1]?.toUpperCase() || 'UNKNOWN'}
                             </span>
                             <span className='mt-1 text-sm font-medium text-center truncate w-full'>
-                              {file.name}
+                              {file.originalName}
                             </span>
                           </div>
                         );
@@ -272,16 +193,20 @@ export default function FileUploadManagerModal({
                   <TableBody>
                     {files.map((file) => {
                       return (
-                        <TableRow key={file.id}>
+                        <TableRow key={file._id}>
                           <TableCell>
                             <div className='flex items-center gap-2'>
-                              <span className='font-medium'>{file.name}</span>
+                              <span className='font-medium'>{file.originalName}</span>
                             </div>
                           </TableCell>
-                          <TableCell className='hidden sm:table-cell'>{file.type}</TableCell>
-                          <TableCell className='hidden md:table-cell'>{file.size}</TableCell>
+                          <TableCell className='hidden sm:table-cell'>
+                            {file.contentType.split('/')[1]?.toUpperCase() || 'UNKNOWN'}
+                          </TableCell>
                           <TableCell className='hidden md:table-cell'>
-                            {formatDistanceToNow(file.modified, { addSuffix: true })}
+                            {formatFileSize(file.size)}
+                          </TableCell>
+                          <TableCell className='hidden md:table-cell'>
+                            {formatDistanceToNow(new Date(file.updatedAt), { addSuffix: true })}
                           </TableCell>
                           <TableCell>
                             <DropdownMenu>
@@ -306,7 +231,7 @@ export default function FileUploadManagerModal({
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => {
-                                    return handleRemoveFile(file.id);
+                                    return handleRemoveFile(file._id);
                                   }}
                                 >
                                   <Trash2 className='h-4 w-4 mr-2' />
@@ -348,36 +273,56 @@ export default function FileUploadManagerModal({
               </CardHeader>
               <CardContent className='flex-1'>
                 <div className='flex flex-col items-center mb-6 pt-4'>
-                  <FileTypeIcon type={selectedFile.type} />
-                  <h3 className='mt-4 font-medium text-center break-all'>{selectedFile.name}</h3>
+                  <FileTypeIcon type={selectedFile.contentType} />
+                  <h3 className='mt-4 font-medium text-center break-all'>
+                    {selectedFile.originalName}
+                  </h3>
                 </div>
 
                 <div className='space-y-4'>
                   <div>
                     <h4 className='text-xs font-medium text-muted-foreground mb-1'>Type</h4>
-                    <p className='text-sm'>{selectedFile.type} file</p>
+                    <p className='text-sm'>{selectedFile.contentType}</p>
                   </div>
 
                   <div>
                     <h4 className='text-xs font-medium text-muted-foreground mb-1'>Size</h4>
-                    <p className='text-sm'>{selectedFile.size}</p>
+                    <p className='text-sm'>{formatFileSize(selectedFile.size)}</p>
                   </div>
 
                   <div>
                     <h4 className='text-xs font-medium text-muted-foreground mb-1'>Created</h4>
                     <p className='text-sm'>
-                      {formatDistanceToNow(selectedFile.modified, { addSuffix: true })}
+                      {formatDistanceToNow(new Date(selectedFile.createdAt), { addSuffix: true })}
                     </p>
                   </div>
 
                   <div>
+                    <h4 className='text-xs font-medium text-muted-foreground mb-1'>Modified</h4>
+                    <p className='text-sm'>
+                      {formatDistanceToNow(new Date(selectedFile.updatedAt), { addSuffix: true })}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className='text-xs font-medium text-muted-foreground mb-1'>Uploaded By</h4>
+                    <p className='text-sm'>{selectedFile.uploadedBy.name}</p>
+                  </div>
+
+                  <div>
                     <h4 className='text-xs font-medium text-muted-foreground mb-1'>Full Path</h4>
-                    <p className='text-sm break-all'>/storage/{selectedFile.name}</p>
+                    <p className='text-sm break-all'>{selectedFile.storagePath}</p>
                   </div>
                 </div>
 
                 <div className='mt-8 space-y-2'>
-                  <Button className='w-full gap-2' size='sm'>
+                  <Button
+                    className='w-full gap-2'
+                    size='sm'
+                    onClick={() => {
+                      return window.open(selectedFile.downloadURL, '_blank');
+                    }}
+                  >
                     <Download className='h-4 w-4' />
                     Download
                   </Button>
