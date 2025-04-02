@@ -1,3 +1,4 @@
+import { Template } from '@/api/models';
 import { Button } from '@/components/ui/button';
 import { CommandShortcut } from '@/components/ui/command';
 import {
@@ -16,8 +17,10 @@ import { useProjectModules } from '@/hooks/useProjectModules';
 import { formatDistanceToNow } from 'date-fns';
 import { FileText, PaintRoller, Plus } from 'lucide-react';
 import Image from 'next/image';
+import { useState } from 'react';
 import { FcDocument } from 'react-icons/fc';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
+import NewTemplateSheet from '../FileComponents/NewTemplateSheet';
 
 export default function NewProjectModules() {
   const {
@@ -27,6 +30,15 @@ export default function NewProjectModules() {
     handleAddFileToProject,
     modules,
   } = useProjectModules();
+
+  const [isNewTemplateSheetOpen, setIsNewTemplateSheetOpen] = useState(false);
+
+  const handleSaveTemplate = (
+    template: Omit<Template, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>,
+  ) => {
+    // TODO: Implement template saving logic
+    console.log('Saving template:', template);
+  };
 
   const renderDropdownMenu = () => {
     return (
@@ -69,7 +81,11 @@ export default function NewProjectModules() {
                   );
                 })}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    return setIsNewTemplateSheetOpen(true);
+                  }}
+                >
                   <Plus className='h-4 w-4' />
                   <div className='text-sm text-popover-foreground'>New Template</div>
                   <CommandShortcut className='ml-auto '>
@@ -164,6 +180,14 @@ export default function NewProjectModules() {
         handleAddFileToProject={(files) => {
           return handleAddFileToProject({ type: 'file', content: files });
         }}
+      />
+
+      <NewTemplateSheet
+        isOpen={isNewTemplateSheetOpen}
+        onClose={() => {
+          return setIsNewTemplateSheetOpen(false);
+        }}
+        onSave={handleSaveTemplate}
       />
     </div>
   );
