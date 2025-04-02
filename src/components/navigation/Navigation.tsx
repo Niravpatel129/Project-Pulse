@@ -112,8 +112,8 @@ export function Navigation() {
       icon: <CiUser className='h-5 w-5' />,
     },
     {
-      href: '/inventory',
-      label: 'Inventory',
+      href: '/database',
+      label: 'Database',
       icon: <CiBoxes className='h-5 w-5' />,
     },
     {
