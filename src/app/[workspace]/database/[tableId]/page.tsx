@@ -16,194 +16,13 @@ import {
 } from '@/components/ui/table';
 import { useDatabase } from '@/hooks/useDatabase';
 import { ArrowLeft, ChevronDown, ChevronUp, Plus, Save, Search, X } from 'lucide-react';
+import { useParams } from 'next/navigation';
 import React, { memo, useCallback } from 'react';
 
-// Memoized Table Header Component
-const TableHeaderMemo = memo(
-  ({
-    columns,
-    sortConfig,
-    onSort,
-    onAddColumn,
-    allSelected,
-    toggleSelectAll,
-  }: {
-    columns: any[];
-    sortConfig: any;
-    onSort: (id: string) => void;
-    onAddColumn: () => void;
-    allSelected: boolean;
-    toggleSelectAll: (checked: boolean) => void;
-  }) => {
-    return (
-      <TableHeader>
-        <TableRow className='bg-white hover:bg-white'>
-          <TableHead className='w-10 border-r'>
-            <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} />
-          </TableHead>
-          {columns.map((column) => {
-            return (
-              <TableHead key={column.id} className='border-r'>
-                <div className='flex items-center justify-between'>
-                  <span className='font-medium'>{column.name}</span>
-                  {column.sortable && (
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      className='h-8 w-8'
-                      onClick={() => {
-                        return onSort(column.id);
-                      }}
-                    >
-                      {sortConfig?.key === column.id ? (
-                        sortConfig.direction === 'asc' ? (
-                          <ChevronUp className='h-4 w-4 text-gray-500' />
-                        ) : (
-                          <ChevronDown className='h-4 w-4 text-gray-500' />
-                        )
-                      ) : (
-                        <ChevronDown className='h-4 w-4 text-gray-500' />
-                      )}
-                    </Button>
-                  )}
-                </div>
-              </TableHead>
-            );
-          })}
-          <TableHead className='w-10'>
-            <Button variant='ghost' size='icon' className='h-8 w-8' onClick={onAddColumn}>
-              <Plus className='h-4 w-4' />
-            </Button>
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-    );
-  },
-);
-TableHeaderMemo.displayName = 'TableHeaderMemo';
+export default function TablePage() {
+  const params = useParams();
+  const tableId = params.tableId as string;
 
-// Memoized Table Cell Component
-const TableCellMemo = memo(
-  ({
-    record,
-    column,
-    editingCell,
-    onEdit,
-    onCellChange,
-    onCellKeyDown,
-    stopEditing,
-    inputRef,
-    newTagText,
-    setNewTagText,
-    handleTagInputKeyDown,
-    removeTag,
-    addTag,
-  }: {
-    record: any;
-    column: any;
-    editingCell: any;
-    onEdit: () => void;
-    onCellChange: (
-      e: React.ChangeEvent<HTMLInputElement>,
-      recordId: number,
-      columnId: string,
-    ) => void;
-    onCellKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-    stopEditing: () => void;
-    inputRef: React.RefObject<HTMLInputElement>;
-    newTagText: Record<string, string>;
-    setNewTagText: (value: Record<string, string>) => void;
-    handleTagInputKeyDown: (e: React.KeyboardEvent<HTMLInputElement>, recordId: number) => void;
-    removeTag: (recordId: number, tagId: string) => void;
-    addTag: (recordId: number) => void;
-  }) => {
-    return (
-      <TableCell className='border-r min-h-[40px] h-[40px]' onClick={onEdit}>
-        {column.id === 'tags' ? (
-          <div className='flex flex-wrap gap-1 items-center'>
-            {record.tags.map((tag) => {
-              return (
-                <Badge
-                  key={tag.id}
-                  variant='outline'
-                  className='bg-amber-50 text-amber-700 hover:bg-amber-50 border-amber-200 flex items-center gap-1'
-                >
-                  {tag.name}
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='h-4 w-4 p-0 hover:bg-amber-100'
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeTag(record.id, tag.id);
-                    }}
-                  >
-                    <X className='h-3 w-3' />
-                  </Button>
-                </Badge>
-              );
-            })}
-            <div className='flex items-center'>
-              <Input
-                value={newTagText[record.id] || ''}
-                onChange={(e) => {
-                  setNewTagText({
-                    ...newTagText,
-                    [record.id]: e.target.value,
-                  });
-                }}
-                onKeyDown={(e) => {
-                  return handleTagInputKeyDown(e, record.id);
-                }}
-                className='h-6 w-20 min-w-20 text-xs'
-                placeholder='Add tag...'
-                onClick={(e) => {
-                  return e.stopPropagation();
-                }}
-              />
-              <Button
-                variant='ghost'
-                size='icon'
-                className='h-6 w-6 ml-1'
-                onClick={(e) => {
-                  e.stopPropagation();
-                  addTag(record.id);
-                }}
-              >
-                <Plus className='h-3 w-3' />
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className='min-h-[28px] h-[28px] flex items-center w-full'>
-            {editingCell.recordId === record.id && editingCell.columnId === column.id ? (
-              <Input
-                ref={inputRef}
-                value={record[column.id] || ''}
-                onChange={(e) => {
-                  return onCellChange(e, record.id, column.id);
-                }}
-                onBlur={stopEditing}
-                onKeyDown={onCellKeyDown}
-                className='h-8 m-0 p-2 w-full'
-                autoFocus
-              />
-            ) : column.id === 'name' ? (
-              <>
-                {record.id}. {record[column.id]}
-              </>
-            ) : (
-              record[column.id]
-            )}
-          </div>
-        )}
-      </TableCell>
-    );
-  },
-);
-TableCellMemo.displayName = 'TableCellMemo';
-
-export default function TableOne() {
   const {
     columns,
     records,
@@ -240,6 +59,191 @@ export default function TableOne() {
     setNewPropertyPrefix,
     getIconComponent,
   } = useDatabase();
+
+  // Memoized Table Header Component
+  const TableHeaderMemo = memo(
+    ({
+      columns,
+      sortConfig,
+      onSort,
+      onAddColumn,
+      allSelected,
+      toggleSelectAll,
+    }: {
+      columns: any[];
+      sortConfig: any;
+      onSort: (id: string) => void;
+      onAddColumn: () => void;
+      allSelected: boolean;
+      toggleSelectAll: (checked: boolean) => void;
+    }) => {
+      return (
+        <TableHeader>
+          <TableRow className='bg-white hover:bg-white'>
+            <TableHead className='w-10 border-r'>
+              <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} />
+            </TableHead>
+            {columns.map((column) => {
+              return (
+                <TableHead key={column.id} className='border-r'>
+                  <div className='flex items-center justify-between'>
+                    <span className='font-medium'>{column.name}</span>
+                    {column.sortable && (
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='h-8 w-8'
+                        onClick={() => {
+                          return onSort(column.id);
+                        }}
+                      >
+                        {sortConfig?.key === column.id ? (
+                          sortConfig.direction === 'asc' ? (
+                            <ChevronUp className='h-4 w-4 text-gray-500' />
+                          ) : (
+                            <ChevronDown className='h-4 w-4 text-gray-500' />
+                          )
+                        ) : (
+                          <ChevronDown className='h-4 w-4 text-gray-500' />
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </TableHead>
+              );
+            })}
+            <TableHead className='w-10'>
+              <Button variant='ghost' size='icon' className='h-8 w-8' onClick={onAddColumn}>
+                <Plus className='h-4 w-4' />
+              </Button>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+      );
+    },
+  );
+  TableHeaderMemo.displayName = 'TableHeaderMemo';
+
+  // Memoized Table Cell Component
+  const TableCellMemo = memo(
+    ({
+      record,
+      column,
+      editingCell,
+      onEdit,
+      onCellChange,
+      onCellKeyDown,
+      stopEditing,
+      inputRef,
+      newTagText,
+      setNewTagText,
+      handleTagInputKeyDown,
+      removeTag,
+      addTag,
+    }: {
+      record: any;
+      column: any;
+      editingCell: any;
+      onEdit: () => void;
+      onCellChange: (
+        e: React.ChangeEvent<HTMLInputElement>,
+        recordId: number,
+        columnId: string,
+      ) => void;
+      onCellKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+      stopEditing: () => void;
+      inputRef: React.RefObject<HTMLInputElement>;
+      newTagText: Record<string, string>;
+      setNewTagText: (value: Record<string, string>) => void;
+      handleTagInputKeyDown: (e: React.KeyboardEvent<HTMLInputElement>, recordId: number) => void;
+      removeTag: (recordId: number, tagId: string) => void;
+      addTag: (recordId: number) => void;
+    }) => {
+      return (
+        <TableCell className='border-r min-h-[40px] h-[40px]' onClick={onEdit}>
+          {column.id === 'tags' ? (
+            <div className='flex flex-wrap gap-1 items-center'>
+              {record.tags.map((tag) => {
+                return (
+                  <Badge
+                    key={tag.id}
+                    variant='outline'
+                    className='bg-amber-50 text-amber-700 hover:bg-amber-50 border-amber-200 flex items-center gap-1'
+                  >
+                    {tag.name}
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='h-4 w-4 p-0 hover:bg-amber-100'
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeTag(record.id, tag.id);
+                      }}
+                    >
+                      <X className='h-3 w-3' />
+                    </Button>
+                  </Badge>
+                );
+              })}
+              <div className='flex items-center'>
+                <Input
+                  value={newTagText[record.id] || ''}
+                  onChange={(e) => {
+                    setNewTagText({
+                      ...newTagText,
+                      [record.id]: e.target.value,
+                    });
+                  }}
+                  onKeyDown={(e) => {
+                    return handleTagInputKeyDown(e, record.id);
+                  }}
+                  className='h-6 w-20 min-w-20 text-xs'
+                  placeholder='Add tag...'
+                  onClick={(e) => {
+                    return e.stopPropagation();
+                  }}
+                />
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='h-6 w-6 ml-1'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    addTag(record.id);
+                  }}
+                >
+                  <Plus className='h-3 w-3' />
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className='min-h-[28px] h-[28px] flex items-center w-full'>
+              {editingCell.recordId === record.id && editingCell.columnId === column.id ? (
+                <Input
+                  ref={inputRef}
+                  value={record[column.id] || ''}
+                  onChange={(e) => {
+                    return onCellChange(e, record.id, column.id);
+                  }}
+                  onBlur={stopEditing}
+                  onKeyDown={onCellKeyDown}
+                  className='h-8 m-0 p-2 w-full'
+                  autoFocus
+                />
+              ) : column.id === 'name' ? (
+                <>
+                  {record.id}. {record[column.id]}
+                </>
+              ) : (
+                record[column.id]
+              )}
+            </div>
+          )}
+        </TableCell>
+      );
+    },
+  );
+  TableCellMemo.displayName = 'TableCellMemo';
 
   // Memoize handlers
   const handleSort = useCallback(

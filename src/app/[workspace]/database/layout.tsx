@@ -16,7 +16,7 @@ export default function DatabaseLayout({ children }: { children: React.ReactNode
 
   return (
     <BlockWrapper>
-      <div className='min-h-screen'>
+      <div className='min-h-screen p-3'>
         <h1 className='text-2xl font-medium pt-2'>Database</h1>
         <p className='text-muted-foreground text-sm pb-5'>
           Manage your database entries and tags here.
