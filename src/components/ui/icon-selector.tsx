@@ -6,40 +6,44 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { filterIcons, iconMap } from '@/lib/icons';
 import { Smile } from 'lucide-react';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { IconType } from 'react-icons';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
 // Memoized Icon Component
-const IconButton = memo(({ name, onClick }: { name: string; onClick: () => void }) => {
-  const Icon = iconMap[name];
-  if (!Icon) return null;
+const IconButton = memo(
+  ({ name, onClick, value }: { name: string; onClick: () => void; value: string }) => {
+    const Icon = iconMap[name];
+    if (!Icon) return null;
 
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant='ghost'
-            className='h-10 w-10 p-0 flex items-center justify-center hover:bg-accent'
-            onClick={onClick}
-          >
-            <Icon className='h-4 w-4' />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{name}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-});
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant='ghost'
+              className='h-10 w-10 p-0 flex items-center justify-center hover:bg-accent'
+              onClick={onClick}
+            >
+              <Icon className='h-4 w-4' />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{name}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  },
+);
 IconButton.displayName = 'IconButton';
 
 interface IconSelectorProps {
   onSelect: (name: string) => void;
   trigger?: React.ReactNode;
+  selectedIcon?: IconType;
 }
 
-export const IconSelector = memo(({ onSelect, trigger }: IconSelectorProps) => {
+export const IconSelector = memo(({ onSelect, trigger, selectedIcon }: IconSelectorProps) => {
   const [iconSearchQuery, setIconSearchQuery] = useState('');
   const debouncedSearch = useDebounce(iconSearchQuery, 150);
 
@@ -53,7 +57,7 @@ export const IconSelector = memo(({ onSelect, trigger }: IconSelectorProps) => {
   // Reset displayed icons when search changes
   useEffect(() => {
     setDisplayedIcons(allIcons.slice(0, 64));
-  }, [debouncedSearch, allIcons]); // Include allIcons in dependency array
+  }, [debouncedSearch, allIcons]);
 
   const handleIconSelect = useCallback(
     (name: string) => {
@@ -71,14 +75,20 @@ export const IconSelector = memo(({ onSelect, trigger }: IconSelectorProps) => {
     });
   }, [displayedIcons.length, allIcons]);
 
-  // Memoize the default trigger
+  // Memoize the default trigger based on selected icon
   const defaultTrigger = useMemo(() => {
+    let IconComponent: IconType = Smile;
+
+    if (selectedIcon) {
+      IconComponent = selectedIcon;
+    }
+
     return (
       <Button variant='ghost' className='justify-start h-[80%] px-3'>
-        <Smile className='text-muted-foreground' size={24} />
+        <IconComponent className='text-muted-foreground' size={24} />
       </Button>
     );
-  }, []);
+  }, [selectedIcon]);
 
   // Memoize the input handler
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,6 +125,7 @@ export const IconSelector = memo(({ onSelect, trigger }: IconSelectorProps) => {
                 <IconButton
                   key={name}
                   name={name}
+                  value={name}
                   onClick={() => {
                     return handleIconSelect(name);
                   }}

@@ -1,22 +1,13 @@
-import {
-  CalendarIcon,
-  CheckSquare2Icon,
-  CheckSquareIcon,
-  ChevronDownIcon,
-  FileTextIcon,
-  HashIcon,
-  LinkIcon,
-  MailIcon,
-  PhoneIcon,
-  TextQuoteIcon,
-} from 'lucide-react';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { IconType } from 'react-icons';
+import * as LuIcons from 'react-icons/lu';
 
 type Column = {
   id: string;
   name: string;
   sortable: boolean;
+  iconName?: string;
 };
 
 type TagType = {
@@ -34,7 +25,7 @@ type Record = {
 type PropertyType = {
   id: string;
   name: string;
-  icon: React.ElementType;
+  iconName: string;
 };
 
 const iconOptions = [
@@ -53,16 +44,16 @@ const iconOptions = [
 ];
 
 const defaultPropertyTypes: PropertyType[] = [
-  { id: 'text', name: 'Text', icon: TextQuoteIcon },
-  { id: 'number', name: 'Number', icon: HashIcon },
-  { id: 'date', name: 'Date', icon: CalendarIcon },
-  { id: 'checkbox', name: 'Checkbox', icon: CheckSquareIcon },
-  { id: 'select', name: 'Select', icon: ChevronDownIcon },
-  { id: 'multiselect', name: 'Multi-select', icon: CheckSquare2Icon },
-  { id: 'url', name: 'URL', icon: LinkIcon },
-  { id: 'email', name: 'Email', icon: MailIcon },
-  { id: 'phone', name: 'Phone', icon: PhoneIcon },
-  { id: 'file', name: 'File', icon: FileTextIcon },
+  { id: 'text', name: 'Text', iconName: 'LuText' },
+  { id: 'number', name: 'Number', iconName: 'LuHash' },
+  { id: 'date', name: 'Date', iconName: 'LuCalendar' },
+  { id: 'checkbox', name: 'Checkbox', iconName: 'LuCheck' },
+  { id: 'select', name: 'Select', iconName: 'LuChevronDown' },
+  { id: 'multiselect', name: 'Multi-select', iconName: 'LuCheckCheck' },
+  { id: 'url', name: 'URL', iconName: 'LuLink' },
+  { id: 'email', name: 'Email', iconName: 'LuMail' },
+  { id: 'phone', name: 'Phone', iconName: 'LuPhone' },
+  { id: 'file', name: 'File', iconName: 'LuFile' },
 ];
 
 export function useDatabase() {
@@ -101,6 +92,11 @@ export function useDatabase() {
   const [newPropertyName, setNewPropertyName] = useState('');
   const [newPropertyPrefix, setNewPropertyPrefix] = useState('');
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
+  const [newPropertyIconName, setNewPropertyIconName] = useState<string>('LuSmile');
+
+  const getIconComponent = (iconName: string): IconType => {
+    return LuIcons[iconName as keyof typeof LuIcons] || LuIcons.LuSmile;
+  };
 
   const filteredPropertyTypes = defaultPropertyTypes.filter((type) => {
     return type.name.toLowerCase().includes(propertySearchQuery.toLowerCase());
@@ -191,7 +187,15 @@ export function useDatabase() {
     if (!selectedPropertyType) return;
 
     const newId = `column${columns.length + 1}`;
-    setColumns([...columns, { id: newId, name: newPropertyName || `New Column`, sortable: true }]);
+    setColumns([
+      ...columns,
+      {
+        id: newId,
+        name: newPropertyName || `New Column`,
+        sortable: true,
+        iconName: newPropertyIconName,
+      },
+    ]);
 
     // Add the new column to all existing records
     setRecords(
@@ -207,6 +211,7 @@ export function useDatabase() {
     setSelectedPropertyType(null);
     setNewPropertyName('');
     setNewPropertyPrefix('');
+    setNewPropertyIconName('LuSmile');
     setIsAddColumnSheetOpen(false);
   };
 
@@ -351,8 +356,11 @@ export function useDatabase() {
     setNewTagText,
     setIsAddColumnSheetOpen,
     setPropertySearchQuery,
+    newPropertyIconName,
+    setNewPropertyIconName,
     setNewPropertyName,
     setNewPropertyPrefix,
     setIsIconPickerOpen,
+    getIconComponent,
   };
 }

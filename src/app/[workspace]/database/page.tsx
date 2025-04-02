@@ -18,24 +18,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { useDatabase } from '@/hooks/useDatabase';
-import { useDebounce } from '@/hooks/useDebounce';
-import { filterIcons } from '@/lib/icons';
-import {
-  ArrowLeft,
-  Box,
-  ChartLine,
-  ChevronDown,
-  ChevronUp,
-  House,
-  PanelsTopLeft,
-  Plus,
-  Save,
-  Search,
-  Settings,
-  UsersRound,
-  X,
-} from 'lucide-react';
-import { memo, useCallback, useState } from 'react';
+import { ArrowLeft, ChevronDown, ChevronUp, House, Plus, Save, Search, X } from 'lucide-react';
+import React, { memo, useCallback } from 'react';
 
 // Memoized Table Header Component
 const TableHeaderMemo = memo(
@@ -236,12 +220,15 @@ export default function DataTable() {
     selectedPropertyType,
     newPropertyName,
     newPropertyPrefix,
+    isIconPickerOpen,
     propertyTypes,
+    iconOptions,
     requestSort,
     addNewRow,
     addNewColumn,
     saveNewColumn,
     backToPropertySelection,
+    selectIcon,
     startEditing,
     stopEditing,
     handleCellChange,
@@ -254,14 +241,13 @@ export default function DataTable() {
     setNewTagText,
     setIsAddColumnSheetOpen,
     setPropertySearchQuery,
+    newPropertyIconName,
+    setNewPropertyIconName,
     setNewPropertyName,
     setNewPropertyPrefix,
+    setIsIconPickerOpen,
+    getIconComponent,
   } = useDatabase();
-
-  const [iconSearchQuery, setIconSearchQuery] = useState('');
-  const debouncedSearch = useDebounce(iconSearchQuery, 150);
-  const { icons: allIcons, total } = filterIcons(debouncedSearch);
-  const [displayedIcons, setDisplayedIcons] = useState<string[]>([]);
 
   // Memoize handlers
   const handleSort = useCallback(
@@ -289,128 +275,83 @@ export default function DataTable() {
               className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
             >
               <House className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
-              Overview
-            </TabsTrigger>
-            <TabsTrigger
-              value='tab-2'
-              className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
-            >
-              <PanelsTopLeft className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
-              Projects
-              <Badge className='bg-primary/15 ms-1.5 min-w-5 px-1' variant='secondary'>
-                3
-              </Badge>
-            </TabsTrigger>
-            <TabsTrigger
-              value='tab-3'
-              className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
-            >
-              <Box className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
-              Packages
-              <Badge className='ms-1.5'>New</Badge>
-            </TabsTrigger>
-            <TabsTrigger
-              value='tab-4'
-              className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
-            >
-              <UsersRound className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
-              Team
-            </TabsTrigger>
-            <TabsTrigger
-              value='tab-5'
-              className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
-            >
-              <ChartLine className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
-              Insights
-            </TabsTrigger>
-            <TabsTrigger
-              value='tab-6'
-              className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
-            >
-              <Settings className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />
-              Settings
+              Table 1
             </TabsTrigger>
           </TabsList>
           <ScrollBar orientation='horizontal' />
         </ScrollArea>
         <TabsContent value='tab-1'>
-          <p className='text-muted-foreground pt-1 text-center text-xs'>Content for Tab 1</p>
-        </TabsContent>
-        <TabsContent value='tab-2'>
-          <p className='text-muted-foreground pt-1 text-center text-xs'>Content for Tab 2</p>
-        </TabsContent>
-        <TabsContent value='tab-3'>
-          <p className='text-muted-foreground pt-1 text-center text-xs'>Content for Tab 3</p>
-        </TabsContent>
-        <TabsContent value='tab-4'>
-          <p className='text-muted-foreground pt-1 text-center text-xs'>Content for Tab 4</p>
-        </TabsContent>
-        <TabsContent value='tab-5'>
-          <p className='text-muted-foreground pt-1 text-center text-xs'>Content for Tab 5</p>
-        </TabsContent>
-        <TabsContent value='tab-6'>
-          <p className='text-muted-foreground pt-1 text-center text-xs'>Content for Tab 6</p>
+          <p className='text-muted-foreground pt-1 text-center text-xs'>
+            {' '}
+            <>
+              <Table>
+                <TableHeaderMemo
+                  columns={columns}
+                  sortConfig={sortConfig}
+                  onSort={handleSort}
+                  onAddColumn={handleAddColumn}
+                  allSelected={allSelected}
+                  toggleSelectAll={toggleSelectAll}
+                />
+                <TableBody>
+                  {records.map((record) => {
+                    return (
+                      <TableRow key={record.id} className='hover:bg-gray-50'>
+                        <TableCell className='border-r p-0 text-center'>
+                          <div className='flex h-full items-center justify-center'>
+                            <Checkbox
+                              checked={record.selected}
+                              onCheckedChange={() => {
+                                return toggleSelectRecord(record.id);
+                              }}
+                            />
+                          </div>
+                        </TableCell>
+                        {columns.map((column) => {
+                          return (
+                            <TableCellMemo
+                              key={`${record.id}-${column.id}`}
+                              record={record}
+                              column={column}
+                              editingCell={editingCell}
+                              onEdit={() => {
+                                return startEditing(record.id, column.id);
+                              }}
+                              onCellChange={handleCellChange}
+                              onCellKeyDown={handleCellKeyDown}
+                              stopEditing={stopEditing}
+                              inputRef={inputRef}
+                              newTagText={newTagText}
+                              setNewTagText={setNewTagText}
+                              handleTagInputKeyDown={handleTagInputKeyDown}
+                              removeTag={removeTag}
+                              addTag={addTag}
+                            />
+                          );
+                        })}
+                        <TableCell></TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+              <div className='flex items-center border-t p-2'>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='h-6 w-6 rounded-sm'
+                  onClick={addNewRow}
+                >
+                  <Plus className='h-4 w-4' />
+                </Button>
+                <div className='ml-2 text-sm text-gray-500'>
+                  {records.length} record{records.length !== 1 ? 's' : ''}
+                </div>
+              </div>
+            </>
+          </p>
         </TabsContent>
       </Tabs>
-      <Table>
-        <TableHeaderMemo
-          columns={columns}
-          sortConfig={sortConfig}
-          onSort={handleSort}
-          onAddColumn={handleAddColumn}
-          allSelected={allSelected}
-          toggleSelectAll={toggleSelectAll}
-        />
-        <TableBody>
-          {records.map((record) => {
-            return (
-              <TableRow key={record.id} className='hover:bg-gray-50'>
-                <TableCell className='border-r p-0 text-center'>
-                  <div className='flex h-full items-center justify-center'>
-                    <Checkbox
-                      checked={record.selected}
-                      onCheckedChange={() => {
-                        return toggleSelectRecord(record.id);
-                      }}
-                    />
-                  </div>
-                </TableCell>
-                {columns.map((column) => {
-                  return (
-                    <TableCellMemo
-                      key={`${record.id}-${column.id}`}
-                      record={record}
-                      column={column}
-                      editingCell={editingCell}
-                      onEdit={() => {
-                        return startEditing(record.id, column.id);
-                      }}
-                      onCellChange={handleCellChange}
-                      onCellKeyDown={handleCellKeyDown}
-                      stopEditing={stopEditing}
-                      inputRef={inputRef}
-                      newTagText={newTagText}
-                      setNewTagText={setNewTagText}
-                      handleTagInputKeyDown={handleTagInputKeyDown}
-                      removeTag={removeTag}
-                      addTag={addTag}
-                    />
-                  );
-                })}
-                <TableCell></TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-      <div className='flex items-center border-t p-2'>
-        <Button variant='ghost' size='icon' className='h-6 w-6 rounded-sm' onClick={addNewRow}>
-          <Plus className='h-4 w-4' />
-        </Button>
-        <div className='ml-2 text-sm text-gray-500'>
-          {records.length} record{records.length !== 1 ? 's' : ''}
-        </div>
-      </div>
 
       <Sheet open={isAddColumnSheetOpen} onOpenChange={setIsAddColumnSheetOpen}>
         <SheetContent side='right' className='w-[400px] sm:w-[540px]'>
@@ -454,9 +395,10 @@ export default function DataTable() {
                     <div className='absolute right-1 top-1/2 -translate-y-1/2'>
                       <IconSelector
                         onSelect={(name) => {
+                          setNewPropertyIconName(name);
                           setNewPropertyPrefix(name);
-                          setNewPropertyName(`${name} ${newPropertyName}`);
                         }}
+                        selectedIcon={getIconComponent(newPropertyIconName)}
                       />
                     </div>
                     <Input
@@ -497,12 +439,11 @@ export default function DataTable() {
                         variant='ghost'
                         className='justify-start h-8 px-1'
                         onClick={() => {
+                          setNewPropertyIconName(type.iconName);
                           return addNewColumn(type);
                         }}
                       >
-                        <div>
-                          <type.icon />
-                        </div>
+                        <div>{React.createElement(getIconComponent(type.iconName))}</div>
                         <div className='flex items-center'>
                           <div>{type.name}</div>
                         </div>
