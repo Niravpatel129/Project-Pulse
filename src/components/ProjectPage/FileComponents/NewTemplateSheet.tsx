@@ -1,7 +1,13 @@
 import { FieldType, Template, TemplateField } from '@/api/models';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -130,9 +136,21 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
   const [templateName, setTemplateName] = useState('');
   const [templateDescription, setTemplateDescription] = useState('');
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [isCreateTableModalOpen, setIsCreateTableModalOpen] = useState(false);
   const [selectedDatabase, setSelectedDatabase] = useState<string>('');
   const [allowMultiple, setAllowMultiple] = useState(false);
   const [lookupFields, setLookupFields] = useState<Record<string, boolean>>({});
+  const [newTableName, setNewTableName] = useState('');
+  const [newTableDescription, setNewTableDescription] = useState('');
+  const [newTableFields, setNewTableFields] = useState<TemplateField[]>([
+    {
+      id: `field-${Date.now()}`,
+      name: '',
+      type: 'text' as FieldType,
+      required: false,
+      options: [],
+    },
+  ]);
   const [fields, setFields] = useState<TemplateField[]>([
     {
       id: `field-${Date.now()}`,
@@ -434,11 +452,31 @@ Option 3`}
             <div className='space-y-4'>
               <div className='space-y-2'>
                 <Label>Select Database</Label>
-                <Select value={selectedDatabase} onValueChange={setSelectedDatabase}>
+                <Select
+                  value={selectedDatabase}
+                  onValueChange={(value) => {
+                    if (value === 'create-new') {
+                      setIsCreateTableModalOpen(true);
+                      return;
+                    }
+                    setSelectedDatabase(value);
+                  }}
+                >
                   <SelectTrigger className='text-left h-14'>
                     <SelectValue placeholder='Choose a database' />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value='create-new'>
+                      <div className='flex gap-2'>
+                        <span>➕</span>
+                        <div className='flex flex-col'>
+                          <span>Create New Table</span>
+                          <span className='text-xs text-muted-foreground'>
+                            Create a new table to link to
+                          </span>
+                        </div>
+                      </div>
+                    </SelectItem>
                     {mockDatabases.map((db) => {
                       return (
                         <SelectItem key={db.id} value={db.id}>
@@ -589,6 +627,189 @@ Option 3`}
                   disabled={!selectedDatabase}
                 >
                   Add Link
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create New Table Modal */}
+        <Dialog open={isCreateTableModalOpen} onOpenChange={setIsCreateTableModalOpen}>
+          <DialogContent className='sm:max-w-[600px]'>
+            <DialogHeader>
+              <DialogTitle>Create New Table</DialogTitle>
+              <DialogDescription>
+                Create a new table to link to. This will create a new database entry and fields for
+                the table.
+              </DialogDescription>
+            </DialogHeader>
+            <div className='space-y-4'>
+              <div className='space-y-2'>
+                <Label>Table Name</Label>
+                <Input
+                  value={newTableName}
+                  onChange={(e) => {
+                    return setNewTableName(e.target.value);
+                  }}
+                  placeholder='e.g., Suppliers'
+                  className='w-full'
+                />
+              </div>
+              <div className='space-y-2'>
+                <Label>Description</Label>
+                <Textarea
+                  value={newTableDescription}
+                  onChange={(e) => {
+                    return setNewTableDescription(e.target.value);
+                  }}
+                  placeholder='What is this table for?'
+                  className='w-full'
+                />
+              </div>
+
+              <div className='space-y-4'>
+                <div className='flex items-center justify-between'>
+                  <Label>Fields</Label>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => {
+                      setNewTableFields([
+                        ...newTableFields,
+                        {
+                          id: `field-${Date.now()}-${newTableFields.length}`,
+                          name: '',
+                          type: 'text' as FieldType,
+                          required: false,
+                          options: [],
+                        },
+                      ]);
+                    }}
+                  >
+                    <Plus className='h-4 w-4 mr-2' />
+                    Add Field
+                  </Button>
+                </div>
+
+                <div className='space-y-2'>
+                  {newTableFields.map((field, index) => {
+                    return (
+                      <div
+                        key={field.id}
+                        className='flex items-center gap-2 p-3 border rounded-lg bg-background'
+                      >
+                        <Input
+                          value={field.name}
+                          onChange={(e) => {
+                            const updatedFields = [...newTableFields];
+                            updatedFields[index] = { ...field, name: e.target.value };
+                            setNewTableFields(updatedFields);
+                          }}
+                          placeholder='Field name'
+                          className='flex-1'
+                        />
+                        <Select
+                          value={field.type}
+                          onValueChange={(value) => {
+                            const updatedFields = [...newTableFields];
+                            updatedFields[index] = { ...field, type: value as FieldType };
+                            setNewTableFields(updatedFields);
+                          }}
+                        >
+                          <SelectTrigger className='w-[200px]'>
+                            <SelectValue placeholder='Field type'>
+                              {
+                                mockFields.find((type) => {
+                                  return type.id === field.type;
+                                })?.name
+                              }
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {mockFields.map((type) => {
+                              return (
+                                <SelectItem key={type.id} value={type.id}>
+                                  <div className='flex items-center gap-2'>
+                                    <span>{type.icon}</span>
+                                    <span>{type.name}</span>
+                                  </div>
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => {
+                            const updatedFields = [...newTableFields];
+                            updatedFields.splice(index, 1);
+                            setNewTableFields(updatedFields);
+                          }}
+                          className='text-destructive'
+                        >
+                          <Trash2 className='h-4 w-4' />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className='flex justify-end gap-2'>
+                <Button
+                  variant='outline'
+                  onClick={() => {
+                    return setIsCreateTableModalOpen(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (!newTableName.trim()) return;
+
+                    // Create a new database entry
+                    const newDb = {
+                      id: newTableName.toLowerCase().replace(/\s+/g, '-'),
+                      name: newTableName,
+                      icon: '📊',
+                      description: newTableDescription,
+                    };
+
+                    // Add the new database to mockDatabases
+                    mockDatabases.push(newDb);
+
+                    // Create fields for the new database
+                    mockDatabaseFields[newDb.id] = newTableFields.map((field) => {
+                      return {
+                        id: field.name.toLowerCase().replace(/\s+/g, '-'),
+                        name: field.name,
+                        type: field.type,
+                      };
+                    });
+
+                    // Set the selected database to the new one
+                    setSelectedDatabase(newDb.id);
+
+                    // Reset the form
+                    setNewTableName('');
+                    setNewTableDescription('');
+                    setNewTableFields([
+                      {
+                        id: `field-${Date.now()}`,
+                        name: '',
+                        type: 'text' as FieldType,
+                        required: false,
+                        options: [],
+                      },
+                    ]);
+
+                    setIsCreateTableModalOpen(false);
+                  }}
+                  disabled={!newTableName.trim()}
+                >
+                  Create Table
                 </Button>
               </div>
             </div>
