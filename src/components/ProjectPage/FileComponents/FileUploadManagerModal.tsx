@@ -342,18 +342,8 @@ export default function FileUploadManagerModal({
           {showDetails && selectedFile && (
             <div className='w-80 border-l pl-4 flex flex-col h-full'>
               <CardHeader className='pb-2'>
-                <div className='flex justify-between items-center'>
+                <div className='flex gap-1 items-center'>
                   <CardTitle className='text-sm font-medium'>File Details</CardTitle>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={() => {
-                      return setShowDetails(false);
-                    }}
-                    className='h-8 w-8 p-0'
-                  >
-                    ×
-                  </Button>
                 </div>
               </CardHeader>
               <CardContent className='flex-1'>
@@ -390,17 +380,6 @@ export default function FileUploadManagerModal({
                   <Button className='w-full gap-2' size='sm'>
                     <Download className='h-4 w-4' />
                     Download
-                  </Button>
-                  <Button
-                    className='w-full gap-2'
-                    variant='destructive'
-                    size='sm'
-                    onClick={() => {
-                      return handleRemoveFile(selectedFile.id);
-                    }}
-                  >
-                    <Trash2 className='h-4 w-4' />
-                    Delete
                   </Button>
                 </div>
               </CardContent>
