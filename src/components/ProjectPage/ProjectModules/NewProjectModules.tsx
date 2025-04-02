@@ -12,30 +12,20 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useProjectModules } from '@/hooks/useProjectModules';
+import { formatDistanceToNow } from 'date-fns';
 import { ChevronRight, FilePlus, FileText, PaintRoller, Plus } from 'lucide-react';
-import { useState } from 'react';
 import { FcDocument } from 'react-icons/fc';
-import { toast } from 'sonner';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 
-const fakeModules = [
-  { name: 'Project Brief', description: 'Project overview document' },
-  { name: 'Design Assets', description: 'Logos and brand guidelines' },
-  { name: 'Contract', description: 'Signed agreement document' },
-  { name: 'Timeline', description: 'Project milestones and deadlines' },
-  { name: 'Requirements', description: 'Technical specifications' },
-];
-
 export default function NewProjectModules() {
-  const [isFileUploadModalOpen, setIsFileUploadModalOpen] = useState(false);
-
-  const handleAddFileToProject = (files: File[]) => {
-    // Handle the uploaded files here
-    setIsFileUploadModalOpen(false);
-    console.log('Uploaded files:', files);
-    // You can add your file upload logic here
-    toast.success('File uploaded successfully');
-  };
+  const {
+    isFileUploadModalOpen,
+    setIsFileUploadModalOpen,
+    templates,
+    handleAddFileToProject,
+    modules,
+  } = useProjectModules();
 
   const renderProjectItem = (item) => {
     return (
@@ -48,7 +38,9 @@ export default function NewProjectModules() {
         <div className='border-t'>
           <div className='py-3 px-3 flex flex-col gap-1'>
             <p className='text-sm font-medium truncate'>{item.name}</p>
-            <p className='text-xs text-gray-500 truncate'>{item.description}</p>
+            <p className='text-xs text-gray-500 truncate'>
+              {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
+            </p>
           </div>
         </div>
       </div>
@@ -56,13 +48,6 @@ export default function NewProjectModules() {
   };
 
   const renderAddNewModule = () => {
-    const templates = [
-      { name: 'Project Brief', description: 'Standard project overview template' },
-      { name: 'Design Spec', description: 'Design specification document' },
-      { name: 'Technical Doc', description: 'Technical documentation template' },
-      { name: 'Meeting Notes', description: 'Meeting notes template' },
-    ];
-
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -195,8 +180,8 @@ export default function NewProjectModules() {
         </DropdownMenu>
       </div>
       <div className=''>
-        <div className='grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 auto-rows-fr'>
-          {fakeModules.map((item, index) => {
+        <div className='grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-4 auto-rows-fr'>
+          {modules.map((item, index) => {
             return (
               <div key={index} className='flex justify-center'>
                 {renderProjectItem(item)}
@@ -212,7 +197,9 @@ export default function NewProjectModules() {
         onClose={() => {
           return setIsFileUploadModalOpen(false);
         }}
-        handleAddFileToProject={handleAddFileToProject}
+        handleAddFileToProject={(files) => {
+          return handleAddFileToProject({ type: 'file', content: files });
+        }}
       />
     </div>
   );

@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
 import {
   Table,
   TableBody,
@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useFileUploadManager } from './useFileUploadManager';
 
 function FileTypeIcon({ type }: { type: string }) {
@@ -96,11 +97,14 @@ export default function FileUploadManagerModal({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetTitle>My Storage</SheetTitle>
       <SheetContent
         side='bottom'
         className='h-[90vh] max-h-[90vh] w-screen flex flex-col rounded-t-2xl'
       >
+        <VisuallyHidden>
+          <SheetTitle>My Storage</SheetTitle>
+          <SheetDescription>Storage</SheetDescription>
+        </VisuallyHidden>
         <div className='px-6 flex h-full'>
           <div className={`flex-1 flex flex-col ${showDetails ? 'pr-4' : ''}`}>
             <CardHeader className='flex flex-row items-center justify-between shrink-0 pb-0'>
@@ -141,7 +145,7 @@ export default function FileUploadManagerModal({
                 </CardHeader>
                 <CardContent className='shrink-0'>
                   {files.length > 0 ? (
-                    <div className='grid grid-cols-2 sm:grid-cols-4 gap-4'>
+                    <div className='grid grid-cols-2 sm:grid-cols-3 gap-4'>
                       {files.slice(0, 4).map((file) => {
                         return (
                           <div
