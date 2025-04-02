@@ -15,6 +15,7 @@ import {
 import { ChevronRight, FilePlus, FileText, PaintRoller, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { FcDocument } from 'react-icons/fc';
+import { toast } from 'sonner';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 
 const fakeModules = [
@@ -28,10 +29,12 @@ const fakeModules = [
 export default function NewProjectModules() {
   const [isFileUploadModalOpen, setIsFileUploadModalOpen] = useState(false);
 
-  const handleFileUpload = (files: File[]) => {
+  const handleAddFileToProject = (files: File[]) => {
     // Handle the uploaded files here
+    setIsFileUploadModalOpen(false);
     console.log('Uploaded files:', files);
     // You can add your file upload logic here
+    toast.success('File uploaded successfully');
   };
 
   const renderProjectItem = (item) => {
@@ -209,6 +212,7 @@ export default function NewProjectModules() {
         onClose={() => {
           return setIsFileUploadModalOpen(false);
         }}
+        handleAddFileToProject={handleAddFileToProject}
       />
     </div>
   );

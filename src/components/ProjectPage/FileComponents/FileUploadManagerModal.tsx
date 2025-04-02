@@ -76,9 +76,11 @@ function formatFileSize(bytes: number): string {
 export default function FileUploadManagerModal({
   isOpen,
   onClose,
+  handleAddFileToProject,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  handleAddFileToProject;
 }) {
   const {
     files,
@@ -90,7 +92,6 @@ export default function FileUploadManagerModal({
     handleViewDetails,
     handleFileUpload,
     triggerFileUpload,
-    setShowDetails,
   } = useFileUploadManager();
 
   return (
@@ -147,7 +148,7 @@ export default function FileUploadManagerModal({
                             key={file._id}
                             className='flex flex-col items-center p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer'
                             onClick={() => {
-                              return handleViewDetails(file);
+                              return handleAddFileToProject(file);
                             }}
                           >
                             <FileTypeIcon type={file.contentType} />
@@ -193,7 +194,13 @@ export default function FileUploadManagerModal({
                   <TableBody>
                     {files.map((file) => {
                       return (
-                        <TableRow key={file._id}>
+                        <TableRow
+                          key={file._id}
+                          className='cursor-pointer'
+                          onClick={() => {
+                            return handleAddFileToProject(file);
+                          }}
+                        >
                           <TableCell>
                             <div className='flex items-center gap-2'>
                               <span className='font-medium'>{file.originalName}</span>
