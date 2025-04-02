@@ -30,6 +30,7 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
       name: '',
       type: 'text' as FieldType,
       required: false,
+      options: [],
     },
   ]);
 
@@ -41,6 +42,7 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
         name: '',
         type: 'text' as FieldType,
         required: false,
+        options: [],
       },
     ]);
   };
@@ -82,6 +84,7 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
         name: '',
         type: 'text' as FieldType,
         required: false,
+        options: [],
       },
     ]);
     onClose();
@@ -211,11 +214,12 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
                                         <Textarea
                                           value={field.options?.join('\n') || ''}
                                           onChange={(e) => {
-                                            return updateField(index, {
-                                              options: e.target.value.split('\n').filter(Boolean),
-                                            });
+                                            const newOptions = e.target.value.split('\n');
+                                            updateField(index, { options: newOptions });
                                           }}
-                                          placeholder='Option 1&#10;Option 2&#10;Option 3'
+                                          placeholder={`Option 1
+Option 2
+Option 3`}
                                           className='h-20 text-sm'
                                         />
                                       </div>
