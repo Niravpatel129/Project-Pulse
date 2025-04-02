@@ -169,8 +169,11 @@ export default function FileUploadManagerModal({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side='bottom' className='h-[90vh] max-h-[90vh] w-screen flex flex-col'>
-        <CardHeader className='flex flex-row items-center justify-between shrink-0'>
+      <SheetContent
+        side='bottom'
+        className='h-[90vh] max-h-[90vh] w-screen flex flex-col rounded-t-2xl'
+      >
+        <CardHeader className='flex flex-row items-center justify-between shrink-0 pb-0'>
           <CardTitle className='text-lg font-bold'>My Storage</CardTitle>
           <Button size='sm' className='gap-1 mb-2' variant='outline'>
             <Upload className='h-4 w-4' />
