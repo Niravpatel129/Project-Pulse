@@ -46,6 +46,7 @@ import {
 import CreateModuleDialog from '../FileComponents/CreateModuleDialog';
 import InvoiceCreatorModal from '../InvoiceCreatorModal';
 import { DeleteModuleDialog, ModuleDetailsDialog, type Module } from '../ModuleComponents';
+import NewProjectModules from './NewProjectModules';
 
 export default function ProjectModules() {
   const {
@@ -249,6 +250,12 @@ export default function ProjectModules() {
     if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
     return 0;
   });
+
+  return (
+    <div>
+      <NewProjectModules />
+    </div>
+  );
 
   return (
     <div className='space-y-4'>

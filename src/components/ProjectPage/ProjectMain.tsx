@@ -10,7 +10,6 @@ import Link from 'next/link';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { Suspense, useEffect, useState, useTransition } from 'react';
 import ProjectActivity from './ProjectActivity';
-import ProjectFiles from './ProjectFiles';
 import ProjectHome from './ProjectHome';
 import ProjectModules from './ProjectModules/ProjectModules';
 import ProjectPayments from './ProjectPayments';
@@ -147,7 +146,6 @@ export default function ProjectMain() {
                   {activeTab === 'home' && <ProjectHome />}
                   {activeTab === 'timeline' && <TimelineExample />}
                   {activeTab === 'schedule' && <ProjectSchedule />}
-                  {activeTab === 'files' && <ProjectFiles />}
                   {activeTab === 'modules' && <ProjectModules />}
                   {activeTab === 'payments' && <ProjectPayments />}
                 </Suspense>
