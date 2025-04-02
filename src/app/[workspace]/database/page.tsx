@@ -3,8 +3,8 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { IconSelector } from '@/components/ui/icon-selector';
 import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
@@ -16,11 +16,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useDebounce } from '@/hooks/useDebounce';
-import { filterIcons, iconMap } from '@/lib/icons';
+import { filterIcons } from '@/lib/icons';
 import {
   ArrowLeft,
   Box,
@@ -33,37 +32,10 @@ import {
   Save,
   Search,
   Settings,
-  Smile,
   UsersRound,
   X,
 } from 'lucide-react';
-import { memo, useCallback, useMemo, useState } from 'react';
-
-// Memoized Icon Component
-const IconButton = memo(({ name, onClick }: { name: string; onClick: () => void }) => {
-  const Icon = iconMap[name];
-  if (!Icon) return null;
-
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant='ghost'
-            className='h-10 w-10 p-0 flex items-center justify-center hover:bg-accent'
-            onClick={onClick}
-          >
-            <Icon className='h-4 w-4' />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{name}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-});
-IconButton.displayName = 'IconButton';
+import { memo, useCallback, useState } from 'react';
 
 // Memoized Table Header Component
 const TableHeaderMemo = memo(
@@ -250,36 +222,6 @@ const TableCellMemo = memo(
 );
 TableCellMemo.displayName = 'TableCellMemo';
 
-// Memoized Icon Grid Component
-const IconGrid = memo(
-  ({
-    icons,
-    onIconSelect,
-    newPropertyName,
-  }: {
-    icons: string[];
-    onIconSelect: (name: string) => void;
-    newPropertyName: string;
-  }) => {
-    return (
-      <div className='grid grid-cols-8 gap-0 p-4'>
-        {icons.map((name) => {
-          return (
-            <IconButton
-              key={name}
-              name={name}
-              onClick={() => {
-                return onIconSelect(name);
-              }}
-            />
-          );
-        })}
-      </div>
-    );
-  },
-);
-IconGrid.displayName = 'IconGrid';
-
 export default function DataTable() {
   const {
     columns,
@@ -318,17 +260,10 @@ export default function DataTable() {
 
   const [iconSearchQuery, setIconSearchQuery] = useState('');
   const debouncedSearch = useDebounce(iconSearchQuery, 150);
-  const { icons: filteredIcons, total } = filterIcons(debouncedSearch);
+  const { icons: allIcons, total } = filterIcons(debouncedSearch);
+  const [displayedIcons, setDisplayedIcons] = useState<string[]>([]);
 
   // Memoize handlers
-  const handleIconSelect = useCallback(
-    (name: string) => {
-      setNewPropertyPrefix(name);
-      setNewPropertyName(`${name} ${newPropertyName}`);
-    },
-    [newPropertyName],
-  );
-
   const handleSort = useCallback(
     (columnId: string) => {
       requestSort(columnId);
@@ -339,17 +274,6 @@ export default function DataTable() {
   const handleAddColumn = useCallback(() => {
     setIsAddColumnSheetOpen(true);
   }, [setIsAddColumnSheetOpen]);
-
-  // Memoize the icon grid
-  const iconGrid = useMemo(() => {
-    return (
-      <IconGrid
-        icons={filteredIcons}
-        onIconSelect={handleIconSelect}
-        newPropertyName={newPropertyName}
-      />
-    );
-  }, [filteredIcons, handleIconSelect, newPropertyName]);
 
   return (
     <BlockWrapper className='min-h-screen'>
@@ -527,36 +451,16 @@ export default function DataTable() {
                     Property Name
                   </label>
                   <div className='flex gap-1 relative'>
-                    <Popover modal>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant='ghost'
-                          className='absolute right-1 top-1/2 -translate-y-1/2 justify-start h-[80%] px-3'
-                        >
-                          <Smile className='text-muted-foreground' size={24} />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className='w-[400px] p-0' align='end' sideOffset={5}>
-                        <div className='p-4 border-b'>
-                          <Input
-                            placeholder='Search icons...'
-                            value={iconSearchQuery}
-                            onChange={(e) => {
-                              return setIconSearchQuery(e.target.value);
-                            }}
-                            className='w-full'
-                          />
-                        </div>
-                        <ScrollArea className='h-[300px]'>
-                          {iconGrid}
-                          <div className='p-4 text-center text-sm text-muted-foreground'>
-                            {total} icons found
-                          </div>
-                        </ScrollArea>
-                      </PopoverContent>
-                    </Popover>
+                    <div className='absolute right-1 top-1/2 -translate-y-1/2'>
+                      <IconSelector
+                        onSelect={(name) => {
+                          setNewPropertyPrefix(name);
+                          setNewPropertyName(`${name} ${newPropertyName}`);
+                        }}
+                      />
+                    </div>
                     <Input
-                      className='h-12'
+                      className='h-12 pr-10'
                       id='property-name'
                       value={newPropertyName}
                       onChange={(e) => {

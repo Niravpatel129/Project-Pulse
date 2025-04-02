@@ -2,10 +2,15 @@ import * as LuIcons from 'react-icons/lu';
 
 // Create a map of all Lucide icons
 const iconMap = Object.fromEntries(
-  Object.entries(LuIcons).filter(([key]) => {
-    // Filter out non-icon exports
-    return key !== 'default' && typeof LuIcons[key as keyof typeof LuIcons] === 'function';
-  }),
+  Object.entries(LuIcons)
+    .filter(([key]) => {
+      // Filter out non-icon exports
+      return key !== 'default' && typeof LuIcons[key as keyof typeof LuIcons] === 'function';
+    })
+    .filter(([key]) => {
+      // Filter out duplicate icons (some icons have both Lu prefix and without)
+      return !key.startsWith('Lu') || !LuIcons[key.slice(2) as keyof typeof LuIcons];
+    }),
 );
 
 // Create a sorted list of icon names
