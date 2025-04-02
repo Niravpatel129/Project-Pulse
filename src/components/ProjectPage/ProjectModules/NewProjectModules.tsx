@@ -15,6 +15,7 @@ import {
 import { useProjectModules } from '@/hooks/useProjectModules';
 import { formatDistanceToNow } from 'date-fns';
 import { ChevronRight, FilePlus, FileText, PaintRoller, Plus } from 'lucide-react';
+import Image from 'next/image';
 import { FcDocument } from 'react-icons/fc';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 
@@ -28,11 +29,28 @@ export default function NewProjectModules() {
   } = useProjectModules();
 
   const renderProjectItem = (item) => {
+    const isImage =
+      item.moduleType === 'file' &&
+      item.content?.fileId?.contentType &&
+      item.content.fileId.contentType.startsWith('image/');
+
     return (
       <div className='border rounded-xl w-full aspect-square max-w-[220px] hover:bg-muted/50 cursor-pointer flex flex-col'>
         {/* Top Part */}
         <div className='flex items-center justify-center flex-grow'>
-          <FcDocument className='h-[50%] w-[50%] max-h-[60px] max-w-[60px]' />
+          {isImage ? (
+            <div className='h-full w-full p-2 flex items-center justify-center'>
+              <Image
+                src={item.content.fileId.downloadURL}
+                alt={item.name}
+                className='max-h-full max-w-full object-contain'
+                width={100}
+                height={100}
+              />
+            </div>
+          ) : (
+            <FcDocument className='h-[50%] w-[50%] max-h-[60px] max-w-[60px]' />
+          )}
         </div>
         {/* Bottom Part */}
         <div className='border-t'>
