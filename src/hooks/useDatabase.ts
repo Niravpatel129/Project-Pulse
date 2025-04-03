@@ -99,7 +99,6 @@ export function useDatabase(initialColumns: Column[]) {
           isPrimary: column.isPrimaryKey,
           isRequired: column.isRequired,
           isUnique: column.isUnique,
-          hidden: column.isHidden,
           description: column.description,
           order: column.order,
           options: column.options,
@@ -111,24 +110,7 @@ export function useDatabase(initialColumns: Column[]) {
       });
 
       console.log('Transformed columns:', transformedColumns);
-
-      // Get visible columns from the default grid view
-      const defaultView = currentTableData.views?.find((view: any) => {
-        return view.type === 'grid';
-      });
-      const visibleColumnIds = defaultView?.visibleColumns || [];
-      console.log('Visible column IDs:', visibleColumnIds);
-
-      // Set columns with visibility based on the view
-      const finalColumns = transformedColumns.map((col) => {
-        return {
-          ...col,
-          hidden: !visibleColumnIds.includes(col.id),
-        };
-      });
-
-      console.log('Final columns:', finalColumns);
-      setColumns(finalColumns);
+      setColumns(transformedColumns);
     }
   }, [currentTableData, setColumns]);
 

@@ -83,21 +83,26 @@ export default function TablePage() {
 
   // Initialize column order and widths
   useEffect(() => {
-    if (columns.length > 0 && columnOrder.length === 0) {
-      setColumnOrder(
-        columns.map((col) => {
-          return col.id;
-        }),
-      );
-
-      // Initialize column widths
-      const initialWidths: Record<string, number> = {};
+    if (columns.length > 0) {
+      // Update column order with any new columns
+      const newColumnOrder = [...columnOrder];
       columns.forEach((col) => {
-        initialWidths[col.id] = col.width || 200; // Default width
+        if (!newColumnOrder.includes(col.id)) {
+          newColumnOrder.push(col.id);
+        }
       });
-      setColumnWidths(initialWidths);
+      setColumnOrder(newColumnOrder);
+
+      // Initialize column widths for new columns
+      const newColumnWidths = { ...columnWidths };
+      columns.forEach((col) => {
+        if (!(col.id in newColumnWidths)) {
+          newColumnWidths[col.id] = col.width || 200; // Default width
+        }
+      });
+      setColumnWidths(newColumnWidths);
     }
-  }, [columns, columnOrder.length]);
+  }, [columns]);
 
   // Initialize row order
   useEffect(() => {
@@ -297,18 +302,23 @@ export default function TablePage() {
 
     // Otherwise, return columns in the specified order, filtering out hidden ones
     // and ensuring we have a valid column for each ID
+    console.log('Mapping columnOrder to columns...');
     const orderedColumns = columnOrder
       .map((id) => {
+        console.log(`Looking for column with ID: ${id}`);
         const column = columns.find((col) => {
+          console.log(`Comparing ${col.id} with ${id}`);
           return col.id === id;
         });
         if (!column) {
           console.warn(`Column with ID ${id} not found`);
           return null;
         }
+        console.log(`Found column:`, column);
         return column;
       })
       .filter((col): col is Column => {
+        console.log('Filtering column:', col);
         return col !== null && !col.hidden;
       });
 

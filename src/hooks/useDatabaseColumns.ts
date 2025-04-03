@@ -1,7 +1,13 @@
 import { Column } from '@/types/database';
+import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 export function useDatabaseColumns(initialColumns: Column[]) {
+  const queryClient = useQueryClient();
+  const params = useParams();
   const [columns, setColumns] = useState<Column[]>(initialColumns);
 
   const [isAddColumnSheetOpen, setIsAddColumnSheetOpen] = useState(false);
@@ -12,6 +18,52 @@ export function useDatabaseColumns(initialColumns: Column[]) {
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const [newPropertyIconName, setNewPropertyIconName] = useState<string>('LuSmile');
 
+  // Add new column mutation
+  const addColumnMutation = useMutation({
+    mutationFn: async (newColumn: Column) => {
+      const response = await newRequest.post(`/tables/${params.tableId}/columns`, {
+        name: newColumn.name,
+        type: {
+          id: selectedPropertyType.id,
+          iconName: newPropertyIconName,
+        },
+        order: newColumn.order,
+      });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      // The server returns the entire table with the new column
+      const newColumnFromServer = data.data.columns[data.data.columns.length - 1];
+
+      // Update the local state with the server response
+      setColumns((prevColumns) => {
+        return [
+          ...prevColumns,
+          {
+            id: newColumnFromServer.id,
+            name: newColumnFromServer.name,
+            type: newColumnFromServer.type,
+            order: newColumnFromServer.order,
+            iconName: newColumnFromServer.icon,
+            sortable: true,
+            isRequired: newColumnFromServer.isRequired,
+            isUnique: newColumnFromServer.isUnique,
+            hidden: newColumnFromServer.isHidden,
+          },
+        ];
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['table', params.tableId] });
+      toast.success('Column added successfully');
+    },
+    onError: (error) => {
+      // Revert local state on error
+      setColumns(columns);
+      toast.error('Failed to add column');
+      console.error('Failed to add column:', error);
+    },
+  });
+
   // Add new column
   const addNewColumn = (propertyType) => {
     setSelectedPropertyType(propertyType);
@@ -19,21 +71,24 @@ export function useDatabaseColumns(initialColumns: Column[]) {
     setNewPropertyPrefix('');
   };
 
-  const saveNewColumn = () => {
+  const saveNewColumn = async () => {
     if (!selectedPropertyType) return;
 
-    const newId = `column${columns.length + 1}`;
-    setColumns([
-      ...columns,
-      {
-        id: newId,
-        name: newPropertyName || `New Column`,
-        sortable: true,
-        iconName: newPropertyIconName,
-        type: selectedPropertyType,
-        order: columns.length,
-      },
-    ]);
+    const newColumn = {
+      id: `temp-${Date.now()}`, // Temporary ID for optimistic update
+      name: newPropertyName || `New Column`,
+      sortable: true,
+      iconName: newPropertyIconName,
+      type: selectedPropertyType,
+      order: columns.length,
+    };
+
+    try {
+      // Make API call to add column
+      await addColumnMutation.mutateAsync(newColumn);
+    } catch (error) {
+      return;
+    }
 
     // Reset state
     setSelectedPropertyType(null);
