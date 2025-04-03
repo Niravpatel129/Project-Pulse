@@ -1,6 +1,10 @@
 'use client';
 
+import { DraggableRow } from '@/components/database/DraggableRow';
+import { FilterPanel } from '@/components/database/FilterPanel';
 import { PropertySheet } from '@/components/database/property-sheet';
+import { TableCellMemo } from '@/components/database/TableCell';
+import { TableHeaderMemo } from '@/components/database/TableHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,54 +15,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Table, TableBody, TableCell } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useDatabase } from '@/hooks/useDatabase';
-import {
-  AlignCenter,
-  AlignLeft,
-  AlignRight,
-  BarChart2,
-  ChevronDown,
-  ChevronUp,
-  Eye,
-  EyeOff,
-  Filter,
-  GripVertical,
-  Info,
-  Key,
-  Palette,
-  Pencil,
-  Plus,
-  Search,
-  Settings2,
-  Trash2,
-  Type,
-  X,
-} from 'lucide-react';
+import { Column, Record as DatabaseRecord, SortConfig } from '@/types/database';
+import { ChevronDown, Filter, Plus, Search, Trash2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-
-type Column = {
-  id: string;
-  name: string;
-  sortable: boolean;
-  iconName?: string;
-  hidden?: boolean;
-  isPrimary?: boolean;
-  width?: number;
-};
 
 export default function TablePage() {
   const params = useParams();
@@ -69,9 +35,7 @@ export default function TablePage() {
   const [rowOrder, setRowOrder] = useState<number[]>([]);
   const [resizingColumnId, setResizingColumnId] = useState<string | null>(null);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(
-    null,
-  );
+  const [sortConfig, setSortConfig] = useState<SortConfig>(null);
   const resizeStartX = useRef<number>(0);
   const initialWidth = useRef<number>(0);
 
@@ -169,6 +133,11 @@ export default function TablePage() {
     setFilters(newFilters);
   };
 
+  // Clear all filters
+  const clearFilters = () => {
+    setFilters([]);
+  };
+
   // Handle column rename
   const handleRenameColumn = (columnId: string, currentName: string) => {
     setRenamingColumn({ id: columnId, name: currentName });
@@ -232,564 +201,7 @@ export default function TablePage() {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-  // Draggable Column Header component
-  const DraggableColumnHeader = ({
-    column,
-    index,
-    children,
-  }: {
-    column: Column;
-    index: number;
-    children: React.ReactNode;
-  }) => {
-    const ref = useRef<HTMLTableCellElement>(null);
-
-    const [{ isDragging }, drag] = useDrag({
-      type: 'COLUMN',
-      item: { index },
-      collect: (monitor) => {
-        return {
-          isDragging: monitor.isDragging(),
-        };
-      },
-    });
-
-    const [, drop] = useDrop({
-      accept: 'COLUMN',
-      hover(item: { index: number }, monitor) {
-        if (!ref.current) return;
-        const dragIndex = item.index;
-        const hoverIndex = index;
-        if (dragIndex === hoverIndex) return;
-
-        moveColumn(dragIndex, hoverIndex);
-        item.index = hoverIndex;
-      },
-    });
-
-    drag(drop(ref));
-
-    return (
-      <TableHead
-        ref={ref}
-        key={column.id}
-        className='border-r relative'
-        style={{
-          opacity: isDragging ? 0.5 : 1,
-          width: columnWidths[column.id] || 200,
-          maxWidth: columnWidths[column.id] || 200,
-        }}
-      >
-        {children}
-        <div
-          className='absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-blue-300'
-          onMouseDown={(e) => {
-            return handleResizeStart(e, column.id);
-          }}
-        />
-      </TableHead>
-    );
-  };
-
-  // Draggable Row component
-  const DraggableRow = ({
-    record,
-    index,
-    children,
-  }: {
-    record: any;
-    index: number;
-    children: React.ReactNode;
-  }) => {
-    const ref = useRef<HTMLTableRowElement>(null);
-
-    const [{ isDragging }, drag] = useDrag({
-      type: 'ROW',
-      item: { index },
-      collect: (monitor) => {
-        return {
-          isDragging: monitor.isDragging(),
-        };
-      },
-    });
-
-    const [, drop] = useDrop({
-      accept: 'ROW',
-      hover(item: { index: number }, monitor) {
-        if (!ref.current) return;
-        const dragIndex = item.index;
-        const hoverIndex = index;
-        if (dragIndex === hoverIndex) return;
-
-        moveRow(dragIndex, hoverIndex);
-        item.index = hoverIndex;
-      },
-    });
-
-    drag(drop(ref));
-
-    return (
-      <TableRow
-        ref={ref}
-        key={record.id}
-        className={`hover:bg-gray-50 ${isDragging ? 'opacity-50' : ''}`}
-      >
-        {children}
-      </TableRow>
-    );
-  };
-
-  // Memoized Table Header Component
-  const TableHeaderMemo = memo(
-    ({
-      columns,
-      sortConfig,
-      onSort,
-      onAddColumn,
-      allSelected,
-      toggleSelectAll,
-      onRenameColumn,
-      onToggleVisibility,
-      onSetPrimary,
-      onDeleteColumn,
-      renamingColumn,
-      newColumnName,
-      setNewColumnName,
-      saveColumnRename,
-    }: {
-      columns: Column[];
-      sortConfig: { key: string; direction: 'asc' | 'desc' } | null;
-      onSort: (id: string) => void;
-      onAddColumn: () => void;
-      allSelected: boolean;
-      toggleSelectAll: (checked: boolean) => void;
-      onRenameColumn: (id: string, name: string) => void;
-      onToggleVisibility: (id: string) => void;
-      onSetPrimary: (id: string) => void;
-      onDeleteColumn: (id: string) => void;
-      renamingColumn: { id: string; name: string } | null;
-      newColumnName: string;
-      setNewColumnName: (name: string) => void;
-      saveColumnRename: () => void;
-    }) => {
-      // Get ordered columns
-      const orderedColumns =
-        columnOrder.length > 0
-          ? (columnOrder
-              .map((id) => {
-                return columns.find((col) => {
-                  return col.id === id;
-                });
-              })
-              .filter(Boolean) as Column[])
-          : columns;
-
-      return (
-        <TableHeader className='sticky top-0 z-10'>
-          <TableRow className='bg-white hover:bg-white'>
-            <TableHead className='w-10 border-r'>
-              <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} />
-            </TableHead>
-            {orderedColumns.map((column, index) => {
-              return (
-                <DraggableColumnHeader key={column.id} column={column} index={index}>
-                  <div className='flex items-center justify-between'>
-                    <div className='flex items-center gap-2'>
-                      <GripVertical className='h-4 w-4 text-gray-400 cursor-move' />
-                      {renamingColumn?.id === column.id ? (
-                        <Input
-                          value={newColumnName}
-                          onChange={(e) => {
-                            return setNewColumnName(e.target.value);
-                          }}
-                          onBlur={saveColumnRename}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              saveColumnRename();
-                            }
-                          }}
-                          className='h-7 w-32'
-                          autoFocus
-                        />
-                      ) : (
-                        <>
-                          <span className='font-medium'>{column.name}</span>
-                          {column.isPrimary && <Key className='h-3 w-3 text-primary' />}
-                        </>
-                      )}
-                    </div>
-                    <div className='flex items-center gap-1'>
-                      {column.sortable && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant='ghost'
-                                size='icon'
-                                className='h-7 w-7 hover:bg-gray-100'
-                                onClick={() => {
-                                  return onSort(column.id);
-                                }}
-                              >
-                                {sortConfig?.key === column.id ? (
-                                  sortConfig.direction === 'asc' ? (
-                                    <ChevronUp className='h-3.5 w-3.5 text-primary' />
-                                  ) : (
-                                    <ChevronDown className='h-3.5 w-3.5 text-primary' />
-                                  )
-                                ) : (
-                                  <ChevronDown className='h-3.5 w-3.5 text-gray-500' />
-                                )}
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {sortConfig?.key === column.id
-                                ? `Sorted ${
-                                    sortConfig.direction === 'asc' ? 'ascending' : 'descending'
-                                  }`
-                                : 'Sort column'}
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant='ghost'
-                                  size='icon'
-                                  className='h-7 w-7 hover:bg-gray-100'
-                                >
-                                  <Settings2 className='h-3.5 w-3.5' />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className='w-64 p-2' align='end'>
-                                <div className='space-y-1'>
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    className='w-full justify-start'
-                                    onClick={() => {
-                                      return onRenameColumn(column.id, column.name);
-                                    }}
-                                  >
-                                    <Pencil className='mr-2 h-4 w-4' />
-                                    <span>Rename</span>
-                                  </Button>
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    className='w-full justify-start'
-                                    onClick={() => {
-                                      return onToggleVisibility(column.id);
-                                    }}
-                                  >
-                                    {column.hidden ? (
-                                      <>
-                                        <Eye className='mr-2 h-4 w-4' />
-                                        <span>Show</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <EyeOff className='mr-2 h-4 w-4' />
-                                        <span>Hide</span>
-                                      </>
-                                    )}
-                                  </Button>
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    className='w-full justify-start'
-                                    onClick={() => {
-                                      return onSetPrimary(column.id);
-                                    }}
-                                    disabled={column.isPrimary}
-                                  >
-                                    <Key className='mr-2 h-4 w-4' />
-                                    <span>
-                                      {column.isPrimary ? 'Primary Key' : 'Set as Primary'}
-                                    </span>
-                                  </Button>
-                                  <div className='h-px bg-border my-1' />
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    className='w-full justify-start'
-                                  >
-                                    <Type className='mr-2 h-4 w-4' />
-                                    <span>Change Type</span>
-                                  </Button>
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    className='w-full justify-start'
-                                  >
-                                    <GripVertical className='mr-2 h-4 w-4' />
-                                    <span>Adjust Width</span>
-                                  </Button>
-
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    className='w-full justify-start'
-                                  >
-                                    <Palette className='mr-2 h-4 w-4' />
-                                    <span>Column Color</span>
-                                  </Button>
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    className='w-full justify-start'
-                                  >
-                                    <Info className='mr-2 h-4 w-4' />
-                                    <span>Add Description</span>
-                                  </Button>
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    className='w-full justify-start'
-                                  >
-                                    <BarChart2 className='mr-2 h-4 w-4' />
-                                    <span>Column Statistics</span>
-                                  </Button>
-                                  <div className='h-px bg-border my-1' />
-                                  <div className='flex items-center gap-1 px-2 py-1  rounded-md'>
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            variant='ghost'
-                                            size='icon'
-                                            className='h-7 w-7 hover:bg-gray-200'
-                                          >
-                                            <AlignLeft className='h-3.5 w-3.5' />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>Align left</TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            variant='ghost'
-                                            size='icon'
-                                            className='h-7 w-7 hover:bg-gray-200'
-                                          >
-                                            <AlignCenter className='h-3.5 w-3.5' />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>Align center</TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            variant='ghost'
-                                            size='icon'
-                                            className='h-7 w-7 hover:bg-gray-200'
-                                          >
-                                            <AlignRight className='h-3.5 w-3.5' />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>Align right</TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  </div>
-                                  <div className='h-px bg-border my-1' />
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    className='w-full justify-start text-destructive hover:text-destructive'
-                                    onClick={() => {
-                                      return onDeleteColumn(column.id);
-                                    }}
-                                    disabled={column.isPrimary}
-                                  >
-                                    <Trash2 className='mr-2 h-4 w-4' />
-                                    <span>Delete</span>
-                                  </Button>
-                                </div>
-                              </PopoverContent>
-                            </Popover>
-                          </TooltipTrigger>
-                          <TooltipContent>Column settings</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                  </div>
-                </DraggableColumnHeader>
-              );
-            })}
-            <TableHead className='w-10'>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant='ghost' size='icon' className='h-8 w-8' onClick={onAddColumn}>
-                      <Plus className='h-4 w-4' />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Add new column</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-      );
-    },
-  );
-  TableHeaderMemo.displayName = 'TableHeaderMemo';
-
-  // Memoized Table Cell Component
-  const TableCellMemo = memo(
-    ({
-      record,
-      column,
-      editingCell,
-      onEdit,
-      onCellChange,
-      onCellKeyDown,
-      stopEditing,
-      inputRef,
-      newTagText,
-      setNewTagText,
-      handleTagInputKeyDown,
-      removeTag,
-      addTag,
-    }: {
-      record: any;
-      column: any;
-      editingCell: any;
-      onEdit: () => void;
-      onCellChange: (
-        e: React.ChangeEvent<HTMLInputElement>,
-        recordId: number,
-        columnId: string,
-      ) => void;
-      onCellKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-      stopEditing: () => void;
-      inputRef: React.RefObject<HTMLInputElement>;
-      newTagText: Record<string, string>;
-      setNewTagText: (value: Record<string, string>) => void;
-      handleTagInputKeyDown: (e: React.KeyboardEvent<HTMLInputElement>, recordId: number) => void;
-      removeTag: (recordId: number, tagId: string) => void;
-      addTag: (recordId: number) => void;
-    }) => {
-      return (
-        <TableCell
-          className={`border-r min-h-[40px] h-[40px] transition-colors ${
-            editingCell.recordId === record.id && editingCell.columnId === column.id
-              ? 'bg-blue-50'
-              : ''
-          } ${column.sortable ? 'cursor-pointer hover:bg-gray-50' : ''}`}
-          onClick={(e) => {
-            if (column.sortable && !editingCell.recordId) {
-              e.stopPropagation();
-              handleColumnClick(column.id);
-            } else {
-              onEdit();
-            }
-          }}
-          style={{
-            width: columnWidths[column.id] || 200,
-            maxWidth: columnWidths[column.id] || 200,
-          }}
-        >
-          {column.id === 'tags' ? (
-            <div className='flex flex-wrap gap-1 items-center'>
-              {record.tags.map((tag) => {
-                return (
-                  <Badge
-                    key={tag.id}
-                    variant='outline'
-                    className='bg-amber-50 text-amber-700 hover:bg-amber-50 border-amber-200 flex items-center gap-1'
-                  >
-                    {tag.name}
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      className='h-4 w-4 p-0 hover:bg-amber-100'
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeTag(record.id, tag.id);
-                      }}
-                    >
-                      <X className='h-3 w-3' />
-                    </Button>
-                  </Badge>
-                );
-              })}
-              <div className='flex items-center'>
-                <Input
-                  value={newTagText[record.id] || ''}
-                  onChange={(e) => {
-                    setNewTagText({
-                      ...newTagText,
-                      [record.id]: e.target.value,
-                    });
-                  }}
-                  onKeyDown={(e) => {
-                    return handleTagInputKeyDown(e, record.id);
-                  }}
-                  className='h-6 w-20 min-w-20 text-xs'
-                  placeholder='Add tag...'
-                  onClick={(e) => {
-                    return e.stopPropagation();
-                  }}
-                />
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='h-6 w-6 ml-1'
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addTag(record.id);
-                        }}
-                      >
-                        <Plus className='h-3 w-3' />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Add tag</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </div>
-          ) : (
-            <div className='min-h-[28px] h-[28px] flex items-center w-full'>
-              {editingCell.recordId === record.id && editingCell.columnId === column.id ? (
-                <Input
-                  ref={inputRef}
-                  value={record[column.id] || ''}
-                  onChange={(e) => {
-                    return onCellChange(e, record.id, column.id);
-                  }}
-                  onBlur={stopEditing}
-                  onKeyDown={onCellKeyDown}
-                  className='h-8 m-0 p-2 w-full'
-                  autoFocus
-                />
-              ) : column.id === 'name' ? (
-                <div className='font-medium'>
-                  {record.id}. {record[column.id]}
-                </div>
-              ) : (
-                record[column.id]
-              )}
-            </div>
-          )}
-        </TableCell>
-      );
-    },
-  );
-  TableCellMemo.displayName = 'TableCellMemo';
-
-  // Memoize handlers
+  // Handle column sorting
   const handleSort = useCallback(
     (columnId: string) => {
       let direction: 'asc' | 'desc' = 'asc';
@@ -854,7 +266,7 @@ export default function TablePage() {
           return record.id === id;
         });
       })
-      .filter(Boolean) as typeof records;
+      .filter(Boolean) as DatabaseRecord[];
   };
 
   // Get ordered columns
@@ -931,89 +343,18 @@ export default function TablePage() {
         </div>
       </div>
 
-      {showFilters && (
-        <div className='bg-blue-50 p-4 mb-4 rounded-md border border-blue-200 shadow-sm transition-all'>
-          <div className='flex justify-between items-center mb-3'>
-            <h3 className='text-sm font-medium text-blue-800'>Filters</h3>
-            {filters.length > 0 && (
-              <Button
-                variant='ghost'
-                size='sm'
-                className='text-blue-600 hover:text-blue-800 hover:bg-blue-100 h-7 px-2'
-                onClick={() => {
-                  return setFilters([]);
-                }}
-              >
-                Clear all
-              </Button>
-            )}
-          </div>
-
-          {filters.length > 0 && (
-            <div className='flex flex-wrap gap-2 mb-3'>
-              {filters.map((filter, index) => {
-                return (
-                  <Badge
-                    key={index}
-                    variant='outline'
-                    className='bg-white border-blue-200 text-blue-800 py-1 px-2 flex items-center gap-1'
-                  >
-                    <span className='font-medium'>{filter.column}:</span> {filter.value}
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      className='h-4 w-4 p-0 hover:bg-blue-100 ml-1'
-                      onClick={() => {
-                        return removeFilter(index);
-                      }}
-                    >
-                      <X className='h-3 w-3' />
-                    </Button>
-                  </Badge>
-                );
-              })}
-            </div>
-          )}
-
-          <div className='flex gap-2 items-center'>
-            <select
-              className='h-9 rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'
-              value={filterColumn}
-              onChange={(e) => {
-                return setFilterColumn(e.target.value);
-              }}
-            >
-              <option value=''>Select column...</option>
-              {columns.map((column) => {
-                return (
-                  <option key={column.id} value={column.name}>
-                    {column.name}
-                  </option>
-                );
-              })}
-            </select>
-            <Input
-              placeholder='Filter value...'
-              className='w-40 h-9'
-              value={filterValue}
-              onChange={(e) => {
-                return setFilterValue(e.target.value);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') addFilter();
-              }}
-            />
-            <Button
-              size='sm'
-              onClick={addFilter}
-              disabled={!filterColumn || !filterValue}
-              className='h-9'
-            >
-              <Plus className='h-4 w-4 mr-1' /> Add Filter
-            </Button>
-          </div>
-        </div>
-      )}
+      <FilterPanel
+        showFilters={showFilters}
+        filters={filters}
+        filterColumn={filterColumn}
+        filterValue={filterValue}
+        columns={columns}
+        setFilterColumn={setFilterColumn}
+        setFilterValue={setFilterValue}
+        addFilter={addFilter}
+        removeFilter={removeFilter}
+        clearFilters={clearFilters}
+      />
 
       <div className='pt-1 border rounded-md shadow-sm'>
         {viewMode === 'table' ? (
@@ -1033,11 +374,14 @@ export default function TablePage() {
               newColumnName={newColumnName}
               setNewColumnName={setNewColumnName}
               saveColumnRename={saveColumnRename}
+              columnWidths={columnWidths}
+              handleResizeStart={handleResizeStart}
+              moveColumn={moveColumn}
             />
             <TableBody>
-              {getOrderedRecords().map((record) => {
+              {getOrderedRecords().map((record, index) => {
                 return (
-                  <TableRow key={record.id} className='hover:bg-gray-50'>
+                  <DraggableRow key={record.id} record={record} index={index} moveRow={moveRow}>
                     <TableCell className='border-r p-0 text-center'>
                       <div className='flex h-full items-center justify-center'>
                         <Checkbox
@@ -1071,11 +415,13 @@ export default function TablePage() {
                             handleTagInputKeyDown={handleTagInputKeyDown}
                             removeTag={removeTag}
                             addTag={addTag}
+                            columnWidths={columnWidths}
+                            handleColumnClick={handleColumnClick}
                           />
                         );
                       })}
                     <TableCell></TableCell>
-                  </TableRow>
+                  </DraggableRow>
                 );
               })}
             </TableBody>
@@ -1108,7 +454,7 @@ export default function TablePage() {
                           <span className='w-2/3'>
                             {column.id === 'tags' ? (
                               <div className='flex flex-wrap gap-1'>
-                                {record.tags.map((tag) => {
+                                {record.tags?.map((tag) => {
                                   return (
                                     <Badge
                                       key={tag.id}
