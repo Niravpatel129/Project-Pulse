@@ -20,10 +20,14 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useDatabase } from '@/hooks/useDatabase';
 import { Column, SortConfig } from '@/types/database';
+import { newRequest } from '@/utils/newRequest';
+import { useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, Filter, Plus, Search, Trash2 } from 'lucide-react';
+import { useParams } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { toast } from 'sonner';
 
 export default function TablePage() {
   const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
@@ -78,6 +82,9 @@ export default function TablePage() {
     setRowOrder,
     setRecords,
   } = useDatabase([]);
+
+  const queryClient = useQueryClient();
+  const params = useParams();
 
   // Initialize column order and widths
   useEffect(() => {
@@ -292,9 +299,48 @@ export default function TablePage() {
   }, [setIsAddColumnSheetOpen]);
 
   const handleDeleteSelected = useCallback(() => {
-    // Implement delete functionality here
-    alert('Delete selected records functionality would go here');
-  }, []);
+    // Get all selected record IDs
+    const selectedRecordIds = records
+      .filter((record) => {
+        return record.values?.selected;
+      })
+      .map((record) => {
+        return record._id;
+      });
+
+    if (selectedRecordIds.length === 0) {
+      toast.error('No records selected');
+      return;
+    }
+
+    // Delete each selected record
+    Promise.all(
+      selectedRecordIds.map((recordId) => {
+        return newRequest.delete(`/tables/${params.tableId}/rows/${recordId}`);
+      }),
+    )
+      .then(() => {
+        // Update local state by removing deleted records
+        setRecords((prevRecords) => {
+          return prevRecords.filter((record) => {
+            return !selectedRecordIds.includes(record._id);
+          });
+        });
+        // Update row order
+        setRowOrder((prevOrder) => {
+          return prevOrder.filter((id) => {
+            return !selectedRecordIds.includes(id);
+          });
+        });
+        // Invalidate queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ['table-records', params.tableId] });
+        toast.success('Selected records deleted successfully');
+      })
+      .catch((error) => {
+        console.error('Failed to delete records:', error);
+        toast.error('Failed to delete records');
+      });
+  }, [records, params.tableId, setRecords, setRowOrder, queryClient]);
 
   // Get ordered records
   const orderedRecords = useMemo(() => {
