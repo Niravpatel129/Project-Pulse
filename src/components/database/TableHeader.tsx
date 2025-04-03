@@ -25,6 +25,7 @@ interface TableHeaderProps {
   newColumnName: string;
   setNewColumnName: (name: string) => void;
   saveColumnRename: () => void;
+  setRenamingColumn: (column: { id: string; name: string } | null) => void;
   columnWidths: Record<string, number>;
   handleResizeStart: (e: React.MouseEvent, columnId: string) => void;
   moveColumn: (dragIndex: number, hoverIndex: number) => void;
@@ -46,6 +47,7 @@ export const TableHeaderMemo = memo(
     newColumnName,
     setNewColumnName,
     saveColumnRename,
+    setRenamingColumn,
     columnWidths,
     handleResizeStart,
     moveColumn,
@@ -135,18 +137,58 @@ export const TableHeaderMemo = memo(
                           </PopoverTrigger>
                           <PopoverContent className='w-64 p-2 shadow-lg rounded-lg' align='end'>
                             <div className='space-y-1'>
-                              <Button
-                                variant='ghost'
-                                size='sm'
-                                className='w-full justify-start text-[#3c4043]'
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  return onRenameColumn(column.id, column.name);
-                                }}
-                              >
-                                <Pencil className='mr-2 h-4 w-4' />
-                                <span>Rename</span>
-                              </Button>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    className='w-full justify-start text-[#3c4043]'
+                                  >
+                                    <Pencil className='mr-2 h-4 w-4' />
+                                    <span>Rename</span>
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  className='w-64 p-2 shadow-lg rounded-lg'
+                                  align='end'
+                                >
+                                  <div className='space-y-2'>
+                                    <Input
+                                      value={newColumnName}
+                                      onChange={(e) => {
+                                        return setNewColumnName(e.target.value);
+                                      }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          saveColumnRename();
+                                        }
+                                      }}
+                                      className='h-8'
+                                      placeholder='Enter new name'
+                                      autoFocus
+                                    />
+                                    <div className='flex justify-end gap-2'>
+                                      <Button
+                                        variant='ghost'
+                                        size='sm'
+                                        onClick={() => {
+                                          setNewColumnName('');
+                                          setRenamingColumn(null);
+                                        }}
+                                      >
+                                        Cancel
+                                      </Button>
+                                      <Button
+                                        size='sm'
+                                        onClick={saveColumnRename}
+                                        disabled={!newColumnName.trim()}
+                                      >
+                                        Save
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
 
                               <div className='h-px bg-[#e0e0e0] my-1' />
                               <Tooltip>

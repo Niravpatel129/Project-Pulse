@@ -153,9 +153,13 @@ export default function TablePage() {
 
   const saveColumnRename = useCallback(async () => {
     if (renamingColumn && newColumnName.trim()) {
-      await renameColumn(renamingColumn.id, newColumnName.trim());
-      setRenamingColumn(null);
-      setNewColumnName('');
+      try {
+        await renameColumn(renamingColumn.id, newColumnName.trim());
+        setRenamingColumn(null);
+        setNewColumnName('');
+      } catch (error) {
+        console.error('Failed to rename column:', error);
+      }
     }
   }, [renamingColumn, newColumnName, renameColumn]);
 
@@ -434,6 +438,7 @@ export default function TablePage() {
               newColumnName={newColumnName}
               setNewColumnName={setNewColumnName}
               saveColumnRename={saveColumnRename}
+              setRenamingColumn={setRenamingColumn}
               columnWidths={columnWidths}
               handleResizeStart={handleResizeStart}
               moveColumn={moveColumn}

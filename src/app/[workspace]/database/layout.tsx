@@ -7,10 +7,12 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { useDatabase } from '@/hooks/useDatabase';
+import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, Pencil, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function DatabaseLayout({ children }: { children: React.ReactNode }) {
@@ -20,6 +22,64 @@ export default function DatabaseLayout({ children }: { children: React.ReactNode
   const currentTable = pathname.split('/').pop() || tables[0]?._id || 'table-1';
   const [tableName, setTableName] = useState('');
   const [isCreatingTable, setIsCreatingTable] = useState(false);
+  const [renamingTable, setRenamingTable] = useState<{ id: string; name: string } | null>(null);
+  const [newTableName, setNewTableName] = useState('');
+  const queryClient = useQueryClient();
+
+  // Delete table mutation
+  const deleteTableMutation = useMutation({
+    mutationFn: async (tableId: string) => {
+      const response = await newRequest.delete(`/tables/${tableId}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tables'] });
+      toast.success('Table deleted successfully');
+      // If we deleted the current table, redirect to the first available table
+      if (tables.length > 0) {
+        router.push(`/database/${tables[0]._id}`);
+      }
+    },
+    onError: (error) => {
+      console.error('Failed to delete table:', error);
+      toast.error('Failed to delete table');
+    },
+  });
+
+  // Handle table delete
+  const handleDeleteTable = useCallback(
+    async (tableId: string) => {
+      try {
+        await deleteTableMutation.mutateAsync(tableId);
+      } catch (error) {
+        console.error('Failed to delete table:', error);
+      }
+    },
+    [deleteTableMutation],
+  );
+
+  // Handle table rename
+  const handleRenameTable = useCallback((tableId: string, currentName: string) => {
+    setRenamingTable({ id: tableId, name: currentName });
+    setNewTableName(currentName);
+  }, []);
+
+  const saveTableRename = useCallback(async () => {
+    if (renamingTable && newTableName.trim()) {
+      try {
+        await newRequest.patch(`/tables/${renamingTable.id}`, {
+          name: newTableName.trim(),
+        });
+        queryClient.invalidateQueries({ queryKey: ['tables'] });
+        setRenamingTable(null);
+        setNewTableName('');
+        toast.success('Table renamed successfully');
+      } catch (error) {
+        console.error('Failed to rename table:', error);
+        toast.error('Failed to rename table');
+      }
+    }
+  }, [renamingTable, newTableName, queryClient]);
 
   // Redirect to first table if no table is selected
   useEffect(() => {
@@ -53,7 +113,34 @@ export default function DatabaseLayout({ children }: { children: React.ReactNode
                             value={table._id}
                             className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none w-full pr-8'
                           >
-                            {table.name}
+                            {renamingTable?.id === table._id ? (
+                              <Input
+                                value={newTableName}
+                                onChange={(e) => {
+                                  return setNewTableName(e.target.value);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    saveTableRename();
+                                  } else if (e.key === 'Escape') {
+                                    setNewTableName('');
+                                    setRenamingTable(null);
+                                  }
+                                }}
+                                onBlur={() => {
+                                  if (newTableName.trim()) {
+                                    saveTableRename();
+                                  } else {
+                                    setNewTableName('');
+                                    setRenamingTable(null);
+                                  }
+                                }}
+                                className='h-7 w-32 border-none focus-visible:ring-0 focus-visible:ring-none focus:outline-none focus:shadow-none shadow-none'
+                                autoFocus
+                              />
+                            ) : (
+                              <span>{table.name}</span>
+                            )}
                           </TabsTrigger>
                         </Link>
                         <div className='absolute right-1 top-1/2 -translate-y-1/2 z-10'>
@@ -64,36 +151,36 @@ export default function DatabaseLayout({ children }: { children: React.ReactNode
                                 variant='ghost'
                                 size='icon'
                                 className='h-6 w-6 rounded-full hover:bg-gray-200'
+                                onClick={(e) => {
+                                  return e.stopPropagation();
+                                }}
                               >
-                                <ChevronDown className='h-3 w-3 text-muted-foreground' />
+                                <ChevronDown className='h-3 w-3 text-[#5f6368]' />
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent
-                              className='w-48 p-2 shadow-lg rounded-lg'
-                              align='end'
-                              side='bottom'
-                            >
+                            <PopoverContent className='w-64 p-2 shadow-lg rounded-lg' align='end'>
                               <div className='space-y-1'>
                                 <Button
                                   variant='ghost'
                                   size='sm'
-                                  className='w-full justify-start'
-                                  onClick={() => {
-                                    // Implement rename functionality
-                                    toast.info('Rename functionality to be implemented');
+                                  className='w-full justify-start text-[#3c4043]'
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRenameTable(table._id, table.name);
                                   }}
                                 >
                                   <Pencil className='mr-2 h-4 w-4' />
                                   <span>Rename</span>
                                 </Button>
-                                <div className='h-px bg-muted my-1' />
+
+                                <div className='h-px bg-[#e0e0e0] my-1' />
                                 <Button
                                   variant='ghost'
                                   size='sm'
-                                  className='w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10'
+                                  className='w-full justify-start text-[#d93025] hover:text-[#d93025] hover:bg-red-50'
                                   onClick={() => {
                                     // Implement delete functionality
-                                    toast.info('Delete functionality to be implemented');
+                                    handleDeleteTable(table._id);
                                   }}
                                 >
                                   <Trash2 className='mr-2 h-4 w-4' />
