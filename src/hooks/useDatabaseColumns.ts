@@ -34,7 +34,6 @@ export function useDatabaseColumns(initialColumns: Column[]) {
     onSuccess: (data) => {
       // The server returns the entire table with the new column
       const newColumnFromServer = data.data.columns[data.data.columns.length - 1];
-      console.log('🚀 newColumnFromServer:', newColumnFromServer);
 
       // Update the local state with the server response
       setColumns((prevColumns) => {

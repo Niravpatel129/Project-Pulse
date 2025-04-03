@@ -153,7 +153,15 @@ export function useDatabaseRecords(
       return response.data;
     },
     onSuccess: () => {
-      // queryClient.invalidateQueries({ queryKey: ['table-records', params.tableId] });
+      // Batch updates and wait 30 seconds before invalidating queries
+      // This prevents excessive refetching when multiple cells are updated in succession
+      const timeoutId = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['table-records', params.tableId] });
+      }, 10000);
+
+      return () => {
+        return clearTimeout(timeoutId);
+      }; // Clean up timeout if component unmounts
     },
     onError: (error) => {
       toast.error('Failed to update cell');
