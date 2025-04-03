@@ -151,9 +151,9 @@ export default function TablePage() {
     setNewColumnName(currentName);
   }, []);
 
-  const saveColumnRename = useCallback(() => {
+  const saveColumnRename = useCallback(async () => {
     if (renamingColumn && newColumnName.trim()) {
-      renameColumn(renamingColumn.id, newColumnName.trim());
+      await renameColumn(renamingColumn.id, newColumnName.trim());
       setRenamingColumn(null);
       setNewColumnName('');
     }
@@ -330,7 +330,7 @@ export default function TablePage() {
         });
       })
       .filter((col): col is Column => {
-        return col !== null && !col.hidden;
+        return col !== null && !col?.hidden;
       });
   }, [columns, columnOrder]);
 
@@ -458,6 +458,8 @@ export default function TablePage() {
                       </div>
                     </TableCell>
                     {orderedColumns.map((column) => {
+                      if (!column) return;
+
                       return (
                         <TableCellMemo
                           key={`cell-${record._id}-${column.id}`}

@@ -2,7 +2,7 @@ import { Column } from '@/types/database';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDatabaseColumns } from './useDatabaseColumns';
 import { useDatabaseIcons } from './useDatabaseIcons';
 import { useDatabaseRecords } from './useDatabaseRecords';
@@ -78,7 +78,6 @@ export function useDatabase(initialColumns: Column[]) {
     queryFn: async () => {
       if (!params?.tableId) return null;
       const response = await newRequest.get(`/tables/${params.tableId}`);
-      console.log('Table data response:', response.data);
       return response.data.data;
     },
     enabled: !!params?.tableId,
@@ -86,12 +85,10 @@ export function useDatabase(initialColumns: Column[]) {
 
   // Update local state when table data changes
   useEffect(() => {
-    if (currentTableData && currentTableData.columns) {
-      console.log('Current table data:', currentTableData);
-
+    if (currentTableData?.columns) {
       // Transform columns from API format to local format
       const transformedColumns = currentTableData.columns.map((column: any) => {
-        const transformed = {
+        return {
           id: column.id,
           name: column.name,
           type: column.type,
@@ -105,11 +102,8 @@ export function useDatabase(initialColumns: Column[]) {
           sortable: true,
           width: 200,
         };
-        console.log('Transformed column:', transformed);
-        return transformed;
       });
 
-      console.log('Transformed columns:', transformedColumns);
       setColumns(transformedColumns);
     }
   }, [currentTableData, setColumns]);
@@ -125,12 +119,9 @@ export function useDatabase(initialColumns: Column[]) {
     queryFn: async () => {
       if (!params?.tableId) return [];
       const response = await newRequest.get(`/tables/${params.tableId}/records`);
-      console.log('Raw response:', response.data);
 
       // Transform the response data to match our frontend structure
       return response.data.data.map((row: any) => {
-        console.log('Processing row:', row);
-
         // Initialize values with defaults
         const values: any = {
           selected: false,
@@ -141,7 +132,6 @@ export function useDatabase(initialColumns: Column[]) {
         // Add values from each record
         if (row.records && Array.isArray(row.records)) {
           row.records.forEach((record: any) => {
-            console.log('Processing record:', record);
             if (record.values) {
               Object.entries(record.values).forEach(([key, value]) => {
                 values[key] = value;
@@ -149,8 +139,6 @@ export function useDatabase(initialColumns: Column[]) {
             }
           });
         }
-
-        console.log('Final values for row:', values);
 
         return {
           _id: row.rowId,
@@ -175,25 +163,28 @@ export function useDatabase(initialColumns: Column[]) {
 
   // Update records when table records change
   useEffect(() => {
-    if (tableRecords && tableRecords.length > 0) {
-      // Only update if the records are different
+    if (tableRecords?.length > 0) {
       setRecords((prevRecords) => {
         // If we have any temporary records, keep them
         const tempRecords = prevRecords.filter((record) => {
           return record._id.startsWith('temp-');
         });
-        // Combine temp records with new records, avoiding duplicates
-        const newRecords = [...tempRecords];
+
+        // Create a map for faster lookups
+        const existingRecordMap = new Map(
+          tempRecords.map((record) => {
+            return [record._id, record];
+          }),
+        );
+
+        // Add new records that don't exist yet
         tableRecords.forEach((newRecord) => {
-          if (
-            !newRecords.some((r) => {
-              return r._id === newRecord._id;
-            })
-          ) {
-            newRecords.push(newRecord);
+          if (!existingRecordMap.has(newRecord._id)) {
+            tempRecords.push(newRecord);
           }
         });
-        return newRecords;
+
+        return tempRecords;
       });
     }
   }, [tableRecords]);
@@ -204,9 +195,11 @@ export function useDatabase(initialColumns: Column[]) {
     }
   }, [editingCell, inputRef]);
 
-  const filteredPropertyTypes = defaultPropertyTypes.filter((type) => {
-    return type.name.toLowerCase().includes(propertySearchQuery.toLowerCase());
-  });
+  const filteredPropertyTypes = useMemo(() => {
+    return defaultPropertyTypes.filter((type) => {
+      return type.name.toLowerCase().includes(propertySearchQuery.toLowerCase());
+    });
+  }, [defaultPropertyTypes, propertySearchQuery]);
 
   const createTableMutation = useMutation({
     mutationFn: async (tableName: string) => {
@@ -217,16 +210,18 @@ export function useDatabase(initialColumns: Column[]) {
     },
   });
 
-  const handleCreateTable = async (tableName: string) => {
-    console.log('create table', tableName);
-    if (!tableName.trim()) return;
+  const handleCreateTable = useCallback(
+    async (tableName: string) => {
+      if (!tableName.trim()) return;
 
-    try {
-      await createTableMutation.mutateAsync(tableName);
-    } catch (error) {
-      console.error('Failed to create table:', error);
-    }
-  };
+      try {
+        await createTableMutation.mutateAsync(tableName);
+      } catch (error) {
+        console.error('Failed to create table:', error);
+      }
+    },
+    [createTableMutation],
+  );
 
   // Initialize row order
   useEffect(() => {
@@ -239,9 +234,14 @@ export function useDatabase(initialColumns: Column[]) {
     }
   }, [records, rowOrder.length]);
 
+  // Memoize sorted records to prevent unnecessary re-renders
+  const sortedRecords = useMemo(() => {
+    return getSortedRecords(records);
+  }, [getSortedRecords, records]);
+
   return {
     columns,
-    records: getSortedRecords(records),
+    records: sortedRecords,
     sortConfig,
     editingCell,
     newTagText,

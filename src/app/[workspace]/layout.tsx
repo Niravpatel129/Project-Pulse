@@ -33,6 +33,8 @@ export default function DashboardLayout({
   // Determine if we should show navigation
   const showNavigation = !isAuthPage && !isPortalPage && (loading || isAuthenticated);
 
+  const fullLayout = pathname.includes('/database');
+
   return (
     <div className='flex min-h-screen flex-col'>
       {showNavigation && <Navigation />}

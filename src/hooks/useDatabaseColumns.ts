@@ -66,6 +66,26 @@ export function useDatabaseColumns(initialColumns: Column[]) {
     },
   });
 
+  // Add rename column mutation
+  const renameColumnMutation = useMutation({
+    mutationFn: async ({ columnId, newName }: { columnId: string; newName: string }) => {
+      const response = await newRequest.patch(`/tables/${params.tableId}/columns/${columnId}`, {
+        column: {
+          name: newName,
+        },
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['table', params.tableId] });
+      toast.success('Column renamed successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to rename column');
+      console.error('Failed to rename column:', error);
+    },
+  });
+
   // Add new column
   const addNewColumn = (propertyType) => {
     setSelectedPropertyType(propertyType);
@@ -113,12 +133,17 @@ export function useDatabaseColumns(initialColumns: Column[]) {
   };
 
   // Column management functions
-  const renameColumn = (columnId: string, newName: string) => {
-    setColumns(
-      columns.map((col) => {
-        return col.id === columnId ? { ...col, name: newName } : col;
-      }),
-    );
+  const renameColumn = async (columnId: string, newName: string) => {
+    try {
+      await renameColumnMutation.mutateAsync({ columnId, newName });
+      setColumns(
+        columns.map((col) => {
+          return col.id === columnId ? { ...col, name: newName } : col;
+        }),
+      );
+    } catch (error) {
+      console.error('Failed to rename column:', error);
+    }
   };
 
   const toggleColumnVisibility = (columnId: string) => {
