@@ -20,6 +20,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { FcDocument } from 'react-icons/fc';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
+import NewModuleFromTemplateSheet from '../FileComponents/NewModuleFromTemplateSheet';
 import NewTemplateSheet from '../FileComponents/NewTemplateSheet';
 
 export default function NewProjectModules() {
@@ -29,15 +30,28 @@ export default function NewProjectModules() {
     templates,
     handleAddFileToProject,
     modules,
+    addModule,
   } = useProjectModules();
 
   const [isNewTemplateSheetOpen, setIsNewTemplateSheetOpen] = useState(false);
+  const [isNewModuleFromTemplateSheetOpen, setIsNewModuleFromTemplateSheetOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
 
   const handleSaveTemplate = (
     template: Omit<Template, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>,
   ) => {
     // TODO: Implement template saving logic
     console.log('Saving template:', template);
+  };
+
+  const handleCreateModuleFromTemplate = (moduleData: any) => {
+    if (selectedTemplate) {
+      addModule({
+        content: moduleData,
+        type: 'template',
+      });
+      setIsNewModuleFromTemplateSheetOpen(false);
+    }
   };
 
   const renderDropdownMenu = () => {
@@ -69,7 +83,13 @@ export default function NewProjectModules() {
               <DropdownMenuSubContent className='text-sm text-popover-foreground min-w-[220px]'>
                 {templates.map((template, index) => {
                   return (
-                    <DropdownMenuItem key={index}>
+                    <DropdownMenuItem
+                      key={index}
+                      onClick={() => {
+                        setSelectedTemplate(template);
+                        setIsNewModuleFromTemplateSheetOpen(true);
+                      }}
+                    >
                       <div className='flex items-center gap-2'>
                         <FileText className='h-4 w-4' />
                         <div>
@@ -189,6 +209,18 @@ export default function NewProjectModules() {
         }}
         onSave={handleSaveTemplate}
       />
+
+      {selectedTemplate && (
+        <NewModuleFromTemplateSheet
+          isOpen={isNewModuleFromTemplateSheetOpen}
+          onClose={() => {
+            setIsNewModuleFromTemplateSheetOpen(false);
+            setSelectedTemplate(null);
+          }}
+          template={selectedTemplate}
+          onSave={handleCreateModuleFromTemplate}
+        />
+      )}
     </div>
   );
 }
