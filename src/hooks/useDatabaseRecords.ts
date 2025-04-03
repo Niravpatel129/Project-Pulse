@@ -70,35 +70,61 @@ export function useDatabaseRecords(
       // Transform the response to match our frontend structure
       return {
         data: {
-          _id: response.data.data.rowId,
-          tableId: params.tableId as string,
+          _id: response.data.data._id,
+          tableId: response.data.data.tableId,
           position: response.data.data.position,
-          values: response.data.data.records || {},
+          values: {
+            selected: false,
+            tags: [],
+            name: '',
+          },
           createdBy: {
-            _id: '',
+            _id: response.data.data.createdBy,
             name: '',
             email: '',
           },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          __v: 0,
+          createdAt: response.data.data.createdAt,
+          updatedAt: response.data.data.updatedAt,
+          __v: response.data.data.__v,
         },
       };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['table-records', params.tableId] });
+      // Update the records state with the new record
+      setRecords((prevRecords) => {
+        return prevRecords.map((record) => {
+          // Find the temporary record and replace it with the actual one
+          if (record._id && record._id.startsWith('temp-')) {
+            return data.data;
+          }
+          return record;
+        });
+      });
+      // Update the row order
+      setRowOrder((prevOrder) => {
+        return prevOrder.map((id) => {
+          if (id && id.startsWith('temp-')) {
+            return data.data._id;
+          }
+          return id;
+        });
+      });
+      // Invalidate the query after a short delay to ensure our optimistic update is visible
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['table-records', params.tableId] });
+      }, 100);
       toast.success('Row added successfully');
     },
     onError: (error) => {
       // Remove the temporary record on error
       setRecords((prevRecords) => {
         return prevRecords.filter((record) => {
-          return record._id !== '';
+          return record._id && !record._id.startsWith('temp-');
         });
       });
       setRowOrder((prevOrder) => {
         return prevOrder.filter((id) => {
-          return id !== '';
+          return id && !id.startsWith('temp-');
         });
       });
       toast.error('Failed to add row');

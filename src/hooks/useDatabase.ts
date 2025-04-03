@@ -169,12 +169,32 @@ export function useDatabase(initialColumns: Column[]) {
       });
     },
     enabled: !!params?.tableId,
+    staleTime: 0, // Always refetch when invalidated
+    gcTime: 0, // Don't cache the data
   });
 
   // Update records when table records change
   useEffect(() => {
     if (tableRecords && tableRecords.length > 0) {
-      setRecords(tableRecords);
+      // Only update if the records are different
+      setRecords((prevRecords) => {
+        // If we have any temporary records, keep them
+        const tempRecords = prevRecords.filter((record) => {
+          return record._id.startsWith('temp-');
+        });
+        // Combine temp records with new records, avoiding duplicates
+        const newRecords = [...tempRecords];
+        tableRecords.forEach((newRecord) => {
+          if (
+            !newRecords.some((r) => {
+              return r._id === newRecord._id;
+            })
+          ) {
+            newRecords.push(newRecord);
+          }
+        });
+        return newRecords;
+      });
     }
   }, [tableRecords]);
 
