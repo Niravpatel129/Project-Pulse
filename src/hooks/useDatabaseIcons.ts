@@ -19,7 +19,6 @@ export const iconOptions = [
 export const defaultPropertyTypes = [
   { id: 'text', name: 'Text', iconName: 'LuCaseSensitive' },
   { id: 'number', name: 'Number', iconName: 'LuHash' },
-  { id: 'file', name: 'File', iconName: 'LuFile' },
 ];
 
 export function useDatabaseIcons() {
