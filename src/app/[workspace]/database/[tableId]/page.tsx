@@ -69,13 +69,15 @@ export default function TablePage() {
   const [rowOrder, setRowOrder] = useState<number[]>([]);
   const [resizingColumnId, setResizingColumnId] = useState<string | null>(null);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(
+    null,
+  );
   const resizeStartX = useRef<number>(0);
   const initialWidth = useRef<number>(0);
 
   const {
     columns,
     records,
-    sortConfig,
     editingCell,
     newTagText,
     allSelected,
@@ -116,11 +118,15 @@ export default function TablePage() {
   // Initialize column order and widths
   useEffect(() => {
     if (columns.length > 0 && columnOrder.length === 0) {
-      setColumnOrder(columns.map(col => col.id));
-      
+      setColumnOrder(
+        columns.map((col) => {
+          return col.id;
+        }),
+      );
+
       // Initialize column widths
       const initialWidths: Record<string, number> = {};
-      columns.forEach(col => {
+      columns.forEach((col) => {
         initialWidths[col.id] = col.width || 200; // Default width
       });
       setColumnWidths(initialWidths);
@@ -130,7 +136,11 @@ export default function TablePage() {
   // Initialize row order
   useEffect(() => {
     if (records.length > 0 && rowOrder.length === 0) {
-      setRowOrder(records.map(record => record.id));
+      setRowOrder(
+        records.map((record) => {
+          return record.id;
+        }),
+      );
     }
   }, [records, rowOrder.length]);
 
@@ -198,40 +208,52 @@ export default function TablePage() {
     setResizingColumnId(columnId);
     resizeStartX.current = e.clientX;
     initialWidth.current = columnWidths[columnId] || 200;
-    
+
     const handleMouseMove = (e: MouseEvent) => {
       if (resizingColumnId) {
         const deltaX = e.clientX - resizeStartX.current;
         const newWidth = Math.max(100, initialWidth.current + deltaX); // Minimum width of 100px
-        setColumnWidths(prev => ({
-          ...prev,
-          [resizingColumnId]: newWidth
-        }));
+        setColumnWidths((prev) => {
+          return {
+            ...prev,
+            [resizingColumnId]: newWidth,
+          };
+        });
       }
     };
-    
+
     const handleMouseUp = () => {
       setResizingColumnId(null);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-    
+
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
   };
 
   // Draggable Column Header component
-  const DraggableColumnHeader = ({ column, index, children }: { column: Column, index: number, children: React.ReactNode }) => {
+  const DraggableColumnHeader = ({
+    column,
+    index,
+    children,
+  }: {
+    column: Column;
+    index: number;
+    children: React.ReactNode;
+  }) => {
     const ref = useRef<HTMLTableCellElement>(null);
-    
+
     const [{ isDragging }, drag] = useDrag({
       type: 'COLUMN',
       item: { index },
-      collect: (monitor) => ({
-        isDragging: monitor.isDragging(),
-      }),
+      collect: (monitor) => {
+        return {
+          isDragging: monitor.isDragging(),
+        };
+      },
     });
-    
+
     const [, drop] = useDrop({
       accept: 'COLUMN',
       hover(item: { index: number }, monitor) {
@@ -239,46 +261,58 @@ export default function TablePage() {
         const dragIndex = item.index;
         const hoverIndex = index;
         if (dragIndex === hoverIndex) return;
-        
+
         moveColumn(dragIndex, hoverIndex);
         item.index = hoverIndex;
       },
     });
-    
+
     drag(drop(ref));
-    
+
     return (
-      <TableHead 
-        ref={ref} 
-        key={column.id} 
+      <TableHead
+        ref={ref}
+        key={column.id}
         className='border-r relative'
-        style={{ 
+        style={{
           opacity: isDragging ? 0.5 : 1,
           width: columnWidths[column.id] || 200,
           maxWidth: columnWidths[column.id] || 200,
         }}
       >
         {children}
-        <div 
-          className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-blue-300"
-          onMouseDown={(e) => handleResizeStart(e, column.id)}
+        <div
+          className='absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-blue-300'
+          onMouseDown={(e) => {
+            return handleResizeStart(e, column.id);
+          }}
         />
       </TableHead>
     );
   };
 
   // Draggable Row component
-  const DraggableRow = ({ record, index, children }: { record: any, index: number, children: React.ReactNode }) => {
+  const DraggableRow = ({
+    record,
+    index,
+    children,
+  }: {
+    record: any;
+    index: number;
+    children: React.ReactNode;
+  }) => {
     const ref = useRef<HTMLTableRowElement>(null);
-    
+
     const [{ isDragging }, drag] = useDrag({
       type: 'ROW',
       item: { index },
-      collect: (monitor) => ({
-        isDragging: monitor.isDragging(),
-      }),
+      collect: (monitor) => {
+        return {
+          isDragging: monitor.isDragging(),
+        };
+      },
     });
-    
+
     const [, drop] = useDrop({
       accept: 'ROW',
       hover(item: { index: number }, monitor) {
@@ -286,18 +320,18 @@ export default function TablePage() {
         const dragIndex = item.index;
         const hoverIndex = index;
         if (dragIndex === hoverIndex) return;
-        
+
         moveRow(dragIndex, hoverIndex);
         item.index = hoverIndex;
       },
     });
-    
+
     drag(drop(ref));
-    
+
     return (
-      <TableRow 
-        ref={ref} 
-        key={record.id} 
+      <TableRow
+        ref={ref}
+        key={record.id}
         className={`hover:bg-gray-50 ${isDragging ? 'opacity-50' : ''}`}
       >
         {children}
@@ -339,9 +373,16 @@ export default function TablePage() {
       saveColumnRename: () => void;
     }) => {
       // Get ordered columns
-      const orderedColumns = columnOrder.length > 0 
-        ? columnOrder.map(id => columns.find(col => col.id === id)).filter(Boolean) as Column[]
-        : columns;
+      const orderedColumns =
+        columnOrder.length > 0
+          ? (columnOrder
+              .map((id) => {
+                return columns.find((col) => {
+                  return col.id === id;
+                });
+              })
+              .filter(Boolean) as Column[])
+          : columns;
 
       return (
         <TableHeader className='sticky top-0 z-10'>
@@ -643,9 +684,16 @@ export default function TablePage() {
             editingCell.recordId === record.id && editingCell.columnId === column.id
               ? 'bg-blue-50'
               : ''
-          }`}
-          onClick={onEdit}
-          style={{ 
+          } ${column.sortable ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+          onClick={(e) => {
+            if (column.sortable && !editingCell.recordId) {
+              e.stopPropagation();
+              handleColumnClick(column.id);
+            } else {
+              onEdit();
+            }
+          }}
+          style={{
             width: columnWidths[column.id] || 200,
             maxWidth: columnWidths[column.id] || 200,
           }}
@@ -744,10 +792,49 @@ export default function TablePage() {
   // Memoize handlers
   const handleSort = useCallback(
     (columnId: string) => {
-      requestSort(columnId);
+      let direction: 'asc' | 'desc' = 'asc';
+
+      if (sortConfig && sortConfig.key === columnId) {
+        if (sortConfig.direction === 'asc') {
+          direction = 'desc';
+        } else {
+          direction = 'asc';
+        }
+      }
+
+      setSortConfig({ key: columnId, direction });
+
+      // Sort the records
+      const sortedRecords = [...records].sort((a, b) => {
+        if (a[columnId] < b[columnId]) {
+          return direction === 'asc' ? -1 : 1;
+        }
+        if (a[columnId] > b[columnId]) {
+          return direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+
+      // Update row order based on sorted records
+      setRowOrder(
+        sortedRecords.map((record) => {
+          return record.id;
+        }),
+      );
     },
-    [requestSort],
+    [records, sortConfig],
   );
+
+  // Make the entire column clickable for sorting
+  const handleColumnClick = (columnId: string) => {
+    if (
+      columns.find((col) => {
+        return col.id === columnId;
+      })?.sortable
+    ) {
+      handleSort(columnId);
+    }
+  };
 
   const handleAddColumn = useCallback(() => {
     setIsAddColumnSheetOpen(true);
@@ -762,7 +849,11 @@ export default function TablePage() {
   const getOrderedRecords = () => {
     if (rowOrder.length === 0) return records;
     return rowOrder
-      .map(id => records.find(record => record.id === id))
+      .map((id) => {
+        return records.find((record) => {
+          return record.id === id;
+        });
+      })
       .filter(Boolean) as typeof records;
   };
 
@@ -770,7 +861,11 @@ export default function TablePage() {
   const getOrderedColumns = () => {
     if (columnOrder.length === 0) return columns;
     return columnOrder
-      .map(id => columns.find(col => col.id === id))
+      .map((id) => {
+        return columns.find((col) => {
+          return col.id === id;
+        });
+      })
       .filter(Boolean) as Column[];
   };
 
@@ -924,7 +1019,7 @@ export default function TablePage() {
         {viewMode === 'table' ? (
           <Table>
             <TableHeaderMemo
-              columns={columns}
+              columns={getOrderedColumns()}
               sortConfig={sortConfig}
               onSort={handleSort}
               onAddColumn={handleAddColumn}
@@ -940,7 +1035,7 @@ export default function TablePage() {
               saveColumnRename={saveColumnRename}
             />
             <TableBody>
-              {records.map((record) => {
+              {getOrderedRecords().map((record) => {
                 return (
                   <TableRow key={record.id} className='hover:bg-gray-50'>
                     <TableCell className='border-r p-0 text-center'>
@@ -953,7 +1048,7 @@ export default function TablePage() {
                         />
                       </div>
                     </TableCell>
-                    {columns
+                    {getOrderedColumns()
                       .filter((column) => {
                         return !column.hidden;
                       })
@@ -987,7 +1082,7 @@ export default function TablePage() {
           </Table>
         ) : (
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4'>
-            {records.map((record) => {
+            {getOrderedRecords().map((record) => {
               return (
                 <div
                   key={record.id}
@@ -1002,7 +1097,7 @@ export default function TablePage() {
                       }}
                     />
                   </div>
-                  {columns
+                  {getOrderedColumns()
                     .filter((col) => {
                       return col.id !== 'name' && !col.hidden;
                     })
@@ -1092,6 +1187,6 @@ export default function TablePage() {
         onAddNewColumn={addNewColumn}
         getIconComponent={getIconComponent}
       />
-    </>
+    </DndProvider>
   );
 }
