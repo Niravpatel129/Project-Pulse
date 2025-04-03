@@ -5,7 +5,7 @@
 
 // Base model with common fields for all documents
 export interface BaseModel {
-  id: string;
+  _id: string;
   createdAt: string;
   updatedAt: string;
   createdBy: string;
@@ -98,6 +98,8 @@ export interface Template extends BaseModel {
   icon?: string; // Icon identifier to represent this template
   fields: TemplateField[];
   category?: string; // Category to group templates
+  workspace?: string;
+  __v?: number;
 }
 
 export interface TemplateFieldValue {
