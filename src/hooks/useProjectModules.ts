@@ -13,9 +13,27 @@ export interface ProjectModule {
   updatedAt: string;
 }
 
+export interface TemplateField {
+  name: string;
+  type: string;
+  required: boolean;
+  options: any[];
+  multiple: boolean;
+  lookupFields: string[];
+  relationType?: string;
+  _id: string;
+}
+
 export interface Template {
+  _id: string;
   name: string;
   description: string;
+  fields: TemplateField[];
+  workspace: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
 }
 
 export function useProjectModules() {
@@ -41,6 +59,14 @@ export function useProjectModules() {
     },
   });
 
+  const { data: templates = [], isLoading: isLoadingTemplates } = useQuery({
+    queryKey: ['templates'],
+    queryFn: async () => {
+      const { data } = await newRequest.get('/module-templates');
+      return data.data;
+    },
+  });
+
   const addModuleMutation = useMutation({
     mutationFn: async ({ content, type }: { content; type: string }) => {
       const { data } = await newRequest.post('/project-modules', {
@@ -57,13 +83,6 @@ export function useProjectModules() {
       toast.error('Failed to add module');
     },
   });
-
-  const templates: Template[] = [
-    { name: 'Project Brief', description: 'Standard project overview template' },
-    { name: 'Design Spec', description: 'Design specification document' },
-    { name: 'Technical Doc', description: 'Technical documentation template' },
-    { name: 'Meeting Notes', description: 'Meeting notes template' },
-  ];
 
   const handleAddFileToProject = ({ type, content }: { type: string; content: any }) => {
     setIsFileUploadModalOpen(false);
@@ -86,6 +105,7 @@ export function useProjectModules() {
     error,
     addModule: addModuleMutation.mutate,
     templates,
+    isLoadingTemplates,
     handleAddFileToProject,
   };
 }

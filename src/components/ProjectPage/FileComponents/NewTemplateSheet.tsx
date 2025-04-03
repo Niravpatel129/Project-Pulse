@@ -20,6 +20,7 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { useTemplates } from '@/hooks/useTemplates';
 import { newRequest } from '@/utils/newRequest';
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import { useQuery } from '@tanstack/react-query';
@@ -42,6 +43,7 @@ interface NewTemplateSheetProps {
 }
 
 export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplateSheetProps) {
+  const { createTemplate } = useTemplates();
   const [templateName, setTemplateName] = useState('');
   const [templateDescription, setTemplateDescription] = useState('');
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
@@ -187,9 +189,10 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
     setTemplateFields(items);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!templateName.trim()) return;
-    onSave({
+
+    const templateData = {
       name: templateName,
       description: templateDescription,
       fields: templateFields.filter((field) => {
@@ -197,19 +200,26 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
         if (field.type === 'select' && (!field.options || field.options.length === 0)) return false;
         return true;
       }),
-    });
-    setTemplateName('');
-    setTemplateDescription('');
-    setTemplateFields([
-      {
-        id: `field-${Date.now()}`,
-        name: '',
-        type: 'text' as FieldType,
-        required: false,
-        options: [],
-      },
-    ]);
-    onClose();
+    };
+
+    try {
+      await createTemplate.mutateAsync(templateData);
+      setTemplateName('');
+      setTemplateDescription('');
+      setTemplateFields([
+        {
+          id: `field-${Date.now()}`,
+          name: '',
+          type: 'text' as FieldType,
+          required: false,
+          options: [],
+        },
+      ]);
+      onClose();
+    } catch (error) {
+      // Error handling is done in the hook
+      console.error('Error saving template:', error);
+    }
   };
 
   return (
@@ -242,7 +252,7 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
                 onChange={(e) => {
                   return setTemplateDescription(e.target.value);
                 }}
-                placeholder='What is this database for?'
+                placeholder='What is this template for?'
                 className='w-full'
               />
             </div>
