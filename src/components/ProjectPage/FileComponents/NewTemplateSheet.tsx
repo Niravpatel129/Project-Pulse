@@ -289,7 +289,11 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
                                           <SelectValue placeholder='Field type'>
                                             {field.type === 'relation' && field.relationType ? (
                                               <div className='flex items-center gap-2'>
-                                                <span>🔗</span>
+                                                <span>
+                                                  {databases.find((db) => {
+                                                    return db.id === field.relationType;
+                                                  })?.icon || '🔗'}
+                                                </span>
                                                 <span>
                                                   {
                                                     databases.find((db) => {
