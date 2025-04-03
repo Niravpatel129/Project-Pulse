@@ -97,7 +97,7 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
   useEffect(() => {
     if (selectedTableData?.columns) {
       setDatabaseFields((prev) => {
-        return {
+        const newFields = {
           ...prev,
           [selectedDatabase]: selectedTableData.columns.map((column: any) => {
             return {
@@ -108,6 +108,18 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
             };
           }),
         };
+
+        // Set all lookup fields to true by default
+        const allFieldsSelected = selectedTableData.columns.reduce(
+          (acc: Record<string, boolean>, column: any) => {
+            acc[column.id] = true;
+            return acc;
+          },
+          {},
+        );
+        setLookupFields(allFieldsSelected);
+
+        return newFields;
       });
     }
   }, [selectedTableData, selectedDatabase]);
