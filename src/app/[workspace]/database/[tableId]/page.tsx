@@ -22,7 +22,7 @@ import { useDatabase } from '@/hooks/useDatabase';
 import { Column, SortConfig } from '@/types/database';
 import { ChevronDown, Filter, Plus, Search, Trash2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
@@ -87,20 +87,18 @@ export default function TablePage() {
     if (columns.length > 0) {
       // Update column order with any new columns
       const newColumnOrder = [...columnOrder];
+      const newColumnWidths = { ...columnWidths };
+
       columns.forEach((col) => {
         if (!newColumnOrder.includes(col.id)) {
           newColumnOrder.push(col.id);
         }
-      });
-      setColumnOrder(newColumnOrder);
-
-      // Initialize column widths for new columns
-      const newColumnWidths = { ...columnWidths };
-      columns.forEach((col) => {
         if (!(col.id in newColumnWidths)) {
           newColumnWidths[col.id] = col.width || 200; // Default width
         }
       });
+
+      setColumnOrder(newColumnOrder);
       setColumnWidths(newColumnWidths);
     }
   }, [columns]);
@@ -126,48 +124,54 @@ export default function TablePage() {
   const [newColumnName, setNewColumnName] = useState('');
 
   // Add a new filter
-  const addFilter = () => {
+  const addFilter = useCallback(() => {
     if (filterColumn && filterValue) {
-      setFilters([...filters, { column: filterColumn, value: filterValue }]);
+      setFilters((prev) => {
+        return [...prev, { column: filterColumn, value: filterValue }];
+      });
       setFilterColumn('');
       setFilterValue('');
     }
-  };
+  }, [filterColumn, filterValue]);
 
   // Remove a filter
-  const removeFilter = (index: number) => {
-    const newFilters = [...filters];
-    newFilters.splice(index, 1);
-    setFilters(newFilters);
-  };
+  const removeFilter = useCallback((index: number) => {
+    setFilters((prev) => {
+      const newFilters = [...prev];
+      newFilters.splice(index, 1);
+      return newFilters;
+    });
+  }, []);
 
   // Clear all filters
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setFilters([]);
-  };
+  }, []);
 
   // Handle column rename
-  const handleRenameColumn = (columnId: string, currentName: string) => {
+  const handleRenameColumn = useCallback((columnId: string, currentName: string) => {
     setRenamingColumn({ id: columnId, name: currentName });
     setNewColumnName(currentName);
-  };
+  }, []);
 
-  const saveColumnRename = () => {
+  const saveColumnRename = useCallback(() => {
     if (renamingColumn && newColumnName.trim()) {
       renameColumn(renamingColumn.id, newColumnName.trim());
       setRenamingColumn(null);
       setNewColumnName('');
     }
-  };
+  }, [renamingColumn, newColumnName, renameColumn]);
 
   // Handle column reordering
-  const moveColumn = (dragIndex: number, hoverIndex: number) => {
-    const draggedColumnId = columnOrder[dragIndex];
-    const newColumnOrder = [...columnOrder];
-    newColumnOrder.splice(dragIndex, 1);
-    newColumnOrder.splice(hoverIndex, 0, draggedColumnId);
-    setColumnOrder(newColumnOrder);
-  };
+  const moveColumn = useCallback((dragIndex: number, hoverIndex: number) => {
+    setColumnOrder((prev) => {
+      const draggedColumnId = prev[dragIndex];
+      const newColumnOrder = [...prev];
+      newColumnOrder.splice(dragIndex, 1);
+      newColumnOrder.splice(hoverIndex, 0, draggedColumnId);
+      return newColumnOrder;
+    });
+  }, []);
 
   // Handle row reordering
   const moveRow = useCallback(
@@ -193,39 +197,42 @@ export default function TablePage() {
         }),
       );
     },
-    [records, setRowOrder],
+    [records, setRowOrder, setRecords],
   );
 
   // Handle column resizing
-  const handleResizeStart = (e: React.MouseEvent, columnId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setResizingColumnId(columnId);
-    resizeStartX.current = e.clientX;
-    initialWidth.current = columnWidths[columnId] || 200;
+  const handleResizeStart = useCallback(
+    (e: React.MouseEvent, columnId: string) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setResizingColumnId(columnId);
+      resizeStartX.current = e.clientX;
+      initialWidth.current = columnWidths[columnId] || 200;
 
-    const handleMouseMove = (e: MouseEvent) => {
-      if (resizingColumnId) {
-        const deltaX = e.clientX - resizeStartX.current;
-        const newWidth = Math.max(100, initialWidth.current + deltaX); // Minimum width of 100px
-        setColumnWidths((prev) => {
-          return {
-            ...prev,
-            [resizingColumnId]: newWidth,
-          };
-        });
-      }
-    };
+      const handleMouseMove = (e: MouseEvent) => {
+        if (resizingColumnId) {
+          const deltaX = e.clientX - resizeStartX.current;
+          const newWidth = Math.max(100, initialWidth.current + deltaX); // Minimum width of 100px
+          setColumnWidths((prev) => {
+            return {
+              ...prev,
+              [resizingColumnId]: newWidth,
+            };
+          });
+        }
+      };
 
-    const handleMouseUp = () => {
-      setResizingColumnId(null);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
+      const handleMouseUp = () => {
+        setResizingColumnId(null);
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    },
+    [columnWidths, resizingColumnId],
+  );
 
   // Handle column sorting
   const handleSort = useCallback(
@@ -233,11 +240,7 @@ export default function TablePage() {
       let direction: 'asc' | 'desc' = 'asc';
 
       if (sortConfig && sortConfig.key === columnId) {
-        if (sortConfig.direction === 'asc') {
-          direction = 'desc';
-        } else {
-          direction = 'asc';
-        }
+        direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
       }
 
       setSortConfig({ key: columnId, direction });
@@ -267,19 +270,21 @@ export default function TablePage() {
       // Update records with new positions
       setRecords(updatedRecords);
     },
-    [records, sortConfig],
+    [records, sortConfig, setRecords],
   );
 
   // Make the entire column clickable for sorting
-  const handleColumnClick = (columnId: string) => {
-    if (
-      columns.find((col) => {
+  const handleColumnClick = useCallback(
+    (columnId: string) => {
+      const column = columns.find((col) => {
         return col.id === columnId;
-      })?.sortable
-    ) {
-      handleSort(columnId);
-    }
-  };
+      });
+      if (column?.sortable) {
+        handleSort(columnId);
+      }
+    },
+    [columns, handleSort],
+  );
 
   const handleAddColumn = useCallback(() => {
     setIsAddColumnSheetOpen(true);
@@ -291,7 +296,7 @@ export default function TablePage() {
   }, []);
 
   // Get ordered records
-  const getOrderedRecords = () => {
+  const orderedRecords = useMemo(() => {
     // Use rowOrder to maintain the order of records
     return rowOrder
       .map((id) => {
@@ -300,57 +305,44 @@ export default function TablePage() {
         });
       })
       .filter(Boolean);
-  };
+  }, [rowOrder, records]);
 
   // Get ordered columns
-  const getOrderedColumns = () => {
-    console.log('🚀 columns:', columns);
-    console.log('🚀 columnOrder:', columnOrder);
-
+  const orderedColumns = useMemo(() => {
     // If no columns, return empty array
     if (!columns || columns.length === 0) {
-      console.log('No columns found');
       return [];
     }
 
     // If columnOrder is empty, return columns sorted by their order property
     if (columnOrder.length === 0) {
-      const sortedColumns = [...columns]
+      return [...columns]
         .sort((a, b) => {
           return (a.order || 0) - (b.order || 0);
         })
         .filter((col) => {
           return !col.hidden;
         });
-      console.log('🚀 sortedColumns:', sortedColumns);
-      return sortedColumns;
     }
 
     // Otherwise, return columns in the specified order, filtering out hidden ones
-    // and ensuring we have a valid column for each ID
-    console.log('Mapping columnOrder to columns...');
-    const orderedColumns = columnOrder
+    return columnOrder
       .map((id) => {
-        console.log(`Looking for column with ID: ${id}`);
-        const column = columns.find((col) => {
-          console.log(`Comparing ${col.id} with ${id}`);
+        return columns.find((col) => {
           return col.id === id;
         });
-        if (!column) {
-          console.warn(`Column with ID ${id} not found`);
-          return null;
-        }
-        console.log(`Found column:`, column);
-        return column;
       })
       .filter((col): col is Column => {
-        console.log('Filtering column:', col);
         return col !== null && !col.hidden;
       });
+  }, [columns, columnOrder]);
 
-    console.log('🚀 orderedColumns:', orderedColumns);
-    return orderedColumns;
-  };
+  // Count selected records
+  const selectedCount = useMemo(() => {
+    return records.filter((r) => {
+      return r.values?.selected || false;
+    }).length;
+  }, [records]);
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -431,7 +423,7 @@ export default function TablePage() {
         {viewMode === 'table' ? (
           <Table>
             <TableHeaderMemo
-              columns={getOrderedColumns()}
+              columns={orderedColumns}
               sortConfig={sortConfig}
               onSort={handleSort}
               onAddColumn={handleAddColumn}
@@ -450,7 +442,7 @@ export default function TablePage() {
               moveColumn={moveColumn}
             />
             <TableBody>
-              {getOrderedRecords().map((record, index) => {
+              {orderedRecords.map((record, index) => {
                 return (
                   <DraggableRow
                     key={`row-${record._id}`}
@@ -468,39 +460,35 @@ export default function TablePage() {
                         />
                       </div>
                     </TableCell>
-                    {getOrderedColumns()
-                      .filter((column) => {
-                        return !column.hidden;
-                      })
-                      .map((column) => {
-                        return (
-                          <TableCellMemo
-                            key={`cell-${record._id}-${column.id}`}
-                            record={record}
-                            column={column}
-                            editingCell={editingCell}
-                            onEdit={() => {
-                              return startEditing(record._id, column.id);
-                            }}
-                            onCellChange={handleCellChange}
-                            onCellKeyDown={handleCellKeyDown}
-                            stopEditing={stopEditing}
-                            inputRef={inputRef}
-                            newTagText={newTagText}
-                            setNewTagText={setNewTagText}
-                            handleTagInputKeyDown={handleTagInputKeyDown}
-                            removeTag={removeTag}
-                            addTag={addTag}
-                            columnWidths={columnWidths}
-                            handleColumnClick={handleColumnClick}
-                            isUpdating={
-                              updateRecordMutation.isPending &&
-                              editingCell.recordId === record._id &&
-                              editingCell.columnId === column.id
-                            }
-                          />
-                        );
-                      })}
+                    {orderedColumns.map((column) => {
+                      return (
+                        <TableCellMemo
+                          key={`cell-${record._id}-${column.id}`}
+                          record={record}
+                          column={column}
+                          editingCell={editingCell}
+                          onEdit={() => {
+                            return startEditing(record._id, column.id);
+                          }}
+                          onCellChange={handleCellChange}
+                          onCellKeyDown={handleCellKeyDown}
+                          stopEditing={stopEditing}
+                          inputRef={inputRef}
+                          newTagText={newTagText}
+                          setNewTagText={setNewTagText}
+                          handleTagInputKeyDown={handleTagInputKeyDown}
+                          removeTag={removeTag}
+                          addTag={addTag}
+                          columnWidths={columnWidths}
+                          handleColumnClick={handleColumnClick}
+                          isUpdating={
+                            updateRecordMutation.isPending &&
+                            editingCell.recordId === record._id &&
+                            editingCell.columnId === column.id
+                          }
+                        />
+                      );
+                    })}
                     <TableCell></TableCell>
                   </DraggableRow>
                 );
@@ -509,7 +497,7 @@ export default function TablePage() {
           </Table>
         ) : (
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4'>
-            {getOrderedRecords().map((record) => {
+            {orderedRecords.map((record) => {
               return (
                 <div
                   key={`card-${record._id}`}
@@ -524,9 +512,9 @@ export default function TablePage() {
                       }}
                     />
                   </div>
-                  {getOrderedColumns()
+                  {orderedColumns
                     .filter((col) => {
-                      return col.id !== 'name' && !col.hidden;
+                      return col.id !== 'name';
                     })
                     .map((column) => {
                       return (
@@ -583,14 +571,7 @@ export default function TablePage() {
               {records.length} record{records.length !== 1 ? 's' : ''}
             </div>
           </div>
-          <div className='text-sm text-gray-500'>
-            {
-              records.filter((r) => {
-                return r.values?.selected || false;
-              }).length
-            }{' '}
-            selected
-          </div>
+          <div className='text-sm text-gray-500'>{selectedCount} selected</div>
         </div>
       </div>
 
