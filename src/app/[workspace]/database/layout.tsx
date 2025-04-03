@@ -7,7 +7,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { useDatabase } from '@/hooks/useDatabase';
-import { Plus } from 'lucide-react';
+import { ChevronDown, Pencil, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -46,14 +46,65 @@ export default function DatabaseLayout({ children }: { children: React.ReactNode
               <TabsList className='text-foreground mb-3 h-auto gap-2 rounded-none border-b bg-transparent px-0 py-1'>
                 {tables.map((table) => {
                   return (
-                    <Link key={table._id} href={`/database/${table._id}`} className='flex-1'>
-                      <TabsTrigger
-                        value={table._id}
-                        className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none w-full'
-                      >
-                        {table.name}
-                      </TabsTrigger>
-                    </Link>
+                    <div key={table._id} className='flex-1 relative group'>
+                      <div className='flex items-center'>
+                        <Link href={`/database/${table._id}`} className='flex-1'>
+                          <TabsTrigger
+                            value={table._id}
+                            className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none w-full pr-8'
+                          >
+                            {table.name}
+                          </TabsTrigger>
+                        </Link>
+                        <div className='absolute right-1 top-1/2 -translate-y-1/2 z-10'>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                type='button'
+                                variant='ghost'
+                                size='icon'
+                                className='h-6 w-6 rounded-full hover:bg-gray-200'
+                              >
+                                <ChevronDown className='h-3 w-3 text-muted-foreground' />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className='w-48 p-2 shadow-lg rounded-lg'
+                              align='end'
+                              side='bottom'
+                            >
+                              <div className='space-y-1'>
+                                <Button
+                                  variant='ghost'
+                                  size='sm'
+                                  className='w-full justify-start'
+                                  onClick={() => {
+                                    // Implement rename functionality
+                                    toast.info('Rename functionality to be implemented');
+                                  }}
+                                >
+                                  <Pencil className='mr-2 h-4 w-4' />
+                                  <span>Rename</span>
+                                </Button>
+                                <div className='h-px bg-muted my-1' />
+                                <Button
+                                  variant='ghost'
+                                  size='sm'
+                                  className='w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10'
+                                  onClick={() => {
+                                    // Implement delete functionality
+                                    toast.info('Delete functionality to be implemented');
+                                  }}
+                                >
+                                  <Trash2 className='mr-2 h-4 w-4' />
+                                  <span>Delete</span>
+                                </Button>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
               </TabsList>
