@@ -113,7 +113,6 @@ export function useDatabaseRecords(
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['table-records', params.tableId] });
       }, 100);
-      toast.success('Row added successfully');
     },
     onError: (error) => {
       // Remove the temporary record on error
