@@ -2,11 +2,11 @@ export interface Record {
   _id: string;
   tableId: string;
   values: {
-    id: number;
     selected: boolean;
     tags: Array<{ id: string; name: string }>;
     [key: string]: any;
   };
+  position: number;
   createdBy: {
     _id: string;
     name: string;

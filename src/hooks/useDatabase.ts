@@ -125,7 +125,48 @@ export function useDatabase(initialColumns: Column[]) {
     queryFn: async () => {
       if (!params?.tableId) return [];
       const response = await newRequest.get(`/tables/${params.tableId}/records`);
-      return response.data.data;
+      console.log('Raw response:', response.data);
+
+      // Transform the response data to match our frontend structure
+      return response.data.data.map((row: any) => {
+        console.log('Processing row:', row);
+
+        // Initialize values with defaults
+        const values: any = {
+          selected: false,
+          tags: [],
+          name: '',
+        };
+
+        // Add values from each record
+        if (row.records && Array.isArray(row.records)) {
+          row.records.forEach((record: any) => {
+            console.log('Processing record:', record);
+            if (record.values) {
+              Object.entries(record.values).forEach(([key, value]) => {
+                values[key] = value;
+              });
+            }
+          });
+        }
+
+        console.log('Final values for row:', values);
+
+        return {
+          _id: row.rowId,
+          tableId: params.tableId,
+          position: row.position,
+          values,
+          createdBy: row.records?.[0]?.createdBy || {
+            _id: '',
+            name: '',
+            email: '',
+          },
+          createdAt: row.records?.[0]?.createdAt || new Date().toISOString(),
+          updatedAt: row.records?.[0]?.updatedAt || new Date().toISOString(),
+          __v: 0,
+        };
+      });
     },
     enabled: !!params?.tableId,
   });
@@ -228,5 +269,6 @@ export function useDatabase(initialColumns: Column[]) {
     updateRecordMutation,
     rowOrder,
     setRowOrder,
+    setRecords,
   };
 }

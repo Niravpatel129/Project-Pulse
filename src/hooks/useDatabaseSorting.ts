@@ -19,8 +19,8 @@ export function useDatabaseSorting() {
     return [...records].sort((a, b) => {
       if (sortConfig.key === 'tags') {
         // Sort by first tag name or empty string if no tags
-        const aValue = a.tags.length > 0 ? a.tags[0].name : '';
-        const bValue = b.tags.length > 0 ? b.tags[0].name : '';
+        const aValue = a.values.tags.length > 0 ? a.values.tags[0].name : '';
+        const bValue = b.values.tags.length > 0 ? b.values.tags[0].name : '';
 
         if (aValue < bValue) {
           return sortConfig.direction === 'asc' ? -1 : 1;
@@ -31,8 +31,8 @@ export function useDatabaseSorting() {
         return 0;
       } else {
         // Sort by other column values
-        const aValue = a[sortConfig.key] || '';
-        const bValue = b[sortConfig.key] || '';
+        const aValue = a.values[sortConfig.key] || '';
+        const bValue = b.values[sortConfig.key] || '';
 
         if (aValue < bValue) {
           return sortConfig.direction === 'asc' ? -1 : 1;

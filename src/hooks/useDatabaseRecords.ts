@@ -64,10 +64,26 @@ export function useDatabaseRecords(
   // Add new row mutation
   const addRowMutation = useMutation({
     mutationFn: async (newRecord: DatabaseRecord) => {
-      const response = await newRequest.post(`/tables/${params.tableId}/records`, {
-        values: newRecord.values,
+      const response = await newRequest.post(`/tables/${params.tableId}/rows`, {
+        position: newRecord.position,
       });
-      return response.data;
+      // Transform the response to match our frontend structure
+      return {
+        data: {
+          _id: response.data.data.rowId,
+          tableId: params.tableId as string,
+          position: response.data.data.position,
+          values: response.data.data.records || {},
+          createdBy: {
+            _id: '',
+            name: '',
+            email: '',
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          __v: 0,
+        },
+      };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['table-records', params.tableId] });
@@ -101,10 +117,12 @@ export function useDatabaseRecords(
       columnId: string;
       value: string;
     }) => {
-      const response = await newRequest.patch(`/tables/${params.tableId}/records/${recordId}`, {
+      const response = await newRequest.post(`/tables/${params.tableId}/records`, {
         values: {
           [columnId]: value,
         },
+        columnId: columnId,
+        rowId: recordId,
       });
       return response.data;
     },
@@ -123,8 +141,11 @@ export function useDatabaseRecords(
               ? {
                   ...record,
                   values: {
-                    ...record.values,
+                    ...(record.values || {}),
                     [editingCell.columnId!]: editingCell.originalValue,
+                    selected: record.values?.selected || false,
+                    tags: record.values?.tags || [],
+                    name: record.values?.name || '',
                   },
                 }
               : record;
@@ -136,26 +157,27 @@ export function useDatabaseRecords(
 
   // Add new row
   const addNewRow = async () => {
-    const newId =
-      records.length > 0
-        ? Math.max(
-            ...records.map((r) => {
-              return r.values.id;
-            }),
-          ) + 1
-        : 1;
-
     // Generate a unique temporary ID using a combination of timestamp and random number
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    // Calculate the next position based on existing records
+    const nextPosition =
+      Math.max(
+        ...records.map((r) => {
+          return r.position || 0;
+        }),
+        0,
+      ) + 1;
 
     const newRecord: DatabaseRecord = {
       _id: tempId,
       tableId: params.tableId as string,
       values: {
-        id: newId,
         selected: false,
         tags: [],
+        name: '', // Initialize name field
       },
+      position: nextPosition,
       createdBy: {
         _id: '',
         name: '',
@@ -168,7 +190,7 @@ export function useDatabaseRecords(
 
     // Initialize all column values
     columns.forEach((col) => {
-      if (col.id !== 'tags') {
+      if (col.id !== 'tags' && col.id !== 'name') {
         newRecord.values[col.id] = '';
       }
     });
@@ -183,7 +205,10 @@ export function useDatabaseRecords(
 
     // Send to server
     try {
-      const response = await addRowMutation.mutateAsync(newRecord);
+      const response = await addRowMutation.mutateAsync({
+        ...newRecord,
+        position: nextPosition,
+      });
 
       // Update the records and rowOrder with the actual ID
       setRecords((prevRecords) => {
@@ -221,21 +246,17 @@ export function useDatabaseRecords(
       setEditingCell({
         recordId,
         columnId,
-        originalValue: record ? record.values[columnId] : null,
+        originalValue: record?.values?.[columnId] || null,
       });
     }
   };
 
   const stopEditing = async () => {
-    if (
-      editingCell.recordId !== null &&
-      editingCell.columnId !== null &&
-      editingCell.originalValue !== null
-    ) {
+    if (editingCell.recordId !== null && editingCell.columnId !== null) {
       const record = records.find((r) => {
         return r._id === editingCell.recordId;
       });
-      const newValue = record ? record.values[editingCell.columnId] : '';
+      const newValue = record?.values?.[editingCell.columnId] || '';
 
       // Only update if value has changed
       if (newValue !== editingCell.originalValue) {
@@ -257,15 +278,19 @@ export function useDatabaseRecords(
   ) => {
     setRecords(
       records.map((record) => {
-        return record._id === recordId
-          ? {
-              ...record,
-              values: {
-                ...record.values,
-                [columnId]: e.target.value,
-              },
-            }
-          : record;
+        if (record._id === recordId) {
+          return {
+            ...record,
+            values: {
+              ...(record.values || {}),
+              [columnId]: e.target.value,
+              selected: record.values?.selected || false,
+              tags: record.values?.tags || [],
+              name: record.values?.name || '',
+            },
+          };
+        }
+        return record;
       }),
     );
   };
@@ -304,8 +329,13 @@ export function useDatabaseRecords(
             return {
               ...record,
               values: {
-                ...record.values,
-                tags: [...record.values.tags, { id: newTagId, name: newTagText[recordId].trim() }],
+                ...(record.values || {}),
+                tags: [
+                  ...(record.values?.tags || []),
+                  { id: newTagId, name: newTagText[recordId].trim() },
+                ],
+                selected: record.values?.selected || false,
+                name: record.values?.name || '',
               },
             };
           }
@@ -323,10 +353,12 @@ export function useDatabaseRecords(
           return {
             ...record,
             values: {
-              ...record.values,
-              tags: record.values.tags.filter((tag) => {
+              ...(record.values || {}),
+              tags: (record.values?.tags || []).filter((tag) => {
                 return tag.id !== tagId;
               }),
+              selected: record.values?.selected || false,
+              name: record.values?.name || '',
             },
           };
         }
@@ -351,8 +383,10 @@ export function useDatabaseRecords(
         return {
           ...record,
           values: {
-            ...record.values,
+            ...(record.values || {}),
             selected: newSelected,
+            tags: record.values?.tags || [],
+            name: record.values?.name || '',
           },
         };
       }),
@@ -361,22 +395,25 @@ export function useDatabaseRecords(
 
   const toggleSelectRecord = (recordId: string) => {
     const updatedRecords = records.map((record) => {
-      return record._id === recordId
-        ? {
-            ...record,
-            values: {
-              ...record.values,
-              selected: !record.values.selected,
-            },
-          }
-        : record;
+      if (record._id === recordId) {
+        return {
+          ...record,
+          values: {
+            ...(record.values || {}),
+            selected: !(record.values?.selected || false),
+            tags: record.values?.tags || [],
+            name: record.values?.name || '',
+          },
+        };
+      }
+      return record;
     });
     setRecords(updatedRecords);
 
     // Update allSelected state based on whether all records are selected
     setAllSelected(
       updatedRecords.every((r) => {
-        return r.values.selected;
+        return r.values?.selected || false;
       }),
     );
   };

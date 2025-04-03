@@ -19,7 +19,7 @@ import { Table, TableBody, TableCell } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useDatabase } from '@/hooks/useDatabase';
-import { Column, Record as DatabaseRecord, SortConfig } from '@/types/database';
+import { Column, SortConfig } from '@/types/database';
 import { ChevronDown, Filter, Plus, Search, Trash2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -79,6 +79,7 @@ export default function TablePage() {
     updateRecordMutation,
     rowOrder,
     setRowOrder,
+    setRecords,
   } = useDatabase([]);
 
   // Initialize column order and widths
@@ -169,13 +170,31 @@ export default function TablePage() {
   };
 
   // Handle row reordering
-  const moveRow = (dragIndex: number, hoverIndex: number) => {
-    const draggedRowId = rowOrder[dragIndex];
-    const newRowOrder = [...rowOrder];
-    newRowOrder.splice(dragIndex, 1);
-    newRowOrder.splice(hoverIndex, 0, draggedRowId);
-    setRowOrder(newRowOrder);
-  };
+  const moveRow = useCallback(
+    (dragIndex: number, hoverIndex: number) => {
+      const dragRecord = records[dragIndex];
+      const newRecords = [...records];
+      newRecords.splice(dragIndex, 1);
+      newRecords.splice(hoverIndex, 0, dragRecord);
+
+      // Update positions to maintain order
+      const updatedRecords = newRecords.map((record, index) => {
+        return {
+          ...record,
+          position: index + 1,
+        };
+      });
+
+      setRecords(updatedRecords);
+      // Update rowOrder to match the new order
+      setRowOrder(
+        updatedRecords.map((record) => {
+          return record._id;
+        }),
+      );
+    },
+    [records, setRowOrder],
+  );
 
   // Handle column resizing
   const handleResizeStart = (e: React.MouseEvent, columnId: string) => {
@@ -225,21 +244,28 @@ export default function TablePage() {
 
       // Sort the records
       const sortedRecords = [...records].sort((a, b) => {
-        if (a[columnId] < b[columnId]) {
+        const aValue = a.values[columnId] || '';
+        const bValue = b.values[columnId] || '';
+
+        if (aValue < bValue) {
           return direction === 'asc' ? -1 : 1;
         }
-        if (a[columnId] > b[columnId]) {
+        if (aValue > bValue) {
           return direction === 'asc' ? 1 : -1;
         }
         return 0;
       });
 
-      // Update row order based on sorted records
-      setRowOrder(
-        sortedRecords.map((record) => {
-          return record._id;
-        }),
-      );
+      // Update positions based on sorted order
+      const updatedRecords = sortedRecords.map((record, index) => {
+        return {
+          ...record,
+          position: index + 1,
+        };
+      });
+
+      // Update records with new positions
+      setRecords(updatedRecords);
     },
     [records, sortConfig],
   );
@@ -266,14 +292,14 @@ export default function TablePage() {
 
   // Get ordered records
   const getOrderedRecords = () => {
-    if (rowOrder.length === 0) return records;
+    // Use rowOrder to maintain the order of records
     return rowOrder
       .map((id) => {
-        return records.find((record) => {
-          return record._id === id;
+        return records.find((r) => {
+          return r._id === id;
         });
       })
-      .filter(Boolean) as DatabaseRecord[];
+      .filter(Boolean);
   };
 
   // Get ordered columns
@@ -435,7 +461,7 @@ export default function TablePage() {
                     <TableCell className='border-r p-0 text-center '>
                       <div className='flex h-full items-center justify-center'>
                         <Checkbox
-                          checked={record.values.selected}
+                          checked={record.values?.selected}
                           onCheckedChange={() => {
                             return toggleSelectRecord(record._id);
                           }}
@@ -492,7 +518,7 @@ export default function TablePage() {
                   <div className='flex justify-between items-center mb-2'>
                     <h3 className='font-medium'>{record.values.name}</h3>
                     <Checkbox
-                      checked={record.values.selected}
+                      checked={record.values?.selected}
                       onCheckedChange={() => {
                         return toggleSelectRecord(record._id);
                       }}
@@ -560,7 +586,7 @@ export default function TablePage() {
           <div className='text-sm text-gray-500'>
             {
               records.filter((r) => {
-                return r.values.selected;
+                return r.values?.selected || false;
               }).length
             }{' '}
             selected
