@@ -1,6 +1,7 @@
 import { Record } from '@/types/database';
 import { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
+import { TableRow } from '../ui/table';
 
 interface DraggableRowProps {
   record: Record;
@@ -57,8 +58,8 @@ export function DraggableRow({ record, index, moveRow, children }: DraggableRowP
   drag(drop(ref));
 
   return (
-    <tr ref={ref} className={`${isDragging ? 'opacity-50' : 'opacity-100'} hover:bg-gray-50`}>
+    <TableRow ref={ref} className={`${isDragging ? 'opacity-50' : 'opacity-100'} border-b`}>
       {children}
-    </tr>
+    </TableRow>
   );
 }

@@ -391,7 +391,7 @@ export default function TablePage() {
         clearFilters={clearFilters}
       />
 
-      <div className='pt-1 border rounded-md shadow-sm'>
+      <div className='pt-1 rounded-md shadow-sm'>
         {viewMode === 'table' ? (
           <Table>
             <TableHeaderMemo
@@ -422,7 +422,7 @@ export default function TablePage() {
                     index={index}
                     moveRow={moveRow}
                   >
-                    <TableCell className='border-r p-0 text-center'>
+                    <TableCell className='border-r p-0 text-center '>
                       <div className='flex h-full items-center justify-center'>
                         <Checkbox
                           checked={record.values.selected}

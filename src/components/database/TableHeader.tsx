@@ -10,19 +10,20 @@ import {
   AlignLeft,
   AlignRight,
   BarChart2,
+  ChevronDown,
   Eye,
   EyeOff,
+  Filter,
   GripVertical,
   Info,
   Key,
   Palette,
   Pencil,
   Plus,
-  Settings2,
   Trash2,
   Type,
 } from 'lucide-react';
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { DraggableColumnHeader } from './DraggableColumnHeader';
 
 interface TableHeaderProps {
@@ -65,14 +66,22 @@ export const TableHeaderMemo = memo(
     handleResizeStart,
     moveColumn,
   }: TableHeaderProps) => {
-    console.log('🚀 columns:', columns);
+    const [hoveredColumn, setHoveredColumn] = useState<string | null>(null);
+
     return (
       <TableHeader className='sticky top-0 z-10'>
-        <TableRow className='bg-white hover:bg-white'>
-          <TableHead className='w-10 border-r'>
-            <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} />
+        <TableRow className='bg-[#f8f9fa] hover:bg-[#f8f9fa] border-b border-t-0 border-[#e0e0e0]'>
+          <TableHead className='w-10 border-r p-0'>
+            <div className='flex items-center justify-center h-full'>
+              <Checkbox
+                checked={allSelected}
+                onCheckedChange={toggleSelectAll}
+                className='rounded-none border-[#dadce0]'
+              />
+            </div>
           </TableHead>
           {columns.map((column, index) => {
+            const isHovered = hoveredColumn === column.id;
             return (
               <DraggableColumnHeader
                 key={column.id}
@@ -82,9 +91,20 @@ export const TableHeaderMemo = memo(
                 handleResizeStart={handleResizeStart}
                 moveColumn={moveColumn}
               >
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <GripVertical className='h-4 w-4 text-gray-400 cursor-move' />
+                <div
+                  className='flex items-center justify-between h-9 px-2 select-none'
+                  onMouseEnter={() => {
+                    return setHoveredColumn(column.id);
+                  }}
+                  onMouseLeave={() => {
+                    return setHoveredColumn(null);
+                  }}
+                  onClick={() => {
+                    return onSort(column.id);
+                  }}
+                >
+                  <div className='flex items-center gap-1'>
+                    {isHovered && <GripVertical className='h-4 w-4 text-gray-400 cursor-move' />}
                     {renamingColumn?.id === column.id ? (
                       <Input
                         value={newColumnName}
@@ -97,178 +117,220 @@ export const TableHeaderMemo = memo(
                             saveColumnRename();
                           }
                         }}
-                        className='h-7 w-32'
+                        className='h-7 w-32 border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500'
                         autoFocus
                       />
                     ) : (
-                      <>
-                        <span className='font-medium'>{column.name}</span>
-                        {column.isPrimary && <Key className='h-3 w-3 text-primary' />}
-                      </>
+                      <div className='flex items-center gap-1'>
+                        <span className='font-medium text-[#5f6368]'>{column.name}</span>
+                        {column.isPrimary && <Key className='h-3 w-3 text-blue-500' />}
+                      </div>
                     )}
                   </div>
-                  <div className='flex items-center gap-1'>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Popover>
-                            <PopoverTrigger asChild>
+                  <div className='flex items-center'>
+                    {isHovered && (
+                      <>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
                               <Button
                                 variant='ghost'
                                 size='icon'
-                                className='h-7 w-7 hover:bg-gray-100'
+                                className='h-6 w-6 rounded-full hover:bg-gray-200'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onSort(column.id);
+                                }}
                               >
-                                <Settings2 className='h-3.5 w-3.5' />
+                                <Filter className='h-3 w-3 text-[#5f6368]' />
                               </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className='w-64 p-2' align='end'>
-                              <div className='space-y-1'>
-                                <Button
-                                  variant='ghost'
-                                  size='sm'
-                                  className='w-full justify-start'
-                                  onClick={() => {
-                                    return onRenameColumn(column.id, column.name);
-                                  }}
+                            </TooltipTrigger>
+                            <TooltipContent>Sort</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant='ghost'
+                                    size='icon'
+                                    className='h-6 w-6 rounded-full hover:bg-gray-200'
+                                    onClick={(e) => {
+                                      return e.stopPropagation();
+                                    }}
+                                  >
+                                    <ChevronDown className='h-3 w-3 text-[#5f6368]' />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  className='w-64 p-2 shadow-lg rounded-lg'
+                                  align='end'
                                 >
-                                  <Pencil className='mr-2 h-4 w-4' />
-                                  <span>Rename</span>
-                                </Button>
-                                <Button
-                                  variant='ghost'
-                                  size='sm'
-                                  className='w-full justify-start'
-                                  onClick={() => {
-                                    return onToggleVisibility(column.id);
-                                  }}
-                                >
-                                  {column.hidden ? (
-                                    <>
-                                      <Eye className='mr-2 h-4 w-4' />
-                                      <span>Show</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <EyeOff className='mr-2 h-4 w-4' />
-                                      <span>Hide</span>
-                                    </>
-                                  )}
-                                </Button>
-                                <Button
-                                  variant='ghost'
-                                  size='sm'
-                                  className='w-full justify-start'
-                                  onClick={() => {
-                                    return onSetPrimary(column.id);
-                                  }}
-                                  disabled={column.isPrimary}
-                                >
-                                  <Key className='mr-2 h-4 w-4' />
-                                  <span>{column.isPrimary ? 'Primary Key' : 'Set as Primary'}</span>
-                                </Button>
-                                <div className='h-px bg-border my-1' />
-                                <Button variant='ghost' size='sm' className='w-full justify-start'>
-                                  <Type className='mr-2 h-4 w-4' />
-                                  <span>Change Type</span>
-                                </Button>
-                                <Button variant='ghost' size='sm' className='w-full justify-start'>
-                                  <GripVertical className='mr-2 h-4 w-4' />
-                                  <span>Adjust Width</span>
-                                </Button>
-
-                                <Button variant='ghost' size='sm' className='w-full justify-start'>
-                                  <Palette className='mr-2 h-4 w-4' />
-                                  <span>Column Color</span>
-                                </Button>
-                                <Button variant='ghost' size='sm' className='w-full justify-start'>
-                                  <Info className='mr-2 h-4 w-4' />
-                                  <span>Add Description</span>
-                                </Button>
-                                <Button variant='ghost' size='sm' className='w-full justify-start'>
-                                  <BarChart2 className='mr-2 h-4 w-4' />
-                                  <span>Column Statistics</span>
-                                </Button>
-                                <div className='h-px bg-border my-1' />
-                                <div className='flex items-center gap-1 px-2 py-1  rounded-md'>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
+                                  <div className='space-y-1'>
+                                    <Button
+                                      variant='ghost'
+                                      size='sm'
+                                      className='w-full justify-start text-[#3c4043]'
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        return onRenameColumn(column.id, column.name);
+                                      }}
+                                    >
+                                      <Pencil className='mr-2 h-4 w-4' />
+                                      <span>Rename</span>
+                                    </Button>
+                                    <Button
+                                      variant='ghost'
+                                      size='sm'
+                                      className='w-full justify-start text-[#3c4043]'
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        return onToggleVisibility(column.id);
+                                      }}
+                                    >
+                                      {column.hidden ? (
+                                        <>
+                                          <Eye className='mr-2 h-4 w-4' />
+                                          <span>Show</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <EyeOff className='mr-2 h-4 w-4' />
+                                          <span>Hide</span>
+                                        </>
+                                      )}
+                                    </Button>
+                                    <Button
+                                      variant='ghost'
+                                      size='sm'
+                                      className='w-full justify-start text-[#3c4043]'
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        return onSetPrimary(column.id);
+                                      }}
+                                      disabled={column.isPrimary}
+                                    >
+                                      <Key className='mr-2 h-4 w-4' />
+                                      <span>
+                                        {column.isPrimary ? 'Primary Key' : 'Set as Primary'}
+                                      </span>
+                                    </Button>
+                                    <div className='h-px bg-[#e0e0e0] my-1' />
+                                    <Button
+                                      variant='ghost'
+                                      size='sm'
+                                      className='w-full justify-start text-[#3c4043]'
+                                    >
+                                      <Type className='mr-2 h-4 w-4' />
+                                      <span>Change Type</span>
+                                    </Button>
+                                    <Button
+                                      variant='ghost'
+                                      size='sm'
+                                      className='w-full justify-start text-[#3c4043]'
+                                    >
+                                      <GripVertical className='mr-2 h-4 w-4' />
+                                      <span>Adjust Width</span>
+                                    </Button>
+                                    <Button
+                                      variant='ghost'
+                                      size='sm'
+                                      className='w-full justify-start text-[#3c4043]'
+                                    >
+                                      <Palette className='mr-2 h-4 w-4' />
+                                      <span>Column Color</span>
+                                    </Button>
+                                    <Button
+                                      variant='ghost'
+                                      size='sm'
+                                      className='w-full justify-start text-[#3c4043]'
+                                    >
+                                      <Info className='mr-2 h-4 w-4' />
+                                      <span>Add Description</span>
+                                    </Button>
+                                    <Button
+                                      variant='ghost'
+                                      size='sm'
+                                      className='w-full justify-start text-[#3c4043]'
+                                    >
+                                      <BarChart2 className='mr-2 h-4 w-4' />
+                                      <span>Column Statistics</span>
+                                    </Button>
+                                    <div className='h-px bg-[#e0e0e0] my-1' />
+                                    <div className='flex items-center justify-between px-2 py-1 rounded-md'>
+                                      <span className='text-sm text-[#3c4043]'>Text alignment</span>
+                                      <div className='flex items-center gap-1'>
                                         <Button
                                           variant='ghost'
                                           size='icon'
-                                          className='h-7 w-7 hover:bg-gray-200'
+                                          className='h-6 w-6 rounded-full hover:bg-gray-200'
                                         >
-                                          <AlignLeft className='h-3.5 w-3.5' />
+                                          <AlignLeft className='h-3.5 w-3.5 text-[#5f6368]' />
                                         </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>Align left</TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
                                         <Button
                                           variant='ghost'
                                           size='icon'
-                                          className='h-7 w-7 hover:bg-gray-200'
+                                          className='h-6 w-6 rounded-full hover:bg-gray-200'
                                         >
-                                          <AlignCenter className='h-3.5 w-3.5' />
+                                          <AlignCenter className='h-3.5 w-3.5 text-[#5f6368]' />
                                         </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>Align center</TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
                                         <Button
                                           variant='ghost'
                                           size='icon'
-                                          className='h-7 w-7 hover:bg-gray-200'
+                                          className='h-6 w-6 rounded-full hover:bg-gray-200'
                                         >
-                                          <AlignRight className='h-3.5 w-3.5' />
+                                          <AlignRight className='h-3.5 w-3.5 text-[#5f6368]' />
                                         </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>Align right</TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </div>
-                                <div className='h-px bg-border my-1' />
-                                <Button
-                                  variant='ghost'
-                                  size='sm'
-                                  className='w-full justify-start text-destructive hover:text-destructive'
-                                  onClick={() => {
-                                    return onDeleteColumn(column.id);
-                                  }}
-                                  disabled={column.isPrimary}
-                                >
-                                  <Trash2 className='mr-2 h-4 w-4' />
-                                  <span>Delete</span>
-                                </Button>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                        </TooltipTrigger>
-                        <TooltipContent>Column settings</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                                      </div>
+                                    </div>
+                                    <div className='h-px bg-[#e0e0e0] my-1' />
+                                    <Button
+                                      variant='ghost'
+                                      size='sm'
+                                      className='w-full justify-start text-[#d93025] hover:text-[#d93025] hover:bg-red-50'
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        return onDeleteColumn(column.id);
+                                      }}
+                                      disabled={column.isPrimary}
+                                    >
+                                      <Trash2 className='mr-2 h-4 w-4' />
+                                      <span>Delete</span>
+                                    </Button>
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
+                            </TooltipTrigger>
+                            <TooltipContent>More</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </>
+                    )}
                   </div>
                 </div>
               </DraggableColumnHeader>
             );
           })}
-          <TableHead className='w-10'>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant='ghost' size='icon' className='h-8 w-8' onClick={onAddColumn}>
-                    <Plus className='h-4 w-4' />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Add new column</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+          <TableHead className='w-10 p-0'>
+            <div className='flex items-center justify-center h-full'>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='h-7 w-7 rounded-full hover:bg-gray-200'
+                      onClick={onAddColumn}
+                    >
+                      <Plus className='h-4 w-4 text-[#5f6368]' />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Add column</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </TableHead>
         </TableRow>
       </TableHeader>

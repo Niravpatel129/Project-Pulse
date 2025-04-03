@@ -30,6 +30,8 @@ export function useDatabaseColumns(initialColumns: Column[]) {
         name: newPropertyName || `New Column`,
         sortable: true,
         iconName: newPropertyIconName,
+        type: selectedPropertyType,
+        order: columns.length,
       },
     ]);
 
