@@ -260,15 +260,23 @@ export function useDatabaseRecords(
 
       // Only update if value has changed
       if (newValue !== editingCell.originalValue) {
-        await updateRecordMutation.mutateAsync({
-          recordId: editingCell.recordId,
-          columnId: editingCell.columnId,
-          value: newValue,
-        });
+        try {
+          await updateRecordMutation.mutateAsync({
+            recordId: editingCell.recordId,
+            columnId: editingCell.columnId,
+            value: newValue,
+          });
+          // Only reset editingCell state if update was successful
+          setEditingCell({ recordId: null, columnId: null, originalValue: null });
+        } catch (error) {
+          // If update fails, keep the editingCell state
+          console.error('Failed to update cell:', error);
+        }
+      } else {
+        // If no changes, just reset the editingCell state
+        setEditingCell({ recordId: null, columnId: null, originalValue: null });
       }
     }
-
-    setEditingCell({ recordId: null, columnId: null, originalValue: null });
   };
 
   const handleCellChange = (
@@ -295,7 +303,7 @@ export function useDatabaseRecords(
     );
   };
 
-  const handleCellKeyDown = (e: React.KeyboardEvent) => {
+  const handleCellKeyDown = async (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       stopEditing();
     } else if (e.key === 'Escape') {
@@ -316,6 +324,58 @@ export function useDatabaseRecords(
         );
       }
       setEditingCell({ recordId: null, columnId: null, originalValue: null });
+    } else if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+      e.preventDefault();
+      const currentRecordIndex = records.findIndex((r) => {
+        return r._id === editingCell.recordId;
+      });
+      const currentColumnIndex = columns.findIndex((c) => {
+        return c.id === editingCell.columnId;
+      });
+
+      let nextRecordIndex = currentRecordIndex;
+      let nextColumnIndex = currentColumnIndex;
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          nextColumnIndex = currentColumnIndex - 1;
+          break;
+        case 'ArrowRight':
+          nextColumnIndex = currentColumnIndex + 1;
+          break;
+        case 'ArrowUp':
+          nextRecordIndex = currentRecordIndex - 1;
+          break;
+        case 'ArrowDown':
+          nextRecordIndex = currentRecordIndex + 1;
+          break;
+      }
+
+      // Handle wrapping around
+      if (nextColumnIndex >= columns.length) {
+        nextColumnIndex = 0;
+        nextRecordIndex++;
+      } else if (nextColumnIndex < 0) {
+        nextColumnIndex = columns.length - 1;
+        nextRecordIndex--;
+      }
+
+      // Ensure we stay within bounds
+      if (
+        nextRecordIndex >= 0 &&
+        nextRecordIndex < records.length &&
+        nextColumnIndex >= 0 &&
+        nextColumnIndex < columns.length
+      ) {
+        const nextRecord = records[nextRecordIndex];
+        const nextColumn = columns[nextColumnIndex];
+
+        // Save current cell before moving
+        await stopEditing();
+
+        // Start editing the next cell
+        startEditing(nextRecord._id, nextColumn.id);
+      }
     }
   };
 

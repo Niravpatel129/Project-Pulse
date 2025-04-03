@@ -118,7 +118,9 @@ export const TableCellMemo = memo(
               return onCellChange(e, record._id, column.id);
             }}
             onKeyDown={onCellKeyDown}
-            onBlur={stopEditing}
+            onBlur={() => {
+              stopEditing();
+            }}
             className='h-8 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none border-none shadow-none p-0 m-0'
             autoFocus
           />
