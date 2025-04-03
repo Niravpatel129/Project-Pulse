@@ -81,6 +81,8 @@ export function useDatabase(initialColumns: Column[]) {
       return response.data.data;
     },
     enabled: !!params?.tableId,
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
   });
 
   // Update local state when table data changes
@@ -157,8 +159,8 @@ export function useDatabase(initialColumns: Column[]) {
       });
     },
     enabled: !!params?.tableId,
-    staleTime: 0, // Always refetch when invalidated
-    gcTime: 0, // Don't cache the data
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
   });
 
   // Update records when table records change
