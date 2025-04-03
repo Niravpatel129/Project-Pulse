@@ -1,4 +1,5 @@
 import * as LuIcons from 'react-icons/lu';
+import { LuSmile } from 'react-icons/lu'; // Default fallback icon
 
 // Create a map of all Lucide icons
 const iconMap = Object.fromEntries(
@@ -15,6 +16,9 @@ const iconMap = Object.fromEntries(
 
 // Create a sorted list of icon names
 const iconList = Object.keys(iconMap).sort();
+
+// Default fallback icon name
+export const DEFAULT_ICON = 'LuSmile';
 
 // Helper function to filter icons based on search query
 export const filterIcons = (searchQuery: string) => {
@@ -35,6 +39,11 @@ export const filterIcons = (searchQuery: string) => {
     icons: filtered,
     total: filtered.length,
   };
+};
+
+// Helper function to get an icon component with fallback
+export const getIconWithFallback = (iconName: string) => {
+  return iconMap[iconName] || iconMap[DEFAULT_ICON] || LuSmile;
 };
 
 export { iconList, iconMap };

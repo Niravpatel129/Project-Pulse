@@ -27,6 +27,7 @@ const IconButton = memo(
               <Icon className='h-4 w-4' />
             </Button>
           </TooltipTrigger>
+
           <TooltipContent>
             <p>{name}</p>
           </TooltipContent>

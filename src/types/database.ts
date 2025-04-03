@@ -19,6 +19,7 @@ export interface Record {
 
 export interface Column {
   id: string;
+  icon?: string;
   name: string;
   type: string;
   order: number;

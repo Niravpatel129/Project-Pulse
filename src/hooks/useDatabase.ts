@@ -91,19 +91,19 @@ export function useDatabase(initialColumns: Column[]) {
 
       // Transform columns from API format to local format
       const transformedColumns = currentTableData.columns.map((column: any) => {
-        console.log('Transforming column:', column);
         const transformed = {
           id: column.id,
           name: column.name,
           type: column.type,
           isPrimary: column.isPrimaryKey,
+          icon: column.icon,
           isRequired: column.isRequired,
           isUnique: column.isUnique,
           description: column.description,
           order: column.order,
           options: column.options,
-          sortable: true, // All columns are sortable by default
-          width: 200, // Default width
+          sortable: true,
+          width: 200,
         };
         console.log('Transformed column:', transformed);
         return transformed;

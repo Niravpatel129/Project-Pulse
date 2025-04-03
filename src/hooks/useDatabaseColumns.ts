@@ -34,6 +34,7 @@ export function useDatabaseColumns(initialColumns: Column[]) {
     onSuccess: (data) => {
       // The server returns the entire table with the new column
       const newColumnFromServer = data.data.columns[data.data.columns.length - 1];
+      console.log('🚀 newColumnFromServer:', newColumnFromServer);
 
       // Update the local state with the server response
       setColumns((prevColumns) => {
@@ -49,6 +50,7 @@ export function useDatabaseColumns(initialColumns: Column[]) {
             isRequired: newColumnFromServer.isRequired,
             isUnique: newColumnFromServer.isUnique,
             hidden: newColumnFromServer.isHidden,
+            icon: newColumnFromServer.icon,
           },
         ];
       });
@@ -69,6 +71,7 @@ export function useDatabaseColumns(initialColumns: Column[]) {
     setSelectedPropertyType(propertyType);
     setNewPropertyName(`New ${propertyType.name}`);
     setNewPropertyPrefix('');
+    setNewPropertyIconName(propertyType.iconName);
   };
 
   const saveNewColumn = async () => {

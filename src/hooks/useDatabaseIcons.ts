@@ -17,7 +17,7 @@ export const iconOptions = [
 ];
 
 export const defaultPropertyTypes = [
-  { id: 'text', name: 'Text', iconName: 'LuText' },
+  { id: 'text', name: 'Text', iconName: 'LuCaseSensitive' },
   { id: 'number', name: 'Number', iconName: 'LuHash' },
   { id: 'date', name: 'Date', iconName: 'LuCalendar' },
   { id: 'checkbox', name: 'Checkbox', iconName: 'LuCheck' },
