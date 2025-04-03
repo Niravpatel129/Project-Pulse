@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/sheet';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { Calendar, CheckSquare, Database, File, FileText, Hash, Type } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface NewModuleFromTemplateSheetProps {
@@ -53,6 +54,27 @@ interface ApiResponse {
   };
   message: string;
 }
+
+const getFieldIcon = (type: string) => {
+  switch (type) {
+    case 'text':
+      return <Type className='h-4 w-4 text-gray-500' />;
+    case 'relation':
+      return <Database className='h-4 w-4 text-gray-500' />;
+    case 'number':
+      return <Hash className='h-4 w-4 text-gray-500' />;
+    case 'date':
+      return <Calendar className='h-4 w-4 text-gray-500' />;
+    case 'select':
+      return <CheckSquare className='h-4 w-4 text-gray-500' />;
+    case 'file':
+      return <File className='h-4 w-4 text-gray-500' />;
+    case 'longtext':
+      return <FileText className='h-4 w-4 text-gray-500' />;
+    default:
+      return <Type className='h-4 w-4 text-gray-500' />;
+  }
+};
 
 export default function NewModuleFromTemplateSheet({
   isOpen,
@@ -178,7 +200,10 @@ export default function NewModuleFromTemplateSheet({
           {fullTemplateData?.data.fields.map((field: ExtendedTemplateField) => {
             return (
               <div key={field._id} className='space-y-2'>
-                <Label htmlFor={field._id}>{field.name}</Label>
+                <div className='flex items-center gap-2'>
+                  {getFieldIcon(field.type)}
+                  <Label htmlFor={field._id}>{field.name}</Label>
+                </div>
                 {field.description && <p className='text-sm text-gray-500'>{field.description}</p>}
                 {renderField(field)}
               </div>
