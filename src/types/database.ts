@@ -6,6 +6,14 @@ export type Column = {
   hidden?: boolean;
   isPrimary?: boolean;
   width?: number;
+  order?: number;
+  type?: string;
+  isRequired?: boolean;
+  isUnique?: boolean;
+  description?: string;
+  options?: {
+    selectOptions?: any[];
+  };
 };
 
 export type Record = {

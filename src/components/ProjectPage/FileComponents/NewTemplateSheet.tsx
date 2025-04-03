@@ -24,107 +24,13 @@ import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import { GripVertical, Plus, Settings2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
-// Mock data for testing
-const mockDatabases = [
-  {
-    id: 'inventory',
-    name: 'Inventory',
-    icon: '📦',
-    description: 'Product inventory and stock levels',
-  },
-  {
-    id: 'customers',
-    name: 'Customers',
-    icon: '👥',
-    description: 'Customer information and orders',
-  },
-  {
-    id: 'orders',
-    name: 'Orders',
-    icon: '🛍️',
-    description: 'Order tracking and management',
-  },
-];
-
-const mockFields = [
-  {
-    id: 'text',
-    name: 'Single line text',
-    icon: '📝',
-    description: 'A single line of text',
-  },
-  {
-    id: 'longtext',
-    name: 'Long text',
-    icon: '📄',
-    description: 'Multiple lines of text',
-  },
-  {
-    id: 'number',
-    name: 'Number',
-    icon: '🔢',
-    description: 'Numeric values',
-  },
-  {
-    id: 'date',
-    name: 'Date',
-    icon: '📅',
-    description: 'Date and time values',
-  },
-  {
-    id: 'select',
-    name: 'Single select',
-    icon: '📋',
-    description: 'Select one option from a list',
-  },
-  {
-    id: 'multiselect',
-    name: 'Multiple select',
-    icon: '📑',
-    description: 'Select multiple options from a list',
-  },
-  {
-    id: 'file',
-    name: 'File attachment',
-    icon: '📎',
-    description: 'Attach files and images',
-  },
-  {
-    id: 'relation',
-    name: 'Link to another record',
-    icon: '🔗',
-    description: 'Link to records in another table',
-  },
-];
-
-// Add mock fields for each database
-interface DatabaseField {
-  id: string;
-  name: string;
-  type: string;
-  lookup?: boolean;
-}
-
-const mockDatabaseFields: Record<string, DatabaseField[]> = {
-  inventory: [
-    { id: 'name', name: 'Name', type: 'text' },
-    { id: 'brand', name: 'Brand', type: 'text' },
-    { id: 'price', name: 'Price', type: 'number' },
-    { id: 'stock', name: 'Stock', type: 'number' },
-  ],
-  customers: [
-    { id: 'name', name: 'Name', type: 'text' },
-    { id: 'email', name: 'Email', type: 'text' },
-    { id: 'phone', name: 'Phone', type: 'text' },
-    { id: 'company', name: 'Company', type: 'text' },
-  ],
-  orders: [
-    { id: 'orderNumber', name: 'Order Number', type: 'text' },
-    { id: 'total', name: 'Total', type: 'number' },
-    { id: 'status', name: 'Status', type: 'text' },
-    { id: 'date', name: 'Date', type: 'date' },
-  ],
-};
+// Empty arrays for database and field options
+const databases: Array<{ id: string; name: string; icon: string; description?: string }> = [];
+const fields: Array<{ id: string; name: string; icon: string; description?: string }> = [];
+const databaseFields: Record<
+  string,
+  Array<{ id: string; name: string; type: string; lookup?: boolean }>
+> = {};
 
 interface NewTemplateSheetProps {
   isOpen: boolean;
@@ -311,21 +217,21 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
                                                 <span>🔗</span>
                                                 <span>
                                                   {
-                                                    mockDatabases.find((db) => {
+                                                    databases.find((db) => {
                                                       return db.id === field.relationType;
                                                     })?.name
                                                   }
                                                 </span>
                                               </div>
                                             ) : (
-                                              mockFields.find((type) => {
+                                              fields.find((type) => {
                                                 return type.id === field.type;
                                               })?.name
                                             )}
                                           </SelectValue>
                                         </SelectTrigger>
                                         <SelectContent>
-                                          {mockFields.map((type) => {
+                                          {fields.map((type: any) => {
                                             return (
                                               <SelectItem
                                                 key={type.id}
@@ -477,7 +383,7 @@ Option 3`}
                         </div>
                       </div>
                     </SelectItem>
-                    {mockDatabases.map((db) => {
+                    {databases.map((db) => {
                       return (
                         <SelectItem key={db.id} value={db.id}>
                           <div className='flex gap-2'>
@@ -507,7 +413,7 @@ Option 3`}
                           size='sm'
                           className='text-xs h-7 px-2'
                           onClick={() => {
-                            const allFields = mockDatabaseFields[selectedDatabase].map((field) => {
+                            const allFields = databaseFields[selectedDatabase].map((field) => {
                               return field.id;
                             });
                             setLookupFields(
@@ -525,7 +431,7 @@ Option 3`}
                           size='sm'
                           className='text-xs h-7 px-2'
                           onClick={() => {
-                            const firstField = mockDatabaseFields[selectedDatabase][0].id;
+                            const firstField = databaseFields[selectedDatabase][0].id;
                             setLookupFields({ [firstField]: true });
                           }}
                         >
@@ -539,7 +445,7 @@ Option 3`}
 
                     <div className='bg-background border rounded-lg p-3 max-h-[240px] overflow-y-auto'>
                       <div className='grid gap-2'>
-                        {mockDatabaseFields[selectedDatabase].map((field) => {
+                        {databaseFields[selectedDatabase].map((field) => {
                           return (
                             <div
                               key={field.id}
@@ -594,7 +500,7 @@ Option 3`}
                   onClick={() => {
                     if (!selectedDatabase) return;
 
-                    const selectedDb = mockDatabases.find((db) => {
+                    const selectedDb = databases.find((db) => {
                       return db.id === selectedDatabase;
                     });
                     if (!selectedDb) return;
@@ -719,14 +625,14 @@ Option 3`}
                           <SelectTrigger className='w-[200px]'>
                             <SelectValue placeholder='Field type'>
                               {
-                                mockFields.find((type) => {
+                                fields.find((type) => {
                                   return type.id === field.type;
                                 })?.name
                               }
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
-                            {mockFields.map((type) => {
+                            {fields.map((type) => {
                               return (
                                 <SelectItem key={type.id} value={type.id}>
                                   <div className='flex items-center gap-2'>
@@ -777,11 +683,11 @@ Option 3`}
                       description: newTableDescription,
                     };
 
-                    // Add the new database to mockDatabases
-                    mockDatabases.push(newDb);
+                    // Add the new database to databases
+                    databases.push(newDb);
 
                     // Create fields for the new database
-                    mockDatabaseFields[newDb.id] = newTableFields.map((field) => {
+                    databaseFields[newDb.id] = newTableFields.map((field) => {
                       return {
                         id: field.name.toLowerCase().replace(/\s+/g, '-'),
                         name: field.name,

@@ -67,6 +67,7 @@ export const TableHeaderMemo = memo(
     handleResizeStart,
     moveColumn,
   }: TableHeaderProps) => {
+    console.log('🚀 columns:', columns);
     return (
       <TableHeader className='sticky top-0 z-10'>
         <TableRow className='bg-white hover:bg-white'>

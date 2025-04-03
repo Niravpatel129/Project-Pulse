@@ -73,6 +73,7 @@ export interface TemplateField {
   name: string;
   type: FieldType;
   required: boolean;
+  icon?: string;
   description?: string;
   options?: string[];
   multiple?: boolean;

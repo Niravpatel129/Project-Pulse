@@ -1,24 +1,19 @@
 import { Column } from '@/types/database';
-import { PropertyType } from '@/types/property';
 import { useState } from 'react';
 
 export function useDatabaseColumns() {
-  const [columns, setColumns] = useState<Column[]>([
-    { id: 'name', name: 'Name', sortable: true, isPrimary: true },
-    { id: 'leads', name: 'Leads', sortable: true },
-    { id: 'tags', name: 'Tags', sortable: true },
-  ]);
+  const [columns, setColumns] = useState<Column[]>([]);
 
   const [isAddColumnSheetOpen, setIsAddColumnSheetOpen] = useState(false);
   const [propertySearchQuery, setPropertySearchQuery] = useState('');
-  const [selectedPropertyType, setSelectedPropertyType] = useState<PropertyType | null>(null);
+  const [selectedPropertyType, setSelectedPropertyType] = useState(null);
   const [newPropertyName, setNewPropertyName] = useState('');
   const [newPropertyPrefix, setNewPropertyPrefix] = useState('');
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const [newPropertyIconName, setNewPropertyIconName] = useState<string>('LuSmile');
 
   // Add new column
-  const addNewColumn = (propertyType: PropertyType) => {
+  const addNewColumn = (propertyType) => {
     setSelectedPropertyType(propertyType);
     setNewPropertyName(`New ${propertyType.name}`);
     setNewPropertyPrefix('');

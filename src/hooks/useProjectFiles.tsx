@@ -8,13 +8,6 @@ import {
   Product,
   ProjectFile,
   Template,
-  mockInventoryCategories,
-  mockInventoryItems,
-  mockInvoices,
-  mockProducts,
-  mockProjectFiles,
-  mockTemplateItems,
-  mockTemplates,
 } from '@/lib/mock/projectFiles';
 import { File, FileText, FolderPlus, ImageIcon, Paperclip, Receipt } from 'lucide-react';
 import { useState } from 'react';
@@ -64,18 +57,18 @@ export function useProjectFiles() {
   const [variationName, setVariationName] = useState('');
   const [variationDescription, setVariationDescription] = useState('');
 
-  // Use the mock data from the imported file
-  const [files, setFiles] = useState<ProjectFile[]>([...mockProjectFiles, ...mockTemplateItems]);
-  const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [templates, setTemplates] = useState<Template[]>(mockTemplates);
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(mockInventoryItems);
-  const [inventoryCategories] = useState<InventoryCategory[]>(mockInventoryCategories);
+  // Initialize with empty arrays
+  const [files, setFiles] = useState<ProjectFile[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [inventoryCategories] = useState<InventoryCategory[]>([]);
   const [selectedInventoryItem, setSelectedInventoryItem] = useState<InventoryItem | null>(null);
   const [showInventoryItemModal, setShowInventoryItemModal] = useState(false);
   const [showInventoryReportModal, setShowInventoryReportModal] = useState(false);
 
   // Invoice related states
-  const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [showInvoiceCreatorModal, setShowInvoiceCreatorModal] = useState(false);
   const [showInvoiceDetailsModal, setShowInvoiceDetailsModal] = useState(false);

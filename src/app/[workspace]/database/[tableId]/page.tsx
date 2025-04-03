@@ -271,14 +271,47 @@ export default function TablePage() {
 
   // Get ordered columns
   const getOrderedColumns = () => {
-    if (columnOrder.length === 0) return columns;
-    return columnOrder
+    console.log('🚀 columns:', columns);
+    console.log('🚀 columnOrder:', columnOrder);
+
+    // If no columns, return empty array
+    if (!columns || columns.length === 0) {
+      console.log('No columns found');
+      return [];
+    }
+
+    // If columnOrder is empty, return columns sorted by their order property
+    if (columnOrder.length === 0) {
+      const sortedColumns = [...columns]
+        .sort((a, b) => {
+          return (a.order || 0) - (b.order || 0);
+        })
+        .filter((col) => {
+          return !col.hidden;
+        });
+      console.log('🚀 sortedColumns:', sortedColumns);
+      return sortedColumns;
+    }
+
+    // Otherwise, return columns in the specified order, filtering out hidden ones
+    // and ensuring we have a valid column for each ID
+    const orderedColumns = columnOrder
       .map((id) => {
-        return columns.find((col) => {
+        const column = columns.find((col) => {
           return col.id === id;
         });
+        if (!column) {
+          console.warn(`Column with ID ${id} not found`);
+          return null;
+        }
+        return column;
       })
-      .filter(Boolean) as Column[];
+      .filter((col): col is Column => {
+        return col !== null && !col.hidden;
+      });
+
+    console.log('🚀 orderedColumns:', orderedColumns);
+    return orderedColumns;
   };
 
   return (

@@ -2,7 +2,7 @@
 
 import { toast } from '@/components/ui/use-toast';
 import { useApi } from '@/contexts/ApiContext';
-import { useAuth, User } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useInventory } from '@/contexts/InventoryContext';
 import { useInvoices } from '@/contexts/InvoicesContext';
 import { useProjectFiles } from '@/contexts/ProjectFilesContext';
@@ -40,36 +40,9 @@ function safeStringify(obj: unknown, fallback: string = '{}') {
   }
 }
 
-// Function to initialize mock users for debug purposes
+// Remove mock user data and related functions
+const mockUsers: any[] = [];
 const loadMockUsers = () => {
-  const mockUsers = [
-    {
-      id: '1',
-      name: 'Admin User',
-      email: 'admin@example.com',
-      password: 'password123',
-      role: 'admin',
-      imageUrl: 'https://ui-avatars.com/api/?name=Admin+User',
-    },
-    {
-      id: '2',
-      name: 'Client User',
-      email: 'client@example.com',
-      password: 'password123',
-      role: 'client',
-      imageUrl: 'https://ui-avatars.com/api/?name=Client+User',
-    },
-    {
-      id: '3',
-      name: 'Photographer',
-      email: 'photographer@example.com',
-      password: 'password123',
-      role: 'photographer',
-      imageUrl: 'https://ui-avatars.com/api/?name=Photographer',
-    },
-  ];
-
-  localStorage.setItem('mockUsers', JSON.stringify(mockUsers));
   return mockUsers;
 };
 
@@ -105,7 +78,6 @@ export default function DevPage() {
 
   // States for the dev page
   const [activeTab, setActiveTab] = useState('users');
-  const [mockUsers, setMockUsers] = useState<User[]>([]);
   const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'user' });
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [appRoutes, setAppRoutes] = useState<string[]>([]);
@@ -125,40 +97,6 @@ export default function DevPage() {
       router.push('/');
       return;
     }
-
-    // Load mock users from localStorage
-    const loadMockUsers = () => {
-      try {
-        // Get mock users directly
-        const usersJson = localStorage.getItem('mock_users');
-        const storedUsers = usersJson ? JSON.parse(usersJson) : [];
-
-        // Default users if none found
-        if (!storedUsers || storedUsers.length === 0) {
-          const defaultUsers: User[] = [
-            {
-              id: '1',
-              email: 'admin@example.com',
-              name: 'Admin User',
-              role: 'admin',
-            },
-            {
-              id: '2',
-              email: 'user@example.com',
-              name: 'Regular User',
-              role: 'user',
-            },
-          ];
-          localStorage.setItem('mock_users', JSON.stringify(defaultUsers));
-          setMockUsers(defaultUsers);
-        } else {
-          setMockUsers(storedUsers);
-        }
-      } catch (error) {
-        console.error('Failed to load mock users:', error);
-        setMockUsers([]);
-      }
-    };
 
     // Get application routes by scanning the file system
     // This is a simplified representation - in a real app you'd get this from Next.js
@@ -208,7 +146,6 @@ export default function DevPage() {
       return items;
     };
 
-    loadMockUsers();
     setLocalStorageItems(getLocalStorageItems());
     setSessionStorageItems(getSessionStorageItems());
 
@@ -218,7 +155,9 @@ export default function DevPage() {
       setSessionStorageItems(getSessionStorageItems());
     }, 2000);
 
-    return () => {return clearInterval(refreshInterval)};
+    return () => {
+      return clearInterval(refreshInterval);
+    };
   }, [router]);
 
   // Handle user creation
@@ -232,7 +171,6 @@ export default function DevPage() {
     };
 
     const updatedUsers = [...mockUsers, newMockUser];
-    setMockUsers(updatedUsers);
     localStorage.setItem('mock_users', JSON.stringify(updatedUsers));
 
     // Reset form
@@ -241,17 +179,17 @@ export default function DevPage() {
 
   // Handle user deletion
   const handleDeleteUser = (id: string) => {
-    const updatedUsers = mockUsers.filter((user) => {return user.id !== id});
-    setMockUsers(updatedUsers);
+    const updatedUsers = mockUsers.filter((user) => {
+      return user.id !== id;
+    });
     localStorage.setItem('mock_users', JSON.stringify(updatedUsers));
   };
 
   // Handle user role change
   const handleRoleChange = (id: string, newRole: 'admin' | 'user') => {
-    const updatedUsers = mockUsers.map((user) =>
-      {return user.id === id ? { ...user, role: newRole } : user},
-    );
-    setMockUsers(updatedUsers);
+    const updatedUsers = mockUsers.map((user) => {
+      return user.id === id ? { ...user, role: newRole } : user;
+    });
     localStorage.setItem('mock_users', JSON.stringify(updatedUsers));
 
     // If the current user's role is changing, update localStorage
@@ -278,10 +216,12 @@ export default function DevPage() {
 
   // Handle dev option change
   const handleDevOptionChange = (option: keyof typeof devOptions, value: boolean) => {
-    setDevOptions((prev) => {return {
-      ...prev,
-      [option]: value,
-    }});
+    setDevOptions((prev) => {
+      return {
+        ...prev,
+        [option]: value,
+      };
+    });
 
     // Save to localStorage for persistence
     localStorage.setItem(
@@ -416,58 +356,64 @@ export default function DevPage() {
                 <div>
                   <h3 className='text-lg font-medium mb-4'>Existing Users</h3>
                   <div className='space-y-3'>
-                    {mockUsers.map((mockUser) => {return (
-                      <div key={mockUser.id} className='border rounded-lg p-3'>
-                        <div className='flex items-center justify-between'>
-                          <div>
-                            <div className='font-medium'>{mockUser.name}</div>
-                            <div className='text-sm text-gray-500'>{mockUser.email}</div>
-                            <div className='flex items-center mt-1'>
-                              <Badge
-                                variant={mockUser.role === 'admin' ? 'default' : 'secondary'}
-                                className='mr-2'
-                              >
-                                {mockUser.role}
-                              </Badge>
-                              <span className='text-xs text-gray-500'>ID: {mockUser.id}</span>
+                    {mockUsers.map((mockUser) => {
+                      return (
+                        <div key={mockUser.id} className='border rounded-lg p-3'>
+                          <div className='flex items-center justify-between'>
+                            <div>
+                              <div className='font-medium'>{mockUser.name}</div>
+                              <div className='text-sm text-gray-500'>{mockUser.email}</div>
+                              <div className='flex items-center mt-1'>
+                                <Badge
+                                  variant={mockUser.role === 'admin' ? 'default' : 'secondary'}
+                                  className='mr-2'
+                                >
+                                  {mockUser.role}
+                                </Badge>
+                                <span className='text-xs text-gray-500'>ID: {mockUser.id}</span>
+                              </div>
                             </div>
-                          </div>
-                          <div className='flex flex-col gap-2'>
-                            <Select
-                              defaultValue={mockUser.role}
-                              onValueChange={(value) =>
-                                {return handleRoleChange(mockUser.id, value as 'admin' | 'user')}
-                              }
-                            >
-                              <SelectTrigger className='w-[110px]'>
-                                <SelectValue placeholder='Role' />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value='user'>User</SelectItem>
-                                <SelectItem value='admin'>Admin</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <div className='flex gap-2'>
-                              <Button
-                                variant='outline'
-                                size='sm'
-                                className='w-full'
-                                onClick={() => {return handleLoginAs(mockUser.email)}}
+                            <div className='flex flex-col gap-2'>
+                              <Select
+                                defaultValue={mockUser.role}
+                                onValueChange={(value) => {
+                                  return handleRoleChange(mockUser.id, value as 'admin' | 'user');
+                                }}
                               >
-                                Login As
-                              </Button>
-                              <Button
-                                variant='destructive'
-                                size='sm'
-                                onClick={() => {return handleDeleteUser(mockUser.id)}}
-                              >
-                                Delete
-                              </Button>
+                                <SelectTrigger className='w-[110px]'>
+                                  <SelectValue placeholder='Role' />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value='user'>User</SelectItem>
+                                  <SelectItem value='admin'>Admin</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <div className='flex gap-2'>
+                                <Button
+                                  variant='outline'
+                                  size='sm'
+                                  className='w-full'
+                                  onClick={() => {
+                                    return handleLoginAs(mockUser.email);
+                                  }}
+                                >
+                                  Login As
+                                </Button>
+                                <Button
+                                  variant='destructive'
+                                  size='sm'
+                                  onClick={() => {
+                                    return handleDeleteUser(mockUser.id);
+                                  }}
+                                >
+                                  Delete
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    )})}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -480,7 +426,9 @@ export default function DevPage() {
                         id='name'
                         placeholder="User's full name"
                         value={newUser.name}
-                        onChange={(e) => {return setNewUser({ ...newUser, name: e.target.value })}}
+                        onChange={(e) => {
+                          return setNewUser({ ...newUser, name: e.target.value });
+                        }}
                       />
                     </div>
                     <div className='space-y-2'>
@@ -490,7 +438,9 @@ export default function DevPage() {
                         type='email'
                         placeholder='user@example.com'
                         value={newUser.email}
-                        onChange={(e) => {return setNewUser({ ...newUser, email: e.target.value })}}
+                        onChange={(e) => {
+                          return setNewUser({ ...newUser, email: e.target.value });
+                        }}
                       />
                     </div>
                     <div className='space-y-2'>
@@ -500,14 +450,18 @@ export default function DevPage() {
                         type='password'
                         placeholder='Password (ignored in mock auth)'
                         value={newUser.password}
-                        onChange={(e) => {return setNewUser({ ...newUser, password: e.target.value })}}
+                        onChange={(e) => {
+                          return setNewUser({ ...newUser, password: e.target.value });
+                        }}
                       />
                     </div>
                     <div className='space-y-2'>
                       <Label htmlFor='role'>Role</Label>
                       <Select
                         defaultValue={newUser.role}
-                        onValueChange={(value) => {return setNewUser({ ...newUser, role: value })}}
+                        onValueChange={(value) => {
+                          return setNewUser({ ...newUser, role: value });
+                        }}
                       >
                         <SelectTrigger id='role'>
                           <SelectValue placeholder='Select role' />
@@ -555,7 +509,9 @@ export default function DevPage() {
                       <Button
                         variant='destructive'
                         size='sm'
-                        onClick={() => {return logout()}}
+                        onClick={() => {
+                          return logout();
+                        }}
                         className='mt-4'
                       >
                         Logout
@@ -564,7 +520,13 @@ export default function DevPage() {
                   ) : (
                     <div className='border rounded-lg p-4 text-center'>
                       <div className='text-gray-500 mb-3'>Not logged in</div>
-                      <Button variant='default' size='sm' onClick={() => {return router.push('/login')}}>
+                      <Button
+                        variant='default'
+                        size='sm'
+                        onClick={() => {
+                          return router.push('/login');
+                        }}
+                      >
                         Go to Login
                       </Button>
                     </div>
@@ -579,7 +541,9 @@ export default function DevPage() {
                       <div className='grid grid-cols-2 gap-2'>
                         <Button
                           size='sm'
-                          onClick={() => {return handleLoginAs('admin@example.com')}}
+                          onClick={() => {
+                            return handleLoginAs('admin@example.com');
+                          }}
                           className='w-full'
                         >
                           Login as Admin
@@ -587,7 +551,9 @@ export default function DevPage() {
                         <Button
                           size='sm'
                           variant='secondary'
-                          onClick={() => {return handleLoginAs('user@example.com')}}
+                          onClick={() => {
+                            return handleLoginAs('user@example.com');
+                          }}
                           className='w-full'
                         >
                           Login as User
@@ -632,21 +598,23 @@ export default function DevPage() {
             </CardHeader>
             <CardContent className='space-y-4'>
               <div className='border rounded-lg divide-y'>
-                {appRoutes.map((route) => {return (
-                  <div key={route} className='p-3 flex justify-between items-center'>
-                    <div>
-                      <code className='bg-muted px-2 py-1 rounded text-sm'>{route}</code>
-                      {route === pathname && (
-                        <Badge variant='secondary' className='ml-2'>
-                          Current
-                        </Badge>
-                      )}
+                {appRoutes.map((route) => {
+                  return (
+                    <div key={route} className='p-3 flex justify-between items-center'>
+                      <div>
+                        <code className='bg-muted px-2 py-1 rounded text-sm'>{route}</code>
+                        {route === pathname && (
+                          <Badge variant='secondary' className='ml-2'>
+                            Current
+                          </Badge>
+                        )}
+                      </div>
+                      <Button asChild variant='outline' size='sm'>
+                        <Link href={route}>Visit</Link>
+                      </Button>
                     </div>
-                    <Button asChild variant='outline' size='sm'>
-                      <Link href={route}>Visit</Link>
-                    </Button>
-                  </div>
-                )})}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -661,13 +629,31 @@ export default function DevPage() {
             </CardHeader>
             <CardContent className='space-y-4'>
               <div className='flex justify-end mb-2 gap-2'>
-                <Button variant='outline' size='sm' onClick={() => {return clearStorage('local')}}>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => {
+                    return clearStorage('local');
+                  }}
+                >
                   Clear localStorage
                 </Button>
-                <Button variant='outline' size='sm' onClick={() => {return clearStorage('session')}}>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => {
+                    return clearStorage('session');
+                  }}
+                >
                   Clear sessionStorage
                 </Button>
-                <Button variant='outline' size='sm' onClick={() => {return clearStorage('both')}}>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => {
+                    return clearStorage('both');
+                  }}
+                >
                   Clear All
                 </Button>
               </div>
@@ -684,28 +670,32 @@ export default function DevPage() {
                 <TabsContent value='localStorage' className='mt-4'>
                   {localStorageItems.length > 0 ? (
                     <div className='border rounded-lg divide-y'>
-                      {localStorageItems.map(({ key, value }) => {return (
-                        <div key={key} className='p-3'>
-                          <div className='flex justify-between items-center'>
-                            <code className='bg-muted px-2 py-1 rounded text-sm'>{key}</code>
-                            <Button
-                              variant='ghost'
-                              size='sm'
-                              onClick={() => {
-                                localStorage.removeItem(key);
-                                setLocalStorageItems((prevItems) =>
-                                  {return prevItems.filter((item) => {return item.key !== key})},
-                                );
-                              }}
-                            >
-                              Delete
-                            </Button>
+                      {localStorageItems.map(({ key, value }) => {
+                        return (
+                          <div key={key} className='p-3'>
+                            <div className='flex justify-between items-center'>
+                              <code className='bg-muted px-2 py-1 rounded text-sm'>{key}</code>
+                              <Button
+                                variant='ghost'
+                                size='sm'
+                                onClick={() => {
+                                  localStorage.removeItem(key);
+                                  setLocalStorageItems((prevItems) => {
+                                    return prevItems.filter((item) => {
+                                      return item.key !== key;
+                                    });
+                                  });
+                                }}
+                              >
+                                Delete
+                              </Button>
+                            </div>
+                            <ScrollArea className='h-[100px] mt-2 rounded border p-2 bg-muted/30'>
+                              <pre className='text-xs'>{formatJSON(value)}</pre>
+                            </ScrollArea>
                           </div>
-                          <ScrollArea className='h-[100px] mt-2 rounded border p-2 bg-muted/30'>
-                            <pre className='text-xs'>{formatJSON(value)}</pre>
-                          </ScrollArea>
-                        </div>
-                      )})}
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className='text-center py-8 text-gray-500'>
@@ -716,28 +706,32 @@ export default function DevPage() {
                 <TabsContent value='sessionStorage' className='mt-4'>
                   {sessionStorageItems.length > 0 ? (
                     <div className='border rounded-lg divide-y'>
-                      {sessionStorageItems.map(({ key, value }) => {return (
-                        <div key={key} className='p-3'>
-                          <div className='flex justify-between items-center'>
-                            <code className='bg-muted px-2 py-1 rounded text-sm'>{key}</code>
-                            <Button
-                              variant='ghost'
-                              size='sm'
-                              onClick={() => {
-                                sessionStorage.removeItem(key);
-                                setSessionStorageItems((prevItems) =>
-                                  {return prevItems.filter((item) => {return item.key !== key})},
-                                );
-                              }}
-                            >
-                              Delete
-                            </Button>
+                      {sessionStorageItems.map(({ key, value }) => {
+                        return (
+                          <div key={key} className='p-3'>
+                            <div className='flex justify-between items-center'>
+                              <code className='bg-muted px-2 py-1 rounded text-sm'>{key}</code>
+                              <Button
+                                variant='ghost'
+                                size='sm'
+                                onClick={() => {
+                                  sessionStorage.removeItem(key);
+                                  setSessionStorageItems((prevItems) => {
+                                    return prevItems.filter((item) => {
+                                      return item.key !== key;
+                                    });
+                                  });
+                                }}
+                              >
+                                Delete
+                              </Button>
+                            </div>
+                            <ScrollArea className='h-[100px] mt-2 rounded border p-2 bg-muted/30'>
+                              <pre className='text-xs'>{formatJSON(value)}</pre>
+                            </ScrollArea>
                           </div>
-                          <ScrollArea className='h-[100px] mt-2 rounded border p-2 bg-muted/30'>
-                            <pre className='text-xs'>{formatJSON(value)}</pre>
-                          </ScrollArea>
-                        </div>
-                      )})}
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className='text-center py-8 text-gray-500'>
@@ -828,9 +822,9 @@ export default function DevPage() {
                   </div>
                   <Switch
                     checked={devOptions.slowNetworkSimulation}
-                    onCheckedChange={(checked) =>
-                      {return handleDevOptionChange('slowNetworkSimulation', checked)}
-                    }
+                    onCheckedChange={(checked) => {
+                      return handleDevOptionChange('slowNetworkSimulation', checked);
+                    }}
                   />
                 </div>
                 <Separator />
@@ -844,7 +838,9 @@ export default function DevPage() {
                   </div>
                   <Switch
                     checked={devOptions.forceErrors}
-                    onCheckedChange={(checked) => {return handleDevOptionChange('forceErrors', checked)}}
+                    onCheckedChange={(checked) => {
+                      return handleDevOptionChange('forceErrors', checked);
+                    }}
                   />
                 </div>
                 <Separator />
@@ -858,7 +854,9 @@ export default function DevPage() {
                   </div>
                   <Switch
                     checked={devOptions.logApiCalls}
-                    onCheckedChange={(checked) => {return handleDevOptionChange('logApiCalls', checked)}}
+                    onCheckedChange={(checked) => {
+                      return handleDevOptionChange('logApiCalls', checked);
+                    }}
                   />
                 </div>
                 <Separator />
@@ -866,7 +864,12 @@ export default function DevPage() {
                 <div className='pt-4'>
                   <h3 className='font-medium mb-3'>System Actions</h3>
                   <div className='grid grid-cols-2 gap-3'>
-                    <Button variant='outline' onClick={() => {return window.location.reload()}}>
+                    <Button
+                      variant='outline'
+                      onClick={() => {
+                        return window.location.reload();
+                      }}
+                    >
                       Refresh Application
                     </Button>
                     <Button

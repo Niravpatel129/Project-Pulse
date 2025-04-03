@@ -1,6 +1,7 @@
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useParams } from 'next/navigation';
+import { useEffect, useRef } from 'react';
 import { useDatabaseColumns } from './useDatabaseColumns';
 import { useDatabaseIcons } from './useDatabaseIcons';
 import { useDatabaseRecords } from './useDatabaseRecords';
@@ -8,6 +9,8 @@ import { useDatabaseSorting } from './useDatabaseSorting';
 
 export function useDatabase() {
   const queryClient = useQueryClient();
+  const params = useParams();
+  const isInitialLoad = useRef(true);
 
   const {
     columns,
@@ -66,6 +69,88 @@ export function useDatabase() {
       return response.data.data;
     },
   });
+
+  const { data: currentTableData } = useQuery({
+    queryKey: ['table', params?.tableId],
+    queryFn: async () => {
+      if (!params?.tableId) return null;
+      const response = await newRequest.get(`/tables/${params.tableId}`);
+      console.log('Table data response:', response.data);
+      return response.data.data;
+    },
+    enabled: !!params?.tableId,
+  });
+
+  // Update local state when table data changes
+  useEffect(() => {
+    if (currentTableData && currentTableData.columns) {
+      console.log('Current table data:', currentTableData);
+
+      // Transform columns from API format to local format
+      const transformedColumns = currentTableData.columns.map((column: any) => {
+        console.log('Transforming column:', column);
+        const transformed = {
+          id: column.id,
+          name: column.name,
+          type: column.type,
+          isPrimary: column.isPrimaryKey,
+          isRequired: column.isRequired,
+          isUnique: column.isUnique,
+          hidden: column.isHidden,
+          description: column.description,
+          order: column.order,
+          options: column.options,
+          sortable: true, // All columns are sortable by default
+          width: 200, // Default width
+        };
+        console.log('Transformed column:', transformed);
+        return transformed;
+      });
+
+      console.log('Transformed columns:', transformedColumns);
+
+      // Get visible columns from the default grid view
+      const defaultView = currentTableData.views?.find((view: any) => {
+        return view.type === 'grid';
+      });
+      const visibleColumnIds = defaultView?.visibleColumns || [];
+      console.log('Visible column IDs:', visibleColumnIds);
+
+      // Set columns with visibility based on the view
+      const finalColumns = transformedColumns.map((col) => {
+        return {
+          ...col,
+          hidden: !visibleColumnIds.includes(col.id),
+        };
+      });
+
+      console.log('Final columns:', finalColumns);
+      setColumns(finalColumns);
+    }
+  }, [currentTableData, setColumns]);
+
+  // Reset initial load when table ID changes
+  useEffect(() => {
+    isInitialLoad.current = true;
+  }, [params?.tableId]);
+
+  // Fetch records for the current table
+  const { data: tableRecords = [] } = useQuery({
+    queryKey: ['table-records', params?.tableId],
+    queryFn: async () => {
+      if (!params?.tableId) return [];
+      const response = await newRequest.get(`/tables/${params.tableId}/records`);
+      return response.data.data;
+    },
+    enabled: !!params?.tableId,
+  });
+
+  // Update records when table records change
+  useEffect(() => {
+    if (tableRecords && tableRecords.length > 0) {
+      setRecords(tableRecords);
+    }
+  }, [tableRecords]);
 
   useEffect(() => {
     if (editingCell.recordId !== null && inputRef.current) {
@@ -143,5 +228,6 @@ export function useDatabase() {
     setPrimaryColumn,
     deleteColumn,
     tables,
+    currentTableData,
   };
 }

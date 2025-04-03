@@ -2,15 +2,7 @@ import { Column, Record as DatabaseRecord } from '@/types/database';
 import { useRef, useState } from 'react';
 
 export function useDatabaseRecords(columns: Column[]) {
-  const [records, setRecords] = useState<DatabaseRecord[]>([
-    {
-      id: 1,
-      name: 'Database Entry',
-      leads: '',
-      tags: [{ id: '1', name: 'sfs' }],
-      selected: false,
-    },
-  ]);
+  const [records, setRecords] = useState<DatabaseRecord[]>([]);
 
   const [editingCell, setEditingCell] = useState<{
     recordId: number | null;

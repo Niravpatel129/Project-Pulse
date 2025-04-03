@@ -46,146 +46,8 @@ import {
 import Link from 'next/link';
 import { useState } from 'react';
 
-// Mock customer data
-const MOCK_CUSTOMERS = [
-  {
-    id: 1,
-    name: 'Acme Corporation',
-    type: 'Enterprise',
-    contactName: 'John Smith',
-    contactEmail: 'john.smith@acme.com',
-    contactPhone: '(555) 123-4567',
-    address: '123 Business Ave, San Francisco, CA 94107',
-    industry: 'Technology',
-    status: 'Active',
-    totalSpent: 285000,
-    lastPurchase: '2024-04-10',
-    lastContact: '2 days ago',
-    rating: 5,
-    projects: 3,
-    notes:
-      'Key account with expansion potential in Q3. Interested in additional service offerings.',
-  },
-  {
-    id: 2,
-    name: 'Fashion Forward Inc.',
-    type: 'Mid-Market',
-    contactName: 'Emma Johnson',
-    contactEmail: 'emma@fashionforward.com',
-    contactPhone: '(555) 234-5678',
-    address: '456 Style Street, New York, NY 10001',
-    industry: 'Retail',
-    status: 'Active',
-    totalSpent: 120000,
-    lastPurchase: '2024-03-22',
-    lastContact: '1 week ago',
-    rating: 4,
-    projects: 1,
-    notes: 'Recently expanded to e-commerce. Looking for digital marketing support.',
-  },
-  {
-    id: 3,
-    name: 'Midwest Healthcare Group',
-    type: 'Enterprise',
-    contactName: 'Dr. Robert Chen',
-    contactEmail: 'robert.chen@midwesthealthcare.org',
-    contactPhone: '(555) 345-6789',
-    address: '789 Healing Blvd, Chicago, IL 60601',
-    industry: 'Healthcare',
-    status: 'Active',
-    totalSpent: 450000,
-    lastPurchase: '2024-04-02',
-    lastContact: '3 days ago',
-    rating: 5,
-    projects: 2,
-    notes: 'Long-term client with multiple facilities. Planning system-wide upgrade in Q4.',
-  },
-  {
-    id: 4,
-    name: 'Global Financial Services',
-    type: 'Enterprise',
-    contactName: 'Sarah Williams',
-    contactEmail: 'sarah.w@globalfinancial.com',
-    contactPhone: '(555) 456-7890',
-    address: '1000 Money Lane, New York, NY 10005',
-    industry: 'Finance',
-    status: 'Active',
-    totalSpent: 780000,
-    lastPurchase: '2024-02-15',
-    lastContact: '1 month ago',
-    rating: 4.5,
-    projects: 1,
-    notes: 'Very security-conscious client. Requires extra compliance documentation.',
-  },
-  {
-    id: 5,
-    name: 'National Retail Chain',
-    type: 'Enterprise',
-    contactName: 'Michael Brown',
-    contactEmail: 'm.brown@nationalretail.com',
-    contactPhone: '(555) 567-8901',
-    address: '567 Market Street, Seattle, WA 98101',
-    industry: 'Retail',
-    status: 'Inactive',
-    totalSpent: 320000,
-    lastPurchase: '2023-11-30',
-    lastContact: '3 months ago',
-    rating: 3,
-    projects: 2,
-    notes: 'Currently on hold due to internal restructuring. Follow up in June.',
-  },
-  {
-    id: 6,
-    name: 'Artisan Goods Marketplace',
-    type: 'Small Business',
-    contactName: 'Lisa Anderson',
-    contactEmail: 'lisa@artisangoods.com',
-    contactPhone: '(555) 678-9012',
-    address: '234 Craft Road, Portland, OR 97205',
-    industry: 'Retail',
-    status: 'Active',
-    totalSpent: 95000,
-    lastPurchase: '2024-04-05',
-    lastContact: '5 days ago',
-    rating: 5,
-    projects: 1,
-    notes: 'Growing business, very responsive. Looking to expand to physical locations.',
-  },
-  {
-    id: 7,
-    name: 'Continental Manufacturing',
-    type: 'Mid-Market',
-    contactName: 'David Lee',
-    contactEmail: 'david.lee@continental-mfg.com',
-    contactPhone: '(555) 789-0123',
-    address: '890 Factory Parkway, Detroit, MI 48201',
-    industry: 'Manufacturing',
-    status: 'Active',
-    totalSpent: 180000,
-    lastPurchase: '2024-03-15',
-    lastContact: '2 weeks ago',
-    rating: 4,
-    projects: 1,
-    notes: 'Has recommended us to several partners. Interested in automation solutions.',
-  },
-  {
-    id: 8,
-    name: 'Sunset Hospitality Group',
-    type: 'Mid-Market',
-    contactName: 'Jennifer Martinez',
-    contactEmail: 'jmartinez@sunsethospitality.com',
-    contactPhone: '(555) 890-1234',
-    address: '321 Resort Way, Miami, FL 33139',
-    industry: 'Hospitality',
-    status: 'Active',
-    totalSpent: 210000,
-    lastPurchase: '2024-01-20',
-    lastContact: '1 month ago',
-    rating: 4,
-    projects: 2,
-    notes: 'Seasonal business cycles. Best time to approach with new offerings is fall.',
-  },
-];
+// Remove mock customer data
+const MOCK_CUSTOMERS: any[] = [];
 
 export default function CustomersPage() {
   const { isAuthenticated, user } = useAuth();
@@ -239,7 +101,11 @@ export default function CustomersPage() {
 
   // Function to handle customer deletion
   const handleDeleteCustomer = (customerId: number) => {
-    setCustomers(customers.filter((customer) => {return customer.id !== customerId}));
+    setCustomers(
+      customers.filter((customer) => {
+        return customer.id !== customerId;
+      }),
+    );
   };
 
   // Function to render customer status badge
@@ -273,12 +139,19 @@ export default function CustomersPage() {
   };
 
   // Helper for column header with sorting
-  const SortableColumnHeader = ({ column, label }: { column: string; label: string }) => {return (
-    <div className='flex items-center cursor-pointer' onClick={() => {return handleSort(column)}}>
-      {label}
-      <ArrowUpDown className='ml-2 h-4 w-4' />
-    </div>
-  )};
+  const SortableColumnHeader = ({ column, label }: { column: string; label: string }) => {
+    return (
+      <div
+        className='flex items-center cursor-pointer'
+        onClick={() => {
+          return handleSort(column);
+        }}
+      >
+        {label}
+        <ArrowUpDown className='ml-2 h-4 w-4' />
+      </div>
+    );
+  };
 
   return (
     <div className='container mx-auto py-8'>
@@ -311,7 +184,9 @@ export default function CustomersPage() {
             placeholder='Search customers...'
             className='pl-8'
             value={searchQuery}
-            onChange={(e) => {return setSearchQuery(e.target.value)}}
+            onChange={(e) => {
+              return setSearchQuery(e.target.value);
+            }}
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -363,75 +238,79 @@ export default function CustomersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedCustomers.map((customer) => {return (
-                <TableRow key={customer.id}>
-                  <TableCell className='font-medium'>
-                    <Link
-                      href={`/customers/${customer.id}`}
-                      className='hover:underline text-primary flex items-center'
-                    >
-                      {customer.type === 'Enterprise' ? (
-                        <Building2 className='h-4 w-4 mr-2 text-muted-foreground' />
-                      ) : (
-                        <UserRound className='h-4 w-4 mr-2 text-muted-foreground' />
-                      )}
-                      {customer.name}
-                    </Link>
-                    <div className='text-xs text-muted-foreground mt-1 ml-6'>
-                      <div className='flex items-center'>
-                        <MapPin className='h-3 w-3 mr-1' />
-                        {customer.address.split(',')[0]}...
+              {sortedCustomers.map((customer) => {
+                return (
+                  <TableRow key={customer.id}>
+                    <TableCell className='font-medium'>
+                      <Link
+                        href={`/customers/${customer.id}`}
+                        className='hover:underline text-primary flex items-center'
+                      >
+                        {customer.type === 'Enterprise' ? (
+                          <Building2 className='h-4 w-4 mr-2 text-muted-foreground' />
+                        ) : (
+                          <UserRound className='h-4 w-4 mr-2 text-muted-foreground' />
+                        )}
+                        {customer.name}
+                      </Link>
+                      <div className='text-xs text-muted-foreground mt-1 ml-6'>
+                        <div className='flex items-center'>
+                          <MapPin className='h-3 w-3 mr-1' />
+                          {customer.address.split(',')[0]}...
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div>{customer.contactName}</div>
-                    <div className='text-xs text-muted-foreground flex items-center mt-1'>
-                      <Mail className='h-3 w-3 mr-1' />
-                      {customer.contactEmail}
-                    </div>
-                    <div className='text-xs text-muted-foreground flex items-center mt-1'>
-                      <Phone className='h-3 w-3 mr-1' />
-                      {customer.contactPhone}
-                    </div>
-                  </TableCell>
-                  <TableCell>{customer.industry}</TableCell>
-                  <TableCell>{customer.type}</TableCell>
-                  <TableCell>${customer.totalSpent.toLocaleString()}</TableCell>
-                  <TableCell className='text-center'>{customer.projects}</TableCell>
-                  <TableCell>{renderRating(customer.rating)}</TableCell>
-                  <TableCell>{renderStatusBadge(customer.status)}</TableCell>
-                  <TableCell className='text-right'>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant='ghost' size='icon' className='h-8 w-8'>
-                          <MoreHorizontal className='h-4 w-4' />
-                          <span className='sr-only'>Actions</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align='end'>
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild>
-                          <Link href={`/customers/${customer.id}`}>View Details</Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href={`/customers/${customer.id}/edit`}>Edit Customer</Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href={`/customers/${customer.id}/contact`}>Contact</Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {return handleDeleteCustomer(customer.id)}}
-                          className='text-destructive focus:text-destructive'
-                        >
-                          Delete Customer
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              )})}
+                    </TableCell>
+                    <TableCell>
+                      <div>{customer.contactName}</div>
+                      <div className='text-xs text-muted-foreground flex items-center mt-1'>
+                        <Mail className='h-3 w-3 mr-1' />
+                        {customer.contactEmail}
+                      </div>
+                      <div className='text-xs text-muted-foreground flex items-center mt-1'>
+                        <Phone className='h-3 w-3 mr-1' />
+                        {customer.contactPhone}
+                      </div>
+                    </TableCell>
+                    <TableCell>{customer.industry}</TableCell>
+                    <TableCell>{customer.type}</TableCell>
+                    <TableCell>${customer.totalSpent.toLocaleString()}</TableCell>
+                    <TableCell className='text-center'>{customer.projects}</TableCell>
+                    <TableCell>{renderRating(customer.rating)}</TableCell>
+                    <TableCell>{renderStatusBadge(customer.status)}</TableCell>
+                    <TableCell className='text-right'>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant='ghost' size='icon' className='h-8 w-8'>
+                            <MoreHorizontal className='h-4 w-4' />
+                            <span className='sr-only'>Actions</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='end'>
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem asChild>
+                            <Link href={`/customers/${customer.id}`}>View Details</Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href={`/customers/${customer.id}/edit`}>Edit Customer</Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href={`/customers/${customer.id}/contact`}>Contact</Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              return handleDeleteCustomer(customer.id);
+                            }}
+                            className='text-destructive focus:text-destructive'
+                          >
+                            Delete Customer
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
