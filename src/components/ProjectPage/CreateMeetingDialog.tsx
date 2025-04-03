@@ -42,7 +42,6 @@ export default function CreateMeetingDialog({
   onOpenChange,
   selectedDate,
 }: CreateMeetingDialogProps) {
-  console.log('🚀 selectedDate:', selectedDate);
   const { project } = useProject();
   const {
     // State

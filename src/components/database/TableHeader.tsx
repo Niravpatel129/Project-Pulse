@@ -83,7 +83,6 @@ export const TableHeaderMemo = memo(
           {columns.map((column, index) => {
             const Icon = iconMap[column.icon];
 
-            console.log('🚀 column:', column);
             const isHovered = hoveredColumn === column.id;
             return (
               <DraggableColumnHeader
