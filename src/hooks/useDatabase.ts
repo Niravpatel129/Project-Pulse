@@ -1,16 +1,18 @@
+import { Column } from '@/types/database';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDatabaseColumns } from './useDatabaseColumns';
 import { useDatabaseIcons } from './useDatabaseIcons';
 import { useDatabaseRecords } from './useDatabaseRecords';
 import { useDatabaseSorting } from './useDatabaseSorting';
 
-export function useDatabase() {
+export function useDatabase(initialColumns: Column[]) {
   const queryClient = useQueryClient();
   const params = useParams();
   const isInitialLoad = useRef(true);
+  const [rowOrder, setRowOrder] = useState<string[]>([]);
 
   const {
     columns,
@@ -36,7 +38,7 @@ export function useDatabase() {
     setNewPropertyPrefix,
     setNewPropertyIconName,
     setIsIconPickerOpen,
-  } = useDatabaseColumns();
+  } = useDatabaseColumns(initialColumns);
 
   const {
     records,
@@ -56,7 +58,8 @@ export function useDatabase() {
     toggleSelectAll,
     toggleSelectRecord,
     setNewTagText,
-  } = useDatabaseRecords(columns);
+    updateRecordMutation,
+  } = useDatabaseRecords(columns, rowOrder, setRowOrder);
 
   const { sortConfig, requestSort, getSortedRecords } = useDatabaseSorting();
 
@@ -182,6 +185,17 @@ export function useDatabase() {
     }
   };
 
+  // Initialize row order
+  useEffect(() => {
+    if (records.length > 0 && rowOrder.length === 0) {
+      setRowOrder(
+        records.map((record) => {
+          return record._id;
+        }),
+      );
+    }
+  }, [records, rowOrder.length]);
+
   return {
     columns,
     records: getSortedRecords(records),
@@ -229,5 +243,8 @@ export function useDatabase() {
     deleteColumn,
     tables,
     currentTableData,
+    updateRecordMutation,
+    rowOrder,
+    setRowOrder,
   };
 }

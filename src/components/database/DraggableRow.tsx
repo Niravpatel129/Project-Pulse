@@ -1,16 +1,15 @@
-import { TableRow } from '@/components/ui/table';
-import { Record as DatabaseRecord } from '@/types/database';
-import React, { useRef } from 'react';
+import { Record } from '@/types/database';
+import { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 
 interface DraggableRowProps {
-  record: DatabaseRecord;
+  record: Record;
   index: number;
-  children: React.ReactNode;
   moveRow: (dragIndex: number, hoverIndex: number) => void;
+  children: React.ReactNode;
 }
 
-export const DraggableRow = ({ record, index, children, moveRow }: DraggableRowProps) => {
+export function DraggableRow({ record, index, moveRow, children }: DraggableRowProps) {
   const ref = useRef<HTMLTableRowElement>(null);
 
   const [{ isDragging }, drag] = useDrag({
@@ -25,11 +24,30 @@ export const DraggableRow = ({ record, index, children, moveRow }: DraggableRowP
 
   const [, drop] = useDrop({
     accept: 'ROW',
-    hover(item: { index: number }, monitor) {
-      if (!ref.current) return;
+    hover: (item: { index: number }, monitor) => {
+      if (!ref.current) {
+        return;
+      }
+
       const dragIndex = item.index;
       const hoverIndex = index;
-      if (dragIndex === hoverIndex) return;
+
+      if (dragIndex === hoverIndex) {
+        return;
+      }
+
+      const hoverBoundingRect = ref.current.getBoundingClientRect();
+      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      const clientOffset = monitor.getClientOffset();
+      const hoverClientY = clientOffset!.y - hoverBoundingRect.top;
+
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+        return;
+      }
+
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+        return;
+      }
 
       moveRow(dragIndex, hoverIndex);
       item.index = hoverIndex;
@@ -39,12 +57,8 @@ export const DraggableRow = ({ record, index, children, moveRow }: DraggableRowP
   drag(drop(ref));
 
   return (
-    <TableRow
-      ref={ref}
-      key={record.id}
-      className={`hover:bg-gray-50 ${isDragging ? 'opacity-50' : ''}`}
-    >
+    <tr ref={ref} className={`${isDragging ? 'opacity-50' : 'opacity-100'} hover:bg-gray-50`}>
       {children}
-    </TableRow>
+    </tr>
   );
-};
+}

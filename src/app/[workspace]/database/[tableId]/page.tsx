@@ -32,7 +32,6 @@ export default function TablePage() {
   const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
   const [showFilters, setShowFilters] = useState(false);
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
-  const [rowOrder, setRowOrder] = useState<number[]>([]);
   const [resizingColumnId, setResizingColumnId] = useState<string | null>(null);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
@@ -77,7 +76,10 @@ export default function TablePage() {
     toggleColumnVisibility,
     setPrimaryColumn,
     deleteColumn,
-  } = useDatabase();
+    updateRecordMutation,
+    rowOrder,
+    setRowOrder,
+  } = useDatabase([]);
 
   // Initialize column order and widths
   useEffect(() => {
@@ -102,7 +104,7 @@ export default function TablePage() {
     if (records.length > 0 && rowOrder.length === 0) {
       setRowOrder(
         records.map((record) => {
-          return record.id;
+          return record._id;
         }),
       );
     }
@@ -230,7 +232,7 @@ export default function TablePage() {
       // Update row order based on sorted records
       setRowOrder(
         sortedRecords.map((record) => {
-          return record.id;
+          return record._id;
         }),
       );
     },
@@ -263,7 +265,7 @@ export default function TablePage() {
     return rowOrder
       .map((id) => {
         return records.find((record) => {
-          return record.id === id;
+          return record._id === id;
         });
       })
       .filter(Boolean) as DatabaseRecord[];
@@ -414,13 +416,18 @@ export default function TablePage() {
             <TableBody>
               {getOrderedRecords().map((record, index) => {
                 return (
-                  <DraggableRow key={record.id} record={record} index={index} moveRow={moveRow}>
+                  <DraggableRow
+                    key={`row-${record._id}`}
+                    record={record}
+                    index={index}
+                    moveRow={moveRow}
+                  >
                     <TableCell className='border-r p-0 text-center'>
                       <div className='flex h-full items-center justify-center'>
                         <Checkbox
-                          checked={record.selected}
+                          checked={record.values.selected}
                           onCheckedChange={() => {
-                            return toggleSelectRecord(record.id);
+                            return toggleSelectRecord(record._id);
                           }}
                         />
                       </div>
@@ -432,12 +439,12 @@ export default function TablePage() {
                       .map((column) => {
                         return (
                           <TableCellMemo
-                            key={`${record.id}-${column.id}`}
+                            key={`cell-${record._id}-${column.id}`}
                             record={record}
                             column={column}
                             editingCell={editingCell}
                             onEdit={() => {
-                              return startEditing(record.id, column.id);
+                              return startEditing(record._id, column.id);
                             }}
                             onCellChange={handleCellChange}
                             onCellKeyDown={handleCellKeyDown}
@@ -450,6 +457,11 @@ export default function TablePage() {
                             addTag={addTag}
                             columnWidths={columnWidths}
                             handleColumnClick={handleColumnClick}
+                            isUpdating={
+                              updateRecordMutation.isPending &&
+                              editingCell.recordId === record._id &&
+                              editingCell.columnId === column.id
+                            }
                           />
                         );
                       })}
@@ -464,15 +476,15 @@ export default function TablePage() {
             {getOrderedRecords().map((record) => {
               return (
                 <div
-                  key={record.id}
+                  key={`card-${record._id}`}
                   className='border rounded-md p-3 hover:shadow-md transition-shadow'
                 >
                   <div className='flex justify-between items-center mb-2'>
-                    <h3 className='font-medium'>{record.name}</h3>
+                    <h3 className='font-medium'>{record.values.name}</h3>
                     <Checkbox
-                      checked={record.selected}
+                      checked={record.values.selected}
                       onCheckedChange={() => {
-                        return toggleSelectRecord(record.id);
+                        return toggleSelectRecord(record._id);
                       }}
                     />
                   </div>
@@ -482,15 +494,18 @@ export default function TablePage() {
                     })
                     .map((column) => {
                       return (
-                        <div key={column.id} className='flex py-1 text-sm'>
+                        <div
+                          key={`card-field-${record._id}-${column.id}`}
+                          className='flex py-1 text-sm'
+                        >
                           <span className='text-gray-500 w-1/3'>{column.name}:</span>
                           <span className='w-2/3'>
                             {column.id === 'tags' ? (
                               <div className='flex flex-wrap gap-1'>
-                                {record.tags?.map((tag) => {
+                                {record.values.tags?.map((tag) => {
                                   return (
                                     <Badge
-                                      key={tag.id}
+                                      key={`tag-${tag.id}`}
                                       variant='outline'
                                       className='bg-amber-50 text-amber-700'
                                     >
@@ -500,7 +515,7 @@ export default function TablePage() {
                                 })}
                               </div>
                             ) : (
-                              record[column.id] || '-'
+                              record.values[column.id] || '-'
                             )}
                           </span>
                         </div>
@@ -535,7 +550,7 @@ export default function TablePage() {
           <div className='text-sm text-gray-500'>
             {
               records.filter((r) => {
-                return r.selected;
+                return r.values.selected;
               }).length
             }{' '}
             selected

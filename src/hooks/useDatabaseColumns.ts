@@ -1,8 +1,8 @@
 import { Column } from '@/types/database';
 import { useState } from 'react';
 
-export function useDatabaseColumns() {
-  const [columns, setColumns] = useState<Column[]>([]);
+export function useDatabaseColumns(initialColumns: Column[]) {
+  const [columns, setColumns] = useState<Column[]>(initialColumns);
 
   const [isAddColumnSheetOpen, setIsAddColumnSheetOpen] = useState(false);
   const [propertySearchQuery, setPropertySearchQuery] = useState('');

@@ -1,86 +1,313 @@
 import { Column, Record as DatabaseRecord } from '@/types/database';
+import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import { useRef, useState } from 'react';
+import { toast } from 'sonner';
 
-export function useDatabaseRecords(columns: Column[]) {
-  const [records, setRecords] = useState<DatabaseRecord[]>([]);
-
-  const [editingCell, setEditingCell] = useState<{
-    recordId: number | null;
+interface DatabaseRecordsHookReturn {
+  records: DatabaseRecord[];
+  setRecords: React.Dispatch<React.SetStateAction<DatabaseRecord[]>>;
+  rowOrder: string[];
+  setRowOrder: React.Dispatch<React.SetStateAction<string[]>>;
+  editingCell: {
+    recordId: string | null;
     columnId: string | null;
+    originalValue: string | null;
+  };
+  newTagText: { [key: string]: string };
+  allSelected: boolean;
+  inputRef: React.RefObject<HTMLInputElement>;
+  addNewRow: () => Promise<void>;
+  startEditing: (recordId: string, columnId: string) => void;
+  stopEditing: () => Promise<void>;
+  handleCellChange: (
+    e: React.ChangeEvent<HTMLInputElement>,
+    recordId: string,
+    columnId: string,
+  ) => void;
+  handleCellKeyDown: (e: React.KeyboardEvent) => void;
+  addTag: (recordId: string) => void;
+  removeTag: (recordId: string, tagId: string) => void;
+  handleTagInputKeyDown: (e: React.KeyboardEvent, recordId: string) => void;
+  toggleSelectAll: () => void;
+  toggleSelectRecord: (recordId: string) => void;
+  setNewTagText: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
+  updateRecordMutation: {
+    isPending: boolean;
+    mutateAsync: (data: { recordId: string; columnId: string; value: string }) => Promise<any>;
+  };
+}
+
+export function useDatabaseRecords(
+  columns: Column[],
+  rowOrder: string[],
+  setRowOrder: React.Dispatch<React.SetStateAction<string[]>>,
+): DatabaseRecordsHookReturn {
+  const params = useParams();
+  const queryClient = useQueryClient();
+  const [records, setRecords] = useState<DatabaseRecord[]>([]);
+  const [editingCell, setEditingCell] = useState<{
+    recordId: string | null;
+    columnId: string | null;
+    originalValue: string | null;
   }>({
     recordId: null,
     columnId: null,
+    originalValue: null,
   });
 
-  const [newTagText, setNewTagText] = useState<{ [key: number]: string }>({});
+  const [newTagText, setNewTagText] = useState<{ [key: string]: string }>({});
   const [allSelected, setAllSelected] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Add new row mutation
+  const addRowMutation = useMutation({
+    mutationFn: async (newRecord: DatabaseRecord) => {
+      const response = await newRequest.post(`/tables/${params.tableId}/records`, {
+        values: newRecord.values,
+      });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['table-records', params.tableId] });
+      toast.success('Row added successfully');
+    },
+    onError: (error) => {
+      // Remove the temporary record on error
+      setRecords((prevRecords) => {
+        return prevRecords.filter((record) => {
+          return record._id !== '';
+        });
+      });
+      setRowOrder((prevOrder) => {
+        return prevOrder.filter((id) => {
+          return id !== '';
+        });
+      });
+      toast.error('Failed to add row');
+      console.error('Failed to add row:', error);
+    },
+  });
+
+  // Update record mutation
+  const updateRecordMutation = useMutation({
+    mutationFn: async ({
+      recordId,
+      columnId,
+      value,
+    }: {
+      recordId: string;
+      columnId: string;
+      value: string;
+    }) => {
+      const response = await newRequest.patch(`/tables/${params.tableId}/records/${recordId}`, {
+        values: {
+          [columnId]: value,
+        },
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['table-records', params.tableId] });
+      toast.success('Cell updated successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to update cell');
+      console.error('Failed to update cell:', error);
+
+      // Revert the change on error
+      if (editingCell.recordId && editingCell.columnId && editingCell.originalValue !== null) {
+        setRecords(
+          records.map((record) => {
+            return record._id === editingCell.recordId
+              ? {
+                  ...record,
+                  values: {
+                    ...record.values,
+                    [editingCell.columnId!]: editingCell.originalValue,
+                  },
+                }
+              : record;
+          }),
+        );
+      }
+    },
+  });
+
   // Add new row
-  const addNewRow = () => {
+  const addNewRow = async () => {
     const newId =
       records.length > 0
         ? Math.max(
             ...records.map((r) => {
-              return r.id;
+              return r.values.id;
             }),
           ) + 1
         : 1;
+
+    // Generate a unique temporary ID using a combination of timestamp and random number
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
     const newRecord: DatabaseRecord = {
-      id: newId,
-      selected: false,
-      tags: [],
+      _id: tempId,
+      tableId: params.tableId as string,
+      values: {
+        id: newId,
+        selected: false,
+        tags: [],
+      },
+      createdBy: {
+        _id: '',
+        name: '',
+        email: '',
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      __v: 0,
     };
 
     // Initialize all column values
     columns.forEach((col) => {
       if (col.id !== 'tags') {
-        newRecord[col.id] = '';
+        newRecord.values[col.id] = '';
       }
     });
 
-    setRecords([...records, newRecord]);
-  };
+    // Add the record locally first
+    setRecords((prevRecords) => {
+      return [...prevRecords, newRecord];
+    });
+    setRowOrder((prevOrder) => {
+      return [...prevOrder, tempId];
+    });
 
-  // Handle cell editing
-  const startEditing = (recordId: number, columnId: string) => {
-    if (columnId !== 'tags') {
-      setEditingCell({ recordId, columnId });
+    // Send to server
+    try {
+      const response = await addRowMutation.mutateAsync(newRecord);
+
+      // Update the records and rowOrder with the actual ID
+      setRecords((prevRecords) => {
+        return prevRecords.map((record) => {
+          return record._id === tempId ? response.data : record;
+        });
+      });
+      setRowOrder((prevOrder) => {
+        return prevOrder.map((id) => {
+          return id === tempId ? response.data._id : id;
+        });
+      });
+    } catch (error) {
+      // Remove the temporary record and its order on error
+      setRecords((prevRecords) => {
+        return prevRecords.filter((record) => {
+          return record._id !== tempId;
+        });
+      });
+      setRowOrder((prevOrder) => {
+        return prevOrder.filter((id) => {
+          return id !== tempId;
+        });
+      });
+      console.error('Error adding row:', error);
     }
   };
 
-  const stopEditing = () => {
-    setEditingCell({ recordId: null, columnId: null });
+  // Handle cell editing
+  const startEditing = (recordId: string, columnId: string) => {
+    if (columnId !== 'tags') {
+      const record = records.find((r) => {
+        return r._id === recordId;
+      });
+      setEditingCell({
+        recordId,
+        columnId,
+        originalValue: record ? record.values[columnId] : null,
+      });
+    }
+  };
+
+  const stopEditing = async () => {
+    if (
+      editingCell.recordId !== null &&
+      editingCell.columnId !== null &&
+      editingCell.originalValue !== null
+    ) {
+      const record = records.find((r) => {
+        return r._id === editingCell.recordId;
+      });
+      const newValue = record ? record.values[editingCell.columnId] : '';
+
+      // Only update if value has changed
+      if (newValue !== editingCell.originalValue) {
+        await updateRecordMutation.mutateAsync({
+          recordId: editingCell.recordId,
+          columnId: editingCell.columnId,
+          value: newValue,
+        });
+      }
+    }
+
+    setEditingCell({ recordId: null, columnId: null, originalValue: null });
   };
 
   const handleCellChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    recordId: number,
+    recordId: string,
     columnId: string,
   ) => {
     setRecords(
       records.map((record) => {
-        return record.id === recordId ? { ...record, [columnId]: e.target.value } : record;
+        return record._id === recordId
+          ? {
+              ...record,
+              values: {
+                ...record.values,
+                [columnId]: e.target.value,
+              },
+            }
+          : record;
       }),
     );
   };
 
   const handleCellKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === 'Escape') {
+    if (e.key === 'Enter') {
       stopEditing();
+    } else if (e.key === 'Escape') {
+      // Revert changes on escape
+      if (editingCell.recordId && editingCell.columnId && editingCell.originalValue !== null) {
+        setRecords(
+          records.map((record) => {
+            return record._id === editingCell.recordId
+              ? {
+                  ...record,
+                  values: {
+                    ...record.values,
+                    [editingCell.columnId!]: editingCell.originalValue,
+                  },
+                }
+              : record;
+          }),
+        );
+      }
+      setEditingCell({ recordId: null, columnId: null, originalValue: null });
     }
   };
 
   // Handle tag management
-  const addTag = (recordId: number) => {
+  const addTag = (recordId: string) => {
     if (newTagText[recordId] && newTagText[recordId].trim() !== '') {
       setRecords(
         records.map((record) => {
-          if (record.id === recordId) {
+          if (record._id === recordId) {
             const newTagId = `tag-${Date.now()}`;
             return {
               ...record,
-              tags: [...record.tags, { id: newTagId, name: newTagText[recordId].trim() }],
+              values: {
+                ...record.values,
+                tags: [...record.values.tags, { id: newTagId, name: newTagText[recordId].trim() }],
+              },
             };
           }
           return record;
@@ -90,15 +317,18 @@ export function useDatabaseRecords(columns: Column[]) {
     }
   };
 
-  const removeTag = (recordId: number, tagId: string) => {
+  const removeTag = (recordId: string, tagId: string) => {
     setRecords(
       records.map((record) => {
-        if (record.id === recordId) {
+        if (record._id === recordId) {
           return {
             ...record,
-            tags: record.tags.filter((tag) => {
-              return tag.id !== tagId;
-            }),
+            values: {
+              ...record.values,
+              tags: record.values.tags.filter((tag) => {
+                return tag.id !== tagId;
+              }),
+            },
           };
         }
         return record;
@@ -106,7 +336,7 @@ export function useDatabaseRecords(columns: Column[]) {
     );
   };
 
-  const handleTagInputKeyDown = (e: React.KeyboardEvent, recordId: number) => {
+  const handleTagInputKeyDown = (e: React.KeyboardEvent, recordId: string) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       addTag(recordId);
@@ -119,21 +349,35 @@ export function useDatabaseRecords(columns: Column[]) {
     setAllSelected(newSelected);
     setRecords(
       records.map((record) => {
-        return { ...record, selected: newSelected };
+        return {
+          ...record,
+          values: {
+            ...record.values,
+            selected: newSelected,
+          },
+        };
       }),
     );
   };
 
-  const toggleSelectRecord = (recordId: number) => {
+  const toggleSelectRecord = (recordId: string) => {
     const updatedRecords = records.map((record) => {
-      return record.id === recordId ? { ...record, selected: !record.selected } : record;
+      return record._id === recordId
+        ? {
+            ...record,
+            values: {
+              ...record.values,
+              selected: !record.values.selected,
+            },
+          }
+        : record;
     });
     setRecords(updatedRecords);
 
     // Update allSelected state based on whether all records are selected
     setAllSelected(
       updatedRecords.every((r) => {
-        return r.selected;
+        return r.values.selected;
       }),
     );
   };
@@ -141,6 +385,8 @@ export function useDatabaseRecords(columns: Column[]) {
   return {
     records,
     setRecords,
+    rowOrder,
+    setRowOrder,
     editingCell,
     newTagText,
     allSelected,
@@ -156,5 +402,6 @@ export function useDatabaseRecords(columns: Column[]) {
     toggleSelectAll,
     toggleSelectRecord,
     setNewTagText,
+    updateRecordMutation,
   };
 }

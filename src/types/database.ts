@@ -1,29 +1,41 @@
-export type Column = {
+export interface Record {
+  _id: string;
+  tableId: string;
+  values: {
+    id: number;
+    selected: boolean;
+    tags: Array<{ id: string; name: string }>;
+    [key: string]: any;
+  };
+  createdBy: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+export interface Column {
   id: string;
   name: string;
-  sortable: boolean;
-  iconName?: string;
+  type: string;
+  order: number;
   hidden?: boolean;
-  isPrimary?: boolean;
+  sortable?: boolean;
   width?: number;
-  order?: number;
-  type?: string;
+  iconName?: string;
+  isPrimary?: boolean;
   isRequired?: boolean;
   isUnique?: boolean;
   description?: string;
   options?: {
     selectOptions?: any[];
   };
-};
-
-export type Record = {
-  id: number;
-  [key: string]: any;
-  selected?: boolean;
-  tags?: Array<{ id: string; name: string }>;
-};
+}
 
 export type SortConfig = {
-  key: string;
-  direction: 'asc' | 'desc';
-} | null;
+  key: string | null;
+  direction: 'asc' | 'desc' | null;
+};

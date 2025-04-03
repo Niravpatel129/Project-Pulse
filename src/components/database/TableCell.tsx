@@ -1,32 +1,36 @@
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TableCell as UITableCell } from '@/components/ui/table';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Column, Record as DatabaseRecord } from '@/types/database';
-import { Plus, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Column, Record } from '@/types/database';
+import { Loader2 } from 'lucide-react';
 import React, { memo } from 'react';
 
 interface TableCellProps {
-  record: DatabaseRecord;
+  record: Record;
   column: Column;
-  editingCell: { recordId: number; columnId: string } | null;
+  editingCell: {
+    recordId: string | null;
+    columnId: string | null;
+    originalValue: string | null;
+  };
   onEdit: () => void;
   onCellChange: (
     e: React.ChangeEvent<HTMLInputElement>,
-    recordId: number,
+    recordId: string,
     columnId: string,
   ) => void;
-  onCellKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  stopEditing: () => void;
+  onCellKeyDown: (e: React.KeyboardEvent) => void;
+  stopEditing: () => Promise<void>;
   inputRef: React.RefObject<HTMLInputElement>;
-  newTagText: Record<string, string>;
-  setNewTagText: (value: Record<string, string>) => void;
-  handleTagInputKeyDown: (e: React.KeyboardEvent<HTMLInputElement>, recordId: number) => void;
-  removeTag: (recordId: number, tagId: string) => void;
-  addTag: (recordId: number) => void;
-  columnWidths: Record<string, number>;
+  newTagText: { [key: string]: string };
+  setNewTagText: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
+  handleTagInputKeyDown: (e: React.KeyboardEvent, recordId: string) => void;
+  removeTag: (recordId: string, tagId: string) => void;
+  addTag: (recordId: string) => void;
+  columnWidths: { [key: string]: number };
   handleColumnClick: (columnId: string) => void;
+  isUpdating?: boolean;
 }
 
 export const TableCellMemo = memo(
@@ -46,110 +50,81 @@ export const TableCellMemo = memo(
     addTag,
     columnWidths,
     handleColumnClick,
+    isUpdating,
   }: TableCellProps) => {
+    const isEditing = editingCell.recordId === record._id && editingCell.columnId === column.id;
+
+    const handleClick = () => {
+      if (column.sortable) {
+        handleColumnClick(column.id);
+      }
+    };
+
     return (
       <UITableCell
-        className={`border-r min-h-[40px] h-[40px] transition-colors ${
-          editingCell?.recordId === record.id && editingCell?.columnId === column.id
-            ? 'bg-blue-50'
-            : ''
-        } ${column.sortable ? 'cursor-pointer hover:bg-gray-50' : ''}`}
-        onClick={(e) => {
-          if (column.sortable && !editingCell?.recordId) {
-            e.stopPropagation();
-            handleColumnClick(column.id);
-          } else {
-            onEdit();
-          }
-        }}
-        style={{
-          width: columnWidths[column.id] || 200,
-          maxWidth: columnWidths[column.id] || 200,
-        }}
+        className={cn(
+          'relative border-r p-2',
+          column.sortable && 'cursor-pointer hover:bg-gray-50',
+        )}
+        style={{ width: columnWidths[column.id] }}
+        onClick={handleClick}
       >
+        {isUpdating && (
+          <div className='absolute inset-0 flex items-center justify-center bg-gray-50/50'>
+            <Loader2 className='h-4 w-4 animate-spin' />
+          </div>
+        )}
+
         {column.id === 'tags' ? (
-          <div className='flex flex-wrap gap-1 items-center'>
-            {record.tags?.map((tag) => {
+          <div className='flex flex-wrap gap-1'>
+            {record.values.tags.map((tag) => {
               return (
-                <Badge
-                  key={tag.id}
-                  variant='outline'
-                  className='bg-amber-50 text-amber-700 hover:bg-amber-50 border-amber-200 flex items-center gap-1'
-                >
+                <Badge key={tag.id} variant='outline' className='bg-amber-50 text-amber-700'>
                   {tag.name}
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='h-4 w-4 p-0 hover:bg-amber-100'
+                  <button
+                    className='ml-1 hover:text-amber-900'
                     onClick={(e) => {
                       e.stopPropagation();
-                      removeTag(record.id, tag.id);
+                      removeTag(record._id, tag.id);
                     }}
                   >
-                    <X className='h-3 w-3' />
-                  </Button>
+                    ×
+                  </button>
                 </Badge>
               );
             })}
-            <div className='flex items-center'>
-              <Input
-                value={newTagText[record.id] || ''}
-                onChange={(e) => {
-                  setNewTagText({
-                    ...newTagText,
-                    [record.id]: e.target.value,
-                  });
-                }}
-                onKeyDown={(e) => {
-                  return handleTagInputKeyDown(e, record.id);
-                }}
-                className='h-6 w-20 min-w-20 text-xs'
-                placeholder='Add tag...'
-                onClick={(e) => {
-                  return e.stopPropagation();
-                }}
-              />
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      className='h-6 w-6 ml-1'
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addTag(record.id);
-                      }}
-                    >
-                      <Plus className='h-3 w-3' />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Add tag</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          </div>
-        ) : (
-          <div className='min-h-[28px] h-[28px] flex items-center w-full'>
-            {editingCell?.recordId === record.id && editingCell?.columnId === column.id ? (
+            {isEditing && (
               <Input
                 ref={inputRef}
-                value={record[column.id] || ''}
+                value={newTagText[record._id] || ''}
                 onChange={(e) => {
-                  return onCellChange(e, record.id, column.id);
+                  setNewTagText({ ...newTagText, [record._id]: e.target.value });
                 }}
-                onBlur={stopEditing}
-                onKeyDown={onCellKeyDown}
-                className='h-8 m-0 p-2 w-full'
-                autoFocus
+                onKeyDown={(e) => {
+                  return handleTagInputKeyDown(e, record._id);
+                }}
+                onBlur={() => {
+                  addTag(record._id);
+                }}
+                placeholder='Add tag...'
+                className='h-6 w-24'
               />
-            ) : column.id === 'name' ? (
-              <div className='font-medium'>
-                {record.id}. {record[column.id]}
-              </div>
-            ) : (
-              record[column.id]
             )}
+          </div>
+        ) : isEditing ? (
+          <Input
+            ref={inputRef}
+            value={record.values[column.id] || ''}
+            onChange={(e) => {
+              return onCellChange(e, record._id, column.id);
+            }}
+            onKeyDown={onCellKeyDown}
+            onBlur={stopEditing}
+            className='h-8'
+          />
+        ) : (
+          <div className='min-h-[32px] flex items-center' onClick={onEdit}>
+            {record.values[column.id] || ''}
           </div>
         )}
       </UITableCell>
