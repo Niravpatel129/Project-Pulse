@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 export default function DatabaseLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { handleCreateTable, tables = [] } = useDatabase();
+  const { handleCreateTable, tables = [] } = useDatabase([]);
   const currentTable = pathname.split('/').pop() || tables[0]?._id || 'table-1';
   const [tableName, setTableName] = useState('');
   const [isCreatingTable, setIsCreatingTable] = useState(false);
