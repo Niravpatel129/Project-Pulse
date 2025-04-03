@@ -8,6 +8,8 @@ type Column = {
   name: string;
   sortable: boolean;
   iconName?: string;
+  hidden?: boolean;
+  isPrimary?: boolean;
 };
 
 type TagType = {
@@ -58,7 +60,7 @@ const defaultPropertyTypes: PropertyType[] = [
 
 export function useDatabase() {
   const [columns, setColumns] = useState<Column[]>([
-    { id: 'name', name: 'Name', sortable: true },
+    { id: 'name', name: 'Name', sortable: true, isPrimary: true },
     { id: 'leads', name: 'Leads', sortable: true },
     { id: 'tags', name: 'Tags', sortable: true },
   ]);
@@ -322,6 +324,59 @@ export function useDatabase() {
     );
   };
 
+  // Column management functions
+  const renameColumn = (columnId: string, newName: string) => {
+    setColumns(
+      columns.map((col) => {
+        return col.id === columnId ? { ...col, name: newName } : col;
+      }),
+    );
+  };
+
+  const toggleColumnVisibility = (columnId: string) => {
+    setColumns(
+      columns.map((col) => {
+        return col.id === columnId ? { ...col, hidden: !col.hidden } : col;
+      }),
+    );
+  };
+
+  const setPrimaryColumn = (columnId: string) => {
+    setColumns(
+      columns.map((col) => {
+        return {
+          ...col,
+          isPrimary: col.id === columnId,
+        };
+      }),
+    );
+  };
+
+  const deleteColumn = (columnId: string) => {
+    // Don't allow deleting the primary column
+    if (
+      columns.find((col) => {
+        return col.id === columnId;
+      })?.isPrimary
+    ) {
+      return;
+    }
+
+    setColumns(
+      columns.filter((col) => {
+        return col.id !== columnId;
+      }),
+    );
+
+    // Remove the column from all records
+    setRecords(
+      records.map((record) => {
+        const { [columnId]: _, ...rest } = record as Record;
+        return rest as Record;
+      }),
+    );
+  };
+
   return {
     columns,
     records: getSortedRecords(),
@@ -362,5 +417,10 @@ export function useDatabase() {
     setNewPropertyPrefix,
     setIsIconPickerOpen,
     getIconComponent,
+    // Add new column management functions
+    renameColumn,
+    toggleColumnVisibility,
+    setPrimaryColumn,
+    deleteColumn,
   };
 }

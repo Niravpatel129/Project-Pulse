@@ -9,10 +9,14 @@ import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 export default function DatabaseLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const currentTable = pathname.split('/').pop() || 'table-1';
+  const [tableName, setTableName] = useState('');
+  const [isCreatingTable, setIsCreatingTable] = useState(false);
 
   return (
     <BlockWrapper>
@@ -21,8 +25,8 @@ export default function DatabaseLayout({ children }: { children: React.ReactNode
         <p className='text-muted-foreground text-sm pb-5'>
           Manage your database entries and tags here.
         </p>
-        <ScrollArea>
-          <Tabs value={currentTable} className='w-full'>
+        <ScrollArea className=''>
+          <Tabs value={currentTable} className='w-full p-2'>
             <div className='flex items-center'>
               <TabsList className='text-foreground mb-3 h-auto gap-2 rounded-none border-b bg-transparent px-0 py-1'>
                 <Link href='/database/table-1' className='flex-1'>
@@ -34,9 +38,16 @@ export default function DatabaseLayout({ children }: { children: React.ReactNode
                   </TabsTrigger>
                 </Link>
               </TabsList>
-              <Popover>
+              <Popover open={isCreatingTable} onOpenChange={setIsCreatingTable}>
                 <PopoverTrigger asChild>
-                  <Button variant='ghost' size='icon' className='h-8 w-8 ml-2 mb-2'>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='h-8 w-8 ml-2 mb-2'
+                    onClick={() => {
+                      return setIsCreatingTable(true);
+                    }}
+                  >
                     <Plus className='h-4 w-4' />
                   </Button>
                 </PopoverTrigger>
@@ -50,10 +61,31 @@ export default function DatabaseLayout({ children }: { children: React.ReactNode
                     </div>
                     <div className='grid gap-2'>
                       <div className='flex items-center gap-2'>
-                        <Input id='table-name' placeholder='Table name' className='flex-1' />
+                        <Input
+                          id='table-name'
+                          placeholder='Table name'
+                          className='flex-1'
+                          maxLength={20}
+                          value={tableName}
+                          onChange={(e) => {
+                            return setTableName(e.target.value);
+                          }}
+                        />
                       </div>
                     </div>
-                    <Button className='w-full'>Create Table</Button>
+                    <Button
+                      className='w-full'
+                      onClick={() => {
+                        setIsCreatingTable(false);
+                        toast.success('Table created successfully');
+                        // delay for 1 second
+                        setTimeout(() => {
+                          setTableName('');
+                        }, 1000);
+                      }}
+                    >
+                      Create Table
+                    </Button>
                   </div>
                 </PopoverContent>
               </Popover>

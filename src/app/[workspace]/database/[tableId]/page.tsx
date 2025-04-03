@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Table,
   TableBody,
@@ -22,15 +23,54 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useDatabase } from '@/hooks/useDatabase';
-import { ChevronDown, ChevronUp, Filter, Plus, Search, Trash2, X } from 'lucide-react';
+import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
+  BarChart2,
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  EyeOff,
+  Filter,
+  GripVertical,
+  Info,
+  Key,
+  Palette,
+  Pencil,
+  Plus,
+  Search,
+  Settings2,
+  Trash2,
+  Type,
+  X,
+} from 'lucide-react';
 import { useParams } from 'next/navigation';
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+
+type Column = {
+  id: string;
+  name: string;
+  sortable: boolean;
+  iconName?: string;
+  hidden?: boolean;
+  isPrimary?: boolean;
+  width?: number;
+};
 
 export default function TablePage() {
   const params = useParams();
   const tableId = params.tableId as string;
   const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
   const [showFilters, setShowFilters] = useState(false);
+  const [columnOrder, setColumnOrder] = useState<string[]>([]);
+  const [rowOrder, setRowOrder] = useState<number[]>([]);
+  const [resizingColumnId, setResizingColumnId] = useState<string | null>(null);
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const resizeStartX = useRef<number>(0);
+  const initialWidth = useRef<number>(0);
 
   const {
     columns,
@@ -67,12 +107,41 @@ export default function TablePage() {
     setNewPropertyName,
     setNewPropertyPrefix,
     getIconComponent,
+    renameColumn,
+    toggleColumnVisibility,
+    setPrimaryColumn,
+    deleteColumn,
   } = useDatabase();
+
+  // Initialize column order and widths
+  useEffect(() => {
+    if (columns.length > 0 && columnOrder.length === 0) {
+      setColumnOrder(columns.map(col => col.id));
+      
+      // Initialize column widths
+      const initialWidths: Record<string, number> = {};
+      columns.forEach(col => {
+        initialWidths[col.id] = col.width || 200; // Default width
+      });
+      setColumnWidths(initialWidths);
+    }
+  }, [columns, columnOrder.length]);
+
+  // Initialize row order
+  useEffect(() => {
+    if (records.length > 0 && rowOrder.length === 0) {
+      setRowOrder(records.map(record => record.id));
+    }
+  }, [records, rowOrder.length]);
 
   // Filter state
   const [filters, setFilters] = useState<Array<{ column: string; value: string }>>([]);
   const [filterColumn, setFilterColumn] = useState('');
   const [filterValue, setFilterValue] = useState('');
+
+  // Add state for column rename
+  const [renamingColumn, setRenamingColumn] = useState<{ id: string; name: string } | null>(null);
+  const [newColumnName, setNewColumnName] = useState('');
 
   // Add a new filter
   const addFilter = () => {
@@ -90,6 +159,152 @@ export default function TablePage() {
     setFilters(newFilters);
   };
 
+  // Handle column rename
+  const handleRenameColumn = (columnId: string, currentName: string) => {
+    setRenamingColumn({ id: columnId, name: currentName });
+    setNewColumnName(currentName);
+  };
+
+  const saveColumnRename = () => {
+    if (renamingColumn && newColumnName.trim()) {
+      renameColumn(renamingColumn.id, newColumnName.trim());
+      setRenamingColumn(null);
+      setNewColumnName('');
+    }
+  };
+
+  // Handle column reordering
+  const moveColumn = (dragIndex: number, hoverIndex: number) => {
+    const draggedColumnId = columnOrder[dragIndex];
+    const newColumnOrder = [...columnOrder];
+    newColumnOrder.splice(dragIndex, 1);
+    newColumnOrder.splice(hoverIndex, 0, draggedColumnId);
+    setColumnOrder(newColumnOrder);
+  };
+
+  // Handle row reordering
+  const moveRow = (dragIndex: number, hoverIndex: number) => {
+    const draggedRowId = rowOrder[dragIndex];
+    const newRowOrder = [...rowOrder];
+    newRowOrder.splice(dragIndex, 1);
+    newRowOrder.splice(hoverIndex, 0, draggedRowId);
+    setRowOrder(newRowOrder);
+  };
+
+  // Handle column resizing
+  const handleResizeStart = (e: React.MouseEvent, columnId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setResizingColumnId(columnId);
+    resizeStartX.current = e.clientX;
+    initialWidth.current = columnWidths[columnId] || 200;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      if (resizingColumnId) {
+        const deltaX = e.clientX - resizeStartX.current;
+        const newWidth = Math.max(100, initialWidth.current + deltaX); // Minimum width of 100px
+        setColumnWidths(prev => ({
+          ...prev,
+          [resizingColumnId]: newWidth
+        }));
+      }
+    };
+    
+    const handleMouseUp = () => {
+      setResizingColumnId(null);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  // Draggable Column Header component
+  const DraggableColumnHeader = ({ column, index, children }: { column: Column, index: number, children: React.ReactNode }) => {
+    const ref = useRef<HTMLTableCellElement>(null);
+    
+    const [{ isDragging }, drag] = useDrag({
+      type: 'COLUMN',
+      item: { index },
+      collect: (monitor) => ({
+        isDragging: monitor.isDragging(),
+      }),
+    });
+    
+    const [, drop] = useDrop({
+      accept: 'COLUMN',
+      hover(item: { index: number }, monitor) {
+        if (!ref.current) return;
+        const dragIndex = item.index;
+        const hoverIndex = index;
+        if (dragIndex === hoverIndex) return;
+        
+        moveColumn(dragIndex, hoverIndex);
+        item.index = hoverIndex;
+      },
+    });
+    
+    drag(drop(ref));
+    
+    return (
+      <TableHead 
+        ref={ref} 
+        key={column.id} 
+        className='border-r relative'
+        style={{ 
+          opacity: isDragging ? 0.5 : 1,
+          width: columnWidths[column.id] || 200,
+          maxWidth: columnWidths[column.id] || 200,
+        }}
+      >
+        {children}
+        <div 
+          className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-blue-300"
+          onMouseDown={(e) => handleResizeStart(e, column.id)}
+        />
+      </TableHead>
+    );
+  };
+
+  // Draggable Row component
+  const DraggableRow = ({ record, index, children }: { record: any, index: number, children: React.ReactNode }) => {
+    const ref = useRef<HTMLTableRowElement>(null);
+    
+    const [{ isDragging }, drag] = useDrag({
+      type: 'ROW',
+      item: { index },
+      collect: (monitor) => ({
+        isDragging: monitor.isDragging(),
+      }),
+    });
+    
+    const [, drop] = useDrop({
+      accept: 'ROW',
+      hover(item: { index: number }, monitor) {
+        if (!ref.current) return;
+        const dragIndex = item.index;
+        const hoverIndex = index;
+        if (dragIndex === hoverIndex) return;
+        
+        moveRow(dragIndex, hoverIndex);
+        item.index = hoverIndex;
+      },
+    });
+    
+    drag(drop(ref));
+    
+    return (
+      <TableRow 
+        ref={ref} 
+        key={record.id} 
+        className={`hover:bg-gray-50 ${isDragging ? 'opacity-50' : ''}`}
+      >
+        {children}
+      </TableRow>
+    );
+  };
+
   // Memoized Table Header Component
   const TableHeaderMemo = memo(
     ({
@@ -99,60 +314,273 @@ export default function TablePage() {
       onAddColumn,
       allSelected,
       toggleSelectAll,
+      onRenameColumn,
+      onToggleVisibility,
+      onSetPrimary,
+      onDeleteColumn,
+      renamingColumn,
+      newColumnName,
+      setNewColumnName,
+      saveColumnRename,
     }: {
-      columns: any[];
-      sortConfig: any;
+      columns: Column[];
+      sortConfig: { key: string; direction: 'asc' | 'desc' } | null;
       onSort: (id: string) => void;
       onAddColumn: () => void;
       allSelected: boolean;
       toggleSelectAll: (checked: boolean) => void;
+      onRenameColumn: (id: string, name: string) => void;
+      onToggleVisibility: (id: string) => void;
+      onSetPrimary: (id: string) => void;
+      onDeleteColumn: (id: string) => void;
+      renamingColumn: { id: string; name: string } | null;
+      newColumnName: string;
+      setNewColumnName: (name: string) => void;
+      saveColumnRename: () => void;
     }) => {
+      // Get ordered columns
+      const orderedColumns = columnOrder.length > 0 
+        ? columnOrder.map(id => columns.find(col => col.id === id)).filter(Boolean) as Column[]
+        : columns;
+
       return (
         <TableHeader className='sticky top-0 z-10'>
           <TableRow className='bg-white hover:bg-white'>
             <TableHead className='w-10 border-r'>
               <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} />
             </TableHead>
-            {columns.map((column) => {
+            {orderedColumns.map((column, index) => {
               return (
-                <TableHead key={column.id} className='border-r'>
+                <DraggableColumnHeader key={column.id} column={column} index={index}>
                   <div className='flex items-center justify-between'>
-                    <span className='font-medium'>{column.name}</span>
-                    {column.sortable && (
+                    <div className='flex items-center gap-2'>
+                      <GripVertical className='h-4 w-4 text-gray-400 cursor-move' />
+                      {renamingColumn?.id === column.id ? (
+                        <Input
+                          value={newColumnName}
+                          onChange={(e) => {
+                            return setNewColumnName(e.target.value);
+                          }}
+                          onBlur={saveColumnRename}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              saveColumnRename();
+                            }
+                          }}
+                          className='h-7 w-32'
+                          autoFocus
+                        />
+                      ) : (
+                        <>
+                          <span className='font-medium'>{column.name}</span>
+                          {column.isPrimary && <Key className='h-3 w-3 text-primary' />}
+                        </>
+                      )}
+                    </div>
+                    <div className='flex items-center gap-1'>
+                      {column.sortable && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant='ghost'
+                                size='icon'
+                                className='h-7 w-7 hover:bg-gray-100'
+                                onClick={() => {
+                                  return onSort(column.id);
+                                }}
+                              >
+                                {sortConfig?.key === column.id ? (
+                                  sortConfig.direction === 'asc' ? (
+                                    <ChevronUp className='h-3.5 w-3.5 text-primary' />
+                                  ) : (
+                                    <ChevronDown className='h-3.5 w-3.5 text-primary' />
+                                  )
+                                ) : (
+                                  <ChevronDown className='h-3.5 w-3.5 text-gray-500' />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {sortConfig?.key === column.id
+                                ? `Sorted ${
+                                    sortConfig.direction === 'asc' ? 'ascending' : 'descending'
+                                  }`
+                                : 'Sort column'}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button
-                              variant='ghost'
-                              size='icon'
-                              className='h-8 w-8'
-                              onClick={() => {
-                                return onSort(column.id);
-                              }}
-                            >
-                              {sortConfig?.key === column.id ? (
-                                sortConfig.direction === 'asc' ? (
-                                  <ChevronUp className='h-4 w-4 text-primary' />
-                                ) : (
-                                  <ChevronDown className='h-4 w-4 text-primary' />
-                                )
-                              ) : (
-                                <ChevronDown className='h-4 w-4 text-gray-500' />
-                              )}
-                            </Button>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant='ghost'
+                                  size='icon'
+                                  className='h-7 w-7 hover:bg-gray-100'
+                                >
+                                  <Settings2 className='h-3.5 w-3.5' />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className='w-64 p-2' align='end'>
+                                <div className='space-y-1'>
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    className='w-full justify-start'
+                                    onClick={() => {
+                                      return onRenameColumn(column.id, column.name);
+                                    }}
+                                  >
+                                    <Pencil className='mr-2 h-4 w-4' />
+                                    <span>Rename</span>
+                                  </Button>
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    className='w-full justify-start'
+                                    onClick={() => {
+                                      return onToggleVisibility(column.id);
+                                    }}
+                                  >
+                                    {column.hidden ? (
+                                      <>
+                                        <Eye className='mr-2 h-4 w-4' />
+                                        <span>Show</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <EyeOff className='mr-2 h-4 w-4' />
+                                        <span>Hide</span>
+                                      </>
+                                    )}
+                                  </Button>
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    className='w-full justify-start'
+                                    onClick={() => {
+                                      return onSetPrimary(column.id);
+                                    }}
+                                    disabled={column.isPrimary}
+                                  >
+                                    <Key className='mr-2 h-4 w-4' />
+                                    <span>
+                                      {column.isPrimary ? 'Primary Key' : 'Set as Primary'}
+                                    </span>
+                                  </Button>
+                                  <div className='h-px bg-border my-1' />
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    className='w-full justify-start'
+                                  >
+                                    <Type className='mr-2 h-4 w-4' />
+                                    <span>Change Type</span>
+                                  </Button>
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    className='w-full justify-start'
+                                  >
+                                    <GripVertical className='mr-2 h-4 w-4' />
+                                    <span>Adjust Width</span>
+                                  </Button>
+
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    className='w-full justify-start'
+                                  >
+                                    <Palette className='mr-2 h-4 w-4' />
+                                    <span>Column Color</span>
+                                  </Button>
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    className='w-full justify-start'
+                                  >
+                                    <Info className='mr-2 h-4 w-4' />
+                                    <span>Add Description</span>
+                                  </Button>
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    className='w-full justify-start'
+                                  >
+                                    <BarChart2 className='mr-2 h-4 w-4' />
+                                    <span>Column Statistics</span>
+                                  </Button>
+                                  <div className='h-px bg-border my-1' />
+                                  <div className='flex items-center gap-1 px-2 py-1  rounded-md'>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            variant='ghost'
+                                            size='icon'
+                                            className='h-7 w-7 hover:bg-gray-200'
+                                          >
+                                            <AlignLeft className='h-3.5 w-3.5' />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Align left</TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            variant='ghost'
+                                            size='icon'
+                                            className='h-7 w-7 hover:bg-gray-200'
+                                          >
+                                            <AlignCenter className='h-3.5 w-3.5' />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Align center</TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            variant='ghost'
+                                            size='icon'
+                                            className='h-7 w-7 hover:bg-gray-200'
+                                          >
+                                            <AlignRight className='h-3.5 w-3.5' />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Align right</TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
+                                  <div className='h-px bg-border my-1' />
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    className='w-full justify-start text-destructive hover:text-destructive'
+                                    onClick={() => {
+                                      return onDeleteColumn(column.id);
+                                    }}
+                                    disabled={column.isPrimary}
+                                  >
+                                    <Trash2 className='mr-2 h-4 w-4' />
+                                    <span>Delete</span>
+                                  </Button>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
                           </TooltipTrigger>
-                          <TooltipContent>
-                            {sortConfig?.key === column.id
-                              ? `Sorted ${
-                                  sortConfig.direction === 'asc' ? 'ascending' : 'descending'
-                                }`
-                              : 'Sort column'}
-                          </TooltipContent>
+                          <TooltipContent>Column settings</TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                    )}
+                    </div>
                   </div>
-                </TableHead>
+                </DraggableColumnHeader>
               );
             })}
             <TableHead className='w-10'>
@@ -217,6 +645,10 @@ export default function TablePage() {
               : ''
           }`}
           onClick={onEdit}
+          style={{ 
+            width: columnWidths[column.id] || 200,
+            maxWidth: columnWidths[column.id] || 200,
+          }}
         >
           {column.id === 'tags' ? (
             <div className='flex flex-wrap gap-1 items-center'>
@@ -326,8 +758,24 @@ export default function TablePage() {
     alert('Delete selected records functionality would go here');
   }, []);
 
+  // Get ordered records
+  const getOrderedRecords = () => {
+    if (rowOrder.length === 0) return records;
+    return rowOrder
+      .map(id => records.find(record => record.id === id))
+      .filter(Boolean) as typeof records;
+  };
+
+  // Get ordered columns
+  const getOrderedColumns = () => {
+    if (columnOrder.length === 0) return columns;
+    return columnOrder
+      .map(id => columns.find(col => col.id === id))
+      .filter(Boolean) as Column[];
+  };
+
   return (
-    <>
+    <DndProvider backend={HTML5Backend}>
       <div className='flex justify-between items-center mb-4'>
         <div className='flex items-center gap-2'>
           <Tabs
@@ -482,6 +930,14 @@ export default function TablePage() {
               onAddColumn={handleAddColumn}
               allSelected={allSelected}
               toggleSelectAll={toggleSelectAll}
+              onRenameColumn={handleRenameColumn}
+              onToggleVisibility={toggleColumnVisibility}
+              onSetPrimary={setPrimaryColumn}
+              onDeleteColumn={deleteColumn}
+              renamingColumn={renamingColumn}
+              newColumnName={newColumnName}
+              setNewColumnName={setNewColumnName}
+              saveColumnRename={saveColumnRename}
             />
             <TableBody>
               {records.map((record) => {
@@ -497,28 +953,32 @@ export default function TablePage() {
                         />
                       </div>
                     </TableCell>
-                    {columns.map((column) => {
-                      return (
-                        <TableCellMemo
-                          key={`${record.id}-${column.id}`}
-                          record={record}
-                          column={column}
-                          editingCell={editingCell}
-                          onEdit={() => {
-                            return startEditing(record.id, column.id);
-                          }}
-                          onCellChange={handleCellChange}
-                          onCellKeyDown={handleCellKeyDown}
-                          stopEditing={stopEditing}
-                          inputRef={inputRef}
-                          newTagText={newTagText}
-                          setNewTagText={setNewTagText}
-                          handleTagInputKeyDown={handleTagInputKeyDown}
-                          removeTag={removeTag}
-                          addTag={addTag}
-                        />
-                      );
-                    })}
+                    {columns
+                      .filter((column) => {
+                        return !column.hidden;
+                      })
+                      .map((column) => {
+                        return (
+                          <TableCellMemo
+                            key={`${record.id}-${column.id}`}
+                            record={record}
+                            column={column}
+                            editingCell={editingCell}
+                            onEdit={() => {
+                              return startEditing(record.id, column.id);
+                            }}
+                            onCellChange={handleCellChange}
+                            onCellKeyDown={handleCellKeyDown}
+                            stopEditing={stopEditing}
+                            inputRef={inputRef}
+                            newTagText={newTagText}
+                            setNewTagText={setNewTagText}
+                            handleTagInputKeyDown={handleTagInputKeyDown}
+                            removeTag={removeTag}
+                            addTag={addTag}
+                          />
+                        );
+                      })}
                     <TableCell></TableCell>
                   </TableRow>
                 );
@@ -544,7 +1004,7 @@ export default function TablePage() {
                   </div>
                   {columns
                     .filter((col) => {
-                      return col.id !== 'name';
+                      return col.id !== 'name' && !col.hidden;
                     })
                     .map((column) => {
                       return (
