@@ -28,7 +28,6 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 
 export default function TablePage() {
   const params = useParams();
-  const tableId = params.tableId as string;
   const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
   const [showFilters, setShowFilters] = useState(false);
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
