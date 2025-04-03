@@ -3,7 +3,6 @@ import { Input } from '@/components/ui/input';
 import { TableCell as UITableCell } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { Column, Record } from '@/types/database';
-import { Loader2 } from 'lucide-react';
 import React, { memo } from 'react';
 
 interface TableCellProps {
@@ -69,11 +68,11 @@ export const TableCellMemo = memo(
         style={{ width: columnWidths[column.id] }}
         onClick={handleClick}
       >
-        {isUpdating && (
+        {/* {isUpdating && (
           <div className='absolute inset-0 flex items-center justify-center bg-gray-50/50'>
             <Loader2 className='h-4 w-4 animate-spin' />
           </div>
-        )}
+        )} */}
 
         {column.id === 'tags' ? (
           <div className='flex flex-wrap gap-1'>
@@ -120,7 +119,8 @@ export const TableCellMemo = memo(
             }}
             onKeyDown={onCellKeyDown}
             onBlur={stopEditing}
-            className='h-8'
+            className='h-8 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none border-none shadow-none p-0 m-0'
+            autoFocus
           />
         ) : (
           <div className='min-h-[32px] flex items-center' onClick={onEdit}>
