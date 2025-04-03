@@ -10,8 +10,6 @@ import {
   AlignLeft,
   AlignRight,
   BarChart2,
-  ChevronDown,
-  ChevronUp,
   Eye,
   EyeOff,
   GripVertical,
@@ -110,39 +108,6 @@ export const TableHeaderMemo = memo(
                     )}
                   </div>
                   <div className='flex items-center gap-1'>
-                    {column.sortable && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant='ghost'
-                              size='icon'
-                              className='h-7 w-7 hover:bg-gray-100'
-                              onClick={() => {
-                                return onSort(column.id);
-                              }}
-                            >
-                              {sortConfig?.key === column.id ? (
-                                sortConfig.direction === 'asc' ? (
-                                  <ChevronUp className='h-3.5 w-3.5 text-primary' />
-                                ) : (
-                                  <ChevronDown className='h-3.5 w-3.5 text-primary' />
-                                )
-                              ) : (
-                                <ChevronDown className='h-3.5 w-3.5 text-gray-500' />
-                              )}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {sortConfig?.key === column.id
-                              ? `Sorted ${
-                                  sortConfig.direction === 'asc' ? 'ascending' : 'descending'
-                                }`
-                              : 'Sort column'}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
