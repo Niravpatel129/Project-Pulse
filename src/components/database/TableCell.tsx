@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { TableCell as UITableCell } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { Column, Record } from '@/types/database';
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 
 interface TableCellProps {
   record: Record;
@@ -53,18 +53,55 @@ export const TableCellMemo = memo(
   }: TableCellProps) => {
     const isEditing = editingCell.recordId === record._id && editingCell.columnId === column.id;
 
-    const handleClick = () => {
+    const handleClick = useCallback(() => {
       if (column.sortable) {
         handleColumnClick(column.id);
       }
-    };
+    }, [column.id, column.sortable, handleColumnClick]);
+
+    const handleTagRemove = useCallback(
+      (e: React.MouseEvent, tagId: string) => {
+        e.stopPropagation();
+        removeTag(record._id, tagId);
+      },
+      [record._id, removeTag],
+    );
+
+    const handleTagChange = useCallback(
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        setNewTagText((prev) => {
+          return { ...prev, [record._id]: e.target.value };
+        });
+      },
+      [record._id, setNewTagText],
+    );
+
+    const handleTagKeyDown = useCallback(
+      (e: React.KeyboardEvent) => {
+        return handleTagInputKeyDown(e, record._id);
+      },
+      [handleTagInputKeyDown, record._id],
+    );
+
+    const handleTagBlur = useCallback(() => {
+      addTag(record._id);
+    }, [addTag, record._id]);
+
+    const handleCellChange = useCallback(
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        return onCellChange(e, record._id, column.id);
+      },
+      [onCellChange, record._id, column.id],
+    );
+
+    const cellClassName = cn(
+      'relative border-r p-2',
+      column.sortable && 'cursor-pointer hover:bg-gray-50',
+    );
 
     return (
       <UITableCell
-        className={cn(
-          'relative border-r p-2',
-          column.sortable && 'cursor-pointer hover:bg-gray-50',
-        )}
+        className={cellClassName}
         style={{ width: columnWidths[column.id] }}
         onClick={handleClick}
       >
@@ -83,8 +120,7 @@ export const TableCellMemo = memo(
                   <button
                     className='ml-1 hover:text-amber-900'
                     onClick={(e) => {
-                      e.stopPropagation();
-                      removeTag(record._id, tag.id);
+                      return handleTagRemove(e, tag.id);
                     }}
                   >
                     ×
@@ -96,15 +132,9 @@ export const TableCellMemo = memo(
               <Input
                 ref={inputRef}
                 value={newTagText[record._id] || ''}
-                onChange={(e) => {
-                  setNewTagText({ ...newTagText, [record._id]: e.target.value });
-                }}
-                onKeyDown={(e) => {
-                  return handleTagInputKeyDown(e, record._id);
-                }}
-                onBlur={() => {
-                  addTag(record._id);
-                }}
+                onChange={handleTagChange}
+                onKeyDown={handleTagKeyDown}
+                onBlur={handleTagBlur}
                 placeholder='Add tag...'
                 className='h-6 w-24'
               />
@@ -114,13 +144,9 @@ export const TableCellMemo = memo(
           <Input
             ref={inputRef}
             value={record.values[column.id] || ''}
-            onChange={(e) => {
-              return onCellChange(e, record._id, column.id);
-            }}
+            onChange={handleCellChange}
             onKeyDown={onCellKeyDown}
-            onBlur={() => {
-              stopEditing();
-            }}
+            onBlur={stopEditing}
             className='h-8 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none border-none shadow-none p-0 m-0'
             autoFocus
           />
