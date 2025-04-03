@@ -1,7 +1,7 @@
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 export interface ProjectModule {
@@ -22,6 +22,12 @@ export function useProjectModules() {
   const [isFileUploadModalOpen, setIsFileUploadModalOpen] = useState(false);
   const queryClient = useQueryClient();
   const { project } = useProject();
+
+  useEffect(() => {
+    return () => {
+      queryClient.invalidateQueries({ queryKey: ['projectModules'] });
+    };
+  }, [queryClient]);
 
   const {
     data: modules = [],
@@ -45,8 +51,7 @@ export function useProjectModules() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projectModules'] });
-      // toast.success('Module added successfully');
+      toast.success('Module added successfully');
     },
     onError: () => {
       toast.error('Failed to add module');
