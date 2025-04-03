@@ -13,7 +13,6 @@ import {
   ChevronDown,
   Eye,
   EyeOff,
-  Filter,
   GripVertical,
   Info,
   Key,
@@ -104,7 +103,6 @@ export const TableHeaderMemo = memo(
                   }}
                 >
                   <div className='flex items-center gap-1'>
-                    {isHovered && <GripVertical className='h-4 w-4 text-gray-400 cursor-move' />}
                     {renamingColumn?.id === column.id ? (
                       <Input
                         value={newColumnName}
@@ -130,24 +128,6 @@ export const TableHeaderMemo = memo(
                   <div className='flex items-center'>
                     {isHovered && (
                       <>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant='ghost'
-                                size='icon'
-                                className='h-6 w-6 rounded-full hover:bg-gray-200'
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onSort(column.id);
-                                }}
-                              >
-                                <Filter className='h-3 w-3 text-[#5f6368]' />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Sort</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>

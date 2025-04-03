@@ -137,7 +137,7 @@ export function useDatabaseColumns(initialColumns: Column[]) {
     );
   };
 
-  const deleteColumn = (columnId: string) => {
+  const deleteColumn = async (columnId: string) => {
     // Don't allow deleting the primary column
     if (
       columns.find((col) => {
@@ -152,6 +152,15 @@ export function useDatabaseColumns(initialColumns: Column[]) {
         return col.id !== columnId;
       }),
     );
+
+    // now send a request to the server to delete the column
+    try {
+      await newRequest.delete(`/tables/${params.tableId}/columns/${columnId}`);
+      toast.success('Column deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete column:', error);
+      toast.error('Failed to delete column');
+    }
   };
 
   return {
