@@ -32,7 +32,7 @@ const fieldTypes: Array<{ id: string; name: string; icon: string; description?: 
   { id: 'number', name: 'Number', icon: '🔢' },
   { id: 'date', name: 'Date', icon: '📅' },
   { id: 'select', name: 'Select', icon: '📋' },
-  { id: 'relation', name: 'Relation', icon: '🔗' },
+  { id: 'relation', name: 'Relation To Database', icon: '📖' },
 ];
 
 interface NewTemplateSheetProps {
@@ -216,14 +216,14 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent className='h-full sm:max-w-[800px]'>
         <SheetHeader>
-          <SheetTitle>Create New Database</SheetTitle>
+          <SheetTitle>Create New Template</SheetTitle>
         </SheetHeader>
 
         <div className='mt-6 space-y-6 overflow-scroll h-full pb-36 scrollbar-hide p-1'>
           {/* Basic Info */}
           <div className='space-y-4'>
             <div className='space-y-2'>
-              <Label htmlFor='template-name'>Database Name</Label>
+              <Label htmlFor='template-name'>Template Name</Label>
               <Input
                 id='template-name'
                 value={templateName}
@@ -412,16 +412,6 @@ Option 3`}
                                             />
                                           </div>
                                         )}
-
-                                        <div className='flex items-center space-x-2'>
-                                          <Switch
-                                            checked={field.multiple || false}
-                                            onCheckedChange={(checked) => {
-                                              return updateField(index, { multiple: checked });
-                                            }}
-                                          />
-                                          <Label>Allow multiple values</Label>
-                                        </div>
                                       </CollapsibleContent>
                                     </Collapsible>
                                   </div>
