@@ -20,17 +20,20 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { newRequest } from '@/utils/newRequest';
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
+import { useQuery } from '@tanstack/react-query';
 import { GripVertical, Plus, Settings2, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 // Empty arrays for database and field options
-const databases: Array<{ id: string; name: string; icon: string; description?: string }> = [];
-const fields: Array<{ id: string; name: string; icon: string; description?: string }> = [];
-const databaseFields: Record<
-  string,
-  Array<{ id: string; name: string; type: string; lookup?: boolean }>
-> = {};
+const fieldTypes: Array<{ id: string; name: string; icon: string; description?: string }> = [
+  { id: 'text', name: 'Text', icon: '📝' },
+  { id: 'number', name: 'Number', icon: '🔢' },
+  { id: 'date', name: 'Date', icon: '📅' },
+  { id: 'select', name: 'Select', icon: '📋' },
+  { id: 'relation', name: 'Relation', icon: '🔗' },
+];
 
 interface NewTemplateSheetProps {
   isOpen: boolean;
@@ -48,6 +51,9 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
   const [lookupFields, setLookupFields] = useState<Record<string, boolean>>({});
   const [newTableName, setNewTableName] = useState('');
   const [newTableDescription, setNewTableDescription] = useState('');
+  const [databaseFields, setDatabaseFields] = useState<
+    Record<string, Array<{ id: string; name: string; type: string; lookup?: boolean }>>
+  >({});
   const [newTableFields, setNewTableFields] = useState<TemplateField[]>([
     {
       id: `field-${Date.now()}`,
@@ -57,7 +63,7 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
       options: [],
     },
   ]);
-  const [fields, setFields] = useState<TemplateField[]>([
+  const [templateFields, setTemplateFields] = useState<TemplateField[]>([
     {
       id: `field-${Date.now()}`,
       name: '',
@@ -67,11 +73,80 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
     },
   ]);
 
+  // Fetch tables using React Query
+  const { data: tables = [] } = useQuery({
+    queryKey: ['tables'],
+    queryFn: async () => {
+      const response = await newRequest.get('/tables/workspace');
+      return response.data.data;
+    },
+  });
+
+  // Fetch fields for selected database
+  const { data: selectedTableData } = useQuery({
+    queryKey: ['table', selectedDatabase],
+    queryFn: async () => {
+      if (!selectedDatabase) return null;
+      const response = await newRequest.get(`/tables/${selectedDatabase}`);
+      return response.data.data;
+    },
+    enabled: !!selectedDatabase,
+  });
+
+  // Update databaseFields when selected table data changes
+  useEffect(() => {
+    if (selectedTableData?.columns) {
+      setDatabaseFields((prev) => {
+        return {
+          ...prev,
+          [selectedDatabase]: selectedTableData.columns.map((column: any) => {
+            return {
+              id: column.id,
+              name: column.name,
+              type: column.type,
+              lookup: true, // Default to true for all fields
+            };
+          }),
+        };
+      });
+    }
+  }, [selectedTableData, selectedDatabase]);
+
+  // Transform tables into the format expected by the component
+  const databases = tables.map((table: any) => {
+    return {
+      id: table._id,
+      name: table.name,
+      icon: '📊',
+      description: table.description || 'No description',
+    };
+  });
+
+  // Helper function to get appropriate icon based on file type
+  const getFileIcon = (contentType: string) => {
+    if (contentType.startsWith('image/')) return '🖼️';
+    if (contentType === 'text/plain') return '📄';
+    if (contentType === 'application/pdf') return '📑';
+    if (contentType.includes('word')) return '📝';
+    if (contentType.includes('excel') || contentType.includes('spreadsheet')) return '📊';
+    if (contentType.includes('presentation')) return '📽️';
+    return '📁';
+  };
+
+  // Helper function to format file size
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
   const addField = () => {
-    setFields([
-      ...fields,
+    setTemplateFields([
+      ...templateFields,
       {
-        id: `field-${Date.now()}-${fields.length}`,
+        id: `field-${Date.now()}-${templateFields.length}`,
         name: '',
         type: 'text' as FieldType,
         required: false,
@@ -81,23 +156,23 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
   };
 
   const updateField = (index: number, updates: Partial<TemplateField>) => {
-    const updatedFields = [...fields];
+    const updatedFields = [...templateFields];
     updatedFields[index] = { ...updatedFields[index], ...updates };
-    setFields(updatedFields);
+    setTemplateFields(updatedFields);
   };
 
   const removeField = (index: number) => {
-    const updatedFields = [...fields];
+    const updatedFields = [...templateFields];
     updatedFields.splice(index, 1);
-    setFields(updatedFields);
+    setTemplateFields(updatedFields);
   };
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
-    const items = Array.from(fields);
+    const items = Array.from(templateFields);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
-    setFields(items);
+    setTemplateFields(items);
   };
 
   const handleSave = () => {
@@ -105,7 +180,7 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
     onSave({
       name: templateName,
       description: templateDescription,
-      fields: fields.filter((field) => {
+      fields: templateFields.filter((field) => {
         if (!field.name.trim()) return false;
         if (field.type === 'select' && (!field.options || field.options.length === 0)) return false;
         return true;
@@ -113,7 +188,7 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
     });
     setTemplateName('');
     setTemplateDescription('');
-    setFields([
+    setTemplateFields([
       {
         id: `field-${Date.now()}`,
         name: '',
@@ -176,7 +251,7 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
                 {(provided) => {
                   return (
                     <div {...provided.droppableProps} ref={provided.innerRef} className='space-y-2'>
-                      {fields.map((field, index) => {
+                      {templateFields.map((field, index) => {
                         return (
                           <Draggable key={field.id} draggableId={field.id} index={index}>
                             {(provided) => {
@@ -224,14 +299,14 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
                                                 </span>
                                               </div>
                                             ) : (
-                                              fields.find((type) => {
+                                              fieldTypes.find((type) => {
                                                 return type.id === field.type;
                                               })?.name
                                             )}
                                           </SelectValue>
                                         </SelectTrigger>
                                         <SelectContent>
-                                          {fields.map((type: any) => {
+                                          {fieldTypes.map((type) => {
                                             return (
                                               <SelectItem
                                                 key={type.id}
@@ -402,7 +477,7 @@ Option 3`}
                 </Select>
               </div>
 
-              {selectedDatabase && (
+              {selectedDatabase && databaseFields[selectedDatabase] && (
                 <div className='space-y-4'>
                   <div>
                     <div className='flex items-center justify-between mb-2'>
@@ -506,7 +581,7 @@ Option 3`}
                     if (!selectedDb) return;
 
                     // Find the current field being edited
-                    const currentFieldIndex = fields.findIndex((field) => {
+                    const currentFieldIndex = templateFields.findIndex((field) => {
                       return field.type === 'relation' && !field.relationType;
                     });
                     if (currentFieldIndex === -1) return;
@@ -625,14 +700,14 @@ Option 3`}
                           <SelectTrigger className='w-[200px]'>
                             <SelectValue placeholder='Field type'>
                               {
-                                fields.find((type) => {
+                                templateFields.find((type) => {
                                   return type.id === field.type;
                                 })?.name
                               }
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
-                            {fields.map((type) => {
+                            {templateFields.map((type) => {
                               return (
                                 <SelectItem key={type.id} value={type.id}>
                                   <div className='flex items-center gap-2'>
@@ -687,11 +762,16 @@ Option 3`}
                     databases.push(newDb);
 
                     // Create fields for the new database
-                    databaseFields[newDb.id] = newTableFields.map((field) => {
+                    setDatabaseFields((prev) => {
                       return {
-                        id: field.name.toLowerCase().replace(/\s+/g, '-'),
-                        name: field.name,
-                        type: field.type,
+                        ...prev,
+                        [newDb.id]: newTableFields.map((field) => {
+                          return {
+                            id: field.name.toLowerCase().replace(/\s+/g, '-'),
+                            name: field.name,
+                            type: field.type,
+                          };
+                        }),
                       };
                     });
 
