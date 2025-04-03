@@ -6,17 +6,32 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
+import { useDatabase } from '@/hooks/useDatabase';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function DatabaseLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const currentTable = pathname.split('/').pop() || 'table-1';
+  const router = useRouter();
+  const { handleCreateTable, tables = [] } = useDatabase();
+  const currentTable = pathname.split('/').pop() || tables[0]?._id || 'table-1';
   const [tableName, setTableName] = useState('');
   const [isCreatingTable, setIsCreatingTable] = useState(false);
+
+  // Redirect to first table if no table is selected
+  useEffect(() => {
+    if (
+      tables.length > 0 &&
+      !tables.some((table) => {
+        return table._id === currentTable;
+      })
+    ) {
+      router.push(`/database/${tables[0]._id}`);
+    }
+  }, [tables, currentTable]);
 
   return (
     <BlockWrapper>
@@ -29,14 +44,18 @@ export default function DatabaseLayout({ children }: { children: React.ReactNode
           <Tabs value={currentTable} className='w-full p-2'>
             <div className='flex items-center'>
               <TabsList className='text-foreground mb-3 h-auto gap-2 rounded-none border-b bg-transparent px-0 py-1'>
-                <Link href='/database/table-1' className='flex-1'>
-                  <TabsTrigger
-                    value='table-1'
-                    className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none w-full'
-                  >
-                    Table 1
-                  </TabsTrigger>
-                </Link>
+                {tables.map((table) => {
+                  return (
+                    <Link key={table._id} href={`/database/${table._id}`} className='flex-1'>
+                      <TabsTrigger
+                        value={table._id}
+                        className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none w-full'
+                      >
+                        {table.name}
+                      </TabsTrigger>
+                    </Link>
+                  );
+                })}
               </TabsList>
               <Popover open={isCreatingTable} onOpenChange={setIsCreatingTable}>
                 <PopoverTrigger asChild>
@@ -77,6 +96,7 @@ export default function DatabaseLayout({ children }: { children: React.ReactNode
                       className='w-full'
                       onClick={() => {
                         setIsCreatingTable(false);
+                        handleCreateTable(tableName);
                         toast.success('Table created successfully');
                         // delay for 1 second
                         setTimeout(() => {

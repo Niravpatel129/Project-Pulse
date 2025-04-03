@@ -1,3 +1,5 @@
+import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useDatabaseColumns } from './useDatabaseColumns';
 import { useDatabaseIcons } from './useDatabaseIcons';
@@ -5,6 +7,8 @@ import { useDatabaseRecords } from './useDatabaseRecords';
 import { useDatabaseSorting } from './useDatabaseSorting';
 
 export function useDatabase() {
+  const queryClient = useQueryClient();
+
   const {
     columns,
     setColumns,
@@ -55,17 +59,43 @@ export function useDatabase() {
 
   const { getIconComponent, iconOptions, defaultPropertyTypes } = useDatabaseIcons();
 
-  // Focus input when editing starts
+  const { data: tables = [] } = useQuery({
+    queryKey: ['tables'],
+    queryFn: async () => {
+      const response = await newRequest.get('/tables/workspace');
+      return response.data.data;
+    },
+  });
+
   useEffect(() => {
     if (editingCell.recordId !== null && inputRef.current) {
       inputRef.current.focus();
     }
   }, [editingCell, inputRef]);
 
-  // Filter property types based on search query
   const filteredPropertyTypes = defaultPropertyTypes.filter((type) => {
     return type.name.toLowerCase().includes(propertySearchQuery.toLowerCase());
   });
+
+  const createTableMutation = useMutation({
+    mutationFn: async (tableName: string) => {
+      return newRequest.post('/tables/create', { name: tableName });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tables'] });
+    },
+  });
+
+  const handleCreateTable = async (tableName: string) => {
+    console.log('create table', tableName);
+    if (!tableName.trim()) return;
+
+    try {
+      await createTableMutation.mutateAsync(tableName);
+    } catch (error) {
+      console.error('Failed to create table:', error);
+    }
+  };
 
   return {
     columns,
@@ -87,6 +117,7 @@ export function useDatabase() {
     addNewRow,
     addNewColumn,
     saveNewColumn,
+    handleCreateTable,
     backToPropertySelection,
     selectIcon,
     startEditing,
@@ -111,5 +142,6 @@ export function useDatabase() {
     toggleColumnVisibility,
     setPrimaryColumn,
     deleteColumn,
+    tables,
   };
 }
