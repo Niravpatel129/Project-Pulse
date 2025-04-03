@@ -21,13 +21,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useDatabase } from '@/hooks/useDatabase';
 import { Column, SortConfig } from '@/types/database';
 import { ChevronDown, Filter, Plus, Search, Trash2 } from 'lucide-react';
-import { useParams } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
 export default function TablePage() {
-  const params = useParams();
   const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
   const [showFilters, setShowFilters] = useState(false);
   const [columnOrder, setColumnOrder] = useState<string[]>([]);

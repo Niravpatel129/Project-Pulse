@@ -153,7 +153,7 @@ export function useDatabaseRecords(
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['table-records', params.tableId] });
+      // queryClient.invalidateQueries({ queryKey: ['table-records', params.tableId] });
     },
     onError: (error) => {
       toast.error('Failed to update cell');
@@ -293,14 +293,14 @@ export function useDatabaseRecords(
             value: newValue,
           });
           // Only reset editingCell state if update was successful
-          setEditingCell({ recordId: null, columnId: null, originalValue: null });
+          // setEditingCell({ recordId: null, columnId: null, originalValue: null });
         } catch (error) {
           // If update fails, keep the editingCell state
           console.error('Failed to update cell:', error);
         }
       } else {
         // If no changes, just reset the editingCell state
-        setEditingCell({ recordId: null, columnId: null, originalValue: null });
+        // setEditingCell({ recordId: null, columnId: null, originalValue: null });
       }
     }
   };
