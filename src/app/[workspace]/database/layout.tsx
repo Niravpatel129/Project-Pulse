@@ -60,11 +60,18 @@ export default function DatabaseLayout({ children }: { children: React.ReactNode
 
   // Handle table rename
   const handleRenameTable = useCallback((tableId: string, currentName: string) => {
+    // make sure its not the same as the current table
     setRenamingTable({ id: tableId, name: currentName });
     setNewTableName(currentName);
   }, []);
 
   const saveTableRename = useCallback(async () => {
+    // make sure the new table name is not the same as the current table
+    if (newTableName.trim() === currentTable) {
+      toast.error('Table name cannot be the same as the current table');
+      return;
+    }
+
     if (renamingTable && newTableName.trim()) {
       try {
         await newRequest.patch(`/tables/${renamingTable.id}`, {
@@ -73,7 +80,6 @@ export default function DatabaseLayout({ children }: { children: React.ReactNode
         queryClient.invalidateQueries({ queryKey: ['tables'] });
         setRenamingTable(null);
         setNewTableName('');
-        toast.success('Table renamed successfully');
       } catch (error) {
         console.error('Failed to rename table:', error);
         toast.error('Failed to rename table');
