@@ -16,13 +16,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -151,22 +144,6 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                   >
                     {getModuleTypeLabel(moduleType)}
                   </Badge>
-
-                  <Select
-                    value={moduleStatus}
-                    onValueChange={(value) => {
-                      setModuleStatus(value as 'active' | 'archived');
-                      updateStatusMutation.mutate(value as 'active' | 'archived');
-                    }}
-                  >
-                    <SelectTrigger className='w-[120px] h-7'>
-                      <SelectValue placeholder='Status' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='active'>Active</SelectItem>
-                      <SelectItem value='archived'>Archived</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
 
