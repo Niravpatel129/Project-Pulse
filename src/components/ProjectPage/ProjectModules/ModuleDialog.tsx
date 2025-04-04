@@ -40,6 +40,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { useState } from 'react';
+import EditModuleFromTemplateSheet from '../FileComponents/EditModuleFromTemplateSheet';
 
 interface ModuleDialogProps {
   moduleId: string;
@@ -48,6 +49,7 @@ interface ModuleDialogProps {
 
 export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditSheet, setShowEditSheet] = useState(false);
   const {
     module,
     isLoading,
@@ -235,7 +237,13 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                 )}
 
                 {moduleType === 'template' && (
-                  <Button variant='outline' className='w-full justify-start gap-2'>
+                  <Button
+                    variant='outline'
+                    className='w-full justify-start gap-2'
+                    onClick={() => {
+                      return setShowEditSheet(true);
+                    }}
+                  >
                     <Edit className='h-4 w-4' />
                     Edit Form Response
                   </Button>
@@ -581,6 +589,21 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {moduleType === 'template' && (
+        <EditModuleFromTemplateSheet
+          isOpen={showEditSheet}
+          onClose={() => {
+            return setShowEditSheet(false);
+          }}
+          template={module.content?.templateId}
+          moduleId={moduleId}
+          initialData={{
+            name: module.name,
+            fields: module.versions?.[currentVersion - 1]?.contentSnapshot?.fields || [],
+          }}
+        />
+      )}
     </>
   );
 }
