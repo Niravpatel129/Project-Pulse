@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useProject } from '@/contexts/ProjectContext';
 import { useModuleDialog } from '@/hooks/useModuleDialog';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -39,6 +40,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import EditModuleFromTemplateSheet from '../FileComponents/EditModuleFromTemplateSheet';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
+import { ApproverDialog } from './ApproverDialog';
 
 interface ModuleDialogProps {
   moduleId: string;
@@ -68,7 +70,23 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
     getApprovalStatusText,
     getModuleTypeLabel,
     getModuleTypeColor,
+    showApproverDialog,
+    setShowApproverDialog,
+    selectedApprovers,
+    setSelectedApprovers,
+    manualEmail,
+    setManualEmail,
+    potentialApprovers,
+    handleAddManualEmail,
+    handleRemoveApprover,
   } = useModuleDialog({ moduleId });
+  const { project } = useProject();
+
+  // Get approvers from project participants
+  const approvers =
+    project?.participants.filter((p) => {
+      return p.role === 'client';
+    }) || [];
 
   const handleDelete = async () => {
     try {
@@ -214,7 +232,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                   <Button
                     className='w-full justify-start gap-2'
                     onClick={() => {
-                      return requestApprovalMutation.mutate();
+                      return setShowApproverDialog(true);
                     }}
                   >
                     <Send className='h-4 w-4' />
@@ -226,7 +244,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                   <Button
                     className='w-full justify-start gap-2'
                     onClick={() => {
-                      return requestApprovalMutation.mutate();
+                      return setShowApproverDialog(true);
                     }}
                   >
                     <RefreshCw className='h-4 w-4' />
@@ -238,7 +256,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                   <Button
                     className='w-full justify-start gap-2'
                     onClick={() => {
-                      return requestApprovalMutation.mutate();
+                      return setShowApproverDialog(true);
                     }}
                   >
                     <RefreshCw className='h-4 w-4' />
@@ -728,6 +746,37 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
           replaceFileMutation.mutate(file._id);
           setShowFileUploadManager(false);
         }}
+      />
+
+      {/* Approver Dialog */}
+      <ApproverDialog
+        isOpen={showApproverDialog}
+        onClose={() => {
+          setShowApproverDialog(false);
+          setSelectedApprovers([]);
+          setManualEmail('');
+        }}
+        potentialApprovers={potentialApprovers}
+        selectedApprovers={selectedApprovers}
+        onSelectApprover={(approver) => {
+          if (
+            !selectedApprovers.some((a) => {
+              return a.email === approver.email;
+            })
+          ) {
+            setSelectedApprovers((prev) => {
+              return [...prev, approver];
+            });
+          }
+        }}
+        onRemoveApprover={handleRemoveApprover}
+        manualEmail={manualEmail}
+        onManualEmailChange={setManualEmail}
+        onAddManualEmail={handleAddManualEmail}
+        onRequestApproval={() => {
+          return requestApprovalMutation.mutate();
+        }}
+        isLoading={requestApprovalMutation.isPending}
       />
     </>
   );

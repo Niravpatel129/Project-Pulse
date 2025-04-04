@@ -1,3 +1,4 @@
+import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
@@ -7,10 +8,21 @@ interface ModuleDialogHookProps {
   moduleId: string;
 }
 
+interface Approver {
+  id?: string;
+  name: string;
+  email: string;
+  isProjectParticipant?: boolean;
+}
+
 export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
+  const { project } = useProject();
   const [activeTab, setActiveTab] = useState<'preview' | 'history' | 'comments'>('preview');
   const [selectedVersion, setSelectedVersion] = useState(1);
   const [moduleStatus, setModuleStatus] = useState<'active' | 'archived'>('active');
+  const [showApproverDialog, setShowApproverDialog] = useState(false);
+  const [selectedApprovers, setSelectedApprovers] = useState<Approver[]>([]);
+  const [manualEmail, setManualEmail] = useState('');
   const queryClient = useQueryClient();
 
   // Fetch module data
@@ -44,18 +56,68 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
     },
   });
 
+  // Get all potential approvers from project participants
+  const potentialApprovers =
+    project?.participants.map((p) => {
+      return {
+        id: p._id,
+        name: p.name,
+        email: p.email,
+        isProjectParticipant: true,
+      };
+    }) || [];
+
+  // Add manual email to approvers
+  const handleAddManualEmail = () => {
+    if (
+      manualEmail &&
+      !selectedApprovers.some((a) => {
+        return a.email === manualEmail;
+      })
+    ) {
+      setSelectedApprovers((prev) => {
+        return [
+          ...prev,
+          {
+            name: manualEmail.split('@')[0],
+            email: manualEmail,
+            isProjectParticipant: false,
+          },
+        ];
+      });
+      setManualEmail('');
+    }
+  };
+
+  // Remove approver
+  const handleRemoveApprover = (email: string) => {
+    setSelectedApprovers((prev) => {
+      return prev.filter((a) => {
+        return a.email !== email;
+      });
+    });
+  };
+
   // Request approval mutation
   const requestApprovalMutation = useMutation({
     mutationFn: async () => {
-      const { data } = await newRequest.post(`/project-modules/${moduleId}/request-approval`);
+      if (selectedApprovers.length === 0) {
+        throw new Error('Please select at least one approver');
+      }
+
+      const { data } = await newRequest.post(`/project-modules/${moduleId}/request-approval`, {
+        approvers: selectedApprovers,
+      });
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['module', moduleId] });
+      setShowApproverDialog(false);
+      setSelectedApprovers([]);
       toast.success('Approval requested successfully');
     },
-    onError: () => {
-      toast.error('Failed to request approval');
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to request approval');
     },
   });
 
@@ -174,5 +236,15 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
     getApprovalStatusText,
     getModuleTypeLabel,
     getModuleTypeColor,
+    // New values
+    showApproverDialog,
+    setShowApproverDialog,
+    selectedApprovers,
+    setSelectedApprovers,
+    manualEmail,
+    setManualEmail,
+    potentialApprovers,
+    handleAddManualEmail,
+    handleRemoveApprover,
   };
 }
