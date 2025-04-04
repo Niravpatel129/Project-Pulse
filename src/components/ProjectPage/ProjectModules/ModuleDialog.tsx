@@ -42,6 +42,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import EditModuleFromTemplateSheet from '../FileComponents/EditModuleFromTemplateSheet';
+import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 
 interface ModuleDialogProps {
   moduleId: string;
@@ -51,6 +52,7 @@ interface ModuleDialogProps {
 export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditSheet, setShowEditSheet] = useState(false);
+  const [showFileUploadManager, setShowFileUploadManager] = useState(false);
   const {
     module,
     isLoading,
@@ -251,8 +253,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                     variant='outline'
                     className='w-full justify-start gap-2'
                     onClick={() => {
-                      // TODO: Implement file upload modal
-                      console.log('Open file upload modal');
+                      setShowFileUploadManager(true);
                     }}
                   >
                     <Upload className='h-4 w-4' />
@@ -654,6 +655,17 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
           }}
         />
       )}
+
+      <FileUploadManagerModal
+        isOpen={showFileUploadManager}
+        onClose={() => {
+          return setShowFileUploadManager(false);
+        }}
+        handleAddFileToProject={(file) => {
+          replaceFileMutation.mutate(file._id);
+          setShowFileUploadManager(false);
+        }}
+      />
     </>
   );
 }
