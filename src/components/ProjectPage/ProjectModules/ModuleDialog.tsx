@@ -463,7 +463,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                               Data - {templateDetails.length} fields
                             </Label>
                             <div className='mt-3 space-y-4'>
-                              {templateDetails.map((field, index) => {
+                              {templateDetails.map((field) => {
                                 return (
                                   <div
                                     key={field.templateFieldId}
@@ -493,6 +493,11 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                                             </Badge>
                                           )}
                                         </div>
+                                        {field.description && (
+                                          <p className='text-xs text-muted-foreground mt-1'>
+                                            {field.description}
+                                          </p>
+                                        )}
                                       </div>
                                     </div>
                                     <div className='mt-2'>
@@ -502,22 +507,58 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                                       <div className='mt-1'>
                                         {field.fieldType === 'relation' ? (
                                           <div className='bg-white p-2 rounded border'>
-                                            {Object.entries(
-                                              field.fieldValue?.displayValues || {},
-                                            ).map(([key, value]) => {
-                                              return (
-                                                <div key={key} className='flex gap-2'>
-                                                  <span className='text-xs font-medium'>
-                                                    {key}:
-                                                  </span>
-                                                  <span className='text-xs'>{value as string}</span>
-                                                </div>
-                                              );
-                                            })}
+                                            {field.fieldValue?.displayValues ? (
+                                              Object.entries(field.fieldValue.displayValues).map(
+                                                ([key, value]) => {
+                                                  return (
+                                                    <div key={key} className='flex gap-2'>
+                                                      <span className='text-xs font-medium'>
+                                                        {key}:
+                                                      </span>
+                                                      <span className='text-xs'>
+                                                        {value as string}
+                                                      </span>
+                                                    </div>
+                                                  );
+                                                },
+                                              )
+                                            ) : (
+                                              <span className='text-xs text-muted-foreground'>
+                                                No relation data
+                                              </span>
+                                            )}
+                                          </div>
+                                        ) : field.fieldType === 'longtext' ? (
+                                          <div className='bg-white p-2 rounded border max-h-32 overflow-y-auto'>
+                                            <span className='text-sm whitespace-pre-wrap'>
+                                              {field.fieldValue || 'No response'}
+                                            </span>
+                                          </div>
+                                        ) : Array.isArray(field.fieldValue) ? (
+                                          <div className='bg-white p-2 rounded border'>
+                                            {field.fieldValue.length > 0 ? (
+                                              field.fieldValue.map((value, idx) => {
+                                                return (
+                                                  <div key={idx} className='text-sm mb-1 last:mb-0'>
+                                                    {value}
+                                                  </div>
+                                                );
+                                              })
+                                            ) : (
+                                              <span className='text-xs text-muted-foreground'>
+                                                No values selected
+                                              </span>
+                                            )}
                                           </div>
                                         ) : (
                                           <div className='bg-white p-2 rounded border'>
-                                            <span className='text-sm'>{field.fieldValue}</span>
+                                            {field.fieldValue ? (
+                                              <span className='text-sm'>{field.fieldValue}</span>
+                                            ) : (
+                                              <span className='text-xs text-muted-foreground'>
+                                                No response
+                                              </span>
+                                            )}
                                           </div>
                                         )}
                                       </div>
