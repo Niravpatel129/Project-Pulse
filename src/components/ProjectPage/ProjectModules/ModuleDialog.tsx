@@ -127,15 +127,17 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
           }
         }}
       >
-        <DialogContent className='max-w-[1000px] p-0 h-[85vh] max-h-[900px] overflow-hidden flex gap-0'>
+        <DialogContent className='max-w-[1000px] p-0 h-[85vh] max-h-[900px] overflow-hidden flex flex-col md:flex-row gap-0'>
           <DialogTitle className='sr-only'>{module.name}</DialogTitle>
           {/* Left Panel - Module Info & Actions */}
-          <div className='w-[35%] border-r p-6 flex flex-col h-full overflow-y-auto'>
-            <div className='space-y-6'>
+          <div className='w-full md:w-[35%] border-b md:border-b-0 md:border-r p-4 md:p-6 flex flex-col h-auto md:h-full overflow-y-auto'>
+            <div className='space-y-4 md:space-y-6'>
               {/* Module Name and Status */}
               <div className='space-y-2'>
                 <div className='flex items-center justify-between'>
-                  <h2 className='text-xl font-semibold'>{module.name || 'Untitled Module'}</h2>
+                  <h2 className='text-lg md:text-xl font-semibold'>
+                    {module.name || 'Untitled Module'}
+                  </h2>
                 </div>
                 {/* Status Badge and Module Type */}
                 <div className='flex items-center justify-between'>
@@ -149,7 +151,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
               </div>
 
               <Card className='border-muted'>
-                <CardContent className='p-4 space-y-4'>
+                <CardContent className='p-3 md:p-4 space-y-3 md:space-y-4'>
                   {/* Added By */}
                   <div className='flex items-center gap-3'>
                     <Avatar className='h-8 w-8'>
@@ -197,7 +199,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
               </Card>
 
               {/* Action Buttons */}
-              <div className='space-y-3'>
+              <div className='space-y-2 md:space-y-3'>
                 {approvalStatus === 'not_requested' && (
                   <Button
                     className='w-full justify-start gap-2'
@@ -274,7 +276,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
             </div>
 
             {/* Activity Log */}
-            <div className='mt-auto pt-6'>
+            <div className='mt-auto pt-4 md:pt-6 hidden md:block'>
               <Separator className='mb-4' />
               <div className='text-xs text-muted-foreground space-y-2'>
                 <div className='flex items-center gap-1'>
@@ -297,11 +299,11 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
           </div>
 
           {/* Right Panel - Module Content Preview */}
-          <div className='w-[65%] h-full flex flex-col'>
+          <div className='w-full md:w-[65%] h-full flex flex-col'>
             {/* Version Indicator Bar */}
             {selectedVersion !== currentVersion && (
-              <div className='bg-yellow-50 border-b border-yellow-200 p-3 flex items-center justify-between'>
-                <div className='flex items-center gap-2'>
+              <div className='bg-yellow-50 border-b border-yellow-200 p-2 md:p-3 flex flex-col md:flex-row items-start md:items-center justify-between'>
+                <div className='flex items-center gap-2 mb-2 md:mb-0'>
                   <span className='text-sm font-medium text-yellow-800'>
                     Viewing Version {selectedVersion}
                   </span>
@@ -309,20 +311,22 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                     Historical
                   </Badge>
                 </div>
-                <div className='flex items-center gap-2'>
+                <div className='flex items-center gap-2 w-full md:w-auto'>
                   <Button
                     size='sm'
                     variant='outline'
-                    className=''
+                    className='md:flex-none'
                     onClick={() => {
                       handleViewVersion(currentVersion);
                     }}
                   >
-                    <Undo className='h-3 w-3' />
+                    <Undo className='h-3 w-3 mr-1 md:mr-0' />
+                    <span className='md:hidden'>Back to Current</span>
                   </Button>
                   <Button
                     size='sm'
                     variant='outline'
+                    className='flex-1 md:flex-none'
                     onClick={() => {
                       restoreVersionMutation.mutate(selectedVersion);
                     }}
@@ -342,8 +346,8 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                   setActiveTab(value as any);
                 }}
               >
-                <div className='px-6 pt-4'>
-                  <TabsList className='grid w-[300px] grid-cols-3'>
+                <div className='px-4 pl-0 md:px-6 pt-3 md:pt-4 pb-4'>
+                  <TabsList className='grid w-full md:w-[300px] grid-cols-3'>
                     <TabsTrigger value='preview'>Preview</TabsTrigger>
                     <TabsTrigger value='history'>History</TabsTrigger>
                     <TabsTrigger value='comments'>Comments</TabsTrigger>
@@ -353,32 +357,32 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
             </div>
 
             {/* Content Area */}
-            <div className='flex-1 overflow-y-auto bg-gray-50 p-6'>
+            <div className='flex-1 overflow-y-auto bg-gray-50 p-4 md:p-6'>
               {activeTab === 'preview' && (
                 <>
                   {/* File Preview */}
                   {moduleType === 'file' && (
-                    <div className='space-y-6'>
+                    <div className='space-y-4 md:space-y-6'>
                       <div className='bg-white rounded-lg border shadow-sm overflow-hidden'>
                         {fileDetails.previewUrl ? (
-                          <div className='flex justify-center p-6'>
+                          <div className='flex justify-center p-4 md:p-6'>
                             <Image
                               src={fileDetails.previewUrl || '/placeholder.svg'}
                               alt={module.name}
-                              className='object-contain max-h-[350px]'
+                              className='object-contain max-h-[250px] md:max-h-[350px]'
                               width={1000}
                               height={1000}
                             />
                           </div>
                         ) : (
-                          <div className='flex items-center justify-center h-[300px] w-full'>
-                            <FileText className='h-24 w-24 text-muted-foreground' />
+                          <div className='flex items-center justify-center h-[200px] md:h-[300px] w-full'>
+                            <FileText className='h-16 md:h-24 w-16 md:w-24 text-muted-foreground' />
                           </div>
                         )}
                       </div>
 
-                      <div className='bg-white rounded-lg border shadow-sm p-4'>
-                        <div className='grid grid-cols-2 gap-4 text-sm'>
+                      <div className='bg-white rounded-lg border shadow-sm p-3 md:p-4'>
+                        <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 text-sm'>
                           <div>
                             <Label className='text-xs text-muted-foreground'>File Name</Label>
                             <p className='font-medium'>{module.name}</p>
@@ -398,12 +402,12 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                         </div>
                       </div>
 
-                      <div className='flex gap-3'>
-                        <Button className='gap-2'>
+                      <div className='flex flex-col sm:flex-row gap-2 md:gap-3'>
+                        <Button className='gap-2 w-full sm:w-auto'>
                           <Download className='h-4 w-4' />
                           Download
                         </Button>
-                        <Button variant='outline' className='gap-2'>
+                        <Button variant='outline' className='gap-2 w-full sm:w-auto'>
                           <ExternalLink className='h-4 w-4' />
                           View Fullscreen
                         </Button>
@@ -413,9 +417,9 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
 
                   {/* Template Preview */}
                   {moduleType === 'template' && (
-                    <div className='space-y-8'>
-                      <div className='bg-white rounded-lg border shadow-sm p-6'>
-                        <div className='space-y-6'>
+                    <div className='space-y-6 md:space-y-8'>
+                      <div className='bg-white rounded-lg border shadow-sm p-4 md:p-6'>
+                        <div className='space-y-4 md:space-y-6'>
                           <div>
                             <Label className='text-xs text-muted-foreground flex items-center gap-1 mb-1'>
                               Template Name{' '}
@@ -443,17 +447,17 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                             </div>
                           </div>
                           <div>
-                            <div className='mt-3 space-y-4'>
+                            <div className='mt-3 space-y-3 md:space-y-4'>
                               {templateDetails.map((field) => {
                                 return (
                                   <div
                                     key={field.templateFieldId}
-                                    className='bg-gray-50 p-4 rounded-lg border'
+                                    className='bg-gray-50 p-3 md:p-4 rounded-lg border'
                                   >
-                                    <div className='flex items-center justify-between'>
+                                    <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between'>
                                       <div>
                                         <p className='font-medium'>{field.fieldName}</p>
-                                        <div className='flex items-center gap-2 mt-1'>
+                                        <div className='flex flex-wrap items-center gap-1 md:gap-2 mt-1'>
                                           <Badge variant='outline' className='text-xs'>
                                             {field.fieldType}
                                           </Badge>
@@ -557,9 +561,9 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
               )}
 
               {activeTab === 'history' && (
-                <div className='space-y-4'>
+                <div className='space-y-3 md:space-y-4'>
                   <h3 className='font-medium'>Version History</h3>
-                  <div className='space-y-3'>
+                  <div className='space-y-2 md:space-y-3'>
                     {Array.from({ length: totalVersions }, (_, i) => {
                       return totalVersions - i - 1;
                     }).map((i) => {
@@ -571,13 +575,13 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                         <div
                           key={i}
                           className={cn(
-                            'flex items-center justify-between p-4 rounded-lg border',
+                            'flex flex-col sm:flex-row sm:items-center justify-between p-3 md:p-4 rounded-lg border',
                             isSelectedVersion
                               ? 'bg-white border-primary'
                               : 'bg-white hover:border-muted-foreground/20',
                           )}
                         >
-                          <div className='space-y-1'>
+                          <div className='space-y-1 mb-2 sm:mb-0'>
                             <div className='flex items-center gap-2'>
                               <span className='font-medium'>Version {i + 1}</span>
                               {isCurrentVersion && (
@@ -606,6 +610,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                                 setActiveTab('preview');
                               }}
                               disabled={isSelectedVersion}
+                              className='w-full sm:w-auto'
                             >
                               {isSelectedVersion ? 'Viewing' : 'View'}
                             </Button>
@@ -618,11 +623,11 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
               )}
 
               {activeTab === 'comments' && (
-                <div className='space-y-4'>
+                <div className='space-y-3 md:space-y-4'>
                   <h3 className='font-medium'>Comments & Feedback</h3>
 
                   {approvalStatus === 'rejected' ? (
-                    <div className='bg-white rounded-lg border shadow-sm p-4 space-y-3'>
+                    <div className='bg-white rounded-lg border shadow-sm p-3 md:p-4 space-y-3'>
                       <div className='flex items-center gap-2'>
                         <Avatar className='h-8 w-8'>
                           <AvatarImage src='/placeholder.svg' alt='Client' />
@@ -648,7 +653,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                       </div>
                     </div>
                   ) : (
-                    <div className='bg-white rounded-lg border shadow-sm p-4 flex items-center justify-center h-[200px]'>
+                    <div className='bg-white rounded-lg border shadow-sm p-4 flex items-center justify-center h-[150px] md:h-[200px]'>
                       <div className='text-center text-muted-foreground'>
                         <p>No comments yet</p>
                         <p className='text-sm'>
