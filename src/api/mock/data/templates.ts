@@ -5,7 +5,7 @@ import { Template } from '../../models';
  */
 export const mockTemplates: Template[] = [
   {
-    id: 'template-1',
+    _id: 'template-1',
     name: 'Banner Design',
     description: 'Template for creating customized banners',
     category: 'signage',
@@ -67,7 +67,7 @@ export const mockTemplates: Template[] = [
     ],
   },
   {
-    id: 'template-2',
+    _id: 'template-2',
     name: 'Business Card',
     description: 'Template for business cards',
     category: 'print',
@@ -133,7 +133,7 @@ export const mockTemplates: Template[] = [
     ],
   },
   {
-    id: 'template-3',
+    _id: 'template-3',
     name: 'Brochure',
     description: 'Template for tri-fold brochures',
     category: 'print',
