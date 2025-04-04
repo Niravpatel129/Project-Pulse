@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useModuleDialog } from '@/hooks/useModuleDialog';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -34,6 +35,7 @@ import {
   Edit,
   ExternalLink,
   FileText,
+  HelpCircle,
   RefreshCw,
   Send,
   Trash,
@@ -431,19 +433,35 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                       <div className='bg-white rounded-lg border shadow-sm p-6'>
                         <div className='space-y-6'>
                           <div>
-                            <Label className='text-xs text-muted-foreground'>Template Name</Label>
-                            <p className='font-medium mt-1'>
-                              {module.content?.templateId?.name || 'Untitled Template'}
-                            </p>
-                          </div>
-                          {module.content?.templateId?.description && (
-                            <div>
-                              <Label className='text-xs text-muted-foreground'>Description</Label>
-                              <p className='mt-1'>{module.content.templateId.description}</p>
+                            <Label className='text-xs text-muted-foreground flex items-center gap-1 mb-1'>
+                              Template Name{' '}
+                              {module.content?.templateId?.description && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant='ghost'
+                                      className='h-2 w-2 p-0 ml-1 inline-flex items-center justify-center'
+                                    >
+                                      <HelpCircle className='h-4 w-4 text-muted-foreground' />
+                                      <span className='sr-only'>Template description</span>
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {module.content.templateId.description}
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
+                            </Label>
+                            <div className='flex items-center mt-1'>
+                              <p className='font-medium'>
+                                {module.content?.templateId?.name || 'Untitled Template'}
+                              </p>
                             </div>
-                          )}
+                          </div>
                           <div>
-                            <Label className='text-xs text-muted-foreground'>Form Responses</Label>
+                            <Label className='text-xs text-muted-foreground'>
+                              Data - {templateDetails.length} fields
+                            </Label>
                             <div className='mt-3 space-y-4'>
                               {templateDetails.map((field, index) => {
                                 return (
