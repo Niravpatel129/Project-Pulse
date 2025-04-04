@@ -83,6 +83,23 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
     },
   });
 
+  // Restore version mutation
+  const restoreVersionMutation = useMutation({
+    mutationFn: async (versionNumber: number) => {
+      const { data } = await newRequest.patch(`/project-modules/${moduleId}/restore-version`, {
+        versionNumber,
+      });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['module', moduleId] });
+      toast.success('Version restored successfully');
+    },
+    onError: () => {
+      toast.error('Failed to restore version');
+    },
+  });
+
   // Helper functions
   const getApprovalStatusColor = (status: string) => {
     switch (status) {
@@ -145,6 +162,7 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
     requestApprovalMutation,
     deleteModuleMutation,
     replaceFileMutation,
+    restoreVersionMutation,
     getApprovalStatusColor,
     getApprovalStatusText,
     getModuleTypeLabel,

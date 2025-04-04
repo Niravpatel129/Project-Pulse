@@ -37,6 +37,7 @@ import {
   RefreshCw,
   Send,
   Trash,
+  Undo,
   Upload,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -63,6 +64,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
     requestApprovalMutation,
     deleteModuleMutation,
     replaceFileMutation,
+    restoreVersionMutation,
     getApprovalStatusColor,
     getApprovalStatusText,
     getModuleTypeLabel,
@@ -75,13 +77,26 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
     onOpenChange(false);
   };
 
+  const handleViewVersion = (versionNumber: number) => {
+    setSelectedVersion(versionNumber);
+    setActiveTab('preview');
+  };
+
   if (!module || isLoading) return null;
 
   const totalVersions = module.versions?.length || 1;
   const currentVersion = module.currentVersion || 1;
   const moduleType = module.moduleType || 'file';
   const approvalStatus = module.approvalStatus || 'not_requested';
-  const fileDetails = module.content?.fileId
+  const selectedVersionData = module.versions?.[selectedVersion - 1];
+  const fileDetails = selectedVersionData?.contentSnapshot?.fileId
+    ? {
+        size: selectedVersionData.contentSnapshot.fileId.size,
+        type: selectedVersionData.contentSnapshot.fileId.contentType,
+        url: selectedVersionData.contentSnapshot.fileId.downloadURL,
+        previewUrl: selectedVersionData.contentSnapshot.fileId.downloadURL,
+      }
+    : module.content?.fileId
     ? {
         size: module.content.fileId.size,
         type: module.content.fileId.contentType,
@@ -94,12 +109,13 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
         url: '',
         previewUrl: '/placeholder.svg',
       };
-  const templateDetails = module.templateDetails || { sections: [] };
+  const templateDetails = selectedVersionData?.contentSnapshot?.fields ||
+    module.templateDetails || { sections: [] };
 
   return (
     <>
       <Dialog open={!!module} onOpenChange={onOpenChange}>
-        <DialogContent className='max-w-[1000px] p-0 h-[85vh] max-h-[900px] overflow-hidden flex'>
+        <DialogContent className='max-w-[1000px] p-0 h-[85vh] max-h-[900px] overflow-hidden flex gap-0'>
           <DialogTitle className='sr-only'>{module.name}</DialogTitle>
           {/* Left Panel - Module Info & Actions */}
           <div className='w-[35%] border-r p-6 flex flex-col h-full overflow-y-auto'>
@@ -287,6 +303,41 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
 
           {/* Right Panel - Module Content Preview */}
           <div className='w-[65%] h-full flex flex-col'>
+            {/* Version Indicator Bar */}
+            {selectedVersion !== currentVersion && (
+              <div className='bg-yellow-50 border-b border-yellow-200 p-3 flex items-center justify-between'>
+                <div className='flex items-center gap-2'>
+                  <span className='text-sm font-medium text-yellow-800'>
+                    Viewing Version {selectedVersion}
+                  </span>
+                  <Badge variant='outline' className='bg-yellow-100 text-yellow-800'>
+                    Historical
+                  </Badge>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    className=''
+                    onClick={() => {
+                      handleViewVersion(currentVersion);
+                    }}
+                  >
+                    <Undo className='h-3 w-3' />
+                  </Button>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    onClick={() => {
+                      restoreVersionMutation.mutate(selectedVersion);
+                    }}
+                  >
+                    Restore this version
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Tabs */}
             <div className='border-b'>
               <Tabs
@@ -383,72 +434,68 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                           <div>
                             <Label className='text-xs text-muted-foreground'>Form Responses</Label>
                             <div className='mt-3 space-y-4'>
-                              {module.versions?.[currentVersion - 1]?.contentSnapshot?.fields?.map(
-                                (field, index) => {
-                                  return (
-                                    <div
-                                      key={field.templateFieldId}
-                                      className='bg-gray-50 p-4 rounded-lg border'
-                                    >
-                                      <div className='flex items-center justify-between'>
-                                        <div>
-                                          <p className='font-medium'>{field.fieldName}</p>
-                                          <div className='flex items-center gap-2 mt-1'>
-                                            <Badge variant='outline' className='text-xs'>
-                                              {field.fieldType}
+                              {templateDetails.map((field, index) => {
+                                return (
+                                  <div
+                                    key={field.templateFieldId}
+                                    className='bg-gray-50 p-4 rounded-lg border'
+                                  >
+                                    <div className='flex items-center justify-between'>
+                                      <div>
+                                        <p className='font-medium'>{field.fieldName}</p>
+                                        <div className='flex items-center gap-2 mt-1'>
+                                          <Badge variant='outline' className='text-xs'>
+                                            {field.fieldType}
+                                          </Badge>
+                                          {field.isRequired && (
+                                            <Badge
+                                              variant='outline'
+                                              className='text-xs bg-red-50 text-red-700'
+                                            >
+                                              Required
                                             </Badge>
-                                            {field.isRequired && (
-                                              <Badge
-                                                variant='outline'
-                                                className='text-xs bg-red-50 text-red-700'
-                                              >
-                                                Required
-                                              </Badge>
-                                            )}
-                                            {field.multiple && (
-                                              <Badge
-                                                variant='outline'
-                                                className='text-xs bg-blue-50 text-blue-700'
-                                              >
-                                                Multiple
-                                              </Badge>
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <div className='mt-2'>
-                                        <Label className='text-xs text-muted-foreground'>
-                                          Response
-                                        </Label>
-                                        <div className='mt-1'>
-                                          {field.fieldType === 'relation' ? (
-                                            <div className='bg-white p-2 rounded border'>
-                                              {Object.entries(
-                                                field.fieldValue?.displayValues || {},
-                                              ).map(([key, value]) => {
-                                                return (
-                                                  <div key={key} className='flex gap-2'>
-                                                    <span className='text-xs font-medium'>
-                                                      {key}:
-                                                    </span>
-                                                    <span className='text-xs'>
-                                                      {value as string}
-                                                    </span>
-                                                  </div>
-                                                );
-                                              })}
-                                            </div>
-                                          ) : (
-                                            <div className='bg-white p-2 rounded border'>
-                                              <span className='text-sm'>{field.fieldValue}</span>
-                                            </div>
+                                          )}
+                                          {field.multiple && (
+                                            <Badge
+                                              variant='outline'
+                                              className='text-xs bg-blue-50 text-blue-700'
+                                            >
+                                              Multiple
+                                            </Badge>
                                           )}
                                         </div>
                                       </div>
                                     </div>
-                                  );
-                                },
-                              )}
+                                    <div className='mt-2'>
+                                      <Label className='text-xs text-muted-foreground'>
+                                        Response
+                                      </Label>
+                                      <div className='mt-1'>
+                                        {field.fieldType === 'relation' ? (
+                                          <div className='bg-white p-2 rounded border'>
+                                            {Object.entries(
+                                              field.fieldValue?.displayValues || {},
+                                            ).map(([key, value]) => {
+                                              return (
+                                                <div key={key} className='flex gap-2'>
+                                                  <span className='text-xs font-medium'>
+                                                    {key}:
+                                                  </span>
+                                                  <span className='text-xs'>{value as string}</span>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        ) : (
+                                          <div className='bg-white p-2 rounded border'>
+                                            <span className='text-sm'>{field.fieldValue}</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         </div>
@@ -463,12 +510,16 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                   <h3 className='font-medium'>Version History</h3>
                   <div className='space-y-3'>
                     {Array.from({ length: totalVersions }, (_, i) => {
+                      const version = module.versions?.[i];
+                      const isCurrentVersion = currentVersion === i + 1;
+                      const isSelectedVersion = selectedVersion === i + 1;
+
                       return (
                         <div
                           key={i}
                           className={cn(
                             'flex items-center justify-between p-4 rounded-lg border',
-                            selectedVersion === i + 1
+                            isSelectedVersion
                               ? 'bg-white border-primary'
                               : 'bg-white hover:border-muted-foreground/20',
                           )}
@@ -476,7 +527,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                           <div className='space-y-1'>
                             <div className='flex items-center gap-2'>
                               <span className='font-medium'>Version {i + 1}</span>
-                              {currentVersion === i + 1 && (
+                              {isCurrentVersion && (
                                 <Badge
                                   variant='outline'
                                   className='bg-green-100 text-green-800 hover:bg-green-100'
@@ -487,27 +538,22 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                             </div>
                             <div className='text-sm text-muted-foreground'>
                               Updated on{' '}
-                              {module.versions?.[i]?.updatedAt
-                                ? new Date(module.versions[i].updatedAt).toLocaleDateString()
+                              {version?.updatedAt
+                                ? new Date(version.updatedAt).toLocaleDateString()
                                 : 'Unknown date'}{' '}
-                              by {module.versions?.[i]?.updatedBy?.name || 'Unknown User'}
+                              by {version?.updatedBy?.name || 'Unknown User'}
                             </div>
                           </div>
                           <div className='flex gap-2'>
                             <Button
                               size='sm'
-                              variant={selectedVersion === i + 1 ? 'default' : 'outline'}
+                              variant={isSelectedVersion ? 'default' : 'outline'}
                               onClick={() => {
-                                setSelectedVersion(i + 1);
+                                handleViewVersion(i + 1);
                               }}
                             >
                               View
                             </Button>
-                            {currentVersion !== i + 1 && selectedVersion === i + 1 && (
-                              <Button size='sm' variant='outline'>
-                                Restore
-                              </Button>
-                            )}
                           </div>
                         </div>
                       );
