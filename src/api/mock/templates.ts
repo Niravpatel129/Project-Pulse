@@ -36,11 +36,12 @@ export const handleTemplatesRequest = (
           let filteredTemplates = [...mockTemplates];
           if (search) {
             const searchLower = search.toLowerCase();
-            filteredTemplates = filteredTemplates.filter(
-              (template) =>
-                {return template.name.toLowerCase().includes(searchLower) ||
-                template.description.toLowerCase().includes(searchLower)},
-            );
+            filteredTemplates = filteredTemplates.filter((template) => {
+              return (
+                template.name.toLowerCase().includes(searchLower) ||
+                template.description.toLowerCase().includes(searchLower)
+              );
+            });
           }
 
           // Sort templates
@@ -74,7 +75,9 @@ export const handleTemplatesRequest = (
 
         // Get template by ID
         const templateId = url.split('/').pop() as string;
-        const template = mockTemplates.find((t) => {return t.id === templateId});
+        const template = mockTemplates.find((t) => {
+          return t._id === templateId;
+        });
 
         if (template) {
           resolve(template);
@@ -99,7 +102,7 @@ export const handleTemplatesRequest = (
         }
 
         const newTemplate: Template = {
-          id: `template-${Date.now()}`,
+          _id: `template-${Date.now()}`,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           createdBy: 'system', // In a real implementation, this would come from the authenticated user
@@ -119,7 +122,9 @@ export const handleTemplatesRequest = (
       // PUT request - Update a template
       if (method === 'PUT') {
         const templateId = url.split('/').pop() as string;
-        const templateIndex = mockTemplates.findIndex((t) => {return t.id === templateId});
+        const templateIndex = mockTemplates.findIndex((t) => {
+          return t._id === templateId;
+        });
 
         if (templateIndex !== -1) {
           // In a real implementation, we would update the database
@@ -127,7 +132,7 @@ export const handleTemplatesRequest = (
           const updatedTemplate: Template = {
             ...mockTemplates[templateIndex],
             ...data,
-            id: templateId, // Ensure ID doesn't change
+            _id: templateId, // Ensure ID doesn't change
             updatedAt: new Date().toISOString(),
           };
 
@@ -145,7 +150,9 @@ export const handleTemplatesRequest = (
       // DELETE request - Delete a template
       if (method === 'DELETE') {
         const templateId = url.split('/').pop() as string;
-        const templateIndex = mockTemplates.findIndex((t) => {return t.id === templateId});
+        const templateIndex = mockTemplates.findIndex((t) => {
+          return t._id === templateId;
+        });
 
         if (templateIndex !== -1) {
           // In a real implementation, we would delete from the database
