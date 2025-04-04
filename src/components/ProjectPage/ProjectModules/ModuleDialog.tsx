@@ -49,6 +49,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditSheet, setShowEditSheet] = useState(false);
   const [showFileUploadManager, setShowFileUploadManager] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const {
     module,
     isLoading,
@@ -82,6 +83,10 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
   const handleViewVersion = (versionNumber: number) => {
     setSelectedVersion(versionNumber);
     setActiveTab('preview');
+  };
+
+  const handleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
   };
 
   if (!module || isLoading) return null;
@@ -127,7 +132,12 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
           }
         }}
       >
-        <DialogContent className='max-w-[1000px] p-0 h-[85vh] max-h-[900px] overflow-hidden flex flex-col md:flex-row gap-0'>
+        <DialogContent
+          className={cn(
+            'p-0 h-[85vh] max-h-[900px] overflow-hidden flex flex-col md:flex-row gap-0',
+            isFullscreen ? 'max-w-[100vw] h-[100vh] max-h-[100vh]' : 'max-w-[1000px]',
+          )}
+        >
           <DialogTitle className='sr-only'>{module.name}</DialogTitle>
           {/* Left Panel - Module Info & Actions */}
           <div className='w-full md:w-[35%] border-b md:border-b-0 md:border-r p-4 md:p-6 flex flex-col h-auto md:h-full overflow-y-auto'>
@@ -407,9 +417,13 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                           <Download className='h-4 w-4' />
                           Download
                         </Button>
-                        <Button variant='outline' className='gap-2 w-full sm:w-auto'>
+                        <Button
+                          variant='outline'
+                          className='gap-2 w-full sm:w-auto'
+                          onClick={handleFullscreen}
+                        >
                           <ExternalLink className='h-4 w-4' />
-                          View Fullscreen
+                          {isFullscreen ? 'Exit Fullscreen' : 'View Fullscreen'}
                         </Button>
                       </div>
                     </div>
