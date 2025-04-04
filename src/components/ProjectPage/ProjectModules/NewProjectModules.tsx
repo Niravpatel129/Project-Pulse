@@ -26,6 +26,8 @@ import { toast } from 'sonner';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 import NewModuleFromTemplateSheet from '../FileComponents/NewModuleFromTemplateSheet';
 import NewTemplateSheet from '../FileComponents/NewTemplateSheet';
+import { Module } from '../ModuleComponents/types';
+import ModuleDialog from './ModuleDialog';
 
 export default function NewProjectModules() {
   const {
@@ -43,6 +45,7 @@ export default function NewProjectModules() {
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [renamingModule, setRenamingModule] = useState<{ id: string; name: string } | null>(null);
   const [newModuleName, setNewModuleName] = useState('');
+  const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const queryClient = useQueryClient();
 
   const handleSaveTemplate = (
@@ -172,7 +175,12 @@ export default function NewProjectModules() {
       item.content.fileId.contentType.startsWith('image/');
 
     return (
-      <div className='border rounded-xl w-full aspect-square max-w-[220px] hover:bg-muted/50 cursor-pointer flex flex-col relative'>
+      <div
+        className='border rounded-xl w-full aspect-square max-w-[220px] hover:bg-muted/50 cursor-pointer flex flex-col relative'
+        onClick={() => {
+          return setSelectedModule(item);
+        }}
+      >
         {/* Top Part */}
         <div className='flex items-center justify-center flex-grow'>
           {isImage ? (
@@ -359,6 +367,13 @@ export default function NewProjectModules() {
           template={selectedTemplate}
         />
       )}
+
+      <ModuleDialog
+        module={selectedModule}
+        onOpenChange={(open) => {
+          return !open && setSelectedModule(null);
+        }}
+      />
     </div>
   );
 }

@@ -72,6 +72,33 @@ export interface Module {
   assignedTo: string[];
   isTemplate: boolean;
   elements: Element[];
+  type: 'file' | 'template';
   createdAt: string;
   updatedAt: string;
+  version: {
+    current: number;
+    total: number;
+  };
+  approvalStatus: 'not_requested' | 'pending' | 'approved' | 'rejected';
+  approvedBy: {
+    _id: string;
+    name: string;
+    email: string;
+    time: string;
+  };
+  fileDetails: {
+    size: number;
+    type: string;
+    url: string;
+    previewUrl?: string;
+  };
+  templateDetails: {
+    sections: {
+      title: string;
+      questions: {
+        question: string;
+        answer: string;
+      }[];
+    }[];
+  };
 }
