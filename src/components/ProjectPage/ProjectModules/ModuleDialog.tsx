@@ -75,10 +75,14 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
     getModuleTypeColor,
   } = useModuleDialog({ moduleId });
 
-  const handleDelete = () => {
-    deleteModuleMutation.mutate();
-    setShowDeleteDialog(false);
-    onOpenChange(false);
+  const handleDelete = async () => {
+    try {
+      await deleteModuleMutation.mutateAsync();
+      setShowDeleteDialog(false);
+      onOpenChange(false);
+    } catch (error) {
+      // Error is already handled by the mutation's onError callback
+    }
   };
 
   const handleViewVersion = (versionNumber: number) => {
@@ -459,9 +463,6 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                             </div>
                           </div>
                           <div>
-                            <Label className='text-xs text-muted-foreground'>
-                              Data - {templateDetails.length} fields
-                            </Label>
                             <div className='mt-3 space-y-4'>
                               {templateDetails.map((field) => {
                                 return (

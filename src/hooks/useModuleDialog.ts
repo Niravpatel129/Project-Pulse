@@ -62,6 +62,7 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
   // Delete module mutation
   const deleteModuleMutation = useMutation({
     mutationFn: async () => {
+      if (!moduleId) return toast.error('Module ID is required');
       const { data } = await newRequest.delete(`/project-modules/${moduleId}`);
       return data;
     },
