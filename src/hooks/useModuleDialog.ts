@@ -1,6 +1,6 @@
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface ModuleDialogHookProps {
@@ -22,6 +22,12 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
     },
     enabled: !!moduleId,
   });
+
+  useEffect(() => {
+    if (module) {
+      setSelectedVersion(module.currentVersion);
+    }
+  }, [module]);
 
   // Update module status mutation
   const updateStatusMutation = useMutation({
