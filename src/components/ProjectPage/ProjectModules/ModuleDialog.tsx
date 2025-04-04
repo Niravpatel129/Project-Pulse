@@ -245,7 +245,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                     }}
                   >
                     <Edit className='h-4 w-4' />
-                    Edit Form Response
+                    Edit
                   </Button>
                 )}
 
