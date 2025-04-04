@@ -13,12 +13,16 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useProjectModules } from '@/hooks/useProjectModules';
+import { newRequest } from '@/utils/newRequest';
+import { useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
-import { FileText, PaintRoller, Plus } from 'lucide-react';
+import { FileText, MoreVertical, PaintRoller, Pencil, Plus, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import { FcDocument } from 'react-icons/fc';
+import { toast } from 'sonner';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 import NewModuleFromTemplateSheet from '../FileComponents/NewModuleFromTemplateSheet';
 import NewTemplateSheet from '../FileComponents/NewTemplateSheet';
@@ -31,11 +35,15 @@ export default function NewProjectModules() {
     handleAddFileToProject,
     modules,
     addModule,
+    isLoading,
   } = useProjectModules();
 
   const [isNewTemplateSheetOpen, setIsNewTemplateSheetOpen] = useState(false);
   const [isNewModuleFromTemplateSheetOpen, setIsNewModuleFromTemplateSheetOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [renamingModule, setRenamingModule] = useState<{ id: string; name: string } | null>(null);
+  const [newModuleName, setNewModuleName] = useState('');
+  const queryClient = useQueryClient();
 
   const handleSaveTemplate = (
     template: Omit<Template, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>,
@@ -44,13 +52,49 @@ export default function NewProjectModules() {
     console.log('Saving template:', template);
   };
 
-  const handleCreateModuleFromTemplate = (moduleData: any) => {
-    if (selectedTemplate) {
-      addModule({
-        content: moduleData,
-        type: 'template',
+  const handleDeleteModule = async (moduleId: string) => {
+    // Optimistically update the UI
+    const previousModules = queryClient.getQueryData(['projectModules']);
+    queryClient.setQueryData(['projectModules'], (old: any) => {
+      return old.filter((module: any) => {
+        return module._id !== moduleId;
       });
-      setIsNewModuleFromTemplateSheetOpen(false);
+    });
+
+    try {
+      await newRequest.delete(`/project-modules/${moduleId}`);
+      toast.success('Module deleted successfully');
+    } catch (error) {
+      // Revert on error
+      queryClient.setQueryData(['projectModules'], previousModules);
+      console.error('Failed to delete module:', error);
+      toast.error('Failed to delete module');
+    }
+  };
+
+  const handleRenameModule = async (moduleId: string, newName: string) => {
+    // Optimistically update the UI
+    const previousModules = queryClient.getQueryData(['projectModules']);
+    queryClient.setQueryData(['projectModules'], (old: any) => {
+      return old.map((module: any) => {
+        if (module._id === moduleId) {
+          return { ...module, name: newName };
+        }
+        return module;
+      });
+    });
+
+    try {
+      await newRequest.patch(`/project-modules/${moduleId}`, {
+        name: newName,
+      });
+      toast.success('Module renamed successfully');
+      setRenamingModule(null);
+    } catch (error) {
+      // Revert on error
+      queryClient.setQueryData(['projectModules'], previousModules);
+      console.error('Failed to rename module:', error);
+      toast.error('Failed to rename module');
     }
   };
 
@@ -128,7 +172,7 @@ export default function NewProjectModules() {
       item.content.fileId.contentType.startsWith('image/');
 
     return (
-      <div className='border rounded-xl w-full aspect-square max-w-[220px] hover:bg-muted/50 cursor-pointer flex flex-col'>
+      <div className='border rounded-xl w-full aspect-square max-w-[220px] hover:bg-muted/50 cursor-pointer flex flex-col relative'>
         {/* Top Part */}
         <div className='flex items-center justify-center flex-grow'>
           {isImage ? (
@@ -148,10 +192,91 @@ export default function NewProjectModules() {
         {/* Bottom Part */}
         <div className='border-t'>
           <div className='py-3 px-3 flex flex-col gap-1'>
-            <p className='text-sm font-medium truncate'>{item.name}</p>
+            {renamingModule?.id === item._id ? (
+              <input
+                ref={(input) => {
+                  return input?.focus();
+                }}
+                type='text'
+                value={newModuleName}
+                onChange={(e) => {
+                  return setNewModuleName(e.target.value);
+                }}
+                onBlur={() => {
+                  return handleRenameModule(item._id, newModuleName);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleRenameModule(item._id, newModuleName);
+                  } else if (e.key === 'Escape') {
+                    setRenamingModule(null);
+                  }
+                }}
+                className='text-sm font-medium bg-transparent border-none focus:outline-none focus:ring-0 p-0'
+              />
+            ) : (
+              <p className='text-sm font-medium truncate'>{item.name}</p>
+            )}
             <p className='text-xs text-gray-500 truncate'>
               {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
             </p>
+          </div>
+        </div>
+        {/* Options Menu */}
+        <div className='absolute top-2 right-2'>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='h-8 w-8 hover:bg-muted/50'
+                onClick={(e) => {
+                  return e.stopPropagation();
+                }}
+              >
+                <MoreVertical className='h-4 w-4' />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end' className='w-48'>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setRenamingModule({ id: item._id, name: item.name });
+                  setNewModuleName(item.name);
+                }}
+              >
+                <Pencil className='mr-2 h-4 w-4' />
+                <span>Rename</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteModule(item._id);
+                }}
+                className='text-red-600 focus:text-red-600 focus:bg-red-50'
+              >
+                <Trash2 className='mr-2 h-4 w-4' />
+                <span>Delete</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+    );
+  };
+
+  const renderModuleSkeleton = () => {
+    return (
+      <div className='border rounded-xl w-full aspect-square max-w-[220px] flex flex-col'>
+        {/* Top Part Skeleton */}
+        <div className='flex items-center justify-center flex-grow p-4'>
+          <Skeleton className='h-[60px] w-[60px] rounded-md' />
+        </div>
+        {/* Bottom Part Skeleton */}
+        <div className='border-t'>
+          <div className='py-3 px-3 flex flex-col gap-2'>
+            <Skeleton className='h-4 w-3/4' />
+            <Skeleton className='h-3 w-1/2' />
           </div>
         </div>
       </div>
@@ -175,17 +300,31 @@ export default function NewProjectModules() {
         </DropdownMenu>
       </div>
       <div className=''>
-        <div className='grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-4 auto-rows-fr'>
-          {modules.map((item, index) => {
-            return (
-              <div key={index} className='flex justify-center'>
-                {renderProjectItem(item)}
-              </div>
-            );
-          })}
-        </div>
+        {isLoading ? (
+          <div className='grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-4 auto-rows-fr'>
+            {Array(5)
+              .fill(0)
+              .map((_, index) => {
+                return (
+                  <div key={index} className='flex justify-center'>
+                    {renderModuleSkeleton()}
+                  </div>
+                );
+              })}
+          </div>
+        ) : (
+          <div className='grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-4 auto-rows-fr'>
+            {modules.map((item, index) => {
+              return (
+                <div key={index} className='flex justify-center'>
+                  {renderProjectItem(item)}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
-        {!modules.length && (
+        {!isLoading && !modules.length && (
           <div className='flex items-center justify-center h-full'>
             <p className='text-sm text-muted-foreground'>No modules found</p>
           </div>
