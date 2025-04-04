@@ -550,9 +550,11 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                               variant={isSelectedVersion ? 'default' : 'outline'}
                               onClick={() => {
                                 handleViewVersion(i + 1);
+                                setActiveTab('preview');
                               }}
+                              disabled={isSelectedVersion}
                             >
-                              View
+                              {isSelectedVersion ? 'Viewing' : 'View'}
                             </Button>
                           </div>
                         </div>
