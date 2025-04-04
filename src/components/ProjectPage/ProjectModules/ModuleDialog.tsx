@@ -521,6 +521,8 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                   <h3 className='font-medium'>Version History</h3>
                   <div className='space-y-3'>
                     {Array.from({ length: totalVersions }, (_, i) => {
+                      return totalVersions - i - 1;
+                    }).map((i) => {
                       const version = module.versions?.[i];
                       const isCurrentVersion = currentVersion === i + 1;
                       const isSelectedVersion = selectedVersion === i + 1;
