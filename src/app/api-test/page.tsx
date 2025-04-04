@@ -101,12 +101,15 @@ export default function ApiTestPage() {
     });
 
     if (newFile) {
-      setProjectFiles((prev) => {return [newFile, ...prev]});
+      setProjectFiles((prev) => {
+        return [newFile, ...prev];
+      });
     }
   };
 
   const handleCreateTemplate = async () => {
     const newTemplate = await services.templates.create({
+      _id: `template-${Date.now()}`,
       name: 'New Test Template',
       description: 'Created as a test from the API Test page',
       fields: [
@@ -126,7 +129,9 @@ export default function ApiTestPage() {
     });
 
     if (newTemplate) {
-      setTemplates((prev) => {return [newTemplate, ...prev]});
+      setTemplates((prev) => {
+        return [newTemplate, ...prev];
+      });
     }
   };
 
@@ -142,7 +147,9 @@ export default function ApiTestPage() {
     });
 
     if (newItem) {
-      setInventoryItems((prev) => {return [newItem, ...prev]});
+      setInventoryItems((prev) => {
+        return [newItem, ...prev];
+      });
     }
   };
 
@@ -172,7 +179,9 @@ export default function ApiTestPage() {
     });
 
     if (newInvoice) {
-      setInvoices((prev) => {return [newInvoice, ...prev]});
+      setInvoices((prev) => {
+        return [newInvoice, ...prev];
+      });
     }
   };
 
@@ -213,36 +222,38 @@ export default function ApiTestPage() {
             </Card>
           ) : (
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-              {projectFiles.map((file) => {return (
-                <Card key={file.id} className='overflow-hidden'>
-                  <CardHeader className='pb-2'>
-                    <div className='flex justify-between items-start'>
-                      <CardTitle className='text-lg'>{file.name}</CardTitle>
-                      <Badge className={getStatusColor(file.status)}>{file.status}</Badge>
-                    </div>
-                    <CardDescription>{file.description || 'No description'}</CardDescription>
-                  </CardHeader>
-                  <CardContent className='pb-2'>
-                    <div className='space-y-1 text-sm'>
-                      <div>
-                        <span className='font-medium'>Type:</span> {file.type}
+              {projectFiles.map((file) => {
+                return (
+                  <Card key={file.id} className='overflow-hidden'>
+                    <CardHeader className='pb-2'>
+                      <div className='flex justify-between items-start'>
+                        <CardTitle className='text-lg'>{file.name}</CardTitle>
+                        <Badge className={getStatusColor(file.status)}>{file.status}</Badge>
                       </div>
-                      <div>
-                        <span className='font-medium'>Client:</span> {file.clientName}
-                      </div>
-                      <div>
-                        <span className='font-medium'>Created:</span> {formatDate(file.createdAt)}
-                      </div>
-                      {file.dueDate && (
+                      <CardDescription>{file.description || 'No description'}</CardDescription>
+                    </CardHeader>
+                    <CardContent className='pb-2'>
+                      <div className='space-y-1 text-sm'>
                         <div>
-                          <span className='font-medium'>Due:</span> {formatDate(file.dueDate)}
+                          <span className='font-medium'>Type:</span> {file.type}
                         </div>
-                      )}
-                    </div>
-                  </CardContent>
-                  <CardFooter className='pt-0 text-xs text-gray-500'>ID: {file.id}</CardFooter>
-                </Card>
-              )})}
+                        <div>
+                          <span className='font-medium'>Client:</span> {file.clientName}
+                        </div>
+                        <div>
+                          <span className='font-medium'>Created:</span> {formatDate(file.createdAt)}
+                        </div>
+                        {file.dueDate && (
+                          <div>
+                            <span className='font-medium'>Due:</span> {formatDate(file.dueDate)}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                    <CardFooter className='pt-0 text-xs text-gray-500'>ID: {file.id}</CardFooter>
+                  </Card>
+                );
+              })}
               {projectFiles.length === 0 && (
                 <Card className='col-span-full'>
                   <CardContent className='pt-6 text-center text-gray-500'>
@@ -275,38 +286,44 @@ export default function ApiTestPage() {
             </Card>
           ) : (
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-              {templates.map((template) => {return (
-                <Card key={template.id} className='overflow-hidden'>
-                  <CardHeader className='pb-2'>
-                    <CardTitle className='text-lg'>{template.name}</CardTitle>
-                    <CardDescription>{template.description || 'No description'}</CardDescription>
-                  </CardHeader>
-                  <CardContent className='pb-2'>
-                    <div className='space-y-1 text-sm'>
-                      <div>
-                        <span className='font-medium'>Fields:</span> {template.fields.length}
+              {templates.map((template) => {
+                return (
+                  <Card key={template._id} className='overflow-hidden'>
+                    <CardHeader className='pb-2'>
+                      <CardTitle className='text-lg'>{template.name}</CardTitle>
+                      <CardDescription>{template.description || 'No description'}</CardDescription>
+                    </CardHeader>
+                    <CardContent className='pb-2'>
+                      <div className='space-y-1 text-sm'>
+                        <div>
+                          <span className='font-medium'>Fields:</span> {template.fields.length}
+                        </div>
+                        <div>
+                          <span className='font-medium'>Created:</span>{' '}
+                          {formatDate(template.createdAt)}
+                        </div>
+                        <div className='flex flex-wrap gap-1 mt-2'>
+                          {template.fields.slice(0, 3).map((field) => {
+                            return (
+                              <Badge key={field.id} variant='outline' className='text-xs'>
+                                {field.name} ({field.type})
+                              </Badge>
+                            );
+                          })}
+                          {template.fields.length > 3 && (
+                            <Badge variant='outline' className='text-xs'>
+                              +{template.fields.length - 3} more
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <span className='font-medium'>Created:</span>{' '}
-                        {formatDate(template.createdAt)}
-                      </div>
-                      <div className='flex flex-wrap gap-1 mt-2'>
-                        {template.fields.slice(0, 3).map((field) => {return (
-                          <Badge key={field.id} variant='outline' className='text-xs'>
-                            {field.name} ({field.type})
-                          </Badge>
-                        )})}
-                        {template.fields.length > 3 && (
-                          <Badge variant='outline' className='text-xs'>
-                            +{template.fields.length - 3} more
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className='pt-0 text-xs text-gray-500'>ID: {template.id}</CardFooter>
-                </Card>
-              )})}
+                    </CardContent>
+                    <CardFooter className='pt-0 text-xs text-gray-500'>
+                      ID: {template._id}
+                    </CardFooter>
+                  </Card>
+                );
+              })}
               {templates.length === 0 && (
                 <Card className='col-span-full'>
                   <CardContent className='pt-6 text-center text-gray-500'>
@@ -339,45 +356,47 @@ export default function ApiTestPage() {
             </Card>
           ) : (
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-              {inventoryItems.map((item) => {return (
-                <Card key={item.id} className='overflow-hidden'>
-                  <CardHeader className='pb-2'>
-                    <div className='flex justify-between items-start'>
-                      <CardTitle className='text-lg'>{item.name}</CardTitle>
-                      <Badge
-                        className={
-                          item.isActive
-                            ? 'bg-green-200 text-green-800'
-                            : 'bg-gray-200 text-gray-800'
-                        }
-                      >
-                        {item.isActive ? 'Active' : 'Inactive'}
-                      </Badge>
-                    </div>
-                    <CardDescription>{item.description || 'No description'}</CardDescription>
-                  </CardHeader>
-                  <CardContent className='pb-2'>
-                    <div className='space-y-1 text-sm'>
-                      <div>
-                        <span className='font-medium'>SKU:</span> {item.sku}
+              {inventoryItems.map((item) => {
+                return (
+                  <Card key={item.id} className='overflow-hidden'>
+                    <CardHeader className='pb-2'>
+                      <div className='flex justify-between items-start'>
+                        <CardTitle className='text-lg'>{item.name}</CardTitle>
+                        <Badge
+                          className={
+                            item.isActive
+                              ? 'bg-green-200 text-green-800'
+                              : 'bg-gray-200 text-gray-800'
+                          }
+                        >
+                          {item.isActive ? 'Active' : 'Inactive'}
+                        </Badge>
                       </div>
-                      <div>
-                        <span className='font-medium'>Price:</span> ${item.price.toFixed(2)}
-                      </div>
-                      <div>
-                        <span className='font-medium'>Stock:</span> {item.stock}{' '}
-                        {item.unit || 'units'}
-                      </div>
-                      {item.cost && (
+                      <CardDescription>{item.description || 'No description'}</CardDescription>
+                    </CardHeader>
+                    <CardContent className='pb-2'>
+                      <div className='space-y-1 text-sm'>
                         <div>
-                          <span className='font-medium'>Cost:</span> ${item.cost.toFixed(2)}
+                          <span className='font-medium'>SKU:</span> {item.sku}
                         </div>
-                      )}
-                    </div>
-                  </CardContent>
-                  <CardFooter className='pt-0 text-xs text-gray-500'>ID: {item.id}</CardFooter>
-                </Card>
-              )})}
+                        <div>
+                          <span className='font-medium'>Price:</span> ${item.price.toFixed(2)}
+                        </div>
+                        <div>
+                          <span className='font-medium'>Stock:</span> {item.stock}{' '}
+                          {item.unit || 'units'}
+                        </div>
+                        {item.cost && (
+                          <div>
+                            <span className='font-medium'>Cost:</span> ${item.cost.toFixed(2)}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                    <CardFooter className='pt-0 text-xs text-gray-500'>ID: {item.id}</CardFooter>
+                  </Card>
+                );
+              })}
               {inventoryItems.length === 0 && (
                 <Card className='col-span-full'>
                   <CardContent className='pt-6 text-center text-gray-500'>
@@ -410,38 +429,40 @@ export default function ApiTestPage() {
             </Card>
           ) : (
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-              {invoices.map((invoice) => {return (
-                <Card key={invoice.id} className='overflow-hidden'>
-                  <CardHeader className='pb-2'>
-                    <div className='flex justify-between items-start'>
-                      <CardTitle className='text-lg'>Invoice #{invoice.invoiceNumber}</CardTitle>
-                      <Badge className={getStatusColor(invoice.status)}>{invoice.status}</Badge>
-                    </div>
-                    <CardDescription>{invoice.clientName}</CardDescription>
-                  </CardHeader>
-                  <CardContent className='pb-2'>
-                    <div className='space-y-1 text-sm'>
-                      <div>
-                        <span className='font-medium'>Total:</span> ${invoice.total.toFixed(2)}
+              {invoices.map((invoice) => {
+                return (
+                  <Card key={invoice.id} className='overflow-hidden'>
+                    <CardHeader className='pb-2'>
+                      <div className='flex justify-between items-start'>
+                        <CardTitle className='text-lg'>Invoice #{invoice.invoiceNumber}</CardTitle>
+                        <Badge className={getStatusColor(invoice.status)}>{invoice.status}</Badge>
                       </div>
-                      <div>
-                        <span className='font-medium'>Issue Date:</span>{' '}
-                        {formatDate(invoice.issueDate)}
-                      </div>
-                      {invoice.dueDate && (
+                      <CardDescription>{invoice.clientName}</CardDescription>
+                    </CardHeader>
+                    <CardContent className='pb-2'>
+                      <div className='space-y-1 text-sm'>
                         <div>
-                          <span className='font-medium'>Due Date:</span>{' '}
-                          {formatDate(invoice.dueDate)}
+                          <span className='font-medium'>Total:</span> ${invoice.total.toFixed(2)}
                         </div>
-                      )}
-                      <div>
-                        <span className='font-medium'>Items:</span> {invoice.items?.length || 0}
+                        <div>
+                          <span className='font-medium'>Issue Date:</span>{' '}
+                          {formatDate(invoice.issueDate)}
+                        </div>
+                        {invoice.dueDate && (
+                          <div>
+                            <span className='font-medium'>Due Date:</span>{' '}
+                            {formatDate(invoice.dueDate)}
+                          </div>
+                        )}
+                        <div>
+                          <span className='font-medium'>Items:</span> {invoice.items?.length || 0}
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className='pt-0 text-xs text-gray-500'>ID: {invoice.id}</CardFooter>
-                </Card>
-              )})}
+                    </CardContent>
+                    <CardFooter className='pt-0 text-xs text-gray-500'>ID: {invoice.id}</CardFooter>
+                  </Card>
+                );
+              })}
               {invoices.length === 0 && (
                 <Card className='col-span-full'>
                   <CardContent className='pt-6 text-center text-gray-500'>
