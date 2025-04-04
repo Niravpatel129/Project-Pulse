@@ -88,29 +88,31 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
 
   const totalVersions = module.versions?.length || 1;
   const currentVersion = module.currentVersion || 1;
+  console.log('🚀 module:', module);
   const moduleType = module.moduleType || 'file';
   const approvalStatus = module.approvalStatus || 'not_requested';
   const selectedVersionData = module.versions?.[selectedVersion - 1];
-  const fileDetails = selectedVersionData?.contentSnapshot?.fileId
-    ? {
-        size: selectedVersionData.contentSnapshot.fileId.size,
-        type: selectedVersionData.contentSnapshot.fileId.contentType,
-        url: selectedVersionData.contentSnapshot.fileId.downloadURL,
-        previewUrl: selectedVersionData.contentSnapshot.fileId.downloadURL,
-      }
-    : module.content?.fileId
-    ? {
-        size: module.content.fileId.size,
-        type: module.content.fileId.contentType,
-        url: module.content.fileId.downloadURL,
-        previewUrl: module.content.fileId.downloadURL,
-      }
-    : {
-        size: 'Unknown',
-        type: 'Unknown',
-        url: '',
-        previewUrl: '/placeholder.svg',
-      };
+  const fileDetails = {
+    size:
+      selectedVersionData?.contentSnapshot?.fileId?.size ||
+      module.content?.fileId?.size ||
+      'Unknown',
+    type:
+      selectedVersionData?.contentSnapshot?.fileId?.contentType ||
+      module.content?.fileId?.contentType ||
+      'Unknown',
+    url:
+      selectedVersionData?.contentSnapshot?.fileId?.downloadURL ||
+      module.content?.fileId?.downloadURL ||
+      '',
+    previewUrl:
+      selectedVersionData?.contentSnapshot?.fileId?.downloadURL ||
+      module.content?.fileId?.downloadURL ||
+      '/placeholder.svg',
+  };
+
+  console.log('🚀 fileDetails:', fileDetails);
+
   const templateDetails = selectedVersionData?.contentSnapshot?.fields ||
     module.templateDetails || { sections: [] };
 
