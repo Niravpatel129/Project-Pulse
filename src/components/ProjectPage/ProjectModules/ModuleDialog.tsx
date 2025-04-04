@@ -114,7 +114,15 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
 
   return (
     <>
-      <Dialog open={!!module} onOpenChange={onOpenChange}>
+      <Dialog
+        open={!!module}
+        onOpenChange={(open) => {
+          onOpenChange(open);
+          if (open) {
+            setActiveTab('preview');
+          }
+        }}
+      >
         <DialogContent className='max-w-[1000px] p-0 h-[85vh] max-h-[900px] overflow-hidden flex gap-0'>
           <DialogTitle className='sr-only'>{module.name}</DialogTitle>
           {/* Left Panel - Module Info & Actions */}
@@ -341,7 +349,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
             {/* Tabs */}
             <div className='border-b'>
               <Tabs
-                defaultValue='preview'
+                value={activeTab}
                 className='w-full'
                 onValueChange={(value) => {
                   setActiveTab(value as any);
