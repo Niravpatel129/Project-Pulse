@@ -154,7 +154,15 @@ export default function EditModuleFromTemplateSheet({
         const existingField = initialData.fields.find((f) => {
           return f.templateFieldId === field._id;
         });
-        initialValues[field._id] = existingField?.fieldValue || (field.multiple ? [] : '');
+
+        // Handle relation fields differently
+        if (field.type === 'relation' && existingField?.fieldValue) {
+          // For relation fields, we need to extract the rowId from the fieldValue object
+          initialValues[field._id] = existingField.fieldValue.rowId;
+        } else {
+          // For non-relation fields, use the value directly
+          initialValues[field._id] = existingField?.fieldValue || (field.multiple ? [] : '');
+        }
       });
       setFormValues(initialValues);
     }
