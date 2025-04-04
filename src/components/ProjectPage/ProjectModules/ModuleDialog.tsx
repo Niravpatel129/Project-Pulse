@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -18,7 +17,6 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import {
-  Archive,
   Clock,
   Copy,
   Download,
@@ -116,74 +114,40 @@ export default function ModuleDialog({ module, onOpenChange }) {
         {/* Left Panel - Module Info & Actions */}
         <div className='w-[35%] border-r p-6 flex flex-col h-full overflow-y-auto'>
           <div className='space-y-6'>
-            {/* Module Name */}
+            {/* Module Name and Status */}
             <div className='space-y-2'>
-              {isEditing ? (
-                <div className='flex items-center gap-2'>
-                  <Input
-                    value={moduleName}
-                    onChange={(e) => {
-                      setModuleName(e.target.value);
-                    }}
-                    className='h-9'
-                  />
-                  <Button size='sm' onClick={handleSave}>
-                    Save
-                  </Button>
-                  <Button
-                    size='sm'
-                    variant='outline'
-                    onClick={() => {
-                      setIsEditing(false);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <div className='flex items-center justify-between'>
-                  <h2 className='text-xl font-semibold'>{module.name}</h2>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='h-8 w-8'
-                    onClick={() => {
-                      setIsEditing(true);
-                    }}
-                  >
-                    <Edit className='h-4 w-4' />
-                  </Button>
-                </div>
-              )}
+              <div className='flex items-center justify-between'>
+                <h2 className='text-xl font-semibold'>{module.name}</h2>
+              </div>
+
+              {/* Status Badge and Module Type */}
+              <div className='flex items-center justify-between'>
+                <Badge
+                  variant='outline'
+                  className={cn('font-normal', getModuleTypeColor(moduleType))}
+                >
+                  {getModuleTypeLabel(moduleType)}
+                </Badge>
+
+                <Select
+                  value={moduleStatus}
+                  onValueChange={(value) => {
+                    setModuleStatus(value as 'active' | 'archived');
+                  }}
+                >
+                  <SelectTrigger className='w-[120px] h-7'>
+                    <SelectValue placeholder='Status' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='active'>Active</SelectItem>
+                    <SelectItem value='archived'>Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <Card className='border-muted'>
               <CardContent className='p-4 space-y-4'>
-                {/* Module Type & Status */}
-                <div className='flex flex-wrap items-center gap-2'>
-                  <Badge
-                    variant='outline'
-                    className={cn('font-normal', getModuleTypeColor(moduleType))}
-                  >
-                    {getModuleTypeLabel(moduleType)}
-                  </Badge>
-
-                  <Select
-                    value={moduleStatus}
-                    onValueChange={(value) => {
-                      setModuleStatus(value as 'active' | 'archived');
-                    }}
-                  >
-                    <SelectTrigger className='w-[120px] h-7'>
-                      <SelectValue placeholder='Status' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='active'>Active</SelectItem>
-                      <SelectItem value='archived'>Archived</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 {/* Added By */}
                 <div className='flex items-center gap-3'>
                   <Avatar className='h-8 w-8'>
@@ -269,11 +233,6 @@ export default function ModuleDialog({ module, onOpenChange }) {
                 Duplicate Module
               </Button>
 
-              <Button variant='outline' className='w-full justify-start gap-2 text-amber-600'>
-                <Archive className='h-4 w-4' />
-                {moduleStatus === 'active' ? 'Archive Module' : 'Unarchive Module'}
-              </Button>
-
               <Button variant='outline' className='w-full justify-start gap-2 text-red-600'>
                 <Trash className='h-4 w-4' />
                 Delete Module
@@ -322,16 +281,6 @@ export default function ModuleDialog({ module, onOpenChange }) {
 
           {/* Content Area */}
           <div className='flex-1 overflow-y-auto bg-gray-50 p-6'>
-            {/* Approval Status Badge (top-right) */}
-            <div className='flex justify-end mb-4'>
-              <Badge
-                variant='outline'
-                className={cn('font-normal', getApprovalStatusColor(approvalStatus))}
-              >
-                {getApprovalStatusText(approvalStatus)}
-              </Badge>
-            </div>
-
             {activeTab === 'preview' && (
               <>
                 {/* File Preview */}
