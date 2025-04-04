@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -16,9 +16,11 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { newRequest } from '@/utils/newRequest';
+import { useQuery } from '@tanstack/react-query';
+import { formatDistanceToNow } from 'date-fns';
 import {
   Clock,
-  Copy,
   Download,
   Edit,
   ExternalLink,
@@ -30,35 +32,45 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
-export default function ModuleDialog({ module, onOpenChange }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [moduleName, setModuleName] = useState(module?.name || '');
-  const [moduleStatus, setModuleStatus] = useState<'active' | 'archived'>(
-    module?.status || 'active',
-  );
+interface ModuleDialogProps {
+  moduleId: string;
+  onOpenChange: (open: boolean) => void;
+}
+
+export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogProps) {
   const [activeTab, setActiveTab] = useState<'preview' | 'history' | 'comments'>('preview');
-  const [selectedVersion, setSelectedVersion] = useState(module?.version?.current || 1);
+  const [selectedVersion, setSelectedVersion] = useState(1);
+  const [moduleStatus, setModuleStatus] = useState<'active' | 'archived'>('active');
 
-  if (!module) return null;
+  const { data: module, isLoading } = useQuery({
+    queryKey: ['module', moduleId],
+    queryFn: async () => {
+      const { data } = await newRequest.get(`/project-modules/module/${moduleId}`);
+      return data.data;
+    },
+    enabled: !!moduleId,
+  });
 
-  const totalVersions = module.version?.total || 1;
-  const currentVersion = module.version?.current || 1;
-  const moduleType = module.type || 'file';
+  if (!module || isLoading) return null;
+
+  const totalVersions = module.versions?.length || 1;
+  const currentVersion = module.currentVersion || 1;
+  const moduleType = module.moduleType || 'file';
   const approvalStatus = module.approvalStatus || 'not_requested';
-  const projectName = module.project?.name || 'Unknown Project';
-  const projectId = module.project?.id || '';
-  const fileDetails = module.fileDetails || {
-    size: 'Unknown',
-    type: 'Unknown',
-    url: '',
-    previewUrl: '/placeholder.svg',
-  };
+  const fileDetails = module.content?.fileId
+    ? {
+        size: module.content.fileId.size,
+        type: module.content.fileId.contentType,
+        url: module.content.fileId.downloadURL,
+        previewUrl: module.content.fileId.downloadURL,
+      }
+    : {
+        size: 'Unknown',
+        type: 'Unknown',
+        url: '',
+        previewUrl: '/placeholder.svg',
+      };
   const templateDetails = module.templateDetails || { sections: [] };
-
-  const handleSave = () => {
-    // Save logic would go here
-    setIsEditing(false);
-  };
 
   const getApprovalStatusColor = (status) => {
     switch (status) {
@@ -108,18 +120,19 @@ export default function ModuleDialog({ module, onOpenChange }) {
     }
   };
 
+  console.log('🚀 module:', module);
   return (
     <Dialog open={!!module} onOpenChange={onOpenChange}>
       <DialogContent className='max-w-[1000px] p-0 h-[85vh] max-h-[900px] overflow-hidden flex'>
+        <DialogTitle className='sr-only'>{module.name}</DialogTitle>
         {/* Left Panel - Module Info & Actions */}
         <div className='w-[35%] border-r p-6 flex flex-col h-full overflow-y-auto'>
           <div className='space-y-6'>
             {/* Module Name and Status */}
             <div className='space-y-2'>
               <div className='flex items-center justify-between'>
-                <h2 className='text-xl font-semibold'>{module.name}</h2>
+                <h2 className='text-xl font-semibold'>{module.name || 'Untitled Module'}</h2>
               </div>
-
               {/* Status Badge and Module Type */}
               <div className='flex items-center justify-between'>
                 <Badge
@@ -152,17 +165,18 @@ export default function ModuleDialog({ module, onOpenChange }) {
                 <div className='flex items-center gap-3'>
                   <Avatar className='h-8 w-8'>
                     <AvatarImage
-                      src={module.createdBy?.avatar || '/placeholder.svg'}
-                      alt={module.createdBy?.name || 'User'}
+                      src={module.addedBy?.avatar || '/placeholder.svg'}
+                      alt={module.addedBy?.name || 'User'}
                     />
-                    <AvatarFallback>{module.createdBy?.name?.charAt(0) || 'U'}</AvatarFallback>
+                    <AvatarFallback>{module.addedBy?.name?.charAt(0) || 'U'}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className='text-sm font-medium'>
-                      {module.createdBy?.name || 'Unknown User'}
-                    </p>
+                    <p className='text-sm font-medium'>{module.addedBy?.name || 'Unknown User'}</p>
                     <p className='text-xs text-muted-foreground'>
-                      Added {module.createdAt || 'Unknown date'}
+                      Added{' '}
+                      {module.createdAt
+                        ? formatDistanceToNow(new Date(module.createdAt), { addSuffix: true })
+                        : 'Unknown date'}
                     </p>
                   </div>
                 </div>
@@ -228,11 +242,6 @@ export default function ModuleDialog({ module, onOpenChange }) {
                 </Button>
               )}
 
-              <Button variant='outline' className='w-full justify-start gap-2'>
-                <Copy className='h-4 w-4' />
-                Duplicate Module
-              </Button>
-
               <Button variant='outline' className='w-full justify-start gap-2 text-red-600'>
                 <Trash className='h-4 w-4' />
                 Delete Module
@@ -246,12 +255,17 @@ export default function ModuleDialog({ module, onOpenChange }) {
             <div className='text-xs text-muted-foreground space-y-2'>
               <div className='flex items-center gap-1'>
                 <Clock className='h-3 w-3' />
-                <span>Last updated {module.updatedAt}</span>
+                <span>
+                  Last updated{' '}
+                  {module.updatedAt
+                    ? formatDistanceToNow(new Date(module.updatedAt), { addSuffix: true })
+                    : 'Unknown date'}
+                </span>
               </div>
               {approvalStatus === 'pending' && (
                 <div className='flex items-center gap-1'>
                   <Send className='h-3 w-3' />
-                  <span>{module.createdBy?.name} sent for approval 2 days ago</span>
+                  <span>{module.addedBy?.name} sent for approval 2 days ago</span>
                 </div>
               )}
             </div>
@@ -405,7 +419,7 @@ export default function ModuleDialog({ module, onOpenChange }) {
                           </div>
                           <div className='text-sm text-muted-foreground'>
                             Updated on {new Date(Date.now() - i * 86400000).toLocaleDateString()} by{' '}
-                            {module.createdBy?.name || 'Unknown User'}
+                            {module.addedBy?.name || 'Unknown User'}
                           </div>
                           {i < totalVersions - 1 && (
                             <div className='text-xs text-muted-foreground mt-2'>
