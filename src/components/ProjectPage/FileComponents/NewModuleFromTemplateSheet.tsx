@@ -69,7 +69,7 @@ interface ApiResponse {
 interface FormFieldValue {
   fieldName: string;
   fieldType: string;
-  fieldValue: string | string[];
+  fieldValue: string | string[] | { rowId: string; displayValues: Record<string, any> } | null;
   templateFieldId: string;
   isRequired: boolean;
   description?: string;
@@ -171,10 +171,39 @@ export default function NewModuleFromTemplateSheet({
     if (!fullTemplateData?.data) return;
 
     const fields: FormFieldValue[] = fullTemplateData.data.fields.map((field) => {
+      const fieldValue = formValues[field._id];
+
+      // Handle relation fields differently
+      if (field.type === 'relation') {
+        // Find the selected option's data
+        const selectedOption = field.selectOptions?.find((opt) => {
+          return opt.value === fieldValue;
+        });
+
+        return {
+          fieldName: field.name,
+          fieldType: field.type,
+          fieldValue: selectedOption
+            ? {
+                rowId: selectedOption.value,
+                displayValues: selectedOption.rowData,
+              }
+            : null,
+          templateFieldId: field._id,
+          isRequired: field.required || false,
+          description: field.description || '',
+          relationType: field.relationType,
+          relationTable: field.relationTable,
+          lookupFields: field.lookupFields,
+          multiple: field.multiple || false,
+        };
+      }
+
+      // Handle non-relation fields normally
       return {
         fieldName: field.name,
         fieldType: field.type,
-        fieldValue: formValues[field._id] || '',
+        fieldValue: fieldValue || '',
         templateFieldId: field._id,
         isRequired: field.required || false,
         description: field.description || '',

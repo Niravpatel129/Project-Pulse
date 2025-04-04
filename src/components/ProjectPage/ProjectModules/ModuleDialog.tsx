@@ -368,56 +368,72 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                           </div>
                         )}
                         <div>
-                          <Label className='text-xs text-muted-foreground'>Fields</Label>
+                          <Label className='text-xs text-muted-foreground'>Form Responses</Label>
                           <div className='mt-3 space-y-4'>
-                            {module.content?.templateId?.fields?.map((field, index) => {
-                              return (
-                                <div key={field._id} className='bg-gray-50 p-4 rounded-lg border'>
-                                  <div className='flex items-center justify-between'>
-                                    <div>
-                                      <p className='font-medium'>{field.name}</p>
-                                      <div className='flex items-center gap-2 mt-1'>
-                                        <Badge variant='outline' className='text-xs'>
-                                          {field.type}
-                                        </Badge>
-                                        {field.required && (
-                                          <Badge
-                                            variant='outline'
-                                            className='text-xs bg-red-50 text-red-700'
-                                          >
-                                            Required
+                            {module.versions?.[currentVersion - 1]?.contentSnapshot?.fields?.map(
+                              (field, index) => {
+                                return (
+                                  <div
+                                    key={field.templateFieldId}
+                                    className='bg-gray-50 p-4 rounded-lg border'
+                                  >
+                                    <div className='flex items-center justify-between'>
+                                      <div>
+                                        <p className='font-medium'>{field.fieldName}</p>
+                                        <div className='flex items-center gap-2 mt-1'>
+                                          <Badge variant='outline' className='text-xs'>
+                                            {field.fieldType}
                                           </Badge>
-                                        )}
-                                        {field.multiple && (
-                                          <Badge
-                                            variant='outline'
-                                            className='text-xs bg-blue-50 text-blue-700'
-                                          >
-                                            Multiple
-                                          </Badge>
+                                          {field.isRequired && (
+                                            <Badge
+                                              variant='outline'
+                                              className='text-xs bg-red-50 text-red-700'
+                                            >
+                                              Required
+                                            </Badge>
+                                          )}
+                                          {field.multiple && (
+                                            <Badge
+                                              variant='outline'
+                                              className='text-xs bg-blue-50 text-blue-700'
+                                            >
+                                              Multiple
+                                            </Badge>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className='mt-2'>
+                                      <Label className='text-xs text-muted-foreground'>
+                                        Response
+                                      </Label>
+                                      <div className='mt-1'>
+                                        {field.fieldType === 'relation' ? (
+                                          <div className='bg-white p-2 rounded border'>
+                                            {Object.entries(
+                                              field.fieldValue?.displayValues || {},
+                                            ).map(([key, value]) => {
+                                              return (
+                                                <div key={key} className='flex gap-2'>
+                                                  <span className='text-xs font-medium'>
+                                                    {key}:
+                                                  </span>
+                                                  <span className='text-xs'>{value}</span>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        ) : (
+                                          <div className='bg-white p-2 rounded border'>
+                                            <span className='text-sm'>{field.fieldValue}</span>
+                                          </div>
                                         )}
                                       </div>
                                     </div>
                                   </div>
-                                  {field.type === 'relation' && field.lookupFields.length > 0 && (
-                                    <div className='mt-2'>
-                                      <Label className='text-xs text-muted-foreground'>
-                                        Lookup Fields
-                                      </Label>
-                                      <div className='flex flex-wrap gap-2 mt-1'>
-                                        {field.lookupFields.map((lookupField, idx) => {
-                                          return (
-                                            <Badge key={idx} variant='outline' className='text-xs'>
-                                              {lookupField}
-                                            </Badge>
-                                          );
-                                        })}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
+                                );
+                              },
+                            )}
                           </div>
                         </div>
                       </div>
@@ -455,8 +471,11 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                             )}
                           </div>
                           <div className='text-sm text-muted-foreground'>
-                            Updated on {new Date(Date.now() - i * 86400000).toLocaleDateString()} by{' '}
-                            {module.addedBy?.name || 'Unknown User'}
+                            Updated on{' '}
+                            {module.versions?.[i]?.updatedAt
+                              ? new Date(module.versions[i].updatedAt).toLocaleDateString()
+                              : 'Unknown date'}{' '}
+                            by {module.versions?.[i]?.updatedBy?.name || 'Unknown User'}
                           </div>
                           {i < totalVersions - 1 && (
                             <div className='text-xs text-muted-foreground mt-2'>
