@@ -158,7 +158,7 @@ export default function EditModuleFromTemplateSheet({
         // Handle relation fields differently
         if (field.type === 'relation' && existingField?.fieldValue) {
           // For relation fields, we need to extract the rowId from the fieldValue object
-          initialValues[field._id] = existingField.fieldValue.rowId;
+          initialValues[field._id] = existingField.fieldValue.rowId || '';
         } else {
           // For non-relation fields, use the value directly
           initialValues[field._id] = existingField?.fieldValue || (field.multiple ? [] : '');
