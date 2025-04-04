@@ -35,6 +35,7 @@ import {
   Undo,
   Upload,
 } from 'lucide-react';
+import Image from 'next/image';
 import { useState } from 'react';
 import EditModuleFromTemplateSheet from '../FileComponents/EditModuleFromTemplateSheet';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
@@ -361,10 +362,12 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                       <div className='bg-white rounded-lg border shadow-sm overflow-hidden'>
                         {fileDetails.previewUrl ? (
                           <div className='flex justify-center p-6'>
-                            <img
+                            <Image
                               src={fileDetails.previewUrl || '/placeholder.svg'}
                               alt={module.name}
-                              className='object-contain max-h-[400px]'
+                              className='object-contain max-h-[350px]'
+                              width={1000}
+                              height={1000}
                             />
                           </div>
                         ) : (
