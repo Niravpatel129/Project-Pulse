@@ -353,38 +353,75 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                 {/* Template Preview */}
                 {moduleType === 'template' && (
                   <div className='space-y-8'>
-                    {templateDetails.sections.map((section, sectionIndex) => {
-                      return (
-                        <div key={sectionIndex} className='space-y-4'>
-                          <h3 className='font-medium text-sm uppercase tracking-wide text-muted-foreground'>
-                            {section.title || 'Untitled Section'}
-                          </h3>
-                          <div className='space-y-4'>
-                            {section.questions.map((item, itemIndex) => {
+                    <div className='bg-white rounded-lg border shadow-sm p-6'>
+                      <div className='space-y-6'>
+                        <div>
+                          <Label className='text-xs text-muted-foreground'>Template Name</Label>
+                          <p className='font-medium mt-1'>
+                            {module.content?.templateId?.name || 'Untitled Template'}
+                          </p>
+                        </div>
+                        {module.content?.templateId?.description && (
+                          <div>
+                            <Label className='text-xs text-muted-foreground'>Description</Label>
+                            <p className='mt-1'>{module.content.templateId.description}</p>
+                          </div>
+                        )}
+                        <div>
+                          <Label className='text-xs text-muted-foreground'>Fields</Label>
+                          <div className='mt-3 space-y-4'>
+                            {module.content?.templateId?.fields?.map((field, index) => {
                               return (
-                                <div
-                                  key={itemIndex}
-                                  className='bg-white p-4 rounded-lg border shadow-sm'
-                                >
-                                  <Label className='font-medium'>
-                                    {item.question || 'Untitled Question'}
-                                  </Label>
-                                  <div className='mt-2 p-3 bg-gray-50 border rounded-md'>
-                                    <p>{item.answer || 'No answer provided'}</p>
+                                <div key={field._id} className='bg-gray-50 p-4 rounded-lg border'>
+                                  <div className='flex items-center justify-between'>
+                                    <div>
+                                      <p className='font-medium'>{field.name}</p>
+                                      <div className='flex items-center gap-2 mt-1'>
+                                        <Badge variant='outline' className='text-xs'>
+                                          {field.type}
+                                        </Badge>
+                                        {field.required && (
+                                          <Badge
+                                            variant='outline'
+                                            className='text-xs bg-red-50 text-red-700'
+                                          >
+                                            Required
+                                          </Badge>
+                                        )}
+                                        {field.multiple && (
+                                          <Badge
+                                            variant='outline'
+                                            className='text-xs bg-blue-50 text-blue-700'
+                                          >
+                                            Multiple
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div className='mt-2 flex justify-end'>
-                                    <Button variant='ghost' size='sm' className='h-7 text-xs gap-1'>
-                                      <Edit className='h-3 w-3' />
-                                      Add Comment
-                                    </Button>
-                                  </div>
+                                  {field.type === 'relation' && field.lookupFields.length > 0 && (
+                                    <div className='mt-2'>
+                                      <Label className='text-xs text-muted-foreground'>
+                                        Lookup Fields
+                                      </Label>
+                                      <div className='flex flex-wrap gap-2 mt-1'>
+                                        {field.lookupFields.map((lookupField, idx) => {
+                                          return (
+                                            <Badge key={idx} variant='outline' className='text-xs'>
+                                              {lookupField}
+                                            </Badge>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               );
                             })}
                           </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                    </div>
                   </div>
                 )}
               </>
