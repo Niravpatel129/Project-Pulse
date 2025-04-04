@@ -492,12 +492,6 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                                 : 'Unknown date'}{' '}
                               by {module.versions?.[i]?.updatedBy?.name || 'Unknown User'}
                             </div>
-                            {i < totalVersions - 1 && (
-                              <div className='text-xs text-muted-foreground mt-2'>
-                                <span className='text-primary'>Changes:</span> Updated logo size,
-                                adjusted colors
-                              </div>
-                            )}
                           </div>
                           <div className='flex gap-2'>
                             <Button
