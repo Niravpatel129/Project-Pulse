@@ -193,6 +193,7 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
     if (!templateName.trim()) return;
 
     const templateData = {
+      _id: '',
       name: templateName,
       description: templateDescription,
       fields: templateFields.filter((field) => {

@@ -17,26 +17,37 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Calendar, CheckSquare, Database, File, FileText, Hash, Type } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface NewModuleFromTemplateSheetProps {
   isOpen: boolean;
   onClose: () => void;
   template: Template;
-  onSave: (moduleData: any) => void;
+  templateName?: string;
 }
 
 // Extend the TemplateField type to include the API response structure
-interface ExtendedTemplateField extends Omit<TemplateField, 'id'> {
-  _id: string;
+interface ExtendedTemplateField extends Omit<TemplateField, 'id' | 'relationType'> {
+  _id: string; // This is the fieldId from Mongoose
   selectOptions?: Array<{
     value: string;
     label: string;
     rowData: Record<string, any>;
   }>;
+  relationType?: {
+    _id: string;
+    name: string;
+  };
+  relationTable?: {
+    _id: string;
+    name: string;
+  };
+  lookupFields?: string[];
 }
 
 interface ApiResponse {
@@ -53,6 +64,32 @@ interface ApiResponse {
     __v: number;
   };
   message: string;
+}
+
+interface FormFieldValue {
+  fieldName: string;
+  fieldType: string;
+  fieldValue: string | string[];
+  templateFieldId: string;
+  isRequired: boolean;
+  description?: string;
+  relationType?: {
+    _id: string;
+    name: string;
+  };
+  relationTable?: {
+    _id: string;
+    name: string;
+  };
+  lookupFields?: string[];
+  multiple?: boolean;
+}
+
+interface ModuleData {
+  templateId: string;
+  templateName: string;
+  templateDescription: string;
+  fields: FormFieldValue[];
 }
 
 const getFieldIcon = (type: string) => {
@@ -80,9 +117,12 @@ export default function NewModuleFromTemplateSheet({
   isOpen,
   onClose,
   template,
-  onSave,
+  templateName,
 }: NewModuleFromTemplateSheetProps) {
   const [formValues, setFormValues] = useState<Record<string, any>>({});
+  const [moduleName, setModuleName] = useState(templateName || template.name);
+  const queryClient = useQueryClient();
+  const { project } = useProject();
 
   // Fetch full template data when template ID is available
   const { data: fullTemplateData, isLoading } = useQuery<ApiResponse>({
@@ -108,13 +148,19 @@ export default function NewModuleFromTemplateSheet({
 
   // Mutation for creating a module
   const createModuleMutation = useMutation({
-    mutationFn: async (moduleData: any) => {
-      const response = await newRequest.post('/project-modules', moduleData);
+    mutationFn: async (moduleData: ModuleData) => {
+      const response = await newRequest.post(
+        `/project-modules/templated-module/${project?._id}`,
+        moduleData,
+      );
       return response.data;
     },
     onSuccess: (data) => {
-      onSave(data);
+      // invalidate the query
+      queryClient.invalidateQueries({ queryKey: ['projectModules'] });
       // Reset form
+      toast.success('Module created successfully');
+      onClose();
       setFormValues({});
     },
   });
@@ -122,14 +168,28 @@ export default function NewModuleFromTemplateSheet({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const moduleData = {
+    if (!fullTemplateData?.data) return;
+
+    const fields: FormFieldValue[] = fullTemplateData.data.fields.map((field) => {
+      return {
+        fieldName: field.name,
+        fieldType: field.type,
+        fieldValue: formValues[field._id] || '',
+        templateFieldId: field._id,
+        isRequired: field.required || false,
+        description: field.description || '',
+        relationType: field.relationType,
+        relationTable: field.relationTable,
+        lookupFields: field.lookupFields,
+        multiple: field.multiple || false,
+      };
+    });
+
+    const moduleData: ModuleData = {
       templateId: template._id,
-      fields: Object.entries(formValues).map(([fieldId, value]) => {
-        return {
-          fieldId,
-          value,
-        };
-      }),
+      templateName: moduleName,
+      templateDescription: fullTemplateData.data.description,
+      fields,
     };
 
     createModuleMutation.mutate(moduleData);
@@ -197,6 +257,18 @@ export default function NewModuleFromTemplateSheet({
         </SheetHeader>
 
         <form onSubmit={handleSubmit} className='space-y-4 py-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='moduleName'>Module Name</Label>
+            <Input
+              id='moduleName'
+              value={moduleName}
+              onChange={(e) => {
+                return setModuleName(e.target.value);
+              }}
+              placeholder='Enter module name'
+            />
+          </div>
+
           {fullTemplateData?.data.fields.map((field: ExtendedTemplateField) => {
             return (
               <div key={field._id} className='space-y-2'>

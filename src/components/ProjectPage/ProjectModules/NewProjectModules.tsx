@@ -218,7 +218,6 @@ export default function NewProjectModules() {
             setSelectedTemplate(null);
           }}
           template={selectedTemplate}
-          onSave={handleCreateModuleFromTemplate}
         />
       )}
     </div>
