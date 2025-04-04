@@ -17,7 +17,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { useProject } from '@/contexts/ProjectContext';
+import { Skeleton } from '@/components/ui/skeleton';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Calendar, CheckSquare, Database, File, FileText, Hash, Type } from 'lucide-react';
@@ -131,42 +131,59 @@ export default function EditModuleFromTemplateSheet({
 }: EditModuleFromTemplateSheetProps) {
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [moduleName, setModuleName] = useState(initialData.name);
+  const [isLoading, setIsLoading] = useState(true);
   const queryClient = useQueryClient();
-  const { project } = useProject();
 
   // Fetch full template data when template ID is available
-  const { data: fullTemplateData, isLoading } = useQuery<ApiResponse>({
+  const { data: fullTemplateData } = useQuery<ApiResponse>({
     queryKey: ['template', template?._id],
     queryFn: async () => {
       if (!template?._id) return null;
       const response = await newRequest.get(`/module-templates/${template._id}`);
+
       return response.data;
     },
     enabled: !!template?._id && isOpen,
   });
 
-  // Initialize form values when template data is fetched
   useEffect(() => {
     if (fullTemplateData?.data) {
-      const initialValues: Record<string, any> = {};
-      fullTemplateData.data.fields.forEach((field: ExtendedTemplateField) => {
-        // Find the corresponding field in initialData
-        const existingField = initialData.fields.find((f) => {
-          return f.templateFieldId === field._id;
+      new Promise((resolve) => {
+        return setTimeout(resolve, 500);
+      });
+      setIsLoading(false);
+    }
+  }, [fullTemplateData]);
+
+  // Initialize form values when template data is fetched
+  useEffect(() => {
+    const setInitialValues = async () => {
+      if (fullTemplateData?.data) {
+        new Promise((resolve) => {
+          return setTimeout(resolve, 300);
         });
 
-        // Handle relation fields differently
-        if (field.type === 'relation' && existingField?.fieldValue) {
-          // For relation fields, we need to extract the rowId from the fieldValue object
-          initialValues[field._id] = existingField.fieldValue.rowId || '';
-        } else {
-          // For non-relation fields, use the value directly
-          initialValues[field._id] = existingField?.fieldValue || (field.multiple ? [] : '');
-        }
-      });
-      setFormValues(initialValues);
-    }
-  }, [fullTemplateData, initialData]);
+        const initialValues: Record<string, any> = {};
+        fullTemplateData.data.fields.forEach((field: ExtendedTemplateField) => {
+          // Find the corresponding field in initialData
+          const existingField = initialData.fields.find((f) => {
+            return f.templateFieldId === field._id;
+          });
+
+          // Handle relation fields differently
+          if (field.type === 'relation' && existingField?.fieldValue) {
+            // For relation fields, we need to extract the rowId from the fieldValue object
+            initialValues[field._id] = existingField.fieldValue.rowId || '';
+          } else {
+            // For non-relation fields, use the value directly
+            initialValues[field._id] = existingField?.fieldValue || (field.multiple ? [] : '');
+          }
+        });
+        setFormValues(initialValues);
+      }
+    };
+    setInitialValues();
+  }, [fullTemplateData, initialData, isLoading]);
 
   // Mutation for updating a module
   const updateModuleMutation = useMutation({
@@ -321,18 +338,37 @@ export default function EditModuleFromTemplateSheet({
             />
           </div>
 
-          {fullTemplateData?.data.fields.map((field: ExtendedTemplateField) => {
-            return (
-              <div key={field._id} className='space-y-2'>
-                <div className='flex items-center gap-2'>
-                  {getFieldIcon(field.type)}
-                  <Label htmlFor={field._id}>{field.name}</Label>
-                </div>
-                {field.description && <p className='text-sm text-gray-500'>{field.description}</p>}
-                {renderField(field)}
+          {isLoading ? (
+            <>
+              <div className='space-y-2'>
+                <Skeleton className='h-4 w-24' />
+                <Skeleton className='h-10 w-full' />
               </div>
-            );
-          })}
+              <div className='space-y-2'>
+                <Skeleton className='h-4 w-32' />
+                <Skeleton className='h-10 w-full' />
+              </div>
+              <div className='space-y-2'>
+                <Skeleton className='h-4 w-28' />
+                <Skeleton className='h-10 w-full' />
+              </div>
+            </>
+          ) : (
+            fullTemplateData?.data.fields.map((field: ExtendedTemplateField) => {
+              return (
+                <div key={field._id} className='space-y-2'>
+                  <div className='flex items-center gap-2'>
+                    {getFieldIcon(field.type)}
+                    <Label htmlFor={field._id}>{field.name}</Label>
+                  </div>
+                  {field.description && (
+                    <p className='text-sm text-gray-500'>{field.description}</p>
+                  )}
+                  {renderField(field)}
+                </div>
+              );
+            })
+          )}
 
           <SheetFooter>
             <Button type='submit' disabled={updateModuleMutation.isPending || isLoading}>
