@@ -1,21 +1,18 @@
-import { Badge } from '@/components/ui/badge';
+'use client';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { X } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { Bell, ChevronDown, FileText, MessageSquare, Plus, X } from 'lucide-react';
+import { useState } from 'react';
 
 interface Approver {
   id?: string;
   name: string;
   email: string;
+  avatar?: string;
   isProjectParticipant?: boolean;
 }
 
@@ -31,6 +28,12 @@ interface ApproverDialogProps {
   onAddManualEmail: () => void;
   onRequestApproval: () => void;
   isLoading: boolean;
+  moduleDetails?: {
+    name: string;
+    version: number;
+    updatedAt: string;
+    fileType?: string;
+  };
 }
 
 export function ApproverDialog({
@@ -45,116 +48,251 @@ export function ApproverDialog({
   onAddManualEmail,
   onRequestApproval,
   isLoading,
+  moduleDetails = {
+    name: 'Untitled',
+    version: 1,
+    updatedAt: '5 min ago',
+  },
 }: ApproverDialogProps) {
+  const [message, setMessage] = useState(
+    `Hi there,
+
+I've completed the latest version of ${moduleDetails.name}. Please review it at your convenience and let me know if you'd like any changes.
+
+Best regards,
+Your Name`,
+  );
+  const [sendReminder, setSendReminder] = useState(true);
+  const [allowComments, setAllowComments] = useState(true);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className='sm:max-w-[425px]'>
-        <DialogHeader>
-          <DialogTitle>Select Approvers</DialogTitle>
-          <DialogDescription>
-            Choose who should approve this module. You can select project participants or add
-            external email addresses.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className='p-0 m-0 max-w-full h-screen w-screen rounded-none'>
+        <div className='flex flex-col h-full'>
+          {/* Header */}
+          <div className='flex justify-between items-center px-6 py-4 border-b'>
+            <h2 className='text-xl font-semibold'>Send for Client Approval</h2>
+            <button onClick={onClose} className='text-gray-500 hover:text-gray-700'>
+              <X className='h-5 w-5' />
+            </button>
+          </div>
 
-        <div className='space-y-4 py-4'>
-          {/* Project Participants */}
-          {potentialApprovers.length > 0 && (
-            <div className='space-y-2'>
-              <Label>Project Participants</Label>
-              <div className='flex flex-wrap gap-2'>
-                {potentialApprovers.map((approver) => {
-                  return (
-                    <Badge
-                      key={approver.email}
-                      variant={
-                        selectedApprovers.some((a) => {
-                          return a.email === approver.email;
-                        })
-                          ? 'default'
-                          : 'outline'
+          {/* Content */}
+          <div className='flex h-full overflow-auto'>
+            {/* Left Column - Designer Input Form */}
+            <div className='w-1/2 p-6 border-r overflow-y-auto'>
+              {/* File Information */}
+              <div className='mb-8'>
+                <div className='flex items-center gap-3 mb-2'>
+                  <div className='w-10 h-10 bg-primary/10 rounded flex items-center justify-center'>
+                    <FileText className='h-5 w-5 text-primary' />
+                  </div>
+                  <div>
+                    <h3 className='font-medium'>{moduleDetails.name}</h3>
+                    <p className='text-sm text-gray-500'>
+                      Version {moduleDetails.version} · Last updated {moduleDetails.updatedAt}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Select Recipients */}
+              <div className='mb-6'>
+                <label className='block text-sm font-medium mb-2'>Select Recipients</label>
+                <div className='relative mb-3'>
+                  <button
+                    className='flex items-center justify-between w-full border rounded-md px-3 py-2 bg-white cursor-pointer hover:bg-gray-50'
+                    onClick={() => {
+                      // Handle dropdown toggle
+                    }}
+                  >
+                    <span className='text-sm'>Select from project participants</span>
+                    <ChevronDown className='h-4 w-4 text-gray-500' />
+                  </button>
+                </div>
+
+                {/* Selected Recipients */}
+                <div className='mb-3'>
+                  {selectedApprovers.map((approver) => {
+                    return (
+                      <div
+                        key={approver.email}
+                        className='flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1.5 mb-2 w-fit'
+                      >
+                        <Avatar className='h-6 w-6'>
+                          <AvatarImage
+                            src={approver.avatar || '/placeholder.svg'}
+                            alt={approver.name}
+                          />
+                          <AvatarFallback>{approver.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <span className='text-sm'>{approver.name}</span>
+                        <button
+                          className='text-gray-500 hover:text-gray-700'
+                          onClick={() => {
+                            return onRemoveApprover(approver.email);
+                          }}
+                        >
+                          <X className='h-3.5 w-3.5' />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Add Another Recipient */}
+                <div className='flex items-center gap-2'>
+                  <input
+                    type='email'
+                    placeholder='Enter email address'
+                    className='flex-1 text-sm rounded-md border border-input px-3 py-2'
+                    value={manualEmail}
+                    onChange={(e) => {
+                      return onManualEmailChange(e.target.value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        onAddManualEmail();
                       }
-                      className='cursor-pointer'
-                      onClick={() => {
-                        return onSelectApprover(approver);
-                      }}
-                    >
-                      {approver.name}
-                    </Badge>
-                  );
-                })}
+                    }}
+                  />
+                  <Button variant='outline' size='sm' className='gap-1' onClick={onAddManualEmail}>
+                    <Plus className='h-4 w-4' />
+                    Add
+                  </Button>
+                </div>
+              </div>
+
+              {/* Add a Message */}
+              <div className='mb-6'>
+                <label className='block text-sm font-medium mb-2'>Add a Message</label>
+                <Textarea
+                  className='min-h-[100px] rounded-md'
+                  placeholder="Hey! Here's the latest version. Let me know what you think!"
+                  value={message}
+                  onChange={(e) => {
+                    return setMessage(e.target.value);
+                  }}
+                />
+              </div>
+
+              {/* Options (Toggles) */}
+              <div className='space-y-4'>
+                <div className='flex items-start gap-3'>
+                  <Switch
+                    checked={sendReminder}
+                    onCheckedChange={setSendReminder}
+                    className='mt-0.5'
+                  />
+                  <div>
+                    <label className='flex items-center gap-2 text-sm font-medium'>
+                      <Bell className='h-4 w-4 text-gray-500' />
+                      Send a reminder email if no response in 2 days
+                    </label>
+                    <p className='text-xs text-gray-500 mt-1'>
+                      Helps nudge the client to respond if they miss your initial request
+                    </p>
+                  </div>
+                </div>
+
+                <div className='flex items-start gap-3'>
+                  <Switch
+                    checked={allowComments}
+                    onCheckedChange={setAllowComments}
+                    className='mt-0.5'
+                  />
+                  <div>
+                    <label className='flex items-center gap-2 text-sm font-medium'>
+                      <MessageSquare className='h-4 w-4 text-gray-500' />
+                      Allow comments
+                    </label>
+                    <p className='text-xs text-gray-500 mt-1'>
+                      Enables client to leave notes directly on the review page
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-          )}
 
-          {/* Manual Email Input */}
-          <div className='space-y-2'>
-            <Label>Add External Email</Label>
-            <div className='flex gap-2'>
-              <Input
-                type='email'
-                placeholder='Enter email address'
-                value={manualEmail}
-                onChange={(e) => {
-                  return onManualEmailChange(e.target.value);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    onAddManualEmail();
-                  }
-                }}
-              />
-              <Button onClick={onAddManualEmail}>Add</Button>
-            </div>
-          </div>
-
-          {/* Selected Approvers */}
-          <div className='space-y-2'>
-            <Label>Selected Approvers</Label>
-            <div className='space-y-2'>
-              {selectedApprovers.map((approver) => {
-                return (
-                  <div
-                    key={approver.email}
-                    className='flex items-center justify-between p-2 border rounded-md'
-                  >
-                    <div>
-                      <p className='font-medium'>{approver.name}</p>
-                      <p className='text-sm text-muted-foreground'>{approver.email}</p>
+            {/* Right Column - Email Preview */}
+            <div className='w-1/2 bg-gray-50 dark:bg-gray-900 overflow-y-auto flex flex-col'>
+              <div className='p-6 flex-1 flex flex-col'>
+                <h3 className='text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center mb-4'>
+                  <FileText className='h-4 w-4 mr-2' />
+                  Email Preview
+                </h3>
+                <div className='bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700 flex-1 flex flex-col'>
+                  <div className='mb-4'>
+                    <div className='flex items-center gap-3 mb-3'>
+                      <Avatar className='h-8 w-8'>
+                        <AvatarImage src='/placeholder.svg' alt='Your avatar' />
+                        <AvatarFallback>YN</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className='text-sm font-medium'>Your Name</div>
+                        <div className='text-xs text-gray-500 dark:text-gray-400'>
+                          your.email@company.com
+                        </div>
+                      </div>
                     </div>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      onClick={() => {
-                        return onRemoveApprover(approver.email);
-                      }}
-                    >
-                      <X className='h-4 w-4' />
+                    <div className='text-base font-medium'>
+                      Request for approval: {moduleDetails?.name || 'Untitled Module'}
+                    </div>
+                  </div>
+
+                  <div className='border-t border-b py-4 my-4 border-gray-200 dark:border-gray-700 flex-1'>
+                    <p className='text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap'>
+                      {message || 'No message provided'}
+                    </p>
+                  </div>
+
+                  <div className='mb-4'>
+                    <div className='border rounded-lg p-3 mb-4 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700'>
+                      <div className='flex items-center gap-3'>
+                        <div className='w-10 h-10 bg-primary/10 dark:bg-primary/20 rounded flex items-center justify-center'>
+                          <FileText className='h-5 w-5 text-primary dark:text-primary' />
+                        </div>
+                        <div>
+                          <h3 className='text-sm font-medium'>
+                            {moduleDetails?.name || 'Untitled Module'}
+                          </h3>
+                          <p className='text-xs text-gray-500 dark:text-gray-400'>
+                            Version {moduleDetails?.version || '1'} •{' '}
+                            {moduleDetails?.fileType || 'Document'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button className='w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 text-sm'>
+                      Review and Approve
                     </Button>
                   </div>
-                );
-              })}
-              {selectedApprovers.length === 0 && (
-                <p className='text-sm text-muted-foreground text-center py-2'>
-                  No approvers selected
-                </p>
-              )}
+
+                  <div className='text-xs text-gray-500 dark:text-gray-400 text-center'>
+                    This request was sent via Pulse. If you have any questions, please contact
+                    support.
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <DialogFooter>
-          <Button variant='outline' onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            onClick={onRequestApproval}
-            disabled={selectedApprovers.length === 0 || isLoading}
-          >
-            {isLoading ? 'Sending...' : 'Send Approval Request'}
-          </Button>
-        </DialogFooter>
+          {/* Footer */}
+          <div className='flex justify-end gap-3 p-4 border-t'>
+            <Button variant='outline' onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              className='bg-primary hover:bg-primary/90 text-primary-foreground'
+              onClick={onRequestApproval}
+              disabled={selectedApprovers.length === 0 || isLoading}
+            >
+              {isLoading ? 'Sending...' : 'Send for Approval'}
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
