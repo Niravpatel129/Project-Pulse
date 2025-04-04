@@ -78,6 +78,7 @@ export function useProjectModules() {
     },
     onSuccess: () => {
       toast.success('Module added successfully');
+      queryClient.invalidateQueries({ queryKey: ['projectModules'] });
     },
     onError: () => {
       toast.error('Failed to add module');
