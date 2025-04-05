@@ -22,9 +22,15 @@ import { useParams } from 'next/navigation';
 
 export default function ApprovalRequestPage() {
   const { id } = useParams();
-  const { approvalRequest, loading, error, addComment, updateStatus } = useApprovalRequest(
-    id as string,
-  );
+  const {
+    approvalRequest,
+    loading,
+    error,
+    addComment,
+    updateStatus,
+    selectedVersion,
+    switchVersion,
+  } = useApprovalRequest(id as string);
 
   if (loading) {
     return <div className='h-screen flex items-center justify-center'>Loading...</div>;
@@ -63,17 +69,23 @@ export default function ApprovalRequestPage() {
 
             {/* Version Tabs */}
             <div className='flex items-center gap-2'>
-              <Tabs defaultValue='v3' className=''>
+              <Tabs defaultValue={selectedVersion?.toString()} className=''>
                 <TabsList className='h-8 bg-slate-100'>
-                  <TabsTrigger value='v1' className='text-xs px-2 data-[state=active]:bg-white'>
-                    v1
-                  </TabsTrigger>
-                  <TabsTrigger value='v2' className='text-xs px-2 data-[state=active]:bg-white'>
-                    v2
-                  </TabsTrigger>
-                  <TabsTrigger value='v3' className='text-xs px-2 data-[state=active]:bg-white'>
-                    v3 (Current)
-                  </TabsTrigger>
+                  {approvalRequest.moduleId.versions.map((version) => {
+                    return (
+                      <TabsTrigger
+                        key={version._id}
+                        value={version.number.toString()}
+                        className='text-xs px-2 data-[state=active]:bg-white'
+                        onClick={() => {
+                          return switchVersion(version.number);
+                        }}
+                      >
+                        v{version.number}
+                        {version.number === approvalRequest.moduleId.currentVersion && ' (Current)'}
+                      </TabsTrigger>
+                    );
+                  })}
                 </TabsList>
               </Tabs>
             </div>
