@@ -9,6 +9,7 @@ import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, ChevronDown, FileText, Mail, MessageSquare, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 interface Approver {
   id?: string;
@@ -56,19 +57,28 @@ export function ApproverDialog({
     updatedAt: '5 min ago',
   },
 }: ApproverDialogProps) {
-  const [message, setMessage] = useState(
-    `Hi there,
-
-I've completed the latest version of ${moduleDetails.name}. Please review it at your convenience and let me know if you'd like any changes.
-
-Best regards,
-Your Name`,
-  );
+  const [message, setMessage] = useState('');
   const [sendReminder, setSendReminder] = useState(true);
   const [allowComments, setAllowComments] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setMessage(`Hi there,
+
+I've completed the latest version of ${moduleDetails.name}. Please review it at your convenience and let me know if you'd like any changes.
+
+Best regards,
+Your Name`);
+      setSendReminder(true);
+      setAllowComments(true);
+      setIsDropdownOpen(false);
+      setSearchTerm('');
+    }
+  }, [isOpen, moduleDetails.name]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -456,7 +466,14 @@ Your Name`,
                     </div>
 
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                      <Button className='w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 text-sm'>
+                      <Button
+                        className='w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 text-sm'
+                        onClick={() => {
+                          toast.info(
+                            'Review page is only available after approval request is sent.',
+                          );
+                        }}
+                      >
                         Review and Approve
                       </Button>
                     </motion.div>
