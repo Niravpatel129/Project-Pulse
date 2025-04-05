@@ -368,12 +368,14 @@ export default function NewProjectModules() {
         />
       )}
 
-      <ModuleDialog
-        moduleId={selectedModule?._id}
-        onOpenChange={(open) => {
-          return !open && setSelectedModule(null);
-        }}
-      />
+      {selectedModule && (
+        <ModuleDialog
+          moduleId={selectedModule?._id}
+          onOpenChange={(open) => {
+            return !open && setSelectedModule(null);
+          }}
+        />
+      )}
     </div>
   );
 }

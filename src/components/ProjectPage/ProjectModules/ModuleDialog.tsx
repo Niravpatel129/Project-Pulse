@@ -240,37 +240,37 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
     setIsFullscreen(!isFullscreen);
   };
 
-  if (!module || isLoading) return null;
+  //   if (!module || isLoading) return null;
 
-  const totalVersions = module.versions?.length || 1;
-  const currentVersion = module.currentVersion || 1;
+  const totalVersions = module?.versions?.length || 1;
+  const currentVersion = module?.currentVersion || 1;
   console.log('🚀 module:', module);
-  const moduleType = module.moduleType || 'file';
-  const approvalStatus = module.approvalStatus || 'not_requested';
-  const selectedVersionData = module.versions?.[selectedVersion - 1];
+  const moduleType = module?.moduleType || 'file';
+  const approvalStatus = module?.approvalStatus || 'not_requested';
+  const selectedVersionData = module?.versions?.[selectedVersion - 1];
   const fileDetails = {
     size:
       selectedVersionData?.contentSnapshot?.fileId?.size ||
-      module.content?.fileId?.size ||
+      module?.content?.fileId?.size ||
       'Unknown',
     type:
       selectedVersionData?.contentSnapshot?.fileId?.contentType ||
-      module.content?.fileId?.contentType ||
+      module?.content?.fileId?.contentType ||
       'Unknown',
     url:
       selectedVersionData?.contentSnapshot?.fileId?.downloadURL ||
-      module.content?.fileId?.downloadURL ||
+      module?.content?.fileId?.downloadURL ||
       '',
     previewUrl:
       selectedVersionData?.contentSnapshot?.fileId?.downloadURL ||
-      module.content?.fileId?.downloadURL ||
+      module?.content?.fileId?.downloadURL ||
       '/placeholder.svg',
   };
 
   console.log('🚀 fileDetails:', fileDetails);
 
   const templateDetails = selectedVersionData?.contentSnapshot?.fields ||
-    module.templateDetails || { sections: [] };
+    module?.templateDetails || { sections: [] };
 
   return (
     <>
@@ -304,7 +304,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
               <div className='space-y-2'>
                 <div className='flex items-center justify-between'>
                   <h2 className='text-lg md:text-xl font-semibold'>
-                    {module.name || 'Untitled Module'}
+                    {module?.name || 'Untitled Module'}
                   </h2>
                 </div>
                 {/* Status Badge and Module Type */}
@@ -325,19 +325,19 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                   <div className='flex items-center gap-3'>
                     <Avatar className='h-8 w-8'>
                       <AvatarImage
-                        src={module.addedBy?.avatar || '/placeholder.svg'}
-                        alt={module.addedBy?.name || 'User'}
+                        src={module?.addedBy?.avatar || '/placeholder.svg'}
+                        alt={module?.addedBy?.name || 'User'}
                       />
-                      <AvatarFallback>{module.addedBy?.name?.charAt(0) || 'U'}</AvatarFallback>
+                      <AvatarFallback>{module?.addedBy?.name?.charAt(0) || 'U'}</AvatarFallback>
                     </Avatar>
                     <div>
                       <p className='text-sm font-medium'>
-                        {module.addedBy?.name || 'Unknown User'}
+                        {module?.addedBy?.name || 'Unknown User'}
                       </p>
                       <p className='text-xs text-muted-foreground'>
                         Added{' '}
-                        {module.createdAt
-                          ? formatDistanceToNow(new Date(module.createdAt), { addSuffix: true })
+                        {module?.createdAt
+                          ? formatDistanceToNow(new Date(module?.createdAt), { addSuffix: true })
                           : 'Unknown date'}
                       </p>
                     </div>
@@ -450,15 +450,15 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                   <Clock className='h-3 w-3' />
                   <span>
                     Last updated{' '}
-                    {module.updatedAt
-                      ? formatDistanceToNow(new Date(module.updatedAt), { addSuffix: true })
+                    {module?.updatedAt
+                      ? formatDistanceToNow(new Date(module?.updatedAt), { addSuffix: true })
                       : 'Unknown date'}
                   </span>
                 </div>
                 {approvalStatus === 'pending' && (
                   <div className='flex items-center gap-1'>
                     <Send className='h-3 w-3' />
-                    <span>{module.addedBy?.name} sent for approval 2 days ago</span>
+                    <span>{module?.addedBy?.name} sent for approval 2 days ago</span>
                   </div>
                 )}
               </div>
@@ -557,7 +557,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                               <div className='flex justify-center p-4 md:p-6'>
                                 <Image
                                   src={fileDetails.previewUrl || '/placeholder.svg'}
-                                  alt={module.name}
+                                  alt={module?.name}
                                   className='object-contain max-h-[250px] md:max-h-[350px]'
                                   width={1000}
                                   height={1000}
@@ -574,7 +574,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                             <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 text-sm'>
                               <div>
                                 <Label className='text-xs text-muted-foreground'>File Name</Label>
-                                <p className='font-medium'>{module.name}</p>
+                                <p className='font-medium'>{module?.name}</p>
                               </div>
                               <div>
                                 <Label className='text-xs text-muted-foreground'>File Type</Label>
@@ -586,7 +586,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                               </div>
                               <div>
                                 <Label className='text-xs text-muted-foreground'>Upload Date</Label>
-                                <p className='font-medium'>{module.createdAt || 'Unknown'}</p>
+                                <p className='font-medium'>{module?.createdAt || 'Unknown'}</p>
                               </div>
                             </div>
                           </div>
@@ -616,7 +616,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                               <div>
                                 <Label className='text-xs text-muted-foreground flex items-center gap-1 mb-1'>
                                   Template Name{' '}
-                                  {module.content?.templateId?.description && (
+                                  {module?.content?.templateId?.description && (
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <Button
@@ -628,14 +628,14 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                                         </Button>
                                       </TooltipTrigger>
                                       <TooltipContent>
-                                        {module.content.templateId.description}
+                                        {module?.content?.templateId?.description}
                                       </TooltipContent>
                                     </Tooltip>
                                   )}
                                 </Label>
                                 <div className='flex items-center mt-1'>
                                   <p className='font-medium'>
-                                    {module.content?.templateId?.name || 'Untitled Template'}
+                                    {module?.content?.templateId?.name || 'Untitled Template'}
                                   </p>
                                 </div>
                               </div>
@@ -906,8 +906,8 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
           template={module.content?.templateId}
           moduleId={moduleId}
           initialData={{
-            name: module.name,
-            fields: module.versions?.[currentVersion - 1]?.contentSnapshot?.fields || [],
+            name: module?.name,
+            fields: module?.versions?.[currentVersion - 1]?.contentSnapshot?.fields || [],
           }}
         />
       )}
@@ -966,17 +966,13 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
         isLoading={requestApprovalMutation.isPending}
         isPreview={approvalDetails?.length > 0}
         moduleDetails={{
-          name: module.name,
-          version: module.currentVersion,
-          updatedAt: module.updatedAt,
-          fileType: module.fileType,
+          name: module?.name,
+          version: module?.currentVersion,
+          updatedAt: module?.updatedAt,
+          fileType: module?.fileType,
         }}
         previewMessage={approvalDetails?.[0]?.message || ''}
       />
-
-      <div className='space-y-4'>
-        <Card>{/* ... existing code ... */}</Card>
-      </div>
     </>
   );
 }
