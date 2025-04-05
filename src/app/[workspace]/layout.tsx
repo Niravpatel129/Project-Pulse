@@ -2,6 +2,7 @@
 
 import { Navigation } from '@/components/navigation/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -31,11 +32,18 @@ export default function DashboardLayout({
   const showNavigation =
     !isAuthPage && !isPortalPage && (loading || isAuthenticated) && !isApprovalsPage;
 
+  const isFullPage = isApprovalsPage;
+
   return (
     <div className='flex min-h-screen flex-col'>
       {showNavigation && <Navigation />}
       {/* Main Content */}
-      <main className='flex-1 bg-[#eff6fd] p-3 pt-1 px-6 sm:p-4 sm:pt-2 md:px-10 md:py-1 lg:p-8 lg:pt-4 lg:px-12 xl:px-16'>
+      <main
+        className={cn(
+          'flex-1 bg-[#eff6fd] p-3 pt-1 px-6 sm:p-4 sm:pt-2 md:px-10 md:py-1 lg:p-8 lg:pt-4 lg:px-12 xl:px-16',
+          isFullPage && '!p-0',
+        )}
+      >
         {children}
       </main>
     </div>

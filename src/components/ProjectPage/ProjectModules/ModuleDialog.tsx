@@ -319,7 +319,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
               </div>
 
               <h3 className='text-sm font-medium text-muted-foreground'>Module Details</h3>
-              <Card className='border-muted mt-2' style={{ marginTop: '12px' }}>
+              <Card className='border-muted !mt-2'>
                 <CardContent className='p-3 md:p-4 pt-0 mt-0'>
                   {/* Added By */}
                   <div className='flex items-center gap-3'>
@@ -925,6 +925,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
 
       {/* Approver Dialog */}
       <ApproverDialog
+        approvalId={approvalDetails?.[0]?._id}
         isOpen={showApproverDialog}
         onClose={() => {
           setShowApproverDialog(false);

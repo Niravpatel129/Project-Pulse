@@ -12,7 +12,6 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Ban, Bell, ChevronDown, Clock, Eye, FileText, Mail, MessageSquare, X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
@@ -29,6 +28,7 @@ interface ApproverDialogProps {
   onClose: () => void;
   potentialApprovers: Approver[];
   selectedApprovers: Approver[];
+  approvalId?: string;
   onSelectApprover: (approver: Approver) => void;
   onRemoveApprover: (email: string) => void;
   manualEmail: string;
@@ -59,6 +59,7 @@ export function ApproverDialog({
   onRequestApproval,
   isLoading,
   isPreview = false,
+  approvalId,
   previewMessage = '',
   moduleDetails = {
     name: 'Untitled',
@@ -84,8 +85,6 @@ export function ApproverDialog({
     moduleId: '',
     moduleDetails,
   });
-
-  const router = useRouter();
 
   // Set message from preview if in preview mode
   useEffect(() => {
@@ -549,7 +548,10 @@ export function ApproverDialog({
                       size='sm'
                       className='justify-start'
                       onClick={() => {
-                        window.open(`/project`, '_blank');
+                        if (approvalId) {
+                          const host = window.location.host;
+                          window.open(`https://${host}/approvals/${approvalId}`, '_blank');
+                        }
                       }}
                     >
                       <Eye className='h-4 w-4 mr-2' />
