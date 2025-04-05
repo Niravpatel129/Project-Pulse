@@ -248,12 +248,12 @@ Your Name`,
                 </div>
 
                 {/* Selected Recipients */}
-                <div className='mb-3'>
+                <div className='mb-3 min-h-[40px] flex flex-row flex-wrap gap-2'>
                   {selectedApprovers.map((approver) => {
                     return (
                       <div
                         key={approver.email}
-                        className='flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1.5 mb-2 w-fit'
+                        className='flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1.5 w-fit'
                       >
                         <Avatar className='h-6 w-6'>
                           <AvatarImage
@@ -382,6 +382,16 @@ Your Name`,
                     <Button className='w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 text-sm'>
                       Review and Approve
                     </Button>
+
+                    {/* Fixed height container to prevent layout shift */}
+                    <div className='h-6 mt-2'>
+                      {allowComments && (
+                        <div className='text-xs text-center text-gray-500'>
+                          <MessageSquare className='h-3 w-3 inline mr-1' />
+                          Comments are enabled for this review
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className='text-xs text-gray-500 dark:text-gray-400 text-center'>
