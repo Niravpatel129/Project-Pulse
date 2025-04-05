@@ -2,9 +2,10 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { Bell, ChevronDown, FileText, MessageSquare, Plus, X } from 'lucide-react';
 import { useState } from 'react';
 
@@ -66,8 +67,11 @@ Your Name`,
   const [allowComments, setAllowComments] = useState(true);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className='p-0 m-0 max-w-full h-screen w-screen rounded-none'>
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent side='bottom' className='p-0 m-0 max-w-full h-[90vh] w-screen rounded-t-lg'>
+        <VisuallyHidden>
+          <SheetTitle>Send for Client Approval</SheetTitle>
+        </VisuallyHidden>
         <div className='flex flex-col h-full'>
           {/* Header */}
           <div className='flex justify-between items-center px-6 py-4 border-b'>
@@ -271,8 +275,8 @@ Your Name`,
                   </div>
 
                   <div className='text-xs text-gray-500 dark:text-gray-400 text-center'>
-                    This request was sent via Pulse. If you have any questions, please contact
-                    support.
+                    This request was sent via automated email. If you have any questions, please
+                    contact support.
                   </div>
                 </div>
               </div>
@@ -293,7 +297,7 @@ Your Name`,
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
