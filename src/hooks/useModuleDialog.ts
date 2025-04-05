@@ -35,6 +35,16 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
     enabled: !!moduleId,
   });
 
+  // Fetch approval details
+  const { data: approvalDetails, isLoading: isLoadingApprovalDetails } = useQuery({
+    queryKey: ['module-approvals', moduleId],
+    queryFn: async () => {
+      const { data } = await newRequest.get(`/approvals/modules/${moduleId}`);
+      return data.data;
+    },
+    enabled: !!moduleId,
+  });
+
   useEffect(() => {
     if (module) {
       setSelectedVersion(module.currentVersion);
@@ -228,7 +238,6 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
     moduleStatus,
     setModuleStatus,
     updateStatusMutation,
-    requestApprovalMutation,
     deleteModuleMutation,
     replaceFileMutation,
     restoreVersionMutation,
@@ -236,15 +245,16 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
     getApprovalStatusText,
     getModuleTypeLabel,
     getModuleTypeColor,
-    // New values
     showApproverDialog,
     setShowApproverDialog,
     selectedApprovers,
     setSelectedApprovers,
     manualEmail,
     setManualEmail,
-    potentialApprovers,
     handleAddManualEmail,
     handleRemoveApprover,
+    requestApprovalMutation,
+    approvalDetails,
+    isLoadingApprovalDetails,
   };
 }

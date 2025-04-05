@@ -31,6 +31,7 @@ import {
   Download,
   Edit,
   ExternalLink,
+  Eye,
   FileText,
   HelpCircle,
   RefreshCw,
@@ -72,6 +73,8 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
     getApprovalStatusText,
     getModuleTypeLabel,
     getModuleTypeColor,
+    approvalDetails,
+    isLoadingApprovalDetails,
   } = useModuleDialog({ moduleId });
   const { project } = useProject();
 
@@ -267,7 +270,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
 
               {/* Action Buttons */}
               <div className='space-y-2 md:space-y-3'>
-                {approvalStatus === 'not_requested' && (
+                {approvalStatus === 'not_requested' && !approvalDetails?.length && (
                   <Button
                     className='w-full justify-start gap-2'
                     onClick={() => {
@@ -276,6 +279,18 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                   >
                     <Send className='h-4 w-4' />
                     Request Approval
+                  </Button>
+                )}
+
+                {approvalDetails?.length > 0 && (
+                  <Button
+                    className='w-full justify-start gap-2'
+                    onClick={() => {
+                      setActiveTab('comments');
+                    }}
+                  >
+                    <Eye className='h-4 w-4' />
+                    View Approval Details
                   </Button>
                 )}
 
