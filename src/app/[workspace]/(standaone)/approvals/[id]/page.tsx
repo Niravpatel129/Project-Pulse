@@ -15,10 +15,10 @@ import {
   Eye,
   FileImage,
   FileText,
-  History,
   MoreHorizontal,
   Paperclip,
   Reply,
+  Send,
   ThumbsUp,
   XCircle,
 } from 'lucide-react';
@@ -35,7 +35,7 @@ export default function ApprovalRequestPage() {
 
             {/* Version Tabs */}
             <div className='flex items-center gap-2'>
-              <Tabs defaultValue='v3' className='w-[200px]'>
+              <Tabs defaultValue='v3' className=''>
                 <TabsList className='h-8'>
                   <TabsTrigger value='v1' className='text-xs px-2'>
                     v1
@@ -48,15 +48,12 @@ export default function ApprovalRequestPage() {
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
-              <Button variant='ghost' size='icon' className='h-8 w-8'>
-                <History className='h-4 w-4' />
-              </Button>
             </div>
           </div>
 
-          <div className='p-3 flex-1 overflow-auto'>
+          <div className='p-3 flex-1 overflow-auto pb-0'>
             <Tabs defaultValue='file' className='w-full h-full flex flex-col'>
-              <TabsList className='w-[260px] h-8 mb-3'>
+              <TabsList className=''>
                 <TabsTrigger value='file' className='text-xs'>
                   File
                 </TabsTrigger>
@@ -147,7 +144,7 @@ export default function ApprovalRequestPage() {
 
                         <div className='space-y-1'>
                           <div className='text-xs font-medium text-gray-500'>Description</div>
-                          <div className='text-xs text-gray-700 bg-gray-50 p-2 rounded-md'>
+                          <div className='text-xs text-gray-700  p-2 rounded-md'>
                             This project aims to increase brand awareness through targeted digital
                             marketing campaigns across multiple platforms. The strategy includes
                             content creation, paid advertising, and influencer partnerships.
@@ -204,7 +201,7 @@ export default function ApprovalRequestPage() {
             {/* Message */}
             <div className='p-3 border-b'>
               <div className='font-semibold text-sm text-gray-700 mb-1'>Message</div>
-              <div className='text-xs text-gray-700 bg-gray-50 p-2 rounded-md'>
+              <div className='text-xs text-gray-700  p-2 rounded-md'>
                 Please review and approve the module. This is the updated version with all the
                 requested changes implemented.
               </div>
@@ -219,7 +216,7 @@ export default function ApprovalRequestPage() {
               {/* Scrollable Comments */}
               <div className='flex-1 overflow-y-auto p-3 space-y-3'>
                 {/* Comment 1 */}
-                <div className='bg-gray-50 rounded-lg p-3'>
+                <div className=' rounded-lg p-3'>
                   <div className='flex gap-2'>
                     <Avatar className='h-8 w-8 border bg-white'>
                       <AvatarImage src='/placeholder.svg?height=32&width=32' />
@@ -267,7 +264,7 @@ export default function ApprovalRequestPage() {
                 </div>
 
                 {/* Comment 2 */}
-                <div className='bg-gray-50 rounded-lg p-3'>
+                <div className=' rounded-lg p-3'>
                   <div className='flex gap-2'>
                     <Avatar className='h-8 w-8 border bg-white'>
                       <AvatarImage src='/placeholder.svg?height=32&width=32' />
@@ -295,61 +292,12 @@ export default function ApprovalRequestPage() {
                         Some minor changes are needed. Could you please update the budget section to
                         include the quarterly breakdown?
                       </div>
-                      <div className='mt-2 flex items-center gap-3'>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='h-6 text-xs flex items-center gap-1 text-gray-500 px-2'
-                        >
-                          <ThumbsUp className='h-3 w-3' />
-                          <span>Like</span>
-                        </Button>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='h-6 text-xs flex items-center gap-1 text-gray-500 px-2'
-                        >
-                          <Reply className='h-3 w-3' />
-                          <span>Reply</span>
-                        </Button>
-                      </div>
-
-                      {/* Nested Reply */}
-                      <div className='mt-2 ml-4 pt-2 border-t border-gray-200'>
-                        <div className='flex gap-2'>
-                          <Avatar className='h-6 w-6 border bg-white'>
-                            <AvatarImage src='/placeholder.svg?height=24&width=24' />
-                            <AvatarFallback>JD</AvatarFallback>
-                          </Avatar>
-                          <div className='flex-1'>
-                            <div className='flex justify-between items-start'>
-                              <div>
-                                <p className='font-medium text-gray-900 text-xs'>John Doe</p>
-                                <p className='text-gray-500 text-xs'>30 minutes ago</p>
-                              </div>
-                            </div>
-                            <div className='mt-1 text-gray-800 text-xs'>
-                              I&apos;ll update that right away and send a new version.
-                            </div>
-                            <div className='mt-1 flex items-center gap-3'>
-                              <Button
-                                variant='ghost'
-                                size='sm'
-                                className='h-5 text-xs flex items-center gap-1 text-gray-500 px-2'
-                              >
-                                <ThumbsUp className='h-2.5 w-2.5' />
-                                <span>Like (1)</span>
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Comment 3 */}
-                <div className='bg-gray-50 rounded-lg p-3'>
+                <div className=' rounded-lg p-3'>
                   <div className='flex gap-2'>
                     <Avatar className='h-8 w-8 border bg-white'>
                       <AvatarImage src='/placeholder.svg?height=32&width=32' />
@@ -384,24 +332,6 @@ export default function ApprovalRequestPage() {
                           <Download className='h-3 w-3' />
                         </Button>
                       </div>
-                      <div className='mt-2 flex items-center gap-3'>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='h-6 text-xs flex items-center gap-1 text-gray-500 px-2'
-                        >
-                          <ThumbsUp className='h-3 w-3' />
-                          <span>Like</span>
-                        </Button>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='h-6 text-xs flex items-center gap-1 text-gray-500 px-2'
-                        >
-                          <Reply className='h-3 w-3' />
-                          <span>Reply</span>
-                        </Button>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -420,12 +350,16 @@ export default function ApprovalRequestPage() {
                         className='w-full p-2 text-xs focus:outline-none'
                         placeholder='Add a comment...'
                       />
-                      <div className='flex items-center px-2 border-l bg-gray-50'>
+                      <div className='flex items-center px-2 border-l '>
                         <Button variant='ghost' size='sm' className='h-6 w-6 p-0'>
                           <Paperclip className='h-3.5 w-3.5' />
                         </Button>
-                        <Button size='sm' className='ml-2 h-6 text-xs'>
-                          Post
+                        <Button
+                          size='sm'
+                          className='ml-2 h-6 text-xs flex items-center gap-1'
+                          variant='outline'
+                        >
+                          <Send className='h-3.5 w-3.5' />
                         </Button>
                       </div>
                     </div>
@@ -434,22 +368,22 @@ export default function ApprovalRequestPage() {
               </div>
             </div>
           </div>
-
-          {/* Approval Actions - Fixed at bottom */}
-          <div className='p-3 flex justify-end gap-3 border-t bg-gray-50'>
-            <Button variant='outline' size='sm' className='h-8 text-xs flex items-center gap-1'>
-              <XCircle className='h-3.5 w-3.5 text-red-500' />
-              Reject
-            </Button>
-            <Button
-              size='sm'
-              className='h-8 text-xs flex items-center gap-1 bg-green-600 hover:bg-green-700'
-            >
-              <CheckCircle className='h-3.5 w-3.5' />
-              Approve
-            </Button>
-          </div>
         </div>
+      </div>
+
+      {/* Approval Actions - Fixed at bottom of screen */}
+      <div className='w-full p-4 flex justify-end gap-3 border-t bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1),0_-2px_4px_-2px_rgba(0,0,0,0.05)] z-10'>
+        <Button variant='outline' size='sm' className='h-9 text-sm flex items-center gap-1'>
+          <XCircle className='h-4 w-4 text-red-500' />
+          Reject
+        </Button>
+        <Button
+          size='sm'
+          className='h-9 text-sm flex items-center gap-1 bg-green-600 hover:bg-green-700'
+        >
+          <CheckCircle className='h-4 w-4' />
+          Approve
+        </Button>
       </div>
     </div>
   );
