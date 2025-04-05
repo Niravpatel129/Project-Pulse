@@ -2,13 +2,16 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useApproverDialog } from '@/hooks/useApproverDialog';
+import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, ChevronDown, FileText, Mail, MessageSquare, X } from 'lucide-react';
+import { Ban, Bell, ChevronDown, Clock, FileText, Mail, MessageSquare, X } from 'lucide-react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
 
 interface Approver {
@@ -31,6 +34,8 @@ interface ApproverDialogProps {
   onAddManualEmail: () => void;
   onRequestApproval: () => void;
   isLoading: boolean;
+  isPreview?: boolean;
+  previewMessage?: string;
   moduleDetails?: {
     name: string;
     version: number;
@@ -51,6 +56,8 @@ export function ApproverDialog({
   onAddManualEmail,
   onRequestApproval,
   isLoading,
+  isPreview = false,
+  previewMessage = '',
   moduleDetails = {
     name: 'Untitled',
     version: 1,
@@ -75,6 +82,13 @@ export function ApproverDialog({
     moduleId: '',
     moduleDetails,
   });
+
+  // Set message from preview if in preview mode
+  useEffect(() => {
+    if (isPreview && previewMessage) {
+      setMessage(previewMessage);
+    }
+  }, [isPreview, previewMessage, setMessage]);
 
   // Filter participants based on search term
   const filteredParticipants = potentialApprovers.filter((approver) => {
@@ -120,7 +134,9 @@ export function ApproverDialog({
         >
           {/* Header */}
           <div className='flex justify-between items-center px-6 py-4 border-b'>
-            <h2 className='text-xl font-semibold'>Send for Client Approval</h2>
+            <h2 className='text-xl font-semibold'>
+              {isPreview ? 'Approval Request Details' : 'Send for Client Approval'}
+            </h2>
             <motion.button
               onClick={onClose}
               className='text-gray-500 hover:text-gray-700'
@@ -170,9 +186,14 @@ export function ApproverDialog({
                 <label className='block text-sm font-medium mb-2'>Select Recipients</label>
                 <div className='relative mb-3' ref={dropdownRef}>
                   <div
-                    className='flex items-center justify-between w-full border rounded-md px-3 py-2 bg-white cursor-pointer hover:bg-gray-50'
+                    className={cn(
+                      'flex items-center justify-between w-full border rounded-md px-3 py-2 bg-white',
+                      isPreview ? 'cursor-default' : 'cursor-pointer hover:bg-gray-50',
+                    )}
                     onClick={() => {
-                      return setIsDropdownOpen(!isDropdownOpen);
+                      if (!isPreview) {
+                        setIsDropdownOpen(!isDropdownOpen);
+                      }
                     }}
                   >
                     <input
@@ -185,7 +206,9 @@ export function ApproverDialog({
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setIsDropdownOpen(true);
+                        if (!isPreview) {
+                          setIsDropdownOpen(true);
+                        }
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && isSearchTermValidEmail) {
@@ -193,12 +216,13 @@ export function ApproverDialog({
                           handleAddCustomEmail();
                         }
                       }}
+                      disabled={isPreview}
                     />
                     <ChevronDown className='h-4 w-4 text-gray-500' />
                   </div>
 
                   <AnimatePresence>
-                    {isDropdownOpen && (
+                    {isDropdownOpen && !isPreview && (
                       <motion.div
                         className='absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-auto'
                         initial={{ opacity: 0, y: -10 }}
@@ -328,6 +352,7 @@ export function ApproverDialog({
                   onChange={(e) => {
                     return setMessage(e.target.value);
                   }}
+                  disabled={isPreview}
                 />
               </motion.div>
 
@@ -343,6 +368,7 @@ export function ApproverDialog({
                     checked={sendReminder}
                     onCheckedChange={setSendReminder}
                     className='mt-0.5'
+                    disabled={isPreview}
                   />
                   <div>
                     <label className='flex items-center gap-2 text-sm font-medium'>
@@ -360,6 +386,7 @@ export function ApproverDialog({
                     checked={allowComments}
                     onCheckedChange={setAllowComments}
                     className='mt-0.5'
+                    disabled={isPreview}
                   />
                   <div>
                     <label className='flex items-center gap-2 text-sm font-medium'>
@@ -486,20 +513,50 @@ export function ApproverDialog({
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.3 }}
           >
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button variant='outline' onClick={onClose}>
-                Cancel
-              </Button>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                className='bg-primary hover:bg-primary/90 text-primary-foreground'
-                onClick={onRequestApproval}
-                disabled={selectedApprovers.length === 0 || isLoading}
-              >
-                {isLoading ? 'Sending...' : 'Send for Approval'}
-              </Button>
-            </motion.div>
+            {isPreview ? (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant='outline' className='gap-2'>
+                    <Clock className='h-4 w-4' />
+                    Pending Approval
+                    <ChevronDown className='h-4 w-4' />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className='w-48 p-2'>
+                  <div className='flex flex-col space-y-1'>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      className='justify-start text-destructive'
+                      onClick={() => {
+                        // TODO: Add cancel request handler
+                        onClose();
+                      }}
+                    >
+                      <Ban className='h-4 w-4 mr-2' />
+                      Cancel Request
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            ) : (
+              <>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button variant='outline' onClick={onClose}>
+                    Cancel
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    className='bg-primary hover:bg-primary/90 text-primary-foreground'
+                    onClick={onRequestApproval}
+                    disabled={selectedApprovers.length === 0 || isLoading}
+                  >
+                    {isLoading ? 'Sending...' : 'Send for Approval'}
+                  </Button>
+                </motion.div>
+              </>
+            )}
           </motion.div>
         </motion.div>
       </SheetContent>

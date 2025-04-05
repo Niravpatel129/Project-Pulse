@@ -392,7 +392,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                   <Button
                     className='w-full justify-start gap-2'
                     onClick={() => {
-                      setActiveTab('comments');
+                      setShowApproverDialog(true);
                     }}
                   >
                     <Eye className='h-4 w-4' />
@@ -953,7 +953,18 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
           setManualEmail('');
         }}
         potentialApprovers={approvers}
-        selectedApprovers={selectedApprovers}
+        selectedApprovers={
+          approvalDetails?.length > 0
+            ? approvalDetails.map((approval) => {
+                return {
+                  name: approval.requestedBy.name,
+                  email: approval.approverEmail,
+                  avatar: approval.requestedBy.avatar,
+                  isProjectParticipant: true,
+                };
+              })
+            : selectedApprovers
+        }
         onSelectApprover={(approver) => {
           if (
             !selectedApprovers.some((a) => {
@@ -973,12 +984,14 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
           return requestApprovalMutation.mutate();
         }}
         isLoading={requestApprovalMutation.isPending}
+        isPreview={approvalDetails?.length > 0}
         moduleDetails={{
           name: module.name,
           version: module.currentVersion,
           updatedAt: module.updatedAt,
           fileType: module.fileType,
         }}
+        previewMessage={approvalDetails?.[0]?.message || ''}
       />
 
       <div className='space-y-4'>
