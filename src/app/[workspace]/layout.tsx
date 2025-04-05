@@ -14,7 +14,6 @@ export default function DashboardLayout({
   const router = useRouter();
   const { isAuthenticated, loading } = useAuth();
 
-  // Check if user is logged in
   useEffect(() => {
     if (
       !loading &&
@@ -26,20 +25,17 @@ export default function DashboardLayout({
     }
   }, [isAuthenticated, loading, pathname, router]);
 
-  // Check if the current path is login or register or portal
   const isAuthPage = pathname.includes('/login') || pathname.includes('/register');
   const isPortalPage = pathname.includes('/portal');
-
-  // Determine if we should show navigation
-  const showNavigation = !isAuthPage && !isPortalPage && (loading || isAuthenticated);
-
-  const fullLayout = pathname.includes('/database');
+  const isApprovalsPage = pathname.includes('/approvals');
+  const showNavigation =
+    !isAuthPage && !isPortalPage && (loading || isAuthenticated) && !isApprovalsPage;
 
   return (
     <div className='flex min-h-screen flex-col'>
       {showNavigation && <Navigation />}
       {/* Main Content */}
-      <main className='flex-1 bg-[#eff6fd] p-3 pt-1 px-6 sm:p-4 md:px-1 sm:pt-2 md:px-10 md:py-1 lg:p-8 lg:pt-4 lg:px-12 xl:px-16'>
+      <main className='flex-1 bg-[#eff6fd] p-3 pt-1 px-6 sm:p-4 sm:pt-2 md:px-10 md:py-1 lg:p-8 lg:pt-4 lg:px-12 xl:px-16'>
         {children}
       </main>
     </div>

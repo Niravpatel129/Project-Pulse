@@ -68,7 +68,7 @@ const ApprovalBanner = ({
 
   return (
     <div className='mb-4 space-y-3'>
-      <h3 className='text-sm font-medium text-muted-foreground'>Active Approval Request</h3>
+      <h3 className='text-sm font-medium text-muted-foreground'>Approval Request</h3>
       <div className='space-y-2'>
         {approvalDetails.map((approval) => {
           return (
@@ -318,8 +318,9 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                 </div>
               </div>
 
-              <Card className='border-muted'>
-                <CardContent className='p-3 md:p-4 space-y-3 md:space-y-4'>
+              <h3 className='text-sm font-medium text-muted-foreground'>Module Details</h3>
+              <Card className='border-muted mt-2' style={{ marginTop: '12px' }}>
+                <CardContent className='p-3 md:p-4 pt-0 mt-0'>
                   {/* Added By */}
                   <div className='flex items-center gap-3'>
                     <Avatar className='h-8 w-8'>
@@ -339,28 +340,6 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                           ? formatDistanceToNow(new Date(module.createdAt), { addSuffix: true })
                           : 'Unknown date'}
                       </p>
-                    </div>
-                  </div>
-
-                  {/* Approval Status */}
-                  <div className='space-y-1'>
-                    <Label className='text-xs text-muted-foreground'>Approval Status</Label>
-                    <div className='flex items-center justify-between'>
-                      <div className='flex items-center gap-2'>
-                        <Badge
-                          variant='outline'
-                          className={cn('font-normal', getApprovalStatusColor(approvalStatus))}
-                        >
-                          {getApprovalStatusText(approvalStatus)}
-                        </Badge>
-
-                        {approvalStatus === 'approved' && module.approvedBy && (
-                          <div className='flex items-center gap-1 text-xs text-muted-foreground'>
-                            <Clock className='h-3 w-3' />
-                            <span>{module.approvedBy.time || 'Unknown time'}</span>
-                          </div>
-                        )}
-                      </div>
                     </div>
                   </div>
                 </CardContent>
