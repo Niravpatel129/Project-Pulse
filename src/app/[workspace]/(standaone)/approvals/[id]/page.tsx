@@ -347,7 +347,7 @@ export default function ApprovalRequestPage() {
       </div>
 
       {/* Approval Actions - Fixed at bottom of screen */}
-      <div className='w-full p-4 flex justify-end gap-3 border-t bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1),0_-2px_4px_-2px_rgba(0,0,0,0.05)] z-10'>
+      <div className='w-full p-4 flex justify-end gap-3 border-t bg-white shadow-[0_-2px_4px_-1px_rgba(0,0,0,0.06)] z-10'>
         <Button
           variant='outline'
           size='sm'
