@@ -311,10 +311,6 @@ export default function ApprovalRequestPage() {
               {/* Add Comment - Fixed at bottom */}
               <div className='p-4 border-t bg-white'>
                 <div className='flex gap-3'>
-                  <Avatar className='h-8 w-8 border bg-white'>
-                    <AvatarImage src='/placeholder.svg?height=32&width=32' />
-                    <AvatarFallback className='bg-teal-100 text-teal-700'>YO</AvatarFallback>
-                  </Avatar>
                   <div className='flex-1'>
                     <div className='border rounded-lg overflow-hidden flex'>
                       <input
@@ -331,10 +327,10 @@ export default function ApprovalRequestPage() {
                         </Button>
                         <Button
                           size='sm'
-                          className='ml-2 h-6 text-xs flex items-center gap-1 bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                          className='ml-2 h-6 text-xs flex items-center gap-1  text-gray-600 border-gray-200 hover:bg-gray-100'
                           variant='outline'
                         >
-                          <Send className='h-3.5 w-3.5' />
+                          <Send className='h-4 w-4' />
                         </Button>
                       </div>
                     </div>
