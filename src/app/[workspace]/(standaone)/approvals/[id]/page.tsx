@@ -71,13 +71,15 @@ export default function ApprovalRequestPage() {
     }) || []),
   ];
 
-  const handleStatusUpdate = (status: 'approved' | 'rejected') => {
-    if (comment.trim()) {
-      addComment(comment);
+  const handleStatusUpdate = async (status: 'approved' | 'rejected') => {
+    try {
+      await updateStatus(status, comment.trim() ? comment : undefined);
+      setConfirmAction(null);
+      setComment('');
+    } catch (error) {
+      console.error('Error updating status:', error);
+      // You might want to add a toast notification here to show the error to the user
     }
-    updateStatus(status);
-    setConfirmAction(null);
-    setComment('');
   };
 
   return (

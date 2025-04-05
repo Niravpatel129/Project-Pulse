@@ -136,7 +136,7 @@ export const useApprovalRequest = (id: string) => {
             comments: data.comments.map((comment) => {
               return {
                 id: comment._id,
-                author: comment.author.name,
+                author: comment?.author?.name || 'External',
                 content: comment.content,
                 timestamp: new Date(comment.createdAt).toLocaleString(),
                 attachments: comment.attachments?.map((att) => {
@@ -214,7 +214,7 @@ export const useApprovalRequest = (id: string) => {
         });
       }
 
-      const response = await newRequest.post(`/approvals/${id}/comments`, formData, {
+      const response = await newRequest.post(`/approvals/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -246,14 +246,25 @@ export const useApprovalRequest = (id: string) => {
     }
   };
 
-  const updateStatus = async (status: 'approved' | 'rejected') => {
+  const updateStatus = async (status: 'approved' | 'rejected', comment?: string) => {
     try {
-      await newRequest.patch(`/approvals/${id}/status`, { status });
+      await newRequest.post(`/approvals/${id}/status`, { status, comment });
 
       if (approvalRequest) {
         setApprovalRequest({
           ...approvalRequest,
           status,
+          comments: comment
+            ? [
+                ...approvalRequest.comments,
+                {
+                  id: Date.now().toString(), // Temporary ID until we get the real one from the server
+                  author: 'You',
+                  content: comment,
+                  timestamp: new Date().toLocaleString(),
+                },
+              ]
+            : approvalRequest.comments,
         });
       }
     } catch (err) {
