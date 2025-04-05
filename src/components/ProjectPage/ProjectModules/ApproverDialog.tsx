@@ -95,7 +95,13 @@ Your Name`,
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
+  // Check if search term is a partial email (contains @ but not complete)
+  const isPartialEmail = (email: string) => {
+    return email.includes('@') && !isValidEmail(email);
+  };
+
   const isSearchTermValidEmail = isValidEmail(searchTerm);
+  const isSearchTermPartialEmail = isPartialEmail(searchTerm);
   const isCustomEmail =
     isSearchTermValidEmail &&
     !filteredParticipants.some((p) => {
@@ -183,35 +189,45 @@ Your Name`,
 
                   {isDropdownOpen && (
                     <div className='absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-auto'>
-                      {filteredParticipants.length > 0 ? (
-                        filteredParticipants.map((approver) => {
-                          return (
-                            <div
-                              key={approver.email}
-                              className='flex items-center gap-2 p-2 hover:bg-gray-100 cursor-pointer'
-                              onClick={() => {
-                                onSelectApprover(approver);
-                                setSearchTerm('');
-                                setIsDropdownOpen(false);
-                              }}
-                            >
-                              <Avatar className='h-6 w-6'>
-                                <AvatarImage
-                                  src={approver.avatar || '/placeholder.svg'}
-                                  alt={approver.name}
-                                />
-                                <AvatarFallback>{approver.name[0]}</AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <div className='text-sm font-medium'>{approver.name}</div>
-                                <div className='text-xs text-gray-500'>{approver.email}</div>
-                              </div>
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <div className='p-2 text-sm text-gray-500'>No participants found</div>
+                      {isSearchTermPartialEmail && (
+                        <div className='p-2 text-sm text-gray-500 border-b'>
+                          Continue typing to complete the email address
+                        </div>
                       )}
+
+                      {filteredParticipants.length > 0
+                        ? filteredParticipants.map((approver) => {
+                            return (
+                              <div
+                                key={approver.email}
+                                className='flex items-center gap-2 p-2 hover:bg-gray-100 cursor-pointer'
+                                onClick={() => {
+                                  onSelectApprover(approver);
+                                  setSearchTerm('');
+                                  setIsDropdownOpen(false);
+                                }}
+                              >
+                                <Avatar className='h-6 w-6'>
+                                  <AvatarImage
+                                    src={approver.avatar || '/placeholder.svg'}
+                                    alt={approver.name}
+                                  />
+                                  <AvatarFallback>{approver.name[0]}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <div className='text-sm font-medium'>{approver.name}</div>
+                                  <div className='text-xs text-gray-500'>{approver.email}</div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        : !isSearchTermPartialEmail && (
+                            <div className='p-2 text-sm text-gray-500'>
+                              {searchTerm
+                                ? 'No participants found'
+                                : 'Type to search or enter an email'}
+                            </div>
+                          )}
 
                       {isCustomEmail && (
                         <div
@@ -268,6 +284,7 @@ Your Name`,
                   className='min-h-[100px] rounded-md'
                   placeholder="Hey! Here's the latest version. Let me know what you think!"
                   value={message}
+                  rows={7}
                   onChange={(e) => {
                     return setMessage(e.target.value);
                   }}
