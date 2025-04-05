@@ -6,9 +6,9 @@ import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { useApproverDialog } from '@/hooks/useApproverDialog';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, ChevronDown, FileText, Mail, MessageSquare, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 interface Approver {
@@ -57,41 +57,24 @@ export function ApproverDialog({
     updatedAt: '5 min ago',
   },
 }: ApproverDialogProps) {
-  const [message, setMessage] = useState('');
-  const [sendReminder, setSendReminder] = useState(true);
-  const [allowComments, setAllowComments] = useState(true);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Reset state when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setMessage(`Hi there,
-
-I've completed the latest version of ${moduleDetails.name}. Please review it at your convenience and let me know if you'd like any changes.
-
-Best regards,
-Your Name`);
-      setSendReminder(true);
-      setAllowComments(true);
-      setIsDropdownOpen(false);
-      setSearchTerm('');
-    }
-  }, [isOpen, moduleDetails.name]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  const {
+    message,
+    setMessage,
+    sendReminder,
+    setSendReminder,
+    allowComments,
+    setAllowComments,
+    isDropdownOpen,
+    setIsDropdownOpen,
+    searchTerm,
+    setSearchTerm,
+    dropdownRef,
+    isValidEmail,
+    isPartialEmail,
+  } = useApproverDialog({
+    moduleId: '',
+    moduleDetails,
+  });
 
   // Filter participants based on search term
   const filteredParticipants = potentialApprovers.filter((approver) => {
@@ -100,16 +83,6 @@ Your Name`);
       approver.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
-
-  // Check if search term is a valid email
-  const isValidEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
-
-  // Check if search term is a partial email (contains @ but not complete)
-  const isPartialEmail = (email: string) => {
-    return email.includes('@') && !isValidEmail(email);
-  };
 
   const isSearchTermValidEmail = isValidEmail(searchTerm);
   const isSearchTermPartialEmail = isPartialEmail(searchTerm);

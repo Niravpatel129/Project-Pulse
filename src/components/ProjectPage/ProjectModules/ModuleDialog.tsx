@@ -21,6 +21,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useProject } from '@/contexts/ProjectContext';
+import { useApproverDialog } from '@/hooks/useApproverDialog';
 import { useModuleDialog } from '@/hooks/useModuleDialog';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -64,7 +65,6 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
     moduleStatus,
     setModuleStatus,
     updateStatusMutation,
-    requestApprovalMutation,
     deleteModuleMutation,
     replaceFileMutation,
     restoreVersionMutation,
@@ -72,22 +72,52 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
     getApprovalStatusText,
     getModuleTypeLabel,
     getModuleTypeColor,
-    showApproverDialog,
-    setShowApproverDialog,
+  } = useModuleDialog({ moduleId });
+  const { project } = useProject();
+
+  const {
+    isOpen: showApproverDialog,
+    setIsOpen: setShowApproverDialog,
     selectedApprovers,
     setSelectedApprovers,
     manualEmail,
     setManualEmail,
-    potentialApprovers,
-    handleAddManualEmail,
+    message,
+    setMessage,
+    sendReminder,
+    setSendReminder,
+    allowComments,
+    setAllowComments,
+    isDropdownOpen,
+    setIsDropdownOpen,
+    searchTerm,
+    setSearchTerm,
+    dropdownRef,
+    requestApprovalMutation,
+    handleAddCustomEmail,
     handleRemoveApprover,
-  } = useModuleDialog({ moduleId });
-  const { project } = useProject();
+    isValidEmail,
+    isPartialEmail,
+  } = useApproverDialog({
+    moduleId,
+    moduleDetails: {
+      name: module?.name || 'Untitled',
+      version: module?.currentVersion || 1,
+      updatedAt: module?.updatedAt || '5 min ago',
+      fileType: module?.fileType,
+    },
+  });
 
   // Get approvers from project participants
   const approvers =
-    project?.participants.filter((p) => {
-      return p.role === 'client';
+    project?.participants.map((p) => {
+      return {
+        id: p._id,
+        name: p.name,
+        email: p.email!,
+        avatar: p.avatar,
+        isProjectParticipant: true,
+      };
     }) || [];
 
   const handleDelete = async () => {
@@ -801,7 +831,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
           setSelectedApprovers([]);
           setManualEmail('');
         }}
-        potentialApprovers={potentialApprovers}
+        potentialApprovers={approvers}
         selectedApprovers={selectedApprovers}
         onSelectApprover={(approver) => {
           if (
@@ -817,11 +847,17 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
         onRemoveApprover={handleRemoveApprover}
         manualEmail={manualEmail}
         onManualEmailChange={setManualEmail}
-        onAddManualEmail={handleAddManualEmail}
+        onAddManualEmail={handleAddCustomEmail}
         onRequestApproval={() => {
           return requestApprovalMutation.mutate();
         }}
         isLoading={requestApprovalMutation.isPending}
+        moduleDetails={{
+          name: module.name,
+          version: module.currentVersion,
+          updatedAt: module.updatedAt,
+          fileType: module.fileType,
+        }}
       />
     </>
   );
