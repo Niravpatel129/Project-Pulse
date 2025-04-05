@@ -285,8 +285,8 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
       >
         <DialogContent
           className={cn(
-            'p-0 h-[85vh] max-h-[900px] overflow-hidden flex flex-col md:flex-row gap-0',
-            isFullscreen ? 'max-w-[100vw] h-[100vh] max-h-[100vh]' : 'max-w-[1000px]',
+            'p-0 h-[90vh] max-h-[1000px] overflow-hidden flex flex-col md:flex-row gap-0',
+            isFullscreen ? 'max-w-[100vw] h-[100vh] max-h-[100vh]' : 'max-w-[1100px]',
           )}
         >
           <VisuallyHidden>
