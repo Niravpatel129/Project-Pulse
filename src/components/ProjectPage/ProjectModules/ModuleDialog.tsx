@@ -14,11 +14,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useProject } from '@/contexts/ProjectContext';
 import { useModuleDialog } from '@/hooks/useModuleDialog';
 import { cn } from '@/lib/utils';
@@ -157,6 +158,9 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
             isFullscreen ? 'max-w-[100vw] h-[100vh] max-h-[100vh]' : 'max-w-[1000px]',
           )}
         >
+          <VisuallyHidden>
+            <DialogTitle>Module Details</DialogTitle>
+          </VisuallyHidden>
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
