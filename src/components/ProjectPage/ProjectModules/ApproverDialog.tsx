@@ -429,7 +429,7 @@ Your Name`,
                   </div>
 
                   <motion.div
-                    className='border-t border-b py-4 my-4 border-gray-200 dark:border-gray-700 flex-1'
+                    className='border-t border-b py-4 my-4 border-gray-200 dark:border-gray-700 flex-1 max-h-[216px] overflow-y-auto'
                     layout
                   >
                     <p className='text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap'>
