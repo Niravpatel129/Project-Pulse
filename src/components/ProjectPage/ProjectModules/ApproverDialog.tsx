@@ -6,8 +6,8 @@ import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
-import { Bell, ChevronDown, FileText, MessageSquare, Plus, X } from 'lucide-react';
-import { useState } from 'react';
+import { Bell, ChevronDown, FileText, Mail, MessageSquare, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Approver {
   id?: string;
@@ -65,6 +65,55 @@ Your Name`,
   );
   const [sendReminder, setSendReminder] = useState(true);
   const [allowComments, setAllowComments] = useState(true);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Filter participants based on search term
+  const filteredParticipants = potentialApprovers.filter((approver) => {
+    return (
+      approver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      approver.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+
+  // Check if search term is a valid email
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const isSearchTermValidEmail = isValidEmail(searchTerm);
+  const isCustomEmail =
+    isSearchTermValidEmail &&
+    !filteredParticipants.some((p) => {
+      return p.email === searchTerm;
+    });
+
+  // Handle adding custom email
+  const handleAddCustomEmail = () => {
+    if (isSearchTermValidEmail) {
+      onSelectApprover({
+        name: searchTerm.split('@')[0],
+        email: searchTerm,
+        isProjectParticipant: false,
+      });
+      setSearchTerm('');
+      setIsDropdownOpen(false);
+    }
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -103,16 +152,83 @@ Your Name`,
               {/* Select Recipients */}
               <div className='mb-6'>
                 <label className='block text-sm font-medium mb-2'>Select Recipients</label>
-                <div className='relative mb-3'>
-                  <button
+                <div className='relative mb-3' ref={dropdownRef}>
+                  <div
                     className='flex items-center justify-between w-full border rounded-md px-3 py-2 bg-white cursor-pointer hover:bg-gray-50'
                     onClick={() => {
-                      // Handle dropdown toggle
+                      return setIsDropdownOpen(!isDropdownOpen);
                     }}
                   >
-                    <span className='text-sm'>Select from project participants</span>
+                    <input
+                      type='text'
+                      placeholder='Search participants or enter email'
+                      className='flex-1 text-sm border-none outline-none bg-transparent'
+                      value={searchTerm}
+                      onChange={(e) => {
+                        return setSearchTerm(e.target.value);
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsDropdownOpen(true);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && isSearchTermValidEmail) {
+                          e.preventDefault();
+                          handleAddCustomEmail();
+                        }
+                      }}
+                    />
                     <ChevronDown className='h-4 w-4 text-gray-500' />
-                  </button>
+                  </div>
+
+                  {isDropdownOpen && (
+                    <div className='absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-auto'>
+                      {filteredParticipants.length > 0 ? (
+                        filteredParticipants.map((approver) => {
+                          return (
+                            <div
+                              key={approver.email}
+                              className='flex items-center gap-2 p-2 hover:bg-gray-100 cursor-pointer'
+                              onClick={() => {
+                                onSelectApprover(approver);
+                                setSearchTerm('');
+                                setIsDropdownOpen(false);
+                              }}
+                            >
+                              <Avatar className='h-6 w-6'>
+                                <AvatarImage
+                                  src={approver.avatar || '/placeholder.svg'}
+                                  alt={approver.name}
+                                />
+                                <AvatarFallback>{approver.name[0]}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className='text-sm font-medium'>{approver.name}</div>
+                                <div className='text-xs text-gray-500'>{approver.email}</div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className='p-2 text-sm text-gray-500'>No participants found</div>
+                      )}
+
+                      {isCustomEmail && (
+                        <div
+                          className='flex items-center gap-2 p-2 hover:bg-gray-100 cursor-pointer border-t'
+                          onClick={handleAddCustomEmail}
+                        >
+                          <div className='h-6 w-6 bg-primary/10 rounded-full flex items-center justify-center'>
+                            <Mail className='h-3 w-3 text-primary' />
+                          </div>
+                          <div>
+                            <div className='text-sm font-medium'>Add custom email</div>
+                            <div className='text-xs text-gray-500'>{searchTerm}</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Selected Recipients */}
@@ -142,29 +258,6 @@ Your Name`,
                       </div>
                     );
                   })}
-                </div>
-
-                {/* Add Another Recipient */}
-                <div className='flex items-center gap-2'>
-                  <input
-                    type='email'
-                    placeholder='Enter email address'
-                    className='flex-1 text-sm rounded-md border border-input px-3 py-2'
-                    value={manualEmail}
-                    onChange={(e) => {
-                      return onManualEmailChange(e.target.value);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        onAddManualEmail();
-                      }
-                    }}
-                  />
-                  <Button variant='outline' size='sm' className='gap-1' onClick={onAddManualEmail}>
-                    <Plus className='h-4 w-4' />
-                    Add
-                  </Button>
                 </div>
               </div>
 
