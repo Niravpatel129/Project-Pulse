@@ -3,7 +3,9 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Timeline,
   TimelineContent,
@@ -19,6 +21,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle, Download, Eye, FileImage, FileText, XCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
 
 export default function ApprovalRequestPage() {
   const { id } = useParams();
@@ -31,6 +34,9 @@ export default function ApprovalRequestPage() {
     selectedVersion,
     switchVersion,
   } = useApprovalRequest(id as string);
+
+  const [confirmAction, setConfirmAction] = useState<'approve' | 'reject' | null>(null);
+  const [comment, setComment] = useState('');
 
   if (loading) {
     return <div className='h-screen flex items-center justify-center'>Loading...</div>;
@@ -64,6 +70,15 @@ export default function ApprovalRequestPage() {
       };
     }) || []),
   ];
+
+  const handleStatusUpdate = (status: 'approved' | 'rejected') => {
+    if (comment.trim()) {
+      addComment(comment);
+    }
+    updateStatus(status);
+    setConfirmAction(null);
+    setComment('');
+  };
 
   return (
     <motion.div
@@ -381,27 +396,120 @@ export default function ApprovalRequestPage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.3 }}
         >
-          <Button
-            variant='outline'
-            size='sm'
-            className='h-9 text-sm flex items-center gap-1.5 border-rose-200 text-rose-600 hover:bg-rose-50 font-medium'
-            onClick={() => {
-              return updateStatus('rejected');
+          <Popover
+            open={confirmAction === 'reject'}
+            onOpenChange={(open) => {
+              return !open && setConfirmAction(null);
             }}
           >
-            <XCircle className='h-4 w-4' />
-            Reject
-          </Button>
-          <Button
-            size='sm'
-            className='h-9 text-sm flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 font-medium'
-            onClick={() => {
-              return updateStatus('approved');
+            <PopoverTrigger asChild>
+              <Button
+                variant='outline'
+                size='sm'
+                className={`h-9 text-sm flex items-center gap-1.5 font-medium ${
+                  confirmAction === 'reject'
+                    ? 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100'
+                    : 'border-rose-200 text-rose-600 hover:bg-rose-50'
+                }`}
+                disabled={confirmAction === 'reject'}
+                onClick={() => {
+                  return setConfirmAction('reject');
+                }}
+              >
+                <XCircle className='h-4 w-4' />
+                Reject
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className='w-80 p-4 space-y-3'>
+              <div className='text-sm font-medium'>Add an optional comment</div>
+              <Textarea
+                placeholder='Enter your comment here...'
+                value={comment}
+                onChange={(e) => {
+                  return setComment(e.target.value);
+                }}
+                className='min-h-[100px]'
+              />
+              <div className='flex justify-end gap-2'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => {
+                    setConfirmAction(null);
+                    setComment('');
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size='sm'
+                  className='bg-rose-600 hover:bg-rose-700'
+                  onClick={() => {
+                    return handleStatusUpdate('rejected');
+                  }}
+                >
+                  Confirm Reject
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Popover
+            open={confirmAction === 'approve'}
+            onOpenChange={(open) => {
+              return !open && setConfirmAction(null);
             }}
           >
-            <CheckCircle className='h-4 w-4' />
-            Approve
-          </Button>
+            <PopoverTrigger asChild>
+              <Button
+                size='sm'
+                disabled={confirmAction === 'approve'}
+                className={`h-9 text-sm flex items-center gap-1.5 font-medium ${
+                  confirmAction === 'approve'
+                    ? 'bg-teal-700 hover:bg-teal-800'
+                    : 'bg-teal-600 hover:bg-teal-700'
+                }`}
+                onClick={() => {
+                  return setConfirmAction('approve');
+                }}
+              >
+                <CheckCircle className='h-4 w-4' />
+                Approve
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className='w-80 p-4 space-y-3'>
+              <div className='text-sm font-medium'>Add an optional comment</div>
+              <Textarea
+                placeholder='Enter your comment here...'
+                value={comment}
+                onChange={(e) => {
+                  return setComment(e.target.value);
+                }}
+                className='min-h-[100px]'
+              />
+              <div className='flex justify-end gap-2'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => {
+                    setConfirmAction(null);
+                    setComment('');
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size='sm'
+                  className='bg-teal-600 hover:bg-teal-700'
+                  onClick={() => {
+                    return handleStatusUpdate('approved');
+                  }}
+                >
+                  Confirm Approve
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </motion.div>
       )}
     </motion.div>
