@@ -72,8 +72,8 @@ export default function ApprovalRequestPage() {
               </TabsList>
 
               <div className='flex-1 overflow-auto'>
-                <AnimatePresence mode='wait'>
-                  <TabsContent value='file' className='mt-0 h-full'>
+                <AnimatePresence mode='wait' key='tabs-content'>
+                  <TabsContent value='file' className='mt-0 h-full' key='file-tab'>
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -138,7 +138,7 @@ export default function ApprovalRequestPage() {
                     </motion.div>
                   </TabsContent>
 
-                  <TabsContent value='form' className='mt-0 h-full'>
+                  <TabsContent value='form' className='mt-0 h-full' key='form-tab'>
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -299,6 +299,7 @@ export default function ApprovalRequestPage() {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.3 }}
                   layout
+                  key='comment-1'
                 >
                   <div className='flex gap-3'>
                     <Avatar className='h-8 w-8 border bg-white'>
@@ -326,6 +327,7 @@ export default function ApprovalRequestPage() {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.3, delay: 0.1 }}
                   layout
+                  key='comment-2'
                 >
                   <div className='flex gap-3'>
                     <Avatar className='h-8 w-8 border bg-white'>
@@ -354,6 +356,7 @@ export default function ApprovalRequestPage() {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.3, delay: 0.2 }}
                   layout
+                  key='comment-3'
                 >
                   <div className='flex gap-3'>
                     <Avatar className='h-8 w-8 border bg-white'>
