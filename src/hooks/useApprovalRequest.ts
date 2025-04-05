@@ -44,64 +44,35 @@ interface Module {
 }
 
 interface ApprovalRequest {
-  id: string;
-  module: string;
-  requestedBy: string;
-  approver: string;
-  dateRequested: string;
-  status: 'pending' | 'approved' | 'rejected';
-  message: string;
-  comments: {
-    id: string;
-    author: string;
-    content: string;
-    timestamp: string;
-    attachments?: {
-      name: string;
-      url: string;
-    }[];
-  }[];
+  _id: string;
   moduleId: Module;
-  modulePreview: {
-    file: {
-      name: string;
-      type: string;
-      url: string;
-      uploadDate: string;
-    };
-    formResults?: {
-      projectName: string;
-      department: string;
-      budget: string;
-      timeline: string;
-      description: string;
-      expectedOutcomes: string[];
-    };
+  requestedBy: User;
+  approverId: string | null;
+  approverEmail: string;
+  message: string;
+  status: 'pending' | 'approved' | 'rejected';
+  allowComments: boolean;
+  moduleDetails: {
+    name: string;
+    version: number;
+    updatedAt: string;
   };
+  sendReminder: boolean;
+  timeline: {
+    action: string;
+    description: string;
+    createdAt: string;
+    _id: string;
+    author?: string;
+  }[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
 }
 
 interface ApiResponse {
   status: string;
-  data: {
-    _id: string;
-    moduleId: Module;
-    requestedBy: User;
-    approverId: string | null;
-    approverEmail: string;
-    message: string;
-    status: 'pending' | 'approved' | 'rejected';
-    allowComments: boolean;
-    moduleDetails: {
-      name: string;
-      version: number;
-      updatedAt: string;
-    };
-    sendReminder: boolean;
-    comments: any[];
-    createdAt: string;
-    updatedAt: string;
-    __v: number;
-  };
+  data: ApprovalRequest;
 }
 
 export const useApprovalRequest = (id: string) => {
@@ -119,48 +90,7 @@ export const useApprovalRequest = (id: string) => {
         if (response.data.status === 'success') {
           const data = response.data.data;
           setSelectedVersion(data.moduleId.currentVersion);
-          const currentVersion = data.moduleId.versions.find((v) => {
-            return v.number === data.moduleId.currentVersion;
-          });
-          const currentFile =
-            currentVersion?.contentSnapshot.fileId || data.moduleId.content.fileId;
-
-          const transformedData: ApprovalRequest = {
-            id: data._id,
-            module: data.moduleId.name,
-            requestedBy: data.requestedBy.name,
-            approver: data.approverEmail,
-            dateRequested: new Date(data.createdAt).toLocaleDateString(),
-            status: data.status,
-            message: data.message,
-            comments: data.comments.map((comment) => {
-              return {
-                id: comment._id,
-                author: comment?.author?.name || 'External',
-                content: comment.content,
-                timestamp: new Date(comment.createdAt).toLocaleString(),
-                attachments: comment.attachments?.map((att) => {
-                  return {
-                    name: att.name,
-                    url: att.url,
-                  };
-                }),
-              };
-            }),
-            moduleId: data.moduleId,
-            modulePreview: {
-              file: {
-                name: currentFile.originalName,
-                type: currentFile.contentType,
-                url: currentFile.downloadURL,
-                uploadDate: new Date(
-                  currentVersion?.updatedAt || data.moduleId.content.fileId.updatedAt,
-                ).toLocaleDateString(),
-              },
-            },
-          };
-
-          setApprovalRequest(transformedData);
+          setApprovalRequest(data);
           setError(null);
         } else {
           throw new Error('Failed to fetch approval request');
@@ -187,20 +117,7 @@ export const useApprovalRequest = (id: string) => {
     });
     if (!version) return;
 
-    const file = version.contentSnapshot.fileId;
     setSelectedVersion(versionNumber);
-    setApprovalRequest({
-      ...data,
-      modulePreview: {
-        ...data.modulePreview,
-        file: {
-          name: file.originalName,
-          type: file.contentType,
-          url: file.downloadURL,
-          uploadDate: new Date(version.updatedAt).toLocaleDateString(),
-        },
-      },
-    });
   };
 
   const addComment = async (content: string, attachments?: File[]) => {
@@ -223,19 +140,14 @@ export const useApprovalRequest = (id: string) => {
       if (approvalRequest) {
         setApprovalRequest({
           ...approvalRequest,
-          comments: [
-            ...approvalRequest.comments,
+          timeline: [
+            ...approvalRequest.timeline,
             {
-              id: response.data._id,
-              author: response.data.author.name,
-              content: response.data.content,
-              timestamp: new Date(response.data.createdAt).toLocaleString(),
-              attachments: response.data.attachments?.map((att) => {
-                return {
-                  name: att.name,
-                  url: att.url,
-                };
-              }),
+              action: 'commented',
+              description: content,
+              createdAt: new Date().toISOString(),
+              _id: response.data._id,
+              author: 'You',
             },
           ],
         });
@@ -254,17 +166,18 @@ export const useApprovalRequest = (id: string) => {
         setApprovalRequest({
           ...approvalRequest,
           status,
-          comments: comment
+          timeline: comment
             ? [
-                ...approvalRequest.comments,
+                ...approvalRequest.timeline,
                 {
-                  id: Date.now().toString(), // Temporary ID until we get the real one from the server
+                  action: 'commented',
+                  description: comment,
+                  createdAt: new Date().toISOString(),
+                  _id: Date.now().toString(), // Temporary ID until we get the real one from the server
                   author: 'You',
-                  content: comment,
-                  timestamp: new Date().toLocaleString(),
                 },
               ]
-            : approvalRequest.comments,
+            : approvalRequest.timeline,
         });
       }
     } catch (err) {

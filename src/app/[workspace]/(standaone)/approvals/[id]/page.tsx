@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/timeline';
 import { useApprovalRequest } from '@/hooks/useApprovalRequest';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle, Download, Eye, FileImage, FileText, XCircle } from 'lucide-react';
+import { CheckCircle, Download, Eye, FileImage, XCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
@@ -53,19 +53,19 @@ export default function ApprovalRequestPage() {
   const timelineItems = [
     {
       id: 1,
-      date: approvalRequest?.dateRequested || '',
-      title: approvalRequest?.requestedBy || '',
+      date: approvalRequest?.timeline[0]?.createdAt || '',
+      title: approvalRequest?.requestedBy?.name || '',
       action: 'requested approval for',
-      description: approvalRequest?.message || '',
+      description: approvalRequest?.timeline[0]?.description || '',
       image: 'https://picsum.photos/200/300',
     },
-    ...(approvalRequest?.comments.map((comment, index) => {
+    ...(approvalRequest?.timeline.slice(1).map((item, index) => {
       return {
         id: index + 2,
-        date: comment.timestamp,
-        title: comment.author,
-        action: 'commented',
-        description: comment.content,
+        date: item.createdAt,
+        title: item.action === 'commented' ? item.author : approvalRequest?.requestedBy?.name,
+        action: item.action,
+        description: item.description,
         image: '/placeholder.svg?height=32&width=32',
       };
     }) || []),
@@ -135,9 +135,6 @@ export default function ApprovalRequestPage() {
                 <TabsTrigger value='file' className='text-xs data-[state=active]:bg-white'>
                   File
                 </TabsTrigger>
-                <TabsTrigger value='form' className='text-xs data-[state=active]:bg-white'>
-                  Form Results
-                </TabsTrigger>
               </TabsList>
 
               <div className='flex-1 overflow-auto'>
@@ -155,13 +152,13 @@ export default function ApprovalRequestPage() {
                           <div className='flex justify-between items-center'>
                             <CardTitle className='text-base font-medium flex items-center gap-2'>
                               <FileImage className='h-4 w-4 text-gray-500' />
-                              {approvalRequest.modulePreview.file.name}
+                              {approvalRequest.moduleId.content.fileId.name}
                             </CardTitle>
                             <Badge
                               variant='outline'
                               className='bg-gray-50 text-xs text-gray-700 border-gray-200'
                             >
-                              {approvalRequest.modulePreview.file.type}
+                              {approvalRequest.moduleId.content.fileId.contentType}
                             </Badge>
                           </div>
                         </CardHeader>
@@ -172,7 +169,7 @@ export default function ApprovalRequestPage() {
                           >
                             <div className='absolute inset-0 flex items-center justify-center h-full w-full'>
                               <Image
-                                src={approvalRequest.modulePreview.file.url}
+                                src={approvalRequest.moduleId.content.fileId.downloadURL}
                                 alt='Document preview'
                                 width={500}
                                 height={300}
@@ -183,7 +180,10 @@ export default function ApprovalRequestPage() {
                           </div>
                           <div className='flex justify-between items-center text-xs text-slate-500 mt-2'>
                             <div className='font-normal'>
-                              Uploaded on {approvalRequest.modulePreview.file.uploadDate}
+                              Uploaded on{' '}
+                              {new Date(
+                                approvalRequest.moduleId.versions[0].updatedAt,
+                              ).toLocaleDateString()}
                             </div>
                             <div className='flex gap-2'>
                               <Button
@@ -204,86 +204,6 @@ export default function ApprovalRequestPage() {
                               </Button>
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  </TabsContent>
-
-                  <TabsContent value='form' className='mt-0 h-full' key='form-tab'>
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <Card className='h-full flex flex-col border-0 shadow-none'>
-                        <CardHeader className='py-3 px-4 border-b bg-white'>
-                          <CardTitle className='text-base font-medium flex items-center gap-2'>
-                            <FileText className='h-4 w-4 text-teal-500' />
-                            Form Submission Results
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className='flex-1 p-3 overflow-auto'>
-                          {approvalRequest.modulePreview.formResults && (
-                            <div className='space-y-4'>
-                              <div className='grid grid-cols-2 gap-4'>
-                                <div className='space-y-1.5'>
-                                  <div className='text-xs font-medium text-slate-500 uppercase tracking-wide'>
-                                    Project Name
-                                  </div>
-                                  <div className='text-sm font-medium text-slate-800 leading-snug'>
-                                    {approvalRequest.modulePreview.formResults.projectName}
-                                  </div>
-                                </div>
-                                <div className='space-y-1.5'>
-                                  <div className='text-xs font-medium text-slate-500 uppercase tracking-wide'>
-                                    Department
-                                  </div>
-                                  <div className='text-sm font-medium text-slate-800 leading-snug'>
-                                    {approvalRequest.modulePreview.formResults.department}
-                                  </div>
-                                </div>
-                                <div className='space-y-1.5'>
-                                  <div className='text-xs font-medium text-slate-500 uppercase tracking-wide'>
-                                    Budget
-                                  </div>
-                                  <div className='text-sm font-medium text-slate-800 leading-snug'>
-                                    {approvalRequest.modulePreview.formResults.budget}
-                                  </div>
-                                </div>
-                                <div className='space-y-1.5'>
-                                  <div className='text-xs font-medium text-slate-500 uppercase tracking-wide'>
-                                    Timeline
-                                  </div>
-                                  <div className='text-sm font-medium text-slate-800 leading-snug'>
-                                    {approvalRequest.modulePreview.formResults.timeline}
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className='space-y-1.5'>
-                                <div className='text-xs font-medium text-slate-500 uppercase tracking-wide'>
-                                  Description
-                                </div>
-                                <div className='text-xs text-slate-700 bg-slate-50 p-3 rounded-md border leading-relaxed'>
-                                  {approvalRequest.modulePreview.formResults.description}
-                                </div>
-                              </div>
-
-                              <div className='space-y-1.5'>
-                                <div className='text-xs font-medium text-slate-500 uppercase tracking-wide'>
-                                  Expected Outcomes
-                                </div>
-                                <ul className='list-disc list-inside text-xs text-slate-700 space-y-1.5 pl-2 leading-relaxed'>
-                                  {approvalRequest.modulePreview.formResults.expectedOutcomes.map(
-                                    (outcome, index) => {
-                                      return <li key={index}>{outcome}</li>;
-                                    },
-                                  )}
-                                </ul>
-                              </div>
-                            </div>
-                          )}
                         </CardContent>
                       </Card>
                     </motion.div>
@@ -331,16 +251,18 @@ export default function ApprovalRequestPage() {
             >
               <div className='grid grid-cols-[1fr_2fr] gap-y-3 text-sm'>
                 <div className='font-medium text-slate-600'>Module:</div>
-                <div className='text-slate-800'>{approvalRequest.module}</div>
+                <div className='text-slate-800'>{approvalRequest.moduleId.name}</div>
 
                 <div className='font-medium text-slate-600'>Requested by:</div>
-                <div className='text-slate-800'>{approvalRequest.requestedBy}</div>
+                <div className='text-slate-800'>{approvalRequest.requestedBy.name}</div>
 
                 <div className='font-medium text-slate-600'>Approver:</div>
-                <div className='text-slate-800'>{approvalRequest.approver}</div>
+                <div className='text-slate-800'>{approvalRequest.approverEmail}</div>
 
                 <div className='font-medium text-slate-600'>Date requested:</div>
-                <div className='text-slate-800'>{approvalRequest.dateRequested}</div>
+                <div className='text-slate-800'>
+                  {new Date(approvalRequest.createdAt).toLocaleDateString()}
+                </div>
               </div>
             </motion.div>
 
