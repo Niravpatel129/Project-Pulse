@@ -2,12 +2,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   CheckCircle,
@@ -15,11 +9,8 @@ import {
   Eye,
   FileImage,
   FileText,
-  MoreHorizontal,
   Paperclip,
-  Reply,
   Send,
-  ThumbsUp,
   XCircle,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -228,37 +219,8 @@ export default function ApprovalRequestPage() {
                           <p className='font-medium text-gray-900 text-sm'>John Doe</p>
                           <p className='text-gray-500 text-xs'>2 hours ago</p>
                         </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant='ghost' size='sm' className='h-6 w-6 p-0'>
-                              <MoreHorizontal className='h-3.5 w-3.5' />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align='end'>
-                            <DropdownMenuItem>Edit</DropdownMenuItem>
-                            <DropdownMenuItem>Delete</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
                       </div>
                       <div className='mt-1 text-gray-800 text-xs'>Looks good to me.</div>
-                      <div className='mt-2 flex items-center gap-3'>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='h-6 text-xs flex items-center gap-1 text-gray-500 px-2'
-                        >
-                          <ThumbsUp className='h-3 w-3' />
-                          <span>Like (2)</span>
-                        </Button>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='h-6 text-xs flex items-center gap-1 text-gray-500 px-2'
-                        >
-                          <Reply className='h-3 w-3' />
-                          <span>Reply</span>
-                        </Button>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -276,17 +238,6 @@ export default function ApprovalRequestPage() {
                           <p className='font-medium text-gray-900 text-sm'>Jane Smith</p>
                           <p className='text-gray-500 text-xs'>1 hour ago</p>
                         </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant='ghost' size='sm' className='h-6 w-6 p-0'>
-                              <MoreHorizontal className='h-3.5 w-3.5' />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align='end'>
-                            <DropdownMenuItem>Edit</DropdownMenuItem>
-                            <DropdownMenuItem>Delete</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
                       </div>
                       <div className='mt-1 text-gray-800 text-xs'>
                         Some minor changes are needed. Could you please update the budget section to
@@ -309,17 +260,6 @@ export default function ApprovalRequestPage() {
                           <p className='font-medium text-gray-900 text-sm'>John Doe</p>
                           <p className='text-gray-500 text-xs'>20 minutes ago</p>
                         </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant='ghost' size='sm' className='h-6 w-6 p-0'>
-                              <MoreHorizontal className='h-3.5 w-3.5' />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align='end'>
-                            <DropdownMenuItem>Edit</DropdownMenuItem>
-                            <DropdownMenuItem>Delete</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
                       </div>
                       <div className='mt-1 text-gray-800 text-xs'>
                         I&apos;ve uploaded a new version with the quarterly budget breakdown. Please
