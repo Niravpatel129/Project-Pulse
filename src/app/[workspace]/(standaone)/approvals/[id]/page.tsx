@@ -351,6 +351,7 @@ export default function ApprovalRequestPage() {
                             </span>
                           </TimelineTitle>
                           <TimelineIndicator className='bg-primary/10 group-data-completed/timeline-item:bg-primary group-data-completed/timeline-item:text-primary-foreground flex size-6 items-center justify-center border-none group-data-[orientation=vertical]/timeline:-left-7'>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={item.image}
                               alt={item.title}
@@ -358,7 +359,7 @@ export default function ApprovalRequestPage() {
                             />
                           </TimelineIndicator>
                         </TimelineHeader>
-                        <TimelineContent className='text-foreground mt-2 rounded-lg border px-4 py-3'>
+                        <TimelineContent className='text-foreground mt-2 rounded-lg border px-4 py-3 whitespace-pre-wrap'>
                           {item.description}
                           <TimelineDate className='mt-1 mb-0'>{item.date}</TimelineDate>
                         </TimelineContent>
