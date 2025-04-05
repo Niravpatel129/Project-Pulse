@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useApproverDialog } from '@/hooks/useApproverDialog';
 import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Ban, Bell, ChevronDown, Clock, FileText, Mail, MessageSquare, X } from 'lucide-react';
 import { useEffect } from 'react';
@@ -121,7 +122,11 @@ export function ApproverDialog({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side='bottom' className='p-0 m-0 max-w-full h-[90vh] w-screen rounded-t-lg'>
+      <SheetContent
+        side='bottom'
+        className='p-0 m-0 max-w-full h-[90vh] w-screen rounded-t-lg'
+        hideCloseButton
+      >
         <VisuallyHidden>
           <SheetTitle>Send for Client Approval</SheetTitle>
         </VisuallyHidden>
@@ -170,7 +175,12 @@ export function ApproverDialog({
                   <div>
                     <h3 className='font-medium'>{moduleDetails.name}</h3>
                     <p className='text-sm text-gray-500'>
-                      Version {moduleDetails.version} · Last updated {moduleDetails.updatedAt}
+                      Version {moduleDetails.version} · Last updated{' '}
+                      {moduleDetails.updatedAt
+                        ? formatDistanceToNow(new Date(moduleDetails.updatedAt), {
+                            addSuffix: true,
+                          })
+                        : 'Unknown date'}
                     </p>
                   </div>
                 </div>
@@ -319,16 +329,19 @@ export function ApproverDialog({
                             <AvatarFallback>{approver.name[0]}</AvatarFallback>
                           </Avatar>
                           <span className='text-sm'>{approver.name}</span>
-                          <motion.button
-                            className='text-gray-500 hover:text-gray-700'
-                            onClick={() => {
-                              return onRemoveApprover(approver.email);
-                            }}
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                          >
-                            <X className='h-3.5 w-3.5' />
-                          </motion.button>
+                          {!isPreview && (
+                            <motion.button
+                              disabled={isPreview}
+                              className='text-gray-500 hover:text-gray-700'
+                              onClick={() => {
+                                return onRemoveApprover(approver.email);
+                              }}
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                            >
+                              <X className='h-3.5 w-3.5' />
+                            </motion.button>
+                          )}
                         </motion.div>
                       );
                     })}
