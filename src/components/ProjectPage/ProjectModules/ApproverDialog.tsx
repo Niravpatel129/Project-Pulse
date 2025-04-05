@@ -11,7 +11,8 @@ import { useApproverDialog } from '@/hooks/useApproverDialog';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Ban, Bell, ChevronDown, Clock, FileText, Mail, MessageSquare, X } from 'lucide-react';
+import { Ban, Bell, ChevronDown, Clock, Eye, FileText, Mail, MessageSquare, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
@@ -83,6 +84,8 @@ export function ApproverDialog({
     moduleId: '',
     moduleDetails,
   });
+
+  const router = useRouter();
 
   // Set message from preview if in preview mode
   useEffect(() => {
@@ -193,119 +196,123 @@ export function ApproverDialog({
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2, duration: 0.3 }}
               >
-                <label className='block text-sm font-medium mb-2'>Select Recipients</label>
-                <div className='relative mb-3' ref={dropdownRef}>
-                  <div
-                    className={cn(
-                      'flex items-center justify-between w-full border rounded-md px-3 py-2 bg-white',
-                      isPreview ? 'cursor-default' : 'cursor-pointer hover:bg-gray-50',
-                    )}
-                    onClick={() => {
-                      if (!isPreview) {
-                        setIsDropdownOpen(!isDropdownOpen);
-                      }
-                    }}
-                  >
-                    <input
-                      type='text'
-                      placeholder='Search participants or enter email'
-                      className='flex-1 text-sm border-none outline-none bg-transparent'
-                      value={searchTerm}
-                      onChange={(e) => {
-                        return setSearchTerm(e.target.value);
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
+                <label className='block text-sm font-medium mb-2'>
+                  {isPreview ? 'Selected Recipients' : 'Select Recipients'}
+                </label>
+                {!isPreview && (
+                  <div className='relative mb-3' ref={dropdownRef}>
+                    <div
+                      className={cn(
+                        'flex items-center justify-between w-full border rounded-md px-3 py-2 bg-white',
+                        isPreview ? 'cursor-default' : 'cursor-pointer hover:bg-gray-50',
+                      )}
+                      onClick={() => {
                         if (!isPreview) {
-                          setIsDropdownOpen(true);
+                          setIsDropdownOpen(!isDropdownOpen);
                         }
                       }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && isSearchTermValidEmail) {
-                          e.preventDefault();
-                          handleAddCustomEmail();
-                        }
-                      }}
-                      disabled={isPreview}
-                    />
-                    <ChevronDown className='h-4 w-4 text-gray-500' />
-                  </div>
+                    >
+                      <input
+                        type='text'
+                        placeholder='Search participants or enter email'
+                        className='flex-1 text-sm border-none outline-none bg-transparent'
+                        value={searchTerm}
+                        onChange={(e) => {
+                          return setSearchTerm(e.target.value);
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!isPreview) {
+                            setIsDropdownOpen(true);
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && isSearchTermValidEmail) {
+                            e.preventDefault();
+                            handleAddCustomEmail();
+                          }
+                        }}
+                        disabled={isPreview}
+                      />
+                      <ChevronDown className='h-4 w-4 text-gray-500' />
+                    </div>
 
-                  <AnimatePresence>
-                    {isDropdownOpen && !isPreview && (
-                      <motion.div
-                        className='absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-auto'
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        {isSearchTermPartialEmail && (
-                          <div className='p-2 text-sm text-gray-500 border-b'>
-                            Continue typing to complete the email address
-                          </div>
-                        )}
+                    <AnimatePresence>
+                      {isDropdownOpen && !isPreview && (
+                        <motion.div
+                          className='absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-auto'
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {isSearchTermPartialEmail && (
+                            <div className='p-2 text-sm text-gray-500 border-b'>
+                              Continue typing to complete the email address
+                            </div>
+                          )}
 
-                        {filteredParticipants.length > 0
-                          ? filteredParticipants.map((approver) => {
-                              return (
-                                <motion.div
-                                  key={approver.email}
-                                  className='flex items-center gap-2 p-2 hover:bg-gray-100 cursor-pointer'
-                                  onClick={() => {
-                                    onSelectApprover(approver);
-                                    setSearchTerm('');
-                                    setIsDropdownOpen(false);
-                                  }}
-                                  whileHover={{ backgroundColor: 'rgba(243, 244, 246, 1)' }}
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  transition={{ duration: 0.2 }}
-                                >
-                                  <Avatar className='h-6 w-6'>
-                                    <AvatarImage
-                                      src={approver.avatar || '/placeholder.svg'}
-                                      alt={approver.name}
-                                    />
-                                    <AvatarFallback>{approver.name[0]}</AvatarFallback>
-                                  </Avatar>
-                                  <div>
-                                    <div className='text-sm font-medium'>{approver.name}</div>
-                                    <div className='text-xs text-gray-500'>{approver.email}</div>
-                                  </div>
-                                </motion.div>
-                              );
-                            })
-                          : !isSearchTermPartialEmail && (
-                              <div className='p-2 text-sm text-gray-500'>
-                                {searchTerm
-                                  ? 'No participants found'
-                                  : 'Type to search or enter an email'}
+                          {filteredParticipants.length > 0
+                            ? filteredParticipants.map((approver) => {
+                                return (
+                                  <motion.div
+                                    key={approver.email}
+                                    className='flex items-center gap-2 p-2 hover:bg-gray-100 cursor-pointer'
+                                    onClick={() => {
+                                      onSelectApprover(approver);
+                                      setSearchTerm('');
+                                      setIsDropdownOpen(false);
+                                    }}
+                                    whileHover={{ backgroundColor: 'rgba(243, 244, 246, 1)' }}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.2 }}
+                                  >
+                                    <Avatar className='h-6 w-6'>
+                                      <AvatarImage
+                                        src={approver.avatar || '/placeholder.svg'}
+                                        alt={approver.name}
+                                      />
+                                      <AvatarFallback>{approver.name[0]}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                      <div className='text-sm font-medium'>{approver.name}</div>
+                                      <div className='text-xs text-gray-500'>{approver.email}</div>
+                                    </div>
+                                  </motion.div>
+                                );
+                              })
+                            : !isSearchTermPartialEmail && (
+                                <div className='p-2 text-sm text-gray-500'>
+                                  {searchTerm
+                                    ? 'No participants found'
+                                    : 'Type to search or enter an email'}
+                                </div>
+                              )}
+
+                          {isCustomEmail && (
+                            <motion.div
+                              className='flex items-center gap-2 p-2 hover:bg-gray-100 cursor-pointer border-t'
+                              onClick={handleAddCustomEmail}
+                              whileHover={{ backgroundColor: 'rgba(243, 244, 246, 1)' }}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <div className='h-6 w-6 bg-primary/10 rounded-full flex items-center justify-center'>
+                                <Mail className='h-3 w-3 text-primary' />
                               </div>
-                            )}
-
-                        {isCustomEmail && (
-                          <motion.div
-                            className='flex items-center gap-2 p-2 hover:bg-gray-100 cursor-pointer border-t'
-                            onClick={handleAddCustomEmail}
-                            whileHover={{ backgroundColor: 'rgba(243, 244, 246, 1)' }}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <div className='h-6 w-6 bg-primary/10 rounded-full flex items-center justify-center'>
-                              <Mail className='h-3 w-3 text-primary' />
-                            </div>
-                            <div>
-                              <div className='text-sm font-medium'>Add custom email</div>
-                              <div className='text-xs text-gray-500'>{searchTerm}</div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                              <div>
+                                <div className='text-sm font-medium'>Add custom email</div>
+                                <div className='text-xs text-gray-500'>{searchTerm}</div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
 
                 {/* Selected Recipients */}
                 <div className='mb-3 min-h-[40px] flex flex-row flex-wrap gap-2'>
@@ -537,6 +544,17 @@ export function ApproverDialog({
                 </PopoverTrigger>
                 <PopoverContent className='w-48 p-2'>
                   <div className='flex flex-col space-y-1'>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      className='justify-start'
+                      onClick={() => {
+                        window.open(`/project`, '_blank');
+                      }}
+                    >
+                      <Eye className='h-4 w-4 mr-2' />
+                      Preview Request
+                    </Button>
                     <Button
                       variant='ghost'
                       size='sm'
