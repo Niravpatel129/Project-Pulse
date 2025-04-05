@@ -1,22 +1,22 @@
 'use client';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Timeline,
+  TimelineContent,
+  TimelineDate,
+  TimelineHeader,
+  TimelineIndicator,
+  TimelineItem,
+  TimelineSeparator,
+  TimelineTitle,
+} from '@/components/ui/timeline';
 import { useApprovalRequest } from '@/hooks/useApprovalRequest';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  CheckCircle,
-  Download,
-  Eye,
-  FileImage,
-  FileText,
-  Paperclip,
-  Send,
-  XCircle,
-} from 'lucide-react';
+import { CheckCircle, Download, Eye, FileImage, FileText, XCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 
@@ -43,6 +43,27 @@ export default function ApprovalRequestPage() {
       </div>
     );
   }
+
+  const timelineItems = [
+    {
+      id: 1,
+      date: approvalRequest?.dateRequested || '',
+      title: approvalRequest?.requestedBy || '',
+      action: 'requested approval for',
+      description: approvalRequest?.message || '',
+      image: 'https://picsum.photos/200/300',
+    },
+    ...(approvalRequest?.comments.map((comment, index) => {
+      return {
+        id: index + 2,
+        date: comment.timestamp,
+        title: comment.author,
+        action: 'commented',
+        description: comment.content,
+        image: '/placeholder.svg?height=32&width=32',
+      };
+    }) || []),
+  ];
 
   return (
     <motion.div
@@ -306,122 +327,46 @@ export default function ApprovalRequestPage() {
               </div>
             </motion.div>
 
-            {/* Message */}
-            <motion.div
-              className='p-4 border-b'
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0.1 }}
-            >
-              <div className='font-medium text-sm text-slate-600 mb-2'>Message</div>
-              <div className='text-xs text-slate-700 bg-slate-50 p-3 rounded-md border leading-relaxed'>
-                {approvalRequest.message}
-              </div>
-            </motion.div>
-
-            {/* Comments Section - Scrollable */}
+            {/* Timeline Section */}
             <div className='flex-1 flex flex-col overflow-hidden'>
-              <div className='p-3 border-b flex justify-between items-center'>
-                <div className='font-medium text-sm text-slate-600'>
-                  Comments ({approvalRequest.comments.length})
-                </div>
+              <div className='p-3 flex justify-between items-center'>
+                <div className='font-medium text-sm text-slate-600'>Activity Timeline</div>
               </div>
 
-              {/* Scrollable Comments */}
-              <motion.div
-                className='flex-1 overflow-y-auto p-4 space-y-4'
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
-                {approvalRequest.comments.map((comment, index) => {
-                  return (
-                    <motion.div
-                      key={comment.id}
-                      className='bg-slate-50 rounded-lg p-3 border'
-                      initial={{ y: 10, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
-                      layout
-                    >
-                      <div className='flex gap-3'>
-                        <Avatar className='h-8 w-8 border bg-white'>
-                          <AvatarImage src='/placeholder.svg?height=32&width=32' />
-                          <AvatarFallback className='bg-gray-100 text-gray-700'>
-                            {comment.author
-                              .split(' ')
-                              .map((n) => {
-                                return n[0];
-                              })
-                              .join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className='flex-1'>
-                          <div className='flex justify-between items-start'>
-                            <div>
-                              <p className='font-medium text-slate-800 text-sm'>{comment.author}</p>
-                              <p className='text-slate-500 text-xs'>{comment.timestamp}</p>
-                            </div>
-                          </div>
-                          <div className='mt-1.5 text-slate-700 text-xs leading-relaxed'>
-                            {comment.content}
-                          </div>
-                          {comment.attachments && comment.attachments.length > 0 && (
-                            <div className='mt-2 bg-white rounded p-2 flex items-center gap-2 text-xs border'>
-                              <FileText className='h-3.5 w-3.5 text-gray-500' />
-                              <span className='text-gray-600 font-medium'>
-                                {comment.attachments[0].name}
-                              </span>
-                              <Button
-                                variant='ghost'
-                                size='sm'
-                                className='h-5 ml-auto p-0 w-5 text-slate-500 hover:text-gray-600'
-                              >
-                                <Download className='h-3 w-3' />
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-
-              {/* Add Comment - Fixed at bottom */}
-              <motion.div
-                className='p-4 border-t bg-white'
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className='flex gap-3'>
-                  <div className='flex-1'>
-                    <div className='border rounded-lg overflow-hidden flex'>
-                      <input
-                        className='w-full p-2.5 text-xs focus:outline-none text-slate-800 placeholder:text-slate-400'
-                        placeholder='Add a comment...'
-                      />
-                      <div className='flex items-center px-2 border-l bg-slate-50'>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='h-6 w-6 p-0 text-slate-500 hover:text-gray-600'
-                        >
-                          <Paperclip className='h-3.5 w-3.5' />
-                        </Button>
-                        <Button
-                          size='sm'
-                          className='ml-2 h-6 text-xs flex items-center gap-1  text-gray-600 border-gray-200 hover:bg-gray-100'
-                          variant='outline'
-                        >
-                          <Send className='h-4 w-4' />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
+              <div className='flex-1 overflow-y-auto p-4'>
+                <Timeline>
+                  {timelineItems.map((item) => {
+                    return (
+                      <TimelineItem
+                        key={item.id}
+                        step={item.id}
+                        className='group-data-[orientation=vertical]/timeline:ms-10 group-data-[orientation=vertical]/timeline:not-last:pb-8'
+                      >
+                        <TimelineHeader>
+                          <TimelineSeparator className='group-data-[orientation=vertical]/timeline:-left-7 group-data-[orientation=vertical]/timeline:h-[calc(100%-1.5rem-0.25rem)] group-data-[orientation=vertical]/timeline:translate-y-6.5' />
+                          <TimelineTitle className='mt-0.5'>
+                            {item.title}{' '}
+                            <span className='text-muted-foreground text-sm font-normal'>
+                              {item.action}
+                            </span>
+                          </TimelineTitle>
+                          <TimelineIndicator className='bg-primary/10 group-data-completed/timeline-item:bg-primary group-data-completed/timeline-item:text-primary-foreground flex size-6 items-center justify-center border-none group-data-[orientation=vertical]/timeline:-left-7'>
+                            <img
+                              src={item.image}
+                              alt={item.title}
+                              className='size-6 rounded-full'
+                            />
+                          </TimelineIndicator>
+                        </TimelineHeader>
+                        <TimelineContent className='text-foreground mt-2 rounded-lg border px-4 py-3'>
+                          {item.description}
+                          <TimelineDate className='mt-1 mb-0'>{item.date}</TimelineDate>
+                        </TimelineContent>
+                      </TimelineItem>
+                    );
+                  })}
+                </Timeline>
+              </div>
             </div>
           </div>
         </motion.div>
