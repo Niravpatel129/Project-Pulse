@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -24,9 +25,11 @@ import { useProject } from '@/contexts/ProjectContext';
 import { useApproverDialog } from '@/hooks/useApproverDialog';
 import { useModuleDialog } from '@/hooks/useModuleDialog';
 import { cn } from '@/lib/utils';
-import { formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  Ban,
+  Check,
   Clock,
   Download,
   Edit,
@@ -34,6 +37,7 @@ import {
   Eye,
   FileText,
   HelpCircle,
+  MoreHorizontal,
   RefreshCw,
   Send,
   Trash,
@@ -50,6 +54,98 @@ interface ModuleDialogProps {
   moduleId: string;
   onOpenChange: (open: boolean) => void;
 }
+
+const ApprovalBanner = ({
+  approvalDetails,
+  onApprove,
+  onReject,
+}: {
+  approvalDetails: any[];
+  onApprove: (approvalId: string) => void;
+  onReject: (approvalId: string) => void;
+}) => {
+  if (!approvalDetails?.length) return null;
+
+  return (
+    <div className='mb-4 space-y-3'>
+      <h3 className='text-sm font-medium text-muted-foreground'>Active Approval Request</h3>
+      <div className='space-y-2'>
+        {approvalDetails.map((approval) => {
+          return (
+            <Card key={approval._id} className=' relative border-l-4 border-l-yellow-500 group'>
+              <CardContent className='p-4 '>
+                <div className='flex items-start justify-between'>
+                  <div className='space-y-1'>
+                    <div className='flex items-center gap-2'>
+                      <Avatar className='h-6 w-6'>
+                        <AvatarImage
+                          src={approval.requestedBy.avatar}
+                          alt={approval.requestedBy.name}
+                        />
+                        <AvatarFallback>{approval.requestedBy.name[0]}</AvatarFallback>
+                      </Avatar>
+                      <span className='text-sm font-medium'>{approval.requestedBy.name}</span>
+                      <Badge
+                        variant='outline'
+                        className='bg-yellow-100 text-yellow-800 border-yellow-200'
+                      >
+                        <Clock className='h-3 w-3 mr-1' />
+                        Pending
+                      </Badge>
+                    </div>
+                    <p className='text-sm text-muted-foreground'>
+                      {approval.moduleDetails.name} (version {approval.moduleDetails.version})
+                    </p>
+                    <p className='text-xs text-muted-foreground'>
+                      Sent to {approval.approverEmail} •{' '}
+                      {format(new Date(approval.createdAt), 'MMM d, yyyy')}
+                    </p>
+                  </div>
+                  <div className='opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 top-2'>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant='ghost' size='icon' className='h-8 w-8'>
+                          <MoreHorizontal className='h-4 w-4' />
+                          <span className='sr-only'>Open actions menu</span>
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className='w-48 p-2'>
+                        <div className='flex flex-col space-y-1'>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            className='justify-start'
+                            onClick={() => {
+                              return onApprove(approval._id);
+                            }}
+                          >
+                            <Check className='h-4 w-4 mr-2' />
+                            Approve
+                          </Button>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            className='justify-start text-destructive'
+                            onClick={() => {
+                              return onReject(approval._id);
+                            }}
+                          >
+                            <Ban className='h-4 w-4 mr-2' />
+                            Cancel Request
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -75,6 +171,8 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
     getModuleTypeColor,
     approvalDetails,
     isLoadingApprovalDetails,
+    approveApprovalMutation,
+    rejectApprovalMutation,
   } = useModuleDialog({ moduleId });
   const { project } = useProject();
 
@@ -282,6 +380,14 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                   </Button>
                 )}
 
+                {/* Approval Banner */}
+                {approvalDetails && (
+                  <ApprovalBanner
+                    approvalDetails={approvalDetails}
+                    onApprove={approveApprovalMutation.mutate}
+                    onReject={rejectApprovalMutation.mutate}
+                  />
+                )}
                 {approvalDetails?.length > 0 && (
                   <Button
                     className='w-full justify-start gap-2'
@@ -874,6 +980,10 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
           fileType: module.fileType,
         }}
       />
+
+      <div className='space-y-4'>
+        <Card>{/* ... existing code ... */}</Card>
+      </div>
     </>
   );
 }

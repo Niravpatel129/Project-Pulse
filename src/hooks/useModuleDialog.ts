@@ -179,6 +179,36 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
     },
   });
 
+  // Approve approval mutation
+  const approveApprovalMutation = useMutation({
+    mutationFn: async (approvalId: string) => {
+      const { data } = await newRequest.patch(`/approvals/modules/${approvalId}/approve`);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['module-approvals', moduleId] });
+      toast.success('Approval request approved successfully');
+    },
+    onError: () => {
+      toast.error('Failed to approve request');
+    },
+  });
+
+  // Reject approval mutation
+  const rejectApprovalMutation = useMutation({
+    mutationFn: async (approvalId: string) => {
+      const { data } = await newRequest.patch(`/approvals/modules/${approvalId}/reject`);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['module-approvals', moduleId] });
+      toast.success('Approval request rejected successfully');
+    },
+    onError: () => {
+      toast.error('Failed to reject request');
+    },
+  });
+
   // Helper functions
   const getApprovalStatusColor = (status: string) => {
     switch (status) {
@@ -256,5 +286,7 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
     requestApprovalMutation,
     approvalDetails,
     isLoadingApprovalDetails,
+    approveApprovalMutation,
+    rejectApprovalMutation,
   };
 }
