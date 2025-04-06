@@ -29,39 +29,29 @@ import { usePipelineSettings } from '@/hooks/usePipelineSettings';
 import { ArrowUpDown, Check, Edit, MoreHorizontal, Plus, Settings, Trash2, X } from 'lucide-react';
 
 // Function to render status badge with appropriate color
-const renderStatusBadge = (status: string) => {
-  let className = '';
-  let dotColor = '';
-
-  switch (status) {
-    case 'Completed':
-      className = 'bg-green-50 text-green-700 hover:bg-green-100';
-      dotColor = 'bg-green-700';
-      break;
-    case 'On Track':
-      className = 'bg-blue-50 text-blue-700 hover:bg-blue-100';
-      dotColor = 'bg-blue-700';
-      break;
-    case 'At Risk':
-      className = 'bg-amber-50 text-amber-700 hover:bg-amber-100';
-      dotColor = 'bg-amber-700';
-      break;
-    case 'Delayed':
-      className = 'bg-red-50 text-red-700 hover:bg-red-100';
-      dotColor = 'bg-red-700';
-      break;
-    case 'Not Started':
-    default:
-      className = 'bg-slate-50 text-slate-700 hover:bg-slate-100';
-      dotColor = 'bg-slate-700';
-      break;
-  }
-
+const renderStatusBadge = (status: { name: string; color: string }) => {
   return (
-    <Badge className={`${className} flex items-center text-xs font-medium`}>
-      <div className={`${dotColor} h-2 w-2 rounded-full mr-1.5`}></div>
-      {status}
+    <Badge
+      className='flex items-center text-xs font-medium'
+      style={{
+        backgroundColor: `${status.color}20`,
+        color: status.color,
+        borderColor: `${status.color}40`,
+      }}
+    >
+      <div className='h-2 w-2 rounded-full mr-1.5' style={{ backgroundColor: status.color }}></div>
+      {status.name}
     </Badge>
+  );
+};
+
+// Function to render stage with color
+const renderStage = (stage: { name: string; color: string }) => {
+  return (
+    <div className='flex items-center'>
+      <div className='h-2 w-2 rounded-full mr-2' style={{ backgroundColor: stage.color }}></div>
+      <span className='text-sm font-normal'>{stage.name}</span>
+    </div>
   );
 };
 
@@ -121,7 +111,7 @@ export function PipelineSettings() {
                 {stages.map((stage, index) => {
                   return (
                     <div
-                      key={index}
+                      key={stage._id}
                       className='flex items-center justify-between p-2 border rounded-md bg-background'
                     >
                       {editingStageIndex === index ? (
@@ -141,7 +131,7 @@ export function PipelineSettings() {
                           }}
                         />
                       ) : (
-                        <span className='text-sm font-normal'>{stage}</span>
+                        renderStage(stage)
                       )}
                       <div className='flex space-x-1'>
                         {editingStageIndex === index ? (
@@ -273,7 +263,7 @@ export function PipelineSettings() {
                 {statuses.map((status, index) => {
                   return (
                     <div
-                      key={index}
+                      key={status._id}
                       className='flex items-center justify-between p-2 border rounded-md bg-background'
                     >
                       <div className='flex items-center'>{renderStatusBadge(status)}</div>
