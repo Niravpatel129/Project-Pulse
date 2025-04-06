@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -43,7 +44,77 @@ export default function ApprovalRequestPage() {
   const [comment, setComment] = useState('');
 
   if (loading) {
-    return <div className='h-screen flex items-center justify-center'>Loading...</div>;
+    return (
+      <div className='h-screen flex flex-col bg-slate-50'>
+        <div className='flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 overflow-hidden'>
+          {/* Module Preview Section Skeleton */}
+          <div className='rounded-lg flex flex-col overflow-hidden border bg-white shadow-sm'>
+            <div className='p-3 flex justify-between items-center border-b bg-white'>
+              <Skeleton className='h-6 w-32' />
+              <Skeleton className='h-8 w-48' />
+            </div>
+            <div className='p-3 flex-1 overflow-auto pb-0'>
+              <div className='h-full'>
+                <div className='h-full flex flex-col'>
+                  <div className='py-3 px-4 border-b bg-white'>
+                    <div className='flex justify-between items-center'>
+                      <Skeleton className='h-5 w-48' />
+                      <Skeleton className='h-5 w-24' />
+                    </div>
+                  </div>
+                  <div className='p-3 flex flex-col flex-1'>
+                    <Skeleton className='h-[300px] w-full rounded-md' />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Approval Request Section Skeleton */}
+          <div className='bg-white rounded-lg flex flex-col overflow-hidden border shadow-sm'>
+            <div className='p-3 flex justify-between items-center border-b bg-white'>
+              <Skeleton className='h-6 w-40' />
+              <Skeleton className='h-5 w-24' />
+            </div>
+            <div className='flex-1 flex flex-col overflow-hidden'>
+              <div className='p-4 border-b'>
+                <div className='grid grid-cols-[1fr_2fr] gap-y-3 text-sm'>
+                  <Skeleton className='h-4 w-24' />
+                  <Skeleton className='h-4 w-32' />
+                  <Skeleton className='h-4 w-24' />
+                  <Skeleton className='h-4 w-32' />
+                  <Skeleton className='h-4 w-24' />
+                  <Skeleton className='h-4 w-32' />
+                  <Skeleton className='h-4 w-24' />
+                  <Skeleton className='h-4 w-32' />
+                </div>
+              </div>
+              <div className='flex-1 flex flex-col overflow-hidden'>
+                <div className='p-3 flex justify-between items-center'>
+                  <Skeleton className='h-4 w-32' />
+                </div>
+                <div className='flex-1 overflow-y-auto p-4'>
+                  <div className='space-y-4'>
+                    {[1, 2, 3].map((i) => {
+                      return (
+                        <div key={i} className='flex items-start gap-4'>
+                          <Skeleton className='h-8 w-8 rounded-full' />
+                          <div className='flex-1 space-y-2'>
+                            <Skeleton className='h-4 w-48' />
+                            <Skeleton className='h-4 w-full' />
+                            <Skeleton className='h-3 w-32' />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error || !approvalRequest) {
@@ -89,9 +160,8 @@ export default function ApprovalRequestPage() {
   return (
     <motion.div
       className='h-screen flex flex-col bg-slate-50'
-      initial={{ opacity: 0 }}
+      initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
     >
       <motion.div
         className='flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 overflow-hidden'
@@ -101,9 +171,8 @@ export default function ApprovalRequestPage() {
         {/* Module Preview Section */}
         <motion.div
           className='rounded-lg flex flex-col overflow-hidden border bg-white shadow-sm'
-          initial={{ y: 20, opacity: 0 }}
+          initial={{ y: 0, opacity: 1 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.4 }}
           layout
         >
           <div className='p-3 flex justify-between items-center border-b bg-white'>
@@ -290,7 +359,7 @@ export default function ApprovalRequestPage() {
         {/* Approval Request Section */}
         <motion.div
           className='bg-white rounded-lg flex flex-col overflow-hidden border shadow-sm'
-          initial={{ y: 20, opacity: 0 }}
+          initial={{ y: 0, opacity: 1 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.1 }}
           layout
@@ -389,7 +458,7 @@ export default function ApprovalRequestPage() {
       {approvalRequest.status === 'pending' && (
         <motion.div
           className='w-full p-4 flex justify-end gap-3 border-t bg-white shadow-[0_-2px_4px_-1px_rgba(0,0,0,0.06)] z-10'
-          initial={{ y: 20, opacity: 0 }}
+          initial={{ y: 0, opacity: 1 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.3 }}
         >
