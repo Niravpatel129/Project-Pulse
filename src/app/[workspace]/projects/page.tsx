@@ -2,6 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +30,19 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
+import { cn } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircle,
@@ -176,6 +189,20 @@ export default function ProjectsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortColumn, setSortColumn] = useState('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
+  const [activeItem, setActiveItem] = useState<any>(null);
+
+  // Configure sensors for drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5, // Start dragging after moving 5px
+      },
+    }),
+  );
+
+  // Project stages for kanban board
+  const KANBAN_STAGES = ['Not Started', 'On Track', 'At Risk', 'Delayed', 'Completed'];
 
   // Fetch projects with React Query
   const {
@@ -325,6 +352,141 @@ export default function ProjectsPage() {
     router.push(`/projects/${projectId}`);
   };
 
+  // Get items for each stage in kanban view
+  const getItemsByStage = (stage: string) => {
+    return projects.filter((project) => {
+      return (
+        project.status === stage &&
+        (searchQuery === '' ||
+          project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          project.type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          project.client?.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    });
+  };
+
+  // Handle drag start
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const id = active.id.toString();
+    const foundItem = projects.find((project) => {
+      return project._id === id;
+    });
+    if (foundItem) {
+      setActiveItem(foundItem);
+    }
+  };
+
+  // Handle drag over
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+
+    if (!over) return;
+
+    const activeItemId = active.id.toString();
+    const overId = over.id.toString();
+
+    if (activeItemId === overId) return;
+
+    // If the over element is a stage container, not an item
+    if (KANBAN_STAGES.includes(overId)) {
+      const activeItem = projects.find((project) => {
+        return project._id === activeItemId;
+      });
+
+      if (activeItem && activeItem.status !== overId) {
+        handleStatusChange(activeItem._id, overId);
+      }
+    }
+  };
+
+  // Handle drag end
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveItem(null);
+  };
+
+  // Sortable Project Item component
+  function SortableProjectItem({ project }: { project: any }) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+      id: project._id,
+      data: {
+        type: 'project',
+        project,
+      },
+    });
+
+    const style = {
+      transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+      zIndex: isDragging ? 1 : 0,
+    };
+
+    return (
+      <Card
+        ref={setNodeRef}
+        style={style}
+        className='cursor-move shadow-sm transition-all'
+        {...attributes}
+        {...listeners}
+      >
+        <CardContent className='p-4 space-y-2'>
+          <div className='flex justify-between items-start gap-2'>
+            <Link
+              href={`/projects/${project._id}`}
+              className='font-medium text-sm line-clamp-2 hover:underline text-primary'
+              onClick={(e) => {
+                return e.stopPropagation();
+              }}
+            >
+              {project.name}
+            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant='ghost' size='icon' className='h-6 w-6 -mt-1 -mr-1'>
+                  <MoreHorizontal className='h-3 w-3' />
+                  <span className='sr-only'>Actions</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align='end'>
+                <DropdownMenuItem asChild>
+                  <Link href={`/projects/${project._id}`}>View Details</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={`/projects/${project._id}/edit`}>Edit Project</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    return handleDeleteProject(project._id);
+                  }}
+                  className='text-destructive focus:text-destructive'
+                >
+                  Delete Project
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+            <span>{project?.participants[0]?.participant?.name}</span>
+          </div>
+
+          <div className='flex justify-between items-center gap-2'>
+            <span className='text-xs font-medium'>{project.progress}%</span>
+            <span className='text-xs text-muted-foreground'>
+              {new Date(project.endDate).toLocaleDateString()}
+            </span>
+          </div>
+
+          <div className='flex justify-between items-center pt-2'>
+            <span className='text-xs'>{renderStatusBadge(project.status)}</span>
+            <span className='text-xs text-muted-foreground'>{project.stage}</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // Function to render status badge with appropriate color
   const renderStatusBadge = (status: string) => {
     let className = '';
@@ -378,7 +540,7 @@ export default function ProjectsPage() {
 
   return (
     <BlockWrapper>
-      <div className='container mx-auto py-8'>
+      <div className='container mx-auto py-8 flex flex-col min-h-[85vh]'>
         <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-8'>
           <div>
             <h1 className='text-3xl font-bold'>Projects</h1>
@@ -400,6 +562,32 @@ export default function ProjectsPage() {
           </div>
         </div>
 
+        {/* View mode toggle */}
+        <div className='flex justify-between items-center mb-6'>
+          <div className='flex border rounded-md overflow-hidden'>
+            <Button
+              variant={viewMode === 'table' ? 'default' : 'ghost'}
+              size='sm'
+              className='rounded-none px-3'
+              onClick={() => {
+                return setViewMode('table');
+              }}
+            >
+              Table View
+            </Button>
+            <Button
+              variant={viewMode === 'kanban' ? 'default' : 'ghost'}
+              size='sm'
+              className='rounded-none px-3'
+              onClick={() => {
+                return setViewMode('kanban');
+              }}
+            >
+              Kanban Board
+            </Button>
+          </div>
+        </div>
+
         {/* Filters and search */}
         <div className='flex flex-col md:flex-row gap-4 mb-8'>
           <div className='relative flex-1'>
@@ -413,23 +601,25 @@ export default function ProjectsPage() {
               }}
             />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className='w-full md:w-[180px]'>
-              <SelectValue placeholder='Filter by stage' />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Stage</SelectLabel>
-                <SelectItem value='all'>All Stages</SelectItem>
-                <SelectItem value='Initial Contact'>Initial Contact</SelectItem>
-                <SelectItem value='Needs Analysis'>Needs Analysis</SelectItem>
-                <SelectItem value='Proposal'>Proposal</SelectItem>
-                <SelectItem value='Negotiation'>Negotiation</SelectItem>
-                <SelectItem value='Closed Won'>Closed Won</SelectItem>
-                <SelectItem value='Closed Lost'>Closed Lost</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+          {viewMode === 'table' && (
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className='w-full md:w-[180px]'>
+                <SelectValue placeholder='Filter by stage' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Stage</SelectLabel>
+                  <SelectItem value='all'>All Stages</SelectItem>
+                  <SelectItem value='Initial Contact'>Initial Contact</SelectItem>
+                  <SelectItem value='Needs Analysis'>Needs Analysis</SelectItem>
+                  <SelectItem value='Proposal'>Proposal</SelectItem>
+                  <SelectItem value='Negotiation'>Negotiation</SelectItem>
+                  <SelectItem value='Closed Won'>Closed Won</SelectItem>
+                  <SelectItem value='Closed Lost'>Closed Lost</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {/* Loading state */}
@@ -453,7 +643,8 @@ export default function ProjectsPage() {
               </div>
             </div>
           </div>
-        ) : sortedProjects.length > 0 ? (
+        ) : viewMode === 'table' ? (
+          // Table View
           <div className='rounded-md border shadow-sm'>
             <Table>
               <TableHeader>
@@ -486,7 +677,6 @@ export default function ProjectsPage() {
                       key={project._id}
                       className='cursor-pointer transition-colors hover:bg-muted/50'
                       onClick={(e) => {
-                        // Prevent navigation if clicking on status dropdown or actions
                         if (
                           e.target instanceof HTMLElement &&
                           !e.target.closest('.status-dropdown') &&
@@ -496,9 +686,7 @@ export default function ProjectsPage() {
                         }
                       }}
                     >
-                      <TableCell className='font-medium'>
-                        <span className=''>{project.name}</span>
-                      </TableCell>
+                      <TableCell className='font-medium'>{project.name}</TableCell>
                       <TableCell>{project?.participants[0]?.participant?.name}</TableCell>
                       <TableCell>{project?.projectType}</TableCell>
                       <TableCell>{project?.manager?.name}</TableCell>
@@ -516,46 +704,19 @@ export default function ProjectsPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align='start'>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  return handleStatusChange(project._id, 'Not Started');
-                                }}
-                                className='flex items-center'
-                              >
-                                {renderStatusBadge('Not Started')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  return handleStatusChange(project._id, 'On Track');
-                                }}
-                                className='flex items-center'
-                              >
-                                {renderStatusBadge('On Track')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  return handleStatusChange(project._id, 'At Risk');
-                                }}
-                                className='flex items-center'
-                              >
-                                {renderStatusBadge('At Risk')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  return handleStatusChange(project._id, 'Delayed');
-                                }}
-                                className='flex items-center'
-                              >
-                                {renderStatusBadge('Delayed')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  return handleStatusChange(project._id, 'Completed');
-                                }}
-                                className='flex items-center'
-                              >
-                                {renderStatusBadge('Completed')}
-                              </DropdownMenuItem>
+                              {KANBAN_STAGES.map((status) => {
+                                return (
+                                  <DropdownMenuItem
+                                    key={status}
+                                    onClick={() => {
+                                      return handleStatusChange(project._id, status);
+                                    }}
+                                    className='flex items-center'
+                                  >
+                                    {renderStatusBadge(status)}
+                                  </DropdownMenuItem>
+                                );
+                              })}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -619,6 +780,89 @@ export default function ProjectsPage() {
             </Table>
           </div>
         ) : (
+          // Kanban View
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4'>
+              {KANBAN_STAGES.map((stage) => {
+                const stageItems = getItemsByStage(stage);
+                return (
+                  <div key={stage} id={stage} className='flex flex-col h-full'>
+                    <div className='flex items-center justify-between px-3 py-2 bg-muted/60 rounded-t-lg border border-border'>
+                      <h3 className='font-medium text-sm'>{stage}</h3>
+                      <span className='inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-primary/10'>
+                        {stageItems.length}
+                      </span>
+                    </div>
+                    <div
+                      className={cn(
+                        'flex-1 p-2 rounded-b-lg border border-t-0 border-border overflow-y-auto max-h-[calc(100vh-300px)] min-h-[300px]',
+                      )}
+                    >
+                      <SortableContext
+                        items={stageItems.map((item) => {
+                          return item._id;
+                        })}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {stageItems.length > 0 ? (
+                          <div className='grid gap-2'>
+                            {stageItems.map((item) => {
+                              return <SortableProjectItem key={item._id} project={item} />;
+                            })}
+                          </div>
+                        ) : (
+                          <div className='h-full flex items-center justify-center'>
+                            <p className='text-xs text-muted-foreground'>No items</p>
+                          </div>
+                        )}
+                      </SortableContext>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <DragOverlay>
+              {activeItem ? (
+                <Card className='cursor-move shadow-md opacity-80'>
+                  <CardContent className='p-4 space-y-2'>
+                    <div className='flex justify-between items-start gap-2'>
+                      <div className='font-medium text-sm line-clamp-2 text-primary'>
+                        {activeItem.name}
+                      </div>
+                      <Button variant='ghost' size='icon' className='h-6 w-6 -mt-1 -mr-1'>
+                        <MoreHorizontal className='h-3 w-3' />
+                      </Button>
+                    </div>
+
+                    <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+                      <span>{activeItem?.participants[0]?.participant?.name}</span>
+                    </div>
+
+                    <div className='flex justify-between items-center gap-2'>
+                      <span className='text-xs font-medium'>{activeItem.progress}%</span>
+                      <span className='text-xs text-muted-foreground'>
+                        {new Date(activeItem.endDate).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    <div className='flex justify-between items-center pt-2'>
+                      <span className='text-xs'>{renderStatusBadge(activeItem.status)}</span>
+                      <span className='text-xs text-muted-foreground'>{activeItem.stage}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        )}
+
+        {!isLoading && !error && sortedProjects.length === 0 && (
           <div className='text-center py-12'>
             <div className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-4'>
               <Search className='h-6 w-6 text-muted-foreground' />

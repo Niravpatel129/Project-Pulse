@@ -27,7 +27,6 @@ import {
   CiLogout,
   CiMenuBurger,
   CiSettings,
-  CiShop,
   CiUser,
   CiViewBoard,
   CiViewTimeline,
@@ -101,11 +100,11 @@ export function Navigation() {
       label: 'Projects',
       icon: <CiViewBoard className='h-5 w-5' />,
     },
-    {
-      href: '/production',
-      label: 'Production',
-      icon: <CiShop className='h-5 w-5' />,
-    },
+    // {
+    //   href: '/production',
+    //   label: 'Production',
+    //   icon: <CiShop className='h-5 w-5' />,
+    // },
     {
       href: '/customers',
       label: 'Customers',
