@@ -51,7 +51,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, ArrowUpDown, MoreHorizontal, Plus, Search } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 // Fallback mock data in case API fails
@@ -192,13 +192,64 @@ function DroppableColumn({ stage, children }: { stage: string; children: React.R
 
 export default function ProjectsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sortColumn, setSortColumn] = useState('name');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
-  const [kanbanView, setKanbanView] = useState<'stages' | 'status'>('stages');
+
+  // Get kanban view type from URL or default to stages
+  const kanban = (searchParams.get('kanban') as 'stages' | 'status') || 'stages';
+  const isKanban = searchParams.get('view') === 'kanban';
+  const search = searchParams.get('search') || '';
+  const status = searchParams.get('status') || 'all';
+  const sort = searchParams.get('sort') || 'name';
+  const direction = (searchParams.get('direction') as 'asc' | 'desc') || 'asc';
+
+  // Update URL params
+  const updateParams = (updates: Record<string, string>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value) {
+        params.set(key, value);
+      } else {
+        params.delete(key);
+      }
+    });
+    router.push(`?${params.toString()}`);
+  };
+
+  // Toggle between table and kanban views
+  const toggleView = () => {
+    if (isKanban) {
+      updateParams({ view: '' });
+    } else {
+      updateParams({ view: 'kanban', kanban });
+    }
+  };
+
+  // Update kanban view type
+  const setKanban = (newKanban: 'stages' | 'status') => {
+    updateParams({ kanban: newKanban });
+  };
+
+  // Update search
+  const setSearch = (newSearch: string) => {
+    updateParams({ search: newSearch });
+  };
+
+  // Update status filter
+  const setStatus = (newStatus: string) => {
+    updateParams({ status: newStatus });
+  };
+
+  // Update sorting
+  const setSort = (newSort: string) => {
+    if (sort === newSort) {
+      updateParams({ direction: direction === 'asc' ? 'desc' : 'asc' });
+    } else {
+      updateParams({ sort: newSort, direction: 'asc' });
+    }
+  };
+
+  // Get initial values from URL params or use defaults
   const [activeItem, setActiveItem] = useState<any>(null);
 
   // Get pipeline settings
@@ -384,26 +435,16 @@ export default function ProjectsPage() {
     },
   });
 
-  // Function to handle column sorting
-  const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('asc');
-    }
-  };
-
   // Filter projects based on search query and status filter
   const filteredProjects = projects?.filter((project) => {
     const matchesSearch =
-      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.client?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.leadSource?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.manager?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+      project.name.toLowerCase().includes(search.toLowerCase()) ||
+      project.type?.toLowerCase().includes(search.toLowerCase()) ||
+      project.client?.toLowerCase().includes(search.toLowerCase()) ||
+      project.leadSource?.toLowerCase().includes(search.toLowerCase()) ||
+      project.manager?.name?.toLowerCase().includes(search.toLowerCase());
 
-    const matchesStatus = statusFilter === 'all' || project.stage === statusFilter;
+    const matchesStatus = status === 'all' || project.stage === status;
 
     return matchesSearch && matchesStatus;
   });
@@ -413,18 +454,17 @@ export default function ProjectsPage() {
     // Handle different column types appropriately
     let comparison = 0;
 
-    if (sortColumn === 'progress' || sortColumn === 'teamSize') {
+    if (sort === 'progress' || sort === 'teamSize') {
       // Numeric comparison
-      comparison =
-        (a[sortColumn as keyof typeof a] as number) - (b[sortColumn as keyof typeof b] as number);
+      comparison = (a[sort as keyof typeof a] as number) - (b[sort as keyof typeof b] as number);
     } else {
       // String comparison
-      const aValue = String(a[sortColumn as keyof typeof a] || '').toLowerCase();
-      const bValue = String(b[sortColumn as keyof typeof b] || '').toLowerCase();
+      const aValue = String(a[sort as keyof typeof a] || '').toLowerCase();
+      const bValue = String(b[sort as keyof typeof b] || '').toLowerCase();
       comparison = aValue.localeCompare(bValue);
     }
 
-    return sortDirection === 'asc' ? comparison : -comparison;
+    return direction === 'asc' ? comparison : -comparison;
   });
 
   // Function to handle project deletion
@@ -458,10 +498,10 @@ export default function ProjectsPage() {
 
       return (
         matchesStage &&
-        (searchQuery === '' ||
-          project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          project.projectType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          project.manager?.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+        (search === '' ||
+          project.name.toLowerCase().includes(search.toLowerCase()) ||
+          project.projectType?.toLowerCase().includes(search.toLowerCase()) ||
+          project.manager?.name?.toLowerCase().includes(search.toLowerCase()))
       );
     });
   };
@@ -477,10 +517,10 @@ export default function ProjectsPage() {
 
       return (
         matchesStatus &&
-        (searchQuery === '' ||
-          project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          project.projectType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          project.manager?.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+        (search === '' ||
+          project.name.toLowerCase().includes(search.toLowerCase()) ||
+          project.projectType?.toLowerCase().includes(search.toLowerCase()) ||
+          project.manager?.name?.toLowerCase().includes(search.toLowerCase()))
       );
     });
   };
@@ -531,7 +571,7 @@ export default function ProjectsPage() {
 
       if (!activeItem) return;
 
-      if (kanbanView === 'stages' && (isStageColumn || isNoStageColumn)) {
+      if (kanban === 'stages' && (isStageColumn || isNoStageColumn)) {
         if (activeItem.stage !== overId) {
           // Optimistically update the UI
           queryClient.setQueryData(['projects'], (old: any[]) => {
@@ -546,7 +586,7 @@ export default function ProjectsPage() {
           // Trigger the mutation
           updateStageMutation.mutate({ projectId: activeItemId, newStage: overId });
         }
-      } else if (kanbanView === 'status' && (isStatusColumn || isNoStatusColumn)) {
+      } else if (kanban === 'status' && (isStatusColumn || isNoStatusColumn)) {
         if (activeItem.status !== overId) {
           // Optimistically update the UI
           queryClient.setQueryData(['projects'], (old: any[]) => {
@@ -599,7 +639,7 @@ export default function ProjectsPage() {
 
       if (!activeItem) return;
 
-      if (kanbanView === 'stages' && (isStageColumn || isNoStageColumn)) {
+      if (kanban === 'stages' && (isStageColumn || isNoStageColumn)) {
         if (activeItem.stage !== overId) {
           // Optimistically update the UI
           queryClient.setQueryData(['projects'], (old: any[]) => {
@@ -614,7 +654,7 @@ export default function ProjectsPage() {
           // Trigger the mutation
           updateStageMutation.mutate({ projectId: activeItemId, newStage: overId });
         }
-      } else if (kanbanView === 'status' && (isStatusColumn || isNoStatusColumn)) {
+      } else if (kanban === 'status' && (isStatusColumn || isNoStatusColumn)) {
         if (activeItem.status !== overId) {
           // Optimistically update the UI
           queryClient.setQueryData(['projects'], (old: any[]) => {
@@ -772,11 +812,16 @@ export default function ProjectsPage() {
       <div
         className='flex items-center cursor-pointer'
         onClick={() => {
-          return handleSort(column);
+          return setSort(column);
         }}
       >
         {label}
         <ArrowUpDown className='ml-2 h-4 w-4' />
+        {sort === column && (
+          <span className='ml-1 text-xs text-muted-foreground'>
+            {direction === 'asc' ? '↑' : '↓'}
+          </span>
+        )}
       </div>
     );
   };
@@ -812,44 +857,40 @@ export default function ProjectsPage() {
         <div className='flex justify-between items-center mb-6'>
           <div className='flex border rounded-md overflow-hidden'>
             <Button
-              variant={viewMode === 'table' ? 'default' : 'ghost'}
+              variant={!isKanban ? 'default' : 'ghost'}
               size='sm'
               className='rounded-none px-3'
-              onClick={() => {
-                return setViewMode('table');
-              }}
+              onClick={toggleView}
             >
               Table View
             </Button>
             <Button
-              variant={viewMode === 'kanban' ? 'default' : 'ghost'}
+              variant={isKanban ? 'default' : 'ghost'}
               size='sm'
               className='rounded-none px-3'
-              onClick={() => {
-                return setViewMode('kanban');
-              }}
+              onClick={toggleView}
             >
               Kanban Board
             </Button>
           </div>
-          {viewMode === 'kanban' && (
+          {isKanban && (
             <div className='flex border rounded-md overflow-hidden'>
               <Button
-                variant={kanbanView === 'stages' ? 'default' : 'ghost'}
+                variant={kanban === 'stages' ? 'default' : 'ghost'}
                 size='sm'
                 className='rounded-none px-3'
                 onClick={() => {
-                  return setKanbanView('stages');
+                  return setKanban('stages');
                 }}
               >
                 By Stage
               </Button>
               <Button
-                variant={kanbanView === 'status' ? 'default' : 'ghost'}
+                variant={kanban === 'status' ? 'default' : 'ghost'}
                 size='sm'
                 className='rounded-none px-3'
                 onClick={() => {
-                  return setKanbanView('status');
+                  return setKanban('status');
                 }}
               >
                 By Status
@@ -865,14 +906,14 @@ export default function ProjectsPage() {
             <Input
               placeholder='Search projects...'
               className='pl-8'
-              value={searchQuery}
+              value={search}
               onChange={(e) => {
-                return setSearchQuery(e.target.value);
+                return setSearch(e.target.value);
               }}
             />
           </div>
-          {viewMode === 'table' && (
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+          {isKanban && (
+            <Select value={status} onValueChange={setStatus}>
               <SelectTrigger className='w-full md:w-[180px]'>
                 <SelectValue placeholder='Filter by stage' />
               </SelectTrigger>
@@ -913,143 +954,7 @@ export default function ProjectsPage() {
               </div>
             </div>
           </div>
-        ) : viewMode === 'table' ? (
-          // Table View
-          <div className='rounded-md border shadow-sm'>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <SortableColumnHeader column='name' label='Project Name' />
-                  </TableHead>
-                  <TableHead>
-                    <SortableColumnHeader column='client' label='Client' />
-                  </TableHead>
-                  <TableHead>
-                    <SortableColumnHeader column='type' label='Type' />
-                  </TableHead>
-                  <TableHead>
-                    <SortableColumnHeader column='manager' label='Manager' />
-                  </TableHead>
-                  <TableHead>
-                    <SortableColumnHeader column='status' label='Status' />
-                  </TableHead>
-                  <TableHead>
-                    <SortableColumnHeader column='stage' label='Stage' />
-                  </TableHead>
-                  <TableHead className='text-right'>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedProjects.map((project) => {
-                  return (
-                    <TableRow
-                      key={project._id}
-                      className='cursor-pointer transition-colors hover:bg-muted/50'
-                      onClick={(e) => {
-                        if (
-                          e.target instanceof HTMLElement &&
-                          !e.target.closest('.status-dropdown') &&
-                          !e.target.closest('.actions-dropdown')
-                        ) {
-                          navigateToProject(project._id);
-                        }
-                      }}
-                    >
-                      <TableCell className='font-medium'>{project.name}</TableCell>
-                      <TableCell>{project?.participants[0]?.participant?.name}</TableCell>
-                      <TableCell>{project?.projectType}</TableCell>
-                      <TableCell>{project?.manager?.name}</TableCell>
-                      <TableCell>
-                        <div
-                          className='status-dropdown'
-                          onClick={(e) => {
-                            return e.stopPropagation();
-                          }}
-                        >
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant='ghost' className='h-8 px-2 py-1'>
-                                {renderStatusBadge(project.status)}
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align='start'>
-                              {KANBAN_STAGES.map((status) => {
-                                return (
-                                  <DropdownMenuItem
-                                    key={status}
-                                    onClick={() => {
-                                      return handleStageChange(project._id, status);
-                                    }}
-                                    className='flex items-center'
-                                  >
-                                    {renderStatusBadge(status)}
-                                  </DropdownMenuItem>
-                                );
-                              })}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            project.stage === 'Closed Won'
-                              ? 'bg-green-100 text-green-800'
-                              : project.stage === 'Proposal'
-                              ? 'bg-blue-100 text-blue-800'
-                              : project.stage === 'Negotiation'
-                              ? 'bg-amber-100 text-amber-800'
-                              : project.stage === 'Needs Analysis'
-                              ? 'bg-purple-100 text-purple-800'
-                              : 'bg-slate-100 text-slate-800'
-                          }`}
-                        >
-                          {project.stage}
-                        </span>
-                      </TableCell>
-                      <TableCell className='text-right'>
-                        <div
-                          className='actions-dropdown'
-                          onClick={(e) => {
-                            return e.stopPropagation();
-                          }}
-                        >
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant='ghost' size='icon' className='h-8 w-8'>
-                                <MoreHorizontal className='h-4 w-4' />
-                                <span className='sr-only'>Actions</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align='end'>
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem asChild>
-                                <Link href={`/projects/${project._id}`}>View Details</Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem asChild>
-                                <Link href={`/projects/${project._id}/edit`}>Edit Project</Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  return handleDeleteProject(project._id);
-                                }}
-                                className='text-destructive focus:text-destructive'
-                              >
-                                Delete Project
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
+        ) : isKanban ? (
           // Kanban View
           <DndContext
             sensors={sensors}
@@ -1059,7 +964,7 @@ export default function ProjectsPage() {
             collisionDetection={closestCenter}
           >
             <div className='grid grid-flow-col auto-cols-[minmax(200px,1fr)] gap-4'>
-              {kanbanView === 'stages'
+              {kanban === 'stages'
                 ? [
                     ...pipelineStages.map((s) => {
                       return s.name;
@@ -1229,6 +1134,142 @@ export default function ProjectsPage() {
               ) : null}
             </DragOverlay>
           </DndContext>
+        ) : (
+          // Table View
+          <div className='rounded-md border shadow-sm'>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>
+                    <SortableColumnHeader column='name' label='Project Name' />
+                  </TableHead>
+                  <TableHead>
+                    <SortableColumnHeader column='client' label='Client' />
+                  </TableHead>
+                  <TableHead>
+                    <SortableColumnHeader column='type' label='Type' />
+                  </TableHead>
+                  <TableHead>
+                    <SortableColumnHeader column='manager' label='Manager' />
+                  </TableHead>
+                  <TableHead>
+                    <SortableColumnHeader column='status' label='Status' />
+                  </TableHead>
+                  <TableHead>
+                    <SortableColumnHeader column='stage' label='Stage' />
+                  </TableHead>
+                  <TableHead className='text-right'>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedProjects.map((project) => {
+                  return (
+                    <TableRow
+                      key={project._id}
+                      className='cursor-pointer transition-colors hover:bg-muted/50'
+                      onClick={(e) => {
+                        if (
+                          e.target instanceof HTMLElement &&
+                          !e.target.closest('.status-dropdown') &&
+                          !e.target.closest('.actions-dropdown')
+                        ) {
+                          navigateToProject(project._id);
+                        }
+                      }}
+                    >
+                      <TableCell className='font-medium'>{project.name}</TableCell>
+                      <TableCell>{project?.participants[0]?.participant?.name}</TableCell>
+                      <TableCell>{project?.projectType}</TableCell>
+                      <TableCell>{project?.manager?.name}</TableCell>
+                      <TableCell>
+                        <div
+                          className='status-dropdown'
+                          onClick={(e) => {
+                            return e.stopPropagation();
+                          }}
+                        >
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant='ghost' className='h-8 px-2 py-1'>
+                                {renderStatusBadge(project.status)}
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align='start'>
+                              {KANBAN_STAGES.map((status) => {
+                                return (
+                                  <DropdownMenuItem
+                                    key={status}
+                                    onClick={() => {
+                                      return handleStageChange(project._id, status);
+                                    }}
+                                    className='flex items-center'
+                                  >
+                                    {renderStatusBadge(status)}
+                                  </DropdownMenuItem>
+                                );
+                              })}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            project.stage === 'Closed Won'
+                              ? 'bg-green-100 text-green-800'
+                              : project.stage === 'Proposal'
+                              ? 'bg-blue-100 text-blue-800'
+                              : project.stage === 'Negotiation'
+                              ? 'bg-amber-100 text-amber-800'
+                              : project.stage === 'Needs Analysis'
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-slate-100 text-slate-800'
+                          }`}
+                        >
+                          {project.stage}
+                        </span>
+                      </TableCell>
+                      <TableCell className='text-right'>
+                        <div
+                          className='actions-dropdown'
+                          onClick={(e) => {
+                            return e.stopPropagation();
+                          }}
+                        >
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant='ghost' size='icon' className='h-8 w-8'>
+                                <MoreHorizontal className='h-4 w-4' />
+                                <span className='sr-only'>Actions</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align='end'>
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem asChild>
+                                <Link href={`/projects/${project._id}`}>View Details</Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link href={`/projects/${project._id}/edit`}>Edit Project</Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  return handleDeleteProject(project._id);
+                                }}
+                                className='text-destructive focus:text-destructive'
+                              >
+                                Delete Project
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         )}
 
         {!isLoading && !error && sortedProjects.length === 0 && (
@@ -1238,11 +1279,11 @@ export default function ProjectsPage() {
             </div>
             <h3 className='text-lg font-medium'>No projects found</h3>
             <p className='text-muted-foreground mt-2 mb-4'>
-              {searchQuery || statusFilter !== 'all'
+              {search || status !== 'all'
                 ? "Try adjusting your search or filter to find what you're looking for."
                 : 'Get started by creating your first project.'}
             </p>
-            {!searchQuery && statusFilter === 'all' && (
+            {!search && status === 'all' && (
               <Button asChild>
                 <Link href='/projects/new'>
                   <Plus className='mr-2 h-4 w-4' />
