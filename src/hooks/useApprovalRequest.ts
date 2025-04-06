@@ -15,6 +15,7 @@ interface User {
   _id: string;
   name: string;
   email: string;
+  avatar: string | null;
 }
 
 interface Version {

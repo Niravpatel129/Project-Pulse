@@ -1,5 +1,6 @@
 'use client';
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,7 +61,7 @@ export default function ApprovalRequestPage() {
       title: approvalRequest?.requestedBy?.name || '',
       action: 'requested approval for',
       description: approvalRequest?.timeline[0]?.description || '',
-      image: 'https://picsum.photos/200/300',
+      image: approvalRequest?.requestedBy?.avatar || null,
     },
     ...(approvalRequest?.timeline.slice(1).map((item, index) => {
       return {
@@ -69,7 +70,7 @@ export default function ApprovalRequestPage() {
         title: item.action === 'commented' ? item.author : approvalRequest?.requestedBy?.name,
         action: item.action,
         description: item.description,
-        image: '/placeholder.svg?height=32&width=32',
+        image: approvalRequest?.requestedBy?.avatar || null,
       };
     }) || []),
   ];
@@ -293,12 +294,11 @@ export default function ApprovalRequestPage() {
                             </span>
                           </TimelineTitle>
                           <TimelineIndicator className='bg-primary/10 group-data-completed/timeline-item:bg-primary group-data-completed/timeline-item:text-primary-foreground flex size-6 items-center justify-center border-none group-data-[orientation=vertical]/timeline:-left-7'>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={item.image}
-                              alt={item.title}
-                              className='size-6 rounded-full'
-                            />
+                            {}
+                            <Avatar className='size-6'>
+                              <AvatarImage src={item.image} alt={item.title} />
+                              <AvatarFallback>{item.title[0]}</AvatarFallback>
+                            </Avatar>
                           </TimelineIndicator>
                         </TimelineHeader>
                         <TimelineContent className='text-foreground mt-2 rounded-lg border px-4 py-3 whitespace-pre-wrap'>
