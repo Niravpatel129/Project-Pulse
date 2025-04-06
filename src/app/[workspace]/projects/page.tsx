@@ -219,15 +219,27 @@ export default function ProjectsPage() {
   // Toggle between table and kanban views
   const toggleView = () => {
     if (isKanban) {
-      updateParams({ view: '' });
+      // When switching to table view, remove all kanban-related params
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('view');
+      params.delete('kanban');
+      router.push(`?${params.toString()}`);
     } else {
+      // When switching to kanban view, keep the kanban type
       updateParams({ view: 'kanban', kanban });
     }
   };
 
   // Update kanban view type
   const setKanban = (newKanban: 'stages' | 'status') => {
-    updateParams({ kanban: newKanban });
+    if (newKanban === 'status') {
+      updateParams({ kanban: 'status' });
+    } else {
+      // When switching to stages (default), remove the kanban parameter
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('kanban');
+      router.push(`?${params.toString()}`);
+    }
   };
 
   // Update search
