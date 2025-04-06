@@ -31,151 +31,22 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
-import { usePipelineSettings } from '@/hooks/usePipelineSettings';
+import { useProjects } from '@/hooks/useProjects';
 import { cn } from '@/lib/utils';
-import { newRequest } from '@/utils/newRequest';
 import {
   closestCenter,
   defaultDropAnimation,
   DndContext,
-  DragEndEvent,
-  DragOverEvent,
   DragOverlay,
-  DragStartEvent,
   PointerSensor,
   useDroppable,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, ArrowUpDown, MoreHorizontal, Plus, Search } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
-
-// Fallback mock data in case API fails
-const MOCK_PROJECTS = [
-  {
-    id: 1,
-    name: 'Enterprise CRM Implementation',
-    client: 'Acme Corporation',
-    type: 'Software Implementation',
-    leadSource: 'Industry Conference',
-    stage: 'Proposal',
-    startDate: '2023-09-15',
-    endDate: '2024-03-30',
-    teamSize: 6,
-    manager: 'Sarah Johnson',
-    lastUpdated: '2 hours ago',
-    progress: 65,
-    status: 'On Track',
-    description:
-      'Implementation of enterprise-wide CRM solution with custom integrations to existing ERP system.',
-  },
-  {
-    id: 2,
-    name: 'Mobile App Development - Retail',
-    client: 'Fashion Forward Inc.',
-    type: 'Mobile Development',
-    leadSource: 'Website Inquiry',
-    stage: 'Needs Analysis',
-    startDate: '2023-11-01',
-    endDate: '2024-04-15',
-    teamSize: 8,
-    manager: 'David Chen',
-    lastUpdated: '1 day ago',
-    progress: 25,
-    status: 'At Risk',
-    description:
-      'Development of iOS and Android retail application with AR try-on features and loyalty program integration.',
-  },
-  {
-    id: 3,
-    name: 'Digital Transformation Strategy',
-    client: 'Midwest Healthcare Group',
-    type: 'Consulting',
-    leadSource: 'Referral',
-    stage: 'Closed Won',
-    startDate: '2023-06-10',
-    endDate: '2023-12-20',
-    teamSize: 5,
-    manager: 'Maria Rodriguez',
-    lastUpdated: '3 days ago',
-    progress: 100,
-    status: 'Completed',
-    description:
-      'Strategic consulting to modernize healthcare provider systems, improve patient experience, and optimize operational workflows.',
-  },
-  {
-    id: 4,
-    name: 'Data Warehouse Migration',
-    client: 'Global Financial Services',
-    type: 'Data Engineering',
-    leadSource: 'Previous Client',
-    stage: 'Negotiation',
-    startDate: '2024-01-15',
-    endDate: '2024-08-31',
-    teamSize: 12,
-    manager: 'Robert Jackson',
-    lastUpdated: '1 week ago',
-    progress: 40,
-    status: 'On Track',
-    description:
-      'Migration of legacy data warehouse to cloud-based solution with real-time analytics capabilities and enhanced security features.',
-  },
-  {
-    id: 5,
-    name: 'Cybersecurity Audit & Remediation',
-    client: 'National Retail Chain',
-    type: 'Security',
-    leadSource: 'Marketing Campaign',
-    stage: 'Initial Contact',
-    startDate: '2024-03-01',
-    endDate: '2024-05-30',
-    teamSize: 4,
-    manager: 'Emily Taylor',
-    lastUpdated: '2 days ago',
-    progress: 0,
-    status: 'Not Started',
-    description:
-      'Comprehensive security audit of IT infrastructure, identification of vulnerabilities, and implementation of remediation measures.',
-  },
-  {
-    id: 6,
-    name: 'E-commerce Platform Upgrade',
-    client: 'Artisan Goods Marketplace',
-    type: 'Web Development',
-    leadSource: 'Social Media',
-    stage: 'Proposal',
-    startDate: '2024-02-15',
-    endDate: '2024-07-31',
-    teamSize: 7,
-    manager: 'Justin Miller',
-    lastUpdated: '5 days ago',
-    progress: 30,
-    status: 'On Track',
-    description:
-      'Upgrade of existing e-commerce platform to improve performance, mobile responsiveness, and integration with modern payment systems.',
-  },
-  {
-    id: 7,
-    name: 'Supply Chain Optimization',
-    client: 'Continental Manufacturing',
-    type: 'Logistics Consulting',
-    leadSource: 'Trade Show',
-    stage: 'Needs Analysis',
-    startDate: '2024-01-20',
-    endDate: '2024-06-15',
-    teamSize: 6,
-    manager: 'Alex Wong',
-    lastUpdated: '4 days ago',
-    progress: 15,
-    status: 'Delayed',
-    description:
-      'Analysis and optimization of manufacturing supply chain to reduce costs, improve delivery times, and enhance inventory management.',
-  },
-];
+import { useRouter } from 'next/navigation';
 
 // Add this new component
 function DroppableColumn({ stage, children }: { stage: string; children: React.ReactNode }) {
@@ -192,80 +63,33 @@ function DroppableColumn({ stage, children }: { stage: string; children: React.R
 
 export default function ProjectsPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
-
-  // Get kanban view type from URL or default to stages
-  const kanban = (searchParams.get('kanban') as 'stages' | 'status') || 'stages';
-  const isKanban = searchParams.get('view') === 'kanban';
-  const search = searchParams.get('search') || '';
-  const status = searchParams.get('status') || 'all';
-  const sort = searchParams.get('sort') || 'name';
-  const direction = (searchParams.get('direction') as 'asc' | 'desc') || 'asc';
-
-  // Update URL params
-  const updateParams = (updates: Record<string, string>) => {
-    const params = new URLSearchParams(searchParams.toString());
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value) {
-        params.set(key, value);
-      } else {
-        params.delete(key);
-      }
-    });
-    router.push(`?${params.toString()}`);
-  };
-
-  // Toggle between table and kanban views
-  const toggleView = () => {
-    if (isKanban) {
-      // When switching to table view, remove all kanban-related params
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete('view');
-      params.delete('kanban');
-      router.push(`?${params.toString()}`);
-    } else {
-      // When switching to kanban view, keep the kanban type
-      updateParams({ view: 'kanban', kanban });
-    }
-  };
-
-  // Update kanban view type
-  const setKanban = (newKanban: 'stages' | 'status') => {
-    if (newKanban === 'status') {
-      updateParams({ kanban: 'status' });
-    } else {
-      // When switching to stages (default), remove the kanban parameter
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete('kanban');
-      router.push(`?${params.toString()}`);
-    }
-  };
-
-  // Update search
-  const setSearch = (newSearch: string) => {
-    updateParams({ search: newSearch });
-  };
-
-  // Update status filter
-  const setStatus = (newStatus: string) => {
-    updateParams({ status: newStatus });
-  };
-
-  // Update sorting
-  const setSort = (newSort: string) => {
-    if (sort === newSort) {
-      updateParams({ direction: direction === 'asc' ? 'desc' : 'asc' });
-    } else {
-      updateParams({ sort: newSort, direction: 'asc' });
-    }
-  };
-
-  // Get initial values from URL params or use defaults
-  const [activeItem, setActiveItem] = useState<any>(null);
-
-  // Get pipeline settings
-  const { stages: pipelineStages, statuses: pipelineStatuses } = usePipelineSettings();
+  const {
+    projects,
+    isLoading,
+    error,
+    activeItem,
+    kanban,
+    isKanban,
+    search,
+    status,
+    sort,
+    direction,
+    sortedProjects,
+    shouldShowNoStage,
+    shouldShowNoStatus,
+    pipelineStages,
+    pipelineStatuses,
+    toggleView,
+    setKanban,
+    setSearch,
+    setStatus,
+    setSort,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    getItemsByStage,
+    getItemsByStatus,
+  } = useProjects();
 
   // Configure sensors for drag and drop
   const sensors = useSensors(
@@ -276,415 +100,22 @@ export default function ProjectsPage() {
     }),
   );
 
-  // Use pipeline stages for kanban board
-  const KANBAN_STAGES = pipelineStages.map((stage) => {
-    return stage.name;
-  });
-
-  // Fetch projects with React Query
-  const {
-    data: projects = [],
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['projects'],
-    queryFn: async () => {
-      try {
-        const response = await newRequest.get('/projects');
-        console.log('🚀 response:', response);
-        // Transform the data to match the expected structure
-        return (
-          response.data.data.map((project: any) => {
-            return {
-              _id: project._id,
-              id: project._id,
-              name: project.name,
-              stage: project.stage,
-              status: project.status,
-              projectType: project.projectType,
-              manager: project.manager,
-              participants: project.participants || [],
-              team: project.team || [],
-              tasks: project.tasks || [],
-              notes: project.notes || [],
-              isActive: project.isActive,
-              createdBy: project.createdBy,
-              workspace: project.workspace,
-              leadSource: project.leadSource,
-              sharing: project.sharing,
-              collaborators: project.collaborators || [],
-              createdAt: project.createdAt,
-              updatedAt: project.updatedAt,
-            };
-          }) || []
-        );
-      } catch (err) {
-        console.error('Failed to fetch projects:', err);
-        return MOCK_PROJECTS;
-      }
-    },
-  });
-
-  // Delete project mutation
-  const deleteProjectMutation = useMutation({
-    mutationFn: (projectId: number) => {
-      return newRequest.delete(`/projects/${projectId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-    },
-    onError: (err) => {
-      console.error('Failed to delete project:', err);
-    },
-    // Optimistic update
-    onMutate: async (projectId) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['projects'] });
-
-      // Snapshot the previous value
-      const previousProjects = queryClient.getQueryData(['projects']);
-
-      // Optimistically update to the new value
-      queryClient.setQueryData(['projects'], (old: any[]) => {
-        return old.filter((project) => {
-          return project.id !== projectId;
-        });
-      });
-
-      // Return a context object with the snapshot
-      return { previousProjects };
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-    },
-  });
-
-  // Update project stage mutation
-  const updateStageMutation = useMutation({
-    mutationFn: async ({ projectId, newStage }: { projectId: string; newStage: string }) => {
-      try {
-        const response = await newRequest.put(`/projects/${projectId}`, { stage: newStage });
-        return response.data;
-      } catch (error) {
-        console.error('Failed to update project stage:', error);
-        throw error;
-      }
-    },
-    onMutate: async ({ projectId, newStage }) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['projects'] });
-
-      // Snapshot the previous value
-      const previousProjects = queryClient.getQueryData(['projects']);
-
-      // Optimistically update to the new value
-      queryClient.setQueryData(['projects'], (old: any[]) => {
-        return old.map((project) => {
-          if (project._id === projectId) {
-            return { ...project, stage: newStage };
-          }
-          return project;
-        });
-      });
-
-      // Return a context object with the snapshot
-      return { previousProjects };
-    },
-    onError: (err, variables, context) => {
-      // If the mutation fails, use the context returned from onMutate to roll back
-      if (context?.previousProjects) {
-        queryClient.setQueryData(['projects'], context.previousProjects);
-      }
-      console.error('Failed to update project stage:', err);
-    },
-    onSettled: () => {
-      // Always refetch after error or success to ensure data is in sync
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-    },
-  });
-
-  // Add update status mutation
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ projectId, newStatus }: { projectId: string; newStatus: string }) => {
-      try {
-        const response = await newRequest.put(`/projects/${projectId}`, { status: newStatus });
-        return response.data;
-      } catch (error) {
-        console.error('Failed to update project status:', error);
-        throw error;
-      }
-    },
-    onMutate: async ({ projectId, newStatus }) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['projects'] });
-
-      // Snapshot the previous value
-      const previousProjects = queryClient.getQueryData(['projects']);
-
-      // Optimistically update to the new value
-      queryClient.setQueryData(['projects'], (old: any[]) => {
-        return old.map((project) => {
-          if (project._id === projectId) {
-            return { ...project, status: newStatus };
-          }
-          return project;
-        });
-      });
-
-      // Return a context object with the snapshot
-      return { previousProjects };
-    },
-    onError: (err, variables, context) => {
-      // If the mutation fails, use the context returned from onMutate to roll back
-      if (context?.previousProjects) {
-        queryClient.setQueryData(['projects'], context.previousProjects);
-      }
-      console.error('Failed to update project status:', err);
-    },
-    onSettled: () => {
-      // Always refetch after error or success to ensure data is in sync
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-    },
-  });
-
-  // Filter projects based on search query and status filter
-  const filteredProjects = projects?.filter((project) => {
-    const matchesSearch =
-      project.name.toLowerCase().includes(search.toLowerCase()) ||
-      project.type?.toLowerCase().includes(search.toLowerCase()) ||
-      project.client?.toLowerCase().includes(search.toLowerCase()) ||
-      project.leadSource?.toLowerCase().includes(search.toLowerCase()) ||
-      project.manager?.name?.toLowerCase().includes(search.toLowerCase());
-
-    const matchesStatus = status === 'all' || project.stage === status;
-
-    return matchesSearch && matchesStatus;
-  });
-
-  // Sort the filtered projects
-  const sortedProjects = [...filteredProjects].sort((a, b) => {
-    // Handle different column types appropriately
-    let comparison = 0;
-
-    if (sort === 'progress' || sort === 'teamSize') {
-      // Numeric comparison
-      comparison = (a[sort as keyof typeof a] as number) - (b[sort as keyof typeof b] as number);
-    } else {
-      // String comparison
-      const aValue = String(a[sort as keyof typeof a] || '').toLowerCase();
-      const bValue = String(b[sort as keyof typeof b] || '').toLowerCase();
-      comparison = aValue.localeCompare(bValue);
-    }
-
-    return direction === 'asc' ? comparison : -comparison;
-  });
-
   // Function to handle project deletion
   const handleDeleteProject = (projectId: number) => {
     if (!projectId) {
       return null;
     }
-
-    deleteProjectMutation.mutate(projectId);
+    // TODO: Implement delete project mutation
   };
 
   // Function to handle stage change
   const handleStageChange = (projectId: string, newStage: string) => {
-    updateStageMutation.mutate({ projectId, newStage });
+    // TODO: Implement stage change mutation
   };
 
   // Function to navigate to project details
   const navigateToProject = (projectId: string) => {
     router.push(`/projects/${projectId}`);
-  };
-
-  // Get items for each stage/status in kanban view
-  const getItemsByStage = (stage: string) => {
-    return projects.filter((project) => {
-      const matchesStage =
-        stage === 'No Stage'
-          ? !pipelineStages.some((s) => {
-              return s.name === project.stage;
-            })
-          : project.stage === stage;
-
-      return (
-        matchesStage &&
-        (search === '' ||
-          project.name.toLowerCase().includes(search.toLowerCase()) ||
-          project.projectType?.toLowerCase().includes(search.toLowerCase()) ||
-          project.manager?.name?.toLowerCase().includes(search.toLowerCase()))
-      );
-    });
-  };
-
-  const getItemsByStatus = (status: string) => {
-    return projects.filter((project) => {
-      const matchesStatus =
-        status === 'No Status'
-          ? !pipelineStatuses.some((s) => {
-              return s.name === project.status;
-            })
-          : project.status === status;
-
-      return (
-        matchesStatus &&
-        (search === '' ||
-          project.name.toLowerCase().includes(search.toLowerCase()) ||
-          project.projectType?.toLowerCase().includes(search.toLowerCase()) ||
-          project.manager?.name?.toLowerCase().includes(search.toLowerCase()))
-      );
-    });
-  };
-
-  // Get projects without a defined stage/status
-  const noStageProjects = getItemsByStage('No Stage');
-  const noStatusProjects = getItemsByStatus('No Status');
-  const shouldShowNoStage = noStageProjects.length > 0;
-  const shouldShowNoStatus = noStatusProjects.length > 0;
-
-  // Handle drag start
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    const id = active.id.toString();
-    const foundItem = projects.find((project) => {
-      return project._id === id;
-    });
-    if (foundItem) {
-      setActiveItem(foundItem);
-    }
-  };
-
-  // Handle drag over
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-
-    if (!over) return;
-
-    const activeItemId = active.id.toString();
-    const overId = over.id.toString();
-
-    if (activeItemId === overId) return;
-
-    // If the over element is a column container, not an item
-    const isStageColumn = pipelineStages.some((s) => {
-      return s.name === overId;
-    });
-    const isStatusColumn = pipelineStatuses.some((s) => {
-      return s.name === overId;
-    });
-    const isNoStageColumn = overId === 'No Stage';
-    const isNoStatusColumn = overId === 'No Status';
-
-    if (isStageColumn || isNoStageColumn || isStatusColumn || isNoStatusColumn) {
-      const activeItem = projects.find((project) => {
-        return project._id === activeItemId;
-      });
-
-      if (!activeItem) return;
-
-      if (kanban === 'stages' && (isStageColumn || isNoStageColumn)) {
-        if (activeItem.stage !== overId) {
-          // Optimistically update the UI
-          queryClient.setQueryData(['projects'], (old: any[]) => {
-            return old.map((project) => {
-              if (project._id === activeItemId) {
-                return { ...project, stage: overId };
-              }
-              return project;
-            });
-          });
-
-          // Trigger the mutation
-          updateStageMutation.mutate({ projectId: activeItemId, newStage: overId });
-        }
-      } else if (kanban === 'status' && (isStatusColumn || isNoStatusColumn)) {
-        if (activeItem.status !== overId) {
-          // Optimistically update the UI
-          queryClient.setQueryData(['projects'], (old: any[]) => {
-            return old.map((project) => {
-              if (project._id === activeItemId) {
-                return { ...project, status: overId };
-              }
-              return project;
-            });
-          });
-
-          // Trigger the mutation
-          updateStatusMutation.mutate({ projectId: activeItemId, newStatus: overId });
-        }
-      }
-    }
-  };
-
-  // Handle drag end
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (!over) {
-      setActiveItem(null);
-      return;
-    }
-
-    const activeItemId = active.id.toString();
-    const overId = over.id.toString();
-
-    if (activeItemId === overId) {
-      setActiveItem(null);
-      return;
-    }
-
-    // If the over element is a column container, not an item
-    const isStageColumn = pipelineStages.some((s) => {
-      return s.name === overId;
-    });
-    const isStatusColumn = pipelineStatuses.some((s) => {
-      return s.name === overId;
-    });
-    const isNoStageColumn = overId === 'No Stage';
-    const isNoStatusColumn = overId === 'No Status';
-
-    if (isStageColumn || isNoStageColumn || isStatusColumn || isNoStatusColumn) {
-      const activeItem = projects.find((project) => {
-        return project._id === activeItemId;
-      });
-
-      if (!activeItem) return;
-
-      if (kanban === 'stages' && (isStageColumn || isNoStageColumn)) {
-        if (activeItem.stage !== overId) {
-          // Optimistically update the UI
-          queryClient.setQueryData(['projects'], (old: any[]) => {
-            return old.map((project) => {
-              if (project._id === activeItemId) {
-                return { ...project, stage: overId };
-              }
-              return project;
-            });
-          });
-
-          // Trigger the mutation
-          updateStageMutation.mutate({ projectId: activeItemId, newStage: overId });
-        }
-      } else if (kanban === 'status' && (isStatusColumn || isNoStatusColumn)) {
-        if (activeItem.status !== overId) {
-          // Optimistically update the UI
-          queryClient.setQueryData(['projects'], (old: any[]) => {
-            return old.map((project) => {
-              if (project._id === activeItemId) {
-                return { ...project, status: overId };
-              }
-              return project;
-            });
-          });
-
-          // Trigger the mutation
-          updateStatusMutation.mutate({ projectId: activeItemId, newStatus: overId });
-        }
-      }
-    }
-
-    setActiveItem(null);
   };
 
   // Sortable Project Item component
@@ -1207,16 +638,16 @@ export default function ProjectsPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align='start'>
-                              {KANBAN_STAGES.map((status) => {
+                              {pipelineStages.map((status) => {
                                 return (
                                   <DropdownMenuItem
-                                    key={status}
+                                    key={status.name}
                                     onClick={() => {
-                                      return handleStageChange(project._id, status);
+                                      return handleStageChange(project._id, status.name);
                                     }}
                                     className='flex items-center'
                                   >
-                                    {renderStatusBadge(status)}
+                                    {renderStatusBadge(status.name)}
                                   </DropdownMenuItem>
                                 );
                               })}
