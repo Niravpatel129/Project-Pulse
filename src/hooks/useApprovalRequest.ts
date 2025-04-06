@@ -75,7 +75,7 @@ interface ApiResponse {
   data: ApprovalRequest;
 }
 
-export const useApprovalRequest = (id: string) => {
+export const useApprovalRequest = (id: string, userId?: string) => {
   const [approvalRequest, setApprovalRequest] = useState<ApprovalRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -160,7 +160,7 @@ export const useApprovalRequest = (id: string) => {
 
   const updateStatus = async (status: 'approved' | 'rejected', comment?: string) => {
     try {
-      await newRequest.post(`/approvals/${id}/status`, { status, comment });
+      await newRequest.post(`/approvals/${id}/status`, { status, comment, userId });
 
       if (approvalRequest) {
         setApprovalRequest({

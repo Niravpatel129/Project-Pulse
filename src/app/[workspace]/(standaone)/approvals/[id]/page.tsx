@@ -20,11 +20,14 @@ import { useApprovalRequest } from '@/hooks/useApprovalRequest';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle, Download, Eye, FileImage, XCircle } from 'lucide-react';
 import Image from 'next/image';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 export default function ApprovalRequestPage() {
   const { id } = useParams();
+  const searchParams = useSearchParams();
+  const userId = searchParams.get('user');
+
   const {
     approvalRequest,
     loading,
@@ -33,7 +36,7 @@ export default function ApprovalRequestPage() {
     updateStatus,
     selectedVersion,
     switchVersion,
-  } = useApprovalRequest(id as string);
+  } = useApprovalRequest(id as string, userId || undefined);
 
   const [confirmAction, setConfirmAction] = useState<'approve' | 'reject' | null>(null);
   const [comment, setComment] = useState('');
