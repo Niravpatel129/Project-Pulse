@@ -1,97 +1,100 @@
+import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
+interface PipelineSettings {
+  stages: string[];
+  statuses: string[];
+}
+
 export function usePipelineSettings() {
-  const [stages, setStages] = useState([
-    'Initial Contact',
-    'Needs Analysis',
-    'Proposal',
-    'Closed Won',
-    'Closed Lost',
-  ]);
-
-  const [statuses, setStatuses] = useState([
-    'Not Started',
-    'On Track',
-    'At Risk',
-    'Delayed',
-    'Completed',
-  ]);
-
+  const queryClient = useQueryClient();
   const [isEditStatusDialogOpen, setIsEditStatusDialogOpen] = useState(false);
   const [newStageName, setNewStageName] = useState('');
   const [newStatusName, setNewStatusName] = useState('');
   const [newStatusColor, setNewStatusColor] = useState('slate');
-  const [customColor, setCustomColor] = useState('#94a3b8'); // Default slate color
+  const [customColor, setCustomColor] = useState('#94a3b8');
   const [editingStageIndex, setEditingStageIndex] = useState<number | null>(null);
   const [editingStatusIndex, setEditingStatusIndex] = useState<number | null>(null);
   const [isAddingStage, setIsAddingStage] = useState(false);
 
+  // Fetch pipeline settings
+  const { data: pipelineSettings, isLoading } = useQuery<PipelineSettings>({
+    queryKey: ['pipelineSettings'],
+    queryFn: async () => {
+      const response = await newRequest.get('/pipeline/settings');
+      return response.data;
+    },
+    initialData: {
+      stages: ['Initial Contact', 'Needs Analysis', 'Proposal', 'Closed Won', 'Closed Lost'],
+      statuses: ['Not Started', 'On Track', 'At Risk', 'Delayed', 'Completed'],
+    },
+  });
+
+  // Update stages mutation
+  const updateStagesMutation = useMutation({
+    mutationFn: async (newStages: string[]) => {
+      return await newRequest.put('/pipeline/settings/stages', { stages: newStages });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pipelineSettings'] });
+    },
+  });
+
+  // Update statuses mutation
+  const updateStatusesMutation = useMutation({
+    mutationFn: async (newStatuses: string[]) => {
+      return await newRequest.put('/pipeline/settings/statuses', { statuses: newStatuses });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pipelineSettings'] });
+    },
+  });
+
   const handleAddStage = () => {
-    if (newStageName.trim()) {
+    if (newStageName.trim() && pipelineSettings) {
+      const updatedStages = [...pipelineSettings.stages];
       if (editingStageIndex !== null) {
-        // Edit existing stage
-        const updatedStages = [...stages];
         updatedStages[editingStageIndex] = newStageName;
-        setStages(updatedStages);
-        setEditingStageIndex(null);
       } else {
-        // Add new stage
-        setStages([...stages, newStageName]);
+        updatedStages.push(newStageName);
       }
+      updateStagesMutation.mutate(updatedStages);
       setNewStageName('');
+      setEditingStageIndex(null);
       setIsAddingStage(false);
     }
   };
 
   const handleDeleteStage = (index: number) => {
-    const updatedStages = [...stages];
-    updatedStages.splice(index, 1);
-    setStages(updatedStages);
+    if (pipelineSettings) {
+      const updatedStages = [...pipelineSettings.stages];
+      updatedStages.splice(index, 1);
+      updateStagesMutation.mutate(updatedStages);
+    }
   };
 
   const handleEditStage = (index: number) => {
-    setNewStageName(stages[index]);
-    setEditingStageIndex(index);
-    setIsAddingStage(true);
+    if (pipelineSettings) {
+      setNewStageName(pipelineSettings.stages[index]);
+      setEditingStageIndex(index);
+      setIsAddingStage(true);
+    }
   };
 
   const handleEditStatus = (index: number) => {
-    setNewStatusName(statuses[index]);
-
-    // Set the current color based on the status
-    switch (statuses[index]) {
-      case 'Completed':
-        setNewStatusColor('green');
-        setCustomColor('#22c55e');
-        break;
-      case 'On Track':
-        setNewStatusColor('blue');
-        setCustomColor('#3b82f6');
-        break;
-      case 'At Risk':
-        setNewStatusColor('amber');
-        setCustomColor('#f59e0b');
-        break;
-      case 'Delayed':
-        setNewStatusColor('red');
-        setCustomColor('#ef4444');
-        break;
-      case 'Not Started':
-      default:
-        setNewStatusColor('slate');
-        setCustomColor('#94a3b8');
-        break;
+    if (pipelineSettings) {
+      setNewStatusName(pipelineSettings.statuses[index]);
+      setEditingStatusIndex(index);
+      setIsEditStatusDialogOpen(true);
     }
-
-    setEditingStatusIndex(index);
-    setIsEditStatusDialogOpen(true);
   };
 
   const handleUpdateStatus = () => {
-    if (newStatusName.trim() && editingStatusIndex !== null) {
-      const updatedStatuses = [...statuses];
+    if (newStatusName.trim() && editingStatusIndex !== null && pipelineSettings) {
+      const updatedStatuses = [...pipelineSettings.statuses];
       updatedStatuses[editingStatusIndex] = newStatusName;
-      setStatuses(updatedStatuses);
+      updateStatusesMutation.mutate(updatedStatuses);
       setNewStatusName('');
       setNewStatusColor('slate');
       setCustomColor('#94a3b8');
@@ -101,31 +104,35 @@ export function usePipelineSettings() {
   };
 
   const handleDeleteStatus = (index: number) => {
-    const updatedStatuses = [...statuses];
-    updatedStatuses.splice(index, 1);
-    setStatuses(updatedStatuses);
+    if (pipelineSettings) {
+      const updatedStatuses = [...pipelineSettings.statuses];
+      updatedStatuses.splice(index, 1);
+      updateStatusesMutation.mutate(updatedStatuses);
+    }
   };
 
   const moveStage = (index: number, direction: 'up' | 'down') => {
+    if (!pipelineSettings) return;
+
     if (
       (direction === 'up' && index === 0) ||
-      (direction === 'down' && index === stages.length - 1)
+      (direction === 'down' && index === pipelineSettings.stages.length - 1)
     ) {
       return;
     }
 
     const newIndex = direction === 'up' ? index - 1 : index + 1;
-    const updatedStages = [...stages];
+    const updatedStages = [...pipelineSettings.stages];
     [updatedStages[index], updatedStages[newIndex]] = [
       updatedStages[newIndex],
       updatedStages[index],
     ];
-    setStages(updatedStages);
+    updateStagesMutation.mutate(updatedStages);
   };
 
   return {
-    stages,
-    statuses,
+    stages: pipelineSettings?.stages || [],
+    statuses: pipelineSettings?.statuses || [],
     isEditStatusDialogOpen,
     newStageName,
     newStatusName,
@@ -134,6 +141,7 @@ export function usePipelineSettings() {
     editingStageIndex,
     editingStatusIndex,
     isAddingStage,
+    isLoading,
     setNewStageName,
     setNewStatusName,
     setNewStatusColor,
