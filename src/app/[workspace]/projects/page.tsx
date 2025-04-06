@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -47,6 +48,93 @@ function DroppableColumn({ stage, children }: { stage: string; children: React.R
   return (
     <div ref={setNodeRef} className='flex flex-col h-full'>
       {children}
+    </div>
+  );
+}
+
+// Skeleton components for loading states
+function TableSkeleton() {
+  return (
+    <div className='rounded-lg border shadow-sm overflow-hidden'>
+      <Table>
+        <TableHeader>
+          <TableRow className='bg-muted/30'>
+            <TableHead className='py-3'>Project Name</TableHead>
+            <TableHead>Client</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Manager</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Stage</TableHead>
+            <TableHead className='text-right'>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: 5 }).map((_, i) => {
+            return (
+              <TableRow key={i}>
+                <TableCell>
+                  <Skeleton className='h-4 w-[200px]' />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className='h-4 w-[120px]' />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className='h-4 w-[100px]' />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className='h-4 w-[150px]' />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className='h-4 w-[80px]' />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className='h-4 w-[100px]' />
+                </TableCell>
+                <TableCell className='text-right'>
+                  <Skeleton className='h-4 w-[40px]' />
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+function KanbanSkeleton() {
+  return (
+    <div className='grid grid-flow-col auto-cols-[minmax(280px,1fr)] overflow-x-auto pb-4 gap-6'>
+      {Array.from({ length: 4 }).map((_, i) => {
+        return (
+          <div key={i} className='flex flex-col min-w-0'>
+            <div className='flex items-center justify-between px-4 py-2.5 bg-muted/40 rounded-t-lg border border-border'>
+              <Skeleton className='h-4 w-[100px]' />
+              <Skeleton className='h-6 w-6 rounded-full' />
+            </div>
+            <div className='flex-1 p-3 rounded-b-lg border border-t-0 border-border overflow-y-auto max-h-[calc(100vh-300px)] min-h-[350px]'>
+              <div className='grid gap-3'>
+                {Array.from({ length: 3 }).map((_, j) => {
+                  return (
+                    <Card key={j} className='shadow-sm'>
+                      <CardContent className='p-4 space-y-3'>
+                        <Skeleton className='h-4 w-[200px]' />
+                        <Skeleton className='h-3 w-[150px]' />
+                        <Skeleton className='h-2 w-full' />
+                        <Skeleton className='h-3 w-[100px]' />
+                        <div className='flex justify-between items-center pt-1 border-t border-border/40'>
+                          <Skeleton className='h-3 w-[60px]' />
+                          <Skeleton className='h-3 w-[80px]' />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -348,12 +436,11 @@ export default function ProjectsPage() {
 
         {/* Loading state */}
         {isLoading ? (
-          <div className='text-center py-16 space-y-4'>
-            <div className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mb-2 animate-pulse'>
-              <Search className='h-5 w-5 text-muted-foreground opacity-70' />
-            </div>
-            <h3 className='text-base font-medium text-muted-foreground'>Loading projects...</h3>
-          </div>
+          isKanban ? (
+            <KanbanSkeleton />
+          ) : (
+            <TableSkeleton />
+          )
         ) : error ? (
           <div className='rounded-lg bg-amber-50 p-4 mb-6 border border-amber-200'>
             <div className='flex'>
