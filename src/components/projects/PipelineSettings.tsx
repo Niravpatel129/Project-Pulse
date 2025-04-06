@@ -307,7 +307,7 @@ export function PipelineSettings() {
                 })}
               </div>
               {isAddingStage && editingStageIndex === null ? (
-                <div className='mt-3 flex items-center space-x-2'>
+                <div className='p-1 mt-3 flex items-center space-x-2'>
                   <Input
                     value={newStageName}
                     onChange={(e) => {
