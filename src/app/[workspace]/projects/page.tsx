@@ -179,7 +179,7 @@ export default function ProjectsPage() {
   );
 
   // Function to handle project deletion
-  const handleDeleteProject = (projectId: number) => {
+  const handleDeleteProject = (projectId: string) => {
     if (!projectId) {
       return null;
     }

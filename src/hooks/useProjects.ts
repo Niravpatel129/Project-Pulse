@@ -20,6 +20,13 @@ interface Project {
   leadSource?: string;
   progress?: number;
   teamSize?: number;
+  tasks?: Array<{
+    _id: string | number;
+    title: string;
+    description: string;
+    status: string;
+    dueDate: string;
+  }>;
   participants?: Array<{
     participant?: {
       name: string;
