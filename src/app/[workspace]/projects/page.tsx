@@ -12,16 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -48,7 +38,7 @@ import { AlertCircle, ArrowUpDown, MoreHorizontal, Plus, Search } from 'lucide-r
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-// Add this new component
+// Droppable column component for kanban view
 function DroppableColumn({ stage, children }: { stage: string; children: React.ReactNode }) {
   const { setNodeRef } = useDroppable({
     id: stage,
@@ -91,7 +81,7 @@ export default function ProjectsPage() {
     getItemsByStatus,
   } = useProjects();
 
-  // Configure sensors for drag and drop
+  // Configure sensors for drag and drop with appropriate sensitivity
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -148,21 +138,21 @@ export default function ProjectsPage() {
     return (
       <div ref={setNodeRef} style={style}>
         {isOver && (
-          <div className='absolute inset-0 bg-primary/10 rounded-lg border-2 border-primary pointer-events-none' />
+          <div className='absolute inset-0 bg-primary/5 rounded-lg border border-primary/20 pointer-events-none' />
         )}
         <Card
           className={cn(
-            'cursor-move shadow-sm transition-all',
-            isOver && 'ring-2 ring-primary ring-offset-2',
+            'cursor-move shadow-sm transition-all duration-200',
+            isOver && 'ring-1 ring-primary ring-offset-1',
           )}
           {...attributes}
           {...listeners}
         >
-          <CardContent className='p-4 space-y-2'>
+          <CardContent className='p-4 space-y-3'>
             <div className='flex justify-between items-start gap-2'>
               <Link
                 href={`/projects/${project._id}`}
-                className='font-medium text-sm line-clamp-2 hover:underline text-primary'
+                className='font-medium text-sm line-clamp-2 hover:text-primary transition-colors'
                 onClick={(e) => {
                   return e.stopPropagation();
                 }}
@@ -171,18 +161,23 @@ export default function ProjectsPage() {
               </Link>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant='ghost' size='icon' className='h-6 w-6 -mt-1 -mr-1'>
-                    <MoreHorizontal className='h-3 w-3' />
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='h-6 w-6 -mt-1 -mr-1 opacity-70 hover:opacity-100 transition-opacity'
+                  >
+                    <MoreHorizontal className='h-3.5 w-3.5' />
                     <span className='sr-only'>Actions</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align='end'>
+                <DropdownMenuContent align='end' className='min-w-[180px]'>
                   <DropdownMenuItem asChild>
                     <Link href={`/projects/${project._id}`}>View Details</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href={`/projects/${project._id}/edit`}>Edit Project</Link>
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => {
                       return handleDeleteProject(project._id);
@@ -199,22 +194,31 @@ export default function ProjectsPage() {
               <span>{project?.manager?.name || 'No manager assigned'}</span>
             </div>
 
-            <div className='flex justify-between items-center gap-2'>
-              <span className='text-xs font-medium'>{progress}%</span>
-              <span className='text-xs text-muted-foreground'>
-                {project.tasks?.find((task: any) => {
-                  return task.dueDate;
-                })?.dueDate
-                  ? new Date(
-                      project.tasks.find((task: any) => {
-                        return task.dueDate;
-                      }).dueDate,
-                    ).toLocaleDateString()
-                  : 'No due date'}
-              </span>
+            <div className='flex justify-between items-center gap-2 pt-1'>
+              <div className='flex items-center gap-2 w-full'>
+                <div className='h-1.5 w-full bg-muted rounded-full overflow-hidden'>
+                  <div
+                    className='h-full bg-primary rounded-full transition-all duration-300'
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <span className='text-xs font-medium min-w-[28px] text-right'>{progress}%</span>
+              </div>
             </div>
 
-            <div className='flex justify-between items-center pt-2'>
+            <div className='text-xs text-muted-foreground'>
+              {project.tasks?.find((task: any) => {
+                return task.dueDate;
+              })?.dueDate
+                ? new Date(
+                    project.tasks.find((task: any) => {
+                      return task.dueDate;
+                    }).dueDate,
+                  ).toLocaleDateString()
+                : 'No due date'}
+            </div>
+
+            <div className='flex justify-between items-center pt-1 border-t border-border/40'>
               <span className='text-xs'>{renderStatusBadge(project.status)}</span>
               <span className='text-xs text-muted-foreground'>{project.stage}</span>
             </div>
@@ -233,15 +237,15 @@ export default function ProjectsPage() {
 
     return (
       <Badge
-        className='flex items-center text-xs font-medium'
+        className='flex items-center text-xs font-normal py-0.5'
         style={{
-          backgroundColor: `${statusConfig.color}20`,
+          backgroundColor: `${statusConfig.color}15`,
           color: statusConfig.color,
-          borderColor: `${statusConfig.color}40`,
+          borderColor: `${statusConfig.color}30`,
         }}
       >
         <div
-          className='h-2 w-2 rounded-full mr-1.5'
+          className='h-1.5 w-1.5 rounded-full mr-1.5'
           style={{ backgroundColor: statusConfig.color }}
         ></div>
         {status}
@@ -253,13 +257,13 @@ export default function ProjectsPage() {
   const SortableColumnHeader = ({ column, label }: { column: string; label: string }) => {
     return (
       <div
-        className='flex items-center cursor-pointer'
+        className='flex items-center cursor-pointer group'
         onClick={() => {
           return setSort(column);
         }}
       >
-        {label}
-        <ArrowUpDown className='ml-2 h-4 w-4' />
+        <span className='font-medium text-sm'>{label}</span>
+        <ArrowUpDown className='ml-1.5 h-3.5 w-3.5 opacity-50 group-hover:opacity-100 transition-opacity' />
         {sort === column && (
           <span className='ml-1 text-xs text-muted-foreground'>
             {direction === 'asc' ? '↑' : '↓'}
@@ -276,15 +280,15 @@ export default function ProjectsPage() {
 
   return (
     <BlockWrapper>
-      <div className='container mx-auto py-8 flex flex-col min-h-[85vh]'>
-        <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-8'>
+      <div className='container mx-auto py-10 flex flex-col min-h-[85vh]'>
+        <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4'>
           <div>
-            <h1 className='text-3xl font-bold'>Projects</h1>
-            <p className='text-muted-foreground mt-1'>
+            <h1 className='text-2xl font-semibold tracking-tight'>Projects</h1>
+            <p className='text-muted-foreground mt-1.5 text-sm'>
               Manage and track all your client projects in one place
             </p>
           </div>
-          <div className='flex space-x-2'>
+          <div className='flex space-x-3'>
             <PipelineSettings />
 
             <Button asChild>
@@ -297,12 +301,12 @@ export default function ProjectsPage() {
         </div>
 
         {/* View mode toggle */}
-        <div className='flex justify-between items-center mb-6'>
-          <div className='flex border rounded-md overflow-hidden'>
+        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4'>
+          <div className='flex border rounded-md overflow-hidden shadow-sm'>
             <Button
               variant={!isKanban ? 'default' : 'ghost'}
               size='sm'
-              className='rounded-none px-3'
+              className='rounded-none px-3 h-9'
               onClick={toggleView}
             >
               Table View
@@ -310,18 +314,18 @@ export default function ProjectsPage() {
             <Button
               variant={isKanban ? 'default' : 'ghost'}
               size='sm'
-              className='rounded-none px-3'
+              className='rounded-none px-3 h-9'
               onClick={toggleView}
             >
               Kanban Board
             </Button>
           </div>
           {isKanban && (
-            <div className='flex border rounded-md overflow-hidden'>
+            <div className='flex border rounded-md overflow-hidden shadow-sm'>
               <Button
                 variant={kanban === 'stages' ? 'default' : 'ghost'}
                 size='sm'
-                className='rounded-none px-3'
+                className='rounded-none px-3 h-9'
                 onClick={() => {
                   return setKanban('stages');
                 }}
@@ -331,7 +335,7 @@ export default function ProjectsPage() {
               <Button
                 variant={kanban === 'status' ? 'default' : 'ghost'}
                 size='sm'
-                className='rounded-none px-3'
+                className='rounded-none px-3 h-9'
                 onClick={() => {
                   return setKanban('status');
                 }}
@@ -342,53 +346,19 @@ export default function ProjectsPage() {
           )}
         </div>
 
-        {/* Filters and search */}
-        <div className='flex flex-col md:flex-row gap-4 mb-8'>
-          <div className='relative flex-1'>
-            <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
-            <Input
-              placeholder='Search projects...'
-              className='pl-8'
-              value={search}
-              onChange={(e) => {
-                return setSearch(e.target.value);
-              }}
-            />
-          </div>
-          {isKanban && (
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className='w-full md:w-[180px]'>
-                <SelectValue placeholder='Filter by stage' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Stage</SelectLabel>
-                  <SelectItem value='all'>All Stages</SelectItem>
-                  <SelectItem value='Initial Contact'>Initial Contact</SelectItem>
-                  <SelectItem value='Needs Analysis'>Needs Analysis</SelectItem>
-                  <SelectItem value='Proposal'>Proposal</SelectItem>
-                  <SelectItem value='Negotiation'>Negotiation</SelectItem>
-                  <SelectItem value='Closed Won'>Closed Won</SelectItem>
-                  <SelectItem value='Closed Lost'>Closed Lost</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-
         {/* Loading state */}
         {isLoading ? (
-          <div className='text-center py-12'>
-            <div className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-4 animate-pulse'>
-              <Search className='h-6 w-6 text-muted-foreground' />
+          <div className='text-center py-16 space-y-4'>
+            <div className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mb-2 animate-pulse'>
+              <Search className='h-5 w-5 text-muted-foreground opacity-70' />
             </div>
-            <h3 className='text-lg font-medium'>Loading projects...</h3>
+            <h3 className='text-base font-medium text-muted-foreground'>Loading projects...</h3>
           </div>
         ) : error ? (
-          <div className='rounded-md bg-amber-50 p-4 mb-4'>
+          <div className='rounded-lg bg-amber-50 p-4 mb-6 border border-amber-200'>
             <div className='flex'>
               <div className='flex-shrink-0'>
-                <AlertCircle className='h-5 w-5 text-amber-400' />
+                <AlertCircle className='h-5 w-5 text-amber-500' />
               </div>
               <div className='ml-3'>
                 <h3 className='text-sm font-medium text-amber-800'>
@@ -406,7 +376,7 @@ export default function ProjectsPage() {
             onDragEnd={handleDragEnd}
             collisionDetection={closestCenter}
           >
-            <div className='grid grid-flow-col auto-cols-[minmax(200px,1fr)] gap-4'>
+            <div className='grid grid-flow-col auto-cols-[minmax(280px,1fr)] overflow-x-auto pb-4 gap-6'>
               {kanban === 'stages'
                 ? [
                     ...pipelineStages.map((s) => {
@@ -426,24 +396,24 @@ export default function ProjectsPage() {
                       <DroppableColumn key={column} stage={column}>
                         <div className='flex flex-col min-w-0'>
                           <div
-                            className='flex items-center justify-between px-3 py-2 bg-muted/60 rounded-t-lg border border-border'
+                            className='flex items-center justify-between px-4 py-2.5 bg-muted/40 rounded-t-lg border border-border'
                             style={{
-                              backgroundColor: `${config?.color}10`,
-                              borderColor: `${config?.color}30`,
+                              backgroundColor: `${config?.color}08`,
+                              borderColor: `${config?.color}25`,
                             }}
                           >
                             <h3 className='font-medium text-sm truncate'>{column}</h3>
-                            <span className='inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-primary/10'>
+                            <span className='inline-flex items-center justify-center w-6 h-6 text-xs font-medium rounded-full bg-primary/10'>
                               {items.length}
                             </span>
                           </div>
                           <div
                             className={cn(
-                              'flex-1 p-2 rounded-b-lg border border-t-0 border-border overflow-y-auto max-h-[calc(100vh-300px)] min-h-[300px]',
+                              'flex-1 p-3 rounded-b-lg border border-t-0 border-border overflow-y-auto max-h-[calc(100vh-300px)] min-h-[350px]',
                               'relative',
                             )}
                             style={{
-                              borderColor: `${config?.color}30`,
+                              borderColor: `${config?.color}25`,
                             }}
                           >
                             <SortableContext
@@ -453,7 +423,7 @@ export default function ProjectsPage() {
                               strategy={verticalListSortingStrategy}
                             >
                               {items.length > 0 ? (
-                                <div className='grid gap-2'>
+                                <div className='grid gap-3'>
                                   {items.map((item) => {
                                     return <SortableProjectItem key={item._id} project={item} />;
                                   })}
@@ -487,24 +457,24 @@ export default function ProjectsPage() {
                       <DroppableColumn key={column} stage={column}>
                         <div className='flex flex-col min-w-0'>
                           <div
-                            className='flex items-center justify-between px-3 py-2 bg-muted/60 rounded-t-lg border border-border'
+                            className='flex items-center justify-between px-4 py-2.5 bg-muted/40 rounded-t-lg border border-border'
                             style={{
-                              backgroundColor: `${config?.color}10`,
-                              borderColor: `${config?.color}30`,
+                              backgroundColor: `${config?.color}08`,
+                              borderColor: `${config?.color}25`,
                             }}
                           >
                             <h3 className='font-medium text-sm truncate'>{column}</h3>
-                            <span className='inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-primary/10'>
+                            <span className='inline-flex items-center justify-center w-6 h-6 text-xs font-medium rounded-full bg-primary/10'>
                               {items.length}
                             </span>
                           </div>
                           <div
                             className={cn(
-                              'flex-1 p-2 rounded-b-lg border border-t-0 border-border overflow-y-auto max-h-[calc(100vh-300px)] min-h-[300px]',
+                              'flex-1 p-3 rounded-b-lg border border-t-0 border-border overflow-y-auto max-h-[calc(100vh-300px)] min-h-[350px]',
                               'relative',
                             )}
                             style={{
-                              borderColor: `${config?.color}30`,
+                              borderColor: `${config?.color}25`,
                             }}
                           >
                             <SortableContext
@@ -514,7 +484,7 @@ export default function ProjectsPage() {
                               strategy={verticalListSortingStrategy}
                             >
                               {items.length > 0 ? (
-                                <div className='grid gap-2'>
+                                <div className='grid gap-3'>
                                   {items.map((item) => {
                                     return <SortableProjectItem key={item._id} project={item} />;
                                   })}
@@ -534,14 +504,18 @@ export default function ProjectsPage() {
 
             <DragOverlay dropAnimation={dropAnimation}>
               {activeItem ? (
-                <Card className='cursor-move shadow-md opacity-80'>
-                  <CardContent className='p-4 space-y-2'>
+                <Card className='cursor-move shadow-md opacity-90 w-[280px]'>
+                  <CardContent className='p-4 space-y-3'>
                     <div className='flex justify-between items-start gap-2'>
                       <div className='font-medium text-sm line-clamp-2 text-primary'>
                         {activeItem.name}
                       </div>
-                      <Button variant='ghost' size='icon' className='h-6 w-6 -mt-1 -mr-1'>
-                        <MoreHorizontal className='h-3 w-3' />
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='h-6 w-6 -mt-1 -mr-1 opacity-70'
+                      >
+                        <MoreHorizontal className='h-3.5 w-3.5' />
                       </Button>
                     </div>
 
@@ -549,26 +523,41 @@ export default function ProjectsPage() {
                       <span>{activeItem?.manager?.name || 'No manager assigned'}</span>
                     </div>
 
-                    <div className='flex justify-between items-center gap-2'>
-                      <span className='text-xs font-medium'>
-                        {activeItem.tasks?.filter((task: any) => {
-                          return task.status === 'completed';
-                        })?.length || 0}
-                        %
-                      </span>
-                      <span className='text-xs text-muted-foreground'>
-                        {(() => {
-                          const taskWithDueDate = activeItem.tasks?.find((task: any) => {
-                            return task.dueDate;
-                          });
-                          return taskWithDueDate?.dueDate
-                            ? new Date(taskWithDueDate.dueDate).toLocaleDateString()
-                            : 'No due date';
-                        })()}
-                      </span>
+                    <div className='flex justify-between items-center gap-2 pt-1'>
+                      <div className='flex items-center gap-2 w-full'>
+                        <div className='h-1.5 w-full bg-muted rounded-full overflow-hidden'>
+                          <div
+                            className='h-full bg-primary rounded-full'
+                            style={{
+                              width: `${
+                                activeItem.tasks?.filter((task: any) => {
+                                  return task.status === 'completed';
+                                })?.length || 0
+                              }%`,
+                            }}
+                          />
+                        </div>
+                        <span className='text-xs font-medium min-w-[28px] text-right'>
+                          {activeItem.tasks?.filter((task: any) => {
+                            return task.status === 'completed';
+                          })?.length || 0}
+                          %
+                        </span>
+                      </div>
                     </div>
 
-                    <div className='flex justify-between items-center pt-2'>
+                    <div className='text-xs text-muted-foreground'>
+                      {(() => {
+                        const taskWithDueDate = activeItem.tasks?.find((task: any) => {
+                          return task.dueDate;
+                        });
+                        return taskWithDueDate?.dueDate
+                          ? new Date(taskWithDueDate.dueDate).toLocaleDateString()
+                          : 'No due date';
+                      })()}
+                    </div>
+
+                    <div className='flex justify-between items-center pt-1 border-t border-border/40'>
                       <span className='text-xs'>{renderStatusBadge(activeItem.status)}</span>
                       <span className='text-xs text-muted-foreground'>{activeItem.stage}</span>
                     </div>
@@ -579,11 +568,11 @@ export default function ProjectsPage() {
           </DndContext>
         ) : (
           // Table View
-          <div className='rounded-md border shadow-sm'>
+          <div className='rounded-lg border shadow-sm overflow-hidden'>
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>
+                <TableRow className='bg-muted/30'>
+                  <TableHead className='py-3'>
                     <SortableColumnHeader column='name' label='Project Name' />
                   </TableHead>
                   <TableHead>
@@ -609,7 +598,7 @@ export default function ProjectsPage() {
                   return (
                     <TableRow
                       key={project._id}
-                      className='cursor-pointer transition-colors hover:bg-muted/50'
+                      className='cursor-pointer transition-colors hover:bg-muted/30'
                       onClick={(e) => {
                         if (
                           e.target instanceof HTMLElement &&
@@ -633,11 +622,11 @@ export default function ProjectsPage() {
                         >
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant='ghost' className='h-8 px-2 py-1'>
+                              <Button variant='ghost' className='h-8 px-2 py-1 -ml-2'>
                                 {renderStatusBadge(project.status)}
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align='start'>
+                            <DropdownMenuContent align='start' className='min-w-[180px]'>
                               {pipelineStages.map((status) => {
                                 return (
                                   <DropdownMenuItem
@@ -657,16 +646,16 @@ export default function ProjectsPage() {
                       </TableCell>
                       <TableCell>
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-normal ${
                             project.stage === 'Closed Won'
-                              ? 'bg-green-100 text-green-800'
+                              ? 'bg-green-50 text-green-700 border border-green-200'
                               : project.stage === 'Proposal'
-                              ? 'bg-blue-100 text-blue-800'
+                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
                               : project.stage === 'Negotiation'
-                              ? 'bg-amber-100 text-amber-800'
+                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
                               : project.stage === 'Needs Analysis'
-                              ? 'bg-purple-100 text-purple-800'
-                              : 'bg-slate-100 text-slate-800'
+                              ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                              : 'bg-slate-50 text-slate-700 border border-slate-200'
                           }`}
                         >
                           {project.stage}
@@ -686,7 +675,7 @@ export default function ProjectsPage() {
                                 <span className='sr-only'>Actions</span>
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align='end'>
+                            <DropdownMenuContent align='end' className='min-w-[180px]'>
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem asChild>
@@ -695,6 +684,7 @@ export default function ProjectsPage() {
                               <DropdownMenuItem asChild>
                                 <Link href={`/projects/${project._id}/edit`}>Edit Project</Link>
                               </DropdownMenuItem>
+                              <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => {
                                   return handleDeleteProject(project._id);
@@ -716,12 +706,12 @@ export default function ProjectsPage() {
         )}
 
         {!isLoading && !error && sortedProjects.length === 0 && (
-          <div className='text-center py-12'>
-            <div className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-4'>
-              <Search className='h-6 w-6 text-muted-foreground' />
+          <div className='text-center py-16 space-y-3'>
+            <div className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mb-3'>
+              <Search className='h-5 w-5 text-muted-foreground opacity-70' />
             </div>
-            <h3 className='text-lg font-medium'>No projects found</h3>
-            <p className='text-muted-foreground mt-2 mb-4'>
+            <h3 className='text-base font-medium'>No projects found</h3>
+            <p className='text-muted-foreground text-sm max-w-md mx-auto mb-5'>
               {search || status !== 'all'
                 ? "Try adjusting your search or filter to find what you're looking for."
                 : 'Get started by creating your first project.'}
