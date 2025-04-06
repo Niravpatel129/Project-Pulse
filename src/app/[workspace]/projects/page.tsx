@@ -22,6 +22,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import {
   Table,
   TableBody,
   TableCell,
@@ -57,6 +65,7 @@ import {
   MoreHorizontal,
   Plus,
   Search,
+  Settings,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -685,6 +694,72 @@ export default function ProjectsPage() {
             </p>
           </div>
           <div className='flex space-x-2'>
+            <Sheet modal>
+              <SheetTrigger asChild>
+                <Button variant='outline' size='icon' className='mr-2'>
+                  <Settings className='h-4 w-4' />
+                  <span className='sr-only'>Pipeline Settings</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent className='overflow-y-auto max-h-screen flex flex-col scrollbar-hide'>
+                <SheetHeader>
+                  <SheetTitle>Project Pipeline Configuration</SheetTitle>
+                  <SheetDescription>
+                    Customize your project pipeline stages and workflow.
+                  </SheetDescription>
+                </SheetHeader>
+                <div className='py-6 space-y-4 flex-grow overflow-auto scrollbar-hide'>
+                  <div>
+                    <h3 className='text-sm font-medium mb-2'>Pipeline Stages</h3>
+                    <div className='space-y-2'>
+                      {KANBAN_STAGES.map((stage, index) => {
+                        return (
+                          <div
+                            key={index}
+                            className='flex items-center justify-between p-2 border rounded-md'
+                          >
+                            <span>{stage}</span>
+                            <div className='flex space-x-1'>
+                              <Button variant='ghost' size='icon' className='h-8 w-8'>
+                                <ArrowUpDown className='h-4 w-4' />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <Button className='mt-4' variant='outline' size='sm'>
+                      <Plus className='h-4 w-4 mr-2' />
+                      Add Stage
+                    </Button>
+                  </div>
+                  <div>
+                    <h3 className='text-sm font-medium mb-2'>Project States</h3>
+                    <div className='space-y-2'>
+                      {['Not Started', 'On Track', 'At Risk', 'Delayed', 'Completed'].map(
+                        (status, index) => {
+                          return (
+                            <div
+                              key={index}
+                              className='flex items-center justify-between p-2 border rounded-md'
+                            >
+                              <div className='flex items-center'>{renderStatusBadge(status)}</div>
+                              <Button variant='ghost' size='icon' className='h-8 w-8'>
+                                <MoreHorizontal className='h-4 w-4' />
+                              </Button>
+                            </div>
+                          );
+                        },
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className='flex justify-end space-x-2 mt-4 pt-4 border-t sticky bottom-0 bg-background'>
+                  <Button variant='outline'>Cancel</Button>
+                  <Button>Save Changes</Button>
+                </div>
+              </SheetContent>
+            </Sheet>
             <Button variant='outline'>
               <Download className='mr-2 h-4 w-4' />
               Export
