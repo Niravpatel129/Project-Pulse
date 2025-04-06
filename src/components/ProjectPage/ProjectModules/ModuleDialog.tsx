@@ -59,10 +59,12 @@ const ApprovalBanner = ({
   approvalDetails,
   onApprove,
   onReject,
+  onDelete,
 }: {
   approvalDetails: any[];
   onApprove: (approvalId: string) => void;
   onReject: (approvalId: string) => void;
+  onDelete: (approvalId: string) => void;
 }) => {
   if (!approvalDetails?.length) return null;
 
@@ -127,11 +129,11 @@ const ApprovalBanner = ({
                             size='sm'
                             className='justify-start text-destructive'
                             onClick={() => {
-                              return onReject(approval._id);
+                              return onDelete(approval._id);
                             }}
                           >
                             <Ban className='h-4 w-4 mr-2' />
-                            Cancel Request
+                            Delete Request
                           </Button>
                         </div>
                       </PopoverContent>
@@ -173,6 +175,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
     isLoadingApprovalDetails,
     approveApprovalMutation,
     rejectApprovalMutation,
+    deleteApprovalMutation,
   } = useModuleDialog({ moduleId });
   const { project } = useProject();
 
@@ -365,6 +368,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                     approvalDetails={approvalDetails}
                     onApprove={approveApprovalMutation.mutate}
                     onReject={rejectApprovalMutation.mutate}
+                    onDelete={deleteApprovalMutation.mutate}
                   />
                 )}
                 {approvalDetails?.length > 0 && (
@@ -925,6 +929,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
 
       {/* Approver Dialog */}
       <ApproverDialog
+        onDelete={deleteApprovalMutation.mutate}
         approvalId={approvalDetails?.[0]?._id}
         isOpen={showApproverDialog}
         onClose={() => {

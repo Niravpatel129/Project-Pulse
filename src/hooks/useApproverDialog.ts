@@ -80,6 +80,7 @@ Your Name`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['module', moduleId] });
+      queryClient.invalidateQueries({ queryKey: ['module-approvals', moduleId] });
       setIsOpen(false);
       setSelectedApprovers([]);
       toast.success('Approval requested successfully');

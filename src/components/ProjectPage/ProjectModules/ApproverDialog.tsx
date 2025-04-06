@@ -24,6 +24,7 @@ interface Approver {
 }
 
 interface ApproverDialogProps {
+  onDelete: (approvalId: string) => void;
   isOpen: boolean;
   onClose: () => void;
   potentialApprovers: Approver[];
@@ -47,6 +48,7 @@ interface ApproverDialogProps {
 }
 
 export function ApproverDialog({
+  onDelete,
   isOpen,
   onClose,
   potentialApprovers,
@@ -562,12 +564,12 @@ export function ApproverDialog({
                       size='sm'
                       className='justify-start text-destructive'
                       onClick={() => {
-                        // TODO: Add cancel request handler
+                        onDelete(approvalId);
                         onClose();
                       }}
                     >
                       <Ban className='h-4 w-4 mr-2' />
-                      Cancel Request
+                      Delete Request
                     </Button>
                   </div>
                 </PopoverContent>

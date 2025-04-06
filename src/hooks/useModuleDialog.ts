@@ -51,6 +51,20 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
     }
   }, [module]);
 
+  const deleteApprovalMutation = useMutation({
+    mutationFn: async (approvalId: string) => {
+      const { data } = await newRequest.delete(`/approvals/${approvalId}`);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['module-approvals', moduleId] });
+      toast.success('Approval deleted successfully');
+    },
+    onError: () => {
+      toast.error('Failed to delete approval');
+    },
+  });
+
   // Update module status mutation
   const updateStatusMutation = useMutation({
     mutationFn: async (status: 'active' | 'archived') => {
@@ -122,6 +136,7 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['module', moduleId] });
+      queryClient.invalidateQueries({ queryKey: ['module-approvals', moduleId] });
       setShowApproverDialog(false);
       setSelectedApprovers([]);
       toast.success('Approval requested successfully');
@@ -283,6 +298,7 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
     setManualEmail,
     handleAddManualEmail,
     handleRemoveApprover,
+    deleteApprovalMutation,
     requestApprovalMutation,
     approvalDetails,
     isLoadingApprovalDetails,
