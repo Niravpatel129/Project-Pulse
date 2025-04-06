@@ -54,7 +54,6 @@ import {
   CheckCircle2,
   Clock,
   Clock4,
-  Download,
   MoreHorizontal,
   Plus,
   Search,
@@ -687,10 +686,7 @@ export default function ProjectsPage() {
           </div>
           <div className='flex space-x-2'>
             <PipelineSettings />
-            <Button variant='outline'>
-              <Download className='mr-2 h-4 w-4' />
-              Export
-            </Button>
+
             <Button asChild>
               <Link href='/projects/new'>
                 <Plus className='mr-2 h-4 w-4' />

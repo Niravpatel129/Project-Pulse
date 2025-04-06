@@ -88,7 +88,7 @@ export function PipelineSettings() {
     <>
       <Sheet modal>
         <SheetTrigger asChild>
-          <Button variant='outline' size='icon' className='mr-2'>
+          <Button variant='outline' size='icon' className=''>
             <Settings className='h-4 w-4' />
             <span className='sr-only'>Pipeline Settings</span>
           </Button>
