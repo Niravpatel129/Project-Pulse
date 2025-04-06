@@ -11,7 +11,18 @@ import { useApproverDialog } from '@/hooks/useApproverDialog';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Ban, Bell, ChevronDown, Clock, Eye, FileText, Mail, MessageSquare, X } from 'lucide-react';
+import {
+  Ban,
+  Bell,
+  CheckCircle,
+  ChevronDown,
+  Clock,
+  Eye,
+  FileText,
+  Mail,
+  MessageSquare,
+  X,
+} from 'lucide-react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
@@ -39,6 +50,7 @@ interface ApproverDialogProps {
   isLoading: boolean;
   isPreview?: boolean;
   previewMessage?: string;
+  status?: string;
   moduleDetails?: {
     name: string;
     version: number;
@@ -68,6 +80,7 @@ export function ApproverDialog({
     version: 1,
     updatedAt: '5 min ago',
   },
+  status = 'pending',
 }: ApproverDialogProps) {
   const {
     message,
@@ -535,45 +548,52 @@ export function ApproverDialog({
             transition={{ delay: 0.3, duration: 0.3 }}
           >
             {isPreview ? (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant='outline' className='gap-2'>
-                    <Clock className='h-4 w-4' />
-                    Pending Approval
-                    <ChevronDown className='h-4 w-4' />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className='w-48 p-2'>
-                  <div className='flex flex-col space-y-1'>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      className='justify-start'
-                      onClick={() => {
-                        if (approvalId) {
-                          const host = window.location.host;
-                          window.open(`https://${host}/approvals/${approvalId}`, '_blank');
-                        }
-                      }}
-                    >
-                      <Eye className='h-4 w-4 mr-2' />
-                      Preview Request
+              status === 'approved' ? (
+                <Button variant='outline' className='gap-2' disabled>
+                  <CheckCircle className='h-4 w-4 text-green-500' />
+                  Approved
+                </Button>
+              ) : (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant='outline' className='gap-2'>
+                      <Clock className='h-4 w-4' />
+                      Pending Approval
+                      <ChevronDown className='h-4 w-4' />
                     </Button>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      className='justify-start text-destructive'
-                      onClick={() => {
-                        onDelete(approvalId);
-                        onClose();
-                      }}
-                    >
-                      <Ban className='h-4 w-4 mr-2' />
-                      Delete Request
-                    </Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                  </PopoverTrigger>
+                  <PopoverContent className='w-48 p-2'>
+                    <div className='flex flex-col space-y-1'>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        className='justify-start'
+                        onClick={() => {
+                          if (approvalId) {
+                            const host = window.location.host;
+                            window.open(`https://${host}/approvals/${approvalId}`, '_blank');
+                          }
+                        }}
+                      >
+                        <Eye className='h-4 w-4 mr-2' />
+                        Preview Request
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        className='justify-start text-destructive'
+                        onClick={() => {
+                          onDelete(approvalId);
+                          onClose();
+                        }}
+                      >
+                        <Ban className='h-4 w-4 mr-2' />
+                        Delete Request
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )
             ) : (
               <>
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>

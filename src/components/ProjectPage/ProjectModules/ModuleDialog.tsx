@@ -962,6 +962,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
         onDelete={deleteApprovalMutation.mutate}
         approvalId={approvalDetails?.[0]?._id}
         isOpen={showApproverDialog}
+        status={approvalDetails?.[0]?.status}
         onClose={() => {
           setShowApproverDialog(false);
           setSelectedApprovers([]);
