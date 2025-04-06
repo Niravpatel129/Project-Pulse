@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Timeline,
@@ -18,8 +18,8 @@ import {
   TimelineTitle,
 } from '@/components/ui/timeline';
 import { useApprovalRequest } from '@/hooks/useApprovalRequest';
-import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle, Download, Eye, FileImage, XCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { CheckCircle, Download, Eye, FileImage, FileText, XCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
@@ -134,87 +134,156 @@ export default function ApprovalRequestPage() {
           </div>
 
           <div className='p-3 flex-1 overflow-auto pb-0'>
-            <Tabs defaultValue='file' className='w-full h-full flex flex-col'>
-              <TabsList className='bg-slate-100'>
-                <TabsTrigger value='file' className='text-xs data-[state=active]:bg-white'>
-                  File
-                </TabsTrigger>
-              </TabsList>
-
-              <div className='flex-1 overflow-auto'>
-                <AnimatePresence mode='wait' key='tabs-content'>
-                  <TabsContent value='file' className='mt-0 h-full' key='file-tab'>
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className='h-full'
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className='h-full'
+            >
+              <Card className='h-full flex flex-col border-0 shadow-none'>
+                <CardHeader className='py-3 px-4 border-b bg-white'>
+                  <div className='flex justify-between items-center'>
+                    <CardTitle className='text-base font-medium flex items-center gap-2'>
+                      {approvalRequest.moduleId.moduleType === 'file' ? (
+                        <>
+                          <FileImage className='h-4 w-4 text-gray-500' />
+                          {approvalRequest.moduleId.content.fileId?.name}
+                        </>
+                      ) : (
+                        approvalRequest.moduleId.name
+                      )}
+                    </CardTitle>
+                    <Badge
+                      variant='outline'
+                      className='bg-gray-50 text-xs text-gray-700 border-gray-200'
                     >
-                      <Card className='h-full flex flex-col border-0 shadow-none'>
-                        <CardHeader className='py-3 px-4 border-b bg-white'>
-                          <div className='flex justify-between items-center'>
-                            <CardTitle className='text-base font-medium flex items-center gap-2'>
-                              <FileImage className='h-4 w-4 text-gray-500' />
-                              {approvalRequest.moduleId.content.fileId.name}
-                            </CardTitle>
-                            <Badge
-                              variant='outline'
-                              className='bg-gray-50 text-xs text-gray-700 border-gray-200'
-                            >
-                              {approvalRequest.moduleId.content.fileId.contentType}
-                            </Badge>
-                          </div>
-                        </CardHeader>
-                        <CardContent className='p-3 flex flex-col flex-1'>
-                          <div
-                            className='relative flex-1 bg-slate-50 border rounded-md overflow-hidden'
-                            style={{ minHeight: '300px' }}
+                      {approvalRequest.moduleId.moduleType === 'file'
+                        ? approvalRequest.moduleId.content.fileId?.contentType
+                        : 'Form'}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className='p-3 flex flex-col flex-1'>
+                  {approvalRequest.moduleId.moduleType === 'file' ? (
+                    <>
+                      <div
+                        className='relative flex-1 bg-slate-50 border rounded-md overflow-hidden'
+                        style={{ minHeight: '300px' }}
+                      >
+                        <div className='absolute inset-0 flex items-center justify-center h-full w-full'>
+                          {approvalRequest.moduleId.content.fileId?.downloadURL ? (
+                            <Image
+                              src={approvalRequest.moduleId.content.fileId.downloadURL}
+                              alt='Document preview'
+                              width={500}
+                              height={300}
+                              className='object-contain'
+                              priority
+                            />
+                          ) : (
+                            <div className='flex flex-col items-center justify-center text-gray-400'>
+                              <FileImage className='h-12 w-12 mb-2' />
+                              <span className='text-sm'>No preview available</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className='flex justify-between items-center text-xs text-slate-500 mt-2'>
+                        <div className='font-normal'>
+                          Uploaded on{' '}
+                          {new Date(
+                            approvalRequest.moduleId.versions[0].updatedAt,
+                          ).toLocaleDateString()}
+                        </div>
+                        <div className='flex gap-2'>
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            className='h-7 text-xs flex items-center gap-1 text-gray-600 border-gray-200 hover:bg-gray-50'
                           >
-                            <div className='absolute inset-0 flex items-center justify-center h-full w-full'>
-                              <Image
-                                src={approvalRequest.moduleId.content.fileId.downloadURL}
-                                alt='Document preview'
-                                width={500}
-                                height={300}
-                                className='object-contain'
-                                priority
-                              />
-                            </div>
-                          </div>
-                          <div className='flex justify-between items-center text-xs text-slate-500 mt-2'>
-                            <div className='font-normal'>
-                              Uploaded on{' '}
-                              {new Date(
-                                approvalRequest.moduleId.versions[0].updatedAt,
-                              ).toLocaleDateString()}
-                            </div>
-                            <div className='flex gap-2'>
-                              <Button
-                                variant='outline'
-                                size='sm'
-                                className='h-7 text-xs flex items-center gap-1 text-gray-600 border-gray-200 hover:bg-gray-50'
-                              >
-                                <Eye className='h-3.5 w-3.5' />
-                                Preview
-                              </Button>
-                              <Button
-                                variant='outline'
-                                size='sm'
-                                className='h-7 text-xs flex items-center gap-1 text-gray-600 border-gray-200 hover:bg-gray-50'
-                              >
-                                <Download className='h-3.5 w-3.5' />
-                                Download
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  </TabsContent>
-                </AnimatePresence>
-              </div>
-            </Tabs>
+                            <Eye className='h-3.5 w-3.5' />
+                            Preview
+                          </Button>
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            className='h-7 text-xs flex items-center gap-1 text-gray-600 border-gray-200 hover:bg-gray-50'
+                          >
+                            <Download className='h-3.5 w-3.5' />
+                            Download
+                          </Button>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className='space-y-6 p-4'>
+                      <div className='flex items-center gap-2 text-sm text-gray-500 mb-4'>
+                        <FileText className='h-4 w-4' />
+                        <span>Form Details</span>
+                      </div>
+                      <div className='grid gap-6'>
+                        {selectedVersion &&
+                          approvalRequest.moduleId.versions
+                            .find((v) => {
+                              return v.number === selectedVersion;
+                            })
+                            ?.contentSnapshot?.fields?.map((field) => {
+                              return (
+                                <div
+                                  key={field.templateFieldId}
+                                  className='bg-gray-50 rounded-lg p-4 border border-gray-100'
+                                >
+                                  <div className='flex items-center justify-between mb-2'>
+                                    <div className='text-sm font-medium text-gray-700'>
+                                      {field.fieldName}
+                                    </div>
+                                    <Badge variant='outline' className='text-xs bg-white'>
+                                      {field.fieldType === 'text' ? 'Text Field' : 'Linked Item'}
+                                    </Badge>
+                                  </div>
+                                  {field.fieldType === 'text' && (
+                                    <div className='text-sm text-gray-600 bg-white rounded-md p-3 border border-gray-200'>
+                                      {field.fieldValue as string}
+                                    </div>
+                                  )}
+                                  {field.fieldType === 'relation' &&
+                                    field.fieldValue &&
+                                    typeof field.fieldValue === 'object' &&
+                                    'displayValues' in field.fieldValue && (
+                                      <div className='text-sm text-gray-600 bg-white rounded-md p-3 border border-gray-200'>
+                                        <div className='grid gap-2'>
+                                          {Object.entries(field.fieldValue.displayValues).map(
+                                            ([key, value]) => {
+                                              return (
+                                                <div key={key} className='flex items-center gap-2'>
+                                                  <span className='font-medium text-gray-500 min-w-[100px]'>
+                                                    {key}
+                                                  </span>
+                                                  <span className='text-gray-700'>
+                                                    {value as string}
+                                                  </span>
+                                                </div>
+                                              );
+                                            },
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                  {field.description && (
+                                    <div className='mt-2 text-xs text-gray-500'>
+                                      {field.description}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </motion.div>
 
