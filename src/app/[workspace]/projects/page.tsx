@@ -33,12 +33,15 @@ import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { cn } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
 import {
+  closestCenter,
+  defaultDropAnimation,
   DndContext,
   DragEndEvent,
   DragOverEvent,
   DragOverlay,
   DragStartEvent,
   PointerSensor,
+  useDroppable,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
@@ -182,6 +185,19 @@ const MOCK_PROJECTS = [
   },
 ];
 
+// Add this new component
+function DroppableColumn({ stage, children }: { stage: string; children: React.ReactNode }) {
+  const { setNodeRef } = useDroppable({
+    id: stage,
+  });
+
+  return (
+    <div ref={setNodeRef} className='flex flex-col h-full'>
+      {children}
+    </div>
+  );
+}
+
 export default function ProjectsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -202,7 +218,14 @@ export default function ProjectsPage() {
   );
 
   // Project stages for kanban board
-  const KANBAN_STAGES = ['Not Started', 'On Track', 'At Risk', 'Delayed', 'Completed'];
+  const KANBAN_STAGES = [
+    'Initial Contact',
+    'Needs Analysis',
+    'Proposal',
+    'Negotiation',
+    'Closed Won',
+    'Closed Lost',
+  ];
 
   // Fetch projects with React Query
   const {
@@ -215,7 +238,32 @@ export default function ProjectsPage() {
       try {
         const response = await newRequest.get('/projects');
         console.log('🚀 response:', response);
-        return response.data.data || [];
+        // Transform the data to match the expected structure
+        return (
+          response.data.data.map((project: any) => {
+            return {
+              _id: project._id,
+              id: project._id,
+              name: project.name,
+              stage: project.stage,
+              status: project.status,
+              projectType: project.projectType,
+              manager: project.manager,
+              participants: project.participants || [],
+              team: project.team || [],
+              tasks: project.tasks || [],
+              notes: project.notes || [],
+              isActive: project.isActive,
+              createdBy: project.createdBy,
+              workspace: project.workspace,
+              leadSource: project.leadSource,
+              sharing: project.sharing,
+              collaborators: project.collaborators || [],
+              createdAt: project.createdAt,
+              updatedAt: project.updatedAt,
+            };
+          }) || []
+        );
       } catch (err) {
         console.error('Failed to fetch projects:', err);
         return MOCK_PROJECTS;
@@ -257,35 +305,46 @@ export default function ProjectsPage() {
     },
   });
 
-  // Update project status mutation
-  const updateStatusMutation = useMutation({
-    mutationFn: ({ projectId, newStatus }: { projectId: number; newStatus: string }) => {
-      return newRequest.patch(`/projects/${projectId}`, { status: newStatus });
+  // Update project stage mutation
+  const updateStageMutation = useMutation({
+    mutationFn: async ({ projectId, newStage }: { projectId: string; newStage: string }) => {
+      try {
+        const response = await newRequest.put(`/projects/${projectId}`, { stage: newStage });
+        return response.data;
+      } catch (error) {
+        console.error('Failed to update project stage:', error);
+        throw error;
+      }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-    },
-    onError: (err) => {
-      console.error('Failed to update project status:', err);
-    },
-    // Optimistic update
-    onMutate: async ({ projectId, newStatus }) => {
+    onMutate: async ({ projectId, newStage }) => {
+      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['projects'] });
 
+      // Snapshot the previous value
       const previousProjects = queryClient.getQueryData(['projects']);
 
+      // Optimistically update to the new value
       queryClient.setQueryData(['projects'], (old: any[]) => {
         return old.map((project) => {
-          if (project.id === projectId) {
-            return { ...project, status: newStatus };
+          if (project._id === projectId) {
+            return { ...project, stage: newStage };
           }
           return project;
         });
       });
 
+      // Return a context object with the snapshot
       return { previousProjects };
     },
+    onError: (err, variables, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousProjects) {
+        queryClient.setQueryData(['projects'], context.previousProjects);
+      }
+      console.error('Failed to update project stage:', err);
+    },
     onSettled: () => {
+      // Always refetch after error or success to ensure data is in sync
       queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
   });
@@ -342,9 +401,9 @@ export default function ProjectsPage() {
     deleteProjectMutation.mutate(projectId);
   };
 
-  // Function to handle status change
-  const handleStatusChange = (projectId: number, newStatus: string) => {
-    updateStatusMutation.mutate({ projectId, newStatus });
+  // Function to handle stage change
+  const handleStageChange = (projectId: string, newStage: string) => {
+    updateStageMutation.mutate({ projectId, newStage });
   };
 
   // Function to navigate to project details
@@ -356,11 +415,11 @@ export default function ProjectsPage() {
   const getItemsByStage = (stage: string) => {
     return projects.filter((project) => {
       return (
-        project.status === stage &&
+        project.stage === stage &&
         (searchQuery === '' ||
           project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          project.type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          project.client?.toLowerCase().includes(searchQuery.toLowerCase()))
+          project.projectType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          project.manager?.name?.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     });
   };
@@ -394,96 +453,168 @@ export default function ProjectsPage() {
         return project._id === activeItemId;
       });
 
-      if (activeItem && activeItem.status !== overId) {
-        handleStatusChange(activeItem._id, overId);
+      if (activeItem && activeItem.stage !== overId) {
+        // Optimistically update the UI
+        queryClient.setQueryData(['projects'], (old: any[]) => {
+          return old.map((project) => {
+            if (project._id === activeItemId) {
+              return { ...project, stage: overId };
+            }
+            return project;
+          });
+        });
+
+        // Trigger the mutation
+        updateStageMutation.mutate({ projectId: activeItemId, newStage: overId });
       }
     }
   };
 
   // Handle drag end
   const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over) {
+      setActiveItem(null);
+      return;
+    }
+
+    const activeItemId = active.id.toString();
+    const overId = over.id.toString();
+
+    if (activeItemId === overId) {
+      setActiveItem(null);
+      return;
+    }
+
+    // If the over element is a stage container, not an item
+    if (KANBAN_STAGES.includes(overId)) {
+      const activeItem = projects.find((project) => {
+        return project._id === activeItemId;
+      });
+
+      if (activeItem && activeItem.stage !== overId) {
+        // Optimistically update the UI
+        queryClient.setQueryData(['projects'], (old: any[]) => {
+          return old.map((project) => {
+            if (project._id === activeItemId) {
+              return { ...project, stage: overId };
+            }
+            return project;
+          });
+        });
+
+        // Trigger the mutation
+        updateStageMutation.mutate({ projectId: activeItemId, newStage: overId });
+      }
+    }
+
     setActiveItem(null);
   };
 
   // Sortable Project Item component
   function SortableProjectItem({ project }: { project: any }) {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-      id: project._id,
-      data: {
-        type: 'project',
-        project,
-      },
-    });
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } =
+      useSortable({
+        id: project._id,
+        data: {
+          type: 'project',
+          project,
+        },
+      });
 
     const style = {
       transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
       transition,
       opacity: isDragging ? 0.5 : 1,
       zIndex: isDragging ? 1 : 0,
+      position: 'relative' as const,
     };
 
+    // Calculate progress based on tasks
+    const totalTasks = project.tasks?.length || 0;
+    const completedTasks =
+      project.tasks?.filter((task: any) => {
+        return task.status === 'completed';
+      })?.length || 0;
+    const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
     return (
-      <Card
-        ref={setNodeRef}
-        style={style}
-        className='cursor-move shadow-sm transition-all'
-        {...attributes}
-        {...listeners}
-      >
-        <CardContent className='p-4 space-y-2'>
-          <div className='flex justify-between items-start gap-2'>
-            <Link
-              href={`/projects/${project._id}`}
-              className='font-medium text-sm line-clamp-2 hover:underline text-primary'
-              onClick={(e) => {
-                return e.stopPropagation();
-              }}
-            >
-              {project.name}
-            </Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant='ghost' size='icon' className='h-6 w-6 -mt-1 -mr-1'>
-                  <MoreHorizontal className='h-3 w-3' />
-                  <span className='sr-only'>Actions</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='end'>
-                <DropdownMenuItem asChild>
-                  <Link href={`/projects/${project._id}`}>View Details</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href={`/projects/${project._id}/edit`}>Edit Project</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    return handleDeleteProject(project._id);
-                  }}
-                  className='text-destructive focus:text-destructive'
-                >
-                  Delete Project
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+      <div ref={setNodeRef} style={style}>
+        {isOver && (
+          <div className='absolute inset-0 bg-primary/10 rounded-lg border-2 border-primary pointer-events-none' />
+        )}
+        <Card
+          className={cn(
+            'cursor-move shadow-sm transition-all',
+            isOver && 'ring-2 ring-primary ring-offset-2',
+          )}
+          {...attributes}
+          {...listeners}
+        >
+          <CardContent className='p-4 space-y-2'>
+            <div className='flex justify-between items-start gap-2'>
+              <Link
+                href={`/projects/${project._id}`}
+                className='font-medium text-sm line-clamp-2 hover:underline text-primary'
+                onClick={(e) => {
+                  return e.stopPropagation();
+                }}
+              >
+                {project.name}
+              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant='ghost' size='icon' className='h-6 w-6 -mt-1 -mr-1'>
+                    <MoreHorizontal className='h-3 w-3' />
+                    <span className='sr-only'>Actions</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end'>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/projects/${project._id}`}>View Details</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/projects/${project._id}/edit`}>Edit Project</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      return handleDeleteProject(project._id);
+                    }}
+                    className='text-destructive focus:text-destructive'
+                  >
+                    Delete Project
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
 
-          <div className='flex items-center gap-2 text-xs text-muted-foreground'>
-            <span>{project?.participants[0]?.participant?.name}</span>
-          </div>
+            <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+              <span>{project?.manager?.name || 'No manager assigned'}</span>
+            </div>
 
-          <div className='flex justify-between items-center gap-2'>
-            <span className='text-xs font-medium'>{project.progress}%</span>
-            <span className='text-xs text-muted-foreground'>
-              {new Date(project.endDate).toLocaleDateString()}
-            </span>
-          </div>
+            <div className='flex justify-between items-center gap-2'>
+              <span className='text-xs font-medium'>{progress}%</span>
+              <span className='text-xs text-muted-foreground'>
+                {project.tasks?.find((task: any) => {
+                  return task.dueDate;
+                })?.dueDate
+                  ? new Date(
+                      project.tasks.find((task: any) => {
+                        return task.dueDate;
+                      }).dueDate,
+                    ).toLocaleDateString()
+                  : 'No due date'}
+              </span>
+            </div>
 
-          <div className='flex justify-between items-center pt-2'>
-            <span className='text-xs'>{renderStatusBadge(project.status)}</span>
-            <span className='text-xs text-muted-foreground'>{project.stage}</span>
-          </div>
-        </CardContent>
-      </Card>
+            <div className='flex justify-between items-center pt-2'>
+              <span className='text-xs'>{renderStatusBadge(project.status)}</span>
+              <span className='text-xs text-muted-foreground'>{project.stage}</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -536,6 +667,11 @@ export default function ProjectsPage() {
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </div>
     );
+  };
+
+  const dropAnimation = {
+    ...defaultDropAnimation,
+    dragSourceOpacity: 0.5,
   };
 
   return (
@@ -709,7 +845,7 @@ export default function ProjectsPage() {
                                   <DropdownMenuItem
                                     key={status}
                                     onClick={() => {
-                                      return handleStatusChange(project._id, status);
+                                      return handleStageChange(project._id, status);
                                     }}
                                     className='flex items-center'
                                   >
@@ -786,12 +922,13 @@ export default function ProjectsPage() {
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
+            collisionDetection={closestCenter}
           >
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4'>
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4'>
               {KANBAN_STAGES.map((stage) => {
                 const stageItems = getItemsByStage(stage);
                 return (
-                  <div key={stage} id={stage} className='flex flex-col h-full'>
+                  <DroppableColumn key={stage} stage={stage}>
                     <div className='flex items-center justify-between px-3 py-2 bg-muted/60 rounded-t-lg border border-border'>
                       <h3 className='font-medium text-sm'>{stage}</h3>
                       <span className='inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-primary/10'>
@@ -801,6 +938,7 @@ export default function ProjectsPage() {
                     <div
                       className={cn(
                         'flex-1 p-2 rounded-b-lg border border-t-0 border-border overflow-y-auto max-h-[calc(100vh-300px)] min-h-[300px]',
+                        'relative',
                       )}
                     >
                       <SortableContext
@@ -822,12 +960,12 @@ export default function ProjectsPage() {
                         )}
                       </SortableContext>
                     </div>
-                  </div>
+                  </DroppableColumn>
                 );
               })}
             </div>
 
-            <DragOverlay>
+            <DragOverlay dropAnimation={dropAnimation}>
               {activeItem ? (
                 <Card className='cursor-move shadow-md opacity-80'>
                   <CardContent className='p-4 space-y-2'>
@@ -841,13 +979,26 @@ export default function ProjectsPage() {
                     </div>
 
                     <div className='flex items-center gap-2 text-xs text-muted-foreground'>
-                      <span>{activeItem?.participants[0]?.participant?.name}</span>
+                      <span>{activeItem?.manager?.name || 'No manager assigned'}</span>
                     </div>
 
                     <div className='flex justify-between items-center gap-2'>
-                      <span className='text-xs font-medium'>{activeItem.progress}%</span>
+                      <span className='text-xs font-medium'>
+                        {activeItem.tasks?.filter((task: any) => {
+                          return task.status === 'completed';
+                        })?.length || 0}
+                        %
+                      </span>
                       <span className='text-xs text-muted-foreground'>
-                        {new Date(activeItem.endDate).toLocaleDateString()}
+                        {activeItem.tasks?.find((task: any) => {
+                          return task.dueDate;
+                        })?.dueDate
+                          ? new Date(
+                              activeItem.tasks.find((task: any) => {
+                                return task.dueDate;
+                              }).dueDate,
+                            ).toLocaleDateString()
+                          : 'No due date'}
                       </span>
                     </div>
 
