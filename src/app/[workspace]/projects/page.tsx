@@ -1,11 +1,11 @@
 'use client';
 
 import { ProjectCard } from '@/components/projects/ProjectCard';
+import { ProjectCreateForm } from '@/components/projects/ProjectCreateForm';
 import { ProjectEmptyState } from '@/components/projects/ProjectEmptyState';
 import { ProjectFilters } from '@/components/projects/ProjectFilters';
 import { ProjectTable } from '@/components/projects/ProjectTable';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -30,8 +30,7 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { AlertCircle, Plus } from 'lucide-react';
-import Link from 'next/link';
+import { AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 // Droppable column component for kanban view
@@ -230,12 +229,7 @@ export default function ProjectsPage() {
             </p>
           </div>
           <div className='flex space-x-3'>
-            <Button asChild>
-              <Link href='/projects/new'>
-                <Plus className='mr-2 h-4 w-4' />
-                New Project
-              </Link>
-            </Button>
+            <ProjectCreateForm />
           </div>
         </div>
 
