@@ -66,6 +66,7 @@ const ApprovalBanner = ({
   onReject: (approvalId: string) => void;
   onDelete: (approvalId: string) => void;
 }) => {
+  console.log('🚀 approvalDetails:', approvalDetails);
   if (!approvalDetails?.length) return null;
 
   return (
@@ -73,8 +74,29 @@ const ApprovalBanner = ({
       <h3 className='text-sm font-medium text-muted-foreground'>Approval Request</h3>
       <div className='space-y-2'>
         {approvalDetails.map((approval) => {
+          const status = approval.status;
+          const isStatusPending = status === 'pending';
+          const isStatusApproved = status === 'approved';
+
+          let statusColor = 'gray';
+          let statusText = 'Canceled';
+          let statusIcon = <Ban className='h-3 w-3 mr-1' />;
+
+          if (isStatusPending) {
+            statusColor = 'yellow';
+            statusText = 'Pending';
+            statusIcon = <Clock className='h-3 w-3 mr-1' />;
+          } else if (isStatusApproved) {
+            statusColor = 'green';
+            statusText = 'Approved';
+            statusIcon = <Check className='h-3 w-3 mr-1' />;
+          }
+
           return (
-            <Card key={approval._id} className=' relative border-l-4 border-l-yellow-500 group'>
+            <Card
+              key={approval._id}
+              className={` relative border-l-4 border-l-${statusColor}-500 group`}
+            >
               <CardContent className='p-4 '>
                 <div className='flex items-start justify-between'>
                   <div className='space-y-1'>
@@ -89,10 +111,10 @@ const ApprovalBanner = ({
                       <span className='text-sm font-medium'>{approval.requestedBy.name}</span>
                       <Badge
                         variant='outline'
-                        className='bg-yellow-100 text-yellow-800 border-yellow-200'
+                        className={`bg-${statusColor}-100 text-${statusColor}-800 border-${statusColor}-200`}
                       >
-                        <Clock className='h-3 w-3 mr-1' />
-                        Pending
+                        {statusIcon}
+                        {statusText}
                       </Badge>
                     </div>
                     <p className='text-sm text-muted-foreground'>
@@ -113,17 +135,32 @@ const ApprovalBanner = ({
                       </PopoverTrigger>
                       <PopoverContent className='w-48 p-2'>
                         <div className='flex flex-col space-y-1'>
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            className='justify-start'
-                            onClick={() => {
-                              return onApprove(approval._id);
-                            }}
-                          >
-                            <Check className='h-4 w-4 mr-2' />
-                            Approve
-                          </Button>
+                          {isStatusPending && (
+                            <Button
+                              variant='ghost'
+                              size='sm'
+                              className='justify-start'
+                              onClick={() => {
+                                return onApprove(approval._id);
+                              }}
+                            >
+                              <Check className='h-4 w-4 mr-2' />
+                              Approve
+                            </Button>
+                          )}
+                          {isStatusPending && (
+                            <Button
+                              variant='ghost'
+                              size='sm'
+                              className='justify-start'
+                              onClick={() => {
+                                return onApprove(approval._id);
+                              }}
+                            >
+                              <Check className='h-4 w-4 mr-2' />
+                              Reject
+                            </Button>
+                          )}
                           <Button
                             variant='ghost'
                             size='sm'
@@ -229,9 +266,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
       await deleteModuleMutation.mutateAsync();
       setShowDeleteDialog(false);
       onOpenChange(false);
-    } catch (error) {
-      // Error is already handled by the mutation's onError callback
-    }
+    } catch (error) {}
   };
 
   const handleViewVersion = (versionNumber: number) => {
@@ -243,11 +278,8 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
     setIsFullscreen(!isFullscreen);
   };
 
-  //   if (!module || isLoading) return null;
-
   const totalVersions = module?.versions?.length || 1;
   const currentVersion = module?.currentVersion || 1;
-  console.log('🚀 module:', module);
   const moduleType = module?.moduleType || 'file';
   const approvalStatus = module?.approvalStatus || 'not_requested';
   const selectedVersionData = module?.versions?.[selectedVersion - 1];
@@ -269,8 +301,6 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
       module?.content?.fileId?.downloadURL ||
       '/placeholder.svg',
   };
-
-  console.log('🚀 fileDetails:', fileDetails);
 
   const templateDetails = selectedVersionData?.contentSnapshot?.fields ||
     module?.templateDetails || { sections: [] };
