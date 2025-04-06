@@ -30,15 +30,8 @@ export default function ApprovalRequestPage() {
   const searchParams = useSearchParams();
   const userId = searchParams.get('user');
 
-  const {
-    approvalRequest,
-    loading,
-    error,
-    addComment,
-    updateStatus,
-    selectedVersion,
-    switchVersion,
-  } = useApprovalRequest(id as string, userId || undefined);
+  const { approvalRequest, loading, error, updateStatus, selectedVersion, switchVersion } =
+    useApprovalRequest(id as string, userId || undefined);
 
   const [confirmAction, setConfirmAction] = useState<'approve' | 'reject' | null>(null);
   const [comment, setComment] = useState('');
