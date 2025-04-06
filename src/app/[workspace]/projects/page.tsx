@@ -31,6 +31,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
+import { usePipelineSettings } from '@/hooks/usePipelineSettings';
 import { cn } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
 import {
@@ -48,16 +49,7 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  AlertCircle,
-  ArrowUpDown,
-  CheckCircle2,
-  Clock,
-  Clock4,
-  MoreHorizontal,
-  Plus,
-  Search,
-} from 'lucide-react';
+import { AlertCircle, ArrowUpDown, MoreHorizontal, Plus, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -206,7 +198,11 @@ export default function ProjectsPage() {
   const [sortColumn, setSortColumn] = useState('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
+  const [kanbanView, setKanbanView] = useState<'stages' | 'status'>('stages');
   const [activeItem, setActiveItem] = useState<any>(null);
+
+  // Get pipeline settings
+  const { stages: pipelineStages, statuses: pipelineStatuses } = usePipelineSettings();
 
   // Configure sensors for drag and drop
   const sensors = useSensors(
@@ -217,15 +213,10 @@ export default function ProjectsPage() {
     }),
   );
 
-  // Project stages for kanban board
-  const KANBAN_STAGES = [
-    'Initial Contact',
-    'Needs Analysis',
-    'Proposal',
-    'Negotiation',
-    'Closed Won',
-    'Closed Lost',
-  ];
+  // Use pipeline stages for kanban board
+  const KANBAN_STAGES = pipelineStages.map((stage) => {
+    return stage.name;
+  });
 
   // Fetch projects with React Query
   const {
@@ -349,6 +340,50 @@ export default function ProjectsPage() {
     },
   });
 
+  // Add update status mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ projectId, newStatus }: { projectId: string; newStatus: string }) => {
+      try {
+        const response = await newRequest.put(`/projects/${projectId}`, { status: newStatus });
+        return response.data;
+      } catch (error) {
+        console.error('Failed to update project status:', error);
+        throw error;
+      }
+    },
+    onMutate: async ({ projectId, newStatus }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['projects'] });
+
+      // Snapshot the previous value
+      const previousProjects = queryClient.getQueryData(['projects']);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(['projects'], (old: any[]) => {
+        return old.map((project) => {
+          if (project._id === projectId) {
+            return { ...project, status: newStatus };
+          }
+          return project;
+        });
+      });
+
+      // Return a context object with the snapshot
+      return { previousProjects };
+    },
+    onError: (err, variables, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousProjects) {
+        queryClient.setQueryData(['projects'], context.previousProjects);
+      }
+      console.error('Failed to update project status:', err);
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure data is in sync
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
+
   // Function to handle column sorting
   const handleSort = (column: string) => {
     if (sortColumn === column) {
@@ -411,11 +446,18 @@ export default function ProjectsPage() {
     router.push(`/projects/${projectId}`);
   };
 
-  // Get items for each stage in kanban view
+  // Get items for each stage/status in kanban view
   const getItemsByStage = (stage: string) => {
     return projects.filter((project) => {
+      const matchesStage =
+        stage === 'No Stage'
+          ? !pipelineStages.some((s) => {
+              return s.name === project.stage;
+            })
+          : project.stage === stage;
+
       return (
-        project.stage === stage &&
+        matchesStage &&
         (searchQuery === '' ||
           project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           project.projectType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -423,6 +465,31 @@ export default function ProjectsPage() {
       );
     });
   };
+
+  const getItemsByStatus = (status: string) => {
+    return projects.filter((project) => {
+      const matchesStatus =
+        status === 'No Status'
+          ? !pipelineStatuses.some((s) => {
+              return s.name === project.status;
+            })
+          : project.status === status;
+
+      return (
+        matchesStatus &&
+        (searchQuery === '' ||
+          project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          project.projectType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          project.manager?.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    });
+  };
+
+  // Get projects without a defined stage/status
+  const noStageProjects = getItemsByStage('No Stage');
+  const noStatusProjects = getItemsByStatus('No Status');
+  const shouldShowNoStage = noStageProjects.length > 0;
+  const shouldShowNoStatus = noStatusProjects.length > 0;
 
   // Handle drag start
   const handleDragStart = (event: DragStartEvent) => {
@@ -447,25 +514,53 @@ export default function ProjectsPage() {
 
     if (activeItemId === overId) return;
 
-    // If the over element is a stage container, not an item
-    if (KANBAN_STAGES.includes(overId)) {
+    // If the over element is a column container, not an item
+    const isStageColumn = pipelineStages.some((s) => {
+      return s.name === overId;
+    });
+    const isStatusColumn = pipelineStatuses.some((s) => {
+      return s.name === overId;
+    });
+    const isNoStageColumn = overId === 'No Stage';
+    const isNoStatusColumn = overId === 'No Status';
+
+    if (isStageColumn || isNoStageColumn || isStatusColumn || isNoStatusColumn) {
       const activeItem = projects.find((project) => {
         return project._id === activeItemId;
       });
 
-      if (activeItem && activeItem.stage !== overId) {
-        // Optimistically update the UI
-        queryClient.setQueryData(['projects'], (old: any[]) => {
-          return old.map((project) => {
-            if (project._id === activeItemId) {
-              return { ...project, stage: overId };
-            }
-            return project;
-          });
-        });
+      if (!activeItem) return;
 
-        // Trigger the mutation
-        updateStageMutation.mutate({ projectId: activeItemId, newStage: overId });
+      if (kanbanView === 'stages' && (isStageColumn || isNoStageColumn)) {
+        if (activeItem.stage !== overId) {
+          // Optimistically update the UI
+          queryClient.setQueryData(['projects'], (old: any[]) => {
+            return old.map((project) => {
+              if (project._id === activeItemId) {
+                return { ...project, stage: overId };
+              }
+              return project;
+            });
+          });
+
+          // Trigger the mutation
+          updateStageMutation.mutate({ projectId: activeItemId, newStage: overId });
+        }
+      } else if (kanbanView === 'status' && (isStatusColumn || isNoStatusColumn)) {
+        if (activeItem.status !== overId) {
+          // Optimistically update the UI
+          queryClient.setQueryData(['projects'], (old: any[]) => {
+            return old.map((project) => {
+              if (project._id === activeItemId) {
+                return { ...project, status: overId };
+              }
+              return project;
+            });
+          });
+
+          // Trigger the mutation
+          updateStatusMutation.mutate({ projectId: activeItemId, newStatus: overId });
+        }
       }
     }
   };
@@ -487,25 +582,53 @@ export default function ProjectsPage() {
       return;
     }
 
-    // If the over element is a stage container, not an item
-    if (KANBAN_STAGES.includes(overId)) {
+    // If the over element is a column container, not an item
+    const isStageColumn = pipelineStages.some((s) => {
+      return s.name === overId;
+    });
+    const isStatusColumn = pipelineStatuses.some((s) => {
+      return s.name === overId;
+    });
+    const isNoStageColumn = overId === 'No Stage';
+    const isNoStatusColumn = overId === 'No Status';
+
+    if (isStageColumn || isNoStageColumn || isStatusColumn || isNoStatusColumn) {
       const activeItem = projects.find((project) => {
         return project._id === activeItemId;
       });
 
-      if (activeItem && activeItem.stage !== overId) {
-        // Optimistically update the UI
-        queryClient.setQueryData(['projects'], (old: any[]) => {
-          return old.map((project) => {
-            if (project._id === activeItemId) {
-              return { ...project, stage: overId };
-            }
-            return project;
-          });
-        });
+      if (!activeItem) return;
 
-        // Trigger the mutation
-        updateStageMutation.mutate({ projectId: activeItemId, newStage: overId });
+      if (kanbanView === 'stages' && (isStageColumn || isNoStageColumn)) {
+        if (activeItem.stage !== overId) {
+          // Optimistically update the UI
+          queryClient.setQueryData(['projects'], (old: any[]) => {
+            return old.map((project) => {
+              if (project._id === activeItemId) {
+                return { ...project, stage: overId };
+              }
+              return project;
+            });
+          });
+
+          // Trigger the mutation
+          updateStageMutation.mutate({ projectId: activeItemId, newStage: overId });
+        }
+      } else if (kanbanView === 'status' && (isStatusColumn || isNoStatusColumn)) {
+        if (activeItem.status !== overId) {
+          // Optimistically update the UI
+          queryClient.setQueryData(['projects'], (old: any[]) => {
+            return old.map((project) => {
+              if (project._id === activeItemId) {
+                return { ...project, status: overId };
+              }
+              return project;
+            });
+          });
+
+          // Trigger the mutation
+          updateStatusMutation.mutate({ projectId: activeItemId, newStatus: overId });
+        }
       }
     }
 
@@ -620,35 +743,24 @@ export default function ProjectsPage() {
 
   // Function to render status badge with appropriate color
   const renderStatusBadge = (status: string) => {
-    let className = '';
-    let icon = null;
-
-    switch (status) {
-      case 'Completed':
-        className = 'bg-green-100 text-green-800 hover:bg-green-200';
-        icon = <CheckCircle2 className='h-3 w-3 mr-1' />;
-        break;
-      case 'On Track':
-        className = 'bg-blue-100 text-blue-800 hover:bg-blue-200';
-        icon = <Clock className='h-3 w-3 mr-1' />;
-        break;
-      case 'At Risk':
-        className = 'bg-amber-100 text-amber-800 hover:bg-amber-200';
-        icon = <AlertCircle className='h-3 w-3 mr-1' />;
-        break;
-      case 'Delayed':
-        className = 'bg-red-100 text-red-800 hover:bg-red-200';
-        icon = <Clock4 className='h-3 w-3 mr-1' />;
-        break;
-      case 'Not Started':
-      default:
-        className = 'bg-slate-100 text-slate-800 hover:bg-slate-200';
-        break;
-    }
+    const statusConfig = pipelineStatuses.find((s) => {
+      return s.name === status;
+    });
+    if (!statusConfig) return null;
 
     return (
-      <Badge className={`${className} flex items-center`}>
-        {icon}
+      <Badge
+        className='flex items-center text-xs font-medium'
+        style={{
+          backgroundColor: `${statusConfig.color}20`,
+          color: statusConfig.color,
+          borderColor: `${statusConfig.color}40`,
+        }}
+      >
+        <div
+          className='h-2 w-2 rounded-full mr-1.5'
+          style={{ backgroundColor: statusConfig.color }}
+        ></div>
         {status}
       </Badge>
     );
@@ -720,6 +832,30 @@ export default function ProjectsPage() {
               Kanban Board
             </Button>
           </div>
+          {viewMode === 'kanban' && (
+            <div className='flex border rounded-md overflow-hidden'>
+              <Button
+                variant={kanbanView === 'stages' ? 'default' : 'ghost'}
+                size='sm'
+                className='rounded-none px-3'
+                onClick={() => {
+                  return setKanbanView('stages');
+                }}
+              >
+                By Stage
+              </Button>
+              <Button
+                variant={kanbanView === 'status' ? 'default' : 'ghost'}
+                size='sm'
+                className='rounded-none px-3'
+                onClick={() => {
+                  return setKanbanView('status');
+                }}
+              >
+                By Status
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Filters and search */}
@@ -922,45 +1058,130 @@ export default function ProjectsPage() {
             onDragEnd={handleDragEnd}
             collisionDetection={closestCenter}
           >
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4'>
-              {KANBAN_STAGES.map((stage) => {
-                const stageItems = getItemsByStage(stage);
-                return (
-                  <DroppableColumn key={stage} stage={stage}>
-                    <div className='flex items-center justify-between px-3 py-2 bg-muted/60 rounded-t-lg border border-border'>
-                      <h3 className='font-medium text-sm'>{stage}</h3>
-                      <span className='inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-primary/10'>
-                        {stageItems.length}
-                      </span>
-                    </div>
-                    <div
-                      className={cn(
-                        'flex-1 p-2 rounded-b-lg border border-t-0 border-border overflow-y-auto max-h-[calc(100vh-300px)] min-h-[300px]',
-                        'relative',
-                      )}
-                    >
-                      <SortableContext
-                        items={stageItems.map((item) => {
-                          return item._id;
-                        })}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        {stageItems.length > 0 ? (
-                          <div className='grid gap-2'>
-                            {stageItems.map((item) => {
-                              return <SortableProjectItem key={item._id} project={item} />;
-                            })}
+            <div className='grid grid-flow-col auto-cols-[minmax(200px,1fr)] gap-4'>
+              {kanbanView === 'stages'
+                ? [
+                    ...pipelineStages.map((s) => {
+                      return s.name;
+                    }),
+                    ...(shouldShowNoStage ? ['No Stage'] : []),
+                  ].map((column) => {
+                    const items = getItemsByStage(column);
+                    const config =
+                      column === 'No Stage'
+                        ? { name: 'No Stage', color: '#94a3b8' }
+                        : pipelineStages.find((s) => {
+                            return s.name === column;
+                          });
+
+                    return (
+                      <DroppableColumn key={column} stage={column}>
+                        <div className='flex flex-col min-w-0'>
+                          <div
+                            className='flex items-center justify-between px-3 py-2 bg-muted/60 rounded-t-lg border border-border'
+                            style={{
+                              backgroundColor: `${config?.color}10`,
+                              borderColor: `${config?.color}30`,
+                            }}
+                          >
+                            <h3 className='font-medium text-sm truncate'>{column}</h3>
+                            <span className='inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-primary/10'>
+                              {items.length}
+                            </span>
                           </div>
-                        ) : (
-                          <div className='h-full flex items-center justify-center'>
-                            <p className='text-xs text-muted-foreground'>No items</p>
+                          <div
+                            className={cn(
+                              'flex-1 p-2 rounded-b-lg border border-t-0 border-border overflow-y-auto max-h-[calc(100vh-300px)] min-h-[300px]',
+                              'relative',
+                            )}
+                            style={{
+                              borderColor: `${config?.color}30`,
+                            }}
+                          >
+                            <SortableContext
+                              items={items.map((item) => {
+                                return item._id;
+                              })}
+                              strategy={verticalListSortingStrategy}
+                            >
+                              {items.length > 0 ? (
+                                <div className='grid gap-2'>
+                                  {items.map((item) => {
+                                    return <SortableProjectItem key={item._id} project={item} />;
+                                  })}
+                                </div>
+                              ) : (
+                                <div className='h-full flex items-center justify-center'>
+                                  <p className='text-xs text-muted-foreground'>No items</p>
+                                </div>
+                              )}
+                            </SortableContext>
                           </div>
-                        )}
-                      </SortableContext>
-                    </div>
-                  </DroppableColumn>
-                );
-              })}
+                        </div>
+                      </DroppableColumn>
+                    );
+                  })
+                : [
+                    ...pipelineStatuses.map((s) => {
+                      return s.name;
+                    }),
+                    ...(shouldShowNoStatus ? ['No Status'] : []),
+                  ].map((column) => {
+                    const items = getItemsByStatus(column);
+                    const config =
+                      column === 'No Status'
+                        ? { name: 'No Status', color: '#94a3b8' }
+                        : pipelineStatuses.find((s) => {
+                            return s.name === column;
+                          });
+
+                    return (
+                      <DroppableColumn key={column} stage={column}>
+                        <div className='flex flex-col min-w-0'>
+                          <div
+                            className='flex items-center justify-between px-3 py-2 bg-muted/60 rounded-t-lg border border-border'
+                            style={{
+                              backgroundColor: `${config?.color}10`,
+                              borderColor: `${config?.color}30`,
+                            }}
+                          >
+                            <h3 className='font-medium text-sm truncate'>{column}</h3>
+                            <span className='inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-primary/10'>
+                              {items.length}
+                            </span>
+                          </div>
+                          <div
+                            className={cn(
+                              'flex-1 p-2 rounded-b-lg border border-t-0 border-border overflow-y-auto max-h-[calc(100vh-300px)] min-h-[300px]',
+                              'relative',
+                            )}
+                            style={{
+                              borderColor: `${config?.color}30`,
+                            }}
+                          >
+                            <SortableContext
+                              items={items.map((item) => {
+                                return item._id;
+                              })}
+                              strategy={verticalListSortingStrategy}
+                            >
+                              {items.length > 0 ? (
+                                <div className='grid gap-2'>
+                                  {items.map((item) => {
+                                    return <SortableProjectItem key={item._id} project={item} />;
+                                  })}
+                                </div>
+                              ) : (
+                                <div className='h-full flex items-center justify-center'>
+                                  <p className='text-xs text-muted-foreground'>No items</p>
+                                </div>
+                              )}
+                            </SortableContext>
+                          </div>
+                        </div>
+                      </DroppableColumn>
+                    );
+                  })}
             </div>
 
             <DragOverlay dropAnimation={dropAnimation}>
@@ -988,15 +1209,14 @@ export default function ProjectsPage() {
                         %
                       </span>
                       <span className='text-xs text-muted-foreground'>
-                        {activeItem.tasks?.find((task: any) => {
-                          return task.dueDate;
-                        })?.dueDate
-                          ? new Date(
-                              activeItem.tasks.find((task: any) => {
-                                return task.dueDate;
-                              }).dueDate,
-                            ).toLocaleDateString()
-                          : 'No due date'}
+                        {(() => {
+                          const taskWithDueDate = activeItem.tasks?.find((task: any) => {
+                            return task.dueDate;
+                          });
+                          return taskWithDueDate?.dueDate
+                            ? new Date(taskWithDueDate.dueDate).toLocaleDateString()
+                            : 'No due date';
+                        })()}
                       </span>
                     </div>
 
