@@ -55,7 +55,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
   // State for dropdown selections
   const [stage, setStage] = useState<Stage | null>(stages[0] || null);
   const [state, setState] = useState<Status | null>(statuses[0] || null);
-  const [lead, setLead] = useState<TeamMember | null>(null);
+  const [manager, setManager] = useState<TeamMember | null>(null);
   const [client, setClient] = useState<TeamMember[]>([]);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [targetDate, setTargetDate] = useState<Date | null>(null);
@@ -148,7 +148,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
         name: title,
         stage: stage?._id,
         status: state?._id,
-        lead: lead?._id,
+        lead: manager?._id,
         client: client.map((c) => {
           return c._id;
         }),
@@ -288,7 +288,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Lead Dropdown */}
+            {/* Manager Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -298,7 +298,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                   disabled={isLoadingTeamMembers}
                 >
                   <Users className='h-3 w-3 mr-1 text-gray-400' />
-                  {lead ? lead.name : 'Lead'}
+                  {manager ? manager.name : 'Manager'}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align='start' className={dropdownContentClasses}>
@@ -307,7 +307,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                     <DropdownMenuItem
                       key={user._id}
                       onClick={() => {
-                        return setLead(user);
+                        return setManager(user);
                       }}
                       className={dropdownItemClasses}
                     >
@@ -319,7 +319,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                         </Avatar>
                         <span>{user.name}</span>
                       </div>
-                      {lead?._id === user._id && <Check className='h-3 w-3 text-gray-500' />}
+                      {manager?._id === user._id && <Check className='h-3 w-3 text-gray-500' />}
                     </DropdownMenuItem>
                   );
                 })}

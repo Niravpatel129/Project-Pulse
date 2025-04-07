@@ -42,8 +42,7 @@ export function ProjectTable({
           <TableRow className='bg-muted/30'>
             <TableHead className='py-3'>Project Name</TableHead>
             <TableHead>Client</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Manager</TableHead>
+            <TableHead>Lead</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Stage</TableHead>
             <TableHead className='text-right'>Actions</TableHead>
@@ -66,9 +65,16 @@ export function ProjectTable({
                 }}
               >
                 <TableCell className='font-medium'>{project.name}</TableCell>
-                <TableCell>{project?.participants[0]?.participant?.name}</TableCell>
-                <TableCell>{project?.projectType}</TableCell>
-                <TableCell>{project?.manager?.name}</TableCell>
+                <TableCell>
+                  {project.clients && project.clients.length > 0
+                    ? project.clients
+                        .map((client) => {
+                          return client?.name;
+                        })
+                        .join(', ')
+                    : '-'}
+                </TableCell>
+                <TableCell>{project.leadSource || '-'}</TableCell>
                 <TableCell>
                   <div
                     className='status-dropdown'
@@ -76,24 +82,20 @@ export function ProjectTable({
                       return e.stopPropagation();
                     }}
                   >
-                    {renderStatusBadge(project.status)}
+                    {renderStatusBadge(project.status?.name || '')}
                   </div>
                 </TableCell>
                 <TableCell>
                   <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-normal ${
-                      project.stage === 'Closed Won'
-                        ? 'bg-green-50 text-green-700 border border-green-200'
-                        : project.stage === 'Proposal'
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                        : project.stage === 'Negotiation'
-                        ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                        : project.stage === 'Needs Analysis'
-                        ? 'bg-purple-50 text-purple-700 border border-purple-200'
-                        : 'bg-slate-50 text-slate-700 border border-slate-200'
-                    }`}
+                    className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-normal'
+                    style={{
+                      backgroundColor: `${project.stage?.color}15`,
+                      color: project.stage?.color,
+                      borderColor: `${project.stage?.color}30`,
+                      border: '1px solid',
+                    }}
                   >
-                    {project.stage}
+                    {project.stage?.name || '-'}
                   </span>
                 </TableCell>
                 <TableCell className='text-right'>
