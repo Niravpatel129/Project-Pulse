@@ -88,7 +88,9 @@ export function ProjectSidebar({
   onUpdateProject: (data: Partial<Project>) => Promise<void>;
 }) {
   const { project } = useProject();
+  console.log('🚀 project:', project);
   const { stages, statuses } = usePipelineSettings();
+  console.log('🚀 stages, statuses:', stages, statuses);
   const [isClientPortalDialogOpen, setIsClientPortalDialogOpen] = useState(false);
   const [isSendEmailDialogOpen, setIsSendEmailDialogOpen] = useState(false);
   const [sharingSettings, setSharingSettings] = useState<SharingSettings>({
@@ -196,9 +198,9 @@ export function ProjectSidebar({
     },
   });
 
-  const handleStageChange = async (value: string) => {
+  const handleStageChange = async (stageId: string) => {
     try {
-      await onUpdateProject({ stage: value });
+      await onUpdateProject({ stage: stageId });
     } catch (error) {
       const apiError = error as ApiError;
       toast({
@@ -210,17 +212,9 @@ export function ProjectSidebar({
     }
   };
 
-  const handleLeadSourceChange = async (value: string) => {
-    await onUpdateProject?.({ leadSource: value });
-  };
-
-  const handleProjectTypeChange = async (value: string) => {
-    await onUpdateProject?.({ projectType: value });
-  };
-
-  const handleStatusChange = async (value: string) => {
+  const handleStatusChange = async (statusId: string) => {
     try {
-      await onUpdateProject({ status: value });
+      await onUpdateProject({ status: statusId });
     } catch (error) {
       const apiError = error as ApiError;
       toast({
@@ -328,10 +322,10 @@ export function ProjectSidebar({
                     <SelectTrigger className='h-8 text-xs'>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className='text-xs'>
+                    <SelectContent>
                       {stages.map((stage) => {
                         return (
-                          <SelectItem key={stage._id} value={stage.name}>
+                          <SelectItem key={stage._id} value={stage._id}>
                             <div className='flex items-center'>
                               <div
                                 className='h-2 w-2 rounded-full mr-2'
@@ -352,10 +346,10 @@ export function ProjectSidebar({
                     <SelectTrigger className='h-8 text-xs'>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className='text-xs'>
+                    <SelectContent>
                       {statuses.map((status) => {
                         return (
-                          <SelectItem key={status._id} value={status.name}>
+                          <SelectItem key={status._id} value={status._id}>
                             <div className='flex items-center'>
                               <div
                                 className='h-2 w-2 rounded-full mr-2'
