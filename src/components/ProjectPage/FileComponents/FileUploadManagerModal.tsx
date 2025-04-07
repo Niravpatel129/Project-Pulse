@@ -2,6 +2,7 @@
 
 import { formatDistanceToNow } from 'date-fns';
 import { Download, File, Info, MoreVertical, Trash2, Upload } from 'lucide-react';
+import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,7 +24,21 @@ import {
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useFileUploadManager } from './useFileUploadManager';
 
-function FileTypeIcon({ type }: { type: string }) {
+function FileTypeIcon({ type, url }: { type: string; url?: string }) {
+  // Check if the file is an image
+  const isImage = type.startsWith('image/');
+
+  if (isImage && url) {
+    return (
+      <div className='relative w-12 h-14'>
+        <Image src={url} alt='File preview' fill className='object-cover rounded-sm' />
+        <div className='absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] font-bold py-1 px-1 rounded-sm text-center'>
+          {type.split('/')[1]?.toUpperCase() || 'IMG'}
+        </div>
+      </div>
+    );
+  }
+
   // Extract file extension from content type or name
   const fileType =
     type.split('/')[1]?.toUpperCase() || type.split('.').pop()?.toUpperCase() || 'UNKNOWN';
@@ -155,7 +170,7 @@ export default function FileUploadManagerModal({
                               return handleAddFileToProject(file);
                             }}
                           >
-                            <FileTypeIcon type={file.contentType} />
+                            <FileTypeIcon type={file.contentType} url={file.downloadURL} />
                             <span className='mt-2 text-xs font-medium text-muted-foreground'>
                               {file.contentType.split('/')[1]?.toUpperCase() || 'UNKNOWN'}
                             </span>
@@ -284,7 +299,18 @@ export default function FileUploadManagerModal({
               </CardHeader>
               <CardContent className='flex-1'>
                 <div className='flex flex-col items-center mb-6 pt-4'>
-                  <FileTypeIcon type={selectedFile.contentType} />
+                  {selectedFile.contentType.startsWith('image/') ? (
+                    <div className='relative w-full aspect-square max-w-[200px] mb-4'>
+                      <Image
+                        src={selectedFile.downloadURL}
+                        alt={selectedFile.originalName}
+                        fill
+                        className='object-contain rounded-md'
+                      />
+                    </div>
+                  ) : (
+                    <FileTypeIcon type={selectedFile.contentType} url={selectedFile.downloadURL} />
+                  )}
                   <h3 className='mt-4 font-medium text-center break-all'>
                     {selectedFile.originalName}
                   </h3>
