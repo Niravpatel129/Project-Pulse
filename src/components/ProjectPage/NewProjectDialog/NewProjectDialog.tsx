@@ -14,11 +14,13 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
-import { Calendar, Check, ChevronDown, Circle, Users, X } from 'lucide-react';
-import { useState } from 'react';
+import { Calendar, Check, ChevronDown, Circle, Paperclip, Users, X } from 'lucide-react';
+import { useRef, useState } from 'react';
 
 export default function NewProjectDialog({ open = true, onClose = () => {} }) {
   const [title, setTitle] = useState('dfgdfgdfg');
+  const [attachments, setAttachments] = useState([]);
+  const fileInputRef = useRef(null);
 
   // State for dropdown selections
   const [status, setStatus] = useState('Backlog');
@@ -36,6 +38,24 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
     { id: 2, name: 'Jane Smith', email: 'jane@example.com' },
     { id: 3, name: 'Bob Johnson', email: 'bob@example.com' },
   ];
+
+  const handleFileChange = (e) => {
+    if (e.target.files.length > 0) {
+      const newAttachments = Array.from(e.target.files).map((file) => {
+        return {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          file,
+        };
+      });
+      setAttachments([...attachments, ...newAttachments]);
+    }
+  };
+
+  const handleAttachmentClick = () => {
+    fileInputRef.current.click();
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -314,7 +334,57 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 />
               </PopoverContent>
             </Popover>
+
+            {/* Attachment Button */}
+            <Button
+              variant='outline'
+              size='sm'
+              className='h-7 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50'
+              onClick={handleAttachmentClick}
+            >
+              <Paperclip className='h-3 w-3 mr-1.5 text-gray-400' />
+              Attachments {attachments.length > 0 && `(${attachments.length})`}
+              <input
+                type='file'
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className='hidden'
+                multiple
+              />
+            </Button>
           </div>
+
+          {/* Display attachments if any */}
+          {attachments.length > 0 && (
+            <div className='mt-2 space-y-1'>
+              {attachments.map((file, index) => {
+                return (
+                  <div
+                    key={index}
+                    className='flex items-center text-xs text-gray-600 bg-gray-50 p-1.5 rounded'
+                  >
+                    <Paperclip className='h-3 w-3 mr-1.5 text-gray-400' />
+                    <span className='flex-1 truncate'>{file.name}</span>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      className='h-4 w-4 p-0'
+                      onClick={() => {
+                        return setAttachments(
+                          attachments.filter((_, i) => {
+                            return i !== index;
+                          }),
+                        );
+                      }}
+                    >
+                      <X className='h-3 w-3 text-gray-400' />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           <Textarea
             className='flex-1 border-none resize-none focus-visible:ring-0 focus-visible:ring-offset-0 font-medium text-black placeholder:text-gray-300 leading-relaxed shadow-none mt-4 text-lg whitespace-pre-line'
             placeholder='Write a description, a project brief, or collect ideas...'
