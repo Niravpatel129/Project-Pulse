@@ -77,9 +77,9 @@ export function ProjectSidebar({
       customMessage: '',
       expirationDays: '30',
       allowedEmails:
-        project?.clients
+        project?.participants
           .map((c) => {
-            return c.user.email;
+            return c.email;
           })
           .filter((email): email is string => {
             return email !== undefined;
@@ -87,9 +87,9 @@ export function ProjectSidebar({
     };
   });
   const [clientEmail, setClientEmail] = useState(
-    project?.clients?.find((c) => {
-      return c.user.email;
-    })?.user.email || '',
+    project?.participants?.find((c) => {
+      return c.email;
+    })?.email || '',
   );
 
   const [portalURL, setPortalURL] = useState('');
