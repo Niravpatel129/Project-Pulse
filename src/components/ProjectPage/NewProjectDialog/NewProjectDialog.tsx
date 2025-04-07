@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { useClients } from '@/hooks/useClients';
 import { usePipelineSettings } from '@/hooks/usePipelineSettings';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { Calendar, Check, Circle, Paperclip, Users, X } from 'lucide-react';
@@ -53,6 +54,8 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [targetDate, setTargetDate] = useState<Date | null>(null);
 
+  const { clients } = useClients();
+
   // Function to render status badge with appropriate color
   const renderStatusBadge = (status: Status | null) => {
     if (!status?.name) return null;
@@ -69,17 +72,6 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
           style={{ backgroundColor: status.color }}
         ></div>
         {status.name}
-      </div>
-    );
-  };
-
-  // Function to render stage with color
-  const renderStage = (stage: Stage | null) => {
-    if (!stage?.name) return null;
-    return (
-      <div className='flex items-center'>
-        <div className='h-2 w-2 rounded-full mr-2' style={{ backgroundColor: stage.color }}></div>
-        <span className='text-sm font-normal'>{stage.name}</span>
       </div>
     );
   };
@@ -277,7 +269,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 align='start'
                 className='w-[180px] rounded-md border border-gray-200 shadow-sm p-1'
               >
-                {teamMembers.map((user) => {
+                {clients?.map((user) => {
                   return (
                     <DropdownMenuItem
                       key={user._id}
