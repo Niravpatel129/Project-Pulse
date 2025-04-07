@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { usePipelineSettings } from '@/hooks/usePipelineSettings';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { Calendar, Check, Circle, Paperclip, Users, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 
@@ -30,10 +31,9 @@ interface Status {
   color: string;
 }
 
-interface User {
-  id: number;
+interface TeamMember {
+  _id: string;
   name: string;
-  email: string;
 }
 
 export default function NewProjectDialog({ open = true, onClose = () => {} }) {
@@ -43,21 +43,15 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
 
   // Get pipeline settings from API
   const { stages, statuses, isLoading } = usePipelineSettings();
+  const { teamMembers, isLoading: isLoadingTeamMembers } = useTeamMembers();
 
   // State for dropdown selections
   const [stage, setStage] = useState<Stage | null>(stages[0] || null);
   const [state, setState] = useState<Status | null>(statuses[0] || null);
-  const [lead, setLead] = useState<User | null>(null);
-  const [client, setClient] = useState<User[]>([]);
+  const [lead, setLead] = useState<TeamMember | null>(null);
+  const [client, setClient] = useState<TeamMember[]>([]);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [targetDate, setTargetDate] = useState<Date | null>(null);
-
-  // Sample data for users (this should also come from API in the future)
-  const userOptions: User[] = [
-    { id: 1, name: 'John Doe', email: 'john@example.com' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com' },
-    { id: 3, name: 'Bob Johnson', email: 'bob@example.com' },
-  ];
 
   // Function to render status badge with appropriate color
   const renderStatusBadge = (status: Status | null) => {
@@ -233,6 +227,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                   variant='outline'
                   size='sm'
                   className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
+                  disabled={isLoadingTeamMembers}
                 >
                   <Users className='h-3 w-3 mr-1 text-gray-400' />
                   {lead ? lead.name : 'Lead'}
@@ -242,10 +237,10 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 align='start'
                 className='w-[180px] rounded-md border border-gray-200 shadow-sm p-1'
               >
-                {userOptions.map((user) => {
+                {teamMembers.map((user) => {
                   return (
                     <DropdownMenuItem
-                      key={user.id}
+                      key={user._id}
                       onClick={() => {
                         return setLead(user);
                       }}
@@ -259,7 +254,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                         </Avatar>
                         <span>{user.name}</span>
                       </div>
-                      {lead?.id === user.id && <Check className='h-3 w-3 text-gray-500' />}
+                      {lead?._id === user._id && <Check className='h-3 w-3 text-gray-500' />}
                     </DropdownMenuItem>
                   );
                 })}
@@ -282,19 +277,19 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 align='start'
                 className='w-[180px] rounded-md border border-gray-200 shadow-sm p-1'
               >
-                {userOptions.map((user) => {
+                {teamMembers.map((user) => {
                   return (
                     <DropdownMenuItem
-                      key={user.id}
+                      key={user._id}
                       onClick={() => {
                         if (
                           client.some((m) => {
-                            return m.id === user.id;
+                            return m._id === user._id;
                           })
                         ) {
                           setClient(
                             client.filter((m) => {
-                              return m.id !== user.id;
+                              return m._id !== user._id;
                             }),
                           );
                         } else {
@@ -312,7 +307,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                         <span>{user.name}</span>
                       </div>
                       {client.some((m) => {
-                        return m.id === user.id;
+                        return m._id === user._id;
                       }) && <Check className='h-3 w-3 text-gray-500' />}
                     </DropdownMenuItem>
                   );
