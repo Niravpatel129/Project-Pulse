@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
-import { useClients } from '@/hooks/useClients';
+import { useParticipation } from '@/hooks/useParticipation';
 import { usePipelineSettings } from '@/hooks/usePipelineSettings';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { newRequest } from '@/utils/newRequest';
@@ -62,7 +62,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
   const [targetDate, setTargetDate] = useState<Date | null>(null);
   const [isCreateClientDialogOpen, setIsCreateClientDialogOpen] = useState(false);
 
-  const { clients } = useClients();
+  const { participants } = useParticipation();
 
   // Function to render status badge with appropriate color
   const renderStatusBadge = (status: Status | null) => {
@@ -337,7 +337,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align='start' className={dropdownContentClasses}>
-                {clients?.map((user) => {
+                {participants?.map((user) => {
                   return (
                     <DropdownMenuItem
                       key={user._id}
@@ -361,10 +361,10 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                       <div className='flex items-center'>
                         <Avatar className='h-4 w-4 mr-1.5'>
                           <AvatarFallback className='text-[10px]'>
-                            {user.user.name.charAt(0)}
+                            {user.name.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
-                        <span>{user.user.name}</span>
+                        <span>{user.name}</span>
                       </div>
                       {client.some((m) => {
                         return m._id === user._id;
