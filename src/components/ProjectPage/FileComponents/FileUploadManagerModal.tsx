@@ -30,8 +30,8 @@ function FileTypeIcon({ type, url }: { type: string; url?: string }) {
 
   if (isImage && url) {
     return (
-      <div className='relative w-12 h-14'>
-        <Image src={url} alt='File preview' fill className='object-cover rounded-sm' />
+      <div className='relative w-14 h-14'>
+        <Image src={url} alt='File preview' fill className='object-contain rounded-sm' />
         <div className='absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] font-bold py-1 px-1 rounded-sm text-center'>
           {type.split('/')[1]?.toUpperCase() || 'IMG'}
         </div>
