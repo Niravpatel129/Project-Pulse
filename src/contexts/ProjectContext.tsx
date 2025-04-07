@@ -41,7 +41,11 @@ export interface Project {
     dateAdded: Date;
   }>;
   participants: Array<{
-    participant: string;
+    _id: string;
+    name: string;
+    role: string;
+    avatar?: string;
+    email?: string;
   }>;
   team: Array<{
     user?: string;

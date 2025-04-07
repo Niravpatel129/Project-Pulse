@@ -368,7 +368,7 @@ export default function ProjectHeader() {
   };
 
   const handleProjectStatus = () => {
-    toast.info(`Current status: ${project.projectStatus || 'Active'}`);
+    toast.info(`Current status: ${project?.status || 'Active'}`);
   };
 
   const ParticipantSkeleton = () => {
@@ -500,7 +500,7 @@ export default function ProjectHeader() {
                     <Clock className='h-4 w-4' />
                     <span className='hidden sm:inline'>Project Status</span>
                     <Badge variant='outline' className='ml-2 bg-gray-100 text-gray-800'>
-                      {project?.projectStatus || 'Active'}
+                      {project?.status || 'Active'}
                     </Badge>
                   </Button>
                 </div>
