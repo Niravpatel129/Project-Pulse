@@ -11,6 +11,7 @@ export interface Project {
   createdAt: string;
   participants: Participant[];
   projectStatus: string;
+  description?: string;
   tasks: Array<{
     _id: string | number;
     title: string;

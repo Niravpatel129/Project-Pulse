@@ -22,6 +22,12 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { useProject, type Project } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -266,181 +272,223 @@ export function ProjectSidebar({
   };
 
   return (
-    <div className='w-full max-w-full lg:w-80 space-y-6 overflow-hidden p-1 md:w-full'>
-      <div className='rounded-lg bg-gray-50 p-4'>
-        <div className='mb-4 flex items-center gap-2'>
-          <Lock className='h-4 w-4' />
-          <span className='font-medium'>Only visible to you</span>
+    <div className='w-full max-w-full lg:w-80 overflow-hidden'>
+      <div className='rounded-md bg-white p-6 shadow-sm border border-gray-100'>
+        <div className='mb-6 flex items-center gap-2'>
+          <Lock className='h-4 w-4 text-primary' />
+          <span className='text-sm font-medium text-foreground'>Project Details</span>
         </div>
-        <p className='text-sm text-muted-foreground'>
-          Private place for you and your internal team to manage this project.
-        </p>
-        <Dialog open={isClientPortalDialogOpen} onOpenChange={setIsClientPortalDialogOpen}>
-          <DialogTrigger asChild>
-            <Button
-              variant='link'
-              className='mt-2 h-auto p-0 text-[#5DD3D1] hover:text-[#4CC3C1]'
-              disabled
-            >
-              <Share2 className='mr-2 h-4 w-4' />
-              Send client portal link
-            </Button>
-          </DialogTrigger>
-          <ShareDialog
-            projectId={project?._id || ''}
-            initialSettings={sharingSettings}
-            onClose={() => {
-              return setIsClientPortalDialogOpen(false);
-            }}
-            onSendEmail={() => {
-              setIsClientPortalDialogOpen(false);
-              setIsSendEmailDialogOpen(true);
-            }}
-          />
-        </Dialog>
 
-        <Dialog open={isSendEmailDialogOpen} onOpenChange={setIsSendEmailDialogOpen}>
-          <DialogContent className='sm:max-w-[550px]'>
-            <DialogHeader>
-              <DialogTitle>Send Client Portal Link</DialogTitle>
-              <DialogDescription>Send your client access to their project portal</DialogDescription>
-            </DialogHeader>
-
-            <div className='space-y-4 py-2'>
-              <div className='space-y-2'>
-                <div className='flex items-center space-x-2'>
-                  <Label htmlFor='email-to' className='w-16'>
-                    To:
-                  </Label>
-                  <Input
-                    id='email-to'
-                    type='email'
-                    placeholder='client@example.com'
-                    value={clientEmail}
-                    onChange={(e) => {
-                      return setClientEmail(e.target.value);
-                    }}
-                    className='flex-1'
-                  />
+        <Accordion type='single' collapsible className='w-full'>
+          <AccordionItem value='properties'>
+            <AccordionTrigger className='text-sm font-medium text-foreground'>
+              Properties
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className='space-y-4 pt-2'>
+                <div className='space-y-2'>
+                  <label className='text-xs font-medium text-muted-foreground'>Stage</label>
+                  <Select
+                    value={project?.stage || 'Initial Contact'}
+                    onValueChange={handleStageChange}
+                  >
+                    <SelectTrigger className='h-8 text-xs'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className='text-xs'>
+                      <SelectItem value='Initial Contact'>Initial Contact</SelectItem>
+                      <SelectItem value='Proposal'>Proposal</SelectItem>
+                      <SelectItem value='Negotiation'>Negotiation</SelectItem>
+                      <SelectItem value='Closed Won'>Closed Won</SelectItem>
+                      <SelectItem value='Closed Lost'>Closed Lost</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div className='flex items-center space-x-2'>
-                  <Label htmlFor='email-subject' className='w-16'>
-                    Subject:
-                  </Label>
-                  <Input
-                    id='email-subject'
-                    type='text'
-                    value={`Access your project portal: ${project?.name || 'Project'}`}
-                    readOnly
-                    className='flex-1 bg-gray-50'
-                  />
+                <div className='space-y-2'>
+                  <label className='text-xs font-medium text-muted-foreground'>Lead Source</label>
+                  <Select
+                    value={project?.leadSource || 'Referral'}
+                    onValueChange={handleLeadSourceChange}
+                  >
+                    <SelectTrigger className='h-8 text-xs'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className='text-xs'>
+                      <SelectItem value='Referral'>Referral</SelectItem>
+                      <SelectItem value='Website'>Website</SelectItem>
+                      <SelectItem value='Social Media'>Social Media</SelectItem>
+                      <SelectItem value='Email Campaign'>Email Campaign</SelectItem>
+                      <SelectItem value='Conference'>Conference</SelectItem>
+                      <SelectItem value='Other'>Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div className='mt-8'>
-                  <Textarea
-                    id='email-message'
-                    placeholder='Add a personal message to your client...'
-                    rows={12}
-                    value={
-                      sharingSettings.customMessage ||
-                      `Hi,\n\nI've created a project portal for you to track our progress. You can access it using the link below:\n\n${portalURL}\n\nPlease let me know if you have any questions.\n\nBest regards`
-                    }
-                    onChange={(e) => {
-                      return handleSharingSettingsChange('customMessage', e.target.value);
-                    }}
-                    className='w-full'
-                  />
+                <div className='space-y-2'>
+                  <label className='text-xs font-medium text-muted-foreground'>Project Type</label>
+                  <Select
+                    value={project?.projectType || 'Research'}
+                    onValueChange={handleProjectTypeChange}
+                  >
+                    <SelectTrigger className='h-8 text-xs'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className='text-xs'>
+                      <SelectItem value='Research'>Research</SelectItem>
+                      <SelectItem value='Development'>Development</SelectItem>
+                      <SelectItem value='Design'>Design</SelectItem>
+                      <SelectItem value='Marketing'>Marketing</SelectItem>
+                      <SelectItem value='Consulting'>Consulting</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className='space-y-2'>
+                  <label className='text-xs font-medium text-muted-foreground'>Status</label>
+                  <Select
+                    value={project?.projectStatus || 'planning'}
+                    onValueChange={handleProjectStatusChange}
+                  >
+                    <SelectTrigger className='h-8 text-xs'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className='text-xs'>
+                      <SelectItem value='planning'>Planning</SelectItem>
+                      <SelectItem value='in_progress'>In Progress</SelectItem>
+                      <SelectItem value='review'>Review</SelectItem>
+                      <SelectItem value='completed'>Completed</SelectItem>
+                      <SelectItem value='on_hold'>On Hold</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-            </div>
+            </AccordionContent>
+          </AccordionItem>
 
-            <DialogFooter className='mt-4'>
-              <Button onClick={sendClientPortalEmail} disabled={sendPortalLinkMutation.isPending}>
-                <Mail className='mr-2 h-4 w-4' />
-                {sendPortalLinkMutation.isPending ? 'Sending...' : 'Send Email'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          <AccordionItem value='description'>
+            <AccordionTrigger className='text-sm font-medium text-foreground'>
+              Description
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className='pt-2'>
+                <Textarea
+                  placeholder='Add a project description...'
+                  className='min-h-[100px] text-sm'
+                  value={project?.description || ''}
+                  onChange={(e) => {
+                    return onUpdateProject?.({ description: e.target.value });
+                  }}
+                />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
 
-        <div className='mt-4'>
-          <div className='space-y-4'>
-            <div className='space-y-2'>
-              <label className='text-sm font-medium'>Stage</label>
-              <Select value={project?.stage || 'Initial Contact'} onValueChange={handleStageChange}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='Initial Contact'>Initial Contact</SelectItem>
-                  <SelectItem value='Proposal'>Proposal</SelectItem>
-                  <SelectItem value='Negotiation'>Negotiation</SelectItem>
-                  <SelectItem value='Closed Won'>Closed Won</SelectItem>
-                  <SelectItem value='Closed Lost'>Closed Lost</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <AccordionItem value='sharing'>
+            <AccordionTrigger className='text-sm font-medium text-foreground'>
+              Sharing Settings
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className='pt-2 space-y-4'>
+                <Dialog open={isClientPortalDialogOpen} onOpenChange={setIsClientPortalDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant='outline' className='w-full h-8 text-xs'>
+                      <Share2 className='mr-2 h-3.5 w-3.5' />
+                      Configure Sharing
+                    </Button>
+                  </DialogTrigger>
+                  <ShareDialog
+                    projectId={project?._id || ''}
+                    initialSettings={sharingSettings}
+                    onClose={() => {
+                      return setIsClientPortalDialogOpen(false);
+                    }}
+                    onSendEmail={() => {
+                      setIsClientPortalDialogOpen(false);
+                      setIsSendEmailDialogOpen(true);
+                    }}
+                  />
+                </Dialog>
 
-            <div className='space-y-2'>
-              <label className='text-sm font-medium'>Lead Source</label>
-              <Select
-                value={project?.leadSource || 'Referral'}
-                onValueChange={handleLeadSourceChange}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='Referral'>Referral</SelectItem>
-                  <SelectItem value='Website'>Website</SelectItem>
-                  <SelectItem value='Social Media'>Social Media</SelectItem>
-                  <SelectItem value='Email Campaign'>Email Campaign</SelectItem>
-                  <SelectItem value='Conference'>Conference</SelectItem>
-                  <SelectItem value='Other'>Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <Dialog open={isSendEmailDialogOpen} onOpenChange={setIsSendEmailDialogOpen}>
+                  <DialogContent className='sm:max-w-[480px] p-6'>
+                    <DialogHeader className='mb-4'>
+                      <DialogTitle className='text-base font-medium'>
+                        Send Client Portal Link
+                      </DialogTitle>
+                      <DialogDescription className='text-xs text-muted-foreground mt-1'>
+                        Send your client access to their project portal
+                      </DialogDescription>
+                    </DialogHeader>
 
-            <div className='space-y-2'>
-              <label className='text-sm font-medium'>Project Type</label>
-              <Select
-                value={project?.projectType || 'Research'}
-                onValueChange={handleProjectTypeChange}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='Research'>Research</SelectItem>
-                  <SelectItem value='Development'>Development</SelectItem>
-                  <SelectItem value='Design'>Design</SelectItem>
-                  <SelectItem value='Marketing'>Marketing</SelectItem>
-                  <SelectItem value='Consulting'>Consulting</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                    <div className='space-y-4'>
+                      <div className='space-y-3'>
+                        <div className='flex items-center space-x-3'>
+                          <Label htmlFor='email-to' className='w-12 text-xs text-muted-foreground'>
+                            To:
+                          </Label>
+                          <Input
+                            id='email-to'
+                            type='email'
+                            placeholder='client@example.com'
+                            value={clientEmail}
+                            onChange={(e) => {
+                              return setClientEmail(e.target.value);
+                            }}
+                            className='flex-1 h-8 text-xs'
+                          />
+                        </div>
 
-            <div className='space-y-2'>
-              <label className='text-sm font-medium'>Status</label>
-              <Select
-                value={project?.projectStatus || 'planning'}
-                onValueChange={handleProjectStatusChange}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='planning'>Planning</SelectItem>
-                  <SelectItem value='in_progress'>In Progress</SelectItem>
-                  <SelectItem value='review'>Review</SelectItem>
-                  <SelectItem value='completed'>Completed</SelectItem>
-                  <SelectItem value='on_hold'>On Hold</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
+                        <div className='flex items-center space-x-3'>
+                          <Label
+                            htmlFor='email-subject'
+                            className='w-12 text-xs text-muted-foreground'
+                          >
+                            Subject:
+                          </Label>
+                          <Input
+                            id='email-subject'
+                            type='text'
+                            value={`Access your project portal: ${project?.name || 'Project'}`}
+                            readOnly
+                            className='flex-1 h-8 text-xs bg-muted'
+                          />
+                        </div>
+
+                        <div className='mt-4'>
+                          <Textarea
+                            id='email-message'
+                            placeholder='Add a personal message to your client...'
+                            rows={8}
+                            value={
+                              sharingSettings.customMessage ||
+                              `Hi,\n\nI've created a project portal for you to track our progress. You can access it using the link below:\n\n${portalURL}\n\nPlease let me know if you have any questions.\n\nBest regards`
+                            }
+                            onChange={(e) => {
+                              return handleSharingSettingsChange('customMessage', e.target.value);
+                            }}
+                            className='w-full text-xs'
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <DialogFooter className='mt-6'>
+                      <Button
+                        onClick={sendClientPortalEmail}
+                        disabled={sendPortalLinkMutation.isPending}
+                        className='h-8 text-xs'
+                      >
+                        <Mail className='mr-2 h-3.5 w-3.5' />
+                        {sendPortalLinkMutation.isPending ? 'Sending...' : 'Send Email'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
     </div>
   );
