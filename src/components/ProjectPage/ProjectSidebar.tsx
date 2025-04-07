@@ -50,11 +50,11 @@ interface TimeEntry {
 }
 
 interface SharingSettings {
-  accessType: 'signup_required' | 'email_restricted' | 'public';
+  accessType: 'email_restricted' | 'public';
   requirePassword: boolean;
   password: string;
-  expirationDays: string;
   customMessage: string;
+  expirationDays: string;
   allowedEmails: string[];
 }
 
@@ -75,25 +75,25 @@ export function ProjectSidebar({
   const { project } = useProject();
   const [isClientPortalDialogOpen, setIsClientPortalDialogOpen] = useState(false);
   const [isSendEmailDialogOpen, setIsSendEmailDialogOpen] = useState(false);
-  const [sharingSettings, setSharingSettings] = useState<SharingSettings>(() => {
-    return {
-      accessType: 'signup_required',
-      requirePassword: false,
-      password: '',
-      customMessage: '',
-      expirationDays: '30',
-      allowedEmails:
-        project?.participants
-          .map((c) => {
-            return c.email;
-          })
-          .filter((email): email is string => {
-            return email !== undefined;
-          }) || [],
-    };
+  const [sharingSettings, setSharingSettings] = useState<SharingSettings>({
+    accessType:
+      (project?.sharing?.accessType as 'email_restricted' | 'public') || 'email_restricted',
+    requirePassword: project?.sharing?.passwordProtected || false,
+    password: project?.sharing?.password || '',
+    customMessage: '',
+    expirationDays: '30',
+    allowedEmails:
+      project?.collaborators
+        ?.map((c) => {
+          return c.email;
+        })
+        .filter((email): email is string => {
+          return email !== undefined;
+        }) || [],
   });
+
   const [clientEmail, setClientEmail] = useState(
-    project?.participants?.find((c) => {
+    project?.collaborators?.find((c) => {
       return c.email;
     })?.email || '',
   );
@@ -193,7 +193,7 @@ export function ProjectSidebar({
   };
 
   const handleProjectStatusChange = async (value: string) => {
-    await onUpdateProject?.({ projectStatus: value });
+    await onUpdateProject?.({ status: value });
   };
 
   const handleSharingSettingsChange = async (
@@ -285,7 +285,7 @@ export function ProjectSidebar({
               Properties
             </AccordionTrigger>
             <AccordionContent>
-              <div className='space-y-4 pt-2'>
+              <div className='space-y-4 pt-2 p-1'>
                 <div className='space-y-2'>
                   <label className='text-xs font-medium text-muted-foreground'>Stage</label>
                   <Select
@@ -306,48 +306,9 @@ export function ProjectSidebar({
                 </div>
 
                 <div className='space-y-2'>
-                  <label className='text-xs font-medium text-muted-foreground'>Lead Source</label>
-                  <Select
-                    value={project?.leadSource || 'Referral'}
-                    onValueChange={handleLeadSourceChange}
-                  >
-                    <SelectTrigger className='h-8 text-xs'>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className='text-xs'>
-                      <SelectItem value='Referral'>Referral</SelectItem>
-                      <SelectItem value='Website'>Website</SelectItem>
-                      <SelectItem value='Social Media'>Social Media</SelectItem>
-                      <SelectItem value='Email Campaign'>Email Campaign</SelectItem>
-                      <SelectItem value='Conference'>Conference</SelectItem>
-                      <SelectItem value='Other'>Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className='space-y-2'>
-                  <label className='text-xs font-medium text-muted-foreground'>Project Type</label>
-                  <Select
-                    value={project?.projectType || 'Research'}
-                    onValueChange={handleProjectTypeChange}
-                  >
-                    <SelectTrigger className='h-8 text-xs'>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className='text-xs'>
-                      <SelectItem value='Research'>Research</SelectItem>
-                      <SelectItem value='Development'>Development</SelectItem>
-                      <SelectItem value='Design'>Design</SelectItem>
-                      <SelectItem value='Marketing'>Marketing</SelectItem>
-                      <SelectItem value='Consulting'>Consulting</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className='space-y-2'>
                   <label className='text-xs font-medium text-muted-foreground'>Status</label>
                   <Select
-                    value={project?.projectStatus || 'planning'}
+                    value={project?.status || 'planning'}
                     onValueChange={handleProjectStatusChange}
                   >
                     <SelectTrigger className='h-8 text-xs'>
@@ -361,6 +322,38 @@ export function ProjectSidebar({
                       <SelectItem value='on_hold'>On Hold</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className='space-y-2'>
+                  <label className='text-xs font-medium text-muted-foreground'>Start Date</label>
+                  <Input
+                    type='date'
+                    value={
+                      project?.startDate
+                        ? new Date(project.startDate).toISOString().split('T')[0]
+                        : ''
+                    }
+                    onChange={(e) => {
+                      return onUpdateProject?.({ startDate: new Date(e.target.value) });
+                    }}
+                    className='h-8 text-xs'
+                  />
+                </div>
+
+                <div className='space-y-2'>
+                  <label className='text-xs font-medium text-muted-foreground'>Target Date</label>
+                  <Input
+                    type='date'
+                    value={
+                      project?.targetDate
+                        ? new Date(project.targetDate).toISOString().split('T')[0]
+                        : ''
+                    }
+                    onChange={(e) => {
+                      return onUpdateProject?.({ targetDate: new Date(e.target.value) });
+                    }}
+                    className='h-8 text-xs'
+                  />
                 </div>
               </div>
             </AccordionContent>

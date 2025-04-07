@@ -7,24 +7,59 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useState 
 export interface Project {
   _id: string;
   name: string;
+  workspace: string;
+  description: string;
   projectType: string;
-  createdAt: string;
-  participants: Participant[];
-  projectStatus: string;
-  description?: string;
-  tasks: Array<{
-    _id: string | number;
-    title: string;
-    description: string;
-    status: string;
-    dueDate: string;
-  }>;
-  stage?: string;
-  leadSource?: string;
-  workflow?: {
-    name: string;
-    status: string;
+  manager?: string;
+  leadSource: string;
+  stage: string;
+  status: string;
+  clients: string[];
+  startDate?: Date;
+  targetDate?: Date;
+  attachments: string[];
+  isActive: boolean;
+  createdBy: string;
+  sharing: {
+    accessType: string;
+    passwordProtected: boolean;
+    password?: string;
   };
+  collaborators: Array<{
+    user?: string;
+    id?: string;
+    name?: string;
+    role: string;
+    email?: string;
+    phone?: string;
+    mailingAddress?: string;
+    companyName?: string;
+    companyType?: string;
+    companyWebsite?: string;
+    status: string;
+    permissions: string[];
+    dateAdded: Date;
+  }>;
+  participants: Array<{
+    participant: string;
+  }>;
+  team: Array<{
+    user?: string;
+  }>;
+  tasks: Array<{
+    title: string;
+    description?: string;
+    dueDate?: Date;
+    status: 'pending' | 'in-progress' | 'completed';
+    assignedTo?: string;
+  }>;
+  notes: Array<{
+    content: string;
+    createdBy: string;
+    createdAt: Date;
+  }>;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Participant {
