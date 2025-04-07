@@ -17,8 +17,11 @@ import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useClients } from '@/hooks/useClients';
 import { usePipelineSettings } from '@/hooks/usePipelineSettings';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { newRequest } from '@/utils/newRequest';
+import { useQueryClient } from '@tanstack/react-query';
 import { Calendar, Check, Circle, Paperclip, Plus, Users, X } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { toast } from 'sonner';
 import CreateClientDialog from './CreateClientDialog';
 
 interface Stage {
@@ -41,7 +44,9 @@ interface TeamMember {
 export default function NewProjectDialog({ open = true, onClose = () => {} }) {
   const [title, setTitle] = useState('dfgdfgdfg');
   const [attachments, setAttachments] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
+  const queryClient = useQueryClient();
 
   // Get pipeline settings from API
   const { stages, statuses, isLoading } = usePipelineSettings();
@@ -134,6 +139,41 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
         )}
       </Button>
     );
+  };
+
+  const handleCreateProject = async () => {
+    setIsSubmitting(true);
+    try {
+      const projectData = {
+        name: title,
+        stage: stage?._id,
+        status: state?._id,
+        lead: lead?._id,
+        client: client.map((c) => {
+          return c._id;
+        }),
+        startDate: startDate?.toISOString(),
+        targetDate: targetDate?.toISOString(),
+        attachments: attachments.map((att) => {
+          return {
+            name: att.name,
+            size: att.size,
+            type: att.type,
+          };
+        }),
+      };
+
+      const response = await newRequest.post('/projects', projectData);
+
+      toast.success('Project created successfully');
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      onClose();
+    } catch (error) {
+      console.error('Error creating project:', error);
+      toast.error('Failed to create project');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -441,8 +481,12 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
             >
               Cancel
             </Button>
-            <Button className='h-7 rounded text-xs font-normal bg-gray-900 hover:bg-gray-800 text-white'>
-              Create project
+            <Button
+              className='h-7 rounded text-xs font-normal bg-gray-900 hover:bg-gray-800 text-white'
+              onClick={handleCreateProject}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Creating...' : 'Create project'}
             </Button>
           </div>
         </DialogFooter>

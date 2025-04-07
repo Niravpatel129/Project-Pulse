@@ -1,5 +1,5 @@
 import { newRequest } from '@/utils/newRequest';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import { usePipelineSettings } from './usePipelineSettings';
@@ -82,6 +82,16 @@ export function useProjects() {
     },
     [router, searchParams],
   );
+
+  const deleteProject = useMutation({
+    mutationFn: async (projectId: string) => {
+      const response = await newRequest.delete(`/projects/${projectId}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
 
   // Memoize view toggling
   const toggleView = useCallback(() => {
@@ -396,5 +406,6 @@ export function useProjects() {
     handleDragEnd,
     getItemsByStage,
     getItemsByStatus,
+    deleteProject,
   };
 }

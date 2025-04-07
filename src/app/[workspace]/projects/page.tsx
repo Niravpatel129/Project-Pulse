@@ -161,6 +161,7 @@ export default function ProjectsPage() {
     handleDragEnd,
     getItemsByStage,
     getItemsByStatus,
+    deleteProject,
   } = useProjects();
 
   // Configure sensors for drag and drop with appropriate sensitivity
@@ -175,7 +176,9 @@ export default function ProjectsPage() {
   // Function to handle project deletion
   const handleDeleteProject = (projectId: string) => {
     if (!projectId) return;
+    console.log('delete project', projectId);
     // TODO: Implement delete project mutation
+    deleteProject.mutate(projectId);
   };
 
   // Function to handle stage change
