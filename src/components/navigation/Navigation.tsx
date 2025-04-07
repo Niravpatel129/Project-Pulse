@@ -105,11 +105,11 @@ export function Navigation() {
     //   label: 'Production',
     //   icon: <CiShop className='h-5 w-5' />,
     // },
-    {
-      href: '/customers',
-      label: 'Customers',
-      icon: <CiUser className='h-5 w-5' />,
-    },
+    // {
+    //   href: '/customers',
+    //   label: 'Customers',
+    //   icon: <CiUser className='h-5 w-5' />,
+    // },
     {
       href: '/database',
       label: 'Database',
