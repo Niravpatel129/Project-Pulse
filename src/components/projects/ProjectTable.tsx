@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/table';
 import { MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 interface ProjectTableProps {
   projects: any[];
@@ -66,16 +67,41 @@ export function ProjectTable({
               >
                 <TableCell className='font-medium'>{project.name}</TableCell>
                 <TableCell>
-                  {project.clients && project.clients.length > 0
-                    ? project.clients
-                        .map((client) => {
-                          return client?.user?.name || '-';
-                        })
-                        .filter(Boolean)
-                        .join(', ')
-                    : '-'}
+                  {project.clients && project.clients.length > 0 ? (
+                    <div className='flex flex-col gap-1'>
+                      {project.clients.map((client: any, index: number) => {
+                        return (
+                          <div
+                            key={`${client.user?.name || client}-${index}`}
+                            className='flex items-center gap-2'
+                          >
+                            <Avatar className='h-5 w-5'>
+                              <AvatarFallback className='bg-muted text-black'>
+                                {client.user?.name?.charAt(0) || '-'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span>{client.user?.name || '-'}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    '-'
+                  )}
                 </TableCell>
-                <TableCell>{project.manager?.name || '-'}</TableCell>
+                <TableCell>
+                  {project.manager?.name ? (
+                    <div className='flex items-center gap-2'>
+                      <Avatar className='h-5 w-5'>
+                        <AvatarImage src={project.manager.avatar} alt={project.manager.name} />
+                        <AvatarFallback>{project.manager.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <span>{project.manager.name}</span>
+                    </div>
+                  ) : (
+                    '-'
+                  )}
+                </TableCell>
                 <TableCell>
                   <div
                     className='status-dropdown'
