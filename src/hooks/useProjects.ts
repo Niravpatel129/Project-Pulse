@@ -9,8 +9,18 @@ interface Project {
   _id: string;
   id: string;
   name: string;
-  stage: string;
-  status: string;
+  stage: {
+    name: string;
+    order: number;
+    color: string;
+    _id: string;
+  };
+  status: {
+    name: string;
+    order: number;
+    color: string;
+    _id: string;
+  };
   projectType: string;
   manager: {
     name: string;
@@ -44,10 +54,10 @@ const MOCK_PROJECTS: Project[] = [
     client: 'Acme Corporation',
     type: 'Software Implementation',
     leadSource: 'Industry Conference',
-    stage: 'Proposal',
+    stage: { name: 'Proposal', order: 0, color: '', _id: '' },
     projectType: 'Software Implementation',
     manager: { name: 'Sarah Johnson' },
-    status: 'On Track',
+    status: { name: 'On Track', order: 0, color: '', _id: '' },
   },
 ];
 
@@ -163,8 +173,8 @@ export function useProjects() {
             _id: project._id,
             id: project._id,
             name: project.name || '',
-            stage: project.stage || '',
-            status: project.status || '',
+            stage: project.stage || { name: '', order: 0, color: '', _id: '' },
+            status: project.status || { name: '', order: 0, color: '', _id: '' },
             projectType: project.projectType || '',
             manager: project.manager || { name: '' },
             participants: project.participants || [],
@@ -193,7 +203,7 @@ export function useProjects() {
         (project.leadSource?.toLowerCase() || '').includes(searchLower) ||
         (project.manager?.name?.toLowerCase() || '').includes(searchLower);
 
-      const matchesStatus = status === 'all' || project.stage === status;
+      const matchesStatus = status === 'all' || project.stage.name === status;
 
       return matchesSearch && matchesStatus;
     });
@@ -233,9 +243,9 @@ export function useProjects() {
         const matchesStage =
           stage === 'No Stage'
             ? !pipelineStages.some((s) => {
-                return s.name === project.stage;
+                return s.name === project.stage.name;
               })
-            : project.stage === stage;
+            : project.stage.name === stage;
 
         return (
           matchesStage &&
@@ -261,9 +271,9 @@ export function useProjects() {
         const matchesStatus =
           status === 'No Status'
             ? !pipelineStatuses.some((s) => {
-                return s.name === project.status;
+                return s.name === project.status.name;
               })
-            : project.status === status;
+            : project.status.name === status;
 
         return (
           matchesStatus &&
@@ -335,22 +345,28 @@ export function useProjects() {
         if (!activeItem) return;
 
         if (kanban === 'stages' && (isStageColumn || isNoStageColumn)) {
-          if (activeItem.stage !== overId) {
+          if (activeItem.stage.name !== overId) {
             queryClient.setQueryData(['projects'], (old: Project[] = []) => {
               return old.map((project) => {
                 if (project._id === activeItemId) {
-                  return { ...project, stage: overId };
+                  const newStage = pipelineStages.find((s) => {
+                    return s.name === overId;
+                  }) || { name: overId, order: 0, color: '#94a3b8', _id: '' };
+                  return { ...project, stage: newStage };
                 }
                 return project;
               });
             });
           }
         } else if (kanban === 'status' && (isStatusColumn || isNoStatusColumn)) {
-          if (activeItem.status !== overId) {
+          if (activeItem.status.name !== overId) {
             queryClient.setQueryData(['projects'], (old: Project[] = []) => {
               return old.map((project) => {
                 if (project._id === activeItemId) {
-                  return { ...project, status: overId };
+                  const newStatus = pipelineStatuses.find((s) => {
+                    return s.name === overId;
+                  }) || { name: overId, order: 0, color: '#94a3b8', _id: '' };
+                  return { ...project, status: newStatus };
                 }
                 return project;
               });

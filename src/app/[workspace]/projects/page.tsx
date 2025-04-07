@@ -192,26 +192,23 @@ export default function ProjectsPage() {
   };
 
   // Function to render status badge with appropriate color
-  const renderStatusBadge = (status: string) => {
-    const statusConfig = pipelineStatuses.find((s) => {
-      return s.name === status;
-    });
-    if (!statusConfig) return null;
+  const renderStatusBadge = (status: { name: string; color: string }) => {
+    if (!status) return null;
 
     return (
       <Badge
         className='flex items-center text-xs font-normal py-0.5'
         style={{
-          backgroundColor: `${statusConfig.color}15`,
-          color: statusConfig.color,
-          borderColor: `${statusConfig.color}30`,
+          backgroundColor: `${status.color}15`,
+          color: status.color,
+          borderColor: `${status.color}30`,
         }}
       >
         <div
           className='h-1.5 w-1.5 rounded-full mr-1.5'
-          style={{ backgroundColor: statusConfig.color }}
+          style={{ backgroundColor: status.color }}
         ></div>
-        {status}
+        {status.name}
       </Badge>
     );
   };

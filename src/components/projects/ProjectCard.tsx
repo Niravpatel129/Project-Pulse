@@ -1,3 +1,5 @@
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -14,9 +16,30 @@ import { MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 
 interface ProjectCardProps {
-  project: any;
+  project: {
+    _id: string;
+    name: string;
+    stage: {
+      name: string;
+      color: string;
+    };
+    status: {
+      name: string;
+      color: string;
+    };
+    manager: {
+      name: string;
+    };
+    tasks?: Array<{
+      _id: string | number;
+      title: string;
+      description: string;
+      status: string;
+      dueDate: string;
+    }>;
+  };
   onDelete: (projectId: string) => void;
-  renderStatusBadge: (status: string) => React.ReactNode;
+  renderStatusBadge: (status: { name: string; color: string }) => React.ReactNode;
 }
 
 export function ProjectCard({ project, onDelete, renderStatusBadge }: ProjectCardProps) {
@@ -101,7 +124,10 @@ export function ProjectCard({ project, onDelete, renderStatusBadge }: ProjectCar
           </div>
 
           <div className='flex items-center gap-2 text-xs text-muted-foreground'>
-            <span>{project?.manager?.name || 'No manager assigned'}</span>
+            <Avatar className='h-6 w-6'>
+              <AvatarFallback>{project.manager.name[0]}</AvatarFallback>
+            </Avatar>
+            <span>{project.manager.name}</span>
           </div>
 
           <div className='flex justify-between items-center gap-2 pt-1'>
@@ -130,7 +156,21 @@ export function ProjectCard({ project, onDelete, renderStatusBadge }: ProjectCar
 
           <div className='flex justify-between items-center pt-1 border-t border-border/40'>
             <span className='text-xs'>{renderStatusBadge(project.status)}</span>
-            <span className='text-xs text-muted-foreground'>{project.stage}</span>
+            <Badge
+              variant='outline'
+              className='text-xs font-normal py-0.5'
+              style={{
+                backgroundColor: `${project.stage.color}15`,
+                color: project.stage.color,
+                borderColor: `${project.stage.color}30`,
+              }}
+            >
+              <div
+                className='h-1.5 w-1.5 rounded-full mr-1.5'
+                style={{ backgroundColor: project.stage.color }}
+              ></div>
+              {project.stage.name}
+            </Badge>
           </div>
         </CardContent>
       </Card>
