@@ -24,20 +24,62 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
 
   // State for dropdown selections
   const [stage, setStage] = useState('Discovery');
-  const [state, setState] = useState('Active');
+  const [state, setState] = useState({ name: 'Active', color: '#22c55e' });
   const [lead, setLead] = useState(null);
   const [client, setClient] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [targetDate, setTargetDate] = useState(null);
 
   // Sample data for dropdowns
-  const stageOptions = ['Discovery', 'Planning', 'Execution', 'Delivery', 'Completed'];
-  const stateOptions = ['Active', 'On Hold', 'Canceled', 'Completed'];
+  const stageOptions = [
+    { name: 'Discovery', color: '#3b82f6' },
+    { name: 'Planning', color: '#8b5cf6' },
+    { name: 'Execution', color: '#f59e0b' },
+    { name: 'Delivery', color: '#10b981' },
+    { name: 'Completed', color: '#6b7280' },
+  ];
+
+  const stateOptions = [
+    { name: 'Active', color: '#22c55e' },
+    { name: 'On Hold', color: '#f59e0b' },
+    { name: 'Canceled', color: '#ef4444' },
+    { name: 'Completed', color: '#6b7280' },
+  ];
+
   const userOptions = [
     { id: 1, name: 'John Doe', email: 'john@example.com' },
     { id: 2, name: 'Jane Smith', email: 'jane@example.com' },
     { id: 3, name: 'Bob Johnson', email: 'bob@example.com' },
   ];
+
+  // Function to render status badge with appropriate color
+  const renderStatusBadge = (status) => {
+    return (
+      <div
+        className='flex items-center text-xs font-medium'
+        style={{
+          color: status.color,
+          borderColor: `${status.color}40`,
+        }}
+      >
+        <div
+          className='h-2 w-2 rounded-full mr-1.5'
+          style={{ backgroundColor: status.color }}
+        ></div>
+        {status.name}
+      </div>
+    );
+  };
+
+  // Function to render stage with color
+  const renderStage = (stage) => {
+    return (
+      <div className='flex items-center'>
+        <div className='h-2 w-2 rounded-full mr-2' style={{ backgroundColor: stage.color }}></div>
+        <span className='text-sm font-normal'>{stage.name}</span>
+      </div>
+    );
+  };
 
   const handleFileChange = (e) => {
     if (e.target.files.length > 0) {
@@ -105,7 +147,15 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                   size='sm'
                   className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
                 >
-                  <Circle className='h-3 w-3 mr-1 text-gray-400' />
+                  <Circle
+                    className='h-3 w-3 mr-1'
+                    style={{
+                      color:
+                        stageOptions.find((s) => {
+                          return s.name === stage;
+                        })?.color || '#3b82f6',
+                    }}
+                  />
                   {stage}
                 </Button>
               </DropdownMenuTrigger>
@@ -116,14 +166,20 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 {stageOptions.map((option) => {
                   return (
                     <DropdownMenuItem
-                      key={option}
+                      key={option.name}
                       onClick={() => {
-                        return setStage(option);
+                        return setStage(option.name);
                       }}
                       className='flex items-center justify-between text-xs py-1.5 rounded-sm text-gray-600 focus:text-gray-700 focus:bg-gray-50'
                     >
-                      {option}
-                      {stage === option && <Check className='h-3 w-3 text-gray-500' />}
+                      <div className='flex items-center'>
+                        <div
+                          className='h-2 w-2 rounded-full mr-2'
+                          style={{ backgroundColor: option.color }}
+                        ></div>
+                        {option.name}
+                      </div>
+                      {stage === option.name && <Check className='h-3 w-3 text-gray-500' />}
                     </DropdownMenuItem>
                   );
                 })}
@@ -138,8 +194,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                   size='sm'
                   className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
                 >
-                  <span className='text-xs mr-1 text-gray-400'>···</span>
-                  {state}
+                  {renderStatusBadge(state)}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -149,14 +204,14 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 {stateOptions.map((option) => {
                   return (
                     <DropdownMenuItem
-                      key={option}
+                      key={option.name}
                       onClick={() => {
                         return setState(option);
                       }}
                       className='flex items-center justify-between text-xs py-1.5 rounded-sm text-gray-600 focus:text-gray-700 focus:bg-gray-50'
                     >
-                      {option}
-                      {state === option && <Check className='h-3 w-3 text-gray-500' />}
+                      {renderStatusBadge(option)}
+                      {state.name === option.name && <Check className='h-3 w-3 text-gray-500' />}
                     </DropdownMenuItem>
                   );
                 })}
