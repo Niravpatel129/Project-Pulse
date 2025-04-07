@@ -100,6 +100,42 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
     setClient([...client, newClient]);
   };
 
+  // Common dropdown menu content styles
+  const dropdownContentClasses = 'w-[180px] rounded-md border border-gray-200 shadow-sm p-1';
+
+  // Common dropdown menu item styles
+  const dropdownItemClasses =
+    'flex items-center justify-between text-xs py-1.5 rounded-sm text-gray-600 focus:text-gray-700 focus:bg-gray-50';
+
+  // Common button styles for triggers
+  const buttonTriggerClasses =
+    'h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2';
+
+  // Common popover content styles
+  const popoverContentClasses =
+    'w-auto p-0 border border-gray-200 shadow-sm rounded-md min-w-[290px]';
+
+  // Helper function for date buttons with clear functionality
+  const renderDateButton = (date, setDate, placeholder) => {
+    return (
+      <Button variant='outline' size='sm' className={buttonTriggerClasses}>
+        <Calendar className='h-3 w-3 mr-1 text-gray-400' />
+        {date ? date.toLocaleDateString() : placeholder}
+        {date && (
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              setDate(null);
+            }}
+            className='!-m-1 !p-0 inline-flex'
+          >
+            <X className='h-2 w-2 text-gray-400' />
+          </div>
+        )}
+      </Button>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className='w-[95vw] sm:max-w-[900px] p-0 gap-0 overflow-hidden border border-gray-200 shadow-sm rounded-lg min-h-[85vh] flex flex-col'>
@@ -146,7 +182,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 <Button
                   variant='outline'
                   size='sm'
-                  className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
+                  className={buttonTriggerClasses}
                   disabled={isLoading}
                 >
                   <Circle
@@ -158,10 +194,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                   {stage?.name || 'Select stage'}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align='start'
-                className='w-[180px] rounded-md border border-gray-200 shadow-sm p-1'
-              >
+              <DropdownMenuContent align='start' className={dropdownContentClasses}>
                 {stages.map((option) => {
                   return (
                     <DropdownMenuItem
@@ -169,7 +202,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                       onClick={() => {
                         return setStage(option);
                       }}
-                      className='flex items-center justify-between text-xs py-1.5 rounded-sm text-gray-600 focus:text-gray-700 focus:bg-gray-50'
+                      className={dropdownItemClasses}
                     >
                       <div className='flex items-center'>
                         <div
@@ -191,16 +224,13 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 <Button
                   variant='outline'
                   size='sm'
-                  className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
+                  className={buttonTriggerClasses}
                   disabled={isLoading}
                 >
                   {renderStatusBadge(state) || 'Select status'}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align='start'
-                className='w-[180px] rounded-md border border-gray-200 shadow-sm p-1'
-              >
+              <DropdownMenuContent align='start' className={dropdownContentClasses}>
                 {statuses.map((option) => {
                   return (
                     <DropdownMenuItem
@@ -208,7 +238,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                       onClick={() => {
                         return setState(option);
                       }}
-                      className='flex items-center justify-between text-xs py-1.5 rounded-sm text-gray-600 focus:text-gray-700 focus:bg-gray-50'
+                      className={dropdownItemClasses}
                     >
                       {renderStatusBadge(option)}
                       {state?._id === option._id && <Check className='h-3 w-3 text-gray-500' />}
@@ -224,17 +254,14 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 <Button
                   variant='outline'
                   size='sm'
-                  className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
+                  className={buttonTriggerClasses}
                   disabled={isLoadingTeamMembers}
                 >
                   <Users className='h-3 w-3 mr-1 text-gray-400' />
                   {lead ? lead.name : 'Lead'}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align='start'
-                className='w-[180px] rounded-md border border-gray-200 shadow-sm p-1'
-              >
+              <DropdownMenuContent align='start' className={dropdownContentClasses}>
                 {teamMembers.map((user) => {
                   return (
                     <DropdownMenuItem
@@ -242,7 +269,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                       onClick={() => {
                         return setLead(user);
                       }}
-                      className='flex items-center justify-between text-xs py-1.5 rounded-sm text-gray-600 focus:text-gray-700 focus:bg-gray-50'
+                      className={dropdownItemClasses}
                     >
                       <div className='flex items-center'>
                         <Avatar className='h-4 w-4 mr-1.5'>
@@ -262,19 +289,12 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
             {/* Client Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
-                >
+                <Button variant='outline' size='sm' className={buttonTriggerClasses}>
                   <Users className='h-3 w-3 mr-1 text-gray-400' />
                   Client {client.length > 0 && `(${client.length})`}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align='start'
-                className='w-[180px] rounded-md border border-gray-200 shadow-sm p-1'
-              >
+              <DropdownMenuContent align='start' className={dropdownContentClasses}>
                 {clients?.map((user) => {
                   return (
                     <DropdownMenuItem
@@ -294,7 +314,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                           setClient([...client, user]);
                         }
                       }}
-                      className='flex items-center justify-between text-xs py-1.5 rounded-sm text-gray-600 focus:text-gray-700 focus:bg-gray-50'
+                      className={dropdownItemClasses}
                     >
                       <div className='flex items-center'>
                         <Avatar className='h-4 w-4 mr-1.5'>
@@ -325,30 +345,9 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
             {/* Start Date Popover */}
             <Popover>
               <PopoverTrigger asChild>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
-                >
-                  <Calendar className='h-3 w-3 mr-1 text-gray-400' />
-                  {startDate ? startDate.toLocaleDateString() : 'Start date'}
-                  {startDate && (
-                    <div
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setStartDate(null);
-                      }}
-                      className='!-m-1 !p-0 inline-flex'
-                    >
-                      <X className='h-2 w-2 text-gray-400' />
-                    </div>
-                  )}
-                </Button>
+                {renderDateButton(startDate, setStartDate, 'Start date')}
               </PopoverTrigger>
-              <PopoverContent
-                className='w-auto p-0 border border-gray-200 shadow-sm rounded-md min-w-[290px]'
-                align='start'
-              >
+              <PopoverContent className={popoverContentClasses} align='start'>
                 <CalendarComponent
                   mode='single'
                   selected={startDate}
@@ -362,30 +361,9 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
             {/* Target Date Popover */}
             <Popover>
               <PopoverTrigger asChild>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
-                >
-                  <Calendar className='h-3 w-3 mr-1 text-gray-400' />
-                  {targetDate ? targetDate.toLocaleDateString() : 'Target date'}
-                  {targetDate && (
-                    <div
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTargetDate(null);
-                      }}
-                      className='!-m-1 !p-0 inline-flex'
-                    >
-                      <X className='h-2 w-2 text-gray-400' />
-                    </div>
-                  )}
-                </Button>
+                {renderDateButton(targetDate, setTargetDate, 'Target date')}
               </PopoverTrigger>
-              <PopoverContent
-                className='w-auto p-0 border border-gray-200 shadow-sm rounded-md min-w-[290px]'
-                align='start'
-              >
+              <PopoverContent className={popoverContentClasses} align='start'>
                 <CalendarComponent
                   mode='single'
                   selected={targetDate}
@@ -400,7 +378,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
             <Button
               variant='outline'
               size='sm'
-              className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
+              className={buttonTriggerClasses}
               onClick={handleAttachmentClick}
             >
               <Paperclip className='h-3 w-3 mr-1 text-gray-400' />
