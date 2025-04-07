@@ -67,13 +67,15 @@ export default function CreateClientDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-[425px]'>
-        <DialogHeader>
-          <DialogTitle>Create New Client</DialogTitle>
+      <DialogContent className='sm:max-w-[400px] p-6 border border-gray-100 shadow-sm rounded-lg'>
+        <DialogHeader className='mb-4'>
+          <DialogTitle className='text-base font-medium text-gray-800'>New Client</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className='space-y-4'>
+        <form onSubmit={handleSubmit} className='space-y-5'>
           <div className='space-y-2'>
-            <Label htmlFor='name'>Name</Label>
+            <Label htmlFor='name' className='text-xs font-normal text-gray-600'>
+              Name
+            </Label>
             <Input
               id='name'
               value={name}
@@ -81,10 +83,14 @@ export default function CreateClientDialog({
                 return setName(e.target.value);
               }}
               required
+              className='h-9 text-sm'
+              placeholder='Enter client name'
             />
           </div>
           <div className='space-y-2'>
-            <Label htmlFor='email'>Email</Label>
+            <Label htmlFor='email' className='text-xs font-normal text-gray-600'>
+              Email
+            </Label>
             <Input
               id='email'
               type='email'
@@ -93,39 +99,54 @@ export default function CreateClientDialog({
                 return setEmail(e.target.value);
               }}
               required
+              className='h-9 text-sm'
+              placeholder='client@example.com'
             />
           </div>
           <div className='space-y-2'>
-            <Label htmlFor='phone'>Phone</Label>
+            <Label htmlFor='phone' className='text-xs font-normal text-gray-600'>
+              Phone
+            </Label>
             <Input
               id='phone'
               value={phone}
               onChange={(e) => {
                 return setPhone(e.target.value);
               }}
+              className='h-9 text-sm'
+              placeholder='Optional'
             />
           </div>
           <div className='space-y-2'>
-            <Label htmlFor='company'>Company</Label>
+            <Label htmlFor='company' className='text-xs font-normal text-gray-600'>
+              Company
+            </Label>
             <Input
               id='company'
               value={company}
               onChange={(e) => {
                 return setCompany(e.target.value);
               }}
+              className='h-9 text-sm'
+              placeholder='Optional'
             />
           </div>
-          <DialogFooter>
+          <DialogFooter className='mt-6 gap-2'>
             <Button
               type='button'
               variant='outline'
               onClick={() => {
                 return onOpenChange(false);
               }}
+              className='h-8 text-xs font-normal text-gray-600 border-gray-200'
             >
               Cancel
             </Button>
-            <Button type='submit' disabled={isSubmitting}>
+            <Button
+              type='submit'
+              disabled={isSubmitting}
+              className='h-8 text-xs font-normal bg-gray-900 hover:bg-gray-800 transition-colors'
+            >
               {isSubmitting ? 'Creating...' : 'Create Client'}
             </Button>
           </DialogFooter>
