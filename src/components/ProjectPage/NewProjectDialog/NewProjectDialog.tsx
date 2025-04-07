@@ -20,7 +20,7 @@ import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { newRequest } from '@/utils/newRequest';
 import { useQueryClient } from '@tanstack/react-query';
 import { Calendar, Check, Circle, Paperclip, Plus, Users, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import CreateClientDialog from './CreateClientDialog';
 
@@ -63,6 +63,20 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
   const [isCreateClientDialogOpen, setIsCreateClientDialogOpen] = useState(false);
 
   const { participants } = useParticipation();
+
+  // State for filtered items
+  const [filteredStages, setFilteredStages] = useState<Stage[]>([]);
+  const [filteredStatuses, setFilteredStatuses] = useState<Status[]>([]);
+  const [filteredTeamMembers, setFilteredTeamMembers] = useState<TeamMember[]>([]);
+  const [filteredParticipants, setFilteredParticipants] = useState<TeamMember[]>([]);
+
+  // Initialize filtered items when data loads
+  useEffect(() => {
+    if (stages) setFilteredStages(stages);
+    if (statuses) setFilteredStatuses(statuses);
+    if (teamMembers) setFilteredTeamMembers(teamMembers);
+    if (participants) setFilteredParticipants(participants);
+  }, [stages, statuses, teamMembers, participants]);
 
   // Function to render status badge with appropriate color
   const renderStatusBadge = (status: Status | null) => {
@@ -107,7 +121,8 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
   };
 
   // Common dropdown menu content styles
-  const dropdownContentClasses = 'w-[180px] rounded-md border border-gray-200 shadow-sm p-1';
+  const dropdownContentClasses =
+    'w-[180px] rounded-md border border-gray-200 shadow-sm p-0 max-h-[300px] flex flex-col';
 
   // Common dropdown menu item styles
   const dropdownItemClasses =
@@ -237,26 +252,41 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align='start' className={dropdownContentClasses}>
-                {stages.map((option) => {
-                  return (
-                    <DropdownMenuItem
-                      key={option._id}
-                      onClick={() => {
-                        return setStage(option);
-                      }}
-                      className={dropdownItemClasses}
-                    >
-                      <div className='flex items-center'>
-                        <div
-                          className='h-2 w-2 rounded-full mr-2'
-                          style={{ backgroundColor: option.color }}
-                        ></div>
-                        {option.name}
-                      </div>
-                      {stage?._id === option._id && <Check className='h-3 w-3 text-gray-500' />}
-                    </DropdownMenuItem>
-                  );
-                })}
+                <div className='p-1 border-b border-gray-100'>
+                  <Input
+                    className='h-7 text-xs'
+                    placeholder='Search stages...'
+                    onChange={(e) => {
+                      const searchTerm = e.target.value.toLowerCase();
+                      const filtered = stages.filter((stage) => {
+                        return stage.name.toLowerCase().includes(searchTerm);
+                      });
+                      setFilteredStages(filtered);
+                    }}
+                  />
+                </div>
+                <div className='overflow-y-auto'>
+                  {filteredStages.map((option) => {
+                    return (
+                      <DropdownMenuItem
+                        key={option._id}
+                        onClick={() => {
+                          return setStage(option);
+                        }}
+                        className={dropdownItemClasses}
+                      >
+                        <div className='flex items-center'>
+                          <div
+                            className='h-2 w-2 rounded-full mr-2'
+                            style={{ backgroundColor: option.color }}
+                          ></div>
+                          {option.name}
+                        </div>
+                        {stage?._id === option._id && <Check className='h-3 w-3 text-gray-500' />}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -273,20 +303,35 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align='start' className={dropdownContentClasses}>
-                {statuses.map((option) => {
-                  return (
-                    <DropdownMenuItem
-                      key={option._id}
-                      onClick={() => {
-                        return setState(option);
-                      }}
-                      className={dropdownItemClasses}
-                    >
-                      {renderStatusBadge(option)}
-                      {state?._id === option._id && <Check className='h-3 w-3 text-gray-500' />}
-                    </DropdownMenuItem>
-                  );
-                })}
+                <div className='p-1 border-b border-gray-100'>
+                  <Input
+                    className='h-7 text-xs'
+                    placeholder='Search statuses...'
+                    onChange={(e) => {
+                      const searchTerm = e.target.value.toLowerCase();
+                      const filtered = statuses.filter((status) => {
+                        return status.name.toLowerCase().includes(searchTerm);
+                      });
+                      setFilteredStatuses(filtered);
+                    }}
+                  />
+                </div>
+                <div className='overflow-y-auto'>
+                  {filteredStatuses.map((option) => {
+                    return (
+                      <DropdownMenuItem
+                        key={option._id}
+                        onClick={() => {
+                          return setState(option);
+                        }}
+                        className={dropdownItemClasses}
+                      >
+                        {renderStatusBadge(option)}
+                        {state?._id === option._id && <Check className='h-3 w-3 text-gray-500' />}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -304,27 +349,42 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align='start' className={dropdownContentClasses}>
-                {teamMembers.map((user) => {
-                  return (
-                    <DropdownMenuItem
-                      key={user._id}
-                      onClick={() => {
-                        return setManager(user);
-                      }}
-                      className={dropdownItemClasses}
-                    >
-                      <div className='flex items-center'>
-                        <Avatar className='h-4 w-4 mr-1.5'>
-                          <AvatarFallback className='text-[10px]'>
-                            {user.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span>{user.name}</span>
-                      </div>
-                      {manager?._id === user._id && <Check className='h-3 w-3 text-gray-500' />}
-                    </DropdownMenuItem>
-                  );
-                })}
+                <div className='p-1 border-b border-gray-100'>
+                  <Input
+                    className='h-7 text-xs'
+                    placeholder='Search managers...'
+                    onChange={(e) => {
+                      const searchTerm = e.target.value.toLowerCase();
+                      const filtered = teamMembers.filter((member) => {
+                        return member.name.toLowerCase().includes(searchTerm);
+                      });
+                      setFilteredTeamMembers(filtered);
+                    }}
+                  />
+                </div>
+                <div className='overflow-y-auto'>
+                  {filteredTeamMembers.map((user) => {
+                    return (
+                      <DropdownMenuItem
+                        key={user._id}
+                        onClick={() => {
+                          return setManager(user);
+                        }}
+                        className={dropdownItemClasses}
+                      >
+                        <div className='flex items-center'>
+                          <Avatar className='h-4 w-4 mr-1.5'>
+                            <AvatarFallback className='text-[10px]'>
+                              {user.name.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>{user.name}</span>
+                        </div>
+                        {manager?._id === user._id && <Check className='h-3 w-3 text-gray-500' />}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -337,41 +397,57 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align='start' className={dropdownContentClasses}>
-                {participants?.map((user) => {
-                  return (
-                    <DropdownMenuItem
-                      key={user._id}
-                      onClick={() => {
-                        if (
-                          client.some((m) => {
-                            return m._id === user._id;
-                          })
-                        ) {
-                          setClient(
-                            client.filter((m) => {
-                              return m._id !== user._id;
-                            }),
-                          );
-                        } else {
-                          setClient([...client, user]);
-                        }
-                      }}
-                      className={dropdownItemClasses}
-                    >
-                      <div className='flex items-center'>
-                        <Avatar className='h-4 w-4 mr-1.5'>
-                          <AvatarFallback className='text-[10px]'>
-                            {user.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span>{user.name}</span>
-                      </div>
-                      {client.some((m) => {
-                        return m._id === user._id;
-                      }) && <Check className='h-3 w-3 text-gray-500' />}
-                    </DropdownMenuItem>
-                  );
-                })}
+                <div className='p-1 border-b border-gray-100'>
+                  <Input
+                    className='h-7 text-xs'
+                    placeholder='Search clients...'
+                    onChange={(e) => {
+                      const searchTerm = e.target.value.toLowerCase();
+                      const filtered =
+                        participants?.filter((participant) => {
+                          return participant.name.toLowerCase().includes(searchTerm);
+                        }) || [];
+                      setFilteredParticipants(filtered);
+                    }}
+                  />
+                </div>
+                <div className='overflow-y-auto'>
+                  {filteredParticipants.map((user) => {
+                    return (
+                      <DropdownMenuItem
+                        key={user._id}
+                        onClick={() => {
+                          if (
+                            client.some((m) => {
+                              return m._id === user._id;
+                            })
+                          ) {
+                            setClient(
+                              client.filter((m) => {
+                                return m._id !== user._id;
+                              }),
+                            );
+                          } else {
+                            setClient([...client, user]);
+                          }
+                        }}
+                        className={dropdownItemClasses}
+                      >
+                        <div className='flex items-center'>
+                          <Avatar className='h-4 w-4 mr-1.5'>
+                            <AvatarFallback className='text-[10px]'>
+                              {user.name.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>{user.name}</span>
+                        </div>
+                        {client.some((m) => {
+                          return m._id === user._id;
+                        }) && <Check className='h-3 w-3 text-gray-500' />}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </div>
                 <DropdownMenuItem
                   onClick={() => {
                     return setIsCreateClientDialogOpen(true);
