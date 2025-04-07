@@ -148,7 +148,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
         name: title,
         stage: stage?._id,
         status: state?._id,
-        lead: manager?._id,
+        manager: manager?._id,
         client: client.map((c) => {
           return c._id;
         }),
