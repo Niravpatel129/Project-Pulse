@@ -426,7 +426,7 @@ export default function ProjectHeader() {
                 <div>
                   <h1 className='text-xl sm:text-2xl font-medium capitalize'>{project?.name}</h1>
                   <p className='text-xs sm:text-sm text-muted-foreground'>
-                    {project?.projectType} - Created on{' '}
+                    Created on{' '}
                     {project?.createdAt &&
                       new Date(project.createdAt).toLocaleDateString('en-US', {
                         year: 'numeric',
