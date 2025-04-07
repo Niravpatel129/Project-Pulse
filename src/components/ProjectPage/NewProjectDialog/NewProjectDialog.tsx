@@ -43,6 +43,7 @@ interface TeamMember {
 
 export default function NewProjectDialog({ open = true, onClose = () => {} }) {
   const [title, setTitle] = useState('dfgdfgdfg');
+  const [description, setDescription] = useState('');
   const [attachments, setAttachments] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
@@ -148,6 +149,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
         name: title,
         stage: stage?._id,
         status: state?._id,
+        description: description,
         manager: manager?._id,
         client: client.map((c) => {
           return c._id;
@@ -468,6 +470,10 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
             className='flex-1 border-none resize-none focus-visible:ring-0 focus-visible:ring-offset-0 font-medium text-black placeholder:text-gray-300 leading-relaxed shadow-none mt-4 text-lg whitespace-pre-line'
             placeholder='Write a description, a project brief, or collect ideas...'
             style={{ lineHeight: '2.5' }}
+            value={description}
+            onChange={(e) => {
+              return setDescription(e.target.value);
+            }}
           />
         </div>
 

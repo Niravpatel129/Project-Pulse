@@ -32,6 +32,7 @@ interface Project {
       name: string;
     };
   }>;
+  clients?: Array<string>;
 }
 
 // Fallback mock data in case API fails
@@ -167,6 +168,7 @@ export function useProjects() {
             projectType: project.projectType || '',
             manager: project.manager || { name: '' },
             participants: project.participants || [],
+            clients: project.clients || [],
           };
         });
       } catch (err) {
@@ -217,6 +219,7 @@ export function useProjects() {
       return direction === 'asc' ? comparison : -comparison;
     });
   }, [filteredProjects, sort, direction]);
+  console.log('🚀 sortedProjects:', sortedProjects);
 
   // Memoize items by stage
   const getItemsByStage = useCallback(

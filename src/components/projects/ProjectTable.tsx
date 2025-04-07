@@ -41,8 +41,8 @@ export function ProjectTable({
         <TableHeader>
           <TableRow className='bg-muted/30'>
             <TableHead className='py-3'>Project Name</TableHead>
-            <TableHead>Client</TableHead>
-            <TableHead>Lead</TableHead>
+            <TableHead>Clients</TableHead>
+            <TableHead>Manager</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Stage</TableHead>
             <TableHead className='text-right'>Actions</TableHead>
@@ -69,12 +69,13 @@ export function ProjectTable({
                   {project.clients && project.clients.length > 0
                     ? project.clients
                         .map((client) => {
-                          return client?.name;
+                          return client?.user?.name || '-';
                         })
+                        .filter(Boolean)
                         .join(', ')
                     : '-'}
                 </TableCell>
-                <TableCell>{project.leadSource || '-'}</TableCell>
+                <TableCell>{project.manager?.name || '-'}</TableCell>
                 <TableCell>
                   <div
                     className='status-dropdown'
