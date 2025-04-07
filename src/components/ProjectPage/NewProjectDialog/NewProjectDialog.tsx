@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
-import { Calendar, Check, ChevronDown, Circle, Paperclip, Users, X } from 'lucide-react';
+import { Calendar, Check, Circle, Paperclip, Users, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 export default function NewProjectDialog({ open = true, onClose = () => {} }) {
@@ -41,7 +41,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
 
   const handleFileChange = (e) => {
     if (e.target.files.length > 0) {
-      const newAttachments = Array.from(e.target.files).map((file) => {
+      const newAttachments = Array.from(e.target.files).map((file: any) => {
         return {
           name: file.name,
           size: file.size,
@@ -103,11 +103,10 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 <Button
                   variant='outline'
                   size='sm'
-                  className='h-7 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50'
+                  className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
                 >
-                  <Circle className='h-3 w-3 mr-1.5 text-gray-400' />
+                  <Circle className='h-3 w-3 mr-1 text-gray-400' />
                   {status}
-                  <ChevronDown className='h-3 w-3 ml-1.5 text-gray-400' />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -137,11 +136,10 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 <Button
                   variant='outline'
                   size='sm'
-                  className='h-7 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50'
+                  className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
                 >
-                  <span className='text-xs mr-1.5 text-gray-400'>···</span>
+                  <span className='text-xs mr-1 text-gray-400'>···</span>
                   {priority}
-                  <ChevronDown className='h-3 w-3 ml-1.5 text-gray-400' />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -171,11 +169,10 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 <Button
                   variant='outline'
                   size='sm'
-                  className='h-7 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50'
+                  className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
                 >
-                  <Users className='h-3 w-3 mr-1.5 text-gray-400' />
+                  <Users className='h-3 w-3 mr-1 text-gray-400' />
                   {lead ? lead.name : 'Lead'}
-                  <ChevronDown className='h-3 w-3 ml-1.5 text-gray-400' />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -212,11 +209,10 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 <Button
                   variant='outline'
                   size='sm'
-                  className='h-7 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50'
+                  className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
                 >
-                  <Users className='h-3 w-3 mr-1.5 text-gray-400' />
+                  <Users className='h-3 w-3 mr-1 text-gray-400' />
                   Client {client.length > 0 && `(${client.length})`}
-                  <ChevronDown className='h-3 w-3 ml-1.5 text-gray-400' />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -267,9 +263,9 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 <Button
                   variant='outline'
                   size='sm'
-                  className='h-7 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50'
+                  className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
                 >
-                  <Calendar className='h-3 w-3 mr-1.5 text-gray-400' />
+                  <Calendar className='h-3 w-3 mr-1 text-gray-400' />
                   {startDate ? startDate.toLocaleDateString() : 'Start date'}
                   {startDate && (
                     <div
@@ -304,9 +300,9 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 <Button
                   variant='outline'
                   size='sm'
-                  className='h-7 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50'
+                  className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
                 >
-                  <Calendar className='h-3 w-3 mr-1.5 text-gray-400' />
+                  <Calendar className='h-3 w-3 mr-1 text-gray-400' />
                   {targetDate ? targetDate.toLocaleDateString() : 'Target date'}
                   {targetDate && (
                     <div
@@ -339,10 +335,10 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
             <Button
               variant='outline'
               size='sm'
-              className='h-7 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50'
+              className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
               onClick={handleAttachmentClick}
             >
-              <Paperclip className='h-3 w-3 mr-1.5 text-gray-400' />
+              <Paperclip className='h-3 w-3 mr-1 text-gray-400' />
               Attachments {attachments.length > 0 && `(${attachments.length})`}
               <input
                 type='file'
