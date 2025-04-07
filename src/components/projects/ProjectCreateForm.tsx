@@ -393,6 +393,7 @@ export function ProjectCreateForm() {
         onClick={() => {
           return setIsOpen(true);
         }}
+        variant='outline'
       >
         New Project
       </Button>
