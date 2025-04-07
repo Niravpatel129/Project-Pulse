@@ -205,8 +205,13 @@ const ProjectFormStep = ({ control, errors }: { control: any; errors: any }) => 
   );
 };
 
-export function ProjectCreateForm() {
-  const [isOpen, setIsOpen] = useState(false);
+export function ProjectCreateForm({
+  setIsNewProjectDialogOpen,
+  isNewProjectDialogOpen,
+}: {
+  setIsNewProjectDialogOpen: (isOpen: boolean) => void;
+  isNewProjectDialogOpen: boolean;
+}) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
@@ -370,7 +375,7 @@ export function ProjectCreateForm() {
       await queryClient.invalidateQueries({ queryKey: ['projects'] });
 
       toast.success('Project created successfully');
-      setIsOpen(false);
+      setIsNewProjectDialogOpen(false);
 
       // Reset forms
       resetProjectForm();
@@ -391,16 +396,16 @@ export function ProjectCreateForm() {
     <div>
       <Button
         onClick={() => {
-          return setIsOpen(true);
+          return setIsNewProjectDialogOpen(true);
         }}
         variant='outline'
       >
         New Project
       </Button>
       <NewProjectDialog
-        open={isOpen}
+        open={isNewProjectDialogOpen}
         onClose={() => {
-          return setIsOpen(false);
+          return setIsNewProjectDialogOpen(false);
         }}
       />
     </div>

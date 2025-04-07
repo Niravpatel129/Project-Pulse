@@ -1,13 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Plus, Search } from 'lucide-react';
-import Link from 'next/link';
 
 interface ProjectEmptyStateProps {
   search: string;
   status: string;
+  handleNewProject: () => void;
 }
 
-export function ProjectEmptyState({ search, status }: ProjectEmptyStateProps) {
+export function ProjectEmptyState({ search, status, handleNewProject }: ProjectEmptyStateProps) {
   return (
     <div className='text-center py-16 space-y-3'>
       <div className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mb-3'>
@@ -21,10 +21,13 @@ export function ProjectEmptyState({ search, status }: ProjectEmptyStateProps) {
       </p>
       {!search && status === 'all' && (
         <Button asChild>
-          <Link href='/projects/new'>
+          <div
+            onClick={handleNewProject}
+            className='flex items-center cursor-pointer hover:bg-accent/50 transition-all duration-200'
+          >
             <Plus className='mr-2 h-4 w-4' />
             New Project
-          </Link>
+          </div>
         </Button>
       )}
     </div>

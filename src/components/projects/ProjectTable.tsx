@@ -98,7 +98,8 @@ export function ProjectTable({
                       backgroundColor: `${project.stage?.color}15`,
                       color: project.stage?.color,
                       borderColor: `${project.stage?.color}30`,
-                      border: '0.1px solid',
+                      borderWidth: '0.1px',
+                      borderStyle: 'solid',
                     }}
                   >
                     <div
@@ -111,7 +112,14 @@ export function ProjectTable({
                 <TableCell className='text-right'>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant='ghost' size='icon' className='h-8 w-8'>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='h-8 w-8'
+                        onClick={(e) => {
+                          return e.stopPropagation();
+                        }}
+                      >
                         <MoreHorizontal className='h-4 w-4' />
                       </Button>
                     </DropdownMenuTrigger>
@@ -120,7 +128,8 @@ export function ProjectTable({
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         className='text-red-600'
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           return onDelete(project._id);
                         }}
                       >

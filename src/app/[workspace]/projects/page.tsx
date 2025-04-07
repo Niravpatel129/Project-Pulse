@@ -32,6 +32,7 @@ import {
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 // Droppable column component for kanban view
 function DroppableColumn({ stage, children }: { stage: string; children: React.ReactNode }) {
@@ -134,6 +135,7 @@ function KanbanSkeleton() {
 }
 
 export default function ProjectsPage() {
+  const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false);
   const router = useRouter();
   const {
     projects,
@@ -229,7 +231,10 @@ export default function ProjectsPage() {
             </p>
           </div>
           <div className='flex space-x-3'>
-            <ProjectCreateForm />
+            <ProjectCreateForm
+              setIsNewProjectDialogOpen={setIsNewProjectDialogOpen}
+              isNewProjectDialogOpen={isNewProjectDialogOpen}
+            />
           </div>
         </div>
 
@@ -432,7 +437,13 @@ export default function ProjectsPage() {
         )}
 
         {!isLoading && !error && sortedProjects.length === 0 && (
-          <ProjectEmptyState search={search} status={status} />
+          <ProjectEmptyState
+            search={search}
+            status={status}
+            handleNewProject={() => {
+              setIsNewProjectDialogOpen(true);
+            }}
+          />
         )}
       </div>
     </BlockWrapper>
