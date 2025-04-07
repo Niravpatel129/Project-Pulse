@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,21 +41,9 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className='w-[95vw] sm:max-w-[900px] p-0 gap-0 overflow-hidden border border-gray-200 shadow-sm rounded-lg min-h-[90vh]'>
-        {/* <DialogHeader className='p-3 border-none border-gray-100 flex flex-row items-center justify-between max-h-[50px]'>
-          <div className='flex items-center space-x-2'>
-            <VisuallyHidden>
-              <DialogTitle>New Project</DialogTitle>
-            </VisuallyHidden>
-            <div className='flex items-center text-xs text-gray-500 font-medium'>
-              <div className='flex items-center justify-center h-5 rounded text-gray-500 mr-2 w-full'>
-                <span className='text-xs'>New Project</span>
-              </div>
-            </div>
-          </div>
-          <Button variant='ghost' size='icon' className='h-6 w-6 rounded-full' onClick={onClose}>
-            <X className='h-4 w-4 text-gray-500' />
-          </Button>
-        </DialogHeader> */}
+        <VisuallyHidden>
+          <DialogTitle>New Project</DialogTitle>
+        </VisuallyHidden>
 
         <div className='p-5 space-y-5 max-h-[30px] relative'>
           <div className='flex items-center'>
