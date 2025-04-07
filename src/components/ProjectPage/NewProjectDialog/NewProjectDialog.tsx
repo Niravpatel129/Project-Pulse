@@ -23,16 +23,16 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
   const fileInputRef = useRef(null);
 
   // State for dropdown selections
-  const [status, setStatus] = useState('Backlog');
-  const [priority, setPriority] = useState('No priority');
+  const [stage, setStage] = useState('Discovery');
+  const [state, setState] = useState('Active');
   const [lead, setLead] = useState(null);
   const [client, setClient] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [targetDate, setTargetDate] = useState(null);
 
   // Sample data for dropdowns
-  const statusOptions = ['Backlog', 'Todo', 'In Progress', 'Done', 'Canceled'];
-  const priorityOptions = ['No priority', 'Urgent', 'High', 'Medium', 'Low'];
+  const stageOptions = ['Discovery', 'Planning', 'Execution', 'Delivery', 'Completed'];
+  const stateOptions = ['Active', 'On Hold', 'Canceled', 'Completed'];
   const userOptions = [
     { id: 1, name: 'John Doe', email: 'john@example.com' },
     { id: 2, name: 'Jane Smith', email: 'jane@example.com' },
@@ -97,7 +97,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
           </div>
 
           <div className='flex flex-wrap gap-1.5 pt-2'>
-            {/* Status Dropdown */}
+            {/* Pipeline Stage Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -106,31 +106,31 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                   className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
                 >
                   <Circle className='h-3 w-3 mr-1 text-gray-400' />
-                  {status}
+                  {stage}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align='start'
                 className='w-[180px] rounded-md border border-gray-200 shadow-sm p-1'
               >
-                {statusOptions.map((option) => {
+                {stageOptions.map((option) => {
                   return (
                     <DropdownMenuItem
                       key={option}
                       onClick={() => {
-                        return setStatus(option);
+                        return setStage(option);
                       }}
                       className='flex items-center justify-between text-xs py-1.5 rounded-sm text-gray-600 focus:text-gray-700 focus:bg-gray-50'
                     >
                       {option}
-                      {status === option && <Check className='h-3 w-3 text-gray-500' />}
+                      {stage === option && <Check className='h-3 w-3 text-gray-500' />}
                     </DropdownMenuItem>
                   );
                 })}
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Priority Dropdown */}
+            {/* Project State Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -139,24 +139,24 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                   className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
                 >
                   <span className='text-xs mr-1 text-gray-400'>···</span>
-                  {priority}
+                  {state}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align='start'
                 className='w-[180px] rounded-md border border-gray-200 shadow-sm p-1'
               >
-                {priorityOptions.map((option) => {
+                {stateOptions.map((option) => {
                   return (
                     <DropdownMenuItem
                       key={option}
                       onClick={() => {
-                        return setPriority(option);
+                        return setState(option);
                       }}
                       className='flex items-center justify-between text-xs py-1.5 rounded-sm text-gray-600 focus:text-gray-700 focus:bg-gray-50'
                     >
                       {option}
-                      {priority === option && <Check className='h-3 w-3 text-gray-500' />}
+                      {state === option && <Check className='h-3 w-3 text-gray-500' />}
                     </DropdownMenuItem>
                   );
                 })}
