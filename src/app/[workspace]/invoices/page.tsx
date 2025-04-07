@@ -20,8 +20,8 @@ export default function InvoiceInterface() {
       </div>
 
       {/* Main Content */}
-      <div className='container mx-auto px-4 py-8'>
-        <div className='flex justify-center items-center'>
+      <div className='container mx-auto px-4 py-8 relative'>
+        <div className='flex justify-center items-center relative z-10'>
           <div className='flex flex-col justify-center p-6 max-w-2xl text-center mt-[50px]'>
             <div className='relative mb-4'>
               <div className='absolute inset-0 bg-gradient-to-r from-green-100 to-blue-100 rounded-full opacity-30 blur-md'></div>
