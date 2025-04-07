@@ -17,8 +17,9 @@ import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useClients } from '@/hooks/useClients';
 import { usePipelineSettings } from '@/hooks/usePipelineSettings';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
-import { Calendar, Check, Circle, Paperclip, Users, X } from 'lucide-react';
+import { Calendar, Check, Circle, Paperclip, Plus, Users, X } from 'lucide-react';
 import { useRef, useState } from 'react';
+import CreateClientDialog from './CreateClientDialog';
 
 interface Stage {
   _id: string;
@@ -53,6 +54,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
   const [client, setClient] = useState<TeamMember[]>([]);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [targetDate, setTargetDate] = useState<Date | null>(null);
+  const [isCreateClientDialogOpen, setIsCreateClientDialogOpen] = useState(false);
 
   const { clients } = useClients();
 
@@ -92,6 +94,10 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
 
   const handleAttachmentClick = () => {
     fileInputRef.current.click();
+  };
+
+  const handleClientCreated = (newClient: any) => {
+    setClient([...client, newClient]);
   };
 
   return (
@@ -269,6 +275,15 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 align='start'
                 className='w-[180px] rounded-md border border-gray-200 shadow-sm p-1'
               >
+                <DropdownMenuItem
+                  onClick={() => {
+                    return setIsCreateClientDialogOpen(true);
+                  }}
+                  className='flex items-center text-xs py-1.5 rounded-sm text-gray-600 focus:text-gray-700 focus:bg-gray-50'
+                >
+                  <Plus className='h-3 w-3 mr-1.5 text-gray-400' />
+                  Create New Client
+                </DropdownMenuItem>
                 {clients?.map((user) => {
                   return (
                     <DropdownMenuItem
@@ -454,6 +469,12 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
           </div>
         </DialogFooter>
       </DialogContent>
+
+      <CreateClientDialog
+        open={isCreateClientDialogOpen}
+        onOpenChange={setIsCreateClientDialogOpen}
+        onClientCreated={handleClientCreated}
+      />
     </Dialog>
   );
 }
