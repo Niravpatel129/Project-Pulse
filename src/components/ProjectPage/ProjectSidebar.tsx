@@ -29,6 +29,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { useProject, type Project } from '@/contexts/ProjectContext';
+import { usePipelineSettings } from '@/hooks/usePipelineSettings';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Lock, Mail, Share2 } from 'lucide-react';
@@ -58,6 +59,20 @@ interface SharingSettings {
   allowedEmails: string[];
 }
 
+interface Stage {
+  _id: string;
+  name: string;
+  order: number;
+  color: string;
+}
+
+interface Status {
+  _id: string;
+  name: string;
+  order: number;
+  color: string;
+}
+
 interface ApiError {
   response?: {
     data?: {
@@ -73,6 +88,7 @@ export function ProjectSidebar({
   onUpdateProject: (data: Partial<Project>) => Promise<void>;
 }) {
   const { project } = useProject();
+  const { stages, statuses } = usePipelineSettings();
   const [isClientPortalDialogOpen, setIsClientPortalDialogOpen] = useState(false);
   const [isSendEmailDialogOpen, setIsSendEmailDialogOpen] = useState(false);
   const [sharingSettings, setSharingSettings] = useState<SharingSettings>({
@@ -181,7 +197,17 @@ export function ProjectSidebar({
   });
 
   const handleStageChange = async (value: string) => {
-    await onUpdateProject?.({ stage: value });
+    try {
+      await onUpdateProject({ stage: value });
+    } catch (error) {
+      const apiError = error as ApiError;
+      toast({
+        title: 'Error',
+        description:
+          apiError.response?.data?.message || apiError.message || 'Failed to update stage',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleLeadSourceChange = async (value: string) => {
@@ -192,8 +218,18 @@ export function ProjectSidebar({
     await onUpdateProject?.({ projectType: value });
   };
 
-  const handleProjectStatusChange = async (value: string) => {
-    await onUpdateProject?.({ status: value });
+  const handleStatusChange = async (value: string) => {
+    try {
+      await onUpdateProject({ status: value });
+    } catch (error) {
+      const apiError = error as ApiError;
+      toast({
+        title: 'Error',
+        description:
+          apiError.response?.data?.message || apiError.message || 'Failed to update status',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleSharingSettingsChange = async (
@@ -288,38 +324,48 @@ export function ProjectSidebar({
               <div className='space-y-4 pt-2 p-1'>
                 <div className='space-y-2'>
                   <label className='text-xs font-medium text-muted-foreground'>Stage</label>
-                  <Select
-                    value={project?.stage || 'Initial Contact'}
-                    onValueChange={handleStageChange}
-                  >
+                  <Select value={project?.stage || ''} onValueChange={handleStageChange}>
                     <SelectTrigger className='h-8 text-xs'>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className='text-xs'>
-                      <SelectItem value='Initial Contact'>Initial Contact</SelectItem>
-                      <SelectItem value='Proposal'>Proposal</SelectItem>
-                      <SelectItem value='Negotiation'>Negotiation</SelectItem>
-                      <SelectItem value='Closed Won'>Closed Won</SelectItem>
-                      <SelectItem value='Closed Lost'>Closed Lost</SelectItem>
+                      {stages.map((stage) => {
+                        return (
+                          <SelectItem key={stage._id} value={stage.name}>
+                            <div className='flex items-center'>
+                              <div
+                                className='h-2 w-2 rounded-full mr-2'
+                                style={{ backgroundColor: stage.color }}
+                              ></div>
+                              {stage.name}
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className='space-y-2'>
                   <label className='text-xs font-medium text-muted-foreground'>Status</label>
-                  <Select
-                    value={project?.status || 'planning'}
-                    onValueChange={handleProjectStatusChange}
-                  >
+                  <Select value={project?.status || ''} onValueChange={handleStatusChange}>
                     <SelectTrigger className='h-8 text-xs'>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className='text-xs'>
-                      <SelectItem value='planning'>Planning</SelectItem>
-                      <SelectItem value='in_progress'>In Progress</SelectItem>
-                      <SelectItem value='review'>Review</SelectItem>
-                      <SelectItem value='completed'>Completed</SelectItem>
-                      <SelectItem value='on_hold'>On Hold</SelectItem>
+                      {statuses.map((status) => {
+                        return (
+                          <SelectItem key={status._id} value={status.name}>
+                            <div className='flex items-center'>
+                              <div
+                                className='h-2 w-2 rounded-full mr-2'
+                                style={{ backgroundColor: status.color }}
+                              ></div>
+                              {status.name}
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
