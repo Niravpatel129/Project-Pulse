@@ -1,5 +1,7 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
-import { ArrowRight, LucidePiggyBank } from 'lucide-react';
+import { LucidePiggyBank } from 'lucide-react';
 import Link from 'next/link';
 
 export default function InvoiceInterface() {
@@ -41,20 +43,6 @@ export default function InvoiceInterface() {
                   Create an Invoice
                 </Button>
               </div>
-
-              <div className='flex justify-center'>
-                <Link href='#' className='inline-flex items-center text-green-500 font-medium'>
-                  Learn More
-                  <ArrowRight className='ml-2 h-4 w-4' />
-                </Link>
-              </div>
-            </div>
-
-            <div className='mt-8 text-center text-sm text-gray-500'>
-              Have questions?{' '}
-              <Link href='#' className='text-green-500'>
-                Contact Support
-              </Link>
             </div>
           </div>
         </div>
