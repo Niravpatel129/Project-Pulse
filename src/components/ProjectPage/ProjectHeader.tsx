@@ -522,17 +522,17 @@ export default function ProjectHeader() {
                     <ParticipantSkeleton />
                   </>
                 ) : (
-                  project?.clients?.map((client) => {
+                  project?.participants?.map((participant) => {
                     return (
-                      <DropdownMenu key={client.user._id}>
+                      <DropdownMenu key={participant._id}>
                         <DropdownMenuTrigger className='w-auto'>
                           <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg cursor-pointer hover:bg-gray-50'>
                             <Avatar className='h-8 w-8 border-2 border-transparent hover:border-gray-300 transition-colors bg-gray-200'>
-                              {client.user.avatar ? (
-                                <AvatarImage src={client.user.avatar} alt={client.user.name} />
+                              {participant.avatar ? (
+                                <AvatarImage src={participant.avatar} alt={participant.name} />
                               ) : (
                                 <AvatarFallback className='bg-gray-200 text-gray-800 font-medium'>
-                                  {client.user.name
+                                  {participant.name
                                     .split(' ')
                                     .map((n) => {
                                       return n.charAt(0).toUpperCase();
@@ -544,13 +544,13 @@ export default function ProjectHeader() {
                             <div className='hidden sm:block'>
                               <div className='flex items-center gap-1'>
                                 <p className='text-sm font-medium capitalize'>
-                                  {client.user.name.length > 15
-                                    ? `${client.user.name.substring(0, 15)}...`
-                                    : client.user.name}
+                                  {participant.name.length > 15
+                                    ? `${participant.name.substring(0, 15)}...`
+                                    : participant.name}
                                 </p>
                               </div>
                               <div className='flex items-center gap-1.5 mt-0.5'>
-                                {getRoleBadge('client')}
+                                {getRoleBadge(participant.role)}
                               </div>
                             </div>
                           </div>
@@ -559,16 +559,16 @@ export default function ProjectHeader() {
                           <DropdownMenuItem
                             className='cursor-pointer '
                             onClick={() => {
-                              if (client.user.email) {
-                                navigator.clipboard?.writeText(client.user.email);
+                              if (participant.email) {
+                                navigator.clipboard?.writeText(participant.email);
                                 toast.success('Email copied to clipboard');
                               }
                             }}
                           >
                             <Mail className='h-4 w-4 mr-2' />
-                            {client.user.email && client.user.email.length > 30
-                              ? `${client.user.email.substring(0, 30)}...`
-                              : client.user.email || 'No email'}
+                            {participant.email && participant.email.length > 30
+                              ? `${participant.email.substring(0, 30)}...`
+                              : participant.email || 'No email'}
                           </DropdownMenuItem>
                           <DropdownMenuLabel className='px-2 py-1.5 text-xs text-gray-500'>
                             <hr />
@@ -576,7 +576,7 @@ export default function ProjectHeader() {
                           <DropdownMenuItem
                             className='cursor-pointer text-red-500'
                             onClick={() => {
-                              return handleRemoveClient(client._id);
+                              return handleRemoveParticipant(participant._id);
                             }}
                           >
                             Remove from project
@@ -894,22 +894,22 @@ export default function ProjectHeader() {
                       </div>
                     </div>
                   </div>
-                ) : project?.clients?.length > 0 ? (
+                ) : project?.participants?.length > 0 ? (
                   <div>
                     <h3 className='text-sm font-medium text-muted-foreground mb-2'>Participants</h3>
-                    {project.clients.map((client) => {
+                    {project.participants.map((participant) => {
                       return (
                         <div
-                          key={client.user._id}
+                          key={participant._id}
                           className='flex items-center justify-between p-2 rounded-lg hover:bg-gray-50'
                         >
                           <div className='flex items-center gap-3'>
                             <Avatar className='h-8 w-8 bg-gray-200'>
-                              {client.user.avatar ? (
-                                <AvatarImage src={client.user.avatar} alt={client.user.name} />
+                              {participant.avatar ? (
+                                <AvatarImage src={participant.avatar} alt={participant.name} />
                               ) : (
                                 <AvatarFallback className='bg-gray-200 text-gray-800 font-medium'>
-                                  {client.user.name
+                                  {participant.name
                                     .split(' ')
                                     .map((n) => {
                                       return n.charAt(0).toUpperCase();
@@ -919,13 +919,15 @@ export default function ProjectHeader() {
                               )}
                             </Avatar>
                             <div>
-                              <p className='text-sm font-medium'>{client.user.name}</p>
+                              <p className='text-sm font-medium'>{participant.name}</p>
                               <p className='text-xs text-muted-foreground'>
-                                {client.user.email || 'No email'}
+                                {participant.email || 'No email'}
                               </p>
                             </div>
                           </div>
-                          <div className='flex items-center gap-2'>{getRoleBadge('client')}</div>
+                          <div className='flex items-center gap-2'>
+                            {getRoleBadge(participant.role)}
+                          </div>
                         </div>
                       );
                     })}

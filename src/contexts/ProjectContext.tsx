@@ -9,15 +9,7 @@ export interface Project {
   name: string;
   projectType: string;
   createdAt: string;
-  clients: Array<{
-    _id: string;
-    user: {
-      _id: string;
-      name: string;
-      email?: string;
-      avatar?: string;
-    };
-  }>;
+  participants: Participant[];
   projectStatus: string;
   tasks: Array<{
     _id: string | number;
