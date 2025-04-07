@@ -14,46 +14,54 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { usePipelineSettings } from '@/hooks/usePipelineSettings';
 import { Calendar, Check, Circle, Paperclip, Users, X } from 'lucide-react';
 import { useRef, useState } from 'react';
+
+interface Stage {
+  _id: string;
+  name: string;
+  color: string;
+}
+
+interface Status {
+  _id: string;
+  name: string;
+  color: string;
+}
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
 
 export default function NewProjectDialog({ open = true, onClose = () => {} }) {
   const [title, setTitle] = useState('dfgdfgdfg');
   const [attachments, setAttachments] = useState([]);
   const fileInputRef = useRef(null);
 
+  // Get pipeline settings from API
+  const { stages, statuses, isLoading } = usePipelineSettings();
+
   // State for dropdown selections
-  const [stage, setStage] = useState('Discovery');
-  const [state, setState] = useState({ name: 'Active', color: '#22c55e' });
-  const [lead, setLead] = useState(null);
-  const [client, setClient] = useState([]);
-  const [startDate, setStartDate] = useState(null);
-  const [targetDate, setTargetDate] = useState(null);
+  const [stage, setStage] = useState<Stage | null>(stages[0] || null);
+  const [state, setState] = useState<Status | null>(statuses[0] || null);
+  const [lead, setLead] = useState<User | null>(null);
+  const [client, setClient] = useState<User[]>([]);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [targetDate, setTargetDate] = useState<Date | null>(null);
 
-  // Sample data for dropdowns
-  const stageOptions = [
-    { name: 'Discovery', color: '#3b82f6' },
-    { name: 'Planning', color: '#8b5cf6' },
-    { name: 'Execution', color: '#f59e0b' },
-    { name: 'Delivery', color: '#10b981' },
-    { name: 'Completed', color: '#6b7280' },
-  ];
-
-  const stateOptions = [
-    { name: 'Active', color: '#22c55e' },
-    { name: 'On Hold', color: '#f59e0b' },
-    { name: 'Canceled', color: '#ef4444' },
-    { name: 'Completed', color: '#6b7280' },
-  ];
-
-  const userOptions = [
+  // Sample data for users (this should also come from API in the future)
+  const userOptions: User[] = [
     { id: 1, name: 'John Doe', email: 'john@example.com' },
     { id: 2, name: 'Jane Smith', email: 'jane@example.com' },
     { id: 3, name: 'Bob Johnson', email: 'bob@example.com' },
   ];
 
   // Function to render status badge with appropriate color
-  const renderStatusBadge = (status) => {
+  const renderStatusBadge = (status: Status | null) => {
+    if (!status?.name) return null;
     return (
       <div
         className='flex items-center text-xs font-medium'
@@ -72,7 +80,8 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
   };
 
   // Function to render stage with color
-  const renderStage = (stage) => {
+  const renderStage = (stage: Stage | null) => {
+    if (!stage?.name) return null;
     return (
       <div className='flex items-center'>
         <div className='h-2 w-2 rounded-full mr-2' style={{ backgroundColor: stage.color }}></div>
@@ -146,29 +155,27 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                   variant='outline'
                   size='sm'
                   className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
+                  disabled={isLoading}
                 >
                   <Circle
                     className='h-3 w-3 mr-1'
                     style={{
-                      color:
-                        stageOptions.find((s) => {
-                          return s.name === stage;
-                        })?.color || '#3b82f6',
+                      color: stage?.color || '#3b82f6',
                     }}
                   />
-                  {stage}
+                  {stage?.name || 'Select stage'}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align='start'
                 className='w-[180px] rounded-md border border-gray-200 shadow-sm p-1'
               >
-                {stageOptions.map((option) => {
+                {stages.map((option) => {
                   return (
                     <DropdownMenuItem
-                      key={option.name}
+                      key={option._id}
                       onClick={() => {
-                        return setStage(option.name);
+                        return setStage(option);
                       }}
                       className='flex items-center justify-between text-xs py-1.5 rounded-sm text-gray-600 focus:text-gray-700 focus:bg-gray-50'
                     >
@@ -179,7 +186,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                         ></div>
                         {option.name}
                       </div>
-                      {stage === option.name && <Check className='h-3 w-3 text-gray-500' />}
+                      {stage?._id === option._id && <Check className='h-3 w-3 text-gray-500' />}
                     </DropdownMenuItem>
                   );
                 })}
@@ -193,25 +200,26 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                   variant='outline'
                   size='sm'
                   className='h-6 rounded text-xs font-normal border-gray-200 text-gray-600 hover:bg-gray-50 px-2'
+                  disabled={isLoading}
                 >
-                  {renderStatusBadge(state)}
+                  {renderStatusBadge(state) || 'Select status'}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align='start'
                 className='w-[180px] rounded-md border border-gray-200 shadow-sm p-1'
               >
-                {stateOptions.map((option) => {
+                {statuses.map((option) => {
                   return (
                     <DropdownMenuItem
-                      key={option.name}
+                      key={option._id}
                       onClick={() => {
                         return setState(option);
                       }}
                       className='flex items-center justify-between text-xs py-1.5 rounded-sm text-gray-600 focus:text-gray-700 focus:bg-gray-50'
                     >
                       {renderStatusBadge(option)}
-                      {state.name === option.name && <Check className='h-3 w-3 text-gray-500' />}
+                      {state?._id === option._id && <Check className='h-3 w-3 text-gray-500' />}
                     </DropdownMenuItem>
                   );
                 })}
