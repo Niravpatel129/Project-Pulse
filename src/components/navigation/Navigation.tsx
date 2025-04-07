@@ -100,6 +100,11 @@ export function Navigation() {
       label: 'Projects',
       icon: <CiViewBoard className='h-5 w-5' />,
     },
+    {
+      href: '/invoices',
+      label: 'Invoices',
+      icon: <CiViewTimeline className='h-5 w-5' />,
+    },
     // {
     //   href: '/production',
     //   label: 'Production',
@@ -124,11 +129,6 @@ export function Navigation() {
       href: '/payments',
       label: 'Payments',
       icon: <CiCreditCard1 className='h-5 w-5' />,
-    },
-    {
-      href: '/analytics',
-      label: 'Analytics',
-      icon: <CiViewTimeline className='h-5 w-5' />,
     },
   ];
 

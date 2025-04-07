@@ -31,8 +31,9 @@ export default function DashboardLayout({
   const isApprovalsPage = pathname.includes('/approvals');
   const showNavigation =
     !isAuthPage && !isPortalPage && (loading || isAuthenticated) && !isApprovalsPage;
+  const isInvoicePage = pathname.includes('/invoices');
 
-  const isFullPage = isApprovalsPage;
+  const isFullPage = isApprovalsPage || isInvoicePage;
 
   return (
     <div className='flex min-h-screen flex-col'>
