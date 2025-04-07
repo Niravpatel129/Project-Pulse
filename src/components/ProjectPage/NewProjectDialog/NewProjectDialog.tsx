@@ -22,6 +22,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Calendar, Check, Circle, Paperclip, Plus, Users, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 import CreateClientDialog from './CreateClientDialog';
 
 interface Stage {
@@ -46,6 +47,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
   const [description, setDescription] = useState('');
   const [attachments, setAttachments] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFileManagerOpen, setIsFileManagerOpen] = useState(false);
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
 
@@ -166,16 +168,17 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
         status: state?._id,
         description: description,
         manager: manager?._id,
-        client: client.map((c) => {
+        participants: client.map((c) => {
           return c._id;
         }),
         startDate: startDate?.toISOString(),
         targetDate: targetDate?.toISOString(),
-        attachments: attachments.map((att) => {
+        attachments: attachments.map((file) => {
           return {
-            name: att.name,
-            size: att.size,
-            type: att.type,
+            fileId: file._id,
+            name: file.originalName,
+            size: file.size,
+            type: file.contentType,
           };
         }),
       };
@@ -191,6 +194,11 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleAddFileToProject = (file) => {
+    setAttachments([...attachments, file]);
+    setIsFileManagerOpen(false);
   };
 
   return (
@@ -497,17 +505,12 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
               variant='outline'
               size='sm'
               className={buttonTriggerClasses}
-              onClick={handleAttachmentClick}
+              onClick={() => {
+                return setIsFileManagerOpen(true);
+              }}
             >
               <Paperclip className='h-3 w-3 mr-1 text-gray-400' />
               Attachments {attachments.length > 0 && `(${attachments.length})`}
-              <input
-                type='file'
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                className='hidden'
-                multiple
-              />
             </Button>
           </div>
 
@@ -521,7 +524,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                     className='flex items-center text-xs text-gray-600 bg-gray-50 p-1.5 rounded'
                   >
                     <Paperclip className='h-3 w-3 mr-1.5 text-gray-400' />
-                    <span className='flex-1 truncate'>{file.name}</span>
+                    <span className='flex-1 truncate'>{file.originalName}</span>
                     <Button
                       variant='ghost'
                       size='sm'
@@ -578,6 +581,14 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
         open={isCreateClientDialogOpen}
         onOpenChange={setIsCreateClientDialogOpen}
         onClientCreated={handleClientCreated}
+      />
+
+      <FileUploadManagerModal
+        isOpen={isFileManagerOpen}
+        onClose={() => {
+          return setIsFileManagerOpen(false);
+        }}
+        handleAddFileToProject={handleAddFileToProject}
       />
     </Dialog>
   );
