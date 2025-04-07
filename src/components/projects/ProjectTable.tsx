@@ -74,18 +74,14 @@ export function ProjectTable({
         <TableBody>
           {projects.map((project) => {
             return (
-              <TableRow key={project._id}>
-                <TableCell>
-                  <Button
-                    variant='link'
-                    className='p-0 h-auto font-normal'
-                    onClick={() => {
-                      return onProjectClick(project._id);
-                    }}
-                  >
-                    {project.name}
-                  </Button>
-                </TableCell>
+              <TableRow
+                key={project._id}
+                onClick={() => {
+                  return onProjectClick(project._id);
+                }}
+                className='cursor-pointer'
+              >
+                <TableCell>{project.name}</TableCell>
                 <TableCell>
                   <div className='flex items-center gap-2'>
                     <Avatar className='h-6 w-6'>
