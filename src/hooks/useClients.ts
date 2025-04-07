@@ -1,56 +1,68 @@
-import { Client } from '@/api/models';
-import { PaginatedResponse } from '@/api/types';
 import { newRequest } from '@/utils/newRequest';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+
+// Define client interface based on the new API response structure
+interface Client {
+  _id: string;
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  workspace: string;
+  isActive: boolean;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 // Fallback mock data in case API fails
 const MOCK_CLIENTS: Client[] = [
   {
     _id: '1',
-    name: 'John Doe',
-    email: 'john@example.com',
-    phone: '+1 234-567-8900',
-    company: 'Acme Corporation',
-    status: 'active',
+    user: {
+      _id: 'user1',
+      name: 'John Doe',
+      email: 'john@example.com',
+    },
+    workspace: 'workspace1',
+    isActive: true,
     notes: 'Key decision maker for all major projects',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    createdBy: 'system',
   },
 ];
 
 export function useClients() {
-  const queryClient = useQueryClient();
   const [activeItem, setActiveItem] = useState<Client | null>(null);
 
-  // Fetch clients with React Query
   const {
-    data: clientsData = { items: [], total: 0, page: 1, limit: 10, totalPages: 1 },
+    data: clientsResponse,
     isLoading,
     error,
-  } = useQuery<PaginatedResponse<Client>>({
+  } = useQuery({
     queryKey: ['clients'],
     queryFn: async () => {
       try {
-        return await newRequest.get('/workspaces/clients');
+        const response = await newRequest.get('/workspaces/clients');
+        return response.data;
       } catch (err) {
         console.error('Failed to fetch clients:', err);
         return {
-          items: MOCK_CLIENTS,
-          total: MOCK_CLIENTS.length,
-          page: 1,
-          limit: 10,
-          totalPages: 1,
+          data: MOCK_CLIENTS,
+          message: 'Using mock data',
+          success: true,
         };
       }
     },
   });
 
+  const clients = clientsResponse?.data || [];
+
   return {
-    // State
-    clients: clientsData.items,
-    total: clientsData.total,
+    clients,
+    total: clients.length,
     isLoading,
     error,
     activeItem,

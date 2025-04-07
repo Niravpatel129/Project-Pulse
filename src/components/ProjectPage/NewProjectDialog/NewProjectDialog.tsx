@@ -275,15 +275,6 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                 align='start'
                 className='w-[180px] rounded-md border border-gray-200 shadow-sm p-1'
               >
-                <DropdownMenuItem
-                  onClick={() => {
-                    return setIsCreateClientDialogOpen(true);
-                  }}
-                  className='flex items-center text-xs py-1.5 rounded-sm text-gray-600 focus:text-gray-700 focus:bg-gray-50'
-                >
-                  <Plus className='h-3 w-3 mr-1.5 text-gray-400' />
-                  Create New Client
-                </DropdownMenuItem>
                 {clients?.map((user) => {
                   return (
                     <DropdownMenuItem
@@ -308,10 +299,10 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                       <div className='flex items-center'>
                         <Avatar className='h-4 w-4 mr-1.5'>
                           <AvatarFallback className='text-[10px]'>
-                            {user.name.charAt(0)}
+                            {user.user.name.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
-                        <span>{user.name}</span>
+                        <span>{user.user.name}</span>
                       </div>
                       {client.some((m) => {
                         return m._id === user._id;
@@ -319,6 +310,15 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                     </DropdownMenuItem>
                   );
                 })}
+                <DropdownMenuItem
+                  onClick={() => {
+                    return setIsCreateClientDialogOpen(true);
+                  }}
+                  className='flex items-center text-xs py-1.5 rounded-sm text-gray-600 focus:text-gray-700 focus:bg-gray-50 '
+                >
+                  <Plus className='h-3 w-3 mr-1.5 text-gray-400' />
+                  Create New Client
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
