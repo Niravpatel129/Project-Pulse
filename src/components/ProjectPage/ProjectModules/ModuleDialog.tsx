@@ -251,12 +251,12 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
 
   // Get approvers from project participants
   const approvers =
-    project?.participants.map((p) => {
+    project?.clients.map((c) => {
       return {
-        id: p._id,
-        name: p.name,
-        email: p.email!,
-        avatar: p.avatar,
+        id: c.user._id,
+        name: c.user.name,
+        email: c.user.email!,
+        avatar: c.user.avatar,
         isProjectParticipant: true,
       };
     }) || [];

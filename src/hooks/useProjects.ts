@@ -37,11 +37,6 @@ interface Project {
     status: string;
     dueDate: string;
   }>;
-  participants?: Array<{
-    participant?: {
-      name: string;
-    };
-  }>;
   clients?: Array<string>;
 }
 
@@ -177,7 +172,6 @@ export function useProjects() {
             status: project.status || { name: '', order: 0, color: '', _id: '' },
             projectType: project.projectType || '',
             manager: project.manager || { name: '' },
-            participants: project.participants || [],
             clients: project.clients || [],
           };
         });

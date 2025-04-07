@@ -361,7 +361,11 @@ export const EmailComponent = ({ initialSubject = '', initialMessage = '' }) => 
                 onRemoveRecipient={(recipient) => {
                   return removeRecipient(recipient, 'to');
                 }}
-                participants={project?.participants || []}
+                participants={
+                  project?.clients.map((c) => {
+                    return c.user;
+                  }) || []
+                }
               />
 
               {showCc && (
@@ -377,7 +381,11 @@ export const EmailComponent = ({ initialSubject = '', initialMessage = '' }) => 
                   onRemoveRecipient={(recipient) => {
                     return removeRecipient(recipient, 'cc');
                   }}
-                  participants={project?.participants || []}
+                  participants={
+                    project?.clients.map((c) => {
+                      return c.user;
+                    }) || []
+                  }
                   showRemoveButton
                   onToggleVisibility={() => {
                     return setShowCc(false);
@@ -395,7 +403,11 @@ export const EmailComponent = ({ initialSubject = '', initialMessage = '' }) => 
                   onRemoveRecipient={(recipient) => {
                     return removeRecipient(recipient, 'bcc');
                   }}
-                  participants={project?.participants || []}
+                  participants={
+                    project?.clients.map((c) => {
+                      return c.user;
+                    }) || []
+                  }
                   showRemoveButton
                   onToggleVisibility={() => {
                     return setShowBcc(false);

@@ -77,12 +77,9 @@ export function ProjectSidebar({
       customMessage: '',
       expirationDays: '30',
       allowedEmails:
-        project?.participants
-          ?.filter((p) => {
-            return p.role === 'client';
-          })
-          .map((p) => {
-            return p.email;
+        project?.clients
+          .map((c) => {
+            return c.user.email;
           })
           .filter((email): email is string => {
             return email !== undefined;
@@ -90,9 +87,9 @@ export function ProjectSidebar({
     };
   });
   const [clientEmail, setClientEmail] = useState(
-    project?.participants?.find((p) => {
-      return p.role === 'client';
-    })?.email || '',
+    project?.clients?.find((c) => {
+      return c.user.email;
+    })?.user.email || '',
   );
 
   const [portalURL, setPortalURL] = useState('');
@@ -280,7 +277,11 @@ export function ProjectSidebar({
         </p>
         <Dialog open={isClientPortalDialogOpen} onOpenChange={setIsClientPortalDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant='link' className='mt-2 h-auto p-0 text-[#5DD3D1] hover:text-[#4CC3C1]'>
+            <Button
+              variant='link'
+              className='mt-2 h-auto p-0 text-[#5DD3D1] hover:text-[#4CC3C1]'
+              disabled
+            >
               <Share2 className='mr-2 h-4 w-4' />
               Send client portal link
             </Button>

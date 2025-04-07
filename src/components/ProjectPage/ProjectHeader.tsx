@@ -116,6 +116,27 @@ export default function ProjectHeader() {
     enabled: !!project?._id,
   });
 
+  const removeClientMutation = useMutation({
+    mutationFn: async (clientId: string) => {
+      const response = await newRequest.delete(`/projects/${project?._id}/clients/${clientId}`);
+      return response.data.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['project', project?._id] });
+      queryClient.invalidateQueries({ queryKey: ['clients', project?._id] });
+    },
+    onError: (error) => {
+      console.error('Error removing client:', error);
+    },
+  });
+  const handleRemoveClient = (clientId: string) => {
+    toast.promise(removeClientMutation.mutateAsync(clientId), {
+      loading: 'Removing client...',
+      success: 'Client removed successfully',
+      error: 'Failed to remove client',
+    });
+  };
+
   // Handle sticky header on scroll
   useEffect(() => {
     const handleScroll = () => {
@@ -501,17 +522,17 @@ export default function ProjectHeader() {
                     <ParticipantSkeleton />
                   </>
                 ) : (
-                  project?.participants?.map((participant) => {
+                  project?.clients?.map((client) => {
                     return (
-                      <DropdownMenu key={participant._id}>
+                      <DropdownMenu key={client.user._id}>
                         <DropdownMenuTrigger className='w-auto'>
                           <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg cursor-pointer hover:bg-gray-50'>
                             <Avatar className='h-8 w-8 border-2 border-transparent hover:border-gray-300 transition-colors bg-gray-200'>
-                              {participant.avatar ? (
-                                <AvatarImage src={participant.avatar} alt={participant.name} />
+                              {client.user.avatar ? (
+                                <AvatarImage src={client.user.avatar} alt={client.user.name} />
                               ) : (
                                 <AvatarFallback className='bg-gray-200 text-gray-800 font-medium'>
-                                  {participant.name
+                                  {client.user.name
                                     .split(' ')
                                     .map((n) => {
                                       return n.charAt(0).toUpperCase();
@@ -523,13 +544,13 @@ export default function ProjectHeader() {
                             <div className='hidden sm:block'>
                               <div className='flex items-center gap-1'>
                                 <p className='text-sm font-medium capitalize'>
-                                  {participant.name.length > 15
-                                    ? `${participant.name.substring(0, 15)}...`
-                                    : participant.name}
+                                  {client.user.name.length > 15
+                                    ? `${client.user.name.substring(0, 15)}...`
+                                    : client.user.name}
                                 </p>
                               </div>
                               <div className='flex items-center gap-1.5 mt-0.5'>
-                                {getRoleBadge(participant.role)}
+                                {getRoleBadge('client')}
                               </div>
                             </div>
                           </div>
@@ -538,16 +559,16 @@ export default function ProjectHeader() {
                           <DropdownMenuItem
                             className='cursor-pointer '
                             onClick={() => {
-                              if (participant.email) {
-                                navigator.clipboard?.writeText(participant.email);
+                              if (client.user.email) {
+                                navigator.clipboard?.writeText(client.user.email);
                                 toast.success('Email copied to clipboard');
                               }
                             }}
                           >
                             <Mail className='h-4 w-4 mr-2' />
-                            {participant.email && participant.email.length > 30
-                              ? `${participant.email.substring(0, 30)}...`
-                              : participant.email || 'No email'}
+                            {client.user.email && client.user.email.length > 30
+                              ? `${client.user.email.substring(0, 30)}...`
+                              : client.user.email || 'No email'}
                           </DropdownMenuItem>
                           <DropdownMenuLabel className='px-2 py-1.5 text-xs text-gray-500'>
                             <hr />
@@ -555,7 +576,7 @@ export default function ProjectHeader() {
                           <DropdownMenuItem
                             className='cursor-pointer text-red-500'
                             onClick={() => {
-                              return handleRemoveParticipant(participant._id);
+                              return handleRemoveClient(client._id);
                             }}
                           >
                             Remove from project
@@ -873,22 +894,22 @@ export default function ProjectHeader() {
                       </div>
                     </div>
                   </div>
-                ) : project?.participants?.length > 0 ? (
+                ) : project?.clients?.length > 0 ? (
                   <div>
                     <h3 className='text-sm font-medium text-muted-foreground mb-2'>Participants</h3>
-                    {project.participants.map((participant) => {
+                    {project.clients.map((client) => {
                       return (
                         <div
-                          key={participant._id}
+                          key={client.user._id}
                           className='flex items-center justify-between p-2 rounded-lg hover:bg-gray-50'
                         >
                           <div className='flex items-center gap-3'>
                             <Avatar className='h-8 w-8 bg-gray-200'>
-                              {participant.avatar ? (
-                                <AvatarImage src={participant.avatar} alt={participant.name} />
+                              {client.user.avatar ? (
+                                <AvatarImage src={client.user.avatar} alt={client.user.name} />
                               ) : (
                                 <AvatarFallback className='bg-gray-200 text-gray-800 font-medium'>
-                                  {participant.name
+                                  {client.user.name
                                     .split(' ')
                                     .map((n) => {
                                       return n.charAt(0).toUpperCase();
@@ -898,22 +919,13 @@ export default function ProjectHeader() {
                               )}
                             </Avatar>
                             <div>
-                              <p className='text-sm font-medium'>{participant.name}</p>
+                              <p className='text-sm font-medium'>{client.user.name}</p>
                               <p className='text-xs text-muted-foreground'>
-                                {participant.email || 'No email'}
+                                {client.user.email || 'No email'}
                               </p>
                             </div>
                           </div>
-                          <div className='flex items-center gap-2'>
-                            {getRoleBadge(participant.role)}
-                            {participant.status && (
-                              <span>
-                                {getStatusBadge(
-                                  participant.status as 'active' | 'pending' | 'inactive',
-                                )}
-                              </span>
-                            )}
-                          </div>
+                          <div className='flex items-center gap-2'>{getRoleBadge('client')}</div>
                         </div>
                       );
                     })}
@@ -1002,13 +1014,6 @@ export default function ProjectHeader() {
                     })}
                   </div>
                 ) : null}
-                {!project?.participants?.length &&
-                  !collaborators?.length &&
-                  !isLoadingCollaborators && (
-                    <div className='text-center text-muted-foreground py-4'>
-                      No project members found
-                    </div>
-                  )}
               </div>
             </div>
           </DialogContent>

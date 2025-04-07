@@ -55,28 +55,28 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
 
   // Initialize selectedTeamMembers with project participants
   useEffect(() => {
-    if (project?.participants) {
+    if (project?.clients) {
       setSelectedTeamMembers(
-        project.participants.map((p) => {
-          return p._id;
+        project.clients.map((c) => {
+          return c.user._id;
         }),
       );
     }
-  }, [project?.participants]);
+  }, [project?.clients]);
 
   // Update filtered participants when search query or project participants change
   useEffect(() => {
-    if (!project?.participants) return;
+    if (!project?.clients) return;
 
     const searchLower = searchQuery.toLowerCase();
-    const filtered = project.participants
-      .map((p) => {
+    const filtered = project.clients
+      .map((c) => {
         return {
-          _id: p._id,
-          name: p.name,
-          email: p.email || '',
-          role: p.role,
-          avatar: p.avatar,
+          _id: c.user._id,
+          name: c.user.name,
+          email: c.user.email || '',
+          role: 'client',
+          avatar: c.user.avatar,
           availableTimes: [],
         };
       })
@@ -87,7 +87,7 @@ export function useCreateMeeting({ selectedDate }: UseCreateMeetingProps) {
         );
       });
     setFilteredParticipants(filtered);
-  }, [searchQuery, project?.participants]);
+  }, [searchQuery, project?.clients]);
 
   // Initialize meetingTypeDetails when meetingType changes
   useEffect(() => {

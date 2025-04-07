@@ -2,7 +2,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { Checkbox } from '@/components/ui/checkbox';
 import { GoogleCalendarTimePicker } from '@/components/ui/google-calendar-time-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -316,8 +315,8 @@ export default function CreateMeetingDialog({
                     {selectedTeamMembers.length > 0 ? (
                       <div className='flex flex-wrap gap-1.5 p-2 border rounded-md bg-muted/30 transition-all duration-300 animate-in fade-in-0'>
                         {selectedTeamMembers.map((participantId) => {
-                          const participant = project?.participants.find((p) => {
-                            return p._id === participantId;
+                          const participant = project?.clients.find((c) => {
+                            return c.user._id === participantId;
                           });
                           if (!participant) {
                             return (
@@ -347,9 +346,9 @@ export default function CreateMeetingDialog({
                               className='flex items-center gap-1 px-2 py-0.5 text-xs transition-all duration-300 hover:bg-muted/50 animate-in slide-in-from-left-2'
                             >
                               <Avatar className='h-4 w-4 transition-transform duration-300 hover:scale-110'>
-                                <AvatarImage src={participant.avatar} />
+                                <AvatarImage src={participant.user.avatar} />
                                 <AvatarFallback>
-                                  {participant.name
+                                  {participant.user.name
                                     .split(' ')
                                     .map((n) => {
                                       return n[0];
@@ -357,7 +356,7 @@ export default function CreateMeetingDialog({
                                     .join('')}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className='font-medium'>{participant.name}</span>
+                              <span className='font-medium'>{participant.user.name}</span>
                               <div
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -612,11 +611,6 @@ export default function CreateMeetingDialog({
               {errors.selectedEndTime && (
                 <p className='text-sm text-destructive'>{errors.selectedEndTime}</p>
               )}
-            </div>
-
-            <div className='flex items-center space-x-2'>
-              <Checkbox id='all-day' checked={isAllDay} onCheckedChange={handleAllDayChange} />
-              <Label htmlFor='all-day'>All day</Label>
             </div>
           </div>
         </div>

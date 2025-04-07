@@ -9,6 +9,15 @@ export interface Project {
   name: string;
   projectType: string;
   createdAt: string;
+  clients: Array<{
+    _id: string;
+    user: {
+      _id: string;
+      name: string;
+      email?: string;
+      avatar?: string;
+    };
+  }>;
   projectStatus: string;
   tasks: Array<{
     _id: string | number;
@@ -16,14 +25,6 @@ export interface Project {
     description: string;
     status: string;
     dueDate: string;
-  }>;
-  participants: Array<{
-    _id: string;
-    name: string;
-    role: string;
-    avatar?: string;
-    email?: string;
-    status?: string;
   }>;
   stage?: string;
   leadSource?: string;
