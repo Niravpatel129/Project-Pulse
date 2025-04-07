@@ -102,9 +102,13 @@ export function ProjectTable({
                       backgroundColor: `${project.stage?.color}15`,
                       color: project.stage?.color,
                       borderColor: `${project.stage?.color}30`,
-                      border: '1px solid',
+                      border: '0.1px solid',
                     }}
                   >
+                    <div
+                      className='h-1.5 w-1.5 rounded-full mr-1.5'
+                      style={{ backgroundColor: project.stage?.color }}
+                    ></div>
                     {project.stage?.name || '-'}
                   </span>
                 </TableCell>
