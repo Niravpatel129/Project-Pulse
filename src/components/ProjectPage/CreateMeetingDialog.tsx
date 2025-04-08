@@ -315,8 +315,8 @@ export default function CreateMeetingDialog({
                     {selectedTeamMembers.length > 0 ? (
                       <div className='flex flex-wrap gap-1.5 p-2 border rounded-md bg-muted/30 transition-all duration-300 animate-in fade-in-0'>
                         {selectedTeamMembers.map((participantId) => {
-                          const participant = project?.clients.find((c) => {
-                            return c.user._id === participantId;
+                          const participant = project?.participants.find((c) => {
+                            return c._id === participantId;
                           });
                           if (!participant) {
                             return (
@@ -346,9 +346,9 @@ export default function CreateMeetingDialog({
                               className='flex items-center gap-1 px-2 py-0.5 text-xs transition-all duration-300 hover:bg-muted/50 animate-in slide-in-from-left-2'
                             >
                               <Avatar className='h-4 w-4 transition-transform duration-300 hover:scale-110'>
-                                <AvatarImage src={participant.user.avatar} />
+                                <AvatarImage src={participant.avatar} />
                                 <AvatarFallback>
-                                  {participant.user.name
+                                  {participant.name
                                     .split(' ')
                                     .map((n) => {
                                       return n[0];
@@ -356,7 +356,7 @@ export default function CreateMeetingDialog({
                                     .join('')}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className='font-medium'>{participant.user.name}</span>
+                              <span className='font-medium'>{participant.name}</span>
                               <div
                                 onClick={(e) => {
                                   e.stopPropagation();
