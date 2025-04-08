@@ -22,6 +22,7 @@ import { FileText, MoreVertical, PaintRoller, Pencil, Plus, Trash2 } from 'lucid
 import Image from 'next/image';
 import { useState } from 'react';
 import { FcDocument } from 'react-icons/fc';
+import { LuFigma } from 'react-icons/lu';
 import { toast } from 'sonner';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 import NewModuleFromTemplateSheet from '../FileComponents/NewModuleFromTemplateSheet';
@@ -115,6 +116,20 @@ export default function NewProjectModules() {
             <CommandShortcut className='ml-auto '>
               <span className=''>⌘</span>
               <span className=''>N</span>
+            </CommandShortcut>
+          </>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            return setIsFileUploadModalOpen(true);
+          }}
+        >
+          <>
+            <LuFigma className='h-4 w-4' />
+            <div className='text-sm text-popover-foreground'>New Figma</div>
+            <CommandShortcut className='ml-auto '>
+              <span className=''>⌘</span>
+              <span className=''>F</span>
             </CommandShortcut>
           </>
         </DropdownMenuItem>
