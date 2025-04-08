@@ -232,6 +232,8 @@ export default function NewProjectModules() {
                 height={100}
               />
             </div>
+          ) : item.moduleType === 'figma' ? (
+            <LuFigma className='h-[50%] w-[50%] max-h-[60px] max-w-[60px] text-[#F24E1E]' />
           ) : (
             <FcDocument className='h-[50%] w-[50%] max-h-[60px] max-w-[60px]' />
           )}
