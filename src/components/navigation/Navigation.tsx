@@ -22,6 +22,7 @@ import {
   CiBoxes,
   CiBoxList,
   CiCalendar,
+  CiFolderOn,
   CiHome,
   CiLogout,
   CiMenuBurger,
@@ -97,6 +98,11 @@ export function Navigation() {
       href: '/projects',
       label: 'Projects',
       icon: <CiViewBoard className='h-5 w-5' />,
+    },
+    {
+      href: '/leads',
+      label: 'Leads',
+      icon: <CiFolderOn className='h-5 w-5' />,
     },
     {
       href: '/invoices',
