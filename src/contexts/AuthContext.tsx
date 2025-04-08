@@ -11,6 +11,7 @@ export interface User {
   email: string;
   name: string;
   role: 'admin' | 'user';
+  avatar: string;
 }
 
 // Define Auth context types
