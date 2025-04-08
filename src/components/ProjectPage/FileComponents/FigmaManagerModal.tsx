@@ -29,10 +29,12 @@ export default function FigmaManagerModal({
   isOpen,
   onClose,
   handleAddFigmaToProject,
+  isReplacing = false,
 }: {
   isOpen: boolean;
   onClose: () => void;
   handleAddFigmaToProject: (file: any) => void;
+  isReplacing?: boolean;
 }) {
   const {
     files,
@@ -54,13 +56,19 @@ export default function FigmaManagerModal({
         className='h-[90vh] max-h-[90vh] w-screen flex flex-col rounded-t-2xl'
       >
         <VisuallyHidden>
-          <SheetTitle>Figma Files</SheetTitle>
-          <SheetDescription>Manage your Figma files</SheetDescription>
+          <SheetTitle>{isReplacing ? 'Replace Figma File' : 'Figma Files'}</SheetTitle>
+          <SheetDescription>
+            {isReplacing
+              ? 'Select a new Figma file to replace the current one'
+              : 'Manage your Figma files'}
+          </SheetDescription>
         </VisuallyHidden>
         <div className='px-6 flex h-full'>
           <div className={`flex-1 flex flex-col ${showDetails ? 'pr-4' : ''}`}>
             <CardHeader className='flex flex-row items-center justify-between shrink-0 pb-0'>
-              <CardTitle className='text-lg font-bold'>Figma Files</CardTitle>
+              <CardTitle className='text-lg font-bold'>
+                {isReplacing ? 'Replace Figma File' : 'Figma Files'}
+              </CardTitle>
               <div className='flex gap-2'>
                 <Input
                   placeholder='Paste Figma URL'
@@ -90,7 +98,9 @@ export default function FigmaManagerModal({
             {files.length > 0 && (
               <>
                 <CardHeader className='pb-2 shrink-0'>
-                  <div className='text-sm font-medium'>Recent Figma Files</div>
+                  <div className='text-sm font-medium'>
+                    {isReplacing ? 'Select a File' : 'Recent Figma Files'}
+                  </div>
                 </CardHeader>
                 <CardContent className='shrink-0'>
                   {files.length > 0 ? (

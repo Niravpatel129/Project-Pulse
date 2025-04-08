@@ -47,6 +47,7 @@ import {
 import Image from 'next/image';
 import { useState } from 'react';
 import EditModuleFromTemplateSheet from '../FileComponents/EditModuleFromTemplateSheet';
+import FigmaManagerModal from '../FileComponents/FigmaManagerModal';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 import { ApproverDialog } from './ApproverDialog';
 
@@ -190,6 +191,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditSheet, setShowEditSheet] = useState(false);
   const [showFileUploadManager, setShowFileUploadManager] = useState(false);
+  const [showFigmaManager, setShowFigmaManager] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const {
     module,
@@ -203,6 +205,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
     updateStatusMutation,
     deleteModuleMutation,
     replaceFileMutation,
+    replaceFigmaMutation,
     restoreVersionMutation,
     getApprovalStatusColor,
     getApprovalStatusText,
@@ -251,12 +254,12 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
 
   // Get approvers from project participants
   const approvers =
-    project?.clients.map((c) => {
+    project?.participants.map((c) => {
       return {
-        id: c.user._id,
-        name: c.user.name,
-        email: c.user.email!,
-        avatar: c.user.avatar,
+        id: c._id,
+        name: c.name,
+        email: c.email!,
+        avatar: c.avatar,
         isProjectParticipant: true,
       };
     }) || [];
@@ -302,8 +305,25 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
       '/placeholder.svg',
   };
 
+  const figmaDetails = {
+    url: module?.content?.figmaUrl || '',
+    fileKey: module?.content?.figmaFileKey || '',
+  };
+
   const templateDetails = selectedVersionData?.contentSnapshot?.fields ||
     module?.templateDetails || { sections: [] };
+
+  const handleReplaceFigma = async (figmaFile: any) => {
+    try {
+      await replaceFigmaMutation.mutateAsync({
+        figmaUrl: figmaFile.figmaUrl,
+        figmaFileKey: figmaFile.figmaFileKey,
+      });
+      setShowFigmaManager(false);
+    } catch (error) {
+      console.error('Failed to replace Figma file:', error);
+    }
+  };
 
   return (
     <>
@@ -434,6 +454,19 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                   >
                     <RefreshCw className='h-4 w-4' />
                     Request New Approval
+                  </Button>
+                )}
+
+                {moduleType === 'figma' && (
+                  <Button
+                    variant='outline'
+                    className='w-full justify-start gap-2'
+                    onClick={() => {
+                      setShowFigmaManager(true);
+                    }}
+                  >
+                    <Upload className='h-4 w-4' />
+                    Replace Figma File
                   </Button>
                 )}
 
@@ -638,6 +671,50 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                               <ExternalLink className='h-4 w-4' />
                               {isFullscreen ? 'Exit Fullscreen' : 'View Fullscreen'}
                             </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Figma Preview */}
+                      {moduleType === 'figma' && (
+                        <div className='space-y-4 md:space-y-6'>
+                          <div className='bg-white rounded-lg border shadow-sm overflow-hidden'>
+                            {figmaDetails.url ? (
+                              <div className='flex flex-col'>
+                                <div className='relative w-full aspect-video'>
+                                  <iframe
+                                    src={`https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(
+                                      figmaDetails.url,
+                                    )}`}
+                                    className='w-full h-full'
+                                    allowFullScreen
+                                  />
+                                </div>
+                                <div className='p-4 space-y-2'>
+                                  <div className='flex items-center justify-between'>
+                                    <h3 className='text-lg font-medium'>{module?.name}</h3>
+                                    <Button
+                                      variant='outline'
+                                      size='sm'
+                                      className='gap-2'
+                                      onClick={() => {
+                                        return window.open(figmaDetails.url, '_blank');
+                                      }}
+                                    >
+                                      <ExternalLink className='h-4 w-4' />
+                                      Open in Figma
+                                    </Button>
+                                  </div>
+                                  <div className='text-sm text-muted-foreground'>
+                                    File Key: {figmaDetails.fileKey}
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className='flex items-center justify-center h-[200px] md:h-[300px] w-full'>
+                                <FileText className='h-16 md:h-24 w-16 md:w-24 text-muted-foreground' />
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
@@ -955,6 +1032,15 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
           replaceFileMutation.mutate(file._id);
           setShowFileUploadManager(false);
         }}
+      />
+
+      <FigmaManagerModal
+        isOpen={showFigmaManager}
+        onClose={() => {
+          return setShowFigmaManager(false);
+        }}
+        handleAddFigmaToProject={handleReplaceFigma}
+        isReplacing={true}
       />
 
       {/* Approver Dialog */}

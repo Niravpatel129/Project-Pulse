@@ -177,6 +177,21 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
     },
   });
 
+  // Replace Figma file mutation
+  const replaceFigmaMutation = useMutation({
+    mutationFn: async (figmaFile: { figmaUrl: string; figmaFileKey: string }) => {
+      const { data } = await newRequest.patch(`/project-modules/${moduleId}/figma`, figmaFile);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['module', moduleId] });
+      toast.success('Figma file replaced successfully');
+    },
+    onError: () => {
+      toast.error('Failed to replace Figma file');
+    },
+  });
+
   // Restore version mutation
   const restoreVersionMutation = useMutation({
     mutationFn: async (versionNumber: number) => {
@@ -285,6 +300,7 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
     updateStatusMutation,
     deleteModuleMutation,
     replaceFileMutation,
+    replaceFigmaMutation,
     restoreVersionMutation,
     getApprovalStatusColor,
     getApprovalStatusText,
