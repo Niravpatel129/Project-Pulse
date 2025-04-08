@@ -35,6 +35,7 @@ import {
   Edit,
   ExternalLink,
   Eye,
+  Figma,
   FileText,
   HelpCircle,
   MoreHorizontal,
@@ -226,22 +227,9 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
     setSelectedApprovers,
     manualEmail,
     setManualEmail,
-    message,
-    setMessage,
-    sendReminder,
-    setSendReminder,
-    allowComments,
-    setAllowComments,
-    isDropdownOpen,
-    setIsDropdownOpen,
-    searchTerm,
-    setSearchTerm,
-    dropdownRef,
     requestApprovalMutation,
     handleAddCustomEmail,
     handleRemoveApprover,
-    isValidEmail,
-    isPartialEmail,
   } = useApproverDialog({
     moduleId,
     moduleDetails: {
@@ -306,8 +294,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
   };
 
   const figmaDetails = {
-    url: module?.content?.figmaUrl || '',
-    fileKey: module?.content?.figmaFileKey || '',
+    url: selectedVersionData?.contentSnapshot?.figmaUrl || module?.content?.figmaUrl || '',
   };
 
   const templateDetails = selectedVersionData?.contentSnapshot?.fields ||
@@ -315,10 +302,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
 
   const handleReplaceFigma = async (figmaFile: any) => {
     try {
-      await replaceFigmaMutation.mutateAsync({
-        figmaUrl: figmaFile.figmaUrl,
-        figmaFileKey: figmaFile.figmaFileKey,
-      });
+      await replaceFigmaMutation.mutateAsync(figmaFile._id);
       setShowFigmaManager(false);
     } catch (error) {
       console.error('Failed to replace Figma file:', error);
@@ -688,6 +672,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                                     )}`}
                                     className='w-full h-full'
                                     allowFullScreen
+                                    title={`Figma Preview - ${module?.name}`}
                                   />
                                 </div>
                                 <div className='p-4 space-y-2'>
@@ -705,14 +690,19 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                                       Open in Figma
                                     </Button>
                                   </div>
-                                  <div className='text-sm text-muted-foreground'>
-                                    File Key: {figmaDetails.fileKey}
-                                  </div>
                                 </div>
                               </div>
                             ) : (
-                              <div className='flex items-center justify-center h-[200px] md:h-[300px] w-full'>
-                                <FileText className='h-16 md:h-24 w-16 md:w-24 text-muted-foreground' />
+                              <div className='flex flex-col items-center justify-center p-8 text-center'>
+                                <div className='bg-muted rounded-full p-4 mb-4'>
+                                  <Figma className='h-8 w-8 text-muted-foreground' />
+                                </div>
+                                <h3 className='text-lg font-medium mb-2'>
+                                  No Figma Preview Available
+                                </h3>
+                                <p className='text-sm text-muted-foreground'>
+                                  The Figma file URL is not available for this version.
+                                </p>
                               </div>
                             )}
                           </div>

@@ -68,7 +68,7 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
   // Update module status mutation
   const updateStatusMutation = useMutation({
     mutationFn: async (status: 'active' | 'archived') => {
-      const { data } = await newRequest.patch(`/project-modules/${moduleId}/status`, { status });
+      const { data } = await newRequest.put(`/project-modules/${moduleId}/status`, { status });
       return data;
     },
     onSuccess: () => {
@@ -179,8 +179,8 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
 
   // Replace Figma file mutation
   const replaceFigmaMutation = useMutation({
-    mutationFn: async (figmaFile: { figmaUrl: string; figmaFileKey: string }) => {
-      const { data } = await newRequest.patch(`/project-modules/${moduleId}/figma`, figmaFile);
+    mutationFn: async (fileId: string) => {
+      const { data } = await newRequest.patch(`/project-modules/${moduleId}/figma`, { fileId });
       return data;
     },
     onSuccess: () => {
