@@ -17,6 +17,7 @@ export interface Project {
   clients: string[];
   startDate?: Date;
   targetDate?: Date;
+  modulesCount?: number;
   attachments: string[];
   isActive: boolean;
   createdBy: string;

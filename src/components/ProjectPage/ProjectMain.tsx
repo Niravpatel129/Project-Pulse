@@ -7,8 +7,8 @@ import { useProject, type Project } from '@/contexts/ProjectContext';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CalendarDays, CreditCard, Home, Menu, PanelsTopLeft } from 'lucide-react';
 import Link from 'next/link';
-import { useParams, usePathname, useRouter } from 'next/navigation';
-import { Suspense, useEffect, useState, useTransition } from 'react';
+import { useParams, usePathname } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 import ProjectActivity from './ProjectActivity';
 import ProjectHome from './ProjectHome';
 import ProjectModules from './ProjectModules/ProjectModules';
@@ -25,8 +25,6 @@ export default function ProjectMain() {
   const { project, updateProject } = useProject();
   const params = useParams();
   const pathname = usePathname();
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const projectId = params.id as string;
 
   const getActiveTab = () => {
@@ -84,9 +82,9 @@ export default function ProjectMain() {
       >
         <Icon className='me-1.5 opacity-80' size={16} aria-hidden='true' />
         {label}
-        {badge && (
+        {project?.modulesCount && tab === 'modules' && (
           <Badge className='ms-1.5 min-w-5 px-1 bg-primary/10' variant='secondary'>
-            {badge}
+            {project.modulesCount}
           </Badge>
         )}
         {isActive && (
