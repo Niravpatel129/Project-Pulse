@@ -152,7 +152,7 @@ export function useDatabaseRecords(
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['table-records', params.tableId] });
+      // queryClient.invalidateQueries({ queryKey: ['table-records', params.tableId] });
     },
     onError: (error) => {
       toast.error('Failed to update cell');

@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -490,16 +491,115 @@ export default function TablePage() {
               moveColumn={moveColumn}
             />
             <TableBody>
-              {orderedRecords.map((record, index) => {
-                return (
-                  <DraggableRow
-                    key={`row-${record._id}`}
-                    record={record}
-                    index={index}
-                    moveRow={moveRow}
-                  >
-                    <TableCell className='border-r p-0 text-center '>
-                      <div className='flex h-full items-center justify-center'>
+              {records.length === 0
+                ? // Skeleton loading state when no records are available
+                  Array.from({ length: 5 }).map((_, index) => {
+                    return (
+                      <tr key={`skeleton-row-${index}`}>
+                        <TableCell className='border-r p-0 text-center'>
+                          <div className='flex h-full items-center justify-center'>
+                            <Skeleton className='h-4 w-4 rounded' />
+                          </div>
+                        </TableCell>
+                        {Array.from({ length: 4 }).map((_, colIndex) => {
+                          return (
+                            <TableCell key={`skeleton-cell-${index}-${colIndex}`}>
+                              <Skeleton className='h-5 w-full' />
+                            </TableCell>
+                          );
+                        })}
+                        <TableCell></TableCell>
+                      </tr>
+                    );
+                  })
+                : orderedRecords.map((record, index) => {
+                    return (
+                      <DraggableRow
+                        key={`row-${record._id}`}
+                        record={record}
+                        index={index}
+                        moveRow={moveRow}
+                      >
+                        <TableCell className='border-r p-0 text-center '>
+                          <div className='flex h-full items-center justify-center'>
+                            <Checkbox
+                              checked={record.values?.selected}
+                              onCheckedChange={() => {
+                                return toggleSelectRecord(record._id);
+                              }}
+                            />
+                          </div>
+                        </TableCell>
+                        {orderedColumns.map((column) => {
+                          if (!column) return;
+
+                          return (
+                            <TableCellMemo
+                              key={`cell-${record._id}-${column.id}`}
+                              record={record}
+                              column={column}
+                              editingCell={editingCell}
+                              onEdit={() => {
+                                return startEditing(record._id, column.id);
+                              }}
+                              onCellChange={handleCellChange}
+                              onCellKeyDown={handleCellKeyDown}
+                              stopEditing={stopEditing}
+                              inputRef={inputRef}
+                              newTagText={newTagText}
+                              setNewTagText={setNewTagText}
+                              handleTagInputKeyDown={handleTagInputKeyDown}
+                              removeTag={removeTag}
+                              addTag={addTag}
+                              columnWidths={columnWidths}
+                              handleColumnClick={handleColumnClick}
+                              isUpdating={
+                                updateRecordMutation.isPending &&
+                                editingCell.recordId === record._id &&
+                                editingCell.columnId === column.id
+                              }
+                            />
+                          );
+                        })}
+                        <TableCell></TableCell>
+                      </DraggableRow>
+                    );
+                  })}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4'>
+            {records.length === 0
+              ? // Skeleton loading state for card view
+                Array.from({ length: 6 }).map((_, index) => {
+                  return (
+                    <div key={`skeleton-card-${index}`} className='border rounded-md p-3'>
+                      <div className='flex justify-between items-center mb-2'>
+                        <Skeleton className='h-5 w-32' />
+                        <Skeleton className='h-4 w-4 rounded' />
+                      </div>
+                      {Array.from({ length: 3 }).map((_, fieldIndex) => {
+                        return (
+                          <div
+                            key={`skeleton-field-${index}-${fieldIndex}`}
+                            className='flex py-1 text-sm'
+                          >
+                            <Skeleton className='h-4 w-1/3 mr-2' />
+                            <Skeleton className='h-4 w-2/3' />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })
+              : orderedRecords.map((record) => {
+                  return (
+                    <div
+                      key={`card-${record._id}`}
+                      className='border rounded-md p-3 hover:shadow-md transition-shadow'
+                    >
+                      <div className='flex justify-between items-center mb-2'>
+                        <h3 className='font-medium'>{record.values.name}</h3>
                         <Checkbox
                           checked={record.values?.selected}
                           onCheckedChange={() => {
@@ -507,97 +607,42 @@ export default function TablePage() {
                           }}
                         />
                       </div>
-                    </TableCell>
-                    {orderedColumns.map((column) => {
-                      if (!column) return;
-
-                      return (
-                        <TableCellMemo
-                          key={`cell-${record._id}-${column.id}`}
-                          record={record}
-                          column={column}
-                          editingCell={editingCell}
-                          onEdit={() => {
-                            return startEditing(record._id, column.id);
-                          }}
-                          onCellChange={handleCellChange}
-                          onCellKeyDown={handleCellKeyDown}
-                          stopEditing={stopEditing}
-                          inputRef={inputRef}
-                          newTagText={newTagText}
-                          setNewTagText={setNewTagText}
-                          handleTagInputKeyDown={handleTagInputKeyDown}
-                          removeTag={removeTag}
-                          addTag={addTag}
-                          columnWidths={columnWidths}
-                          handleColumnClick={handleColumnClick}
-                          isUpdating={
-                            updateRecordMutation.isPending &&
-                            editingCell.recordId === record._id &&
-                            editingCell.columnId === column.id
-                          }
-                        />
-                      );
-                    })}
-                    <TableCell></TableCell>
-                  </DraggableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        ) : (
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4'>
-            {orderedRecords.map((record) => {
-              return (
-                <div
-                  key={`card-${record._id}`}
-                  className='border rounded-md p-3 hover:shadow-md transition-shadow'
-                >
-                  <div className='flex justify-between items-center mb-2'>
-                    <h3 className='font-medium'>{record.values.name}</h3>
-                    <Checkbox
-                      checked={record.values?.selected}
-                      onCheckedChange={() => {
-                        return toggleSelectRecord(record._id);
-                      }}
-                    />
-                  </div>
-                  {orderedColumns
-                    .filter((col) => {
-                      return col.id !== 'name';
-                    })
-                    .map((column) => {
-                      return (
-                        <div
-                          key={`card-field-${record._id}-${column.id}`}
-                          className='flex py-1 text-sm'
-                        >
-                          <span className='text-gray-500 w-1/3'>{column.name}:</span>
-                          <span className='w-2/3'>
-                            {column.id === 'tags' ? (
-                              <div className='flex flex-wrap gap-1'>
-                                {record.values.tags?.map((tag) => {
-                                  return (
-                                    <Badge
-                                      key={`tag-${tag.id}`}
-                                      variant='outline'
-                                      className='bg-amber-50 text-amber-700'
-                                    >
-                                      {tag.name}
-                                    </Badge>
-                                  );
-                                })}
-                              </div>
-                            ) : (
-                              record.values[column.id] || '-'
-                            )}
-                          </span>
-                        </div>
-                      );
-                    })}
-                </div>
-              );
-            })}
+                      {orderedColumns
+                        .filter((col) => {
+                          return col.id !== 'name';
+                        })
+                        .map((column) => {
+                          return (
+                            <div
+                              key={`card-field-${record._id}-${column.id}`}
+                              className='flex py-1 text-sm'
+                            >
+                              <span className='text-gray-500 w-1/3'>{column.name}:</span>
+                              <span className='w-2/3'>
+                                {column.id === 'tags' ? (
+                                  <div className='flex flex-wrap gap-1'>
+                                    {record.values.tags?.map((tag) => {
+                                      return (
+                                        <Badge
+                                          key={`tag-${tag.id}`}
+                                          variant='outline'
+                                          className='bg-amber-50 text-amber-700'
+                                        >
+                                          {tag.name}
+                                        </Badge>
+                                      );
+                                    })}
+                                  </div>
+                                ) : (
+                                  record.values[column.id] || '-'
+                                )}
+                              </span>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  );
+                })}
           </div>
         )}
         <div className='flex items-center justify-between border-t p-2'>
