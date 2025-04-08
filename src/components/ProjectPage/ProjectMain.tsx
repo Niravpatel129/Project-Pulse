@@ -1,6 +1,5 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useProject, type Project } from '@/contexts/ProjectContext';
@@ -82,11 +81,7 @@ export default function ProjectMain() {
       >
         <Icon className='me-1.5 opacity-80' size={16} aria-hidden='true' />
         {label}
-        {project?.modulesCount && tab === 'modules' && (
-          <Badge className='ms-1.5 min-w-5 px-1 bg-primary/10' variant='secondary'>
-            {project.modulesCount}
-          </Badge>
-        )}
+
         {isActive && (
           <motion.div
             className='absolute inset-x-0 bottom-0 h-0.5 bg-primary'

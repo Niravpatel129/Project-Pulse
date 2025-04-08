@@ -24,10 +24,6 @@ export default function DashboardCalendarPage() {
     handleDashboardLoad();
   }, []);
 
-  if (!isLoaded) {
-    return <div className='container mx-auto py-8'>Loading calendar...</div>;
-  }
-
   return (
     <>
       <CalendarPage />

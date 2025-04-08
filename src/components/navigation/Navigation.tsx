@@ -49,7 +49,6 @@ function DesktopNavItem({ href, label, icon, isActive }: NavItemProps) {
       )}
     >
       <div className='scale-80'>{icon}</div>
-      {/* Fixed height to prevent layout shift on hover */}
       <span className='transition-colors duration-200 group-hover:text-[#484848] text-xs h-4 flex items-center text-[#484848]'>
         {label}
       </span>
@@ -104,16 +103,6 @@ export function Navigation() {
       label: 'Invoices',
       icon: <CiViewTimeline className='h-5 w-5' />,
     },
-    // {
-    //   href: '/production',
-    //   label: 'Production',
-    //   icon: <CiShop className='h-5 w-5' />,
-    // },
-    // {
-    //   href: '/customers',
-    //   label: 'Customers',
-    //   icon: <CiUser className='h-5 w-5' />,
-    // },
     {
       href: '/database',
       label: 'Database',
@@ -126,7 +115,7 @@ export function Navigation() {
     },
   ];
 
-  // User settings navigation items - separated to put in a different dropdown
+  // User settings navigation items
   const userNavigation = [
     {
       href: '/profile',
@@ -156,14 +145,14 @@ export function Navigation() {
   return (
     <header className='top-0 z-30 flex h-16 items-center bg-background px-4 md:px-6'>
       <div className='w-full mx-auto flex items-center justify-between'>
-        {/* Logo on the left */}
+        {/* Logo */}
         <div className='flex items-center'>
           <Link href='/' className='flex items-center gap-2 text-[#000000]'>
             <span className='font-medium font-sans '>{workspace?.name}</span>
           </Link>
         </div>
 
-        {/* Mobile Navigation Trigger */}
+        {/* Mobile Navigation */}
         <div className='lg:hidden'>
           <Sheet>
             <SheetTrigger asChild>
@@ -201,7 +190,7 @@ export function Navigation() {
           </Sheet>
         </div>
 
-        {/* Centered Desktop Navigation */}
+        {/* Desktop Navigation */}
         <nav className='hidden lg:flex items-center justify-center space-x-3 mx-auto'>
           {navigation.map((item) => {
             return (
@@ -216,7 +205,7 @@ export function Navigation() {
           })}
         </nav>
 
-        {/* Right Side - User Profile */}
+        {/* User Profile */}
         <div className='flex items-center'>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -225,17 +214,13 @@ export function Navigation() {
                 size='icon'
                 className='relative h-10 w-10 p-0 overflow-visible focus:bg-transparent focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0'
               >
-                <div className='h-8 w-8 rounded-full -[#484848 ] overflow-hidden'>
-                  <Avatar className='h-full w-full'>
-                    <AvatarImage src={user?.avatar || ''} alt={user?.name || 'User'} />
-                    <AvatarFallback className='bg-white text-xs text-[#484848]'>
-                      {/* icon instead of text */}
-                      <CiUser className='h-4 w-4' />
-                      {/* chevron down   */}
-                      <VscChevronDown className='h-4 w-4' />
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
+                <Avatar className='h-8 w-8'>
+                  <AvatarImage src={user?.avatar || ''} alt={user?.name || 'User'} />
+                  <AvatarFallback className='bg-white text-xs text-[#484848]'>
+                    <CiUser className='h-4 w-4' />
+                    <VscChevronDown className='h-4 w-4' />
+                  </AvatarFallback>
+                </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end' className='w-56'>
