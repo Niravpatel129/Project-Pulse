@@ -8,7 +8,7 @@ export default function InvoiceInterface() {
   return (
     <div className='min-h-screen bg-white'>
       {/* Navigation */}
-      <div className='border-b border-t'>
+      <div className='border-b'>
         <div className='container mx-auto px-4'>
           <nav className='flex space-x-8 gap-4'>
             <Link href='#' className='border-b-2 border-green-500 py-4 font-medium text-green-600'>
