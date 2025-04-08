@@ -2,7 +2,6 @@
 
 import { formatDistanceToNow } from 'date-fns';
 import { File, Info, MoreVertical, Plus, Trash2 } from 'lucide-react';
-import Image from 'next/image';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -106,11 +105,12 @@ export default function FigmaManagerModal({
                             }}
                           >
                             <div className='relative w-full aspect-video mb-2'>
-                              <Image
-                                src={file.thumbnailUrl}
-                                alt={file.name}
-                                fill
-                                className='object-cover rounded-md'
+                              <iframe
+                                src={`https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(
+                                  file.figmaUrl,
+                                )}`}
+                                className='w-full h-full rounded-md'
+                                allowFullScreen
                               />
                             </div>
                             <span className='text-sm font-medium text-center truncate w-full'>
@@ -154,11 +154,12 @@ export default function FigmaManagerModal({
                         <TableCell>
                           <div className='flex items-center gap-2'>
                             <div className='relative w-10 h-10'>
-                              <Image
-                                src={file.thumbnailUrl}
-                                alt={file.name}
-                                fill
-                                className='object-cover rounded-md'
+                              <iframe
+                                src={`https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(
+                                  file.figmaUrl,
+                                )}`}
+                                className='w-full h-full rounded-md'
+                                allowFullScreen
                               />
                             </div>
                             <span className='font-medium'>{file.name}</span>
@@ -213,11 +214,12 @@ export default function FigmaManagerModal({
               <CardContent className='flex-1 overflow-y-auto'>
                 <div className='space-y-4'>
                   <div className='relative w-full aspect-video'>
-                    <Image
-                      src={selectedFile.thumbnailUrl}
-                      alt={selectedFile.name}
-                      fill
-                      className='object-cover rounded-md'
+                    <iframe
+                      src={`https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(
+                        selectedFile.figmaUrl,
+                      )}`}
+                      className='w-full h-full rounded-md'
+                      allowFullScreen
                     />
                   </div>
                   <div>
