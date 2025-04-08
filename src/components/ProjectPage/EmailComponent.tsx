@@ -362,8 +362,8 @@ export const EmailComponent = ({ initialSubject = '', initialMessage = '' }) => 
                   return removeRecipient(recipient, 'to');
                 }}
                 participants={
-                  project?.clients.map((c) => {
-                    return c.user;
+                  project?.participants.map((p) => {
+                    return p;
                   }) || []
                 }
               />
@@ -382,8 +382,8 @@ export const EmailComponent = ({ initialSubject = '', initialMessage = '' }) => 
                     return removeRecipient(recipient, 'cc');
                   }}
                   participants={
-                    project?.clients.map((c) => {
-                      return c.user;
+                    project?.participants.map((c) => {
+                      return c;
                     }) || []
                   }
                   showRemoveButton
@@ -404,8 +404,8 @@ export const EmailComponent = ({ initialSubject = '', initialMessage = '' }) => 
                     return removeRecipient(recipient, 'bcc');
                   }}
                   participants={
-                    project?.clients.map((c) => {
-                      return c.user;
+                    project?.participants.map((c) => {
+                      return c;
                     }) || []
                   }
                   showRemoveButton
