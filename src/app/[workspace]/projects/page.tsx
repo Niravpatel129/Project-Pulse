@@ -1,9 +1,9 @@
 'use client';
 
+import { PipelineSettings } from '@/components/projects/PipelineSettings';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { ProjectCreateForm } from '@/components/projects/ProjectCreateForm';
 import { ProjectEmptyState } from '@/components/projects/ProjectEmptyState';
-import { ProjectFilters } from '@/components/projects/ProjectFilters';
 import { ProjectTable } from '@/components/projects/ProjectTable';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,7 +16,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { useProjects } from '@/hooks/useProjects';
 import { cn } from '@/lib/utils';
 import {
@@ -221,7 +220,36 @@ export default function ProjectsPage() {
   };
 
   return (
-    <BlockWrapper>
+    <div className='min-h-screen bg-white'>
+      <div className='border-b'>
+        <div className='container mx-auto px-4'>
+          <nav className='flex space-x-8 gap-4'>
+            <div
+              className={` py-4 font-medium  cursor-pointer ${
+                !isKanban ? 'border-b-2 text-green-600 border-green-500' : ''
+              }`}
+              style={{}}
+              onClick={() => {
+                router.push('/projects?view=table');
+              }}
+            >
+              Table View
+            </div>
+            <div
+              className={`py-4 font-medium text-gray-600 cursor-pointer ${
+                isKanban ? 'border-b-2 text-green-600 border-green-500' : ''
+              }`}
+              style={{}}
+              onClick={() => {
+                router.push('/projects?view=kanban&kanban=stages');
+              }}
+            >
+              Kanban Board
+            </div>
+          </nav>
+        </div>
+      </div>
+
       <div className='container mx-auto py-10 flex flex-col min-h-[85vh]'>
         <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4'>
           <div>
@@ -231,19 +259,14 @@ export default function ProjectsPage() {
             </p>
           </div>
           <div className='flex space-x-3'>
+            <PipelineSettings />
+
             <ProjectCreateForm
               setIsNewProjectDialogOpen={setIsNewProjectDialogOpen}
               isNewProjectDialogOpen={isNewProjectDialogOpen}
             />
           </div>
         </div>
-
-        <ProjectFilters
-          isKanban={isKanban}
-          kanban={kanban}
-          toggleView={toggleView}
-          setKanban={setKanban}
-        />
 
         {/* Loading state */}
         {isLoading ? (
@@ -446,6 +469,6 @@ export default function ProjectsPage() {
           />
         )}
       </div>
-    </BlockWrapper>
+    </div>
   );
 }
