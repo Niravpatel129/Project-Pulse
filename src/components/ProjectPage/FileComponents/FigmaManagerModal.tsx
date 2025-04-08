@@ -1,7 +1,7 @@
 'use client';
 
 import { formatDistanceToNow } from 'date-fns';
-import { File, Info, MoreVertical, Plus, Trash2 } from 'lucide-react';
+import { ExternalLink, File, Info, MoreVertical, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -153,14 +153,8 @@ export default function FigmaManagerModal({
                       <TableRow key={file._id}>
                         <TableCell>
                           <div className='flex items-center gap-2'>
-                            <div className='relative w-10 h-10'>
-                              <iframe
-                                src={`https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(
-                                  file.figmaUrl,
-                                )}`}
-                                className='w-full h-full rounded-md'
-                                allowFullScreen
-                              />
+                            <div className='relative w-10 h-10 bg-muted rounded-md flex items-center justify-center'>
+                              <File className='h-5 w-5 text-muted-foreground' />
                             </div>
                             <span className='font-medium'>{file.name}</span>
                           </div>
@@ -170,32 +164,44 @@ export default function FigmaManagerModal({
                           {formatDistanceToNow(new Date(file.createdAt), { addSuffix: true })}
                         </TableCell>
                         <TableCell className='text-right'>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant='ghost' size='icon'>
-                                <MoreVertical className='h-4 w-4' />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align='end'>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  return handleViewDetails(file);
-                                }}
-                              >
-                                <Info className='h-4 w-4 mr-2' />
-                                View Details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  return handleRemoveFile(file._id);
-                                }}
-                                className='text-red-600'
-                              >
-                                <Trash2 className='h-4 w-4 mr-2' />
-                                Remove
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <div className='flex items-center justify-end gap-2'>
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(file.figmaUrl, '_blank');
+                              }}
+                            >
+                              <ExternalLink className='h-4 w-4' />
+                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant='ghost' size='icon'>
+                                  <MoreVertical className='h-4 w-4' />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align='end'>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    return handleViewDetails(file);
+                                  }}
+                                >
+                                  <Info className='h-4 w-4 mr-2' />
+                                  View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    return handleRemoveFile(file._id);
+                                  }}
+                                  className='text-red-600'
+                                >
+                                  <Trash2 className='h-4 w-4 mr-2' />
+                                  Remove
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
