@@ -272,6 +272,8 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
         return 'File';
       case 'template':
         return 'Form Response';
+      case 'figma':
+        return 'Figma';
       default:
         return 'Unknown';
     }
@@ -283,6 +285,8 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
         return 'bg-purple-100 text-purple-800 hover:bg-purple-100';
       case 'template':
         return 'bg-teal-100 text-teal-800 hover:bg-teal-100';
+      case 'figma':
+        return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
       default:
         return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
     }
