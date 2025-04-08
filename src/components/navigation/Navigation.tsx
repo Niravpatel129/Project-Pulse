@@ -22,7 +22,6 @@ import {
   CiBoxes,
   CiBoxList,
   CiCalendar,
-  CiCreditCard1,
   CiHome,
   CiLogout,
   CiMenuBurger,
@@ -124,11 +123,6 @@ export function Navigation() {
       href: '/calendar',
       label: 'Calendar',
       icon: <CiCalendar className='h-5 w-5' />,
-    },
-    {
-      href: '/payments',
-      label: 'Payments',
-      icon: <CiCreditCard1 className='h-5 w-5' />,
     },
   ];
 
