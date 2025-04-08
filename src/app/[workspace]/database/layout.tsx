@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { useDatabaseLayout } from '@/hooks/useDatabaseLayout';
@@ -39,95 +40,107 @@ export default function DatabaseLayout({ children }: { children: React.ReactNode
           <Tabs value={currentTable} className='w-full p-2'>
             <div className='flex items-center'>
               <TabsList className='text-foreground mb-3 h-auto gap-2 rounded-none border-b bg-transparent px-0 py-1'>
-                {tables.map((table) => {
-                  return (
-                    <div key={table._id} className='flex-1 relative group'>
-                      <div className='flex items-center'>
-                        <Link href={`/database/${table._id}`} className='flex-1'>
-                          <TabsTrigger
-                            value={table._id}
-                            className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none w-full pr-8'
-                          >
-                            {renamingTable?.id === table._id ? (
-                              <Input
-                                value={newTableName}
-                                onChange={(e) => {
-                                  return setNewTableName(e.target.value);
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    saveTableRename();
-                                  } else if (e.key === 'Escape') {
-                                    setNewTableName('');
-                                    setRenamingTable(null);
-                                  }
-                                }}
-                                onBlur={() => {
-                                  if (newTableName.trim()) {
-                                    saveTableRename();
-                                  } else {
-                                    setNewTableName('');
-                                    setRenamingTable(null);
-                                  }
-                                }}
-                                className='h-7 w-32 border-none focus-visible:ring-0 focus-visible:ring-none focus:outline-none focus:shadow-none shadow-none'
-                                autoFocus
-                              />
-                            ) : (
-                              <span>{table.name}</span>
-                            )}
-                          </TabsTrigger>
-                        </Link>
-                        <div className='absolute right-1 top-1/2 -translate-y-1/2 z-10'>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                type='button'
-                                variant='ghost'
-                                size='icon'
-                                className='h-6 w-6 rounded-full hover:bg-gray-200'
-                                onClick={(e) => {
-                                  return e.stopPropagation();
-                                }}
-                              >
-                                <ChevronDown className='h-3 w-3 text-[#5f6368]' />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className='w-64 p-2 shadow-lg rounded-lg' align='end'>
-                              <div className='space-y-1'>
-                                <Button
-                                  variant='ghost'
-                                  size='sm'
-                                  className='w-full justify-start text-[#3c4043]'
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRenameTable(table._id, table.name);
-                                  }}
-                                >
-                                  <Pencil className='mr-2 h-4 w-4' />
-                                  <span>Rename</span>
-                                </Button>
-
-                                <div className='h-px bg-[#e0e0e0] my-1' />
-                                <Button
-                                  variant='ghost'
-                                  size='sm'
-                                  className='w-full justify-start text-[#d93025] hover:text-[#d93025] hover:bg-red-50'
-                                  onClick={() => {
-                                    handleDeleteTable(table._id);
-                                  }}
-                                >
-                                  <Trash2 className='mr-2 h-4 w-4' />
-                                  <span>Delete</span>
-                                </Button>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
+                {tables.length === 0
+                  ? // Skeleton loading state for tables
+                    Array.from({ length: 3 }).map((_, index) => {
+                      return (
+                        <div key={`skeleton-table-${index}`} className='flex-1 relative'>
+                          <Skeleton className='h-8 w-32 rounded-md' />
                         </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                      );
+                    })
+                  : tables.map((table) => {
+                      return (
+                        <div key={table._id} className='flex-1 relative group'>
+                          <div className='flex items-center'>
+                            <Link href={`/database/${table._id}`} className='flex-1'>
+                              <TabsTrigger
+                                value={table._id}
+                                className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none w-full pr-8'
+                              >
+                                {renamingTable?.id === table._id ? (
+                                  <Input
+                                    value={newTableName}
+                                    onChange={(e) => {
+                                      return setNewTableName(e.target.value);
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        saveTableRename();
+                                      } else if (e.key === 'Escape') {
+                                        setNewTableName('');
+                                        setRenamingTable(null);
+                                      }
+                                    }}
+                                    onBlur={() => {
+                                      if (newTableName.trim()) {
+                                        saveTableRename();
+                                      } else {
+                                        setNewTableName('');
+                                        setRenamingTable(null);
+                                      }
+                                    }}
+                                    className='h-7 w-32 border-none focus-visible:ring-0 focus-visible:ring-none focus:outline-none focus:shadow-none shadow-none'
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <span>{table.name}</span>
+                                )}
+                              </TabsTrigger>
+                            </Link>
+                            <div className='absolute right-1 top-1/2 -translate-y-1/2 z-10'>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    type='button'
+                                    variant='ghost'
+                                    size='icon'
+                                    className='h-6 w-6 rounded-full hover:bg-gray-200'
+                                    onClick={(e) => {
+                                      return e.stopPropagation();
+                                    }}
+                                  >
+                                    <ChevronDown className='h-3 w-3 text-[#5f6368]' />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  className='w-64 p-2 shadow-lg rounded-lg'
+                                  align='end'
+                                >
+                                  <div className='space-y-1'>
+                                    <Button
+                                      variant='ghost'
+                                      size='sm'
+                                      className='w-full justify-start text-[#3c4043]'
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRenameTable(table._id, table.name);
+                                      }}
+                                    >
+                                      <Pencil className='mr-2 h-4 w-4' />
+                                      <span>Rename</span>
+                                    </Button>
+
+                                    <div className='h-px bg-[#e0e0e0] my-1' />
+                                    <Button
+                                      variant='ghost'
+                                      size='sm'
+                                      className='w-full justify-start text-[#d93025] hover:text-[#d93025] hover:bg-red-50'
+                                      onClick={() => {
+                                        handleDeleteTable(table._id);
+                                      }}
+                                    >
+                                      <Trash2 className='mr-2 h-4 w-4' />
+                                      <span>Delete</span>
+                                    </Button>
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
               </TabsList>
               <Popover open={isCreatingTable} onOpenChange={setIsCreatingTable}>
                 <PopoverTrigger asChild>
