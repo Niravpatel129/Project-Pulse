@@ -23,6 +23,7 @@ import {
   MessageSquare,
   X,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
@@ -100,6 +101,7 @@ export function ApproverDialog({
     moduleId: '',
     moduleDetails,
   });
+  const router = useRouter();
 
   // Set message from preview if in preview mode
   useEffect(() => {
@@ -503,9 +505,13 @@ export function ApproverDialog({
                       <Button
                         className='w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 text-sm'
                         onClick={() => {
-                          toast.info(
-                            'Review page is only available after approval request is sent.',
-                          );
+                          if (isPreview) {
+                            router.push(`/approvals/${approvalId}`);
+                          } else {
+                            toast.info(
+                              'Review page is only available after approval request is sent.',
+                            );
+                          }
                         }}
                       >
                         Review and Approve
