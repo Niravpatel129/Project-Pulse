@@ -20,7 +20,16 @@ import {
 } from '@/components/ui/timeline';
 import { useApprovalRequest } from '@/hooks/useApprovalRequest';
 import { motion } from 'framer-motion';
-import { CheckCircle, Download, Eye, FileImage, FileText, XCircle } from 'lucide-react';
+import {
+  CheckCircle,
+  Download,
+  ExternalLink,
+  Eye,
+  Figma,
+  FileImage,
+  FileText,
+  XCircle,
+} from 'lucide-react';
 import Image from 'next/image';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
@@ -212,6 +221,11 @@ export default function ApprovalRequestPage() {
                           <FileImage className='h-4 w-4 text-gray-500' />
                           {approvalRequest.moduleId.content.fileId?.name}
                         </>
+                      ) : approvalRequest.moduleId.moduleType === 'figma' ? (
+                        <>
+                          <Figma className='h-4 w-4 text-gray-500' />
+                          {approvalRequest.moduleId.name}
+                        </>
                       ) : (
                         approvalRequest.moduleId.name
                       )}
@@ -222,6 +236,8 @@ export default function ApprovalRequestPage() {
                     >
                       {approvalRequest.moduleId.moduleType === 'file'
                         ? approvalRequest.moduleId.content.fileId?.contentType
+                        : approvalRequest.moduleId.moduleType === 'figma'
+                        ? 'Figma'
                         : 'Form'}
                     </Badge>
                   </div>
@@ -278,6 +294,53 @@ export default function ApprovalRequestPage() {
                         </div>
                       </div>
                     </>
+                  ) : approvalRequest.moduleId.moduleType === 'figma' ? (
+                    <div className='space-y-4'>
+                      <div className='bg-white rounded-lg border shadow-sm overflow-hidden'>
+                        {approvalRequest.moduleId.content.figmaUrl ? (
+                          <div className='flex flex-col'>
+                            <div className='relative w-full aspect-video'>
+                              <iframe
+                                src={`https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(
+                                  approvalRequest.moduleId.content.figmaUrl,
+                                )}`}
+                                className='w-full h-full'
+                                allowFullScreen
+                                title={`Figma Preview - ${approvalRequest.moduleId.name}`}
+                              />
+                            </div>
+                            <div className='p-4 space-y-2'>
+                              <div className='flex items-center justify-between'>
+                                <Button
+                                  variant='outline'
+                                  size='sm'
+                                  className='gap-2'
+                                  onClick={() => {
+                                    return window.open(
+                                      approvalRequest.moduleId.content.figmaUrl,
+                                      '_blank',
+                                    );
+                                  }}
+                                >
+                                  <ExternalLink className='h-4 w-4' />
+                                  Open in Figma
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className='flex flex-col items-center justify-center p-8 text-center'>
+                            <div className='bg-muted rounded-full p-4 mb-4'>
+                              <Figma className='h-8 w-8 text-muted-foreground' />
+                            </div>
+                            <h3 className='text-lg font-medium mb-2'>No Figma Preview Available</h3>
+                            <p className='text-sm text-muted-foreground'>
+                              The Figma file URL is not available for this version.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   ) : (
                     <div className='space-y-6 p-4'>
                       <div className='flex items-center gap-2 text-sm text-gray-500 mb-4'>

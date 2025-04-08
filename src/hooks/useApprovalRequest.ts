@@ -42,6 +42,7 @@ interface Module {
   addedBy: User;
   content: {
     fileId: FileData;
+    figmaUrl?: string;
   };
 }
 
