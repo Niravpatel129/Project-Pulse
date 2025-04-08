@@ -72,7 +72,7 @@ export interface Module {
   assignedTo: string[];
   isTemplate: boolean;
   elements: Element[];
-  type: 'file' | 'template';
+  type: 'file' | 'template' | 'figma';
   createdAt: string;
   updatedAt: string;
   version: {
@@ -100,5 +100,13 @@ export interface Module {
         answer: string;
       }[];
     }[];
+  };
+  content?: {
+    figmaUrl?: string;
+    thumbnailUrl?: string;
+    fileId?: {
+      downloadURL: string;
+      contentType: string;
+    };
   };
 }

@@ -24,6 +24,7 @@ import { useState } from 'react';
 import { FcDocument } from 'react-icons/fc';
 import { LuFigma } from 'react-icons/lu';
 import { toast } from 'sonner';
+import FigmaManagerModal from '../FileComponents/FigmaManagerModal';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 import NewModuleFromTemplateSheet from '../FileComponents/NewModuleFromTemplateSheet';
 import NewTemplateSheet from '../FileComponents/NewTemplateSheet';
@@ -41,6 +42,7 @@ export default function NewProjectModules() {
     isLoading,
   } = useProjectModules();
 
+  const [isFigmaModalOpen, setIsFigmaModalOpen] = useState(false);
   const [isNewTemplateSheetOpen, setIsNewTemplateSheetOpen] = useState(false);
   const [isNewModuleFromTemplateSheetOpen, setIsNewModuleFromTemplateSheetOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
@@ -102,6 +104,18 @@ export default function NewProjectModules() {
     }
   };
 
+  const handleAddFigmaToProject = (figmaFile: any) => {
+    addModule({
+      type: 'figma',
+      content: {
+        figmaUrl: figmaFile.figmaUrl,
+        thumbnailUrl: figmaFile.thumbnailUrl,
+        name: figmaFile.name,
+      },
+    });
+    setIsFigmaModalOpen(false);
+  };
+
   const renderDropdownMenu = () => {
     return (
       <DropdownMenuContent className='min-w-[230px]' align='end'>
@@ -121,7 +135,7 @@ export default function NewProjectModules() {
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => {
-            return setIsFileUploadModalOpen(true);
+            return setIsFigmaModalOpen(true);
           }}
         >
           <>
@@ -362,6 +376,14 @@ export default function NewProjectModules() {
         handleAddFileToProject={(files) => {
           return handleAddFileToProject({ type: 'file', content: files });
         }}
+      />
+
+      <FigmaManagerModal
+        isOpen={isFigmaModalOpen}
+        onClose={() => {
+          return setIsFigmaModalOpen(false);
+        }}
+        handleAddFigmaToProject={handleAddFigmaToProject}
       />
 
       <NewTemplateSheet
