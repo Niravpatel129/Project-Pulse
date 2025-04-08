@@ -6,98 +6,27 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
-import { useDatabase } from '@/hooks/useDatabase';
-import { newRequest } from '@/utils/newRequest';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDatabaseLayout } from '@/hooks/useDatabaseLayout';
 import { ChevronDown, Pencil, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
 
 export default function DatabaseLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const { handleCreateTable, tables = [] } = useDatabase([]);
-  const currentTable = pathname.split('/').pop() || tables[0]?._id || 'table-1';
-  const [tableName, setTableName] = useState('');
-  const [isCreatingTable, setIsCreatingTable] = useState(false);
-  const [renamingTable, setRenamingTable] = useState<{ id: string; name: string } | null>(null);
-  const [newTableName, setNewTableName] = useState('');
-  const queryClient = useQueryClient();
-
-  // Delete table mutation
-  const deleteTableMutation = useMutation({
-    mutationFn: async (tableId: string) => {
-      const response = await newRequest.delete(`/tables/${tableId}`);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tables'] });
-      toast.success('Table deleted successfully');
-      // If we deleted the current table, redirect to the first available table
-      if (tables.length > 0) {
-        router.push(`/database/${tables[0]._id}`);
-      }
-    },
-    onError: (error) => {
-      console.error('Failed to delete table:', error);
-      toast.error('Failed to delete table');
-    },
-  });
-
-  // Handle table delete
-  const handleDeleteTable = useCallback(
-    async (tableId: string) => {
-      try {
-        await deleteTableMutation.mutateAsync(tableId);
-      } catch (error) {
-        console.error('Failed to delete table:', error);
-      }
-    },
-    [deleteTableMutation],
-  );
-
-  // Handle table rename
-  const handleRenameTable = useCallback((tableId: string, currentName: string) => {
-    // make sure its not the same as the current table
-    setRenamingTable({ id: tableId, name: currentName });
-    setNewTableName(currentName);
-  }, []);
-
-  const saveTableRename = useCallback(async () => {
-    // make sure the new table name is not the same as the current table
-    if (newTableName.trim() === currentTable) {
-      toast.error('Table name cannot be the same as the current table');
-      return;
-    }
-
-    if (renamingTable && newTableName.trim()) {
-      try {
-        await newRequest.patch(`/tables/${renamingTable.id}`, {
-          name: newTableName.trim(),
-        });
-        queryClient.invalidateQueries({ queryKey: ['tables'] });
-        setRenamingTable(null);
-        setNewTableName('');
-      } catch (error) {
-        console.error('Failed to rename table:', error);
-        toast.error('Failed to rename table');
-      }
-    }
-  }, [renamingTable, newTableName, queryClient]);
-
-  // Redirect to first table if no table is selected
-  useEffect(() => {
-    if (
-      tables.length > 0 &&
-      !tables.some((table) => {
-        return table._id === currentTable;
-      })
-    ) {
-      router.push(`/database/${tables[0]._id}`);
-    }
-  }, [tables, currentTable]);
+  const {
+    currentTable,
+    tables,
+    tableName,
+    setTableName,
+    isCreatingTable,
+    setIsCreatingTable,
+    renamingTable,
+    setRenamingTable,
+    newTableName,
+    setNewTableName,
+    handleDeleteTable,
+    handleRenameTable,
+    saveTableRename,
+    handleCreateNewTable,
+  } = useDatabaseLayout();
 
   return (
     <BlockWrapper>
@@ -185,7 +114,6 @@ export default function DatabaseLayout({ children }: { children: React.ReactNode
                                   size='sm'
                                   className='w-full justify-start text-[#d93025] hover:text-[#d93025] hover:bg-red-50'
                                   onClick={() => {
-                                    // Implement delete functionality
                                     handleDeleteTable(table._id);
                                   }}
                                 >
@@ -236,18 +164,7 @@ export default function DatabaseLayout({ children }: { children: React.ReactNode
                         />
                       </div>
                     </div>
-                    <Button
-                      className='w-full'
-                      onClick={() => {
-                        setIsCreatingTable(false);
-                        handleCreateTable(tableName);
-                        toast.success('Table created successfully');
-                        // delay for 1 second
-                        setTimeout(() => {
-                          setTableName('');
-                        }, 1000);
-                      }}
-                    >
+                    <Button className='w-full' onClick={handleCreateNewTable}>
                       Create Table
                     </Button>
                   </div>
