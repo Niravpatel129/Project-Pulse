@@ -677,7 +677,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                                 </div>
                                 <div className='p-4 space-y-2'>
                                   <div className='flex items-center justify-between'>
-                                    <h3 className='text-lg font-medium'>{module?.name}</h3>
+                                    {/* <h3 className='text-lg font-medium'>{module?.name}</h3> */}
                                     <Button
                                       variant='outline'
                                       size='sm'
