@@ -43,6 +43,7 @@ export default function CreateClientDialog({
         company,
         status: 'active',
       });
+      console.log('🚀 response:', response);
 
       const newClient = response.data.data;
       toast.success('Client created successfully');

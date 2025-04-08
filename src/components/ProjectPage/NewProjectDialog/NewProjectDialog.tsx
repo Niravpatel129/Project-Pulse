@@ -119,7 +119,8 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
   };
 
   const handleClientCreated = (newClient: any) => {
-    setClient([...client, newClient]);
+    console.log('🚀 newClient:', newClient);
+    setClient([...client, newClient.participant]);
   };
 
   // Common dropdown menu content styles
