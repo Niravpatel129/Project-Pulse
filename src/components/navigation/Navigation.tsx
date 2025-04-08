@@ -88,6 +88,8 @@ export function Navigation() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { workspace } = useWorkspace();
+  const isProd = process.env.NODE_ENV === 'production';
+
   const navigation = [
     {
       href: '/',
@@ -103,6 +105,7 @@ export function Navigation() {
       href: '/leads',
       label: 'Leads',
       icon: <CiFolderOn className='h-5 w-5' />,
+      hidden: isProd,
     },
     {
       href: '/invoices',
@@ -118,6 +121,7 @@ export function Navigation() {
       href: '/calendar',
       label: 'Calendar',
       icon: <CiCalendar className='h-5 w-5' />,
+      hidden: isProd,
     },
   ];
 
@@ -147,6 +151,11 @@ export function Navigation() {
     logout();
     router.push('/login');
   };
+
+  // Filter out hidden navigation items
+  const visibleNavigation = navigation.filter((item) => {
+    return !item.hidden;
+  });
 
   return (
     <header className='top-0 z-30 flex h-16 items-center bg-background px-4 md:px-6'>
@@ -179,7 +188,7 @@ export function Navigation() {
               </div>
               <div className='overflow-y-auto max-h-[calc(100vh-3.5rem)]'>
                 <nav className='grid gap-1 p-2'>
-                  {[...navigation, ...userNavigation].map((item) => {
+                  {[...visibleNavigation, ...userNavigation].map((item) => {
                     return (
                       <MobileNavItem
                         key={item.href}
@@ -198,7 +207,7 @@ export function Navigation() {
 
         {/* Desktop Navigation */}
         <nav className='hidden lg:flex items-center justify-center space-x-3 mx-auto'>
-          {navigation.map((item) => {
+          {visibleNavigation.map((item) => {
             return (
               <DesktopNavItem
                 key={item.href}

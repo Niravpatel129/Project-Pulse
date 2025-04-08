@@ -43,7 +43,7 @@ interface TeamMember {
 }
 
 export default function NewProjectDialog({ open = true, onClose = () => {} }) {
-  const [title, setTitle] = useState('dfgdfgdfg');
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [attachments, setAttachments] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
