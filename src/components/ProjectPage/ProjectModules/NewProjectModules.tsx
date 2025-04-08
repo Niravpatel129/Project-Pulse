@@ -2,6 +2,13 @@ import { Template } from '@/api/models';
 import { Button } from '@/components/ui/button';
 import { CommandShortcut } from '@/components/ui/command';
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -13,6 +20,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProjectModules } from '@/hooks/useProjectModules';
 import { newRequest } from '@/utils/newRequest';
@@ -49,6 +57,7 @@ export default function NewProjectModules() {
   const [renamingModule, setRenamingModule] = useState<{ id: string; name: string } | null>(null);
   const [newModuleName, setNewModuleName] = useState('');
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const handleSaveTemplate = (
@@ -96,6 +105,7 @@ export default function NewProjectModules() {
       });
       toast.success('Module renamed successfully');
       setRenamingModule(null);
+      setIsRenameDialogOpen(false);
     } catch (error) {
       // Revert on error
       queryClient.setQueryData(['projectModules'], previousModules);
@@ -229,31 +239,7 @@ export default function NewProjectModules() {
         {/* Bottom Part */}
         <div className='border-t'>
           <div className='py-3 px-3 flex flex-col gap-1'>
-            {renamingModule?.id === item._id ? (
-              <input
-                ref={(input) => {
-                  return input?.focus();
-                }}
-                type='text'
-                value={newModuleName}
-                onChange={(e) => {
-                  return setNewModuleName(e.target.value);
-                }}
-                onBlur={() => {
-                  return handleRenameModule(item._id, newModuleName);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleRenameModule(item._id, newModuleName);
-                  } else if (e.key === 'Escape') {
-                    setRenamingModule(null);
-                  }
-                }}
-                className='text-sm font-medium bg-transparent border-none focus:outline-none focus:ring-0 p-0'
-              />
-            ) : (
-              <p className='text-sm font-medium truncate'>{item.name}</p>
-            )}
+            <p className='text-sm font-medium truncate'>{item.name}</p>
             <p className='text-xs text-gray-500 truncate'>
               {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
             </p>
@@ -280,6 +266,7 @@ export default function NewProjectModules() {
                   e.stopPropagation();
                   setRenamingModule({ id: item._id, name: item.name });
                   setNewModuleName(item.name);
+                  setIsRenameDialogOpen(true);
                 }}
               >
                 <Pencil className='mr-2 h-4 w-4' />
@@ -413,6 +400,44 @@ export default function NewProjectModules() {
           }}
         />
       )}
+
+      <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
+        <DialogContent className='sm:max-w-[425px]'>
+          <DialogHeader>
+            <DialogTitle>Rename Module</DialogTitle>
+          </DialogHeader>
+          <div className='py-4'>
+            <Input
+              value={newModuleName}
+              onChange={(e) => {
+                return setNewModuleName(e.target.value);
+              }}
+              placeholder='Enter new name'
+              className='w-full'
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => {
+                return setIsRenameDialogOpen(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (renamingModule) {
+                  handleRenameModule(renamingModule.id, newModuleName);
+                }
+              }}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
