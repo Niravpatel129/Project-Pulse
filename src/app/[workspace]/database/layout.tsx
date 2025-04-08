@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { useDatabaseLayout } from '@/hooks/useDatabaseLayout';
+import { useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, Pencil, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -28,6 +29,7 @@ export default function DatabaseLayout({ children }: { children: React.ReactNode
     saveTableRename,
     handleCreateNewTable,
   } = useDatabaseLayout();
+  const queryClient = useQueryClient();
 
   return (
     <BlockWrapper>
@@ -53,7 +55,13 @@ export default function DatabaseLayout({ children }: { children: React.ReactNode
                       return (
                         <div key={table._id} className='flex-1 relative group'>
                           <div className='flex items-center'>
-                            <Link href={`/database/${table._id}`} className='flex-1'>
+                            <Link
+                              href={`/database/${table._id}`}
+                              className='flex-1'
+                              onClick={() => {
+                                queryClient.invalidateQueries({ queryKey: ['table-records'] });
+                              }}
+                            >
                               <TabsTrigger
                                 value={table._id}
                                 className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none w-full pr-8'
