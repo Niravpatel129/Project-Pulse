@@ -12,13 +12,15 @@ export default function ProjectPage() {
 
   return (
     <ProjectProvider projectId={id as string}>
-      <div className='min-h-screen w-full mt-1 flex flex-col gap-4'>
-        <div className='flex-1 bg-[#eff6fd] p-3 pt-1 px-6 sm:p-4 sm:pt-2 md:px-10 md:py-1 lg:p-8 lg:pt-4 lg:px-12 xl:px-16'>
+      <div className='min-h-screen w-full mt-1 flex flex-col gap-4 p-10'>
+        <div className='flex-1 bg-[#eff6fd] p-3 pt-1 px-6 sm:p-4 sm:pt-2 md:px-10 md:py-1 lg:p-8 lg:pt-4 lg:px-12 xl:px-16 gap-4 flex flex-col'>
           <ProjectHeader />
           <BlockWrapper>
             <div className='container mx-auto flex items-center justify-between px-0 py-3'>
               <Suspense
-                fallback={<div className='w-full h-32 animate-pulse bg-gray-100 rounded-lg' />}
+                fallback={
+                  <div className='w-full h-32 animate-pulse bg-gray-100 rounded-lg mb-10' />
+                }
               >
                 <ProjectMain />
               </Suspense>

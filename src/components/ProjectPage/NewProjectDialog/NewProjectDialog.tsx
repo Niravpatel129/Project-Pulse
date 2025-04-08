@@ -568,7 +568,22 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
             </Button>
             <Button
               className='h-7 rounded text-xs font-normal bg-gray-900 hover:bg-gray-800 text-white'
-              onClick={handleCreateProject}
+              onClick={() => {
+                // confirm we have title, stage, status
+                if (!title) {
+                  toast.error('Please fill in a title');
+                  return;
+                }
+                if (!stage) {
+                  toast.error('Please select a stage');
+                  return;
+                }
+                if (!state) {
+                  toast.error('Please select a status');
+                  return;
+                }
+                handleCreateProject();
+              }}
               disabled={isSubmitting}
             >
               {isSubmitting ? 'Creating...' : 'Create project'}
