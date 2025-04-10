@@ -43,7 +43,7 @@ export default function InvoiceEditor() {
       </header>
 
       {/* Main content */}
-      <div className='flex flex-1'>
+      <div className='flex flex-1 bg-[#f0f1f6]'>
         {/* Left panel - Invoice Form Editor */}
         <div className='w-1/2 border-r border-gray-200 bg-white p-6 overflow-y-auto'>
           {/* Customer section */}
@@ -234,9 +234,9 @@ export default function InvoiceEditor() {
 
         {/* Right panel - Invoice Preview */}
         {showPreview && (
-          <div className='w-1/2 bg-[#f0f1f6] p-6 overflow-y-auto'>
+          <div className='w-1/2 bg-[#f0f1f6] p-6 px-24 overflow-y-auto sticky top-16 h-[calc(100vh-4rem)]'>
             {/* Invoice Preview */}
-            <div className='bg-white rounded-md shadow-md p-8 max-w-3xl mx-auto'>
+            <div className='bg-white rounded-md shadow-2xl p-8 max-w-3xl mx-auto aspect-[1/1.334] scale-[0.8] -mt-16'>
               <div className='flex justify-between mb-8'>
                 <div>
                   <h2 className='text-2xl font-bold mb-2'>Invoice</h2>
