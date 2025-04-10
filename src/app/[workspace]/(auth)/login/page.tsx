@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 
 // Default credentials for development mode
 const DEV_CREDENTIALS = {
-  email: 'admin@example.com',
+  email: 'niravpatelp129@gmail.com',
   password: 'admin@example.com',
 };
 
