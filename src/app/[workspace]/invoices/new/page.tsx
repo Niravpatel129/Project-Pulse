@@ -4,6 +4,7 @@ import { ArrowLeft, MoreHorizontal, Search, ZoomIn, ZoomOut } from 'lucide-react
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,12 +20,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 
 export default function InvoiceEditor() {
   const [showPreview, setShowPreview] = useState(true);
   const [previewScale, setPreviewScale] = useState(0.8);
   const [isCustomerPicked, setIsCustomerPicked] = useState(true);
+  const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
+  const [customers, setCustomers] = useState([
+    { id: '2', name: 'Customer 2' },
+    { id: '3', name: 'Customer 3' },
+  ]);
+  const [newCustomer, setNewCustomer] = useState({
+    name: '',
+    email: '',
+    address: '',
+  });
+
+  const handleCustomerSelect = (value: string) => {
+    if (value === 'new') {
+      setIsNewCustomerDialogOpen(true);
+    } else {
+      setSelectedCustomer(value);
+    }
+  };
+
+  const handleAddCustomer = () => {
+    const newId = (customers.length + 2).toString();
+    setCustomers([...customers, { id: newId, name: newCustomer.name }]);
+    setSelectedCustomer(newId);
+    setIsNewCustomerDialogOpen(false);
+    setNewCustomer({ name: '', email: '', address: '' });
+  };
 
   const zoomIn = () => {
     setPreviewScale((prev) => {
@@ -104,11 +133,77 @@ export default function InvoiceEditor() {
             </div>
           ) : (
             <div className='mb-8'>
-              <Select>
+              <Select value={selectedCustomer} onValueChange={handleCustomerSelect}>
                 <SelectTrigger className='w-full bg-white border-gray-200'>
                   <SelectValue placeholder='Select customer' />
                 </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='new' className='text-gray-600'>
+                    + Add new customer
+                  </SelectItem>
+                  <Separator className='my-1' />
+                  {customers.map((customer) => {
+                    return (
+                      <SelectItem key={customer.id} value={customer.id}>
+                        {customer.name}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
               </Select>
+              <Dialog open={isNewCustomerDialogOpen} onOpenChange={setIsNewCustomerDialogOpen}>
+                <DialogContent className='sm:max-w-md'>
+                  <DialogHeader>
+                    <DialogTitle>Add New Customer</DialogTitle>
+                  </DialogHeader>
+                  <div className='grid gap-4 py-4'>
+                    <div className='grid grid-cols-4 items-center gap-4'>
+                      <Label htmlFor='name' className='text-right'>
+                        Name
+                      </Label>
+                      <Input
+                        id='name'
+                        className='col-span-3'
+                        value={newCustomer.name}
+                        onChange={(e) => {
+                          return setNewCustomer({ ...newCustomer, name: e.target.value });
+                        }}
+                      />
+                    </div>
+                    <div className='grid grid-cols-4 items-center gap-4'>
+                      <Label htmlFor='email' className='text-right'>
+                        Email
+                      </Label>
+                      <Input
+                        id='email'
+                        className='col-span-3'
+                        value={newCustomer.email}
+                        onChange={(e) => {
+                          return setNewCustomer({ ...newCustomer, email: e.target.value });
+                        }}
+                      />
+                    </div>
+                    <div className='grid grid-cols-4 items-center gap-4'>
+                      <Label htmlFor='address' className='text-right'>
+                        Address
+                      </Label>
+                      <Input
+                        id='address'
+                        className='col-span-3'
+                        value={newCustomer.address}
+                        onChange={(e) => {
+                          return setNewCustomer({ ...newCustomer, address: e.target.value });
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className='flex justify-end'>
+                    <Button type='submit' onClick={handleAddCustomer}>
+                      Save Customer
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           )}
 
