@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, LucidePiggyBank } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { InvoiceSkeleton } from './components/InvoiceSkeleton';
 import InvoiceTable from './components/InvoiceTable';
+import { OnboardingSkeleton } from './components/OnboardingSkeleton';
 import { useInvoices } from './hooks/useInvoices';
 
 export default function InvoiceInterface() {
@@ -31,6 +33,31 @@ export default function InvoiceInterface() {
   };
 
   const status = searchParams.get('status');
+
+  if (isAccountStatusLoading) {
+    return (
+      <div className='min-h-screen bg-white'>
+        <div className='border-b'>
+          <div className='container mx-auto px-4'>
+            <nav className='flex space-x-8 gap-4'>
+              <Link
+                href='#'
+                className='border-b-2 border-green-500 py-4 font-medium text-green-600'
+              >
+                Invoices
+              </Link>
+              <Link href='#' className='py-4 font-medium text-gray-600'>
+                Settings
+              </Link>
+            </nav>
+          </div>
+        </div>
+        <div className='container mx-auto px-4 py-8 relative'>
+          <OnboardingSkeleton />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen bg-white'>
@@ -75,7 +102,7 @@ export default function InvoiceInterface() {
               </Button>
             </div>
 
-            <InvoiceTable invoices={invoices || []} />
+            {isInvoicesLoading ? <InvoiceSkeleton /> : <InvoiceTable invoices={invoices || []} />}
           </div>
         ) : (
           <div className='flex justify-center items-center relative z-10'>
