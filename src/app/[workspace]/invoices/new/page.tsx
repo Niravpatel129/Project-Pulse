@@ -71,6 +71,9 @@ export default function InvoiceEditor() {
     handleClientCreated,
     projectOptions,
     moduleOptions,
+    sendInvoiceMutation,
+    deliveryMethod,
+    setDeliveryMethod,
   } = useInvoiceEditor();
 
   const [localTaxId, setLocalTaxId] = useState(invoiceSettings?.taxId || '');
@@ -112,7 +115,13 @@ export default function InvoiceEditor() {
           >
             {showPreview ? 'Hide preview' : 'Show preview'}
           </Button>
-          <Button size='sm' className='bg-gray-900 hover:bg-gray-800 text-white'>
+          <Button
+            size='sm'
+            className='bg-gray-900 hover:bg-gray-800 text-white'
+            onClick={() => {
+              return sendInvoiceMutation.mutate();
+            }}
+          >
             Send invoice
           </Button>
         </div>
@@ -296,7 +305,12 @@ export default function InvoiceEditor() {
           {/* Delivery section */}
           <div className='mb-8'>
             <h2 className='text-sm font-medium text-gray-900 mb-3'>Delivery</h2>
-            <Select defaultValue='email'>
+            <Select
+              defaultValue={deliveryMethod}
+              onValueChange={(value) => {
+                setDeliveryMethod(value);
+              }}
+            >
               <SelectTrigger className='w-full bg-white border-gray-200'>
                 <SelectValue placeholder='Select delivery method' />
               </SelectTrigger>

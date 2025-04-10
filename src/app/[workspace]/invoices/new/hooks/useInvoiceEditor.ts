@@ -36,6 +36,7 @@ export function useInvoiceEditor() {
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [isNewItemDialogOpen, setIsNewItemDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState('');
+  const [deliveryMethod, setDeliveryMethod] = useState('email');
   const [availableItems, setAvailableItems] = useState<Item[]>([]);
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
   const [newItem, setNewItem] = useState<Item>({
@@ -160,6 +161,7 @@ export function useInvoiceEditor() {
       });
       if (customer) {
         setCurrentCustomer(customer);
+
         setIsCustomerPicked(true);
       }
     }
@@ -273,6 +275,43 @@ export function useInvoiceEditor() {
     },
   });
 
+  const sendInvoiceMutation = useMutation({
+    mutationFn: async () => {
+      const invoiceData = {
+        clientId: currentCustomer?.id,
+        clientName: currentCustomer?.name,
+        items: selectedItems.map((item) => {
+          return {
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.total,
+          };
+        }),
+        subtotal: selectedItems.reduce((sum, item) => {
+          return sum + item.total;
+        }, 0),
+        total: selectedItems.reduce((sum, item) => {
+          return sum + item.total;
+        }, 0),
+        status: 'draft',
+        deliveryMethod,
+      };
+
+      const response = await newRequest.post('/invoices', invoiceData);
+      const invoice = response.data.data;
+
+      return invoice;
+    },
+    onSuccess: () => {
+      toast.success('Invoice sent successfully');
+    },
+    onError: (error) => {
+      console.error('Error sending invoice:', error);
+      toast.error('Failed to send invoice');
+    },
+  });
+
   const handleAddItem = () => {
     if (!newItem.description || !newItem.quantity || !newItem.unitPrice) {
       toast.error('Please fill in all required fields');
@@ -350,5 +389,8 @@ export function useInvoiceEditor() {
     handleClientCreated,
     projectOptions,
     moduleOptions,
+    sendInvoiceMutation,
+    deliveryMethod,
+    setDeliveryMethod,
   };
 }
