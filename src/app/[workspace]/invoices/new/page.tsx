@@ -550,6 +550,7 @@ export default function InvoiceEditor() {
                     }}
                     placeholder='0.00'
                     className='h-8 text-sm'
+                    inputMode='decimal'
                   />
                 </div>
               </div>
