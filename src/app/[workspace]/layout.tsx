@@ -29,8 +29,13 @@ export default function DashboardLayout({
   const isAuthPage = pathname.includes('/login') || pathname.includes('/register');
   const isPortalPage = pathname.includes('/portal');
   const isApprovalsPage = pathname.includes('/approvals');
+  const isInvoiceNewPage = pathname.includes('/invoices/new');
   const showNavigation =
-    !isAuthPage && !isPortalPage && (loading || isAuthenticated) && !isApprovalsPage;
+    !isAuthPage &&
+    !isPortalPage &&
+    (loading || isAuthenticated) &&
+    !isApprovalsPage &&
+    !isInvoiceNewPage;
   const isInvoicePage = pathname.includes('/invoices');
   const isProjectPage = pathname.includes('/');
   const isLeadsPage = pathname.includes('/leads');
