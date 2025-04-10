@@ -2,6 +2,7 @@
 
 import { ArrowLeft, MoreHorizontal, ZoomIn, ZoomOut } from 'lucide-react';
 
+import CreateClientDialog from '@/components/ProjectPage/NewProjectDialog/CreateClientDialog';
 import { Button } from '@/components/ui/button';
 import { ColorPicker } from '@/components/ui/color-picker';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -60,6 +61,7 @@ export default function InvoiceEditor() {
     setIcon,
     logo,
     setLogo,
+    handleClientCreated,
   } = useInvoiceEditor();
 
   return (
@@ -105,7 +107,6 @@ export default function InvoiceEditor() {
                 <div>
                   <p className='text-sm font-medium text-gray-900'>{currentCustomer.name}</p>
                   <p className='text-sm text-gray-500'>{currentCustomer.email}</p>
-                  <p className='text-xs text-gray-400 mt-1'>{currentCustomer.address}</p>
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -154,59 +155,12 @@ export default function InvoiceEditor() {
               </Select>
             </div>
           )}
-          <Dialog open={isNewCustomerDialogOpen} onOpenChange={setIsNewCustomerDialogOpen}>
-            <DialogContent className='sm:max-w-md'>
-              <DialogHeader>
-                <DialogTitle>Add New Customer</DialogTitle>
-              </DialogHeader>
-              <div className='grid gap-4 py-4'>
-                <div className='grid grid-cols-4 items-center gap-4'>
-                  <Label htmlFor='name' className='text-right'>
-                    Name
-                  </Label>
-                  <Input
-                    id='name'
-                    className='col-span-3'
-                    value={newCustomer.name}
-                    onChange={(e) => {
-                      return setNewCustomer({ ...newCustomer, name: e.target.value });
-                    }}
-                  />
-                </div>
-                <div className='grid grid-cols-4 items-center gap-4'>
-                  <Label htmlFor='email' className='text-right'>
-                    Email
-                  </Label>
-                  <Input
-                    id='email'
-                    className='col-span-3'
-                    value={newCustomer.email}
-                    onChange={(e) => {
-                      return setNewCustomer({ ...newCustomer, email: e.target.value });
-                    }}
-                  />
-                </div>
-                <div className='grid grid-cols-4 items-center gap-4'>
-                  <Label htmlFor='address' className='text-right'>
-                    Address
-                  </Label>
-                  <Input
-                    id='address'
-                    className='col-span-3'
-                    value={newCustomer.address}
-                    onChange={(e) => {
-                      return setNewCustomer({ ...newCustomer, address: e.target.value });
-                    }}
-                  />
-                </div>
-              </div>
-              <div className='flex justify-end'>
-                <Button type='submit' onClick={handleAddCustomer}>
-                  Save Customer
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+
+          <CreateClientDialog
+            open={isNewCustomerDialogOpen}
+            onOpenChange={setIsNewCustomerDialogOpen}
+            onClientCreated={handleClientCreated}
+          />
           <Dialog open={isEditCustomerDialogOpen} onOpenChange={setIsEditCustomerDialogOpen}>
             <DialogContent className='sm:max-w-md'>
               <DialogHeader>
@@ -236,19 +190,6 @@ export default function InvoiceEditor() {
                     value={currentCustomer.email}
                     onChange={(e) => {
                       return setCurrentCustomer({ ...currentCustomer, email: e.target.value });
-                    }}
-                  />
-                </div>
-                <div className='grid grid-cols-4 items-center gap-4'>
-                  <Label htmlFor='edit-address' className='text-right'>
-                    Address
-                  </Label>
-                  <Input
-                    id='edit-address'
-                    className='col-span-3'
-                    value={currentCustomer.address}
-                    onChange={(e) => {
-                      return setCurrentCustomer({ ...currentCustomer, address: e.target.value });
                     }}
                   />
                 </div>
@@ -514,7 +455,6 @@ export default function InvoiceEditor() {
                   <div>
                     <p className='text-xs font-medium text-gray-900 mb-1'>Bill to</p>
                     <p className='text-xs text-gray-500'>{currentCustomer.name}</p>
-                    <p className='text-xs text-gray-500'>{currentCustomer.address}</p>
                     <p className='text-xs text-gray-500'>{currentCustomer.email}</p>
                   </div>
                 </div>

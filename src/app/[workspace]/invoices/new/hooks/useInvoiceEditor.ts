@@ -4,7 +4,6 @@ interface Customer {
   id: string;
   name: string;
   email: string;
-  address: string;
 }
 
 interface Item {
@@ -38,13 +37,11 @@ export function useInvoiceEditor() {
     id: '',
     name: '',
     email: '',
-    address: '',
   });
   const [currentCustomer, setCurrentCustomer] = useState<Customer>({
     id: '',
     name: '',
     email: '',
-    address: '',
   });
   const [icon, setIcon] = useState<string>('');
   const [logo, setLogo] = useState<string>('');
@@ -70,7 +67,6 @@ export function useInvoiceEditor() {
       id: newId,
       name: newCustomer.name,
       email: newCustomer.email,
-      address: newCustomer.address,
     };
 
     setCustomers([...customers, newCustomerData]);
@@ -78,7 +74,23 @@ export function useInvoiceEditor() {
     setIsNewCustomerDialogOpen(false);
     setCurrentCustomer(newCustomerData);
     setIsCustomerPicked(true);
-    setNewCustomer({ id: '', name: '', email: '', address: '' });
+    setNewCustomer({ id: '', name: '', email: '' });
+  };
+
+  const handleClientCreated = (client: any) => {
+    const clientParticipant = client.participant;
+
+    const newCustomerData = {
+      id: clientParticipant._id || (customers.length + 2).toString(),
+      name: clientParticipant.name,
+      email: clientParticipant.email,
+    };
+
+    setCustomers([...customers, newCustomerData]);
+    setSelectedCustomer(newCustomerData.id);
+    setCurrentCustomer(newCustomerData);
+    setIsCustomerPicked(true);
+    setIsNewCustomerDialogOpen(false);
   };
 
   const handleItemSelect = (value: string) => {
@@ -181,5 +193,6 @@ export function useInvoiceEditor() {
     setIcon,
     logo,
     setLogo,
+    handleClientCreated,
   };
 }
