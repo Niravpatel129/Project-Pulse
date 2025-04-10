@@ -20,7 +20,8 @@ export default function DashboardLayout({
       !loading &&
       !isAuthenticated &&
       !pathname.includes('/login') &&
-      !pathname.includes('/register')
+      !pathname.includes('/register') &&
+      !pathname.includes('/invoice/')
     ) {
       router.push('/login');
     }
@@ -30,13 +31,15 @@ export default function DashboardLayout({
   const isPortalPage = pathname.includes('/portal');
   const isApprovalsPage = pathname.includes('/approvals');
   const isInvoiceNewPage = pathname.includes('/invoices/new');
+  const isInvoiceViewPage = pathname.includes('/invoice/');
   const showNavigation =
     !isAuthPage &&
     !isPortalPage &&
     (loading || isAuthenticated) &&
     !isApprovalsPage &&
-    !isInvoiceNewPage;
-  const isInvoicePage = pathname.includes('/invoices');
+    !isInvoiceNewPage &&
+    !isInvoiceViewPage;
+  const isInvoicesPage = pathname.includes('/invoices');
   const isProjectPage = pathname.includes('/');
   const isLeadsPage = pathname.includes('/leads');
 

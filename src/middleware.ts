@@ -27,6 +27,20 @@ export function middleware(request: NextRequest) {
     // Extract workspace from the subdomain
     const workspace = subdomain;
 
+    // Skip authentication check for invoice view pages
+    if (path.match(/\/invoice\/[^\/]+$/)) {
+      // Allow access to invoice view pages without authentication
+      if (path === '/') {
+        return NextResponse.rewrite(new URL(`/${workspace}`, request.url));
+      }
+
+      if (!path.startsWith(`/${workspace}`)) {
+        return NextResponse.rewrite(new URL(`/${workspace}${path}`, request.url));
+      }
+
+      return NextResponse.next();
+    }
+
     // If not authenticated and not already on login page, redirect to login
     if (!isAuthenticated && !path.includes('/login') && !path.includes('/register')) {
       // Store the original URL to redirect back after login
