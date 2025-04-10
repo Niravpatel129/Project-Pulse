@@ -4,6 +4,12 @@ import { ArrowLeft, MoreHorizontal, Search, ZoomIn, ZoomOut } from 'lucide-react
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -18,6 +24,7 @@ import { Switch } from '@/components/ui/switch';
 export default function InvoiceEditor() {
   const [showPreview, setShowPreview] = useState(true);
   const [previewScale, setPreviewScale] = useState(0.8);
+  const [isCustomerPicked, setIsCustomerPicked] = useState(true);
 
   const zoomIn = () => {
     setPreviewScale((prev) => {
@@ -67,19 +74,43 @@ export default function InvoiceEditor() {
           } border-r border-gray-100 bg-white p-8 overflow-y-auto`}
         >
           {/* Customer section */}
-          <div className='mb-8'>
-            <h2 className='text-sm font-medium text-gray-900 mb-3'>Customer</h2>
-            <div className='flex items-start justify-between p-4 bg-gray-50 rounded-lg'>
-              <div>
-                <p className='text-sm font-medium text-gray-900'>Keshiv Sharma</p>
-                <p className='text-sm text-gray-500'>keshiv.sharma@gmail.com</p>
-                <p className='text-xs text-gray-400 mt-1'>Language: English (United States)</p>
+          <h2 className='text-sm font-medium text-gray-900 mb-3'>Customer</h2>
+          {isCustomerPicked ? (
+            <div className='mb-8'>
+              <div className='flex items-start justify-between p-4 bg-gray-50 rounded-lg'>
+                <div>
+                  <p className='text-sm font-medium text-gray-900'>Keshiv Sharma</p>
+                  <p className='text-sm text-gray-500'>keshiv.sharma@gmail.com</p>
+                  <p className='text-xs text-gray-400 mt-1'>Language: English (United States)</p>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
+                      <MoreHorizontal className='h-4 w-4 text-gray-500' />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className='w-56' align='end'>
+                    <DropdownMenuItem>Edit customer information</DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        return setIsCustomerPicked(false);
+                      }}
+                    >
+                      Switch customer
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-              <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
-                <MoreHorizontal className='h-4 w-4 text-gray-500' />
-              </Button>
             </div>
-          </div>
+          ) : (
+            <div className='mb-8'>
+              <Select>
+                <SelectTrigger className='w-full bg-white border-gray-200'>
+                  <SelectValue placeholder='Select customer' />
+                </SelectTrigger>
+              </Select>
+            </div>
+          )}
 
           {/* Currency section */}
           <div className='mb-8'>
