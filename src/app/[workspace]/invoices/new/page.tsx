@@ -31,33 +31,66 @@ export default function InvoiceEditor() {
   const [isEditCustomerDialogOpen, setIsEditCustomerDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [customers, setCustomers] = useState([
-    { id: '2', name: 'Customer 2' },
-    { id: '3', name: 'Customer 3' },
+    {
+      id: '1',
+      name: 'Customer 1',
+      email: 'customer1@example.com',
+      address: '123 Main St, Anytown, USA',
+    },
+    {
+      id: '2',
+      name: 'Customer 2',
+      email: 'customer2@example.com',
+      address: '456 Maple Ave, Anycity, USA',
+    },
+    {
+      id: '3',
+      name: 'Customer 3',
+      email: 'customer3@example.com',
+      address: '789 Pine St, Anyvillage, USA',
+    },
   ]);
   const [newCustomer, setNewCustomer] = useState({
     name: '',
     email: '',
     address: '',
   });
-  const [currentCustomer, setCurrentCustomer] = useState({
-    name: 'Keshiv Sharma',
-    email: 'keshiv.sharma@gmail.com',
-    address: 'Ontario, Canada',
-  });
+  const [currentCustomer, setCurrentCustomer] = useState(customers[0]);
 
   const handleCustomerSelect = (value: string) => {
     if (value === 'new') {
       setIsNewCustomerDialogOpen(true);
     } else {
       setSelectedCustomer(value);
+      // Find the selected customer from the customers array
+      const customer = customers.find((c) => {
+        return c.id === value;
+      });
+      if (customer) {
+        // Update the current customer with the selected customer's information
+        setCurrentCustomer(customer);
+        // Set isCustomerPicked to true to show the customer info panel
+        setIsCustomerPicked(true);
+      }
     }
   };
 
   const handleAddCustomer = () => {
     const newId = (customers.length + 2).toString();
-    setCustomers([...customers, { id: newId, name: newCustomer.name }]);
+    setCustomers([
+      ...customers,
+      { id: newId, name: newCustomer.name, email: newCustomer.email, address: newCustomer.address },
+    ]);
     setSelectedCustomer(newId);
     setIsNewCustomerDialogOpen(false);
+    // Update current customer with the new customer's information
+    setCurrentCustomer({
+      name: newCustomer.name,
+      email: newCustomer.email,
+      address: newCustomer.address,
+    });
+    // Set isCustomerPicked to true to show the customer info panel
+    setIsCustomerPicked(true);
     setNewCustomer({ name: '', email: '', address: '' });
   };
 
@@ -114,9 +147,9 @@ export default function InvoiceEditor() {
             <div className='mb-8'>
               <div className='flex items-start justify-between p-4 bg-gray-50 rounded-lg'>
                 <div>
-                  <p className='text-sm font-medium text-gray-900'>Keshiv Sharma</p>
-                  <p className='text-sm text-gray-500'>keshiv.sharma@gmail.com</p>
-                  <p className='text-xs text-gray-400 mt-1'>Language: English (United States)</p>
+                  <p className='text-sm font-medium text-gray-900'>{currentCustomer.name}</p>
+                  <p className='text-sm text-gray-500'>{currentCustomer.email}</p>
+                  <p className='text-xs text-gray-400 mt-1'>{currentCustomer.address}</p>
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
