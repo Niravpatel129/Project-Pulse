@@ -76,7 +76,7 @@ export default function InvoiceEditor() {
           <Button variant='ghost' size='icon' className='rounded-full hover:bg-gray-100'>
             <ArrowLeft className='h-4 w-4 text-gray-600' />
           </Button>
-          <h1 className='text-base font-medium text-gray-900'>Edit invoice</h1>
+          <h1 className='text-base font-medium text-gray-900'>Create invoice</h1>
         </div>
         <div className='flex items-center gap-3'>
           <Button
