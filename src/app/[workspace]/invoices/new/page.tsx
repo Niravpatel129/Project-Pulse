@@ -405,19 +405,6 @@ export default function InvoiceEditor() {
                 This will appear at the bottom of the invoice.
               </p>
             </div>
-
-            {/* Custom Fields */}
-            <div>
-              <div className='flex items-center justify-between mb-2'>
-                <Label className='text-sm text-gray-700'>Custom Fields</Label>
-                <Button variant='outline' size='sm' className='text-gray-600 hover:text-gray-900'>
-                  Add Field
-                </Button>
-              </div>
-              <p className='text-xs text-gray-500'>
-                Add custom fields to your invoice for additional information.
-              </p>
-            </div>
           </div>
 
           {/* Tax ID section */}
