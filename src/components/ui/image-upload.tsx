@@ -88,6 +88,7 @@ export function ImageUpload({ label, value, onChange, className }: ImageUploadPr
         >
           {preview ? (
             <div className='relative group h-full bg-gray-100 p-2'>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={preview}
                 alt={label}
