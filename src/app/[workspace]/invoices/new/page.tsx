@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, MoreHorizontal, Search, ZoomIn, ZoomOut } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, ZoomIn, ZoomOut } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,38 @@ export default function InvoiceEditor() {
   const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
   const [isEditCustomerDialogOpen, setIsEditCustomerDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
+  const [isNewItemDialogOpen, setIsNewItemDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<string>('');
+  const [availableItems, setAvailableItems] = useState([
+    {
+      id: '1',
+      description: 'Item 1',
+      quantity: 1,
+      unitPrice: 100,
+      total: 100,
+    },
+    {
+      id: '2',
+      description: 'Item 2',
+      quantity: 1,
+      unitPrice: 200,
+      total: 200,
+    },
+    {
+      id: '3',
+      description: 'Item 3',
+      quantity: 1,
+      unitPrice: 300,
+      total: 300,
+    },
+  ]);
+  const [selectedItems, setSelectedItems] = useState<typeof availableItems>([]);
+  const [newItem, setNewItem] = useState({
+    description: '',
+    quantity: 1,
+    unitPrice: 0,
+    total: 0,
+  });
   const [customers, setCustomers] = useState([
     {
       id: '1',
@@ -93,6 +125,57 @@ export default function InvoiceEditor() {
     // Set isCustomerPicked to true to show the customer info panel
     setIsCustomerPicked(true);
     setNewCustomer({ name: '', email: '', address: '' });
+  };
+
+  const handleItemSelect = (value: string) => {
+    if (value === 'new') {
+      setIsNewItemDialogOpen(true);
+    } else {
+      setSelectedItem(value);
+      // Find the selected item from the available items array
+      const item = availableItems.find((i) => {
+        return i.id === value;
+      });
+      if (item) {
+        // Add the item to the selected items list
+        setSelectedItems([...selectedItems, item]);
+      }
+    }
+  };
+
+  const handleAddItem = () => {
+    if (!newItem.description || !newItem.quantity || !newItem.unitPrice) return;
+
+    const newId = (availableItems.length + 1).toString();
+    const total = newItem.quantity * newItem.unitPrice;
+
+    const newItemWithId = {
+      id: newId,
+      description: newItem.description,
+      quantity: newItem.quantity,
+      unitPrice: newItem.unitPrice,
+      total,
+    };
+
+    // Add to both available and selected items
+    setAvailableItems([...availableItems, newItemWithId]);
+    setSelectedItems([...selectedItems, newItemWithId]);
+
+    setNewItem({
+      description: '',
+      quantity: 1,
+      unitPrice: 0,
+      total: 0,
+    });
+    setIsNewItemDialogOpen(false);
+  };
+
+  const handleRemoveItem = (itemId: string) => {
+    setSelectedItems(
+      selectedItems.filter((item) => {
+        return item.id !== itemId;
+      }),
+    );
   };
 
   const zoomIn = () => {
@@ -339,9 +422,66 @@ export default function InvoiceEditor() {
               </span>{' '}
               to this invoice.
             </p>
-            <div className='relative'>
-              <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400' />
-              <Input className='pl-10 bg-white border-gray-200' placeholder='Find or add an item' />
+            <div className='space-y-4'>
+              <Select value={selectedItem} onValueChange={handleItemSelect}>
+                <SelectTrigger className='w-full bg-white border-gray-200'>
+                  <SelectValue placeholder='Add item' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='new' className='text-gray-600'>
+                    + Add new item
+                  </SelectItem>
+                  <Separator className='my-1' />
+                  {availableItems.map((item) => {
+                    return (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.description}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+
+              {selectedItems.length > 0 && (
+                <div className='space-y-2'>
+                  {selectedItems.map((item) => {
+                    return (
+                      <div
+                        key={`selected-${item.id}`}
+                        className='flex items-start justify-between p-4 bg-gray-50 rounded-lg'
+                      >
+                        <div>
+                          <p className='text-sm font-medium text-gray-900'>{item.description}</p>
+                          <p className='text-sm text-gray-500'>Quantity: {item.quantity}</p>
+                          <p className='text-sm text-gray-500'>Unit Price: ${item.unitPrice}</p>
+                          <p className='text-sm text-gray-500'>Total: ${item.total}</p>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              className='h-8 w-8 hover:bg-gray-100'
+                            >
+                              <MoreHorizontal className='h-4 w-4 text-gray-500' />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className='w-56' align='end'>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                return handleRemoveItem(item.id);
+                              }}
+                              className='text-red-600'
+                            >
+                              Remove item
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
@@ -580,6 +720,66 @@ export default function InvoiceEditor() {
           </div>
         )}
       </div>
+
+      {/* New Item Dialog */}
+      <Dialog open={isNewItemDialogOpen} onOpenChange={setIsNewItemDialogOpen}>
+        <DialogContent className='sm:max-w-md'>
+          <DialogHeader>
+            <DialogTitle>Add New Item</DialogTitle>
+          </DialogHeader>
+          <div className='grid gap-4 py-4'>
+            <div className='grid grid-cols-4 items-center gap-4'>
+              <Label htmlFor='item-description' className='text-right'>
+                Description
+              </Label>
+              <Input
+                id='item-description'
+                className='col-span-3'
+                value={newItem.description}
+                onChange={(e) => {
+                  setNewItem({ ...newItem, description: e.target.value });
+                }}
+              />
+            </div>
+            <div className='grid grid-cols-4 items-center gap-4'>
+              <Label htmlFor='item-quantity' className='text-right'>
+                Quantity
+              </Label>
+              <Input
+                id='item-quantity'
+                type='number'
+                min='1'
+                className='col-span-3'
+                value={newItem.quantity}
+                onChange={(e) => {
+                  setNewItem({ ...newItem, quantity: parseInt(e.target.value) });
+                }}
+              />
+            </div>
+            <div className='grid grid-cols-4 items-center gap-4'>
+              <Label htmlFor='item-unit-price' className='text-right'>
+                Unit Price
+              </Label>
+              <Input
+                id='item-unit-price'
+                type='number'
+                min='0'
+                step='0.01'
+                className='col-span-3'
+                value={newItem.unitPrice}
+                onChange={(e) => {
+                  setNewItem({ ...newItem, unitPrice: parseFloat(e.target.value) });
+                }}
+              />
+            </div>
+          </div>
+          <div className='flex justify-end'>
+            <Button type='submit' onClick={handleAddItem}>
+              Add Item
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
