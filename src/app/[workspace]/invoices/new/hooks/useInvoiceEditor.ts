@@ -1,10 +1,12 @@
 import { useParticipation } from '@/hooks/useParticipation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface Customer {
   id: string;
   name: string;
   email: string;
+  phone?: string;
+  company?: string;
 }
 
 interface Item {
@@ -16,8 +18,7 @@ interface Item {
 }
 
 export function useInvoiceEditor() {
-  const { participants } = useParticipation();
-  console.log('🚀 participants:', participants);
+  const { participants, isLoading } = useParticipation();
   const [showPreview, setShowPreview] = useState(true);
   const [previewScale, setPreviewScale] = useState(1.4);
   const [isCustomerPicked, setIsCustomerPicked] = useState(false);
@@ -35,15 +36,7 @@ export function useInvoiceEditor() {
     unitPrice: 0,
     total: 0,
   });
-  const [customers, setCustomers] = useState<Customer[]>(() => {
-    return participants.map((participant) => {
-      return {
-        id: participant._id,
-        name: participant.name,
-        email: participant.email || '',
-      };
-    });
-  });
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [newCustomer, setNewCustomer] = useState<Customer>({
     id: '',
     name: '',
@@ -53,9 +46,26 @@ export function useInvoiceEditor() {
     id: '',
     name: '',
     email: '',
+    phone: '',
+    company: '',
   });
   const [icon, setIcon] = useState<string>('');
   const [logo, setLogo] = useState<string>('');
+
+  // Update customers when participants are loaded
+  useEffect(() => {
+    if (!isLoading && participants.length > 0) {
+      setCustomers(
+        participants.map((participant) => {
+          return {
+            id: participant._id,
+            name: participant.name,
+            email: participant.email || '',
+          };
+        }),
+      );
+    }
+  }, [participants, isLoading]);
 
   const handleCustomerSelect = (value: string) => {
     if (value === 'new') {

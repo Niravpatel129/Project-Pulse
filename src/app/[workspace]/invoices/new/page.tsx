@@ -3,6 +3,7 @@
 import { ArrowLeft, MoreHorizontal, ZoomIn, ZoomOut } from 'lucide-react';
 
 import CreateClientDialog from '@/components/ProjectPage/NewProjectDialog/CreateClientDialog';
+import EditClientDialog from '@/components/ProjectPage/NewProjectDialog/EditClientDialog';
 import { Button } from '@/components/ui/button';
 import { ColorPicker } from '@/components/ui/color-picker';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -62,6 +63,7 @@ export default function InvoiceEditor() {
     logo,
     setLogo,
     handleClientCreated,
+    setCustomers,
   } = useInvoiceEditor();
 
   return (
@@ -161,51 +163,19 @@ export default function InvoiceEditor() {
             onOpenChange={setIsNewCustomerDialogOpen}
             onClientCreated={handleClientCreated}
           />
-          <Dialog open={isEditCustomerDialogOpen} onOpenChange={setIsEditCustomerDialogOpen}>
-            <DialogContent className='sm:max-w-md'>
-              <DialogHeader>
-                <DialogTitle>Edit Customer Information</DialogTitle>
-              </DialogHeader>
-              <div className='grid gap-4 py-4'>
-                <div className='grid grid-cols-4 items-center gap-4'>
-                  <Label htmlFor='edit-name' className='text-right'>
-                    Name
-                  </Label>
-                  <Input
-                    id='edit-name'
-                    className='col-span-3'
-                    value={currentCustomer.name}
-                    onChange={(e) => {
-                      return setCurrentCustomer({ ...currentCustomer, name: e.target.value });
-                    }}
-                  />
-                </div>
-                <div className='grid grid-cols-4 items-center gap-4'>
-                  <Label htmlFor='edit-email' className='text-right'>
-                    Email
-                  </Label>
-                  <Input
-                    id='edit-email'
-                    className='col-span-3'
-                    value={currentCustomer.email}
-                    onChange={(e) => {
-                      return setCurrentCustomer({ ...currentCustomer, email: e.target.value });
-                    }}
-                  />
-                </div>
-              </div>
-              <div className='flex justify-end'>
-                <Button
-                  type='submit'
-                  onClick={() => {
-                    return setIsEditCustomerDialogOpen(false);
-                  }}
-                >
-                  Save Changes
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <EditClientDialog
+            open={isEditCustomerDialogOpen}
+            onOpenChange={setIsEditCustomerDialogOpen}
+            client={currentCustomer}
+            onClientUpdated={(updatedClient) => {
+              setCurrentCustomer(updatedClient);
+              setCustomers(
+                customers.map((c) => {
+                  return c.id === updatedClient.id ? updatedClient : c;
+                }),
+              );
+            }}
+          />
           {/* Currency section */}
           <div className='mb-8'>
             <h2 className='text-sm font-medium text-gray-900 mb-3'>Currency</h2>
