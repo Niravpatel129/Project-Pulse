@@ -12,17 +12,19 @@ import { Invoice } from '../types';
 import { InvoiceSkeleton } from './InvoiceSkeleton';
 
 const getStatusBadgeColor = (status: string) => {
-  switch (status) {
-    case 'paid':
-      return 'bg-green-50 text-green-700 hover:bg-green-50';
-    case 'pending':
-      return 'bg-yellow-50 text-yellow-700 hover:bg-yellow-50';
+  switch (status.toLowerCase()) {
     case 'draft':
-      return 'bg-gray-50 text-gray-700 hover:bg-gray-50';
-    case 'overdue':
-      return 'bg-red-50 text-red-700 hover:bg-red-50';
+      return 'bg-slate-100 text-slate-600 hover:bg-slate-100 border border-slate-200';
+    case 'open':
+      return 'bg-sky-50 text-sky-600 hover:bg-sky-50 border border-sky-200';
+    case 'pending':
+      return 'bg-amber-50 text-amber-600 hover:bg-amber-50 border border-amber-200';
+    case 'paid':
+      return 'bg-emerald-50 text-emerald-600 hover:bg-emerald-50 border border-emerald-200';
+    case 'void':
+      return 'bg-slate-100 text-slate-600 hover:bg-slate-100 border border-slate-200';
     default:
-      return 'bg-gray-50 text-gray-700 hover:bg-gray-50';
+      return 'bg-slate-100 text-slate-600 hover:bg-slate-100 border border-slate-200';
   }
 };
 
@@ -37,46 +39,58 @@ export default function InvoiceTable({ invoices, isLoading = false }: InvoiceTab
   }
 
   return (
-    <div className='bg-background overflow-hidden rounded-md border'>
+    <div className='bg-white overflow-hidden rounded-md border'>
       <Table>
         <TableHeader>
-          <TableRow className='bg-muted/50'>
-            <TableHead className='h-9 py-2'>Invoice #</TableHead>
-            <TableHead className='h-9 py-2'>Client</TableHead>
-            <TableHead className='h-9 py-2'>Amount</TableHead>
-            <TableHead className='h-9 py-2'>Status</TableHead>
-            <TableHead className='h-9 py-2'>Due Date</TableHead>
-            <TableHead className='h-9 py-2'>Created</TableHead>
-            <TableHead className='h-9 py-2'>Created By</TableHead>
+          <TableRow>
+            <TableHead className='h-9 py-2 text-sm font-medium text-gray-600'>Amount</TableHead>
+            <TableHead className='h-9 py-2 text-sm font-medium text-gray-600'>
+              Invoice number
+            </TableHead>
+            <TableHead className='h-9 py-2 text-sm font-medium text-gray-600'>
+              Customer name
+            </TableHead>
+            <TableHead className='h-9 py-2 text-sm font-medium text-gray-600'>
+              Customer email
+            </TableHead>
+            <TableHead className='h-9 py-2 text-sm font-medium text-gray-600'>Due</TableHead>
+            <TableHead className='h-9 py-2 text-sm font-medium text-gray-600'>Created</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {invoices.map((invoice) => {
             return (
-              <TableRow key={invoice._id}>
-                <TableCell className='py-2 font-medium'>{invoice.invoiceNumber}</TableCell>
+              <TableRow key={invoice._id} className='hover:bg-gray-50'>
                 <TableCell className='py-2'>
-                  <div className='space-y-0.5'>
-                    <div className='text-sm font-medium'>{invoice.client.name}</div>
-                    <div className='text-xs text-gray-500'>{invoice.client.email}</div>
+                  <div className='flex items-center gap-1'>
+                    <span className='font-semibold'>${invoice.total.toFixed(2)}</span>
+                    <span className='text-gray-600'>CAD</span>
+                    <Badge
+                      variant='secondary'
+                      className={cn(
+                        'text-sm capitalize  font-bold px-2 py-0.5 rounded',
+                        getStatusBadgeColor(invoice.status),
+                      )}
+                    >
+                      {invoice.status}
+                    </Badge>
                   </div>
                 </TableCell>
-                <TableCell className='py-2'>${invoice.total.toFixed(2)}</TableCell>
-                <TableCell className='py-2'>
-                  <Badge
-                    variant='outline'
-                    className={cn('text-xs font-medium', getStatusBadgeColor(invoice.status))}
-                  >
-                    {invoice.status}
-                  </Badge>
+                <TableCell className='py-2 text-gray-600'>{invoice.invoiceNumber}</TableCell>
+                <TableCell className='py-2 text-gray-600'>{invoice.client.name}</TableCell>
+                <TableCell className='py-2 text-gray-500'>{invoice.client.email}</TableCell>
+                <TableCell className='py-2 text-gray-600'>
+                  {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : '—'}
                 </TableCell>
-                <TableCell className='py-2'>
-                  {new Date(invoice.dueDate).toLocaleDateString()}
+                <TableCell className='py-2 text-gray-500'>
+                  {new Date(invoice.createdAt).toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: true,
+                  })}
                 </TableCell>
-                <TableCell className='py-2'>
-                  {new Date(invoice.createdAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell className='py-2'>{invoice.createdBy.name}</TableCell>
               </TableRow>
             );
           })}
