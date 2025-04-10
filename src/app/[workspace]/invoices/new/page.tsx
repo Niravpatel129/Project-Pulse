@@ -481,7 +481,7 @@ export default function InvoiceEditor() {
         {showPreview && (
           <div className='w-1/2 bg-gray-50 overflow-y-auto sticky top-14 h-[calc(100vh-3.5rem)] flex flex-col'>
             {/* Zoom controls */}
-            <div className='flex justify-end mb-4 gap-2 p-4'>
+            <div className='flex justify-end mb-4 gap-2 p-4 absolute top-0 right-0'>
               <Button
                 variant='outline'
                 size='icon'

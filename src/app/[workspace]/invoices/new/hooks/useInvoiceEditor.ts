@@ -16,8 +16,8 @@ interface Item {
 }
 
 export function useInvoiceEditor() {
-  const [showPreview, setShowPreview] = useState(false);
-  const [previewScale, setPreviewScale] = useState(1);
+  const [showPreview, setShowPreview] = useState(true);
+  const [previewScale, setPreviewScale] = useState(1.4);
   const [isCustomerPicked, setIsCustomerPicked] = useState(false);
   const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
   const [isEditCustomerDialogOpen, setIsEditCustomerDialogOpen] = useState(false);
