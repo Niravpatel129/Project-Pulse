@@ -254,10 +254,21 @@ export default function AddItemDialog({
                 </AccordionItem>
               </Accordion>
             </div>
-            <div className='flex justify-end pt-2'>
-              <Button type='submit' onClick={handleAddItem} size='sm'>
-                Add Item
-              </Button>
+            <div className='flex justify-end pt-2 px-1'>
+              <div className='flex gap-2'>
+                <Button
+                  onClick={() => {
+                    onOpenChange(false);
+                  }}
+                  size='sm'
+                  variant='outline'
+                >
+                  Cancel
+                </Button>
+                <Button type='submit' onClick={handleAddItem} size='sm'>
+                  Add Item
+                </Button>
+              </div>
             </div>
           </div>
         </div>
