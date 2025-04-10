@@ -6,7 +6,6 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
   SelectContent,
@@ -33,56 +32,60 @@ export default function InvoiceEditor() {
   };
 
   return (
-    <div className='flex min-h-screen flex-col font-sans'>
+    <div className='flex min-h-screen flex-col font-sans bg-gray-50'>
       {/* Header */}
-      <header className='sticky top-0 z-10 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6'>
-        <div className='flex items-center gap-4'>
-          <Button variant='ghost' size='icon' className='rounded-full'>
-            <ArrowLeft className='h-5 w-5' />
+      <header className='sticky top-0 z-10 flex h-14 items-center justify-between border-b border-gray-100 bg-white/80 backdrop-blur-sm px-6'>
+        <div className='flex items-center gap-3'>
+          <Button variant='ghost' size='icon' className='rounded-full hover:bg-gray-100'>
+            <ArrowLeft className='h-4 w-4 text-gray-600' />
           </Button>
-          <h1 className='text-xl font-semibold'>Edit invoice</h1>
+          <h1 className='text-base font-medium text-gray-900'>Edit invoice</h1>
         </div>
-        <div className='flex items-center gap-4'>
+        <div className='flex items-center gap-3'>
           <Button
             variant='outline'
+            size='sm'
+            className='text-gray-600 hover:text-gray-900'
             onClick={() => {
               return setShowPreview(!showPreview);
             }}
           >
             {showPreview ? 'Hide preview' : 'Show preview'}
           </Button>
-          <Button className='bg-[#635BFF] hover:bg-[#524cdb]'>Send invoice</Button>
+          <Button size='sm' className='bg-gray-900 hover:bg-gray-800 text-white'>
+            Send invoice
+          </Button>
         </div>
       </header>
 
       {/* Main content */}
-      <div className='flex flex-1 bg-[#f0f1f6]'>
+      <div className='flex flex-1'>
         {/* Left panel - Invoice Form Editor */}
         <div
           className={`${
             showPreview ? 'w-1/2' : 'w-full'
-          } border-r border-gray-200 bg-white p-6 overflow-y-auto`}
+          } border-r border-gray-100 bg-white p-8 overflow-y-auto`}
         >
           {/* Customer section */}
           <div className='mb-8'>
-            <h2 className='text-base font-semibold mb-4'>Customer</h2>
-            <div className='flex items-start justify-between'>
+            <h2 className='text-sm font-medium text-gray-900 mb-3'>Customer</h2>
+            <div className='flex items-start justify-between p-4 bg-gray-50 rounded-lg'>
               <div>
-                <p className='font-medium'>Keshiv Sharma</p>
-                <p className='text-gray-500 text-sm'>keshiv.sharma@gmail.com</p>
-                <p className='text-gray-400 text-sm mt-1'>Language: English (United States)</p>
+                <p className='text-sm font-medium text-gray-900'>Keshiv Sharma</p>
+                <p className='text-sm text-gray-500'>keshiv.sharma@gmail.com</p>
+                <p className='text-xs text-gray-400 mt-1'>Language: English (United States)</p>
               </div>
-              <Button variant='ghost' size='icon' className='h-8 w-8'>
-                <MoreHorizontal className='h-5 w-5' />
+              <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
+                <MoreHorizontal className='h-4 w-4 text-gray-500' />
               </Button>
             </div>
           </div>
 
           {/* Currency section */}
           <div className='mb-8'>
-            <h2 className='text-base font-semibold mb-4'>Currency</h2>
+            <h2 className='text-sm font-medium text-gray-900 mb-3'>Currency</h2>
             <Select defaultValue='cad'>
-              <SelectTrigger className='w-full bg-white'>
+              <SelectTrigger className='w-full bg-white border-gray-200'>
                 <SelectValue placeholder='Select currency' />
               </SelectTrigger>
               <SelectContent>
@@ -92,76 +95,72 @@ export default function InvoiceEditor() {
                 <SelectItem value='gbp'>GBP - British Pound</SelectItem>
               </SelectContent>
             </Select>
-            <p className='text-gray-500 text-sm mt-2'>
+            <p className='text-xs text-gray-500 mt-2'>
               Selecting a new currency will clear all items from the invoice.
             </p>
           </div>
 
           {/* Items section */}
           <div className='mb-8'>
-            <h2 className='text-base font-semibold mb-4'>Items</h2>
-            <p className='text-gray-600 text-sm mb-4'>
+            <h2 className='text-sm font-medium text-gray-900 mb-3'>Items</h2>
+            <p className='text-sm text-gray-600 mb-4'>
               Add single, one-time items or products from your{' '}
-              <span className='text-[#635BFF] cursor-pointer'>product catalogue</span> to this
-              invoice.
+              <span className='text-gray-900 font-medium cursor-pointer hover:text-gray-700'>
+                product catalogue
+              </span>{' '}
+              to this invoice.
             </p>
             <div className='relative'>
               <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400' />
-              <Input className='pl-10 bg-white' placeholder='Find or add an item' />
+              <Input className='pl-10 bg-white border-gray-200' placeholder='Find or add an item' />
             </div>
           </div>
 
           {/* Delivery section */}
           <div className='mb-8'>
-            <h2 className='text-base font-semibold mb-4'>Delivery</h2>
-            <RadioGroup className='flex flex-wrap gap-2' defaultValue='email'>
-              <div className='border-input has-data-[state=checked]:border-[#635BFF]/50 relative flex flex-col items-start gap-4 rounded-md border p-3 shadow-xs outline-none'>
-                <div className='flex items-center gap-2'>
-                  <RadioGroupItem
-                    id='email'
-                    value='email'
-                    className='after:absolute after:inset-0'
-                  />
-                  <Label htmlFor='email'>Email</Label>
-                </div>
-              </div>
-              <div className='border-input has-data-[state=checked]:border-[#635BFF]/50 relative flex flex-col items-start gap-4 rounded-md border p-3 shadow-xs outline-none'>
-                <div className='flex items-center gap-2'>
-                  <RadioGroupItem id='sms' value='sms' className='after:absolute after:inset-0' />
-                  <Label htmlFor='sms'>SMS</Label>
-                </div>
-              </div>
-              <div className='border-input has-data-[state=checked]:border-[#635BFF]/50 relative flex flex-col items-start gap-4 rounded-md border p-3 shadow-xs outline-none'>
-                <div className='flex items-center gap-2'>
-                  <RadioGroupItem id='both' value='both' className='after:absolute after:inset-0' />
-                  <Label htmlFor='both'>Both</Label>
-                </div>
-              </div>
-            </RadioGroup>
+            <h2 className='text-sm font-medium text-gray-900 mb-3'>Delivery</h2>
+            <Select defaultValue='email'>
+              <SelectTrigger className='w-full bg-white border-gray-200'>
+                <SelectValue placeholder='Select delivery method' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='email'>Email</SelectItem>
+                <SelectItem value='sms'>SMS</SelectItem>
+                <SelectItem value='both'>Both</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Options section */}
           <div className='mb-8'>
-            <h2 className='text-base font-semibold mb-4'>Options</h2>
+            <h2 className='text-sm font-medium text-gray-900 mb-3'>Options</h2>
 
             {/* Memo */}
             <div className='mb-4'>
-              <Label htmlFor='memo' className='block mb-2'>
+              <Label htmlFor='memo' className='text-sm text-gray-700 mb-2 block'>
                 Memo
               </Label>
-              <Input id='memo' placeholder='Add a memo to your invoice' className='bg-white' />
-              <p className='text-gray-500 text-sm mt-1'>
+              <Input
+                id='memo'
+                placeholder='Add a memo to your invoice'
+                className='bg-white border-gray-200'
+              />
+              <p className='text-xs text-gray-500 mt-1'>
                 This will appear on the invoice below the line items.
               </p>
             </div>
 
             {/* Footer */}
             <div className='mb-4'>
-              <Label htmlFor='footer' className='block mb-2'>
+              <Label htmlFor='footer' className='text-sm text-gray-700 mb-2 block'>
                 Footer
               </Label>
-              <Input id='footer' placeholder='Add a footer to your invoice' className='bg-white' />
-              <p className='text-gray-500 text-sm mt-1'>
+              <Input
+                id='footer'
+                placeholder='Add a footer to your invoice'
+                className='bg-white border-gray-200'
+              />
+              <p className='text-xs text-gray-500 mt-1'>
                 This will appear at the bottom of the invoice.
               </p>
             </div>
@@ -169,12 +168,12 @@ export default function InvoiceEditor() {
             {/* Custom Fields */}
             <div>
               <div className='flex items-center justify-between mb-2'>
-                <Label>Custom Fields</Label>
-                <Button variant='outline' size='sm' className='text-[#635BFF]'>
+                <Label className='text-sm text-gray-700'>Custom Fields</Label>
+                <Button variant='outline' size='sm' className='text-gray-600 hover:text-gray-900'>
                   Add Field
                 </Button>
               </div>
-              <p className='text-gray-500 text-sm'>
+              <p className='text-xs text-gray-500'>
                 Add custom fields to your invoice for additional information.
               </p>
             </div>
@@ -183,35 +182,39 @@ export default function InvoiceEditor() {
           {/* Tax ID section */}
           <div className='mb-8'>
             <div className='flex items-center justify-between mb-2'>
-              <h2 className='text-base font-semibold'>Tax ID</h2>
+              <h2 className='text-sm font-medium text-gray-900'>Tax ID</h2>
               <div className='flex items-center'>
-                <Label htmlFor='showTaxId' className='mr-2 text-sm'>
+                <Label htmlFor='showTaxId' className='text-xs text-gray-600 mr-2'>
                   Show on invoice
                 </Label>
-                <Switch id='showTaxId' className='data-[state=checked]:bg-[#635BFF]' />
+                <Switch id='showTaxId' className='data-[state=checked]:bg-gray-900' />
               </div>
             </div>
-            <Input id='taxId' placeholder='Enter your tax ID' className='bg-white' />
-            <p className='text-gray-500 text-sm mt-1'>
+            <Input
+              id='taxId'
+              placeholder='Enter your tax ID'
+              className='bg-white border-gray-200'
+            />
+            <p className='text-xs text-gray-500 mt-1'>
               This will appear on the invoice if enabled.
             </p>
           </div>
 
           {/* Branding section */}
           <div className='mb-8'>
-            <h2 className='text-base font-semibold mb-4'>Branding</h2>
+            <h2 className='text-sm font-medium text-gray-900 mb-3'>Branding</h2>
 
             {/* Icon and Logo */}
             <div className='grid grid-cols-2 gap-4 mb-4'>
               <div>
-                <Label className='block mb-2'>Icon</Label>
-                <div className='border-2 border-dashed border-gray-300 rounded-md p-4 text-center cursor-pointer hover:bg-gray-50'>
+                <Label className='text-sm text-gray-700 mb-2 block'>Icon</Label>
+                <div className='border border-dashed border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50 transition-colors'>
                   <p className='text-sm text-gray-500'>Upload icon</p>
                 </div>
               </div>
               <div>
-                <Label className='block mb-2'>Logo</Label>
-                <div className='border-2 border-dashed border-gray-300 rounded-md p-4 text-center cursor-pointer hover:bg-gray-50'>
+                <Label className='text-sm text-gray-700 mb-2 block'>Logo</Label>
+                <div className='border border-dashed border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50 transition-colors'>
                   <p className='text-sm text-gray-500'>Upload logo</p>
                 </div>
               </div>
@@ -220,28 +223,28 @@ export default function InvoiceEditor() {
             {/* Brand Color and Accent Color */}
             <div className='grid grid-cols-2 gap-4'>
               <div>
-                <Label htmlFor='brandColor' className='block mb-2'>
+                <Label htmlFor='brandColor' className='text-sm text-gray-700 mb-2 block'>
                   Brand Color
                 </Label>
                 <div className='flex'>
-                  <div className='w-10 h-10 rounded-l-md bg-[#635BFF] border border-r-0 border-gray-300'></div>
+                  <div className='w-10 h-10 rounded-l-md bg-gray-900 border border-r-0 border-gray-200'></div>
                   <Input
                     id='brandColor'
-                    defaultValue='#635BFF'
-                    className='rounded-l-none bg-white'
+                    defaultValue='#111827'
+                    className='rounded-l-none bg-white border-gray-200'
                   />
                 </div>
               </div>
               <div>
-                <Label htmlFor='accentColor' className='block mb-2'>
+                <Label htmlFor='accentColor' className='text-sm text-gray-700 mb-2 block'>
                   Accent Color
                 </Label>
                 <div className='flex'>
-                  <div className='w-10 h-10 rounded-l-md bg-[#524cdb] border border-r-0 border-gray-300'></div>
+                  <div className='w-10 h-10 rounded-l-md bg-gray-800 border border-r-0 border-gray-200'></div>
                   <Input
                     id='accentColor'
-                    defaultValue='#524cdb'
-                    className='rounded-l-none bg-white'
+                    defaultValue='#1f2937'
+                    className='rounded-l-none bg-white border-gray-200'
                   />
                 </div>
               </div>
@@ -251,13 +254,23 @@ export default function InvoiceEditor() {
 
         {/* Right panel - Invoice Preview */}
         {showPreview && (
-          <div className='w-1/2 bg-[#f0f1f6] overflow-y-auto sticky top-16 h-[calc(100vh-4rem)] flex flex-col'>
+          <div className='w-1/2 bg-gray-50 overflow-y-auto sticky top-14 h-[calc(100vh-3.5rem)] flex flex-col'>
             {/* Zoom controls */}
-            <div className='flex justify-end mb-4 gap-2'>
-              <Button variant='outline' size='icon' onClick={zoomOut}>
+            <div className='flex justify-end mb-4 gap-2 p-4'>
+              <Button
+                variant='outline'
+                size='icon'
+                className='h-8 w-8 text-gray-600 hover:text-gray-900'
+                onClick={zoomOut}
+              >
                 <ZoomOut className='h-4 w-4' />
               </Button>
-              <Button variant='outline' size='icon' onClick={zoomIn}>
+              <Button
+                variant='outline'
+                size='icon'
+                className='h-8 w-8 text-gray-600 hover:text-gray-900'
+                onClick={zoomIn}
+              >
                 <ZoomIn className='h-4 w-4' />
               </Button>
             </div>
@@ -265,48 +278,50 @@ export default function InvoiceEditor() {
             {/* Invoice Preview */}
             <div className='flex justify-center items-center flex-1 overflow-hidden py-8'>
               <div
-                className='bg-white rounded-md shadow-2xl p-8 max-w-full mx-auto aspect-[1/1.334] my-auto'
+                className='bg-white rounded-lg shadow-sm p-8 max-w-full mx-auto aspect-[1/1.334] my-auto'
                 style={{ transform: `scale(${previewScale})`, transformOrigin: 'center center' }}
               >
                 <div className='flex justify-between mb-6'>
                   <div>
-                    <h2 className='text-xl font-bold mb-1'>Invoice</h2>
-                    <p className='text-xs'>0BD1057-DRAFT</p>
-                    <p className='text-xs'>Date due: May 10, 2025</p>
+                    <h2 className='text-base font-medium text-gray-900 mb-1'>Invoice</h2>
+                    <p className='text-xs text-gray-500'>0BD1057-DRAFT</p>
+                    <p className='text-xs text-gray-500'>Date due: May 10, 2025</p>
                   </div>
-                  <div className='text-lg font-bold'>BOLO</div>
+                  <div className='text-base font-medium text-gray-900'>BOLO</div>
                 </div>
 
                 <div className='grid grid-cols-2 gap-6 mb-6'>
                   <div>
-                    <p className='font-medium text-sm mb-1'>Bolo Print Inc.</p>
-                    <p className='text-xs'>3883 Nashua Dr</p>
-                    <p className='text-xs'>Brampton Ontario L4V1R3</p>
-                    <p className='text-xs mb-1'>Canada</p>
-                    <p className='text-xs'>+1 844-321-2656</p>
-                    <p className='text-xs'>info@boloprint.com</p>
+                    <p className='text-xs font-medium text-gray-900 mb-1'>Bolo Print Inc.</p>
+                    <p className='text-xs text-gray-500'>3883 Nashua Dr</p>
+                    <p className='text-xs text-gray-500'>Brampton Ontario L4V1R3</p>
+                    <p className='text-xs text-gray-500 mb-1'>Canada</p>
+                    <p className='text-xs text-gray-500'>+1 844-321-2656</p>
+                    <p className='text-xs text-gray-500'>info@boloprint.com</p>
                   </div>
                   <div>
-                    <p className='font-medium text-sm mb-1'>Bill to</p>
-                    <p className='text-xs'>Keshiv Sharma</p>
-                    <p className='text-xs'>Ontario, Canada</p>
-                    <p className='text-xs'>keshiv.sharma@gmail.com</p>
+                    <p className='text-xs font-medium text-gray-900 mb-1'>Bill to</p>
+                    <p className='text-xs text-gray-500'>Keshiv Sharma</p>
+                    <p className='text-xs text-gray-500'>Ontario, Canada</p>
+                    <p className='text-xs text-gray-500'>keshiv.sharma@gmail.com</p>
                   </div>
                 </div>
 
-                <div className='text-center font-medium text-sm mb-6'>C$0.00 due May 10, 2025</div>
+                <div className='text-center text-xs font-medium text-gray-900 mb-6'>
+                  C$0.00 due May 10, 2025
+                </div>
 
                 <table className='w-full mb-6 text-xs'>
                   <thead>
-                    <tr className='border-b border-gray-200'>
-                      <th className='text-left py-1'>Description</th>
-                      <th className='text-right py-1'>Qty</th>
-                      <th className='text-right py-1'>Unit price</th>
-                      <th className='text-right py-1'>Amount</th>
+                    <tr className='border-b border-gray-100'>
+                      <th className='text-left py-2 text-gray-500 font-medium'>Description</th>
+                      <th className='text-right py-2 text-gray-500 font-medium'>Qty</th>
+                      <th className='text-right py-2 text-gray-500 font-medium'>Unit price</th>
+                      <th className='text-right py-2 text-gray-500 font-medium'>Amount</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className='border-b border-gray-200'>
+                    <tr className='border-b border-gray-100'>
                       <td className='py-3 text-gray-400'>No items added yet</td>
                       <td></td>
                       <td></td>
@@ -317,15 +332,15 @@ export default function InvoiceEditor() {
 
                 <div className='flex justify-end'>
                   <div className='w-1/3 text-xs'>
-                    <div className='flex justify-between mb-1'>
+                    <div className='flex justify-between mb-1 text-gray-500'>
                       <span>Subtotal</span>
                       <span>C$0.00</span>
                     </div>
-                    <div className='flex justify-between mb-1 font-medium'>
+                    <div className='flex justify-between mb-1 font-medium text-gray-900'>
                       <span>Total</span>
                       <span>C$0.00</span>
                     </div>
-                    <div className='flex justify-between font-medium'>
+                    <div className='flex justify-between font-medium text-gray-900'>
                       <span>Amount due</span>
                       <span>C$0.00</span>
                     </div>
