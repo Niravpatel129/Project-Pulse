@@ -85,6 +85,7 @@ export default function InvoiceEditor() {
     setIsNewCustomerDialogOpen(false);
     // Update current customer with the new customer's information
     setCurrentCustomer({
+      id: newId,
       name: newCustomer.name,
       email: newCustomer.email,
       address: newCustomer.address,
