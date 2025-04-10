@@ -29,12 +29,6 @@ interface Invoice {
   createdAt: string;
 }
 
-interface ApiResponse {
-  status: string;
-  results: number;
-  data: Invoice[];
-}
-
 export default function InvoiceInterface() {
   const [isLoading, setIsLoading] = useState(false);
   const [accountStatus, setAccountStatus] = useState(null);

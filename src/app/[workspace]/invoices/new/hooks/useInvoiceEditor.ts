@@ -281,20 +281,9 @@ export function useInvoiceEditor() {
       const invoiceData = {
         clientId: currentCustomer?.id,
         clientName: currentCustomer?.name,
-        items: selectedItems.map((item) => {
-          return {
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            total: item.total,
-          };
+        itemIds: selectedItems.map((item) => {
+          return item.id;
         }),
-        subtotal: selectedItems.reduce((sum, item) => {
-          return sum + item.total;
-        }, 0),
-        total: selectedItems.reduce((sum, item) => {
-          return sum + item.total;
-        }, 0),
         status: 'draft',
         deliveryMethod,
       };
