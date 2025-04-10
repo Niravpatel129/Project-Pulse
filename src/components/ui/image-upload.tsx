@@ -87,8 +87,12 @@ export function ImageUpload({ label, value, onChange, className }: ImageUploadPr
           )}
         >
           {preview ? (
-            <div className='relative group h-full'>
-              <img src={preview} alt={label} className='w-full h-full object-cover rounded-lg' />
+            <div className='relative group h-full bg-gray-100 p-2'>
+              <img
+                src={preview}
+                alt={label}
+                className='w-full h-full object-contain rounded-lg bg-gray-100'
+              />
               <div className='absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity'>
                 <button
                   type='button'

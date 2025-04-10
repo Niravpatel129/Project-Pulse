@@ -446,7 +446,7 @@ export default function InvoiceEditor() {
             <h2 className='text-sm font-medium text-gray-900 mb-3'>Branding</h2>
 
             {/* Icon and Logo */}
-            <div className='grid grid-cols-2 gap-4 mb-4'>
+            <div className='flex gap-4 mb-4'>
               <div className='w-full max-w-[200px]'>
                 <ImageUpload label='Icon' value={icon} onChange={setIcon} />
               </div>
