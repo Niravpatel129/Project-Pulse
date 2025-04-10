@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Maximize2, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface ImageUploadProps {
   label: string;
@@ -14,6 +14,11 @@ interface ImageUploadProps {
 export function ImageUpload({ label, value, onChange, className }: ImageUploadProps) {
   const [preview, setPreview] = useState<string | undefined>(value);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Update preview when value changes
+  useEffect(() => {
+    setPreview(value);
+  }, [value]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

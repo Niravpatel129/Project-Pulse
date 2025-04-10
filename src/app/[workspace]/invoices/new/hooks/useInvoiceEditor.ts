@@ -62,8 +62,8 @@ export function useInvoiceEditor() {
     company: '',
   });
   const { data: invoiceSettings } = useInvoiceSettings();
-  const [icon, setIcon] = useState(invoiceSettings?.icon || '');
-  const [logo, setLogo] = useState(invoiceSettings?.logo || '');
+  const [icon, setIcon] = useState('');
+  const [logo, setLogo] = useState('');
   const queryClient = useQueryClient();
 
   // Fetch items from product catalog
@@ -145,8 +145,8 @@ export function useInvoiceEditor() {
   // Update icon and logo when invoice settings change
   useEffect(() => {
     if (invoiceSettings) {
-      if (invoiceSettings.icon) setIcon(invoiceSettings.icon);
-      if (invoiceSettings.logo) setLogo(invoiceSettings.logo);
+      setIcon(invoiceSettings.icon || '');
+      setLogo(invoiceSettings.logo || '');
     }
   }, [invoiceSettings]);
 

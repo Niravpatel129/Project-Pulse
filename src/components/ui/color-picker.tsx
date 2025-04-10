@@ -2,7 +2,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChromePicker, ColorResult } from 'react-color';
 
 interface ColorPickerProps {
@@ -15,6 +15,11 @@ interface ColorPickerProps {
 export function ColorPicker({ label, value, onChange, className }: ColorPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [localColor, setLocalColor] = useState(value);
+
+  // Sync local state with value prop
+  useEffect(() => {
+    setLocalColor(value);
+  }, [value]);
 
   // Update local state while picking
   const handleColorChange = (color: ColorResult) => {

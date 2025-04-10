@@ -412,14 +412,14 @@ export default function InvoiceEditor() {
             <div className='grid grid-cols-2 gap-4'>
               <ColorPicker
                 label='Brand Color'
-                value={invoiceSettings?.brandColor || '#006aff'}
+                value={invoiceSettings?.brandColor}
                 onChange={(value) => {
                   handleSettingsUpdate({ brandColor: value });
                 }}
               />
               <ColorPicker
                 label='Accent Color'
-                value={invoiceSettings?.accentColor || '#1f2937'}
+                value={invoiceSettings?.accentColor}
                 onChange={(value) => {
                   handleSettingsUpdate({ accentColor: value });
                 }}

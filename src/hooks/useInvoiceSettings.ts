@@ -32,8 +32,6 @@ export const useInvoiceSettings = () => {
         return {
           taxId: '',
           showTaxId: false,
-          brandColor: '#006aff',
-          accentColor: '#1f2937',
           icon: '',
           logo: '',
         };
