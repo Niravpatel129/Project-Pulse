@@ -102,7 +102,11 @@ export default function InvoiceInterface() {
               </Button>
             </div>
 
-            {isInvoicesLoading ? <InvoiceSkeleton /> : <InvoiceTable invoices={invoices || []} />}
+            {isInvoicesLoading ? (
+              <InvoiceSkeleton />
+            ) : (
+              <InvoiceTable invoices={invoices || []} isLoading={isInvoicesLoading} />
+            )}
           </div>
         ) : (
           <div className='flex justify-center items-center relative z-10'>
