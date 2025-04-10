@@ -1,5 +1,8 @@
 import { useParticipation } from '@/hooks/useParticipation';
+import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface Customer {
   id: string;
@@ -59,6 +62,7 @@ export function useInvoiceEditor() {
   });
   const [icon, setIcon] = useState<string>('');
   const [logo, setLogo] = useState<string>('');
+  const queryClient = useQueryClient();
 
   // Mock data for projects and modules - replace with actual data from your API
   const projectOptions = [
@@ -149,34 +153,81 @@ export function useInvoiceEditor() {
     }
   };
 
+  const addItemMutation = useMutation({
+    mutationFn: async (item: Item) => {
+      const response = await newRequest.post('/product-catalog', {
+        name: item.description,
+        quantity: item.quantity,
+        price: item.unitPrice,
+        projects: item.projectIds || [],
+        modules: item.moduleIds || [],
+      });
+      return response.data.data.product;
+    },
+    onSuccess: (data) => {
+      // Update the available items list with the new item
+      setAvailableItems((prev) => {
+        return [
+          ...prev,
+          {
+            id: data._id,
+            description: data.name,
+            quantity: data.quantity,
+            unitPrice: data.price,
+            total: data.quantity * data.price,
+            projectIds: data.projects,
+            moduleIds: data.modules,
+          },
+        ];
+      });
+      // Add the new item to selected items
+      setSelectedItems((prev) => {
+        return [
+          ...prev,
+          {
+            id: data._id,
+            description: data.name,
+            quantity: data.quantity,
+            unitPrice: data.price,
+            total: data.quantity * data.price,
+            projectIds: data.projects,
+            moduleIds: data.modules,
+          },
+        ];
+      });
+      // Reset the new item form
+      setNewItem({
+        id: '',
+        description: '',
+        quantity: 1,
+        unitPrice: 0,
+        total: 0,
+        projectIds: [],
+        moduleIds: [],
+        options: {},
+      });
+      setIsNewItemDialogOpen(false);
+      toast.success('Item added successfully');
+    },
+    onError: (error) => {
+      console.error('Error adding item:', error);
+      toast.error('Failed to add item');
+    },
+  });
+
   const handleAddItem = () => {
-    if (!newItem.description || !newItem.quantity || !newItem.unitPrice) return;
+    if (!newItem.description || !newItem.quantity || !newItem.unitPrice) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
 
-    const newId = (availableItems.length + 1).toString();
     const total = newItem.quantity * newItem.unitPrice;
-
-    const newItemWithId = {
-      id: newId,
-      description: newItem.description,
-      quantity: newItem.quantity,
-      unitPrice: newItem.unitPrice,
+    const itemToAdd = {
+      ...newItem,
       total,
     };
 
-    setAvailableItems([...availableItems, newItemWithId]);
-    setSelectedItems([...selectedItems, newItemWithId]);
-
-    setNewItem({
-      id: '',
-      description: '',
-      quantity: 1,
-      unitPrice: 0,
-      total: 0,
-      projectIds: [],
-      moduleIds: [],
-      options: {},
-    });
-    setIsNewItemDialogOpen(false);
+    addItemMutation.mutate(itemToAdd);
   };
 
   const handleRemoveItem = (itemId: string) => {
