@@ -16,19 +16,29 @@ export function ColorPicker({ label, value, onChange, className }: ColorPickerPr
   const [isOpen, setIsOpen] = useState(false);
   const [localColor, setLocalColor] = useState(value);
 
+  // Update local state while picking
   const handleColorChange = (color: ColorResult) => {
     const newColor = color.hex;
     setLocalColor(newColor);
-    onChange(newColor);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setLocalColor(newValue);
+  };
 
-    // Validate hex color format
-    if (/^#[0-9A-Fa-f]{6}$/.test(newValue)) {
-      onChange(newValue);
+  const handleBlur = () => {
+    // Validate hex color format and trigger onChange only on blur
+    if (/^#[0-9A-Fa-f]{6}$/.test(localColor)) {
+      onChange(localColor);
+    }
+  };
+
+  const handlePopoverOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    // When popover closes, trigger onChange if color is valid
+    if (!open && /^#[0-9A-Fa-f]{6}$/.test(localColor)) {
+      onChange(localColor);
     }
   };
 
@@ -38,7 +48,7 @@ export function ColorPicker({ label, value, onChange, className }: ColorPickerPr
         {label}
       </Label>
       <div className='flex'>
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <Popover open={isOpen} onOpenChange={handlePopoverOpenChange}>
           <PopoverTrigger asChild>
             <div
               className='w-10 h-10 rounded-l-md border border-r-0 border-gray-200 cursor-pointer hover:ring-2 hover:ring-gray-200 transition-all'
@@ -46,17 +56,14 @@ export function ColorPicker({ label, value, onChange, className }: ColorPickerPr
             />
           </PopoverTrigger>
           <PopoverContent className='w-auto p-0' align='start'>
-            <ChromePicker
-              color={localColor}
-              onChange={handleColorChange}
-              onChangeComplete={handleColorChange}
-            />
+            <ChromePicker color={localColor} onChange={handleColorChange} />
           </PopoverContent>
         </Popover>
         <Input
           id={label.toLowerCase()}
           value={localColor}
           onChange={handleInputChange}
+          onBlur={handleBlur}
           placeholder='#000000'
           className='rounded-l-none bg-white border-gray-200 h-10 focus-visible:ring-0'
         />
