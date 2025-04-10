@@ -596,11 +596,11 @@ export default function InvoiceEditor() {
                   Brand Color
                 </Label>
                 <div className='flex'>
-                  <div className='w-10 h-10 rounded-l-md bg-gray-900 border border-r-0 border-gray-200'></div>
+                  <div className='w-10 h-10 rounded-l-md bg-[#006aff] border border-r-0 border-gray-200'></div>
                   <Input
-                    id='brandColor'
-                    defaultValue='#111827'
-                    className='rounded-l-none bg-white border-gray-200'
+                    id='accentColor'
+                    defaultValue='#1f2937'
+                    className='rounded-l-none bg-white border-gray-200 h-10 focus-visible:ring-0'
                   />
                 </div>
               </div>
@@ -609,11 +609,11 @@ export default function InvoiceEditor() {
                   Accent Color
                 </Label>
                 <div className='flex'>
-                  <div className='w-10 h-10 rounded-l-md bg-gray-800 border border-r-0 border-gray-200'></div>
+                  <div className='w-10 h-10 rounded-l-md bg-[#1f2937] border border-r-0 border-gray-200'></div>
                   <Input
                     id='accentColor'
                     defaultValue='#1f2937'
-                    className='rounded-l-none bg-white border-gray-200'
+                    className='rounded-l-none bg-white border-gray-200 h-10 focus-visible:ring-0'
                   />
                 </div>
               </div>
