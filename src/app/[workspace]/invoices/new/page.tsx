@@ -28,6 +28,7 @@ export default function InvoiceEditor() {
   const [previewScale, setPreviewScale] = useState(0.8);
   const [isCustomerPicked, setIsCustomerPicked] = useState(true);
   const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
+  const [isEditCustomerDialogOpen, setIsEditCustomerDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [customers, setCustomers] = useState([
     { id: '2', name: 'Customer 2' },
@@ -37,6 +38,11 @@ export default function InvoiceEditor() {
     name: '',
     email: '',
     address: '',
+  });
+  const [currentCustomer, setCurrentCustomer] = useState({
+    name: 'Keshiv Sharma',
+    email: 'keshiv.sharma@gmail.com',
+    address: 'Ontario, Canada',
   });
 
   const handleCustomerSelect = (value: string) => {
@@ -119,7 +125,13 @@ export default function InvoiceEditor() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className='w-56' align='end'>
-                    <DropdownMenuItem>Edit customer information</DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        return setIsEditCustomerDialogOpen(true);
+                      }}
+                    >
+                      Edit customer information
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
                         return setIsCustomerPicked(false);
@@ -151,62 +163,119 @@ export default function InvoiceEditor() {
                   })}
                 </SelectContent>
               </Select>
-              <Dialog open={isNewCustomerDialogOpen} onOpenChange={setIsNewCustomerDialogOpen}>
-                <DialogContent className='sm:max-w-md'>
-                  <DialogHeader>
-                    <DialogTitle>Add New Customer</DialogTitle>
-                  </DialogHeader>
-                  <div className='grid gap-4 py-4'>
-                    <div className='grid grid-cols-4 items-center gap-4'>
-                      <Label htmlFor='name' className='text-right'>
-                        Name
-                      </Label>
-                      <Input
-                        id='name'
-                        className='col-span-3'
-                        value={newCustomer.name}
-                        onChange={(e) => {
-                          return setNewCustomer({ ...newCustomer, name: e.target.value });
-                        }}
-                      />
-                    </div>
-                    <div className='grid grid-cols-4 items-center gap-4'>
-                      <Label htmlFor='email' className='text-right'>
-                        Email
-                      </Label>
-                      <Input
-                        id='email'
-                        className='col-span-3'
-                        value={newCustomer.email}
-                        onChange={(e) => {
-                          return setNewCustomer({ ...newCustomer, email: e.target.value });
-                        }}
-                      />
-                    </div>
-                    <div className='grid grid-cols-4 items-center gap-4'>
-                      <Label htmlFor='address' className='text-right'>
-                        Address
-                      </Label>
-                      <Input
-                        id='address'
-                        className='col-span-3'
-                        value={newCustomer.address}
-                        onChange={(e) => {
-                          return setNewCustomer({ ...newCustomer, address: e.target.value });
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className='flex justify-end'>
-                    <Button type='submit' onClick={handleAddCustomer}>
-                      Save Customer
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
             </div>
           )}
-
+          <Dialog open={isNewCustomerDialogOpen} onOpenChange={setIsNewCustomerDialogOpen}>
+            <DialogContent className='sm:max-w-md'>
+              <DialogHeader>
+                <DialogTitle>Add New Customer</DialogTitle>
+              </DialogHeader>
+              <div className='grid gap-4 py-4'>
+                <div className='grid grid-cols-4 items-center gap-4'>
+                  <Label htmlFor='name' className='text-right'>
+                    Name
+                  </Label>
+                  <Input
+                    id='name'
+                    className='col-span-3'
+                    value={newCustomer.name}
+                    onChange={(e) => {
+                      return setNewCustomer({ ...newCustomer, name: e.target.value });
+                    }}
+                  />
+                </div>
+                <div className='grid grid-cols-4 items-center gap-4'>
+                  <Label htmlFor='email' className='text-right'>
+                    Email
+                  </Label>
+                  <Input
+                    id='email'
+                    className='col-span-3'
+                    value={newCustomer.email}
+                    onChange={(e) => {
+                      return setNewCustomer({ ...newCustomer, email: e.target.value });
+                    }}
+                  />
+                </div>
+                <div className='grid grid-cols-4 items-center gap-4'>
+                  <Label htmlFor='address' className='text-right'>
+                    Address
+                  </Label>
+                  <Input
+                    id='address'
+                    className='col-span-3'
+                    value={newCustomer.address}
+                    onChange={(e) => {
+                      return setNewCustomer({ ...newCustomer, address: e.target.value });
+                    }}
+                  />
+                </div>
+              </div>
+              <div className='flex justify-end'>
+                <Button type='submit' onClick={handleAddCustomer}>
+                  Save Customer
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={isEditCustomerDialogOpen} onOpenChange={setIsEditCustomerDialogOpen}>
+            <DialogContent className='sm:max-w-md'>
+              <DialogHeader>
+                <DialogTitle>Edit Customer Information</DialogTitle>
+              </DialogHeader>
+              <div className='grid gap-4 py-4'>
+                <div className='grid grid-cols-4 items-center gap-4'>
+                  <Label htmlFor='edit-name' className='text-right'>
+                    Name
+                  </Label>
+                  <Input
+                    id='edit-name'
+                    className='col-span-3'
+                    value={currentCustomer.name}
+                    onChange={(e) => {
+                      setCurrentCustomer({ ...currentCustomer, name: e.target.value });
+                    }}
+                  />
+                </div>
+                <div className='grid grid-cols-4 items-center gap-4'>
+                  <Label htmlFor='edit-email' className='text-right'>
+                    Email
+                  </Label>
+                  <Input
+                    id='edit-email'
+                    className='col-span-3'
+                    value={currentCustomer.email}
+                    onChange={(e) => {
+                      setCurrentCustomer({ ...currentCustomer, email: e.target.value });
+                    }}
+                  />
+                </div>
+                <div className='grid grid-cols-4 items-center gap-4'>
+                  <Label htmlFor='edit-address' className='text-right'>
+                    Address
+                  </Label>
+                  <Input
+                    id='edit-address'
+                    className='col-span-3'
+                    value={currentCustomer.address}
+                    onChange={(e) => {
+                      setCurrentCustomer({ ...currentCustomer, address: e.target.value });
+                    }}
+                  />
+                </div>
+              </div>
+              <div className='flex justify-end'>
+                <Button
+                  type='submit'
+                  onClick={() => {
+                    return setIsEditCustomerDialogOpen(false);
+                  }}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
           {/* Currency section */}
           <div className='mb-8'>
             <h2 className='text-sm font-medium text-gray-900 mb-3'>Currency</h2>
