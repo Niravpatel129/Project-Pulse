@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, MoreHorizontal, Search } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Search, ZoomIn, ZoomOut } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,19 @@ import { Switch } from '@/components/ui/switch';
 
 export default function InvoiceEditor() {
   const [showPreview, setShowPreview] = useState(true);
+  const [previewScale, setPreviewScale] = useState(0.8);
+
+  const zoomIn = () => {
+    setPreviewScale((prev) => {
+      return Math.min(prev + 0.1, 1.2);
+    });
+  };
+
+  const zoomOut = () => {
+    setPreviewScale((prev) => {
+      return Math.max(prev - 0.1, 0.5);
+    });
+  };
 
   return (
     <div className='flex min-h-screen flex-col font-sans'>
@@ -45,7 +58,11 @@ export default function InvoiceEditor() {
       {/* Main content */}
       <div className='flex flex-1 bg-[#f0f1f6]'>
         {/* Left panel - Invoice Form Editor */}
-        <div className='w-1/2 border-r border-gray-200 bg-white p-6 overflow-y-auto'>
+        <div
+          className={`${
+            showPreview ? 'w-1/2' : 'w-full'
+          } border-r border-gray-200 bg-white p-6 overflow-y-auto`}
+        >
           {/* Customer section */}
           <div className='mb-8'>
             <h2 className='text-base font-semibold mb-4'>Customer</h2>
@@ -234,69 +251,84 @@ export default function InvoiceEditor() {
 
         {/* Right panel - Invoice Preview */}
         {showPreview && (
-          <div className='w-1/2 bg-[#f0f1f6] p-6 px-24 overflow-y-auto sticky top-16 h-[calc(100vh-4rem)]'>
+          <div className='w-1/2 bg-[#f0f1f6] p-6 overflow-y-auto sticky top-16 h-[calc(100vh-4rem)] flex flex-col'>
+            {/* Zoom controls */}
+            <div className='flex justify-end mb-4 gap-2'>
+              <Button variant='outline' size='icon' onClick={zoomOut}>
+                <ZoomOut className='h-4 w-4' />
+              </Button>
+              <Button variant='outline' size='icon' onClick={zoomIn}>
+                <ZoomIn className='h-4 w-4' />
+              </Button>
+            </div>
+
             {/* Invoice Preview */}
-            <div className='bg-white rounded-md shadow-2xl p-8 max-w-3xl mx-auto aspect-[1/1.334] scale-[0.8] -mt-16'>
-              <div className='flex justify-between mb-8'>
-                <div>
-                  <h2 className='text-2xl font-bold mb-2'>Invoice</h2>
-                  <p className='text-sm'>0BD1057-DRAFT</p>
-                  <p className='text-sm'>Date due: May 10, 2025</p>
-                </div>
-                <div className='text-xl font-bold'>BOLO</div>
-              </div>
-
-              <div className='grid grid-cols-2 gap-8 mb-8'>
-                <div>
-                  <p className='font-medium mb-1'>Bolo Print Inc.</p>
-                  <p className='text-sm'>3883 Nashua Dr</p>
-                  <p className='text-sm'>Brampton Ontario L4V1R3</p>
-                  <p className='text-sm mb-2'>Canada</p>
-                  <p className='text-sm'>+1 844-321-2656</p>
-                  <p className='text-sm'>info@boloprint.com</p>
-                </div>
-                <div>
-                  <p className='font-medium mb-1'>Bill to</p>
-                  <p className='text-sm'>Keshiv Sharma</p>
-                  <p className='text-sm'>Ontario, Canada</p>
-                  <p className='text-sm'>keshiv.sharma@gmail.com</p>
-                </div>
-              </div>
-
-              <div className='text-center font-bold mb-8'>C$0.00 due May 10, 2025</div>
-
-              <table className='w-full mb-8 text-sm'>
-                <thead>
-                  <tr className='border-b border-gray-200'>
-                    <th className='text-left py-2'>Description</th>
-                    <th className='text-right py-2'>Qty</th>
-                    <th className='text-right py-2'>Unit price</th>
-                    <th className='text-right py-2'>Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className='border-b border-gray-200'>
-                    <td className='py-4 text-gray-400'>No items added yet</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                  </tr>
-                </tbody>
-              </table>
-
-              <div className='flex justify-end'>
-                <div className='w-1/3'>
-                  <div className='flex justify-between mb-2'>
-                    <span>Subtotal</span>
-                    <span>C$0.00</span>
+            <div className='flex justify-center items-center flex-1 overflow-hidden'>
+              <div
+                className='bg-white rounded-md shadow-2xl p-8 max-w-full mx-auto aspect-[1/1.334]'
+                style={{ transform: `scale(${previewScale})`, transformOrigin: 'center top' }}
+              >
+                <div className='flex justify-between mb-8'>
+                  <div>
+                    <h2 className='text-2xl font-bold mb-2'>Invoice</h2>
+                    <p className='text-sm'>0BD1057-DRAFT</p>
+                    <p className='text-sm'>Date due: May 10, 2025</p>
                   </div>
-                  <div className='flex justify-between mb-2 font-medium'>
-                    <span>Total</span>
-                    <span>C$0.00</span>
+                  <div className='text-xl font-bold'>BOLO</div>
+                </div>
+
+                <div className='grid grid-cols-2 gap-8 mb-8'>
+                  <div>
+                    <p className='font-medium mb-1'>Bolo Print Inc.</p>
+                    <p className='text-sm'>3883 Nashua Dr</p>
+                    <p className='text-sm'>Brampton Ontario L4V1R3</p>
+                    <p className='text-sm mb-2'>Canada</p>
+                    <p className='text-sm'>+1 844-321-2656</p>
+                    <p className='text-sm'>info@boloprint.com</p>
                   </div>
-                  <div className='flex justify-between font-medium'>
-                    <span>Amount due</span>
-                    <span>C$0.00</span>
+                  <div>
+                    <p className='font-medium mb-1'>Bill to</p>
+                    <p className='text-sm'>Keshiv Sharma</p>
+                    <p className='text-sm'>Ontario, Canada</p>
+                    <p className='text-sm'>keshiv.sharma@gmail.com</p>
+                  </div>
+                </div>
+
+                <div className='text-center font-bold mb-8'>C$0.00 due May 10, 2025</div>
+
+                <table className='w-full mb-8 text-sm'>
+                  <thead>
+                    <tr className='border-b border-gray-200'>
+                      <th className='text-left py-2'>Description</th>
+                      <th className='text-right py-2'>Qty</th>
+                      <th className='text-right py-2'>Unit price</th>
+                      <th className='text-right py-2'>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className='border-b border-gray-200'>
+                      <td className='py-4 text-gray-400'>No items added yet</td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div className='flex justify-end'>
+                  <div className='w-1/3'>
+                    <div className='flex justify-between mb-2'>
+                      <span>Subtotal</span>
+                      <span>C$0.00</span>
+                    </div>
+                    <div className='flex justify-between mb-2 font-medium'>
+                      <span>Total</span>
+                      <span>C$0.00</span>
+                    </div>
+                    <div className='flex justify-between font-medium'>
+                      <span>Amount due</span>
+                      <span>C$0.00</span>
+                    </div>
                   </div>
                 </div>
               </div>
