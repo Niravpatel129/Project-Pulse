@@ -1,62 +1,32 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { newRequest } from '@/utils/newRequest';
 import { AlertCircle, LucidePiggyBank } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import InvoiceTable from './components/InvoiceTable';
-import { Invoice } from './types';
+import { useInvoices } from './hooks/useInvoices';
 
 export default function InvoiceInterface() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [accountStatus, setAccountStatus] = useState(null);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const searchParams = useSearchParams();
   const router = useRouter();
-
-  useEffect(() => {
-    const checkAccountStatus = async () => {
-      try {
-        const res = await newRequest.get('/stripe/connect/account-status');
-        if (res.data.success) {
-          setAccountStatus(res.data.data);
-        }
-      } catch (error) {
-        console.error('Error checking account status:', error);
-      }
-    };
-
-    const fetchInvoices = async () => {
-      try {
-        const res = await newRequest.get('/invoices');
-        if (res.data.status === 'success') {
-          setInvoices(res.data.data);
-        }
-      } catch (error) {
-        console.error('Error fetching invoices:', error);
-      }
-    };
-
-    checkAccountStatus();
-    fetchInvoices();
-  }, []);
+  const {
+    accountStatus,
+    isAccountStatusLoading,
+    invoices,
+    isInvoicesLoading,
+    createStripeAccount,
+    isCreatingAccount,
+  } = useInvoices();
 
   const handleCreateAccount = async () => {
     try {
-      setIsLoading(true);
-      const res = await newRequest.post('/stripe/connect/create-account');
-
-      if (res.data.success && res.data.data.onboardingUrl) {
-        window.location.href = res.data.data.onboardingUrl;
-      } else {
-        console.error('Failed to get onboarding URL');
+      const data = await createStripeAccount();
+      if (data.onboardingUrl) {
+        window.location.href = data.onboardingUrl;
       }
     } catch (error) {
       console.error('Error creating Stripe account:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -105,7 +75,7 @@ export default function InvoiceInterface() {
               </Button>
             </div>
 
-            <InvoiceTable invoices={invoices} />
+            <InvoiceTable invoices={invoices || []} />
           </div>
         ) : (
           <div className='flex justify-center items-center relative z-10'>
@@ -127,9 +97,9 @@ export default function InvoiceInterface() {
                   <Button
                     className='bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md'
                     onClick={handleCreateAccount}
-                    disabled={isLoading}
+                    disabled={isCreatingAccount}
                   >
-                    {isLoading ? 'Setting up...' : 'Connect Stripe Account'}
+                    {isCreatingAccount ? 'Setting up...' : 'Connect Stripe Account'}
                   </Button>
                 </div>
               </div>
