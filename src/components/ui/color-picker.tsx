@@ -12,7 +12,7 @@ interface ColorPickerProps {
   className?: string;
 }
 
-export function ColorPicker({ label, value, onChange, className }: ColorPickerProps) {
+export function ColorPicker({ label, value = '#000000', onChange, className }: ColorPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [localColor, setLocalColor] = useState(value);
 
