@@ -1,9 +1,9 @@
 'use client';
 
 import { ArrowLeft, MoreHorizontal, ZoomIn, ZoomOut } from 'lucide-react';
-import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { ColorPicker } from '@/components/ui/color-picker';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   DropdownMenu,
@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ImageUpload } from '@/components/ui/image-upload';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -22,173 +23,44 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import { useInvoiceEditor } from './hooks/useInvoiceEditor';
 
 export default function InvoiceEditor() {
-  const [showPreview, setShowPreview] = useState(true);
-  const [previewScale, setPreviewScale] = useState(0.8);
-  const [isCustomerPicked, setIsCustomerPicked] = useState(true);
-  const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
-  const [isEditCustomerDialogOpen, setIsEditCustomerDialogOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
-  const [isNewItemDialogOpen, setIsNewItemDialogOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<string>('');
-  const [availableItems, setAvailableItems] = useState([
-    {
-      id: '1',
-      description: 'Item 1',
-      quantity: 1,
-      unitPrice: 100,
-      total: 100,
-    },
-    {
-      id: '2',
-      description: 'Item 2',
-      quantity: 1,
-      unitPrice: 200,
-      total: 200,
-    },
-    {
-      id: '3',
-      description: 'Item 3',
-      quantity: 1,
-      unitPrice: 300,
-      total: 300,
-    },
-  ]);
-  const [selectedItems, setSelectedItems] = useState<typeof availableItems>([]);
-  const [newItem, setNewItem] = useState({
-    description: '',
-    quantity: 1,
-    unitPrice: 0,
-    total: 0,
-  });
-  const [customers, setCustomers] = useState([
-    {
-      id: '1',
-      name: 'Customer 1',
-      email: 'customer1@example.com',
-      address: '123 Main St, Anytown, USA',
-    },
-    {
-      id: '2',
-      name: 'Customer 2',
-      email: 'customer2@example.com',
-      address: '456 Maple Ave, Anycity, USA',
-    },
-    {
-      id: '3',
-      name: 'Customer 3',
-      email: 'customer3@example.com',
-      address: '789 Pine St, Anyvillage, USA',
-    },
-  ]);
-  const [newCustomer, setNewCustomer] = useState({
-    name: '',
-    email: '',
-    address: '',
-  });
-  const [currentCustomer, setCurrentCustomer] = useState(customers[0]);
-
-  const handleCustomerSelect = (value: string) => {
-    if (value === 'new') {
-      setIsNewCustomerDialogOpen(true);
-    } else {
-      setSelectedCustomer(value);
-      // Find the selected customer from the customers array
-      const customer = customers.find((c) => {
-        return c.id === value;
-      });
-      if (customer) {
-        // Update the current customer with the selected customer's information
-        setCurrentCustomer(customer);
-        // Set isCustomerPicked to true to show the customer info panel
-        setIsCustomerPicked(true);
-      }
-    }
-  };
-
-  const handleAddCustomer = () => {
-    const newId = (customers.length + 2).toString();
-    setCustomers([
-      ...customers,
-      { id: newId, name: newCustomer.name, email: newCustomer.email, address: newCustomer.address },
-    ]);
-    setSelectedCustomer(newId);
-    setIsNewCustomerDialogOpen(false);
-    // Update current customer with the new customer's information
-    setCurrentCustomer({
-      id: newId,
-      name: newCustomer.name,
-      email: newCustomer.email,
-      address: newCustomer.address,
-    });
-    // Set isCustomerPicked to true to show the customer info panel
-    setIsCustomerPicked(true);
-    setNewCustomer({ name: '', email: '', address: '' });
-  };
-
-  const handleItemSelect = (value: string) => {
-    if (value === 'new') {
-      setIsNewItemDialogOpen(true);
-    } else {
-      setSelectedItem(value);
-      // Find the selected item from the available items array
-      const item = availableItems.find((i) => {
-        return i.id === value;
-      });
-      if (item) {
-        // Add the item to the selected items list
-        setSelectedItems([...selectedItems, item]);
-      }
-    }
-  };
-
-  const handleAddItem = () => {
-    if (!newItem.description || !newItem.quantity || !newItem.unitPrice) return;
-
-    const newId = (availableItems.length + 1).toString();
-    const total = newItem.quantity * newItem.unitPrice;
-
-    const newItemWithId = {
-      id: newId,
-      description: newItem.description,
-      quantity: newItem.quantity,
-      unitPrice: newItem.unitPrice,
-      total,
-    };
-
-    // Add to both available and selected items
-    setAvailableItems([...availableItems, newItemWithId]);
-    setSelectedItems([...selectedItems, newItemWithId]);
-
-    setNewItem({
-      description: '',
-      quantity: 1,
-      unitPrice: 0,
-      total: 0,
-    });
-    setIsNewItemDialogOpen(false);
-  };
-
-  const handleRemoveItem = (itemId: string) => {
-    setSelectedItems(
-      selectedItems.filter((item) => {
-        return item.id !== itemId;
-      }),
-    );
-  };
-
-  const zoomIn = () => {
-    setPreviewScale((prev) => {
-      return Math.min(prev + 0.1, 1.2);
-    });
-  };
-
-  const zoomOut = () => {
-    setPreviewScale((prev) => {
-      return Math.max(prev - 0.1, 0.5);
-    });
-  };
+  const {
+    showPreview,
+    setShowPreview,
+    previewScale,
+    isCustomerPicked,
+    setIsCustomerPicked,
+    isNewCustomerDialogOpen,
+    setIsNewCustomerDialogOpen,
+    isEditCustomerDialogOpen,
+    setIsEditCustomerDialogOpen,
+    selectedCustomer,
+    isNewItemDialogOpen,
+    setIsNewItemDialogOpen,
+    selectedItem,
+    availableItems,
+    selectedItems,
+    newItem,
+    setNewItem,
+    customers,
+    newCustomer,
+    setNewCustomer,
+    currentCustomer,
+    setCurrentCustomer,
+    handleCustomerSelect,
+    handleAddCustomer,
+    handleItemSelect,
+    handleAddItem,
+    handleRemoveItem,
+    zoomIn,
+    zoomOut,
+    icon,
+    setIcon,
+    logo,
+    setLogo,
+  } = useInvoiceEditor();
 
   return (
     <div className='flex min-h-screen flex-col font-sans bg-gray-50'>
@@ -350,7 +222,7 @@ export default function InvoiceEditor() {
                     className='col-span-3'
                     value={currentCustomer.name}
                     onChange={(e) => {
-                      setCurrentCustomer({ ...currentCustomer, name: e.target.value });
+                      return setCurrentCustomer({ ...currentCustomer, name: e.target.value });
                     }}
                   />
                 </div>
@@ -363,7 +235,7 @@ export default function InvoiceEditor() {
                     className='col-span-3'
                     value={currentCustomer.email}
                     onChange={(e) => {
-                      setCurrentCustomer({ ...currentCustomer, email: e.target.value });
+                      return setCurrentCustomer({ ...currentCustomer, email: e.target.value });
                     }}
                   />
                 </div>
@@ -376,7 +248,7 @@ export default function InvoiceEditor() {
                     className='col-span-3'
                     value={currentCustomer.address}
                     onChange={(e) => {
-                      setCurrentCustomer({ ...currentCustomer, address: e.target.value });
+                      return setCurrentCustomer({ ...currentCustomer, address: e.target.value });
                     }}
                   />
                 </div>
@@ -575,48 +447,32 @@ export default function InvoiceEditor() {
 
             {/* Icon and Logo */}
             <div className='grid grid-cols-2 gap-4 mb-4'>
-              <div>
-                <Label className='text-sm text-gray-700 mb-2 block'>Icon</Label>
-                <div className='border border-dashed border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50 transition-colors'>
-                  <p className='text-sm text-gray-500'>Upload icon</p>
-                </div>
+              <div className='w-full max-w-[200px]'>
+                <ImageUpload label='Icon' value={icon} onChange={setIcon} />
               </div>
-              <div>
-                <Label className='text-sm text-gray-700 mb-2 block'>Logo</Label>
-                <div className='border border-dashed border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50 transition-colors'>
-                  <p className='text-sm text-gray-500'>Upload logo</p>
-                </div>
+              <div className='w-full max-w-[200px]'>
+                <ImageUpload label='Logo' value={logo} onChange={setLogo} />
               </div>
             </div>
 
             {/* Brand Color and Accent Color */}
             <div className='grid grid-cols-2 gap-4'>
-              <div>
-                <Label htmlFor='brandColor' className='text-sm text-gray-700 mb-2 block'>
-                  Brand Color
-                </Label>
-                <div className='flex'>
-                  <div className='w-10 h-10 rounded-l-md bg-[#006aff] border border-r-0 border-gray-200'></div>
-                  <Input
-                    id='accentColor'
-                    defaultValue='#1f2937'
-                    className='rounded-l-none bg-white border-gray-200 h-10 focus-visible:ring-0'
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor='accentColor' className='text-sm text-gray-700 mb-2 block'>
-                  Accent Color
-                </Label>
-                <div className='flex'>
-                  <div className='w-10 h-10 rounded-l-md bg-[#1f2937] border border-r-0 border-gray-200'></div>
-                  <Input
-                    id='accentColor'
-                    defaultValue='#1f2937'
-                    className='rounded-l-none bg-white border-gray-200 h-10 focus-visible:ring-0'
-                  />
-                </div>
-              </div>
+              <ColorPicker
+                label='Brand Color'
+                value='#006aff'
+                onChange={(value) => {
+                  // Handle brand color change
+                  console.log('Brand color changed:', value);
+                }}
+              />
+              <ColorPicker
+                label='Accent Color'
+                value='#1f2937'
+                onChange={(value) => {
+                  // Handle accent color change
+                  console.log('Accent color changed:', value);
+                }}
+              />
             </div>
           </div>
         </div>
@@ -670,9 +526,9 @@ export default function InvoiceEditor() {
                   </div>
                   <div>
                     <p className='text-xs font-medium text-gray-900 mb-1'>Bill to</p>
-                    <p className='text-xs text-gray-500'>Keshiv Sharma</p>
-                    <p className='text-xs text-gray-500'>Ontario, Canada</p>
-                    <p className='text-xs text-gray-500'>keshiv.sharma@gmail.com</p>
+                    <p className='text-xs text-gray-500'>{currentCustomer.name}</p>
+                    <p className='text-xs text-gray-500'>{currentCustomer.address}</p>
+                    <p className='text-xs text-gray-500'>{currentCustomer.email}</p>
                   </div>
                 </div>
 
@@ -690,12 +546,25 @@ export default function InvoiceEditor() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className='border-b border-gray-100'>
-                      <td className='py-3 text-gray-400'>No items added yet</td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                    </tr>
+                    {selectedItems.length > 0 ? (
+                      selectedItems.map((item) => {
+                        return (
+                          <tr key={item.id} className='border-b border-gray-100'>
+                            <td className='py-3'>{item.description}</td>
+                            <td className='py-3 text-right'>{item.quantity}</td>
+                            <td className='py-3 text-right'>${item.unitPrice}</td>
+                            <td className='py-3 text-right'>${item.total}</td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr className='border-b border-gray-100'>
+                        <td className='py-3 text-gray-400'>No items added yet</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
 
@@ -737,7 +606,7 @@ export default function InvoiceEditor() {
                 className='col-span-3'
                 value={newItem.description}
                 onChange={(e) => {
-                  setNewItem({ ...newItem, description: e.target.value });
+                  return setNewItem({ ...newItem, description: e.target.value });
                 }}
               />
             </div>
@@ -752,7 +621,7 @@ export default function InvoiceEditor() {
                 className='col-span-3'
                 value={newItem.quantity}
                 onChange={(e) => {
-                  setNewItem({ ...newItem, quantity: parseInt(e.target.value) });
+                  return setNewItem({ ...newItem, quantity: parseInt(e.target.value) });
                 }}
               />
             </div>
@@ -768,7 +637,7 @@ export default function InvoiceEditor() {
                 className='col-span-3'
                 value={newItem.unitPrice}
                 onChange={(e) => {
-                  setNewItem({ ...newItem, unitPrice: parseFloat(e.target.value) });
+                  return setNewItem({ ...newItem, unitPrice: parseFloat(e.target.value) });
                 }}
               />
             </div>
