@@ -1,10 +1,17 @@
 'use client';
 
-import { ArrowLeft, MoreHorizontal, ZoomIn, ZoomOut } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, X, ZoomIn, ZoomOut } from 'lucide-react';
 
 import CreateClientDialog from '@/components/ProjectPage/NewProjectDialog/CreateClientDialog';
 import EditClientDialog from '@/components/ProjectPage/NewProjectDialog/EditClientDialog';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ColorPicker } from '@/components/ui/color-picker';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
@@ -47,6 +54,7 @@ export default function InvoiceEditor() {
     newItem,
     setNewItem,
     customers,
+    setCustomers,
     newCustomer,
     setNewCustomer,
     currentCustomer,
@@ -63,7 +71,8 @@ export default function InvoiceEditor() {
     logo,
     setLogo,
     handleClientCreated,
-    setCustomers,
+    projectOptions,
+    moduleOptions,
   } = useInvoiceEditor();
 
   return (
@@ -489,14 +498,14 @@ export default function InvoiceEditor() {
 
       {/* New Item Dialog */}
       <Dialog open={isNewItemDialogOpen} onOpenChange={setIsNewItemDialogOpen}>
-        <DialogContent className='sm:max-w-md'>
+        <DialogContent className='sm:max-w-2xl'>
           <DialogHeader>
             <DialogTitle>Add New Item</DialogTitle>
           </DialogHeader>
-          <div className='grid gap-4 py-4'>
+          <div className='grid gap-6 py-4'>
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='item-description' className='text-right'>
-                Description
+                Item Name
               </Label>
               <Input
                 id='item-description'
@@ -508,23 +517,8 @@ export default function InvoiceEditor() {
               />
             </div>
             <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='item-quantity' className='text-right'>
-                Quantity
-              </Label>
-              <Input
-                id='item-quantity'
-                type='number'
-                min='1'
-                className='col-span-3'
-                value={newItem.quantity}
-                onChange={(e) => {
-                  return setNewItem({ ...newItem, quantity: parseInt(e.target.value) });
-                }}
-              />
-            </div>
-            <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='item-unit-price' className='text-right'>
-                Unit Price
+                Price
               </Label>
               <Input
                 id='item-unit-price'
@@ -538,6 +532,179 @@ export default function InvoiceEditor() {
                 }}
               />
             </div>
+
+            <div className='grid grid-cols-4 items-center gap-4'>
+              <Label className='text-right'>Projects</Label>
+              <div className='col-span-3'>
+                <Select
+                  value={newItem.projectIds?.[0] || ''}
+                  onValueChange={(value) => {
+                    if (value) {
+                      setNewItem({
+                        ...newItem,
+                        projectIds: [...(newItem.projectIds || []), value],
+                      });
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select a project' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projectOptions.map((project) => {
+                      return (
+                        <SelectItem key={project.value} value={project.value}>
+                          {project.label}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                {newItem.projectIds && newItem.projectIds.length > 0 && (
+                  <div className='mt-2 space-y-2'>
+                    {newItem.projectIds.map((projectId) => {
+                      const project = projectOptions.find((p) => {
+                        return p.value === projectId;
+                      });
+                      return (
+                        <div
+                          key={projectId}
+                          className='flex items-center justify-between p-2 border rounded-lg bg-muted'
+                        >
+                          <span>{project?.label}</span>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            onClick={() => {
+                              setNewItem({
+                                ...newItem,
+                                projectIds: newItem.projectIds?.filter((id) => {
+                                  return id !== projectId;
+                                }),
+                              });
+                            }}
+                          >
+                            <X className='h-4 w-4' />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className='grid grid-cols-4 items-center gap-4'>
+              <Label className='text-right'>Modules</Label>
+              <div className='col-span-3'>
+                <Select
+                  value={newItem.moduleIds?.[0] || ''}
+                  onValueChange={(value) => {
+                    if (value) {
+                      setNewItem({
+                        ...newItem,
+                        moduleIds: [...(newItem.moduleIds || []), value],
+                      });
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select a module' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {moduleOptions.map((module) => {
+                      return (
+                        <SelectItem key={module.value} value={module.value}>
+                          {module.label}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                {newItem.moduleIds && newItem.moduleIds.length > 0 && (
+                  <div className='mt-2 space-y-2'>
+                    {newItem.moduleIds.map((moduleId) => {
+                      const moduleItem = moduleOptions.find((m) => {
+                        return m.value === moduleId;
+                      });
+                      return (
+                        <div
+                          key={moduleId}
+                          className='flex items-center justify-between p-2 border rounded-lg bg-muted'
+                        >
+                          <span>{moduleItem?.label}</span>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            onClick={() => {
+                              setNewItem({
+                                ...newItem,
+                                moduleIds: newItem.moduleIds?.filter((id) => {
+                                  return id !== moduleId;
+                                }),
+                              });
+                            }}
+                          >
+                            <X className='h-4 w-4' />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Accordion type='single' collapsible className='w-full'>
+              <AccordionItem value='options'>
+                <AccordionTrigger>Item Options</AccordionTrigger>
+                <AccordionContent>
+                  <div className='space-y-4'>
+                    <div className='space-y-2'>
+                      <div className='flex items-center space-x-2'>
+                        <Checkbox
+                          id='option-1'
+                          checked={newItem.options?.['option1'] as boolean}
+                          onCheckedChange={(checked) => {
+                            return setNewItem({
+                              ...newItem,
+                              options: { ...newItem.options, option1: checked },
+                            });
+                          }}
+                        />
+                        <Label htmlFor='option-1'>Option 1</Label>
+                      </div>
+                      <div className='flex items-center space-x-2'>
+                        <Checkbox
+                          id='option-2'
+                          checked={newItem.options?.['option2'] as boolean}
+                          onCheckedChange={(checked) => {
+                            return setNewItem({
+                              ...newItem,
+                              options: { ...newItem.options, option2: checked },
+                            });
+                          }}
+                        />
+                        <Label htmlFor='option-2'>Option 2</Label>
+                      </div>
+                      <div className='flex items-center space-x-2'>
+                        <Checkbox
+                          id='option-3'
+                          checked={newItem.options?.['option3'] as boolean}
+                          onCheckedChange={(checked) => {
+                            return setNewItem({
+                              ...newItem,
+                              options: { ...newItem.options, option3: checked },
+                            });
+                          }}
+                        />
+                        <Label htmlFor='option-3'>Option 3</Label>
+                      </div>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
           <div className='flex justify-end'>
             <Button type='submit' onClick={handleAddItem}>

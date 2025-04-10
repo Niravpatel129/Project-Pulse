@@ -15,6 +15,11 @@ interface Item {
   quantity: number;
   unitPrice: number;
   total: number;
+  projectIds?: string[];
+  moduleIds?: string[];
+  options?: {
+    [key: string]: string | number | boolean;
+  };
 }
 
 export function useInvoiceEditor() {
@@ -35,6 +40,9 @@ export function useInvoiceEditor() {
     quantity: 1,
     unitPrice: 0,
     total: 0,
+    projectIds: [],
+    moduleIds: [],
+    options: {},
   });
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [newCustomer, setNewCustomer] = useState<Customer>({
@@ -51,6 +59,19 @@ export function useInvoiceEditor() {
   });
   const [icon, setIcon] = useState<string>('');
   const [logo, setLogo] = useState<string>('');
+
+  // Mock data for projects and modules - replace with actual data from your API
+  const projectOptions = [
+    { label: 'Project 1', value: 'project-1' },
+    { label: 'Project 2', value: 'project-2' },
+    { label: 'Project 3', value: 'project-3' },
+  ];
+
+  const moduleOptions = [
+    { label: 'Module 1', value: 'module-1' },
+    { label: 'Module 2', value: 'module-2' },
+    { label: 'Module 3', value: 'module-3' },
+  ];
 
   // Update customers when participants are loaded
   useEffect(() => {
@@ -151,6 +172,9 @@ export function useInvoiceEditor() {
       quantity: 1,
       unitPrice: 0,
       total: 0,
+      projectIds: [],
+      moduleIds: [],
+      options: {},
     });
     setIsNewItemDialogOpen(false);
   };
@@ -215,5 +239,7 @@ export function useInvoiceEditor() {
     logo,
     setLogo,
     handleClientCreated,
+    projectOptions,
+    moduleOptions,
   };
 }
