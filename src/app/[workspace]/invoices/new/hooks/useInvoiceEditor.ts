@@ -1,6 +1,6 @@
 import { useParticipation } from '@/hooks/useParticipation';
 import { newRequest } from '@/utils/newRequest';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -63,6 +63,34 @@ export function useInvoiceEditor() {
   const [icon, setIcon] = useState<string>('');
   const [logo, setLogo] = useState<string>('');
   const queryClient = useQueryClient();
+
+  // Fetch items from product catalog
+  const { data: productCatalogItems, isLoading: isLoadingItems } = useQuery({
+    queryKey: ['product-catalog'],
+    queryFn: async () => {
+      const response = await newRequest.get('/product-catalog');
+      return response.data.data.products;
+    },
+  });
+
+  // Update available items when product catalog data changes
+  useEffect(() => {
+    if (productCatalogItems) {
+      const formattedItems = productCatalogItems.map((item: any) => {
+        return {
+          id: item._id,
+          description: item.name,
+          quantity: item.quantity || 1,
+          unitPrice: item.price,
+          total: (item.quantity || 1) * item.price,
+          projectIds: item.projects || [],
+          moduleIds: item.modules || [],
+          options: item.options || {},
+        };
+      });
+      setAvailableItems(formattedItems);
+    }
+  }, [productCatalogItems]);
 
   // Mock data for projects and modules - replace with actual data from your API
   const projectOptions = [
