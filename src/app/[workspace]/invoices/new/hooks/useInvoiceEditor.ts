@@ -1,7 +1,8 @@
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { useParticipation } from '@/hooks/useParticipation';
 import { newRequest } from '@/utils/newRequest';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -65,7 +66,7 @@ export function useInvoiceEditor() {
   const { data: invoiceSettings } = useInvoiceSettings();
   const [icon, setIcon] = useState('');
   const [logo, setLogo] = useState('');
-  const queryClient = useQueryClient();
+  const router = useRouter();
 
   // Fetch items from product catalog
   const { data: productCatalogItems, isLoading: isLoadingItems } = useQuery({
@@ -305,6 +306,7 @@ export function useInvoiceEditor() {
     },
     onSuccess: () => {
       toast.success('Invoice sent successfully');
+      router.push(`/invoices`);
     },
     onError: (error) => {
       console.error('Error sending invoice:', error);

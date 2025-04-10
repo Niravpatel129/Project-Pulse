@@ -119,10 +119,17 @@ export default function InvoiceEditor() {
             size='sm'
             className='bg-gray-900 hover:bg-gray-800 text-white'
             onClick={() => {
-              return sendInvoiceMutation.mutate();
+              try {
+                sendInvoiceMutation.mutate();
+              } catch (error) {
+                console.error(error);
+              }
             }}
+            disabled={
+              sendInvoiceMutation.isPending || !currentCustomer || selectedItems.length === 0
+            }
           >
-            Send invoice
+            {sendInvoiceMutation.isPending ? 'Sending...' : 'Send invoice'}
           </Button>
         </div>
       </header>
