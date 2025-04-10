@@ -73,6 +73,39 @@ export function useInvoiceEditor() {
     },
   });
 
+  // Fetch projects
+  const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
+    queryKey: ['projects'],
+    queryFn: async () => {
+      const response = await newRequest.get('/projects');
+      return response.data.data;
+    },
+  });
+
+  // Fetch modules
+  const { data: modules = [], isLoading: isLoadingModules } = useQuery({
+    queryKey: ['modules'],
+    queryFn: async () => {
+      const response = await newRequest.get('/project-modules');
+      return response.data.data;
+    },
+  });
+
+  // Format projects and modules for dropdown options
+  const projectOptions = projects.map((project: any) => {
+    return {
+      label: project.name,
+      value: project._id,
+    };
+  });
+
+  const moduleOptions = modules.map((module: any) => {
+    return {
+      label: module.name,
+      value: module._id,
+    };
+  });
+
   // Update available items when product catalog data changes
   useEffect(() => {
     if (productCatalogItems) {
@@ -91,19 +124,6 @@ export function useInvoiceEditor() {
       setAvailableItems(formattedItems);
     }
   }, [productCatalogItems]);
-
-  // Mock data for projects and modules - replace with actual data from your API
-  const projectOptions = [
-    { label: 'Project 1', value: 'project-1' },
-    { label: 'Project 2', value: 'project-2' },
-    { label: 'Project 3', value: 'project-3' },
-  ];
-
-  const moduleOptions = [
-    { label: 'Module 1', value: 'module-1' },
-    { label: 'Module 2', value: 'module-2' },
-    { label: 'Module 3', value: 'module-3' },
-  ];
 
   // Update customers when participants are loaded
   useEffect(() => {
