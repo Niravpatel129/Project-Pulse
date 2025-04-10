@@ -1,6 +1,7 @@
 'use client';
 
 import { ArrowLeft, MoreHorizontal, ZoomIn, ZoomOut } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import CreateClientDialog from '@/components/ProjectPage/NewProjectDialog/CreateClientDialog';
 import EditClientDialog from '@/components/ProjectPage/NewProjectDialog/EditClientDialog';
@@ -24,10 +25,14 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
+import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
 import AddItemDialog from './components/AddItemDialog';
 import { useInvoiceEditor } from './hooks/useInvoiceEditor';
 
 export default function InvoiceEditor() {
+  const { data: invoiceSettings } = useInvoiceSettings();
+  const updateInvoiceSettings = useUpdateInvoiceSettings();
   const {
     showPreview,
     setShowPreview,
@@ -67,6 +72,24 @@ export default function InvoiceEditor() {
     projectOptions,
     moduleOptions,
   } = useInvoiceEditor();
+
+  const [localTaxId, setLocalTaxId] = useState(invoiceSettings?.taxId || '');
+
+  // Update local state when invoice settings change
+  useEffect(() => {
+    if (invoiceSettings?.taxId !== undefined) {
+      setLocalTaxId(invoiceSettings.taxId);
+    }
+  }, [invoiceSettings?.taxId]);
+
+  const handleSettingsUpdate = (updates: Partial<typeof invoiceSettings>) => {
+    updateInvoiceSettings.mutate({
+      settings: {
+        ...invoiceSettings,
+        ...updates,
+      },
+    });
+  };
 
   return (
     <div className='flex min-h-screen flex-col font-sans bg-gray-50'>
@@ -328,13 +351,29 @@ export default function InvoiceEditor() {
                 <Label htmlFor='showTaxId' className='text-xs text-gray-600 mr-2'>
                   Show on invoice
                 </Label>
-                <Switch id='showTaxId' className='data-[state=checked]:bg-gray-900' />
+                <Switch
+                  id='showTaxId'
+                  className='data-[state=checked]:bg-gray-900'
+                  checked={invoiceSettings?.showTaxId}
+                  onCheckedChange={(checked) => {
+                    handleSettingsUpdate({ showTaxId: checked });
+                  }}
+                />
               </div>
             </div>
             <Input
               id='taxId'
               placeholder='Enter your tax ID'
               className='bg-white border-gray-200'
+              value={localTaxId}
+              onChange={(e) => {
+                // Only update local state while typing
+                setLocalTaxId(e.target.value);
+              }}
+              onBlur={(e) => {
+                // Make API call only when user leaves the input
+                handleSettingsUpdate({ taxId: e.target.value });
+              }}
             />
             <p className='text-xs text-gray-500 mt-1'>
               This will appear on the invoice if enabled.
@@ -348,10 +387,24 @@ export default function InvoiceEditor() {
             {/* Icon and Logo */}
             <div className='flex gap-4 mb-4'>
               <div className='w-full max-w-[200px]'>
-                <ImageUpload label='Icon' value={icon} onChange={setIcon} />
+                <ImageUpload
+                  label='Icon'
+                  value={icon}
+                  onChange={(newIcon) => {
+                    setIcon(newIcon);
+                    handleSettingsUpdate({ icon: newIcon });
+                  }}
+                />
               </div>
               <div className='w-full max-w-[200px]'>
-                <ImageUpload label='Logo' value={logo} onChange={setLogo} />
+                <ImageUpload
+                  label='Logo'
+                  value={logo}
+                  onChange={(newLogo) => {
+                    setLogo(newLogo);
+                    handleSettingsUpdate({ logo: newLogo });
+                  }}
+                />
               </div>
             </div>
 
@@ -359,18 +412,16 @@ export default function InvoiceEditor() {
             <div className='grid grid-cols-2 gap-4'>
               <ColorPicker
                 label='Brand Color'
-                value='#006aff'
+                value={invoiceSettings?.brandColor || '#006aff'}
                 onChange={(value) => {
-                  // Handle brand color change
-                  console.log('Brand color changed:', value);
+                  handleSettingsUpdate({ brandColor: value });
                 }}
               />
               <ColorPicker
                 label='Accent Color'
-                value='#1f2937'
+                value={invoiceSettings?.accentColor || '#1f2937'}
                 onChange={(value) => {
-                  // Handle accent color change
-                  console.log('Accent color changed:', value);
+                  handleSettingsUpdate({ accentColor: value });
                 }}
               />
             </div>

@@ -1,3 +1,4 @@
+import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { useParticipation } from '@/hooks/useParticipation';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -60,8 +61,9 @@ export function useInvoiceEditor() {
     phone: '',
     company: '',
   });
-  const [icon, setIcon] = useState<string>('');
-  const [logo, setLogo] = useState<string>('');
+  const { data: invoiceSettings } = useInvoiceSettings();
+  const [icon, setIcon] = useState(invoiceSettings?.icon || '');
+  const [logo, setLogo] = useState(invoiceSettings?.logo || '');
   const queryClient = useQueryClient();
 
   // Fetch items from product catalog
@@ -139,6 +141,14 @@ export function useInvoiceEditor() {
       );
     }
   }, [participants, isLoading]);
+
+  // Update icon and logo when invoice settings change
+  useEffect(() => {
+    if (invoiceSettings) {
+      if (invoiceSettings.icon) setIcon(invoiceSettings.icon);
+      if (invoiceSettings.logo) setLogo(invoiceSettings.logo);
+    }
+  }, [invoiceSettings]);
 
   const handleCustomerSelect = (value: string) => {
     if (value === 'new') {
