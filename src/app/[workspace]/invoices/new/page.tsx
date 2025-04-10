@@ -143,7 +143,7 @@ export default function InvoiceEditor() {
                   <SelectItem value='new' className='text-gray-600'>
                     + Add new customer
                   </SelectItem>
-                  <Separator className='my-1' />
+                  {customers.length === 0 && <Separator className='my-1' />}
                   {customers.map((customer) => {
                     return (
                       <SelectItem key={customer.id} value={customer.id}>

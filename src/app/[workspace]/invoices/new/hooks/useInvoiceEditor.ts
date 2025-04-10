@@ -1,3 +1,4 @@
+import { useParticipation } from '@/hooks/useParticipation';
 import { useState } from 'react';
 
 interface Customer {
@@ -15,6 +16,8 @@ interface Item {
 }
 
 export function useInvoiceEditor() {
+  const { participants } = useParticipation();
+  console.log('🚀 participants:', participants);
   const [showPreview, setShowPreview] = useState(true);
   const [previewScale, setPreviewScale] = useState(1.4);
   const [isCustomerPicked, setIsCustomerPicked] = useState(false);
@@ -32,7 +35,15 @@ export function useInvoiceEditor() {
     unitPrice: 0,
     total: 0,
   });
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>(() => {
+    return participants.map((participant) => {
+      return {
+        id: participant._id,
+        name: participant.name,
+        email: participant.email || '',
+      };
+    });
+  });
   const [newCustomer, setNewCustomer] = useState<Customer>({
     id: '',
     name: '',
