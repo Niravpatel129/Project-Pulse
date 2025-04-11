@@ -163,29 +163,6 @@ export default function AddItemDialog({
           </div>
 
           <div className='space-y-2'>
-            <Label>Projects</Label>
-            <Select
-              value={formData.projectIds[0] || ''}
-              onValueChange={(value) => {
-                return setFormData({ ...formData, projectIds: [value] });
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder='Select project' />
-              </SelectTrigger>
-              <SelectContent>
-                {projectOptions.map((option) => {
-                  return (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className='space-y-2'>
             <Label>Modules</Label>
             <Select
               value={formData.moduleIds[0] || ''}
