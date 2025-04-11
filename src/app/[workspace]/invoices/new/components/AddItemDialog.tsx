@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { X } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface AddItemDialogProps {
   open: boolean;
@@ -27,6 +28,7 @@ interface AddItemDialogProps {
     projectIds?: string[];
     moduleIds?: string[];
   };
+  project?: any;
   setNewItem: (item: any) => void;
   handleAddItem: () => void;
   projectOptions: { value: string; label: string }[];
@@ -41,7 +43,22 @@ export default function AddItemDialog({
   handleAddItem,
   projectOptions,
   moduleOptions,
+  project,
 }: AddItemDialogProps) {
+  // Pre-select the current project when dialog opens
+  useEffect(() => {
+    if (
+      open &&
+      project?._id &&
+      (!newItem.projectIds || !newItem.projectIds.includes(project._id))
+    ) {
+      setNewItem({
+        ...newItem,
+        projectIds: [...(newItem.projectIds || []), project._id],
+      });
+    }
+  }, [open, project, newItem, setNewItem]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='sm:max-w-md'>
@@ -112,74 +129,76 @@ export default function AddItemDialog({
                   </AccordionTrigger>
                   <AccordionContent className='pt-2 overflow-visible'>
                     <div className='px-1 space-y-4'>
-                      <div className='space-y-2'>
-                        <Label className='text-xs font-medium'>Projects</Label>
-                        <Select
-                          value={newItem.projectIds?.[0] || ''}
-                          onValueChange={(value) => {
-                            if (value) {
-                              setNewItem({
-                                ...newItem,
-                                projectIds: [...(newItem.projectIds || []), value],
-                              });
-                            }
-                          }}
-                        >
-                          <SelectTrigger className='h-8 text-sm'>
-                            <SelectValue placeholder='Select a project' />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {projectOptions.map((project) => {
-                              return (
-                                <SelectItem
-                                  key={project.value}
-                                  value={project.value}
-                                  className='text-sm'
-                                >
-                                  {project.label}
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                          {projectOptions.length === 0 && (
-                            <SelectContent className='text-sm text-muted-foreground'>
-                              No projects found
-                            </SelectContent>
-                          )}
-                        </Select>
-                        {newItem.projectIds && newItem.projectIds.length > 0 && (
-                          <div className='mt-1.5 space-y-1'>
-                            {newItem.projectIds.map((projectId) => {
-                              const project = projectOptions.find((p) => {
-                                return p.value === projectId;
-                              });
-                              return (
-                                <div
-                                  key={projectId}
-                                  className='flex items-center justify-between px-2 py-1 text-xs border rounded-sm bg-muted/50'
-                                >
-                                  <span className='text-muted-foreground'>{project?.label}</span>
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    className='h-5 w-5 p-0 hover:bg-muted'
-                                    onClick={() => {
-                                      setNewItem({
-                                        ...newItem,
-                                        projectIds: newItem.projectIds?.filter((id) => {
-                                          return id !== projectId;
-                                        }),
-                                      });
-                                    }}
+                      {!project && (
+                        <div className='space-y-2'>
+                          <Label className='text-xs font-medium'>Projects</Label>
+                          <Select
+                            value={newItem.projectIds?.[0] || ''}
+                            onValueChange={(value) => {
+                              if (value) {
+                                setNewItem({
+                                  ...newItem,
+                                  projectIds: [...(newItem.projectIds || []), value],
+                                });
+                              }
+                            }}
+                          >
+                            <SelectTrigger className='h-8 text-sm'>
+                              <SelectValue placeholder='Select a project' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {projectOptions.map((project) => {
+                                return (
+                                  <SelectItem
+                                    key={project.value}
+                                    value={project.value}
+                                    className='text-sm'
                                   >
-                                    <X className='h-3 w-3' />
-                                  </Button>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
+                                    {project.label}
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                            {projectOptions.length === 0 && (
+                              <SelectContent className='text-sm text-muted-foreground px-2'>
+                                <div className=''>No projects found</div>
+                              </SelectContent>
+                            )}
+                          </Select>
+                          {newItem.projectIds && newItem.projectIds.length > 0 && (
+                            <div className='mt-1.5 space-y-1'>
+                              {newItem.projectIds.map((projectId) => {
+                                const project = projectOptions.find((p) => {
+                                  return p.value === projectId;
+                                });
+                                return (
+                                  <div
+                                    key={projectId}
+                                    className='flex items-center justify-between px-2 py-1 text-xs border rounded-sm bg-muted/50'
+                                  >
+                                    <span className='text-muted-foreground'>{project?.label}</span>
+                                    <Button
+                                      variant='ghost'
+                                      size='sm'
+                                      className='h-5 w-5 p-0 hover:bg-muted'
+                                      onClick={() => {
+                                        setNewItem({
+                                          ...newItem,
+                                          projectIds: newItem.projectIds?.filter((id) => {
+                                            return id !== projectId;
+                                          }),
+                                        });
+                                      }}
+                                    >
+                                      <X className='h-3 w-3' />
+                                    </Button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       <div className='space-y-2'>
                         <Label className='text-xs font-medium'>Modules</Label>
@@ -211,7 +230,7 @@ export default function AddItemDialog({
                             })}
                           </SelectContent>
                           {moduleOptions.length === 0 && (
-                            <SelectContent className='text-sm text-muted-foreground'>
+                            <SelectContent className='text-sm text-muted-foreground px-2 py-1'>
                               No modules found
                             </SelectContent>
                           )}

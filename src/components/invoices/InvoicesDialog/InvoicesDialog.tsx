@@ -283,7 +283,7 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                       {availableItems.map((item) => {
                         return (
                           <SelectItem key={item.id} value={item.id}>
-                            {item.description}
+                            <div>{item.description}</div>
                           </SelectItem>
                         );
                       })}
@@ -592,6 +592,7 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
 
           {/* New Item Dialog */}
           <AddItemDialog
+            project={project}
             open={isNewItemDialogOpen}
             onOpenChange={setIsNewItemDialogOpen}
             newItem={newItem}
