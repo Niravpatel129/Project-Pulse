@@ -474,7 +474,7 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
             {showPreview && (
               <div className='w-1/2 bg-gray-50 overflow-y-auto h-[calc(100vh-3.5rem)] flex flex-col relative'>
                 {/* Zoom controls */}
-                <div className='absolute top-0 right-0 z-10 flex justify-end mb-4 gap-2 p-4 bg-gray-50/80 backdrop-blur-sm'>
+                <div className='absolute top-0 right-0 z-10 flex justify-end mb-4 gap-2 p-4'>
                   <Button
                     variant='outline'
                     size='icon'
@@ -496,7 +496,7 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                 {/* Invoice Preview */}
                 <div className='flex justify-center items-start flex-1 overflow-auto py-8 px-4'>
                   <div
-                    className='bg-white rounded-lg shadow-sm p-8 max-w-full mx-auto aspect-[1/1.334] my-auto'
+                    className='bg-white rounded-lg shadow-sm p-8 max-w-full mx-auto aspect-[1/1.334]'
                     style={{
                       transform: `scale(${previewScale})`,
                       transformOrigin: 'top center',
