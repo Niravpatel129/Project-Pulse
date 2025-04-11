@@ -250,9 +250,6 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                     <SelectItem value='gbp'>GBP - British Pound</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className='text-xs text-gray-500 mt-2'>
-                  Selecting a new currency will clear all items from the invoice.
-                </p>
               </div>
 
               {/* Items section */}
