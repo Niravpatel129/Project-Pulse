@@ -1,5 +1,6 @@
 'use client';
 
+import { useInvoices } from '@/app/[workspace]/invoices/hooks/useInvoices';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -32,8 +33,17 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
-import { CreditCard, DollarSign, MoreVertical, Plus, Send, Trash2 } from 'lucide-react';
+import {
+  CreditCard,
+  DollarSign,
+  LucidePiggyBank,
+  MoreVertical,
+  Plus,
+  Send,
+  Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
+import InvoicesDialog from '../invoices/InvoicesDialog/InvoicesDialog';
 
 // Define invoice types
 type InvoiceStatus = 'DRAFT' | 'SENT' | 'PAID' | 'OVERDUE';
@@ -365,7 +375,15 @@ export default function ProjectPayments() {
   const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
   const [openViewDialog, setOpenViewDialog] = useState(false);
+  const [isInvoicesDialogOpen, setIsInvoicesDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const {
+    accountStatus,
+    isAccountStatusLoading,
+    isInvoicesLoading,
+    createStripeAccount,
+    isCreatingAccount,
+  } = useInvoices();
 
   // View invoice
   const handleViewInvoice = (invoice: Invoice) => {
@@ -427,6 +445,61 @@ export default function ProjectPayments() {
       description: 'Invoice has been deleted successfully.',
     });
   };
+
+  const handleCreateAccount = async () => {
+    try {
+      const data = await createStripeAccount();
+      if (data.onboardingUrl) {
+        window.location.href = data.onboardingUrl;
+      }
+    } catch (error) {
+      console.error('Error creating Stripe account:', error);
+    }
+  };
+
+  return (
+    <>
+      <InvoicesDialog open={isInvoicesDialogOpen} onOpenChange={setIsInvoicesDialogOpen} />
+      <div className='flex justify-center items-center relative z-10'>
+        <div className='flex flex-col justify-center p-6 max-w-2xl text-center mt-[50px]'>
+          <div className='relative mb-4'>
+            <div className='absolute inset-0 bg-gradient-to-r from-green-100 to-blue-100 rounded-full opacity-30 blur-md'></div>
+            <div className='relative flex items-center justify-center'>
+              <LucidePiggyBank className='h-16 w-16 mx-auto text-green-500 drop-shadow-md' />
+            </div>
+          </div>
+          <div className='mx-auto'>
+            <h2 className='text-3xl font-bold text-gray-800 mb-6'>Easy Invoicing & Payments</h2>
+            <p className='text-gray-600 mb-8'>
+              Send invoices and accept online payments. Schedule them to send in the future, and
+              Bonsai will automatically send client reminders for payment.
+            </p>
+
+            <div className='mb-8 flex justify-center'>
+              {!accountStatus?.chargesEnabled ? (
+                <Button
+                  className='bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md'
+                  onClick={handleCreateAccount}
+                  disabled={isCreatingAccount}
+                >
+                  {isCreatingAccount ? 'Setting up...' : 'Connect Stripe Account'}
+                </Button>
+              ) : (
+                <Button
+                  className='bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md'
+                  onClick={() => {
+                    setIsInvoicesDialogOpen(true);
+                  }}
+                >
+                  Create Invoice
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <div className='space-y-6'>
