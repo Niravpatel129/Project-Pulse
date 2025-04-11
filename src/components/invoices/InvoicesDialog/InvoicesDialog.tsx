@@ -211,7 +211,12 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                       {project?.participants.map((participant) => {
                         return (
                           <SelectItem key={participant._id} value={participant._id}>
-                            {participant.name}
+                            <div className='flex items-center gap-2'>
+                              <div className='text-sm font-medium text-gray-900'>
+                                {participant.name}
+                              </div>
+                              <div className='text-xs text-gray-500'>{participant.email}</div>
+                            </div>
                           </SelectItem>
                         );
                       })}
