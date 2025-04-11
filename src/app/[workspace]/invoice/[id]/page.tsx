@@ -4,7 +4,7 @@ import { newRequest } from '@/utils/newRequest';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Lock } from 'lucide-react';
+import { CheckCircle, Lock } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -31,6 +31,8 @@ interface Invoice {
   };
   createdAt: string;
   updatedAt: string;
+  paymentIntentId?: string;
+  paidAt?: string;
 }
 
 function PaymentForm({
@@ -66,7 +68,7 @@ function PaymentForm({
     const { error: confirmError } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/${workspace}/payment-success`,
+        return_url: `${window.location.origin}/payment-success`,
       },
     });
 
@@ -161,12 +163,12 @@ export default function InvoicePage() {
 
   // Create payment intent when invoice is loaded
   useEffect(() => {
-    if (invoice && !clientSecret) {
+    if (invoice && !clientSecret && invoice.status !== 'paid') {
       createPaymentIntentMutation.mutate();
     }
   }, [invoice]);
 
-  if (isLoading || createPaymentIntentMutation.isPending) {
+  if (isLoading || (createPaymentIntentMutation.isPending && invoice?.status !== 'paid')) {
     return (
       <div className='min-h-screen bg-[#fafafa] flex items-center justify-center'>
         <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#0066FF]'></div>
@@ -199,10 +201,12 @@ export default function InvoicePage() {
         <div className='flex justify-between items-start mb-10'>
           <div>
             <h1 className='text-[32px] font-semibold text-gray-900 mb-1 tracking-tight'>
-              CA${invoice.total.toFixed(2)}
+              {invoice.currency || 'USD'}${invoice.total.toFixed(2)}
             </h1>
             <p className='text-[13px] text-gray-500'>
-              Due {new Date(invoice.dueDate).toLocaleDateString()}
+              {invoice.status === 'paid'
+                ? `Paid on ${new Date(invoice.paidAt || '').toLocaleDateString()}`
+                : `Due ${new Date(invoice.dueDate).toLocaleDateString()}`}
             </p>
           </div>
           <button className='text-gray-400 hover:text-gray-600 transition-colors'>
@@ -231,6 +235,14 @@ export default function InvoicePage() {
             <span className='text-[13px] text-gray-500'>Invoice</span>
             <span className='text-[13px] text-gray-900 font-mono'>{invoice.invoiceNumber}</span>
           </div>
+          {invoice.status === 'paid' && (
+            <div className='flex justify-between items-center'>
+              <span className='text-[13px] text-gray-500'>Status</span>
+              <span className='text-[13px] text-green-600 font-medium flex items-center gap-1'>
+                <CheckCircle className='w-3.5 h-3.5' /> Paid
+              </span>
+            </div>
+          )}
         </div>
 
         <button className='w-full text-[13px] text-gray-500 text-left hover:text-gray-900 transition-colors'>
@@ -240,10 +252,32 @@ export default function InvoicePage() {
 
       {/* Payment Methods */}
       <div className='w-full max-w-[440px] bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8'>
-        {clientSecret && (
-          <Elements stripe={stripePromise} options={{ clientSecret }}>
-            <PaymentForm clientSecret={clientSecret} invoice={invoice} workspace={workspace} />
-          </Elements>
+        {invoice.status === 'paid' ? (
+          <div className='text-center py-6'>
+            <CheckCircle className='text-green-500 w-12 h-12 mx-auto mb-4' />
+            <h2 className='text-xl font-semibold text-gray-900 mb-2'>Payment Complete</h2>
+            <p className='text-gray-500 mb-4'>
+              This invoice has been paid on {new Date(invoice.paidAt || '').toLocaleDateString()}
+            </p>
+            <div className='bg-gray-50 p-4 rounded-lg text-left mb-4'>
+              <div className='flex justify-between mb-2'>
+                <span className='text-gray-500'>Payment ID:</span>
+                <span className='font-mono text-sm'>{invoice.paymentIntentId}</span>
+              </div>
+              <div className='flex justify-between'>
+                <span className='text-gray-500'>Amount:</span>
+                <span className='font-medium'>
+                  {invoice.currency || 'USD'} {invoice.total.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          clientSecret && (
+            <Elements stripe={stripePromise} options={{ clientSecret }}>
+              <PaymentForm clientSecret={clientSecret} invoice={invoice} workspace={workspace} />
+            </Elements>
+          )
         )}
 
         {/* Footer */}

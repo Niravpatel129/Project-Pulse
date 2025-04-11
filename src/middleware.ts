@@ -42,7 +42,12 @@ export function middleware(request: NextRequest) {
     }
 
     // If not authenticated and not already on login page, redirect to login
-    if (!isAuthenticated && !path.includes('/login') && !path.includes('/register')) {
+    if (
+      !isAuthenticated &&
+      !path.includes('/login') &&
+      !path.includes('/register') &&
+      !path.includes('/payment-success')
+    ) {
       // Store the original URL to redirect back after login
       const redirectUrl = new URL('/login', request.url);
       redirectUrl.searchParams.set('redirect', request.url);
