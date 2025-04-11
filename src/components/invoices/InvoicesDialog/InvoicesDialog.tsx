@@ -326,8 +326,9 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                                 {item.description}
                               </p>
                               <p className='text-sm text-gray-500'>Quantity: {item.quantity}</p>
-                              <p className='text-sm text-gray-500'>Unit Price: ${item.unitPrice}</p>
-                              <p className='text-sm text-gray-500'>Total: ${item.total}</p>
+                              <p className='text-sm text-gray-500'>
+                                Total: ${item.unitPrice * item.quantity}
+                              </p>
                             </div>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
