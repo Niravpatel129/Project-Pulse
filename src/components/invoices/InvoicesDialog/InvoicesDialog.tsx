@@ -31,6 +31,7 @@ import { Switch } from '@/components/ui/switch';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useProject } from '@/contexts/ProjectContext';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
+import { useProjectModules } from '@/hooks/useProjectModules';
 import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
 
 interface InvoicesDialogProps {
@@ -86,6 +87,8 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
   const { project } = useProject();
 
   const [localTaxId, setLocalTaxId] = useState(invoiceSettings?.taxId || '');
+
+  const { modules } = useProjectModules();
 
   // Update local state when invoice settings change
   useEffect(() => {
@@ -599,6 +602,7 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
             setNewItem={setNewItem}
             handleAddItem={handleAddItem}
             projectOptions={projectOptions}
+            modules={modules}
             moduleOptions={moduleOptions}
           />
         </div>

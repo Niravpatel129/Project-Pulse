@@ -27,12 +27,15 @@ interface AddItemDialogProps {
     unitPrice: number;
     projectIds?: string[];
     moduleIds?: string[];
+    options?: {
+      [key: string]: string | number | boolean;
+    };
   };
   project?: any;
+  modules: any[];
   setNewItem: (item: any) => void;
   handleAddItem: () => void;
   projectOptions: { value: string; label: string }[];
-  moduleOptions: { value: string; label: string }[];
 }
 
 export default function AddItemDialog({
@@ -42,7 +45,7 @@ export default function AddItemDialog({
   setNewItem,
   handleAddItem,
   projectOptions,
-  moduleOptions,
+  modules,
   project,
 }: AddItemDialogProps) {
   // Pre-select the current project when dialog opens
@@ -217,19 +220,15 @@ export default function AddItemDialog({
                             <SelectValue placeholder='Select a module' />
                           </SelectTrigger>
                           <SelectContent>
-                            {moduleOptions.map((module) => {
+                            {modules.map((module) => {
                               return (
-                                <SelectItem
-                                  key={module.value}
-                                  value={module.value}
-                                  className='text-sm'
-                                >
-                                  {module.label}
+                                <SelectItem key={module._id} value={module._id} className='text-sm'>
+                                  {module.name}
                                 </SelectItem>
                               );
                             })}
                           </SelectContent>
-                          {moduleOptions.length === 0 && (
+                          {modules.length === 0 && (
                             <SelectContent className='text-sm text-muted-foreground px-2 py-1'>
                               No modules found
                             </SelectContent>
@@ -238,15 +237,15 @@ export default function AddItemDialog({
                         {newItem.moduleIds && newItem.moduleIds.length > 0 && (
                           <div className='mt-1.5 space-y-1'>
                             {newItem.moduleIds.map((moduleId) => {
-                              const moduleItem = moduleOptions.find((m) => {
-                                return m.value === moduleId;
+                              const moduleItem = modules.find((m) => {
+                                return m._id === moduleId;
                               });
                               return (
                                 <div
                                   key={moduleId}
                                   className='flex items-center justify-between px-2 py-1 text-xs border rounded-sm bg-muted/50'
                                 >
-                                  <span className='text-muted-foreground'>{moduleItem?.label}</span>
+                                  <span className='text-muted-foreground'>{moduleItem?.name}</span>
                                   <Button
                                     variant='ghost'
                                     size='sm'
