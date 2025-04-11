@@ -125,61 +125,136 @@ export default function AddItemDialog({
                 </div>
               </div>
 
-              <Accordion type='single' collapsible className='w-full'>
-                <AccordionItem value='options' className='border-none'>
-                  <AccordionTrigger className='text-xs font-medium py-1.5 hover:no-underline px-1'>
-                    Additional Options
-                  </AccordionTrigger>
-                  <AccordionContent className='pt-2 overflow-visible'>
-                    <div className='px-1 space-y-4'>
-                      {!project && (
+              {modules && modules.length > 0 && (
+                <Accordion type='single' collapsible className='w-full'>
+                  <AccordionItem value='options' className='border-none'>
+                    <AccordionTrigger className='text-xs font-medium py-1.5 hover:no-underline px-1'>
+                      Additional Options
+                    </AccordionTrigger>
+                    <AccordionContent className='pt-2 overflow-visible'>
+                      <div className='px-1 space-y-4'>
+                        {!project && (
+                          <div className='space-y-2'>
+                            <Label className='text-xs font-medium'>Projects</Label>
+                            <Select
+                              value={newItem.projectIds?.[0] || ''}
+                              onValueChange={(value) => {
+                                if (value) {
+                                  setNewItem({
+                                    ...newItem,
+                                    projectIds: [...(newItem.projectIds || []), value],
+                                  });
+                                }
+                              }}
+                            >
+                              <SelectTrigger className='h-8 text-sm'>
+                                <SelectValue placeholder='Select a project' />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {projectOptions.map((project) => {
+                                  return (
+                                    <SelectItem
+                                      key={project.value}
+                                      value={project.value}
+                                      className='text-sm'
+                                    >
+                                      {project.label}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                              {projectOptions.length === 0 && (
+                                <SelectContent className='text-sm text-muted-foreground px-2'>
+                                  <div className=''>No projects found</div>
+                                </SelectContent>
+                              )}
+                            </Select>
+                            {newItem.projectIds && newItem.projectIds.length > 0 && (
+                              <div className='mt-1.5 space-y-1'>
+                                {newItem.projectIds.map((projectId) => {
+                                  const project = projectOptions.find((p) => {
+                                    return p.value === projectId;
+                                  });
+                                  return (
+                                    <div
+                                      key={projectId}
+                                      className='flex items-center justify-between px-2 py-1 text-xs border rounded-sm bg-muted/50'
+                                    >
+                                      <span className='text-muted-foreground'>
+                                        {project?.label}
+                                      </span>
+                                      <Button
+                                        variant='ghost'
+                                        size='sm'
+                                        className='h-5 w-5 p-0 hover:bg-muted'
+                                        onClick={() => {
+                                          setNewItem({
+                                            ...newItem,
+                                            projectIds: newItem.projectIds?.filter((id) => {
+                                              return id !== projectId;
+                                            }),
+                                          });
+                                        }}
+                                      >
+                                        <X className='h-3 w-3' />
+                                      </Button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         <div className='space-y-2'>
-                          <Label className='text-xs font-medium'>Projects</Label>
+                          <Label className='text-xs font-medium'>Modules</Label>
                           <Select
-                            value={newItem.projectIds?.[0] || ''}
+                            value={newItem.moduleIds?.[0] || ''}
                             onValueChange={(value) => {
                               if (value) {
                                 setNewItem({
                                   ...newItem,
-                                  projectIds: [...(newItem.projectIds || []), value],
+                                  moduleIds: [...(newItem.moduleIds || []), value],
                                 });
                               }
                             }}
                           >
                             <SelectTrigger className='h-8 text-sm'>
-                              <SelectValue placeholder='Select a project' />
+                              <SelectValue placeholder='Select a module' />
                             </SelectTrigger>
                             <SelectContent>
-                              {projectOptions.map((project) => {
+                              {modules.map((module) => {
                                 return (
                                   <SelectItem
-                                    key={project.value}
-                                    value={project.value}
+                                    key={module._id}
+                                    value={module._id}
                                     className='text-sm'
                                   >
-                                    {project.label}
+                                    {module.name}
                                   </SelectItem>
                                 );
                               })}
                             </SelectContent>
-                            {projectOptions.length === 0 && (
-                              <SelectContent className='text-sm text-muted-foreground px-2'>
-                                <div className=''>No projects found</div>
+                            {modules.length === 0 && (
+                              <SelectContent className='text-sm text-muted-foreground px-2 py-1'>
+                                No modules found
                               </SelectContent>
                             )}
                           </Select>
-                          {newItem.projectIds && newItem.projectIds.length > 0 && (
+                          {newItem.moduleIds && newItem.moduleIds.length > 0 && (
                             <div className='mt-1.5 space-y-1'>
-                              {newItem.projectIds.map((projectId) => {
-                                const project = projectOptions.find((p) => {
-                                  return p.value === projectId;
+                              {newItem.moduleIds.map((moduleId) => {
+                                const moduleItem = modules.find((m) => {
+                                  return m._id === moduleId;
                                 });
                                 return (
                                   <div
-                                    key={projectId}
+                                    key={moduleId}
                                     className='flex items-center justify-between px-2 py-1 text-xs border rounded-sm bg-muted/50'
                                   >
-                                    <span className='text-muted-foreground'>{project?.label}</span>
+                                    <span className='text-muted-foreground'>
+                                      {moduleItem?.name}
+                                    </span>
                                     <Button
                                       variant='ghost'
                                       size='sm'
@@ -187,8 +262,8 @@ export default function AddItemDialog({
                                       onClick={() => {
                                         setNewItem({
                                           ...newItem,
-                                          projectIds: newItem.projectIds?.filter((id) => {
-                                            return id !== projectId;
+                                          moduleIds: newItem.moduleIds?.filter((id) => {
+                                            return id !== moduleId;
                                           }),
                                         });
                                       }}
@@ -201,76 +276,11 @@ export default function AddItemDialog({
                             </div>
                           )}
                         </div>
-                      )}
-
-                      <div className='space-y-2'>
-                        <Label className='text-xs font-medium'>Modules</Label>
-                        <Select
-                          value={newItem.moduleIds?.[0] || ''}
-                          onValueChange={(value) => {
-                            if (value) {
-                              setNewItem({
-                                ...newItem,
-                                moduleIds: [...(newItem.moduleIds || []), value],
-                              });
-                            }
-                          }}
-                        >
-                          <SelectTrigger className='h-8 text-sm'>
-                            <SelectValue placeholder='Select a module' />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {modules.map((module) => {
-                              return (
-                                <SelectItem key={module._id} value={module._id} className='text-sm'>
-                                  {module.name}
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                          {modules.length === 0 && (
-                            <SelectContent className='text-sm text-muted-foreground px-2 py-1'>
-                              No modules found
-                            </SelectContent>
-                          )}
-                        </Select>
-                        {newItem.moduleIds && newItem.moduleIds.length > 0 && (
-                          <div className='mt-1.5 space-y-1'>
-                            {newItem.moduleIds.map((moduleId) => {
-                              const moduleItem = modules.find((m) => {
-                                return m._id === moduleId;
-                              });
-                              return (
-                                <div
-                                  key={moduleId}
-                                  className='flex items-center justify-between px-2 py-1 text-xs border rounded-sm bg-muted/50'
-                                >
-                                  <span className='text-muted-foreground'>{moduleItem?.name}</span>
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    className='h-5 w-5 p-0 hover:bg-muted'
-                                    onClick={() => {
-                                      setNewItem({
-                                        ...newItem,
-                                        moduleIds: newItem.moduleIds?.filter((id) => {
-                                          return id !== moduleId;
-                                        }),
-                                      });
-                                    }}
-                                  >
-                                    <X className='h-3 w-3' />
-                                  </Button>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
                       </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              )}
             </div>
             <div className='flex justify-end pt-2 px-1'>
               <div className='flex gap-2'>

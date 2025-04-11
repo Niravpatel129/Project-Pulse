@@ -603,7 +603,6 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
             handleAddItem={handleAddItem}
             projectOptions={projectOptions}
             modules={modules}
-            moduleOptions={moduleOptions}
           />
         </div>
       </DialogContent>
