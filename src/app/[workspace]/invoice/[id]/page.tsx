@@ -1,6 +1,179 @@
+'use client';
+import { toast } from '@/components/ui/use-toast';
+import { newRequest } from '@/utils/newRequest';
+import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Lock } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+interface Invoice {
+  _id: string;
+  invoiceNumber: string;
+  client: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  items: string[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  status: string;
+  dueDate: string;
+  currency: string;
+  deliveryMethod: string;
+  workspace: string;
+  createdBy: {
+    _id: string;
+    name: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+function PaymentForm({ clientSecret, invoice }: { clientSecret: string; invoice: Invoice }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [error, setError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setIsProcessing(true);
+
+    const { error: submitError } = await elements.submit();
+    if (submitError) {
+      setError(submitError.message || 'An error occurred');
+      setIsProcessing(false);
+      return;
+    }
+
+    const { error: confirmError } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/payment-success`,
+      },
+    });
+
+    if (confirmError) {
+      setError(confirmError.message || 'An error occurred');
+    }
+    setIsProcessing(false);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className='space-y-4'>
+      <PaymentElement />
+      {error && <div className='text-red-500 text-sm mt-2'>{error}</div>}
+      <button
+        type='submit'
+        disabled={!stripe || isProcessing}
+        className='w-full bg-[#0066FF] text-white rounded-lg h-10 font-medium flex items-center justify-center gap-2 hover:bg-[#0052CC] transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+      >
+        {isProcessing
+          ? 'Processing...'
+          : `Pay ${invoice.currency || 'USD'}${invoice.total.toFixed(2)}`}
+        <Lock className='w-3.5 h-3.5' />
+      </button>
+    </form>
+  );
+}
 
 export default function InvoicePage() {
+  const params = useParams();
+  const invoiceId = params.id as string;
+  const workspace = params.workspace as string;
+
+  const { data: invoice, isLoading } = useQuery<Invoice>({
+    queryKey: ['invoice', workspace, invoiceId],
+    queryFn: async () => {
+      const response = await newRequest.get(`/invoices/${invoiceId}`);
+      return response.data.data;
+    },
+  });
+
+  const [stripePromise] = useState(() => {
+    try {
+      const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+      if (!stripeKey) {
+        throw new Error('Stripe publishable key is not defined');
+      }
+      return loadStripe(stripeKey);
+    } catch (error) {
+      console.error('Error initializing Stripe:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to initialize payment system. Please try again later.',
+        variant: 'destructive',
+      });
+      return null;
+    }
+  });
+
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+
+  const createPaymentIntentMutation = useMutation({
+    mutationFn: async () => {
+      if (!invoice) throw new Error('Invoice not loaded');
+      try {
+        const response = await newRequest.post(`/invoices/${invoiceId}/payment-intent`, {
+          amount: invoice.total,
+          currency: invoice.currency || 'USD',
+        });
+        return response.data;
+      } catch (error) {
+        console.error('Error creating payment intent:', error);
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      if (data.clientSecret) {
+        setClientSecret(data.clientSecret);
+        toast({
+          title: 'Payment intent created',
+          description: 'Please complete your payment details below.',
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: 'Failed to create payment intent. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Create payment intent when invoice is loaded
+  useEffect(() => {
+    if (invoice && !clientSecret) {
+      createPaymentIntentMutation.mutate();
+    }
+  }, [invoice]);
+
+  if (isLoading || createPaymentIntentMutation.isPending) {
+    return (
+      <div className='min-h-screen bg-[#fafafa] flex items-center justify-center'>
+        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#0066FF]'></div>
+      </div>
+    );
+  }
+
+  if (!invoice) {
+    return (
+      <div className='min-h-screen bg-[#fafafa] flex items-center justify-center'>
+        <div className='text-gray-500'>Invoice not found</div>
+      </div>
+    );
+  }
+
   return (
     <div className='min-h-screen bg-[#fafafa] flex flex-col items-center py-16 px-4 antialiased'>
       {/* Company Logo */}
@@ -8,7 +181,7 @@ export default function InvoicePage() {
         <div className='flex items-center gap-3'>
           <div className='w-6 h-6 rounded-full bg-[#0066FF]' />
           <span className='text-[15px] font-medium text-gray-900 tracking-tight'>
-            Bolo Print Inc.
+            {invoice.client.name}
           </span>
         </div>
       </div>
@@ -18,9 +191,11 @@ export default function InvoicePage() {
         <div className='flex justify-between items-start mb-10'>
           <div>
             <h1 className='text-[32px] font-semibold text-gray-900 mb-1 tracking-tight'>
-              CA$169.50
+              CA${invoice.total.toFixed(2)}
             </h1>
-            <p className='text-[13px] text-gray-500'>Due May 10, 2025</p>
+            <p className='text-[13px] text-gray-500'>
+              Due {new Date(invoice.dueDate).toLocaleDateString()}
+            </p>
           </div>
           <button className='text-gray-400 hover:text-gray-600 transition-colors'>
             <span className='sr-only'>Download invoice</span>
@@ -38,15 +213,15 @@ export default function InvoicePage() {
         <div className='space-y-5 mb-7'>
           <div className='flex justify-between items-center'>
             <span className='text-[13px] text-gray-500'>To</span>
-            <span className='text-[13px] text-gray-900'>Divesh</span>
+            <span className='text-[13px] text-gray-900'>{invoice.client.name}</span>
           </div>
           <div className='flex justify-between items-center'>
             <span className='text-[13px] text-gray-500'>From</span>
-            <span className='text-[13px] text-gray-900'>Bolo Print Inc.</span>
+            <span className='text-[13px] text-gray-900'>{invoice.createdBy.name}</span>
           </div>
           <div className='flex justify-between items-center'>
             <span className='text-[13px] text-gray-500'>Invoice</span>
-            <span className='text-[13px] text-gray-900 font-mono'>#16786F48-0001</span>
+            <span className='text-[13px] text-gray-900 font-mono'>{invoice.invoiceNumber}</span>
           </div>
         </div>
 
@@ -57,66 +232,11 @@ export default function InvoicePage() {
 
       {/* Payment Methods */}
       <div className='w-full max-w-[440px] bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8'>
-        {/* Google Pay Button */}
-        <button className='w-full bg-black text-white rounded-lg py-3 px-4 mb-6 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity'>
-          <span className='text-[13px] font-medium'>G Pay</span>
-          <span className='text-[13px] opacity-60'>•••• 5011</span>
-        </button>
-
-        <div className='text-center text-[13px] text-gray-500 mb-6'>Or pay another way</div>
-
-        {/* Payment Options */}
-        <div className='space-y-3 mb-8'>
-          <label className='flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors'>
-            <input
-              type='radio'
-              name='payment'
-              className='h-4 w-4 text-[#0066FF] focus:ring-[#0066FF]'
-            />
-            <span className='text-[13px] text-gray-700'>Card</span>
-          </label>
-
-          <label className='flex items-center gap-3 p-3 border border-[#0066FF] rounded-lg cursor-pointer bg-blue-50/50'>
-            <input
-              type='radio'
-              name='payment'
-              className='h-4 w-4 text-[#0066FF] focus:ring-[#0066FF]'
-              defaultChecked
-            />
-            <span className='text-[13px] text-[#0066FF]'>Pre-authorized Debit</span>
-          </label>
-        </div>
-
-        {/* Form Fields */}
-        <div className='space-y-4 mb-8'>
-          <div>
-            <label className='block text-[13px] text-gray-700 mb-1.5'>Full name</label>
-            <input
-              type='text'
-              defaultValue='Divesh'
-              className='w-full h-10 px-3 text-[13px] border border-gray-200 rounded-lg focus:outline-none focus:border-[#0066FF] focus:ring-1 focus:ring-[#0066FF] transition-shadow'
-            />
-          </div>
-          <div>
-            <label className='block text-[13px] text-gray-700 mb-1.5'>Email</label>
-            <input
-              type='email'
-              defaultValue='Dipu051098@gmail.com'
-              className='w-full h-10 px-3 text-[13px] border border-gray-200 rounded-lg focus:outline-none focus:border-[#0066FF] focus:ring-1 focus:ring-[#0066FF] transition-shadow'
-            />
-          </div>
-        </div>
-
-        <p className='text-[13px] text-gray-500 leading-relaxed mb-8'>
-          By confirming your payment, you allow Bolo Print Inc. to charge you for this payment and
-          future payments in accordance with their terms.
-        </p>
-
-        {/* Pay Button */}
-        <button className='w-full bg-[#0066FF] text-white rounded-lg h-10 font-medium flex items-center justify-center gap-2 hover:bg-[#0052CC] transition-colors'>
-          <span className='text-[13px]'>Pay CA$169.50</span>
-          <Lock className='w-3.5 h-3.5' />
-        </button>
+        {clientSecret && (
+          <Elements stripe={stripePromise} options={{ clientSecret }}>
+            <PaymentForm clientSecret={clientSecret} invoice={invoice} />
+          </Elements>
+        )}
 
         {/* Footer */}
         <div className='mt-10 flex items-center justify-center gap-6 text-[13px] text-gray-400'>
