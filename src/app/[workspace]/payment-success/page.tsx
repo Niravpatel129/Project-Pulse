@@ -3,10 +3,11 @@
 import { toast } from '@/components/ui/use-toast';
 import { newRequest } from '@/utils/newRequest';
 import { CheckCircle } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function PaymentSuccessPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const paymentIntent = searchParams.get('payment_intent');
   const paymentIntentClientSecret = searchParams.get('payment_intent_client_secret');
@@ -41,6 +42,11 @@ export default function PaymentSuccessPage() {
             title: 'Success',
             description: 'Your payment has been processed successfully',
           });
+
+          // Redirect back to the invoice page after successful verification
+          if (response.data.data.invoice?._id) {
+            router.push(`/invoice/${response.data.data.invoice._id}`);
+          }
         } else {
           throw new Error('Payment verification failed');
         }
@@ -68,7 +74,7 @@ export default function PaymentSuccessPage() {
         variant: 'destructive',
       });
     }
-  }, [paymentIntent, paymentIntentClientSecret, redirectStatus]);
+  }, [paymentIntent, paymentIntentClientSecret, redirectStatus, router]);
 
   if (isVerifying) {
     return (
