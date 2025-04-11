@@ -9,8 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useProject } from '@/contexts/ProjectContext';
-import { useProjectModules } from '@/hooks/useProjectModules';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -51,8 +49,6 @@ export default function AddItemDialog({
   modules,
   currency,
 }: AddItemDialogProps) {
-  const { project } = useProject();
-  const { modules: projectModules } = useProjectModules();
   const [formData, setFormData] = useState({
     id: '',
     description: '',
@@ -63,6 +59,14 @@ export default function AddItemDialog({
     options: {} as Record<string, any>,
     currency: currency || 'usd',
   });
+
+  const currencySymbol =
+    {
+      usd: '$',
+      cad: 'C$',
+      eur: '€',
+      gbp: '£',
+    }[currency] || '$';
 
   // Initialize form data when item changes or dialog opens
   useEffect(() => {
@@ -119,7 +123,14 @@ export default function AddItemDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='sm:max-w-[425px]'>
-        <DialogTitle>{item ? 'Edit Item' : 'Add New Item'}</DialogTitle>
+        <DialogTitle>
+          {item ? 'Edit Item' : 'Add New Item'}
+          <div className='text-sm text-gray-500 font-normal'>
+            {currencySymbol}
+            {formData.unitPrice.toFixed(2)} x {formData.quantity} = {currencySymbol}
+            {(formData.unitPrice * formData.quantity).toFixed(2)}
+          </div>
+        </DialogTitle>
         <form onSubmit={handleSubmit} className='space-y-4'>
           <div className='space-y-2'>
             <Label htmlFor='description'>Description</Label>
@@ -140,25 +151,33 @@ export default function AddItemDialog({
                 id='quantity'
                 type='number'
                 min='1'
+                step='any'
                 value={formData.quantity}
                 onChange={(e) => {
-                  return setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 });
+                  return setFormData({ ...formData, quantity: parseFloat(e.target.value) || 0 });
                 }}
+                className='[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none'
               />
             </div>
 
             <div className='space-y-2'>
               <Label htmlFor='unitPrice'>Unit Price</Label>
-              <Input
-                id='unitPrice'
-                type='number'
-                min='0'
-                step='0.01'
-                value={formData.unitPrice}
-                onChange={(e) => {
-                  return setFormData({ ...formData, unitPrice: parseFloat(e.target.value) || 0 });
-                }}
-              />
+              <div className='relative'>
+                <span className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-500'>
+                  {currencySymbol}
+                </span>
+                <Input
+                  id='unitPrice'
+                  type='number'
+                  min='0'
+                  step='any'
+                  className='pl-7 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none'
+                  value={formData.unitPrice}
+                  onChange={(e) => {
+                    return setFormData({ ...formData, unitPrice: parseFloat(e.target.value) || 0 });
+                  }}
+                />
+              </div>
             </div>
           </div>
 
