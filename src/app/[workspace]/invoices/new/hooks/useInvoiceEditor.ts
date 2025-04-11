@@ -19,13 +19,11 @@ interface Item {
   description: string;
   quantity: number;
   unitPrice: number;
-  total: number;
+  projectIds: string[];
+  moduleIds: string[];
+  options: Record<string, any>;
   currency: string;
-  projectIds?: string[];
-  moduleIds?: string[];
-  options?: {
-    [key: string]: string | number | boolean;
-  };
+  total?: number;
 }
 
 export function useInvoiceEditor() {
@@ -47,7 +45,6 @@ export function useInvoiceEditor() {
     description: '',
     quantity: 1,
     unitPrice: 0,
-    total: 0,
     projectIds: [],
     moduleIds: [],
     options: {},
@@ -70,6 +67,8 @@ export function useInvoiceEditor() {
   const [icon, setIcon] = useState('');
   const [logo, setLogo] = useState('');
   const router = useRouter();
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [localTaxId, setLocalTaxId] = useState(invoiceSettings?.taxId || '');
 
   // Fetch items from product catalog
   const { data: productCatalogItems, isLoading: isLoadingItems } = useQuery({
@@ -122,10 +121,10 @@ export function useInvoiceEditor() {
           description: item.name,
           quantity: item.quantity || 1,
           unitPrice: item.price,
-          total: (item.quantity || 1) * item.price,
           projectIds: item.projects || [],
           moduleIds: item.modules || [],
           options: item.options || {},
+          currency: item.currency || 'usd',
         };
       });
       setAvailableItems(formattedItems);
@@ -154,6 +153,13 @@ export function useInvoiceEditor() {
       setLogo(invoiceSettings.logo || '');
     }
   }, [invoiceSettings]);
+
+  // Update localTaxId when invoiceSettings changes
+  useEffect(() => {
+    if (invoiceSettings?.taxId !== undefined) {
+      setLocalTaxId(invoiceSettings.taxId);
+    }
+  }, [invoiceSettings?.taxId]);
 
   const handleCustomerSelect = (value: string) => {
     if (value === 'new') {
@@ -217,68 +223,115 @@ export function useInvoiceEditor() {
     }
   };
 
+  const handleEditItem = (item: Item) => {
+    setEditingItem(item);
+    setIsNewItemDialogOpen(true);
+  };
+
+  const handleSaveItem = (item: Item) => {
+    // Calculate total and prepare item data
+    const total = item.quantity * item.unitPrice;
+    const itemToSave = {
+      ...item,
+      total,
+      currency: item.currency || 'usd',
+    };
+
+    // Make the API call
+    addItemMutation.mutate(itemToSave);
+  };
+
   const addItemMutation = useMutation({
     mutationFn: async (item: Item) => {
-      const response = await newRequest.post('/product-catalog', {
-        name: item.description,
-        quantity: item.quantity,
-        price: item.unitPrice,
-        projects: item.projectIds || [],
-        modules: item.moduleIds || [],
-      });
-      return response.data.data.product;
+      if (item.id) {
+        // Update existing item
+        const response = await newRequest.put(`/product-catalog/${item.id}`, {
+          name: item.description,
+          quantity: item.quantity,
+          price: item.unitPrice,
+          projects: item.projectIds || [],
+          modules: item.moduleIds || [],
+        });
+        return response.data.data.product;
+      } else {
+        // Create new item
+        const response = await newRequest.post('/product-catalog', {
+          name: item.description,
+          quantity: item.quantity,
+          price: item.unitPrice,
+          projects: item.projectIds || [],
+          modules: item.moduleIds || [],
+        });
+        return response.data.data.product;
+      }
     },
     onSuccess: (data) => {
-      // Update the available items list with the new item
-      setAvailableItems((prev) => {
-        return [
-          ...prev,
-          {
-            id: data._id,
-            description: data.name,
-            quantity: data.quantity,
-            unitPrice: data.price,
-            currency: data.currency,
-            total: data.quantity * data.price,
-            projectIds: data.projects,
-            moduleIds: data.modules,
-          },
-        ];
-      });
-      // Add the new item to selected items
-      setSelectedItems((prev) => {
-        return [
-          ...prev,
-          {
-            id: data._id,
-            description: data.name,
-            quantity: data.quantity,
-            unitPrice: data.price,
-            currency: data.currency,
-            total: data.quantity * data.price,
-            projectIds: data.projects,
-            moduleIds: data.modules,
-          },
-        ];
-      });
-      // Reset the new item form
-      setNewItem({
-        id: '',
-        description: '',
-        quantity: 1,
-        unitPrice: 0,
-        total: 0,
-        projectIds: [],
-        moduleIds: [],
-        options: {},
-        currency: 'usd',
-      });
+      if (editingItem) {
+        // Update existing item in both lists
+        setAvailableItems((prev) => {
+          return prev.map((item) => {
+            return item.id === data._id
+              ? {
+                  id: data._id,
+                  description: data.name,
+                  quantity: data.quantity,
+                  unitPrice: data.price,
+                  currency: data.currency,
+                  total: data.quantity * data.price,
+                  projectIds: data.projects || [],
+                  moduleIds: data.modules || [],
+                  options: {},
+                }
+              : item;
+          });
+        });
+        setSelectedItems((prev) => {
+          return prev.map((item) => {
+            return item.id === data._id
+              ? {
+                  id: data._id,
+                  description: data.name,
+                  quantity: data.quantity,
+                  unitPrice: data.price,
+                  currency: data.currency,
+                  total: data.quantity * data.price,
+                  projectIds: data.projects || [],
+                  moduleIds: data.modules || [],
+                  options: {},
+                }
+              : item;
+          });
+        });
+        toast.success('Item updated successfully');
+      } else {
+        // Add new item to both lists
+        const newItem = {
+          id: data._id,
+          description: data.name,
+          quantity: data.quantity,
+          unitPrice: data.price,
+          currency: data.currency,
+          total: data.quantity * data.price,
+          projectIds: data.projects || [],
+          moduleIds: data.modules || [],
+          options: {},
+        };
+        setAvailableItems((prev) => {
+          return [...prev, newItem];
+        });
+        setSelectedItems((prev) => {
+          return [...prev, newItem];
+        });
+        toast.success('Item added successfully');
+      }
+
+      // Reset the form state and close dialog
+      setEditingItem(null);
       setIsNewItemDialogOpen(false);
-      toast.success('Item added successfully');
     },
     onError: (error) => {
-      console.error('Error adding item:', error);
-      toast.error('Failed to add item');
+      console.error('Error saving item:', error);
+      toast.error('Failed to save item');
     },
   });
 
@@ -308,22 +361,6 @@ export function useInvoiceEditor() {
       toast.error('Failed to send invoice');
     },
   });
-
-  const handleAddItem = () => {
-    if (!newItem.description || !newItem.quantity || !newItem.unitPrice) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    const total = newItem.quantity * newItem.unitPrice;
-    const itemToAdd = {
-      ...newItem,
-      total,
-      currency: newItem.currency || 'usd',
-    };
-
-    addItemMutation.mutate(itemToAdd);
-  };
 
   const handleRemoveItem = (itemId: string) => {
     setSelectedItems(
@@ -378,7 +415,8 @@ export function useInvoiceEditor() {
     handleCustomerSelect,
     handleAddCustomer,
     handleItemSelect,
-    handleAddItem,
+    handleEditItem,
+    handleSaveItem,
     handleRemoveItem,
     zoomIn,
     zoomOut,
@@ -392,5 +430,8 @@ export function useInvoiceEditor() {
     sendInvoiceMutation,
     deliveryMethod,
     setDeliveryMethod,
+    editingItem,
+    localTaxId,
+    setLocalTaxId,
   };
 }

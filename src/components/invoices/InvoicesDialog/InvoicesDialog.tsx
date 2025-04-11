@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowLeft, MoreHorizontal, ZoomIn, ZoomOut } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 import AddItemDialog from '@/app/[workspace]/invoices/new/components/AddItemDialog';
 import { useInvoiceEditor } from '@/app/[workspace]/invoices/new/hooks/useInvoiceEditor';
@@ -58,8 +58,6 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
     selectedItem,
     availableItems,
     selectedItems,
-    newItem,
-    setNewItem,
     customers,
     setCustomers,
     newCustomer,
@@ -69,7 +67,8 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
     handleCustomerSelect,
     handleAddCustomer,
     handleItemSelect,
-    handleAddItem,
+    handleEditItem,
+    handleSaveItem,
     handleRemoveItem,
     zoomIn,
     zoomOut,
@@ -85,10 +84,11 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
     setDeliveryMethod,
     currency,
     setCurrency,
+    editingItem,
+    localTaxId,
+    setLocalTaxId,
   } = useInvoiceEditor();
   const { project } = useProject();
-
-  const [localTaxId, setLocalTaxId] = useState(invoiceSettings?.taxId || '');
 
   const { modules } = useProjectModules();
 
@@ -328,6 +328,14 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent className='w-56' align='end'>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    handleEditItem(item);
+                                    setIsNewItemDialogOpen(true);
+                                  }}
+                                >
+                                  Edit item
+                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => {
                                     return handleRemoveItem(item.id);
@@ -603,12 +611,12 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
 
           {/* New Item Dialog */}
           <AddItemDialog
-            project={project}
             open={isNewItemDialogOpen}
-            onOpenChange={setIsNewItemDialogOpen}
-            newItem={newItem}
-            setNewItem={setNewItem}
-            handleAddItem={handleAddItem}
+            onOpenChange={(open) => {
+              setIsNewItemDialogOpen(open);
+            }}
+            item={editingItem}
+            onSave={handleSaveItem}
             projectOptions={projectOptions}
             modules={modules}
             currency={currency}
