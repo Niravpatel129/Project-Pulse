@@ -60,7 +60,7 @@ export default function InvoiceEditor() {
     handleCustomerSelect,
     handleAddCustomer,
     handleItemSelect,
-    handleAddItem,
+    handleSaveItem,
     handleRemoveItem,
     zoomIn,
     zoomOut,
@@ -74,6 +74,8 @@ export default function InvoiceEditor() {
     sendInvoiceMutation,
     deliveryMethod,
     setDeliveryMethod,
+    currency,
+    setCurrency,
   } = useInvoiceEditor();
 
   const [localTaxId, setLocalTaxId] = useState(invoiceSettings?.taxId || '');
@@ -220,7 +222,12 @@ export default function InvoiceEditor() {
           {/* Currency section */}
           <div className='mb-8'>
             <h2 className='text-sm font-medium text-gray-900 mb-3'>Currency</h2>
-            <Select defaultValue='cad'>
+            <Select
+              defaultValue={currency}
+              onValueChange={(value) => {
+                setCurrency(value);
+              }}
+            >
               <SelectTrigger className='w-full bg-white border-gray-200'>
                 <SelectValue placeholder='Select currency' />
               </SelectTrigger>
@@ -565,11 +572,11 @@ export default function InvoiceEditor() {
       <AddItemDialog
         open={isNewItemDialogOpen}
         onOpenChange={setIsNewItemDialogOpen}
-        newItem={newItem}
-        setNewItem={setNewItem}
-        handleAddItem={handleAddItem}
+        item={newItem}
+        onSave={handleSaveItem}
         projectOptions={projectOptions}
-        moduleOptions={moduleOptions}
+        modules={moduleOptions}
+        currency={currency}
       />
     </div>
   );
