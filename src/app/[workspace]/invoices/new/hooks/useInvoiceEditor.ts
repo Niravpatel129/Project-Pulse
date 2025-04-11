@@ -1,3 +1,4 @@
+import { useProject } from '@/contexts/ProjectContext';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { useParticipation } from '@/hooks/useParticipation';
 import { newRequest } from '@/utils/newRequest';
@@ -37,6 +38,7 @@ export function useInvoiceEditor() {
   const [currency, setCurrency] = useState('usd');
   const [isNewItemDialogOpen, setIsNewItemDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState('');
+  const { project } = useProject();
   const [deliveryMethod, setDeliveryMethod] = useState('email');
   const [availableItems, setAvailableItems] = useState<Item[]>([]);
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
@@ -249,8 +251,9 @@ export function useInvoiceEditor() {
           name: item.description,
           quantity: item.quantity,
           price: item.unitPrice,
-          projects: item.projectIds || [],
+          projects: item.projectIds || [project?._id],
           modules: item.moduleIds || [],
+          currency: item.currency || 'usd',
         });
         return response.data.data.product;
       } else {
@@ -259,8 +262,9 @@ export function useInvoiceEditor() {
           name: item.description,
           quantity: item.quantity,
           price: item.unitPrice,
-          projects: item.projectIds || [],
+          projects: item.projectIds || [project?._id],
           modules: item.moduleIds || [],
+          currency: item.currency || 'usd',
         });
         return response.data.data.product;
       }
