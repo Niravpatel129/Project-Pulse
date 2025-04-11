@@ -283,7 +283,13 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                 <div className='space-y-4'>
                   <Select value={selectedItem} onValueChange={handleItemSelect}>
                     <SelectTrigger className='w-full bg-white border-gray-200'>
-                      <SelectValue placeholder='Add item' />
+                      <SelectValue placeholder='Add item'>
+                        {selectedItem !== 'new' &&
+                          selectedItem &&
+                          availableItems.find((item) => {
+                            return item.id === selectedItem;
+                          })?.description}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value='new' className='text-gray-600'>
@@ -293,8 +299,14 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                       {availableItems.map((item) => {
                         return (
                           <SelectItem key={item.id} value={item.id}>
-                            <div>{item.description}</div>
-                            <div>{item.unitPrice}</div>
+                            <div className='flex flex-col w-full'>
+                              <div className='font-medium'>
+                                {item.description} x {item.quantity}
+                              </div>
+                              <div className='flex justify-between text-xs text-gray-500'>
+                                <span>${item.unitPrice * item.quantity}</span>
+                              </div>
+                            </div>
                           </SelectItem>
                         );
                       })}
