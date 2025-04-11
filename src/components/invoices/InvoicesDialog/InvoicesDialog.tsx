@@ -585,7 +585,9 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                                 <td className='py-3'>{item.description}</td>
                                 <td className='py-3 text-right'>{item.quantity}</td>
                                 <td className='py-3 text-right'>${item.unitPrice}</td>
-                                <td className='py-3 text-right'>${item.total}</td>
+                                <td className='py-3 text-right'>
+                                  ${item.unitPrice * item.quantity}
+                                </td>
                               </tr>
                             );
                           })
