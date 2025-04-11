@@ -112,17 +112,21 @@ export default function AddItemDialog({
                 <Label htmlFor='item-quantity' className='text-xs'>
                   Quantity
                 </Label>
-                <Input
-                  id='item-quantity'
-                  type='number'
-                  min='1'
-                  value={newItem.quantity}
-                  onChange={(e) => {
-                    return setNewItem({ ...newItem, quantity: parseInt(e.target.value) });
-                  }}
-                  placeholder='1'
-                  className='h-8 text-xs'
-                />
+                <div className='relative'>
+                  <Input
+                    id='item-quantity'
+                    type='number'
+                    min='1'
+                    value={newItem.quantity || ''}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      setNewItem({ ...newItem, quantity: isNaN(value) ? 1 : value });
+                    }}
+                    placeholder='1'
+                    className='h-8 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none'
+                  />
+                  <div className='absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-0.5'></div>
+                </div>
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='item-unit-price' className='text-xs'>
@@ -137,14 +141,16 @@ export default function AddItemDialog({
                     type='number'
                     min='0'
                     step='0.01'
-                    value={newItem.unitPrice}
+                    value={newItem.unitPrice || ''}
                     onChange={(e) => {
-                      return setNewItem({ ...newItem, unitPrice: parseFloat(e.target.value) });
+                      const value = parseFloat(e.target.value);
+                      setNewItem({ ...newItem, unitPrice: isNaN(value) ? 0 : value });
                     }}
                     placeholder='0.00'
-                    className='h-8 text-xs pl-7'
+                    className='h-8 text-xs pl-7 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none'
                     inputMode='decimal'
                   />
+                  <div className='absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-0.5'></div>
                 </div>
               </div>
             </div>
