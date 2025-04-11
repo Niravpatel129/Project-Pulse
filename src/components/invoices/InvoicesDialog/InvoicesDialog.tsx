@@ -1,7 +1,7 @@
 'use client';
 
-import { ArrowLeft, MoreHorizontal, ZoomIn, ZoomOut } from 'lucide-react';
-import { useEffect } from 'react';
+import { ArrowLeft, MoreHorizontal, Plus, ZoomIn, ZoomOut } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import AddItemDialog from '@/app/[workspace]/invoices/new/components/AddItemDialog';
 import { useInvoiceEditor } from '@/app/[workspace]/invoices/new/hooks/useInvoiceEditor';
@@ -92,12 +92,23 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
 
   const { modules } = useProjectModules();
 
+  const [isCreatingTax, setIsCreatingTax] = useState(false);
+  const [newTax, setNewTax] = useState({ name: '', rate: 0 });
+  const [selectedTax, setSelectedTax] = useState<string>('');
+  const [localCurrency, setLocalCurrency] = useState(invoiceSettings?.currency || 'usd');
+
   // Update local state when invoice settings change
   useEffect(() => {
     if (invoiceSettings?.taxId !== undefined) {
       setLocalTaxId(invoiceSettings.taxId);
     }
   }, [invoiceSettings?.taxId]);
+
+  useEffect(() => {
+    if (invoiceSettings?.currency !== undefined) {
+      setLocalCurrency(invoiceSettings.currency);
+    }
+  }, [invoiceSettings?.currency]);
 
   const handleSettingsUpdate = (updates: Partial<typeof invoiceSettings>) => {
     updateInvoiceSettings.mutate({
@@ -106,6 +117,20 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
         ...updates,
       },
     });
+  };
+
+  const handleAddTax = () => {
+    if (!newTax.name || newTax.rate <= 0) return;
+
+    const newTaxId = `tax-${Date.now()}`;
+    const updatedTaxes = [
+      ...(invoiceSettings?.taxes || []),
+      { id: newTaxId, name: newTax.name, rate: newTax.rate },
+    ];
+
+    handleSettingsUpdate({ taxes: updatedTaxes });
+    setNewTax({ name: '', rate: 0 });
+    setIsCreatingTax(false);
   };
 
   return (
@@ -253,19 +278,22 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
               <div className='mb-8'>
                 <h2 className='text-sm font-medium text-gray-900 mb-3'>Currency</h2>
                 <Select
-                  defaultValue={currency}
+                  value={localCurrency}
                   onValueChange={(value) => {
-                    setCurrency(value);
+                    setLocalCurrency(value);
+                    handleSettingsUpdate({ currency: value });
                   }}
                 >
                   <SelectTrigger className='w-full bg-white border-gray-200'>
                     <SelectValue placeholder='Select currency' />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='cad'>CAD - Canadian Dollar</SelectItem>
                     <SelectItem value='usd'>USD - US Dollar</SelectItem>
                     <SelectItem value='eur'>EUR - Euro</SelectItem>
                     <SelectItem value='gbp'>GBP - British Pound</SelectItem>
+                    <SelectItem value='cad'>CAD - Canadian Dollar</SelectItem>
+                    <SelectItem value='aud'>AUD - Australian Dollar</SelectItem>
+                    <SelectItem value='jpy'>JPY - Japanese Yen</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -365,6 +393,85 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* Tax section */}
+              <div className='mb-8'>
+                <div className='flex items-center justify-between mb-2'>
+                  <h2 className='text-sm font-medium text-gray-900'>Taxes</h2>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => {
+                      return setIsCreatingTax(true);
+                    }}
+                    className='flex items-center gap-2'
+                  >
+                    <Plus className='h-4 w-4' />
+                    Add Tax
+                  </Button>
+                </div>
+
+                {isCreatingTax && (
+                  <div className='mb-4 p-4 bg-gray-50 rounded-lg'>
+                    <div className='grid grid-cols-2 gap-4 mb-4'>
+                      <div>
+                        <Label htmlFor='tax-name'>Tax Name</Label>
+                        <Input
+                          id='tax-name'
+                          placeholder='e.g. GST, VAT'
+                          value={newTax.name}
+                          onChange={(e) => {
+                            return setNewTax({ ...newTax, name: e.target.value });
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor='tax-rate'>Rate (%)</Label>
+                        <Input
+                          id='tax-rate'
+                          type='number'
+                          min='0'
+                          step='0.1'
+                          value={newTax.rate}
+                          onChange={(e) => {
+                            return setNewTax({ ...newTax, rate: Number(e.target.value) });
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className='flex justify-end gap-2'>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => {
+                          setIsCreatingTax(false);
+                          setNewTax({ name: '', rate: 0 });
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button size='sm' onClick={handleAddTax}>
+                        Add Tax
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                <Select value={selectedTax} onValueChange={setSelectedTax}>
+                  <SelectTrigger className='w-full bg-white border-gray-200'>
+                    <SelectValue placeholder='Select tax rate' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {invoiceSettings?.taxes?.map((tax) => {
+                      return (
+                        <SelectItem key={tax.id} value={tax.id}>
+                          {tax.name} ({tax.rate}%)
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Delivery section */}

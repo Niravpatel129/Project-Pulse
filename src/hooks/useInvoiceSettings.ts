@@ -8,6 +8,12 @@ interface InvoiceSettings {
   accentColor?: string;
   icon?: string;
   logo?: string;
+  taxes?: Array<{
+    id: string;
+    name: string;
+    rate: number;
+  }>;
+  currency?: string;
 }
 
 interface ApiResponse {
