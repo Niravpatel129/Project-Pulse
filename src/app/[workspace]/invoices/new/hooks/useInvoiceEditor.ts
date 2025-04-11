@@ -20,6 +20,7 @@ interface Item {
   quantity: number;
   unitPrice: number;
   total: number;
+  currency: string;
   projectIds?: string[];
   moduleIds?: string[];
   options?: {
@@ -35,6 +36,7 @@ export function useInvoiceEditor() {
   const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
   const [isEditCustomerDialogOpen, setIsEditCustomerDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState('');
+  const [currency, setCurrency] = useState('usd');
   const [isNewItemDialogOpen, setIsNewItemDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState('');
   const [deliveryMethod, setDeliveryMethod] = useState('email');
@@ -49,6 +51,7 @@ export function useInvoiceEditor() {
     projectIds: [],
     moduleIds: [],
     options: {},
+    currency: 'usd',
   });
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [newCustomer, setNewCustomer] = useState<Customer>({
@@ -235,6 +238,7 @@ export function useInvoiceEditor() {
             description: data.name,
             quantity: data.quantity,
             unitPrice: data.price,
+            currency: data.currency,
             total: data.quantity * data.price,
             projectIds: data.projects,
             moduleIds: data.modules,
@@ -250,6 +254,7 @@ export function useInvoiceEditor() {
             description: data.name,
             quantity: data.quantity,
             unitPrice: data.price,
+            currency: data.currency,
             total: data.quantity * data.price,
             projectIds: data.projects,
             moduleIds: data.modules,
@@ -266,6 +271,7 @@ export function useInvoiceEditor() {
         projectIds: [],
         moduleIds: [],
         options: {},
+        currency: 'usd',
       });
       setIsNewItemDialogOpen(false);
       toast.success('Item added successfully');
@@ -313,6 +319,7 @@ export function useInvoiceEditor() {
     const itemToAdd = {
       ...newItem,
       total,
+      currency: newItem.currency || 'usd',
     };
 
     addItemMutation.mutate(itemToAdd);
@@ -362,6 +369,8 @@ export function useInvoiceEditor() {
     setNewItem,
     customers,
     setCustomers,
+    currency,
+    setCurrency,
     newCustomer,
     setNewCustomer,
     currentCustomer,

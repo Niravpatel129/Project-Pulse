@@ -83,6 +83,8 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
     sendInvoiceMutation,
     deliveryMethod,
     setDeliveryMethod,
+    currency,
+    setCurrency,
   } = useInvoiceEditor();
   const { project } = useProject();
 
@@ -250,7 +252,12 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
               {/* Currency section */}
               <div className='mb-8'>
                 <h2 className='text-sm font-medium text-gray-900 mb-3'>Currency</h2>
-                <Select defaultValue='cad'>
+                <Select
+                  defaultValue={currency}
+                  onValueChange={(value) => {
+                    setCurrency(value);
+                  }}
+                >
                   <SelectTrigger className='w-full bg-white border-gray-200'>
                     <SelectValue placeholder='Select currency' />
                   </SelectTrigger>
@@ -287,6 +294,7 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                         return (
                           <SelectItem key={item.id} value={item.id}>
                             <div>{item.description}</div>
+                            <div>{item.unitPrice}</div>
                           </SelectItem>
                         );
                       })}
@@ -603,6 +611,7 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
             handleAddItem={handleAddItem}
             projectOptions={projectOptions}
             modules={modules}
+            currency={currency}
           />
         </div>
       </DialogContent>
