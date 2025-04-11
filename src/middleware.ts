@@ -27,9 +27,9 @@ export function middleware(request: NextRequest) {
     // Extract workspace from the subdomain
     const workspace = subdomain;
 
-    // Skip authentication check for invoice view pages
-    if (path.match(/\/invoice\/[^\/]+$/)) {
-      // Allow access to invoice view pages without authentication
+    // Skip authentication check for invoice view pages and payment success page
+    if (path.match(/\/invoice\/[^\/]+$/) || path === '/payment-success') {
+      // Allow access to invoice view pages and payment success without authentication
       if (path === '/') {
         return NextResponse.rewrite(new URL(`/${workspace}`, request.url));
       }

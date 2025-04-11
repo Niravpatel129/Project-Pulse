@@ -33,7 +33,15 @@ interface Invoice {
   updatedAt: string;
 }
 
-function PaymentForm({ clientSecret, invoice }: { clientSecret: string; invoice: Invoice }) {
+function PaymentForm({
+  clientSecret,
+  invoice,
+  workspace,
+}: {
+  clientSecret: string;
+  invoice: Invoice;
+  workspace: string;
+}) {
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +66,7 @@ function PaymentForm({ clientSecret, invoice }: { clientSecret: string; invoice:
     const { error: confirmError } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/payment-success`,
+        return_url: `${window.location.origin}/${workspace}/payment-success`,
       },
     });
 
@@ -234,7 +242,7 @@ export default function InvoicePage() {
       <div className='w-full max-w-[440px] bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8'>
         {clientSecret && (
           <Elements stripe={stripePromise} options={{ clientSecret }}>
-            <PaymentForm clientSecret={clientSecret} invoice={invoice} />
+            <PaymentForm clientSecret={clientSecret} invoice={invoice} workspace={workspace} />
           </Elements>
         )}
 
