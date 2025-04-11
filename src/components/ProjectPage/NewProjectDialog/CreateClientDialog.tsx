@@ -17,12 +17,14 @@ interface CreateClientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onClientCreated: (client: any) => void;
+  project?: any;
 }
 
 export default function CreateClientDialog({
   open,
   onOpenChange,
   onClientCreated,
+  project,
 }: CreateClientDialogProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -42,6 +44,7 @@ export default function CreateClientDialog({
         phone,
         company,
         status: 'active',
+        projectId: project?._id,
       });
       console.log('🚀 response:', response);
 
@@ -58,6 +61,10 @@ export default function CreateClientDialog({
 
       // Invalidate clients query to refresh the list
       queryClient.invalidateQueries({ queryKey: ['clients'] });
+
+      if (project) {
+        queryClient.invalidateQueries({ queryKey: ['project'] });
+      }
     } catch (error) {
       console.error('Error creating client:', error);
       toast.error('Failed to create client');

@@ -29,6 +29,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { useProject } from '@/contexts/ProjectContext';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
 
@@ -82,6 +83,7 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
     deliveryMethod,
     setDeliveryMethod,
   } = useInvoiceEditor();
+  const { project } = useProject();
 
   const [localTaxId, setLocalTaxId] = useState(invoiceSettings?.taxId || '');
 
@@ -205,11 +207,11 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                       <SelectItem value='new' className='text-gray-600'>
                         + Add new customer
                       </SelectItem>
-                      {customers.length === 0 && <Separator className='my-1' />}
-                      {customers.map((customer) => {
+                      {project?.participants.length > 0 && <Separator className='my-1' />}
+                      {project?.participants.map((participant) => {
                         return (
-                          <SelectItem key={customer.id} value={customer.id}>
-                            {customer.name}
+                          <SelectItem key={participant._id} value={participant._id}>
+                            {participant.name}
                           </SelectItem>
                         );
                       })}
@@ -219,6 +221,7 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
               )}
 
               <CreateClientDialog
+                project={project}
                 open={isNewCustomerDialogOpen}
                 onOpenChange={setIsNewCustomerDialogOpen}
                 onClientCreated={handleClientCreated}

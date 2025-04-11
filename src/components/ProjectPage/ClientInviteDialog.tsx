@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
@@ -11,7 +10,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -21,9 +19,8 @@ import {
 } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useProject } from '@/contexts/ProjectContext';
-import { cn } from '@/lib/utils';
-import { Calendar, Check, ChevronsUpDown, Info, Loader2, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { Calendar, Info, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 import useClientInviteForm from './hooks/UseClientInviteFormReturn';
 import ManageAvailabilityDialog from './ManageAvailabilityDialog';
 
@@ -49,159 +46,6 @@ type ClientMultiSelectProps = {
   onChange: (emails: string[]) => void;
   disabled?: boolean;
 };
-
-function ClientMultiSelect({
-  participants,
-  selectedEmails,
-  onChange,
-  disabled,
-}: ClientMultiSelectProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const filteredParticipants = participants.filter((participant) => {
-    return participant.email?.toLowerCase().includes(searchQuery.toLowerCase());
-  });
-
-  const toggleEmail = (email: string) => {
-    if (selectedEmails.includes(email)) {
-      onChange(
-        selectedEmails.filter((e) => {
-          return e !== email;
-        }),
-      );
-    } else {
-      onChange([...selectedEmails, email]);
-    }
-  };
-
-  return (
-    <div className='relative' ref={containerRef}>
-      <div
-        className={cn(
-          'relative flex min-h-[2.5rem] w-full flex-wrap items-center gap-1 rounded-md border border-input bg-background px-2 py-1.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 transition-all duration-200 cursor-pointer',
-          disabled && 'opacity-50 cursor-not-allowed',
-        )}
-        onClick={() => {
-          return !disabled && setIsOpen(!isOpen);
-        }}
-        role='button'
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (!disabled && (e.key === 'Enter' || e.key === ' ')) {
-            e.preventDefault();
-            setIsOpen(!isOpen);
-          }
-        }}
-      >
-        {!selectedEmails.length ? (
-          <span className='text-muted-foreground px-2'>Select clients</span>
-        ) : (
-          <>
-            {selectedEmails.map((email) => {
-              return (
-                <Badge
-                  key={email}
-                  variant='secondary'
-                  className='flex items-center gap-1 transition-all duration-200 animate-in fade-in-0 slide-in-from-left-1'
-                >
-                  {email}
-                  <button
-                    type='button'
-                    className='ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5 transition-colors duration-200'
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleEmail(email);
-                    }}
-                    disabled={disabled}
-                  >
-                    <X className='h-3 w-3' />
-                  </button>
-                </Badge>
-              );
-            })}
-          </>
-        )}
-        <ChevronsUpDown
-          className={cn(
-            'h-4 w-4 opacity-50 transition-transform duration-200 ml-auto',
-            isOpen && 'rotate-180',
-          )}
-        />
-      </div>
-
-      {isOpen && (
-        <div className='absolute left-0 right-0 top-full mt-1 z-[100]'>
-          <div className='rounded-md border bg-popover text-popover-foreground shadow-md outline-none'>
-            <div className='p-1'>
-              <Input
-                placeholder='Search clients...'
-                value={searchQuery}
-                onChange={(e) => {
-                  return setSearchQuery(e.target.value);
-                }}
-                className='mb-1'
-                onClick={(e) => {
-                  return e.stopPropagation();
-                }}
-              />
-              <ScrollArea className='max-h-[200px]'>
-                <div className='space-y-1'>
-                  {filteredParticipants.length === 0 ? (
-                    <div className='py-2 text-center text-sm text-muted-foreground'>
-                      No clients found
-                    </div>
-                  ) : (
-                    filteredParticipants.map((participant) => {
-                      const isSelected = selectedEmails.includes(participant.email);
-                      return (
-                        <button
-                          key={participant._id}
-                          type='button'
-                          className={cn(
-                            'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors duration-200',
-                            isSelected && 'bg-accent',
-                          )}
-                          onClick={() => {
-                            return participant.email && toggleEmail(participant.email);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              'h-4 w-4 transition-opacity duration-200',
-                              isSelected ? 'opacity-100' : 'opacity-0',
-                            )}
-                          />
-                          <span className='flex-1 text-left'>
-                            {participant.email || 'No email available'}
-                          </span>
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
-              </ScrollArea>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function ClientInviteDialog({
   open,
