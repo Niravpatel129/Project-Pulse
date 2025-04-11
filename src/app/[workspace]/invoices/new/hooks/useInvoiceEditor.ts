@@ -71,6 +71,9 @@ export function useInvoiceEditor() {
   const router = useRouter();
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [localTaxId, setLocalTaxId] = useState(invoiceSettings?.taxId || '');
+  const [memo, setMemo] = useState('');
+  const [footer, setFooter] = useState('');
+  const [selectedTax, setSelectedTax] = useState<string>('');
 
   // Fetch items from product catalog
   const { data: productCatalogItems, isLoading: isLoadingItems } = useQuery({
@@ -172,8 +175,10 @@ export function useInvoiceEditor() {
         return c.id === value;
       });
       if (customer) {
-        setCurrentCustomer(customer);
-
+        setCurrentCustomer({
+          ...customer,
+          id: value,
+        });
         setIsCustomerPicked(true);
       }
     }
@@ -341,28 +346,47 @@ export function useInvoiceEditor() {
 
   const sendInvoiceMutation = useMutation({
     mutationFn: async () => {
+      if (!currentCustomer || selectedItems.length === 0) {
+        throw new Error('Customer and items are required');
+      }
+
+      // Get the selected tax information
+      const selectedTaxInfo = invoiceSettings?.taxes?.find((tax) => {
+        return tax.id === selectedTax;
+      });
+
       const invoiceData = {
-        clientId: currentCustomer?.id,
-        clientName: currentCustomer?.name,
-        itemIds: selectedItems.map((item) => {
-          return item.id;
+        clientId: currentCustomer.id,
+        items: selectedItems.map((item) => {
+          return {
+            id: item.id,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+          };
         }),
-        status: 'draft',
         deliveryMethod,
+        memo,
+        footer,
+        tax: selectedTaxInfo
+          ? {
+              id: selectedTaxInfo.id,
+              name: selectedTaxInfo.name,
+              rate: selectedTaxInfo.rate,
+            }
+          : null,
       };
 
       const response = await newRequest.post('/invoices', invoiceData);
-      const invoice = response.data.data;
-
-      return invoice;
+      return response.data.data;
     },
-    onSuccess: () => {
-      toast.success('Invoice sent successfully');
-      router.push(`/invoices`);
+    onSuccess: (data) => {
+      toast.success('Invoice created successfully');
+      router.push(`/invoices/${data.id}`);
     },
-    onError: (error) => {
-      console.error('Error sending invoice:', error);
-      toast.error('Failed to send invoice');
+    onError: (error: any) => {
+      console.error('Error creating invoice:', error);
+      toast.error(error.message || 'Failed to create invoice');
     },
   });
 
@@ -437,5 +461,11 @@ export function useInvoiceEditor() {
     editingItem,
     localTaxId,
     setLocalTaxId,
+    memo,
+    setMemo,
+    footer,
+    setFooter,
+    selectedTax,
+    setSelectedTax,
   };
 }

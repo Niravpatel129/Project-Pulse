@@ -87,6 +87,12 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
     editingItem,
     localTaxId,
     setLocalTaxId,
+    memo,
+    setMemo,
+    footer,
+    setFooter,
+    selectedTax,
+    setSelectedTax,
   } = useInvoiceEditor();
   const { project } = useProject();
 
@@ -94,7 +100,6 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
 
   const [isCreatingTax, setIsCreatingTax] = useState(false);
   const [newTax, setNewTax] = useState({ name: '', rate: 0 });
-  const [selectedTax, setSelectedTax] = useState<string>('');
   const [localCurrency, setLocalCurrency] = useState(invoiceSettings?.currency || 'usd');
 
   // Update local state when invoice settings change
@@ -463,6 +468,7 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                     <SelectValue placeholder='Select tax rate' />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value='no-tax'>No Tax</SelectItem>
                     {invoiceSettings?.taxes?.map((tax) => {
                       return (
                         <SelectItem key={tax.id} value={tax.id}>
@@ -507,6 +513,10 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                     id='memo'
                     placeholder='Add a memo to your invoice'
                     className='bg-white border-gray-200'
+                    value={memo}
+                    onChange={(e) => {
+                      return setMemo(e.target.value);
+                    }}
                   />
                   <p className='text-xs text-gray-500 mt-1'>
                     This will appear on the invoice below the line items.
@@ -522,6 +532,10 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                     id='footer'
                     placeholder='Add a footer to your invoice'
                     className='bg-white border-gray-200'
+                    value={footer}
+                    onChange={(e) => {
+                      return setFooter(e.target.value);
+                    }}
                   />
                   <p className='text-xs text-gray-500 mt-1'>
                     This will appear at the bottom of the invoice.
