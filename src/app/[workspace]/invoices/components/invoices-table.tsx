@@ -20,7 +20,6 @@ import { useProject } from '@/contexts/ProjectContext';
 import { cn } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
 import { useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
 import {
   ArchiveIcon,
   BookOpenIcon,
@@ -145,7 +144,13 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                   </TableCell>
                   <TableCell className='px-4 py-3'>
                     <span className='text-sm text-muted-foreground'>
-                      {format(invoiceDate, dateFormat)}
+                      {invoiceDate.toLocaleString(undefined, {
+                        year: invoiceDate.getFullYear() !== currentYear ? 'numeric' : undefined,
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
                     </span>
                   </TableCell>
                   <TableCell className='px-4 py-3'>
