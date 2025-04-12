@@ -3,7 +3,7 @@
 import { InvoicesTable } from '@/app/[workspace]/invoices/components/invoices-table';
 import { useInvoices } from '@/app/[workspace]/invoices/hooks/useInvoices';
 import { Button } from '@/components/ui/button';
-import { LucidePiggyBank } from 'lucide-react';
+import { LucidePiggyBank, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 import InvoicesDialog from '../invoices/InvoicesDialog/InvoicesDialog';
 
@@ -29,7 +29,24 @@ export default function ProjectPayments() {
   };
 
   if (invoices) {
-    return <InvoicesTable invoices={invoices} />;
+    return (
+      <>
+        <div className='flex justify-between items-center mb-4'>
+          <h1 className='text-3xl font-semibold'>Invoices</h1>
+          <Button
+            variant='outline'
+            onClick={() => {
+              return setIsInvoicesDialogOpen(true);
+            }}
+          >
+            <PlusIcon className='w-4 h-2' />
+            Create Invoice
+          </Button>
+        </div>
+        <InvoicesTable invoices={invoices} />
+        <InvoicesDialog open={isInvoicesDialogOpen} onOpenChange={setIsInvoicesDialogOpen} />
+      </>
+    );
   }
 
   return (
