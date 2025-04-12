@@ -176,7 +176,11 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                 className='bg-gray-900 hover:bg-gray-800 text-white'
                 onClick={() => {
                   try {
-                    sendInvoiceMutation.mutate();
+                    sendInvoiceMutation.mutate(undefined, {
+                      onSuccess: () => {
+                        onOpenChange(false);
+                      },
+                    });
                   } catch (error) {
                     console.error(error);
                   }
