@@ -358,13 +358,9 @@ export function useInvoiceEditor() {
       const invoiceData = {
         clientId: currentCustomer.id,
         items: selectedItems.map((item) => {
-          return {
-            id: item.id,
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-          };
+          return item.id;
         }),
+
         deliveryMethod,
         memo,
         footer,
@@ -377,12 +373,13 @@ export function useInvoiceEditor() {
           : null,
       };
 
-      const response = await newRequest.post('/invoices', invoiceData);
+      const response = await newRequest.post(`/projects/${project?._id}/invoices`, invoiceData);
       return response.data.data;
     },
     onSuccess: (data) => {
+      console.log('🚀 data:', data);
       toast.success('Invoice created successfully');
-      router.push(`/invoices/${data.id}`);
+      // router.push(`/invoices/${data.id}`);
     },
     onError: (error: any) => {
       console.error('Error creating invoice:', error);
