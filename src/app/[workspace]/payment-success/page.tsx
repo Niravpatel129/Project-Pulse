@@ -2,7 +2,6 @@
 
 import { toast } from '@/components/ui/use-toast';
 import { newRequest } from '@/utils/newRequest';
-import { CheckCircle } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -99,34 +98,5 @@ export default function PaymentSuccessPage() {
     );
   }
 
-  return (
-    <div className='min-h-screen bg-[#fafafa] flex items-center justify-center'>
-      <div className='text-center max-w-md p-8 bg-white rounded-xl shadow-sm'>
-        <CheckCircle className='text-green-500 w-16 h-16 mx-auto mb-4' />
-        <h1 className='text-2xl font-semibold text-gray-800 mb-2'>Payment Successful!</h1>
-        <p className='text-gray-600 mb-6'>Your payment has been processed successfully.</p>
-
-        {paymentData?.invoice && (
-          <div className='bg-gray-50 p-4 rounded-lg text-left mb-6'>
-            <div className='flex justify-between mb-2'>
-              <span className='text-gray-500'>Invoice Number:</span>
-              <span className='font-medium'>{paymentData.invoice.invoiceNumber}</span>
-            </div>
-            <div className='flex justify-between mb-2'>
-              <span className='text-gray-500'>Amount Paid:</span>
-              <span className='font-medium'>
-                {paymentData.invoice.currency || 'USD'} {paymentData.invoice.total.toFixed(2)}
-              </span>
-            </div>
-            <div className='flex justify-between'>
-              <span className='text-gray-500'>Date:</span>
-              <span className='font-medium'>
-                {new Date(paymentData.invoice.paidAt).toLocaleDateString()}
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  return <div className='min-h-screen bg-[#fafafa] flex items-center justify-center'></div>;
 }
