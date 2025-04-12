@@ -165,76 +165,90 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                             Update Status
                           </DropdownMenuSubTrigger>
                           <DropdownMenuSubContent>
-                            <DropdownMenuItem
-                              className='flex gap-1'
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateInvoiceStatus(invoice, 'draft');
-                              }}
-                            >
-                              <PencilIcon className='w-4 h-4 mr-2' />
-                              Draft
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className='flex gap-1'
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateInvoiceStatus(invoice, 'sent');
-                              }}
-                            >
-                              <SendIcon className='w-4 h-4 mr-2' />
-                              Sent
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className='flex gap-1'
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateInvoiceStatus(invoice, 'paid');
-                              }}
-                            >
-                              <CheckIcon className='w-4 h-4 mr-2' />
-                              Paid
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className='flex gap-1'
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateInvoiceStatus(invoice, 'overdue');
-                              }}
-                            >
-                              <XIcon className='w-4 h-4 mr-2' />
-                              Overdue
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className='flex gap-1'
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateInvoiceStatus(invoice, 'cancelled');
-                              }}
-                            >
-                              <XIcon className='w-4 h-4 mr-2' />
-                              Cancelled
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className='flex gap-1'
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateInvoiceStatus(invoice, 'open');
-                              }}
-                            >
-                              <CheckIcon className='w-4 h-4 mr-2' />
-                              Open
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className='flex gap-1'
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateInvoiceStatus(invoice, 'archived');
-                              }}
-                            >
-                              <ArchiveIcon className='w-4 h-4 mr-2' />
-                              Archived
-                            </DropdownMenuItem>
+                            {invoice.status !== 'draft' && (
+                              <DropdownMenuItem
+                                className='flex gap-1'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateInvoiceStatus(invoice, 'draft');
+                                }}
+                              >
+                                <PencilIcon className='w-4 h-4 mr-2' />
+                                Draft
+                              </DropdownMenuItem>
+                            )}
+                            {invoice.status !== 'sent' && (
+                              <DropdownMenuItem
+                                className='flex gap-1'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateInvoiceStatus(invoice, 'sent');
+                                }}
+                              >
+                                <SendIcon className='w-4 h-4 mr-2' />
+                                Sent
+                              </DropdownMenuItem>
+                            )}
+                            {invoice.status !== 'paid' && (
+                              <DropdownMenuItem
+                                className='flex gap-1'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateInvoiceStatus(invoice, 'paid');
+                                }}
+                              >
+                                <CheckIcon className='w-4 h-4 mr-2' />
+                                Paid
+                              </DropdownMenuItem>
+                            )}
+                            {invoice.status !== 'overdue' && (
+                              <DropdownMenuItem
+                                className='flex gap-1'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateInvoiceStatus(invoice, 'overdue');
+                                }}
+                              >
+                                <XIcon className='w-4 h-4 mr-2' />
+                                Overdue
+                              </DropdownMenuItem>
+                            )}
+                            {invoice.status !== 'cancelled' && (
+                              <DropdownMenuItem
+                                className='flex gap-1'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateInvoiceStatus(invoice, 'cancelled');
+                                }}
+                              >
+                                <XIcon className='w-4 h-4 mr-2' />
+                                Cancelled
+                              </DropdownMenuItem>
+                            )}
+                            {invoice.status !== 'open' && (
+                              <DropdownMenuItem
+                                className='flex gap-1'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateInvoiceStatus(invoice, 'open');
+                                }}
+                              >
+                                <CheckIcon className='w-4 h-4 mr-2' />
+                                Open
+                              </DropdownMenuItem>
+                            )}
+                            {invoice.status !== 'archived' && (
+                              <DropdownMenuItem
+                                className='flex gap-1'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateInvoiceStatus(invoice, 'archived');
+                                }}
+                              >
+                                <ArchiveIcon className='w-4 h-4 mr-2' />
+                                Archived
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuSubContent>
                         </DropdownMenuSub>
                         <DropdownMenuItem
