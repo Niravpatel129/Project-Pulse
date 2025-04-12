@@ -15,8 +15,10 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { MoreHorizontal } from 'lucide-react';
+import { ArchiveIcon, Link2Icon, MoreHorizontal } from 'lucide-react';
+import Link from 'next/link';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Invoice } from '../types';
 import { InvoiceDetailsModal } from './invoice-details-modal';
 
@@ -126,9 +128,29 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                           <MoreHorizontal className='h-4 w-4 text-muted-foreground' />
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align='end'>
-                        <DropdownMenuItem>Archive</DropdownMenuItem>
-                        <DropdownMenuItem>Payment link</DropdownMenuItem>
+                      <DropdownMenuContent align='start'>
+                        <DropdownMenuItem
+                          className='flex gap-1'
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            return toast.success('Invoice archived');
+                          }}
+                        >
+                          <ArchiveIcon className='w-4 h-4 mr-2' />
+                          Archive
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className='flex gap-1'
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            return toast.success('Invoice archived');
+                          }}
+                        >
+                          <Link href={`/invoices/${invoice._id}`} className='flex gap-1'>
+                            <Link2Icon className='w-4 h-4 mr-2' />
+                            Payment link
+                          </Link>
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
