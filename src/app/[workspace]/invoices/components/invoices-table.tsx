@@ -124,6 +124,8 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                             'bg-gray-100 text-gray-800 hover:bg-gray-200',
                           invoice.status === 'overdue' &&
                             'bg-red-100 text-red-800 hover:bg-red-200',
+                          invoice.status === 'open' &&
+                            'bg-blue-100 text-blue-800 hover:bg-blue-200',
                         )}
                       >
                         {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
