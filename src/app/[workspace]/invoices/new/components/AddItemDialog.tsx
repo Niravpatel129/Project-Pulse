@@ -243,7 +243,7 @@ export default function AddItemDialog({
                     return (
                       <Badge
                         key={moduleId}
-                        variant='secondary'
+                        variant='outline'
                         className='flex items-center gap-1 transition-all hover:bg-secondary/80'
                       >
                         {selectedModule?.name}
