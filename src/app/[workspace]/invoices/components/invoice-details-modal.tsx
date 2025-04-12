@@ -33,10 +33,10 @@ export function InvoiceDetailsModal({ invoice, onClose }: InvoiceDetailsModalPro
         <DialogHeader className='px-6 pt-6 pb-4 border-b sticky top-0 bg-background z-10'>
           <div className='flex items-center justify-between'>
             <div>
-              <DialogTitle className='text-lg font-medium tracking-tight'>
+              <DialogTitle className='text-base font-medium tracking-tight'>
                 Invoice #{invoice.invoiceNumber}
               </DialogTitle>
-              <DialogDescription className='mt-1 text-sm text-muted-foreground'>
+              <DialogDescription className='mt-1 text-xs text-muted-foreground'>
                 Created on {formatDate(invoice.createdAt)}
               </DialogDescription>
             </div>
@@ -69,48 +69,50 @@ export function InvoiceDetailsModal({ invoice, onClose }: InvoiceDetailsModalPro
           <div className='space-y-6'>
             {/* Client Information */}
             <div className='space-y-2'>
-              <h3 className='text-sm font-medium text-muted-foreground'>Client Information</h3>
-              <div className='rounded-lg border bg-card p-4'>
-                <div className='font-medium tracking-tight'>{invoice.client.name}</div>
-                <div className='mt-1 text-sm text-muted-foreground'>{invoice.client.email}</div>
+              <h3 className='text-xs font-medium text-muted-foreground'>Client Information</h3>
+              <div className='rounded-lg border bg-card p-3'>
+                <div className='text-sm font-medium tracking-tight'>{invoice.client.name}</div>
+                <div className='mt-1 text-xs text-muted-foreground'>{invoice.client.email}</div>
               </div>
             </div>
 
             {/* Invoice Details */}
             <div className='space-y-2'>
-              <h3 className='text-sm font-medium text-muted-foreground'>Invoice Details</h3>
-              <div className='rounded-lg border bg-card p-4 space-y-4'>
-                <div className='grid grid-cols-2 gap-4'>
-                  <div className='space-y-1'>
-                    <div className='text-sm text-muted-foreground'>Issue Date</div>
-                    <div className='font-medium tracking-tight'>
+              <h3 className='text-xs font-medium text-muted-foreground'>Invoice Details</h3>
+              <div className='rounded-lg border bg-card p-3 space-y-3'>
+                <div className='grid grid-cols-2 gap-3'>
+                  <div className='space-y-0.5'>
+                    <div className='text-xs text-muted-foreground'>Issue Date</div>
+                    <div className='text-sm font-medium tracking-tight'>
                       {formatDate(invoice.createdAt)}
                     </div>
                   </div>
-                  <div className='space-y-1'>
-                    <div className='text-sm text-muted-foreground'>Due Date</div>
-                    <div className='font-medium tracking-tight'>{formatDate(invoice.dueDate)}</div>
+                  <div className='space-y-0.5'>
+                    <div className='text-xs text-muted-foreground'>Due Date</div>
+                    <div className='text-sm font-medium tracking-tight'>
+                      {formatDate(invoice.dueDate)}
+                    </div>
                   </div>
                 </div>
-                <div className='grid grid-cols-2 gap-4'>
-                  <div className='space-y-1'>
-                    <div className='text-sm text-muted-foreground'>Payment Terms</div>
-                    <div className='font-medium tracking-tight'>
+                <div className='grid grid-cols-2 gap-3'>
+                  <div className='space-y-0.5'>
+                    <div className='text-xs text-muted-foreground'>Payment Terms</div>
+                    <div className='text-sm font-medium tracking-tight'>
                       {invoice.paymentTerms || 'N/A'}
                     </div>
                   </div>
-                  <div className='space-y-1'>
-                    <div className='text-sm text-muted-foreground'>Delivery Method</div>
-                    <div className='font-medium tracking-tight'>
+                  <div className='space-y-0.5'>
+                    <div className='text-xs text-muted-foreground'>Delivery Method</div>
+                    <div className='text-sm font-medium tracking-tight'>
                       {invoice.deliveryMethod || 'N/A'}
                     </div>
                   </div>
                 </div>
-                <Separator className='my-2' />
-                <div className='space-y-2'>
+                <Separator className='my-1' />
+                <div className='space-y-1.5'>
                   <div className='flex justify-between'>
-                    <div className='text-sm text-muted-foreground'>Subtotal</div>
-                    <div className='font-medium tracking-tight'>
+                    <div className='text-xs text-muted-foreground'>Subtotal</div>
+                    <div className='text-sm font-medium tracking-tight'>
                       {new Intl.NumberFormat('en-US', {
                         style: 'currency',
                         currency: invoice.currency.toUpperCase(),
@@ -118,17 +120,17 @@ export function InvoiceDetailsModal({ invoice, onClose }: InvoiceDetailsModalPro
                     </div>
                   </div>
                   <div className='flex justify-between'>
-                    <div className='text-sm text-muted-foreground'>Tax</div>
-                    <div className='font-medium tracking-tight'>
+                    <div className='text-xs text-muted-foreground'>Tax</div>
+                    <div className='text-sm font-medium tracking-tight'>
                       {new Intl.NumberFormat('en-US', {
                         style: 'currency',
                         currency: invoice.currency.toUpperCase(),
                       }).format(invoice.tax)}
                     </div>
                   </div>
-                  <div className='flex justify-between pt-2'>
-                    <div className='text-sm font-medium'>Total</div>
-                    <div className='text-lg font-semibold tracking-tight'>
+                  <div className='flex justify-between pt-1'>
+                    <div className='text-xs font-medium'>Total</div>
+                    <div className='text-base font-semibold tracking-tight'>
                       {new Intl.NumberFormat('en-US', {
                         style: 'currency',
                         currency: invoice.currency.toUpperCase(),
@@ -142,14 +144,14 @@ export function InvoiceDetailsModal({ invoice, onClose }: InvoiceDetailsModalPro
             {/* Items */}
             {invoice.items && invoice.items.length > 0 && (
               <div className='space-y-2'>
-                <h3 className='text-sm font-medium text-muted-foreground'>Items</h3>
+                <h3 className='text-xs font-medium text-muted-foreground'>Items</h3>
                 <div className='rounded-lg border bg-card divide-y'>
                   {invoice.items.map((item) => {
                     return (
-                      <div key={item._id} className='p-4'>
+                      <div key={item._id} className='p-3'>
                         <div className='flex justify-between items-center'>
-                          <div className='font-medium tracking-tight'>{item.name}</div>
-                          <div className='font-medium tracking-tight'>
+                          <div className='text-sm font-medium tracking-tight'>{item.name}</div>
+                          <div className='text-sm font-medium tracking-tight'>
                             {new Intl.NumberFormat('en-US', {
                               style: 'currency',
                               currency: invoice.currency.toUpperCase(),
@@ -166,9 +168,9 @@ export function InvoiceDetailsModal({ invoice, onClose }: InvoiceDetailsModalPro
             {/* Notes */}
             {invoice.notes && (
               <div className='space-y-2'>
-                <h3 className='text-sm font-medium text-muted-foreground'>Notes</h3>
-                <div className='rounded-lg border bg-card p-4'>
-                  <div className='text-sm text-muted-foreground leading-relaxed'>
+                <h3 className='text-xs font-medium text-muted-foreground'>Notes</h3>
+                <div className='rounded-lg border bg-card p-3'>
+                  <div className='text-xs text-muted-foreground leading-relaxed'>
                     {invoice.notes}
                   </div>
                 </div>
