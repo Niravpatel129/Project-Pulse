@@ -18,6 +18,7 @@ interface InvoicesTableProps {
 }
 
 export function InvoicesTable({ invoices }: InvoicesTableProps) {
+  console.log('🚀 invoices:', invoices);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   return (
@@ -54,13 +55,14 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                   }}
                 >
                   <TableCell className='px-4 py-3'>
-                    <div className='flex gap-1'>
+                    <div className='flex gap-2'>
                       <span className='font-medium text-foreground'>
                         {new Intl.NumberFormat('en-US', {
                           style: 'currency',
                           currency: invoice.currency.toUpperCase(),
                         }).format(invoice.total)}
                       </span>
+                      <span className='uppercase text-muted-foreground'>{invoice.currency}</span>
                       <Badge
                         variant={
                           invoice.status === 'paid'
