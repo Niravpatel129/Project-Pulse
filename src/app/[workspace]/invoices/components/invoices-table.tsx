@@ -68,7 +68,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
               <TableHead className='h-12 px-4 text-sm font-medium text-muted-foreground'>
                 Amount
               </TableHead>
-              <TableHead className='h-12 px -4 text-sm font-medium text-muted-foreground'>
+              <TableHead className='h-12 px-4 text-sm font-medium text-muted-foreground'>
                 Invoice #
               </TableHead>
               <TableHead className='h-12 px-4 text-sm font-medium text-muted-foreground'>
@@ -80,7 +80,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
               <TableHead className='h-12 px-4 text-sm font-medium text-muted-foreground'>
                 Created
               </TableHead>
-              <TableHead className=''></TableHead>
+              <TableHead className='h-12 px-4'></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
