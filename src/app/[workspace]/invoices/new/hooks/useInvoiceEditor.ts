@@ -2,7 +2,7 @@ import { useProject } from '@/contexts/ProjectContext';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { useParticipation } from '@/hooks/useParticipation';
 import { newRequest } from '@/utils/newRequest';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -74,6 +74,7 @@ export function useInvoiceEditor() {
   const [memo, setMemo] = useState('');
   const [footer, setFooter] = useState('');
   const [selectedTax, setSelectedTax] = useState<string>('');
+  const queryClient = useQueryClient();
 
   // Fetch items from product catalog
   const { data: productCatalogItems, isLoading: isLoadingItems } = useQuery({
@@ -380,6 +381,7 @@ export function useInvoiceEditor() {
       console.log('🚀 data:', data);
       toast.success('Invoice created successfully');
       // router.push(`/invoices/${data.id}`);
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
     },
     onError: (error: any) => {
       console.error('Error creating invoice:', error);
