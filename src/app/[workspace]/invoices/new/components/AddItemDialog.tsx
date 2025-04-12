@@ -1,14 +1,10 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -152,9 +148,15 @@ export default function AddItemDialog({
                 type='number'
                 min='1'
                 step='any'
-                value={formData.quantity}
+                value={
+                  formData.quantity === 0 &&
+                  document.activeElement === document.getElementById('quantity')
+                    ? ''
+                    : formData.quantity
+                }
                 onChange={(e) => {
-                  return setFormData({ ...formData, quantity: parseFloat(e.target.value) || 0 });
+                  const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                  return setFormData({ ...formData, quantity: value });
                 }}
                 className='[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none'
               />
@@ -169,12 +171,16 @@ export default function AddItemDialog({
                 <Input
                   id='unitPrice'
                   type='number'
-                  min='0'
-                  step='any'
                   className='pl-7 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none'
-                  value={formData.unitPrice}
+                  value={
+                    formData.unitPrice === 0 &&
+                    document.activeElement === document.getElementById('unitPrice')
+                      ? ''
+                      : formData.unitPrice
+                  }
                   onChange={(e) => {
-                    return setFormData({ ...formData, unitPrice: parseFloat(e.target.value) || 0 });
+                    const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                    return setFormData({ ...formData, unitPrice: value });
                   }}
                 />
               </div>
@@ -183,25 +189,83 @@ export default function AddItemDialog({
 
           <div className='space-y-2'>
             <Label>Modules</Label>
-            <Select
-              value={formData.moduleIds[0] || ''}
-              onValueChange={(value) => {
-                return setFormData({ ...formData, moduleIds: [value] });
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder='Select module' />
-              </SelectTrigger>
-              <SelectContent>
-                {modules.map((module) => {
-                  return (
-                    <SelectItem key={module._id} value={module._id}>
-                      {module.name}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+            <div className='border rounded-md p-2 h-[200px] overflow-y-auto bg-muted/5'>
+              {modules.length === 0 ? (
+                <div className='h-full flex items-center justify-center text-sm text-muted-foreground'>
+                  No modules available
+                </div>
+              ) : (
+                <div className='space-y-1'>
+                  {modules.map((module) => {
+                    return (
+                      <div
+                        key={module._id}
+                        className='flex items-center space-x-2 py-1.5 px-2 rounded-md hover:bg-muted/50 transition-colors'
+                      >
+                        <Checkbox
+                          id={`module-${module._id}`}
+                          checked={formData.moduleIds.includes(module._id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setFormData({
+                                ...formData,
+                                moduleIds: [...formData.moduleIds, module._id],
+                              });
+                            } else {
+                              setFormData({
+                                ...formData,
+                                moduleIds: formData.moduleIds.filter((id) => {
+                                  return id !== module._id;
+                                }),
+                              });
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor={`module-${module._id}`}
+                          className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1'
+                        >
+                          {module.name}
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            <div className='min-h-[32px]'>
+              {formData.moduleIds.length > 0 && (
+                <div className='flex flex-wrap gap-2'>
+                  {formData.moduleIds.map((moduleId) => {
+                    const selectedModule = modules.find((m) => {
+                      return m._id === moduleId;
+                    });
+                    return (
+                      <Badge
+                        key={moduleId}
+                        variant='secondary'
+                        className='flex items-center gap-1 transition-all hover:bg-secondary/80'
+                      >
+                        {selectedModule?.name}
+                        <button
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              moduleIds: formData.moduleIds.filter((id) => {
+                                return id !== moduleId;
+                              }),
+                            });
+                          }}
+                          className='ml-1 hover:text-destructive transition-colors'
+                        >
+                          <X className='h-3 w-3' />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className='flex justify-end space-x-2'>
