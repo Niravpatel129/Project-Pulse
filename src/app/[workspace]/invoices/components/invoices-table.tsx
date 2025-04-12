@@ -85,10 +85,9 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
           </TableHeader>
           <TableBody>
             {invoices.map((invoice) => {
+              console.log('🚀 invoice:', invoice);
               const invoiceDate = new Date(invoice.createdAt);
               const currentYear = new Date().getFullYear();
-              const dateFormat =
-                invoiceDate.getFullYear() === currentYear ? 'MMM dd, HH:mm' : 'MMM dd, yyyy HH:mm';
 
               return (
                 <TableRow
@@ -104,7 +103,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                         {new Intl.NumberFormat('en-US', {
                           style: 'currency',
                           currency: invoice.currency.toUpperCase(),
-                        }).format(invoice.total)}
+                        }).format(invoice.subtotal)}
                       </span>
                       <span className='uppercase text-muted-foreground'>{invoice.currency}</span>
                       <Badge
