@@ -23,11 +23,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import {
   ArchiveIcon,
+  BookOpenIcon,
   CheckIcon,
   Link2Icon,
   MoreHorizontal,
   PencilIcon,
-  SendIcon,
   XIcon,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -177,18 +177,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                                 Draft
                               </DropdownMenuItem>
                             )}
-                            {invoice.status !== 'sent' && (
-                              <DropdownMenuItem
-                                className='flex gap-1'
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  updateInvoiceStatus(invoice, 'sent');
-                                }}
-                              >
-                                <SendIcon className='w-4 h-4 mr-2' />
-                                Sent
-                              </DropdownMenuItem>
-                            )}
+
                             {invoice.status !== 'paid' && (
                               <DropdownMenuItem
                                 className='flex gap-1'
@@ -198,21 +187,10 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                                 }}
                               >
                                 <CheckIcon className='w-4 h-4 mr-2' />
-                                Paid
+                                Mark as Paid
                               </DropdownMenuItem>
                             )}
-                            {invoice.status !== 'overdue' && (
-                              <DropdownMenuItem
-                                className='flex gap-1'
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  updateInvoiceStatus(invoice, 'overdue');
-                                }}
-                              >
-                                <XIcon className='w-4 h-4 mr-2' />
-                                Overdue
-                              </DropdownMenuItem>
-                            )}
+
                             {invoice.status !== 'cancelled' && (
                               <DropdownMenuItem
                                 className='flex gap-1'
@@ -225,18 +203,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                                 Cancelled
                               </DropdownMenuItem>
                             )}
-                            {invoice.status !== 'open' && (
-                              <DropdownMenuItem
-                                className='flex gap-1'
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  updateInvoiceStatus(invoice, 'open');
-                                }}
-                              >
-                                <CheckIcon className='w-4 h-4 mr-2' />
-                                Open
-                              </DropdownMenuItem>
-                            )}
+
                             {invoice.status !== 'archived' && (
                               <DropdownMenuItem
                                 className='flex gap-1'
@@ -247,6 +214,18 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                               >
                                 <ArchiveIcon className='w-4 h-4 mr-2' />
                                 Archived
+                              </DropdownMenuItem>
+                            )}
+                            {invoice.status !== 'open' && (
+                              <DropdownMenuItem
+                                className='flex gap-1'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateInvoiceStatus(invoice, 'open');
+                                }}
+                              >
+                                <BookOpenIcon className='w-4 h-4 mr-2' />
+                                Open
                               </DropdownMenuItem>
                             )}
                           </DropdownMenuSubContent>
