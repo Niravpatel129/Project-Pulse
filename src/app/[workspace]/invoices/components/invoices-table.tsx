@@ -13,7 +13,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useProject } from '@/contexts/ProjectContext';
 import { cn } from '@/lib/utils';
+import { newRequest } from '@/utils/newRequest';
 import { format } from 'date-fns';
 import { ArchiveIcon, Link2Icon, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
@@ -28,6 +30,7 @@ interface InvoicesTableProps {
 
 export function InvoicesTable({ invoices }: InvoicesTableProps) {
   console.log('🚀 invoices:', invoices);
+  const { project } = useProject();
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   return (
@@ -131,9 +134,22 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                       <DropdownMenuContent align='start'>
                         <DropdownMenuItem
                           className='flex gap-1'
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation();
-                            return toast.success('Invoice archived');
+
+                            toast.promise(
+                              newRequest.patch(
+                                `/projects/${project?._id}/invoices/${invoice._id}`,
+                                {
+                                  status: 'archived',
+                                },
+                              ),
+                              {
+                                loading: 'Archiving invoice...',
+                                success: 'Invoice archived successfully',
+                                error: 'Failed to archive invoice',
+                              },
+                            );
                           }}
                         >
                           <ArchiveIcon className='w-4 h-4 mr-2' />
@@ -143,10 +159,9 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                           className='flex gap-1'
                           onClick={(e) => {
                             e.stopPropagation();
-                            return toast.success('Invoice archived');
                           }}
                         >
-                          <Link href={`/invoices/${invoice._id}`} className='flex gap-1'>
+                          <Link href={`/invoice/${invoice._id}`} className='flex gap-1 w-full'>
                             <Link2Icon className='w-4 h-4 mr-2' />
                             Payment link
                           </Link>
