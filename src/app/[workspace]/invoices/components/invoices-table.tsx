@@ -1,5 +1,11 @@
 import { Badge } from '@/components/ui/badge';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   Table,
   TableBody,
   TableCell,
@@ -9,6 +15,7 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import { Invoice } from '../types';
 import { InvoiceDetailsModal } from './invoice-details-modal';
@@ -42,6 +49,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
               <TableHead className='h-12 px-4 text-sm font-medium text-muted-foreground'>
                 Created
               </TableHead>
+              <TableHead className=''></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -105,6 +113,24 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                     <span className='text-sm text-muted-foreground'>
                       {format(invoiceDate, dateFormat)}
                     </span>
+                  </TableCell>
+                  <TableCell className='px-4 py-3'>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        asChild
+                        onClick={(e) => {
+                          return e.stopPropagation();
+                        }}
+                      >
+                        <button className='p-1 hover:bg-muted rounded-md'>
+                          <MoreHorizontal className='h-4 w-4 text-muted-foreground' />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align='end'>
+                        <DropdownMenuItem>Archive</DropdownMenuItem>
+                        <DropdownMenuItem>Payment link</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               );
