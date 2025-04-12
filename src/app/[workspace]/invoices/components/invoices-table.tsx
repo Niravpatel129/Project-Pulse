@@ -16,6 +16,7 @@ import {
 import { useProject } from '@/contexts/ProjectContext';
 import { cn } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
+import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ArchiveIcon, Link2Icon, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
@@ -23,13 +24,12 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Invoice } from '../types';
 import { InvoiceDetailsModal } from './invoice-details-modal';
-
 interface InvoicesTableProps {
   invoices: Invoice[];
 }
 
 export function InvoicesTable({ invoices }: InvoicesTableProps) {
-  console.log('🚀 invoices:', invoices);
+  const queryClient = useQueryClient();
   const { project } = useProject();
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
@@ -134,22 +134,22 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                       <DropdownMenuContent align='start'>
                         <DropdownMenuItem
                           className='flex gap-1'
-                          onClick={async (e) => {
+                          onClick={(e) => {
                             e.stopPropagation();
 
-                            toast.promise(
-                              newRequest.patch(
-                                `/projects/${project?._id}/invoices/${invoice._id}`,
-                                {
-                                  status: 'archived',
-                                },
-                              ),
-                              {
-                                loading: 'Archiving invoice...',
-                                success: 'Invoice archived successfully',
-                                error: 'Failed to archive invoice',
-                              },
-                            );
+                            newRequest
+                              .patch(`/projects/${project?._id}/invoices/${invoice._id}`, {
+                                status: 'open',
+                              })
+                              .then(() => {
+                                toast.success('Invoice archived successfully');
+                                queryClient.invalidateQueries({
+                                  queryKey: ['invoices'],
+                                });
+                              })
+                              .catch(() => {
+                                toast.error('Failed to archive invoice');
+                              });
                           }}
                         >
                           <ArchiveIcon className='w-4 h-4 mr-2' />
