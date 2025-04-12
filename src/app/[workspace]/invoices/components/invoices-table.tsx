@@ -46,6 +46,11 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
           </TableHeader>
           <TableBody>
             {invoices.map((invoice) => {
+              const invoiceDate = new Date(invoice.createdAt);
+              const currentYear = new Date().getFullYear();
+              const dateFormat =
+                invoiceDate.getFullYear() === currentYear ? 'MMM dd, HH:mm' : 'MMM dd, yyyy HH:mm';
+
               return (
                 <TableRow
                   key={invoice._id}
@@ -86,17 +91,19 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                     </div>
                   </TableCell>
                   <TableCell className='px-4 py-3'>
-                    <span className='font-medium text-foreground'>{invoice.invoiceNumber}</span>
+                    <span className='font-medium text-muted-foreground'>
+                      {invoice.invoiceNumber}
+                    </span>
                   </TableCell>
                   <TableCell className='px-4 py-3'>
-                    <span className='font-medium text-foreground'>{invoice.client.name}</span>
+                    <span className='font-medium text-muted-foreground'>{invoice.client.name}</span>
                   </TableCell>
                   <TableCell className='px-4 py-3'>
                     <span className='text-sm text-muted-foreground'>{invoice.client.email}</span>
                   </TableCell>
                   <TableCell className='px-4 py-3'>
-                    <span className='text-sm text-foreground'>
-                      {format(new Date(invoice.createdAt), 'MMM dd, yyyy HH:mm')}
+                    <span className='text-sm text-muted-foreground'>
+                      {format(invoiceDate, dateFormat)}
                     </span>
                   </TableCell>
                 </TableRow>
