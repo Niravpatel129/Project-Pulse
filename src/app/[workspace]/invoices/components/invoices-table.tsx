@@ -3,6 +3,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -18,7 +21,15 @@ import { cn } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { ArchiveIcon, Link2Icon, MoreHorizontal } from 'lucide-react';
+import {
+  ArchiveIcon,
+  CheckIcon,
+  Link2Icon,
+  MoreHorizontal,
+  PencilIcon,
+  SendIcon,
+  XIcon,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -32,6 +43,22 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
   const queryClient = useQueryClient();
   const { project } = useProject();
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+
+  const updateInvoiceStatus = (invoice: Invoice, status: string) => {
+    newRequest
+      .patch(`/projects/${project?._id}/invoices/${invoice._id}`, {
+        status,
+      })
+      .then(() => {
+        toast.success(`Invoice status updated to ${status}`);
+        queryClient.invalidateQueries({
+          queryKey: ['invoices'],
+        });
+      })
+      .catch(() => {
+        toast.error(`Failed to update invoice status to ${status}`);
+      });
+  };
 
   return (
     <>
@@ -132,29 +159,84 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align='start'>
-                        <DropdownMenuItem
-                          className='flex gap-1'
-                          onClick={(e) => {
-                            e.stopPropagation();
-
-                            newRequest
-                              .patch(`/projects/${project?._id}/invoices/${invoice._id}`, {
-                                status: 'open',
-                              })
-                              .then(() => {
-                                toast.success('Invoice archived successfully');
-                                queryClient.invalidateQueries({
-                                  queryKey: ['invoices'],
-                                });
-                              })
-                              .catch(() => {
-                                toast.error('Failed to archive invoice');
-                              });
-                          }}
-                        >
-                          <ArchiveIcon className='w-4 h-4 mr-2' />
-                          Archive
-                        </DropdownMenuItem>
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className='flex gap-1'>
+                            <PencilIcon className='w-4 h-4 mr-2' />
+                            Update Status
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent>
+                            <DropdownMenuItem
+                              className='flex gap-1'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateInvoiceStatus(invoice, 'draft');
+                              }}
+                            >
+                              <PencilIcon className='w-4 h-4 mr-2' />
+                              Draft
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className='flex gap-1'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateInvoiceStatus(invoice, 'sent');
+                              }}
+                            >
+                              <SendIcon className='w-4 h-4 mr-2' />
+                              Sent
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className='flex gap-1'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateInvoiceStatus(invoice, 'paid');
+                              }}
+                            >
+                              <CheckIcon className='w-4 h-4 mr-2' />
+                              Paid
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className='flex gap-1'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateInvoiceStatus(invoice, 'overdue');
+                              }}
+                            >
+                              <XIcon className='w-4 h-4 mr-2' />
+                              Overdue
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className='flex gap-1'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateInvoiceStatus(invoice, 'cancelled');
+                              }}
+                            >
+                              <XIcon className='w-4 h-4 mr-2' />
+                              Cancelled
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className='flex gap-1'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateInvoiceStatus(invoice, 'open');
+                              }}
+                            >
+                              <CheckIcon className='w-4 h-4 mr-2' />
+                              Open
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className='flex gap-1'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateInvoiceStatus(invoice, 'archived');
+                              }}
+                            >
+                              <ArchiveIcon className='w-4 h-4 mr-2' />
+                              Archived
+                            </DropdownMenuItem>
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
                         <DropdownMenuItem
                           className='flex gap-1'
                           onClick={(e) => {
