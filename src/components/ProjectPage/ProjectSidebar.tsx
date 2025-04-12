@@ -88,9 +88,7 @@ export function ProjectSidebar({
   onUpdateProject: (data: Partial<Project>) => Promise<void>;
 }) {
   const { project } = useProject();
-  console.log('🚀 project:', project);
   const { stages, statuses } = usePipelineSettings();
-  console.log('🚀 stages, statuses:', stages, statuses);
   const [isClientPortalDialogOpen, setIsClientPortalDialogOpen] = useState(false);
   const [isSendEmailDialogOpen, setIsSendEmailDialogOpen] = useState(false);
   const [sharingSettings, setSharingSettings] = useState<SharingSettings>({

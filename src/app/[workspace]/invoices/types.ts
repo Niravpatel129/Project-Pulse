@@ -18,4 +18,5 @@ export interface Invoice {
   dueDate: string;
   createdBy: CreatedBy;
   createdAt: string;
+  currency: string;
 }
