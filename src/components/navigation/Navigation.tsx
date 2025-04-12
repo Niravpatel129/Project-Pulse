@@ -29,7 +29,6 @@ import {
   CiSettings,
   CiUser,
   CiViewBoard,
-  CiViewTimeline,
 } from 'react-icons/ci';
 
 interface NavItemProps {
@@ -107,11 +106,11 @@ export function Navigation() {
       icon: <CiFolderOn className='h-5 w-5' />,
       hidden: isProd,
     },
-    {
-      href: '/invoices',
-      label: 'Invoices',
-      icon: <CiViewTimeline className='h-5 w-5' />,
-    },
+    // {
+    //   href: '/invoices',
+    //   label: 'Invoices',
+    //   icon: <CiViewTimeline className='h-5 w-5' />,
+    // },
     {
       href: '/database',
       label: 'Database',
