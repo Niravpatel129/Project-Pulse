@@ -18,7 +18,6 @@ interface InvoicesTableProps {
 }
 
 export function InvoicesTable({ invoices }: InvoicesTableProps) {
-  console.log('🚀 invoices:', invoices);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   return (
@@ -28,19 +27,19 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
           <TableHeader>
             <TableRow className='hover:bg-transparent'>
               <TableHead className='h-12 px-4 text-sm font-medium text-muted-foreground'>
+                Amount
+              </TableHead>
+              <TableHead className='h-12 px -4 text-sm font-medium text-muted-foreground'>
                 Invoice #
               </TableHead>
               <TableHead className='h-12 px-4 text-sm font-medium text-muted-foreground'>
-                Client
+                Customer Name
               </TableHead>
               <TableHead className='h-12 px-4 text-sm font-medium text-muted-foreground'>
-                Due Date
+                Customer Email
               </TableHead>
               <TableHead className='h-12 px-4 text-sm font-medium text-muted-foreground'>
-                Total
-              </TableHead>
-              <TableHead className='h-12 px-4 text-sm font-medium text-muted-foreground'>
-                Status
+                Created
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -55,46 +54,48 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                   }}
                 >
                   <TableCell className='px-4 py-3'>
-                    <span className='font-medium text-foreground'>{invoice.invoiceNumber}</span>
-                  </TableCell>
-                  <TableCell className='px-4 py-3'>
-                    <div className='space-y-0.5'>
-                      <div className='font-medium text-foreground'>{invoice.client.name}</div>
-                      <div className='text-sm text-muted-foreground'>{invoice.client.email}</div>
+                    <div className='flex gap-1'>
+                      <span className='font-medium text-foreground'>
+                        {new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: invoice.currency.toUpperCase(),
+                        }).format(invoice.total)}
+                      </span>
+                      <Badge
+                        variant={
+                          invoice.status === 'paid'
+                            ? 'default'
+                            : invoice.status === 'draft'
+                            ? 'secondary'
+                            : 'destructive'
+                        }
+                        className={cn(
+                          'transition-colors w-fit rounded-sm',
+                          invoice.status === 'paid' &&
+                            'bg-green-100 text-green-800 hover:bg-green-200',
+                          invoice.status === 'draft' &&
+                            'bg-gray-100 text-gray-800 hover:bg-gray-200',
+                          invoice.status === 'overdue' &&
+                            'bg-red-100 text-red-800 hover:bg-red-200',
+                        )}
+                      >
+                        {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                      </Badge>
                     </div>
                   </TableCell>
                   <TableCell className='px-4 py-3'>
+                    <span className='font-medium text-foreground'>{invoice.invoiceNumber}</span>
+                  </TableCell>
+                  <TableCell className='px-4 py-3'>
+                    <span className='font-medium text-foreground'>{invoice.client.name}</span>
+                  </TableCell>
+                  <TableCell className='px-4 py-3'>
+                    <span className='text-sm text-muted-foreground'>{invoice.client.email}</span>
+                  </TableCell>
+                  <TableCell className='px-4 py-3'>
                     <span className='text-sm text-foreground'>
-                      {format(new Date(invoice.dueDate), 'MMM dd, yyyy')}
+                      {format(new Date(invoice.createdAt), 'MMM dd, yyyy HH:mm')}
                     </span>
-                  </TableCell>
-                  <TableCell className='px-4 py-3'>
-                    <span className='font-medium text-foreground'>
-                      {new Intl.NumberFormat('en-US', {
-                        style: 'currency',
-                        currency: invoice.currency.toUpperCase(),
-                      }).format(invoice.total)}
-                    </span>
-                  </TableCell>
-                  <TableCell className='px-4 py-3'>
-                    <Badge
-                      variant={
-                        invoice.status === 'paid'
-                          ? 'default'
-                          : invoice.status === 'draft'
-                          ? 'secondary'
-                          : 'destructive'
-                      }
-                      className={cn(
-                        'transition-colors',
-                        invoice.status === 'paid' &&
-                          'bg-green-100 text-green-800 hover:bg-green-200',
-                        invoice.status === 'draft' && 'bg-gray-100 text-gray-800 hover:bg-gray-200',
-                        invoice.status === 'overdue' && 'bg-red-100 text-red-800 hover:bg-red-200',
-                      )}
-                    >
-                      {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
-                    </Badge>
                   </TableCell>
                 </TableRow>
               );
