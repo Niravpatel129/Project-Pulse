@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence } from 'framer-motion';
 import { FileText, Mail, User } from 'lucide-react';
 import { EmailCard } from './EmailCard';
-import { EmailComponent } from './EmailComponent';
+import ProjectMessageInput from './ProjectMessageInput';
 
 interface ActivityUser {
   _id: string;
@@ -212,9 +212,15 @@ export default function ProjectHome() {
     return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
   });
 
+  const handleSendMessage = async (content: string, attachments: File[]) => {
+    // TODO: Implement message sending logic
+    console.log('Sending message:', content, attachments);
+  };
+
   return (
     <div className='space-y-6'>
-      <EmailComponent />
+      {/* Message Input */}
+      <ProjectMessageInput onSendMessage={handleSendMessage} />
 
       {/* Combined Activity and Email Feed */}
       <div className='space-y-4'>
