@@ -10,6 +10,7 @@ import {
   CommandInput,
   CommandItem,
 } from '@/components/ui/command';
+import { useProject } from '@/contexts/ProjectContext';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import {
   AtSign,
@@ -48,8 +49,10 @@ interface ProjectMessageInputProps {
 }
 
 export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInputProps) {
+  const { project } = useProject();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const expandedRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
   const [isMentionPopoverOpen, setIsMentionPopoverOpen] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionPosition, setMentionPosition] = useState<{ top: number; left: number } | null>(
@@ -75,12 +78,18 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
 
   const [value, setValue] = useState<Descendant[]>(initialValue);
 
-  // Mock data for mentions - replace with actual project members
-  const [mentions] = useState<Mention[]>([
-    { id: '1', name: 'John Doe', avatar: '/avatars/john.jpg' },
-    { id: '2', name: 'Jane Smith', avatar: '/avatars/jane.jpg' },
-    { id: '3', name: 'Bob Johnson', avatar: '/avatars/bob.jpg' },
-  ]);
+  // Use project participants for mentions
+  const mentions = useMemo(() => {
+    return (
+      project?.participants.map((participant) => {
+        return {
+          id: participant._id,
+          name: participant.name,
+          avatar: participant.avatar,
+        };
+      }) || []
+    );
+  }, [project?.participants]);
 
   // Filter mentions based on search query
   const filteredMentions = mentions.filter((mention) => {
@@ -114,14 +123,22 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
             setMentionQuery('');
             const domRange = window.getSelection()?.getRangeAt(0);
             const rect = domRange?.getBoundingClientRect();
+            const editorRect = editorRef.current?.getBoundingClientRect();
 
-            if (rect) {
+            if (rect && editorRect) {
               setMentionPosition({
-                top: rect.top + window.scrollY + 20,
-                left: rect.left + window.scrollX,
+                top: rect.top - editorRect.top + 20, // Position below cursor
+                left: rect.left - editorRect.left,
               });
               setIsMentionPopoverOpen(true);
               setSelectedMentionIndex(0);
+              // Focus the command input after a short delay to ensure it's rendered
+              setTimeout(() => {
+                const input = document.querySelector('[data-command-input]') as HTMLInputElement;
+                if (input) {
+                  input.focus();
+                }
+              }, 0);
             }
           }
         }
@@ -143,7 +160,19 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
           handleMentionSelect(filteredMentions[selectedMentionIndex]);
         }
       } else if (e.key === 'Escape') {
+        e.preventDefault();
         setIsMentionPopoverOpen(false);
+      } else if (e.key === 'Backspace' && mentionQuery === '') {
+        e.preventDefault();
+        setIsMentionPopoverOpen(false);
+      } else {
+        // Update the mention query as the user types
+        const currentText = Editor.string(editor, []);
+        const lastAtSignIndex = currentText.lastIndexOf('@');
+        if (lastAtSignIndex !== -1) {
+          const query = currentText.slice(lastAtSignIndex + 1);
+          setMentionQuery(query);
+        }
       }
     }
   };
@@ -338,11 +367,13 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
             <div className='flex-1 min-w-0 space-y-3'>
               <div className='relative'>
                 <Slate editor={editor} initialValue={value} onChange={setValue}>
-                  <Editable
-                    placeholder='Try uploading files and adding comments...'
-                    className='pr-20 text-sm min-h-[80px] focus-visible:ring-0 border-0 shadow-none resize-none py-2 overflow-hidden outline-none'
-                    onKeyDown={handleKeyDown}
-                  />
+                  <div ref={editorRef}>
+                    <Editable
+                      placeholder='Try uploading files and adding comments...'
+                      className='pr-20 text-sm min-h-[80px] focus-visible:ring-0 border-0 shadow-none resize-none py-2 overflow-hidden outline-none'
+                      onKeyDown={handleKeyDown}
+                    />
+                  </div>
                 </Slate>
                 {isMentionPopoverOpen && mentionPosition && (
                   <div
@@ -352,11 +383,12 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
                       left: mentionPosition.left,
                     }}
                   >
-                    <Command className='rounded-lg border shadow-md'>
+                    <Command className='rounded-lg border shadow-md w-[300px]'>
                       <CommandInput
                         placeholder='Search people...'
                         value={mentionQuery}
                         onValueChange={setMentionQuery}
+                        data-command-input
                       />
                       <CommandEmpty>No people found.</CommandEmpty>
                       <CommandGroup className='max-h-[200px] overflow-auto'>
