@@ -20,7 +20,7 @@ import {
 import { ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import { createEditor, Descendant, Editor, Text, Transforms } from 'slate';
 import { withHistory } from 'slate-history';
-import { Editable, Slate, useFocused, useSelected, withReact } from 'slate-react';
+import { Editable, ReactEditor, Slate, useFocused, useSelected, withReact } from 'slate-react';
 import { toast } from 'sonner';
 
 interface MessageAttachment {
@@ -228,6 +228,14 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
 
           Transforms.insertNodes(editor, mentionNode);
           Transforms.insertText(editor, ' ');
+
+          // Move cursor to the end of the inserted content
+          const newSelection = {
+            anchor: Editor.end(editor, []),
+            focus: Editor.end(editor, []),
+          };
+          Transforms.select(editor, newSelection);
+          ReactEditor.focus(editor);
         }
       }
     }
