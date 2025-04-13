@@ -3,21 +3,13 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { EmojiPicker } from '@/components/ui/emoji-picker';
 import { useProject } from '@/contexts/ProjectContext';
 import { useClickOutside } from '@/hooks/useClickOutside';
-import {
-  FootprintsIcon,
-  ImageIcon,
-  Link2,
-  MessageSquare,
-  Paperclip,
-  Smile,
-  Sparkles,
-  X,
-} from 'lucide-react';
+import { ImageIcon, Link2, MessageSquare, Paperclip, Sparkles, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
-import EnhancedMessageEditor from './EnhancedMessageEditor';
+import EnhancedMessageEditor, { EnhancedMessageEditorRef } from './EnhancedMessageEditor';
 
 interface MessageAttachment {
   id: string;
@@ -36,6 +28,7 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const expandedRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<EnhancedMessageEditorRef>(null);
   const [isSending, setIsSending] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -161,6 +154,7 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
             <div className='flex-1 min-w-0 space-y-3'>
               <div className='relative'>
                 <EnhancedMessageEditor
+                  ref={editorRef}
                   content={content}
                   onContentChange={setContent}
                   maxLength={5000}
@@ -221,12 +215,11 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
                   >
                     <Paperclip className='w-4 h-4' />
                   </Button>
-                  <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
-                    <Smile className='w-4 h-4' />
-                  </Button>
-                  <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
-                    <FootprintsIcon className='w-4 h-4' />
-                  </Button>
+                  <EmojiPicker
+                    onSelect={(emoji) => {
+                      return editorRef.current?.insertEmoji(emoji);
+                    }}
+                  />
                   <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
                     <Sparkles className='w-4 h-4' />
                   </Button>
