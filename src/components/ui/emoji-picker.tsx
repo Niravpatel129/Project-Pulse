@@ -1,121 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import EmojiPickerComponent, { SkinTonePickerLocation, Theme } from 'emoji-picker-react';
 import { Smile } from 'lucide-react';
 import { useState } from 'react';
-
-const EMOJIS = [
-  '😀',
-  '😃',
-  '😄',
-  '😁',
-  '😆',
-  '😅',
-  '😂',
-  '🤣',
-  '😊',
-  '😇',
-  '🙂',
-  '🙃',
-  '😉',
-  '😌',
-  '😍',
-  '🥰',
-  '😘',
-  '😗',
-  '😙',
-  '😚',
-  '😋',
-  '😛',
-  '😝',
-  '😜',
-  '🤪',
-  '🤨',
-  '🧐',
-  '🤓',
-  '😎',
-  '🤩',
-  '🥳',
-  '😏',
-  '😒',
-  '😞',
-  '😔',
-  '😟',
-  '😕',
-  '🙁',
-  '☹️',
-  '😣',
-  '😖',
-  '😫',
-  '😩',
-  '🥺',
-  '😢',
-  '😭',
-  '😤',
-  '😠',
-  '😡',
-  '🤬',
-  '🤯',
-  '😳',
-  '🥵',
-  '🥶',
-  '😱',
-  '😨',
-  '😰',
-  '😥',
-  '😓',
-  '🤗',
-  '🤔',
-  '🤭',
-  '🤫',
-  '🤥',
-  '😶',
-  '😐',
-  '😑',
-  '😬',
-  '🙄',
-  '😯',
-  '😦',
-  '😧',
-  '😮',
-  '😲',
-  '🥱',
-  '😴',
-  '🤤',
-  '😪',
-  '😵',
-  '🤐',
-  '🥴',
-  '🤢',
-  '🤮',
-  '🤧',
-  '😷',
-  '🤒',
-  '🤕',
-  '🤑',
-  '🤠',
-  '😈',
-  '👿',
-  '👹',
-  '👺',
-  '🤡',
-  '💩',
-  '👻',
-  '💀',
-  '☠️',
-  '👽',
-  '👾',
-  '🤖',
-  '🎃',
-  '😺',
-  '😸',
-  '😹',
-  '😻',
-  '😼',
-  '😽',
-  '🙀',
-  '😿',
-  '😾',
-];
 
 interface EmojiPickerProps {
   onSelect: (emoji: string) => void;
@@ -131,22 +18,23 @@ export function EmojiPicker({ onSelect }: EmojiPickerProps) {
           <Smile className='h-4 w-4' />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className='w-[300px] p-2' align='start'>
-        <div className='grid grid-cols-8 gap-1'>
-          {EMOJIS.map((emoji) => {
-            return (
-              <button
-                key={emoji}
-                className='w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-md text-lg'
-                onClick={() => {
-                  onSelect(emoji);
-                  setIsOpen(false);
-                }}
-              >
-                {emoji}
-              </button>
-            );
-          })}
+      <PopoverContent className='w-[320px] p-0' align='start'>
+        <div className='emoji-picker-react'>
+          <EmojiPickerComponent
+            onEmojiClick={(emojiData) => {
+              onSelect(emojiData.emoji);
+              setIsOpen(false);
+            }}
+            width={320}
+            height={350}
+            theme={Theme.LIGHT}
+            searchPlaceholder='Search emojis...'
+            previewConfig={{
+              showPreview: false,
+            }}
+            skinTonePickerLocation={SkinTonePickerLocation.SEARCH}
+            lazyLoadEmojis
+          />
         </div>
       </PopoverContent>
     </Popover>
