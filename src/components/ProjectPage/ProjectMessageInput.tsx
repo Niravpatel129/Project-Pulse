@@ -316,11 +316,6 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
 
     console.log('Mentioned user IDs:', mentionedUserIds);
 
-    // Reset form first
-    setValue(initialValue);
-    setAttachments([]);
-    setIsExpanded(false);
-
     setIsSending(true);
     try {
       await onSendMessage(
@@ -333,6 +328,25 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
             return !!f;
           }),
       );
+
+      // Reset everything after successful send
+      setValue(initialValue);
+      setAttachments([]);
+      setIsExpanded(false);
+      setIsMentionPopoverOpen(false);
+      setMentionQuery('');
+      setMentionPosition(null);
+      setSelectedMentionIndex(0);
+
+      // Properly reset the editor
+      editor.history = { redos: [], undos: [] };
+      editor.children = initialValue;
+      editor.selection = {
+        anchor: { path: [0, 0], offset: 0 },
+        focus: { path: [0, 0], offset: 0 },
+      };
+      editor.operations = [];
+      editor.marks = null;
 
       toast.success('Message sent', {
         description: 'Your message has been sent successfully.',
