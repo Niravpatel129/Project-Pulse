@@ -223,6 +223,7 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
           const mentionNode: any = {
             type: 'mention',
             character: mention.name,
+            userId: mention.id,
             children: [{ text: '' }],
           };
 
@@ -298,6 +299,28 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
       return;
     }
 
+    // Extract all mentions from the editor
+    const mentionedUserIds: string[] = [];
+    const nodes = Editor.nodes(editor, {
+      at: [],
+      match: (n) => {
+        const node = n as unknown as { type: string; userId: string };
+        return node.type === 'mention';
+      },
+    });
+
+    for (const [node] of nodes) {
+      const mentionNode = node as unknown as { type: string; userId: string };
+      mentionedUserIds.push(mentionNode.userId);
+    }
+
+    console.log('Mentioned user IDs:', mentionedUserIds);
+
+    // Reset form first
+    setValue(initialValue);
+    setAttachments([]);
+    setIsExpanded(false);
+
     setIsSending(true);
     try {
       await onSendMessage(
@@ -310,11 +333,6 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
             return !!f;
           }),
       );
-
-      // Reset form
-      setValue(initialValue);
-      setAttachments([]);
-      setIsExpanded(false);
 
       toast.success('Message sent', {
         description: 'Your message has been sent successfully.',
