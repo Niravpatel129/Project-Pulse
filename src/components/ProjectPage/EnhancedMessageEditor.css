@@ -25,6 +25,40 @@
   margin: 0.5em 0;
 }
 
+.ProseMirror ul {
+  list-style-type: none;
+}
+
+.ProseMirror ul li {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.ProseMirror ul li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #4b5563;
+}
+
+.ProseMirror ol {
+  list-style-type: none;
+  counter-reset: item;
+}
+
+.ProseMirror ol li {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.ProseMirror ol li::before {
+  content: counter(item) '.';
+  counter-increment: item;
+  position: absolute;
+  left: 0;
+  color: #4b5563;
+}
+
 .ProseMirror blockquote {
   padding-left: 1rem;
   border-left: 2px solid #ccc;
