@@ -86,9 +86,19 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
     const files = e.target.files;
     if (!files) return;
 
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
     const newAttachments: MessageAttachment[] = [];
+
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error('File too large', {
+          description: `${file.name} exceeds the 5MB size limit.`,
+        });
+        continue;
+      }
+
       newAttachments.push({
         id: `attachment-${Date.now()}-${i}`,
         name: file.name,
@@ -98,7 +108,9 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
       });
     }
 
-    setAttachments([...attachments, ...newAttachments]);
+    if (newAttachments.length > 0) {
+      setAttachments([...attachments, ...newAttachments]);
+    }
 
     // Reset the file input
     if (fileInputRef.current) {
