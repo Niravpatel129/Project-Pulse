@@ -82,6 +82,7 @@ export interface EnhancedMessageEditorRef {
   insertEmoji: (emoji: string) => void;
   enhanceSelection: () => string | null;
   updateSelection: (enhancedText: string) => void;
+  clearContent: () => void;
 }
 
 const EnhancedMessageEditor = forwardRef<EnhancedMessageEditorRef, EnhancedMessageEditorProps>(
@@ -148,25 +149,23 @@ const EnhancedMessageEditor = forwardRef<EnhancedMessageEditorRef, EnhancedMessa
       return {
         insertEmoji: (emoji: string) => {
           if (editor) {
-            editor.chain().focus().insertContent(emoji).run();
+            editor.commands.insertContent(emoji);
           }
         },
         enhanceSelection: () => {
           if (editor) {
-            const { from, to } = editor.state.selection;
-            if (from === to) {
-              return null; // No text selected
-            }
-            return editor.state.doc.textBetween(from, to);
+            return editor.state.selection.content().content.firstChild?.textContent || null;
           }
           return null;
         },
         updateSelection: (enhancedText: string) => {
           if (editor) {
-            const { from, to } = editor.state.selection;
-            if (from === to) return;
-
-            editor.chain().focus().deleteRange({ from, to }).insertContent(enhancedText).run();
+            editor.commands.insertContent(enhancedText);
+          }
+        },
+        clearContent: () => {
+          if (editor) {
+            editor.commands.clearContent(true);
           }
         },
       };

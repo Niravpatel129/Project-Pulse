@@ -7,6 +7,7 @@ import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence } from 'framer-motion';
 import { FileText, Mail, User } from 'lucide-react';
+import { toast } from 'sonner';
 import { EmailCard } from './EmailCard';
 import ProjectMessageInput from './ProjectMessageInput';
 
@@ -212,9 +213,25 @@ export default function ProjectHome() {
     return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
   });
 
-  const handleSendMessage = async (content: string, attachments: File[]) => {
-    // TODO: Implement message sending logic
-    console.log('Sending message:', content, attachments);
+  const handleSendMessage = async (data: any) => {
+    try {
+      const newMessage = {
+        id: Date.now().toString(),
+        content: data.content,
+        attachments: data.attachments,
+        timestamp: new Date().toISOString(),
+        status: 'UNREAD',
+      };
+
+      // TODO: Add API call to save message to backend
+      console.log('Sending message:', newMessage);
+
+      // For now, just log the message
+      // Once backend is ready, we'll make the API call here
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Failed to send message');
+    }
   };
 
   return (

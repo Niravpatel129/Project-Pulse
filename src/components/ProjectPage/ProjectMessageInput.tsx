@@ -23,7 +23,7 @@ interface MessageAttachment {
 }
 
 interface ProjectMessageInputProps {
-  onSend: (content: string, attachments: MessageAttachment[]) => void;
+  onSend: (data: any) => void;
 }
 
 const QUICK_ENHANCE_OPTIONS = [
@@ -52,7 +52,7 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
 
   const { mutate: enhanceText, isPending: isEnhancing } = useAiEnhancement();
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!content.trim() && attachments.length === 0) {
       toast.error('Please enter a message or attach a file');
       return;
@@ -60,8 +60,9 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
 
     setIsSending(true);
     try {
-      onSend(content, attachments);
+      await onSend({ content, attachments });
       setContent('');
+      editorRef.current?.clearContent();
       setAttachments([]);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
