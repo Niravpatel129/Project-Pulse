@@ -6,10 +6,10 @@ import { Card } from '@/components/ui/card';
 import { useProject } from '@/contexts/ProjectContext';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { AtSign, FootprintsIcon, MessageSquare, Paperclip, Smile, Sparkles } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Descendant } from 'slate';
 import { toast } from 'sonner';
-import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
 
 interface MessageAttachment {
   id: string;
@@ -28,6 +28,7 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
   const { project } = useProject();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const expandedRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Initial value for Slate editor
   const initialValue: Descendant[] = [
@@ -53,6 +54,16 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
       setIsExpanded(false);
     }
   });
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      // Reset height to auto to get the correct scrollHeight
+      textarea.style.height = 'auto';
+      // Set the height to scrollHeight to fit the content
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [message]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -166,18 +177,25 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
             {/* Message area */}
             <div className='flex-1 min-w-0 space-y-3'>
               <div className='relative'>
-                <Input
+                <Textarea
+                  ref={textareaRef}
                   value={message}
                   onChange={(e) => {
                     return setMessage(e.target.value);
                   }}
                   placeholder='Try uploading files and adding comments...'
-                  className='pr-20 text-sm h-10 focus-visible:ring-0 border-0 shadow-none'
+                  className='pr-20 text-sm min-h-[80px] focus-visible:ring-0 border-0 shadow-none resize-none py-2 overflow-hidden'
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
                 />
                 <Button
                   variant='ghost'
                   size='sm'
-                  className='absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground hover:text-foreground hover:bg-gray-100'
+                  className='absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground hover:bg-gray-100'
                   onClick={handleSendMessage}
                 >
                   Send
