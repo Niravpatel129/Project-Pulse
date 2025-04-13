@@ -18,15 +18,10 @@ import {
   X,
 } from 'lucide-react';
 import { ReactNode, useCallback, useMemo, useRef, useState } from 'react';
-import { createEditor, Descendant, Editor, Element as SlateElement, Text, Transforms } from 'slate';
+import { createEditor, Descendant, Editor, Text, Transforms } from 'slate';
 import { withHistory } from 'slate-history';
 import { Editable, Slate, useFocused, useSelected, withReact } from 'slate-react';
 import { toast } from 'sonner';
-
-interface MentionElement extends SlateElement {
-  type: 'mention';
-  character: string;
-}
 
 interface MessageAttachment {
   id: string;
@@ -69,11 +64,11 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
 
     const { isInline, isVoid } = editor;
 
-    editor.isInline = (element: SlateElement) => {
+    editor.isInline = (element: any) => {
       return element.type === 'mention' ? true : isInline(element);
     };
 
-    editor.isVoid = (element: SlateElement) => {
+    editor.isVoid = (element: any) => {
       return element.type === 'mention' ? true : isVoid(element);
     };
 
@@ -173,7 +168,7 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
   }: {
     attributes: any;
     children: ReactNode;
-    element: MentionElement;
+    element: any;
   }) => {
     const selected = useSelected();
     const focused = useFocused();
@@ -225,7 +220,7 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
             },
           });
 
-          const mentionNode: MentionElement = {
+          const mentionNode: any = {
             type: 'mention',
             character: mention.name,
             children: [{ text: '' }],
@@ -444,7 +439,7 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
                     <Editable
                       renderElement={renderElement}
                       placeholder='Try uploading files and adding comments...'
-                      className='pr-20 text-sm min-h-[80px] focus-visible:ring-0 border-0 shadow-none resize-none py-2 overflow-hidden outline-none'
+                      className='pr-20 text-sm  focus-visible:ring-0 border-0 shadow-none resize-none px-3 overflow-hidden outline-none'
                       onKeyDown={handleKeyDown}
                     />
                   </div>
