@@ -289,7 +289,14 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
                     multiple
                     accept='*/*'
                   />
-                  <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='h-8 w-8 hover:bg-gray-100'
+                    onClick={() => {
+                      return handleFileSelect('file');
+                    }}
+                  >
                     <Paperclip className='w-4 h-4' />
                   </Button>
                   <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
