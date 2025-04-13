@@ -4,6 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmojiPicker } from '@/components/ui/emoji-picker';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useProject } from '@/contexts/ProjectContext';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { ImageIcon, Link2, MessageSquare, Paperclip, Sparkles, X } from 'lucide-react';
@@ -22,15 +24,25 @@ interface ProjectMessageInputProps {
   onSend: (content: string, attachments: MessageAttachment[]) => void;
 }
 
+const QUICK_ENHANCE_OPTIONS = [
+  { label: 'Make it more professional', value: 'professional' },
+  { label: 'Make it more friendly', value: 'friendly' },
+  { label: 'Fix grammar and spelling', value: 'grammar' },
+  { label: 'Make it more concise', value: 'concise' },
+  { label: 'Make it more detailed', value: 'detailed' },
+];
+
 const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
   const { project } = useProject();
   const [content, setContent] = useState('');
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
+  const [customEnhancePrompt, setCustomEnhancePrompt] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const expandedRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<EnhancedMessageEditorRef>(null);
   const [isSending, setIsSending] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
 
   const handleSend = () => {
     if (!content.trim() && attachments.length === 0) {
@@ -120,6 +132,34 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
     if (fileInputRef.current) {
       fileInputRef.current.accept = type === 'image' ? 'image/*' : '*/*';
       fileInputRef.current.click();
+    }
+  };
+
+  const handleEnhanceText = async (enhanceType: string) => {
+    const selectedText = editorRef.current?.enhanceSelection();
+    if (!selectedText) {
+      toast.error('Please select some text to enhance');
+      return;
+    }
+
+    setIsEnhancing(true);
+    try {
+      // Here you would call your AI enhancement API with enhanceType and customEnhancePrompt
+      // For now, we'll just simulate an enhancement
+      const enhancedText = `✨ ${selectedText} ✨`;
+      editorRef.current?.updateSelection(enhancedText);
+
+      toast.success('Text enhanced!', {
+        description: 'Your text has been enhanced.',
+      });
+      setCustomEnhancePrompt('');
+    } catch (error) {
+      console.error('Error enhancing text:', error);
+      toast.error('Failed to enhance text', {
+        description: 'There was a problem enhancing your text. Please try again.',
+      });
+    } finally {
+      setIsEnhancing(false);
     }
   };
 
@@ -220,9 +260,64 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
                       return editorRef.current?.insertEmoji(emoji);
                     }}
                   />
-                  <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
-                    <Sparkles className='w-4 h-4' />
-                  </Button>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='h-8 w-8 hover:bg-gray-100'
+                        disabled={isEnhancing}
+                      >
+                        <Sparkles className='w-4 h-4' />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className='w-80 p-3' align='start'>
+                      <div className='space-y-4'>
+                        <div className='space-y-2'>
+                          <h4 className='font-medium leading-none'>Enhance text with AI</h4>
+                          <p className='text-sm text-muted-foreground'>
+                            Tell AI how to enhance your selected text
+                          </p>
+                        </div>
+                        <div className='space-y-2'>
+                          <Input
+                            type='text'
+                            placeholder='Enter custom instructions...'
+                            value={customEnhancePrompt}
+                            onChange={(e) => {
+                              return setCustomEnhancePrompt(e.target.value);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && customEnhancePrompt) {
+                                handleEnhanceText(customEnhancePrompt);
+                              }
+                            }}
+                          />
+                        </div>
+                        <div className='space-y-2'>
+                          <p className='text-sm font-medium'>Quick options</p>
+                          <div className='grid gap-2'>
+                            {QUICK_ENHANCE_OPTIONS.map((option) => {
+                              return (
+                                <Button
+                                  key={option.value}
+                                  variant='outline'
+                                  className='justify-start'
+                                  onClick={() => {
+                                    return handleEnhanceText(option.value);
+                                  }}
+                                  disabled={isEnhancing}
+                                >
+                                  <Sparkles className='mr-2 h-4 w-4' />
+                                  {option.label}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <Button
                   variant='default'
