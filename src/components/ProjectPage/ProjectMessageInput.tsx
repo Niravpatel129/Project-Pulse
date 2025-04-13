@@ -61,13 +61,14 @@ type CustomText = {
   strikethrough?: boolean;
   code?: boolean;
 };
-declare module 'slate' {
-  interface CustomTypes {
-    Editor: BaseEditor & ReactEditor;
-    Element: CustomElement;
-    Text: CustomText;
-  }
-}
+
+type CustomEditor = BaseEditor &
+  ReactEditor & {
+    history: {
+      redos: any[];
+      undos: any[];
+    };
+  };
 
 export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInputProps) {
   const { project } = useProject();
@@ -90,7 +91,7 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
 
   // Initialize Slate editor
   const editor = useMemo(() => {
-    const editor = withHistory(withReact(createEditor()));
+    const editor = withHistory(withReact(createEditor())) as CustomEditor;
 
     const { isInline, isVoid } = editor;
 
@@ -209,22 +210,11 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
           match: (n) => {
             return (
               Element.isElement(n) &&
-              (n.type === 'heading-one' || n.type === 'heading-two' || n.type === 'block-quote')
+              n.type !== undefined &&
+              ['heading-one', 'heading-two', 'block-quote'].includes(n.type)
             );
           },
         });
-
-        if (node) {
-          const [element, path] = node;
-          const isAtStart = Editor.isStart(editor, selection.anchor, path);
-          const isAtEnd = Editor.isEnd(editor, selection.anchor, path);
-          const isEmpty = Editor.isEmpty(editor, element);
-
-          if ((e.key === 'Backspace' && isAtStart) || (e.key === 'Delete' && isAtEnd) || isEmpty) {
-            e.preventDefault();
-            Transforms.setNodes(editor, { type: 'paragraph' }, { at: path });
-          }
-        }
       }
     }
   };
