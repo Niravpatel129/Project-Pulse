@@ -220,7 +220,7 @@ export default function ProjectHome() {
   return (
     <div className='space-y-6'>
       {/* Message Input */}
-      <ProjectMessageInput onSendMessage={handleSendMessage} />
+      <ProjectMessageInput onSend={handleSendMessage} />
 
       {/* Combined Activity and Email Feed */}
       <div className='space-y-4'>
