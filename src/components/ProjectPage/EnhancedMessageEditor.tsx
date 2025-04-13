@@ -83,7 +83,26 @@ const EnhancedMessageEditor = ({
         <BubbleMenu
           className='flex gap-1 bg-white border rounded shadow-lg p-1'
           editor={editor}
-          tippyOptions={{ duration: 100, placement: 'top-start' }}
+          tippyOptions={{
+            duration: 100,
+            placement: 'top-start',
+            popperOptions: {
+              modifiers: [
+                {
+                  name: 'preventOverflow',
+                  options: {
+                    boundary: 'viewport',
+                  },
+                },
+                {
+                  name: 'flip',
+                  options: {
+                    fallbackPlacements: ['top-start', 'top-end'],
+                  },
+                },
+              ],
+            },
+          }}
         >
           <Button
             variant='ghost'
