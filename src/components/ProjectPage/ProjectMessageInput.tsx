@@ -595,7 +595,40 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
                   >
                     <Paperclip className='w-4 h-4' />
                   </Button>
-                  <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='h-8 w-8 hover:bg-gray-100'
+                    onClick={() => {
+                      // Insert @ and move cursor after it
+                      Transforms.insertText(editor, '@');
+                      const newSelection = {
+                        anchor: { path: [0, 0], offset: editor.selection?.anchor.offset || 0 },
+                        focus: { path: [0, 0], offset: editor.selection?.anchor.offset || 0 },
+                      };
+                      Transforms.select(editor, newSelection);
+                      ReactEditor.focus(editor);
+
+                      // Get cursor position and show mention popover
+                      const domRange = window.getSelection()?.getRangeAt(0);
+                      const rect = domRange?.getBoundingClientRect();
+                      const editorRect = editorRef.current?.getBoundingClientRect();
+
+                      if (rect && editorRect) {
+                        setMentionPosition({
+                          top: rect.top - editorRect.top + 20,
+                          left: rect.left - editorRect.left,
+                        });
+                        setIsMentionPopoverOpen(true);
+                        setSelectedMentionIndex(0);
+                        setMentionQuery('');
+                        // Focus the input after a small delay to ensure it's mounted
+                        setTimeout(() => {
+                          mentionInputRef.current?.focus();
+                        }, 0);
+                      }
+                    }}
+                  >
                     <AtSign className='w-4 h-4' />
                   </Button>
                   <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
