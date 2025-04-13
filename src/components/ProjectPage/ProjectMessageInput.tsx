@@ -164,6 +164,7 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
                   content={content}
                   onContentChange={setContent}
                   maxLength={5000}
+                  participants={project?.participants || []}
                 />
               </div>
 

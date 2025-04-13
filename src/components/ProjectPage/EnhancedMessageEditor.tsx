@@ -21,10 +21,11 @@ import { useState } from 'react';
 import './EnhancedMessageEditor.css';
 import mentionSuggestion from './mentionSuggestion';
 
-interface EnhancedMessageEditorProps {
-  content: string;
-  onContentChange: (content: string) => void;
-  maxLength?: number;
+interface Participant {
+  _id: string;
+  name: string;
+  email?: string;
+  avatar?: string;
 }
 
 interface LinkInputProps {
@@ -71,10 +72,18 @@ const LinkInput = ({ onSubmit, onCancel }: LinkInputProps) => {
   );
 };
 
+interface EnhancedMessageEditorProps {
+  content: string;
+  onContentChange: (content: string) => void;
+  maxLength?: number;
+  participants?: Participant[];
+}
+
 const EnhancedMessageEditor = ({
   content,
   onContentChange,
   maxLength = 10000,
+  participants = [],
 }: EnhancedMessageEditorProps) => {
   const [showLinkInput, setShowLinkInput] = useState(false);
 
@@ -98,7 +107,30 @@ const EnhancedMessageEditor = ({
         HTMLAttributes: {
           class: 'mention',
         },
-        suggestion: mentionSuggestion,
+        suggestion: {
+          ...mentionSuggestion,
+          items: ({ query }: { query: string }) => {
+            return participants
+              .filter((participant) => {
+                const searchTerm = query.toLowerCase();
+                return (
+                  participant.name.toLowerCase().includes(searchTerm) ||
+                  (participant.email && participant.email.toLowerCase().includes(searchTerm))
+                );
+              })
+              .slice(0, 5);
+          },
+        },
+        renderHTML({ node }) {
+          const participant = participants.find((p) => {
+            return p._id === node.attrs.id;
+          });
+          return [
+            'span',
+            { class: 'mention', 'data-mention-id': node.attrs.id },
+            participant?.name || 'Unknown',
+          ];
+        },
       }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],

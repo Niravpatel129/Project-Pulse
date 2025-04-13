@@ -7,40 +7,6 @@ interface MentionListRef {
 }
 
 const suggestion = {
-  items: ({ query }: { query: string }) => {
-    return [
-      'Lea Thompson',
-      'Cyndi Lauper',
-      'Tom Cruise',
-      'Madonna',
-      'Jerry Hall',
-      'Joan Collins',
-      'Winona Ryder',
-      'Christina Applegate',
-      'Alyssa Milano',
-      'Molly Ringwald',
-      'Ally Sheedy',
-      'Debbie Harry',
-      'Olivia Newton-John',
-      'Elton John',
-      'Michael J. Fox',
-      'Axl Rose',
-      'Emilio Estevez',
-      'Ralph Macchio',
-      'Rob Lowe',
-      'Jennifer Grey',
-      'Mickey Rourke',
-      'John Cusack',
-      'Matthew Broderick',
-      'Justine Bateman',
-      'Lisa Bonet',
-    ]
-      .filter((item) => {
-        return item.toLowerCase().startsWith(query.toLowerCase());
-      })
-      .slice(0, 5);
-  },
-
   render: () => {
     let component: ReactRenderer<MentionListRef>;
     let popup: any;

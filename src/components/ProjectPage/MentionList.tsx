@@ -1,8 +1,15 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import './MentionList.css';
 
+interface Participant {
+  _id: string;
+  name: string;
+  email?: string;
+  avatar?: string;
+}
+
 interface MentionListProps {
-  items: string[];
+  items: Participant[];
   command: (item: { id: string }) => void;
 }
 
@@ -16,7 +23,7 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>((props, ref) =>
   const selectItem = (index: number) => {
     const item = props.items[index];
     if (item) {
-      props.command({ id: item });
+      props.command({ id: item._id });
     }
   };
 
@@ -66,12 +73,13 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>((props, ref) =>
           return (
             <button
               className={`mention-item ${index === selectedIndex ? 'is-selected' : ''}`}
-              key={index}
+              key={item._id}
               onClick={() => {
                 return selectItem(index);
               }}
             >
-              {item}
+              {item.name}
+              {item.email && <span className='mention-email'> ({item.email})</span>}
             </button>
           );
         })
