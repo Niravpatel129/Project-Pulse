@@ -5,7 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useProject } from '@/contexts/ProjectContext';
 import { useClickOutside } from '@/hooks/useClickOutside';
-import { AtSign, FootprintsIcon, MessageSquare, Paperclip, Smile, Sparkles } from 'lucide-react';
+import {
+  AtSign,
+  FootprintsIcon,
+  ImageIcon,
+  Link2,
+  MessageSquare,
+  Paperclip,
+  Smile,
+  Sparkles,
+  X,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Descendant } from 'slate';
 import { toast } from 'sonner';
@@ -44,12 +54,19 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
   const [editorValue, setEditorValue] = useState<Descendant[]>(initialValue);
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
   const [isSending, setIsSending] = useState(false);
+  const [isAddingLink, setIsAddingLink] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [isAttachmentPopoverOpen, setIsAttachmentPopoverOpen] = useState(false);
 
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
   };
 
-  useClickOutside(expandedRef, () => {
+  useClickOutside(expandedRef, (e: MouseEvent) => {
+    // Don't collapse if clicking inside a Popover
+    const target = e.target as HTMLElement;
+    if (target.closest('[role="dialog"]')) return;
+
     if (isExpanded) {
       setIsExpanded(false);
     }
@@ -95,6 +112,22 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
         return a.id !== id;
       }),
     );
+  };
+
+  const handleAddLink = () => {
+    if (!linkUrl.trim()) return;
+
+    const newAttachment: MessageAttachment = {
+      id: `attachment-${Date.now()}`,
+      name: linkUrl,
+      size: 0,
+      type: 'link',
+      url: linkUrl,
+    };
+
+    setAttachments([...attachments, newAttachment]);
+    setLinkUrl('');
+    setIsAddingLink(false);
   };
 
   const handleSendMessage = async () => {
@@ -143,6 +176,23 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getAttachmentIcon = (type: string) => {
+    if (type === 'link') {
+      return <Link2 className='h-4 w-4 mr-2 text-gray-500' />;
+    } else if (type.startsWith('image/')) {
+      return <ImageIcon className='h-4 w-4 mr-2 text-gray-500' />;
+    } else {
+      return <Paperclip className='h-4 w-4 mr-2 text-gray-500' />;
+    }
+  };
+
+  const handleFileSelect = (type: 'file' | 'image') => {
+    if (fileInputRef.current) {
+      fileInputRef.current.accept = type === 'image' ? 'image/*' : '*/*';
+      fileInputRef.current.click();
+    }
   };
 
   return (
@@ -194,9 +244,51 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
                 />
               </div>
 
+              {/* Attachments */}
+              {attachments.length > 0 && (
+                <div className='space-y-2'>
+                  {attachments.map((attachment) => {
+                    return (
+                      <div
+                        key={attachment.id}
+                        className='flex items-center justify-between bg-gray-50 p-2 rounded'
+                      >
+                        <div className='flex items-center'>
+                          {getAttachmentIcon(attachment.type)}
+                          <span className='text-sm'>{attachment.name}</span>
+                          {attachment.size > 0 && (
+                            <span className='text-xs text-gray-500 ml-2'>
+                              ({formatFileSize(attachment.size)})
+                            </span>
+                          )}
+                        </div>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => {
+                            return removeAttachment(attachment.id);
+                          }}
+                          className='h-6 w-6 p-0'
+                        >
+                          <X className='h-4 w-4' />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               {/* Toolbar */}
               <div className='flex items-center justify-between gap-1.5 text-muted-foreground'>
                 <div className='flex items-center gap-1.5'>
+                  <input
+                    type='file'
+                    ref={fileInputRef}
+                    className='hidden'
+                    onChange={handleFileUpload}
+                    multiple
+                    accept='*/*'
+                  />
                   <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
                     <Paperclip className='w-4 h-4' />
                   </Button>
