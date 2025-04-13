@@ -192,32 +192,34 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
                     }
                   }}
                 />
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  className='absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground hover:bg-gray-100'
-                  onClick={handleSendMessage}
-                >
-                  Send
-                </Button>
               </div>
 
               {/* Toolbar */}
-              <div className='flex items-center gap-1.5 text-muted-foreground'>
-                <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
-                  <Paperclip className='w-4 h-4' />
-                </Button>
-                <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
-                  <AtSign className='w-4 h-4' />
-                </Button>
-                <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
-                  <Smile className='w-4 h-4' />
-                </Button>
-                <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
-                  <FootprintsIcon className='w-4 h-4' />
-                </Button>
-                <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
-                  <Sparkles className='w-4 h-4' />
+              <div className='flex items-center justify-between gap-1.5 text-muted-foreground'>
+                <div className='flex items-center gap-1.5'>
+                  <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
+                    <Paperclip className='w-4 h-4' />
+                  </Button>
+                  <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
+                    <AtSign className='w-4 h-4' />
+                  </Button>
+                  <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
+                    <Smile className='w-4 h-4' />
+                  </Button>
+                  <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
+                    <FootprintsIcon className='w-4 h-4' />
+                  </Button>
+                  <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
+                    <Sparkles className='w-4 h-4' />
+                  </Button>
+                </div>
+                <Button
+                  variant='default'
+                  size='sm'
+                  className='text-sm text-muted-foreground hover:text-foreground text-white hover:text-white'
+                  onClick={handleSendMessage}
+                >
+                  Send
                 </Button>
               </div>
             </div>
