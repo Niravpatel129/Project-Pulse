@@ -601,13 +601,15 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
                     className='h-8 w-8 hover:bg-gray-100'
                     onClick={() => {
                       // Insert @ and move cursor after it
+                      const currentOffset = editor.selection?.anchor.offset || 0;
                       Transforms.insertText(editor, '@');
+
+                      // Move cursor after the @
                       const newSelection = {
-                        anchor: { path: [0, 0], offset: editor.selection?.anchor.offset || 0 },
-                        focus: { path: [0, 0], offset: editor.selection?.anchor.offset || 0 },
+                        anchor: { path: [0, 0], offset: currentOffset + 1 },
+                        focus: { path: [0, 0], offset: currentOffset + 1 },
                       };
                       Transforms.select(editor, newSelection);
-                      ReactEditor.focus(editor);
 
                       // Get cursor position and show mention popover
                       const domRange = window.getSelection()?.getRangeAt(0);
@@ -622,7 +624,8 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
                         setIsMentionPopoverOpen(true);
                         setSelectedMentionIndex(0);
                         setMentionQuery('');
-                        // Focus the input after a small delay to ensure it's mounted
+
+                        // Focus the mention input after a small delay
                         setTimeout(() => {
                           mentionInputRef.current?.focus();
                         }, 0);
