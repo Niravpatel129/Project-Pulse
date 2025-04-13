@@ -10,7 +10,6 @@ import {
   CommandInput,
   CommandItem,
 } from '@/components/ui/command';
-import { useProject } from '@/contexts/ProjectContext';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import {
   AtSign,
@@ -23,10 +22,11 @@ import {
   Sparkles,
   X,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { Descendant } from 'slate';
+import { useMemo, useRef, useState } from 'react';
+import { createEditor, Descendant, Editor, Text, Transforms } from 'slate';
+import { withHistory } from 'slate-history';
+import { Editable, Slate, withReact } from 'slate-react';
 import { toast } from 'sonner';
-import { Textarea } from '../ui/textarea';
 
 interface MessageAttachment {
   id: string;
@@ -48,16 +48,32 @@ interface ProjectMessageInputProps {
 }
 
 export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInputProps) {
-  const { project } = useProject();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const expandedRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isMentionPopoverOpen, setIsMentionPopoverOpen] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionPosition, setMentionPosition] = useState<{ top: number; left: number } | null>(
     null,
   );
   const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
+  const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
+  const [isSending, setIsSending] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Initialize Slate editor
+  const editor = useMemo(() => {
+    return withHistory(withReact(createEditor()));
+  }, []);
+
+  // Initial value for Slate editor
+  const initialValue: Descendant[] = [
+    {
+      type: 'paragraph',
+      children: [{ text: '' }],
+    },
+  ];
+
+  const [value, setValue] = useState<Descendant[]>(initialValue);
 
   // Mock data for mentions - replace with actual project members
   const [mentions] = useState<Mention[]>([
@@ -71,40 +87,46 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
     return mention.name.toLowerCase().includes(mentionQuery.toLowerCase());
   });
 
-  // Handle @ key press
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    // Handle Enter + Shift for sending message
-    if (e.key === 'Enter' && e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-      return;
-    }
-
-    // Handle @ key press
+  // Handle @ key press in Slate editor
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === '@') {
-      const rect = textarea.getBoundingClientRect();
-      const cursorPosition = textarea.selectionStart;
-      const textBeforeCursor = textarea.value.substring(0, cursorPosition);
-
-      // Check if @ is at the start of the line or after a space
-      const isAtStart = cursorPosition === 0;
-      const lastSpaceIndex = textBeforeCursor.lastIndexOf(' ');
-      const isAfterSpace = lastSpaceIndex === cursorPosition - 1;
-
-      if (isAtStart || isAfterSpace) {
-        setMentionQuery('');
-        setMentionPosition({
-          top: rect.top + textarea.scrollTop + 20,
-          left: rect.left + 10,
+      const { selection } = editor;
+      if (selection) {
+        const [start] = Editor.nodes(editor, {
+          match: (n) => {
+            return Text.isText(n);
+          },
+          at: selection,
         });
-        setIsMentionPopoverOpen(true);
-        setSelectedMentionIndex(0);
+
+        if (start) {
+          const [node, path] = start;
+          const text = node.text;
+          const offset = selection.anchor.offset;
+          const beforeText = text.slice(0, offset);
+
+          // Check if @ is at the start of the line or after a space
+          const isAtStart = offset === 0;
+          const lastSpaceIndex = beforeText.lastIndexOf(' ');
+          const isAfterSpace = lastSpaceIndex === offset - 1;
+
+          if (isAtStart || isAfterSpace) {
+            setMentionQuery('');
+            const domRange = window.getSelection()?.getRangeAt(0);
+            const rect = domRange?.getBoundingClientRect();
+
+            if (rect) {
+              setMentionPosition({
+                top: rect.top + window.scrollY + 20,
+                left: rect.left + window.scrollX,
+              });
+              setIsMentionPopoverOpen(true);
+              setSelectedMentionIndex(0);
+            }
+          }
+        }
       }
     } else if (isMentionPopoverOpen) {
-      // Handle navigation in mention popover
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setSelectedMentionIndex((prev) => {
@@ -122,86 +144,85 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
         }
       } else if (e.key === 'Escape') {
         setIsMentionPopoverOpen(false);
-      } else if (e.key === 'Backspace') {
-        // If backspace is pressed and we're at the start of a mention
-        const cursorPosition = textarea.selectionStart;
-        const textBeforeCursor = textarea.value.substring(0, cursorPosition);
-        const lastSpaceIndex = textBeforeCursor.lastIndexOf(' ');
-        const lastAtSignIndex = textBeforeCursor.lastIndexOf('@');
-
-        if (lastAtSignIndex > lastSpaceIndex && cursorPosition === lastAtSignIndex + 1) {
-          setIsMentionPopoverOpen(false);
-        }
-      }
-    }
-  };
-
-  // Handle text changes to update mention query
-  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value;
-    setMessage(newValue);
-
-    if (isMentionPopoverOpen) {
-      const cursorPosition = e.target.selectionStart;
-      const textBeforeCursor = newValue.substring(0, cursorPosition);
-      const lastSpaceIndex = textBeforeCursor.lastIndexOf(' ');
-      const lastAtSignIndex = textBeforeCursor.lastIndexOf('@');
-
-      if (lastAtSignIndex > lastSpaceIndex) {
-        setMentionQuery(textBeforeCursor.substring(lastAtSignIndex + 1));
-      } else {
-        setIsMentionPopoverOpen(false);
       }
     }
   };
 
   // Handle mention selection
   const handleMentionSelect = (mention: Mention) => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      const cursorPosition = textarea.selectionStart;
-      const textBeforeCursor = textarea.value.substring(0, cursorPosition);
-      const lastSpaceIndex = textBeforeCursor.lastIndexOf(' ');
-      const lastAtSignIndex = textBeforeCursor.lastIndexOf('@');
+    const { selection } = editor;
+    if (selection) {
+      const [start] = Editor.nodes(editor, {
+        match: (n) => {
+          return Text.isText(n);
+        },
+        at: selection,
+      });
 
-      if (lastAtSignIndex > lastSpaceIndex) {
-        const newText =
-          textBeforeCursor.substring(0, lastAtSignIndex) +
-          `@${mention.name}` +
-          textarea.value.substring(cursorPosition);
+      if (start) {
+        const [node, path] = start;
+        const text = node.text;
+        const offset = selection.anchor.offset;
+        const beforeText = text.slice(0, offset);
+        const lastAtSignIndex = beforeText.lastIndexOf('@');
 
-        setMessage(newText);
-        setIsMentionPopoverOpen(false);
-        setMentionQuery('');
+        if (lastAtSignIndex !== -1) {
+          Transforms.delete(editor, {
+            at: {
+              anchor: { path, offset: lastAtSignIndex },
+              focus: { path, offset },
+            },
+          });
 
-        // Set cursor position after the mention
-        setTimeout(() => {
-          if (textarea) {
-            const newCursorPosition = lastAtSignIndex + mention.name.length + 1;
-            textarea.setSelectionRange(newCursorPosition, newCursorPosition);
-          }
-        }, 0);
+          Transforms.insertText(editor, `@${mention.name} `, {
+            at: { path, offset: lastAtSignIndex },
+          });
+        }
       }
     }
+    setIsMentionPopoverOpen(false);
   };
 
-  // Initial value for Slate editor
-  const initialValue: Descendant[] = [
-    {
-      type: 'paragraph',
-      children: [{ text: '' }],
-    },
-  ];
+  // Handle sending message
+  const handleSendMessage = async () => {
+    const text = Editor.string(editor, []);
+    if (!text.trim() && attachments.length === 0) {
+      toast.error('Message required', {
+        description: 'Please add a message or attachment before sending.',
+      });
+      return;
+    }
 
-  // State management
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [message, setMessage] = useState('');
-  const [editorValue, setEditorValue] = useState<Descendant[]>(initialValue);
-  const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
-  const [isSending, setIsSending] = useState(false);
-  const [isAddingLink, setIsAddingLink] = useState(false);
-  const [linkUrl, setLinkUrl] = useState('');
-  const [isAttachmentPopoverOpen, setIsAttachmentPopoverOpen] = useState(false);
+    setIsSending(true);
+    try {
+      await onSendMessage(
+        text,
+        attachments
+          .map((a) => {
+            return a.file;
+          })
+          .filter((f): f is File => {
+            return !!f;
+          }),
+      );
+
+      // Reset form
+      setValue(initialValue);
+      setAttachments([]);
+      setIsExpanded(false);
+
+      toast.success('Message sent', {
+        description: 'Your message has been sent successfully.',
+      });
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Failed to send message', {
+        description: 'There was a problem sending your message. Please try again.',
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
@@ -216,16 +237,6 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
       setIsExpanded(false);
     }
   });
-
-  useEffect(() => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      // Reset height to auto to get the correct scrollHeight
-      textarea.style.height = 'auto';
-      // Set the height to scrollHeight to fit the content
-      textarea.style.height = `${textarea.scrollHeight}px`;
-    }
-  }, [message]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -269,62 +280,6 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
         return a.id !== id;
       }),
     );
-  };
-
-  const handleAddLink = () => {
-    if (!linkUrl.trim()) return;
-
-    const newAttachment: MessageAttachment = {
-      id: `attachment-${Date.now()}`,
-      name: linkUrl,
-      size: 0,
-      type: 'link',
-      url: linkUrl,
-    };
-
-    setAttachments([...attachments, newAttachment]);
-    setLinkUrl('');
-    setIsAddingLink(false);
-  };
-
-  const handleSendMessage = async () => {
-    if (!message.trim() && attachments.length === 0) {
-      toast.error('Message required', {
-        description: 'Please add a message or attachment before sending.',
-      });
-      return;
-    }
-
-    setIsSending(true);
-    try {
-      await onSendMessage(
-        message,
-        attachments
-          .map((a) => {
-            return a.file;
-          })
-          .filter((f): f is File => {
-            return !!f;
-          }),
-      );
-
-      // Reset form
-      setMessage('');
-      setEditorValue(initialValue);
-      setAttachments([]);
-      setIsExpanded(false);
-
-      toast.success('Message sent', {
-        description: 'Your message has been sent successfully.',
-      });
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('Failed to send message', {
-        description: 'There was a problem sending your message. Please try again.',
-      });
-    } finally {
-      setIsSending(false);
-    }
   };
 
   const formatFileSize = (bytes: number) => {
@@ -376,22 +331,19 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
           }}
         >
           <div className='flex items-start gap-4'>
-            {/* Avatar */}
             <div className='w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm shrink-0 mt-1'>
               AS
             </div>
 
-            {/* Message area */}
             <div className='flex-1 min-w-0 space-y-3'>
               <div className='relative'>
-                <Textarea
-                  ref={textareaRef}
-                  value={message}
-                  onChange={handleMessageChange}
-                  placeholder='Try uploading files and adding comments...'
-                  className='pr-20 text-sm min-h-[80px] focus-visible:ring-0 border-0 shadow-none resize-none py-2 overflow-hidden'
-                  onKeyDown={handleKeyDown}
-                />
+                <Slate editor={editor} initialValue={value} onChange={setValue}>
+                  <Editable
+                    placeholder='Try uploading files and adding comments...'
+                    className='pr-20 text-sm min-h-[80px] focus-visible:ring-0 border-0 shadow-none resize-none py-2 overflow-hidden outline-none'
+                    onKeyDown={handleKeyDown}
+                  />
+                </Slate>
                 {isMentionPopoverOpen && mentionPosition && (
                   <div
                     className='absolute z-50'
@@ -433,7 +385,6 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
                 )}
               </div>
 
-              {/* Attachments */}
               {attachments.length > 0 && (
                 <div className='space-y-2'>
                   {attachments.map((attachment) => {
@@ -467,7 +418,6 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
                 </div>
               )}
 
-              {/* Toolbar */}
               <div className='flex items-center justify-between gap-1.5 text-muted-foreground'>
                 <div className='flex items-center gap-1.5'>
                   <input
