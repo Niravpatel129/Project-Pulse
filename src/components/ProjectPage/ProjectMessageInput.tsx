@@ -7,12 +7,16 @@ import { useProject } from '@/contexts/ProjectContext';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import {
   Bold,
+  Code,
   FootprintsIcon,
+  Heading1,
+  Heading2,
   ImageIcon,
   Italic,
   Link2,
   MessageSquare,
   Paperclip,
+  Quote,
   Search,
   Smile,
   Sparkles,
@@ -21,7 +25,7 @@ import {
   X,
 } from 'lucide-react';
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { createEditor, Descendant, Editor, Text, Transforms } from 'slate';
+import { BaseEditor, createEditor, Descendant, Editor, Element, Text, Transforms } from 'slate';
 import { withHistory } from 'slate-history';
 import { Editable, ReactEditor, Slate, useFocused, useSelected, withReact } from 'slate-react';
 import { toast } from 'sonner';
@@ -43,6 +47,26 @@ interface Mention {
 
 interface ProjectMessageInputProps {
   onSendMessage: (content: string, attachments: File[]) => Promise<void>;
+}
+
+type CustomElement = {
+  type: 'paragraph' | 'heading-one' | 'heading-two' | 'block-quote' | 'mention';
+  children: CustomText[];
+};
+type CustomText = {
+  text: string;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  strikethrough?: boolean;
+  code?: boolean;
+};
+declare module 'slate' {
+  interface CustomTypes {
+    Editor: BaseEditor & ReactEditor;
+    Element: CustomElement;
+    Text: CustomText;
+  }
 }
 
 export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInputProps) {
@@ -176,6 +200,33 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
           break;
       }
     }
+
+    // Handle backspace/delete for block elements
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+      const { selection } = editor;
+      if (selection) {
+        const [node] = Editor.nodes(editor, {
+          match: (n) => {
+            return (
+              Element.isElement(n) &&
+              (n.type === 'heading-one' || n.type === 'heading-two' || n.type === 'block-quote')
+            );
+          },
+        });
+
+        if (node) {
+          const [element, path] = node;
+          const isAtStart = Editor.isStart(editor, selection.anchor, path);
+          const isAtEnd = Editor.isEnd(editor, selection.anchor, path);
+          const isEmpty = Editor.isEmpty(editor, element);
+
+          if ((e.key === 'Backspace' && isAtStart) || (e.key === 'Delete' && isAtEnd) || isEmpty) {
+            e.preventDefault();
+            Transforms.setNodes(editor, { type: 'paragraph' }, { at: path });
+          }
+        }
+      }
+    }
   };
 
   const renderElement = useCallback((props) => {
@@ -184,6 +235,24 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
     switch (element.type) {
       case 'mention':
         return <MentionComponent {...props} />;
+      case 'heading-one':
+        return (
+          <h1 {...attributes} className='text-2xl font-bold'>
+            {children}
+          </h1>
+        );
+      case 'heading-two':
+        return (
+          <h2 {...attributes} className='text-xl font-bold'>
+            {children}
+          </h2>
+        );
+      case 'block-quote':
+        return (
+          <blockquote {...attributes} className='border-l-4 border-gray-200 pl-4 italic'>
+            {children}
+          </blockquote>
+        );
       default:
         return <p {...attributes}>{children}</p>;
     }
@@ -204,6 +273,9 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
     }
     if (leaf.strikethrough) {
       newChildren = <s>{newChildren}</s>;
+    }
+    if (leaf.code) {
+      newChildren = <code className='bg-gray-100 px-1 rounded'>{newChildren}</code>;
     }
 
     return <span {...attributes}>{newChildren}</span>;
@@ -511,6 +583,24 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
     return !!match;
   };
 
+  const toggleBlock = (format: CustomElement['type']) => {
+    const isActive = isBlockActive(format);
+    Transforms.setNodes(editor, { type: isActive ? 'paragraph' : format } as Partial<Element>, {
+      match: (n) => {
+        return Element.isElement(n) && Editor.isBlock(editor, n);
+      },
+    });
+  };
+
+  const isBlockActive = (format: CustomElement['type']) => {
+    const [match] = Editor.nodes(editor, {
+      match: (n) => {
+        return Element.isElement(n) && n.type === format;
+      },
+    });
+    return !!match;
+  };
+
   // Add mouse selection handling
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
     const selection = window.getSelection();
@@ -637,64 +727,120 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
                 {showFloatingToolbar && (
                   <div
                     ref={floatingToolbarRef}
-                    className='absolute z-50 flex items-center gap-1 bg-white border rounded-lg shadow-lg p-1'
+                    className='absolute z-50 flex items-center gap-1 bg-white border rounded-lg shadow-lg p-1 backdrop-blur-sm bg-white/90'
                     style={{
                       top: toolbarPosition.top,
                       left: toolbarPosition.left,
                     }}
                   >
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      className={`h-8 w-8 hover:bg-gray-100 ${
-                        isFormatActive('bold') ? 'bg-gray-100' : ''
-                      }`}
-                      onClick={() => {
-                        return toggleFormat('bold');
-                      }}
-                      title='Bold (Ctrl+B)'
-                    >
-                      <Bold className='w-4 h-4' />
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      className={`h-8 w-8 hover:bg-gray-100 ${
-                        isFormatActive('italic') ? 'bg-gray-100' : ''
-                      }`}
-                      onClick={() => {
-                        return toggleFormat('italic');
-                      }}
-                      title='Italic (Ctrl+I)'
-                    >
-                      <Italic className='w-4 h-4' />
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      className={`h-8 w-8 hover:bg-gray-100 ${
-                        isFormatActive('underline') ? 'bg-gray-100' : ''
-                      }`}
-                      onClick={() => {
-                        return toggleFormat('underline');
-                      }}
-                      title='Underline (Ctrl+U)'
-                    >
-                      <Underline className='w-4 h-4' />
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      className={`h-8 w-8 hover:bg-gray-100 ${
-                        isFormatActive('strikethrough') ? 'bg-gray-100' : ''
-                      }`}
-                      onClick={() => {
-                        return toggleFormat('strikethrough');
-                      }}
-                      title='Strikethrough (Ctrl+S)'
-                    >
-                      <Strikethrough className='w-4 h-4' />
-                    </Button>
+                    <div className='flex items-center gap-1 border-r pr-1'>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className={`h-8 w-8 hover:bg-gray-100 ${
+                          isFormatActive('bold') ? 'bg-gray-100' : ''
+                        }`}
+                        onClick={() => {
+                          return toggleFormat('bold');
+                        }}
+                        title='Bold (Ctrl+B)'
+                      >
+                        <Bold className='w-4 h-4' />
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className={`h-8 w-8 hover:bg-gray-100 ${
+                          isFormatActive('italic') ? 'bg-gray-100' : ''
+                        }`}
+                        onClick={() => {
+                          return toggleFormat('italic');
+                        }}
+                        title='Italic (Ctrl+I)'
+                      >
+                        <Italic className='w-4 h-4' />
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className={`h-8 w-8 hover:bg-gray-100 ${
+                          isFormatActive('underline') ? 'bg-gray-100' : ''
+                        }`}
+                        onClick={() => {
+                          return toggleFormat('underline');
+                        }}
+                        title='Underline (Ctrl+U)'
+                      >
+                        <Underline className='w-4 h-4' />
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className={`h-8 w-8 hover:bg-gray-100 ${
+                          isFormatActive('strikethrough') ? 'bg-gray-100' : ''
+                        }`}
+                        onClick={() => {
+                          return toggleFormat('strikethrough');
+                        }}
+                        title='Strikethrough (Ctrl+S)'
+                      >
+                        <Strikethrough className='w-4 h-4' />
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className={`h-8 w-8 hover:bg-gray-100 ${
+                          isFormatActive('code') ? 'bg-gray-100' : ''
+                        }`}
+                        onClick={() => {
+                          return toggleFormat('code');
+                        }}
+                        title='Code'
+                      >
+                        <Code className='w-4 h-4' />
+                      </Button>
+                    </div>
+                    <div className='flex items-center gap-1'>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className={`h-8 w-8 hover:bg-gray-100 ${
+                          isBlockActive('heading-one') ? 'bg-gray-100' : ''
+                        }`}
+                        onClick={() => {
+                          return toggleBlock('heading-one');
+                        }}
+                        title='Heading 1'
+                      >
+                        <Heading1 className='w-4 h-4' />
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className={`h-8 w-8 hover:bg-gray-100 ${
+                          isBlockActive('heading-two') ? 'bg-gray-100' : ''
+                        }`}
+                        onClick={() => {
+                          return toggleBlock('heading-two');
+                        }}
+                        title='Heading 2'
+                      >
+                        <Heading2 className='w-4 h-4' />
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className={`h-8 w-8 hover:bg-gray-100 ${
+                          isBlockActive('block-quote') ? 'bg-gray-100' : ''
+                        }`}
+                        onClick={() => {
+                          return toggleBlock('block-quote');
+                        }}
+                        title='Quote'
+                      >
+                        <Quote className='w-4 h-4' />
+                      </Button>
+                    </div>
                   </div>
                 )}
 
