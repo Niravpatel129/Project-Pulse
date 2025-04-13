@@ -3,13 +3,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from '@/components/ui/command';
 import { useProject } from '@/contexts/ProjectContext';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import {
@@ -19,6 +12,7 @@ import {
   Link2,
   MessageSquare,
   Paperclip,
+  Search,
   Smile,
   Sparkles,
   X,
@@ -62,6 +56,7 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const mentionInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize Slate editor
   const editor = useMemo(() => {
@@ -127,51 +122,17 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
 
             if (rect && editorRect) {
               setMentionPosition({
-                top: rect.top - editorRect.top + 20, // Position below cursor
+                top: rect.top - editorRect.top + 20,
                 left: rect.left - editorRect.left,
               });
               setIsMentionPopoverOpen(true);
               setSelectedMentionIndex(0);
-              // Focus the command input after a short delay to ensure it's rendered
+              // Focus the input after a small delay to ensure it's mounted
               setTimeout(() => {
-                const input = document.querySelector('[data-command-input]') as HTMLInputElement;
-                if (input) {
-                  input.focus();
-                }
+                mentionInputRef.current?.focus();
               }, 0);
             }
           }
-        }
-      }
-    } else if (isMentionPopoverOpen) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setSelectedMentionIndex((prev) => {
-          return Math.min(prev + 1, filteredMentions.length - 1);
-        });
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setSelectedMentionIndex((prev) => {
-          return Math.max(prev - 1, 0);
-        });
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        if (filteredMentions[selectedMentionIndex]) {
-          handleMentionSelect(filteredMentions[selectedMentionIndex]);
-        }
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        setIsMentionPopoverOpen(false);
-      } else if (e.key === 'Backspace' && mentionQuery === '') {
-        e.preventDefault();
-        setIsMentionPopoverOpen(false);
-      } else {
-        // Update the mention query as the user types
-        const currentText = Editor.string(editor, []);
-        const lastAtSignIndex = currentText.lastIndexOf('@');
-        if (lastAtSignIndex !== -1) {
-          const query = currentText.slice(lastAtSignIndex + 1);
-          setMentionQuery(query);
         }
       }
     }
@@ -210,6 +171,52 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
       }
     }
     setIsMentionPopoverOpen(false);
+  };
+
+  // Handle mention popover keyboard navigation
+  const handleMentionPopoverKeyDown = (e: React.KeyboardEvent) => {
+    if (!isMentionPopoverOpen) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedMentionIndex((prev) => {
+          return Math.min(prev + 1, filteredMentions.length - 1);
+        });
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedMentionIndex((prev) => {
+          return Math.max(prev - 1, 0);
+        });
+        break;
+      case 'Enter':
+        e.preventDefault();
+        e.stopPropagation();
+        const selectedMention = filteredMentions[selectedMentionIndex];
+        if (selectedMention) {
+          handleMentionSelect(selectedMention);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        e.stopPropagation();
+        setIsMentionPopoverOpen(false);
+        break;
+      case 'Backspace':
+        if (mentionQuery === '') {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsMentionPopoverOpen(false);
+        }
+        break;
+    }
+  };
+
+  // Update mention query as user types
+  const handleMentionQueryChange = (value: string) => {
+    setMentionQuery(value);
+    setSelectedMentionIndex(0);
   };
 
   // Handle sending message
@@ -382,37 +389,53 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
                       top: mentionPosition.top,
                       left: mentionPosition.left,
                     }}
+                    onKeyDown={handleMentionPopoverKeyDown}
                   >
-                    <Command className='rounded-lg border shadow-md w-[300px]'>
-                      <CommandInput
-                        placeholder='Search people...'
-                        value={mentionQuery}
-                        onValueChange={setMentionQuery}
-                        data-command-input
-                      />
-                      <CommandEmpty>No people found.</CommandEmpty>
-                      <CommandGroup className='max-h-[200px] overflow-auto'>
-                        {filteredMentions.map((mention, index) => {
-                          return (
-                            <CommandItem
-                              key={mention.id}
-                              onSelect={() => {
-                                return handleMentionSelect(mention);
-                              }}
-                              className={`flex items-center gap-2 px-2 py-1.5 cursor-pointer ${
-                                index === selectedMentionIndex ? 'bg-accent' : ''
-                              }`}
-                            >
-                              <Avatar className='h-6 w-6'>
-                                <AvatarImage src={mention.avatar} alt={mention.name} />
-                                <AvatarFallback>{mention.name[0]}</AvatarFallback>
-                              </Avatar>
-                              <span>{mention.name}</span>
-                            </CommandItem>
-                          );
-                        })}
-                      </CommandGroup>
-                    </Command>
+                    <div className='rounded-lg border bg-white shadow-md w-[300px] overflow-hidden'>
+                      <div className='flex items-center border-b px-3 py-2'>
+                        <Search className='mr-2 h-4 w-4 shrink-0 opacity-50' />
+                        <input
+                          ref={mentionInputRef}
+                          type='text'
+                          placeholder='Search people...'
+                          value={mentionQuery}
+                          onChange={(e) => {
+                            return handleMentionQueryChange(e.target.value);
+                          }}
+                          className='flex h-8 w-full rounded-md bg-transparent text-sm outline-none placeholder:text-gray-500'
+                          onKeyDown={handleMentionPopoverKeyDown}
+                        />
+                      </div>
+                      <div className='max-h-[200px] overflow-y-auto'>
+                        {filteredMentions.length === 0 ? (
+                          <div className='py-6 text-center text-sm text-gray-500'>
+                            No people found.
+                          </div>
+                        ) : (
+                          <div className='p-1'>
+                            {filteredMentions.map((mention, index) => {
+                              return (
+                                <div
+                                  key={mention.id}
+                                  onClick={() => {
+                                    return handleMentionSelect(mention);
+                                  }}
+                                  className={`flex items-center gap-2 px-2 py-1.5 cursor-pointer rounded-sm ${
+                                    index === selectedMentionIndex ? 'bg-gray-100' : ''
+                                  }`}
+                                >
+                                  <Avatar className='h-6 w-6'>
+                                    <AvatarImage src={mention.avatar} alt={mention.name} />
+                                    <AvatarFallback>{mention.name[0]}</AvatarFallback>
+                                  </Avatar>
+                                  <span className='text-sm'>{mention.name}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
