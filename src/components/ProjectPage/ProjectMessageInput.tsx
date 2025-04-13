@@ -17,11 +17,16 @@ import {
   Sparkles,
   X,
 } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
-import { createEditor, Descendant, Editor, Text, Transforms } from 'slate';
+import { ReactNode, useCallback, useMemo, useRef, useState } from 'react';
+import { createEditor, Descendant, Editor, Element as SlateElement, Text, Transforms } from 'slate';
 import { withHistory } from 'slate-history';
-import { Editable, Slate, withReact } from 'slate-react';
+import { Editable, Slate, useFocused, useSelected, withReact } from 'slate-react';
 import { toast } from 'sonner';
+
+interface MentionElement extends SlateElement {
+  type: 'mention';
+  character: string;
+}
 
 interface MessageAttachment {
   id: string;
@@ -60,7 +65,19 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
 
   // Initialize Slate editor
   const editor = useMemo(() => {
-    return withHistory(withReact(createEditor()));
+    const editor = withHistory(withReact(createEditor()));
+
+    const { isInline, isVoid } = editor;
+
+    editor.isInline = (element: SlateElement) => {
+      return element.type === 'mention' ? true : isInline(element);
+    };
+
+    editor.isVoid = (element: SlateElement) => {
+      return element.type === 'mention' ? true : isVoid(element);
+    };
+
+    return editor;
   }, []);
 
   // Initial value for Slate editor
@@ -138,6 +155,50 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
     }
   };
 
+  const renderElement = useCallback((props) => {
+    const { attributes, children, element } = props;
+
+    switch (element.type) {
+      case 'mention':
+        return <MentionComponent {...props} />;
+      default:
+        return <p {...attributes}>{children}</p>;
+    }
+  }, []);
+
+  const MentionComponent = ({
+    attributes,
+    children,
+    element,
+  }: {
+    attributes: any;
+    children: ReactNode;
+    element: MentionElement;
+  }) => {
+    const selected = useSelected();
+    const focused = useFocused();
+
+    return (
+      <span
+        {...attributes}
+        contentEditable={false}
+        style={{
+          padding: '3px 3px 2px',
+          margin: '0 1px',
+          verticalAlign: 'baseline',
+          display: 'inline-block',
+          borderRadius: '4px',
+          backgroundColor: '#eee',
+          fontSize: '0.9em',
+          boxShadow: selected && focused ? '0 0 0 2px #B4D5FF' : 'none',
+        }}
+      >
+        @{element.character}
+        {children}
+      </span>
+    );
+  };
+
   // Handle mention selection
   const handleMentionSelect = (mention: Mention) => {
     const { selection } = editor;
@@ -164,9 +225,14 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
             },
           });
 
-          Transforms.insertText(editor, `@${mention.name} `, {
-            at: { path, offset: lastAtSignIndex },
-          });
+          const mentionNode: MentionElement = {
+            type: 'mention',
+            character: mention.name,
+            children: [{ text: '' }],
+          };
+
+          Transforms.insertNodes(editor, mentionNode);
+          Transforms.insertText(editor, ' ');
         }
       }
     }
@@ -376,6 +442,7 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
                 <Slate editor={editor} initialValue={value} onChange={setValue}>
                   <div ref={editorRef}>
                     <Editable
+                      renderElement={renderElement}
                       placeholder='Try uploading files and adding comments...'
                       className='pr-20 text-sm min-h-[80px] focus-visible:ring-0 border-0 shadow-none resize-none py-2 overflow-hidden outline-none'
                       onKeyDown={handleKeyDown}
