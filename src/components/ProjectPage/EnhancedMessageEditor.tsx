@@ -253,9 +253,11 @@ const EnhancedMessageEditor = ({
 
       <EditorContent editor={editor} className='min-h-[200px]' />
 
-      <div className='p-2 text-sm text-gray-500 absolute bottom-0 right-0'>
-        {editor.storage.characterCount.characters()}/{maxLength} characters
-      </div>
+      {editor.storage.characterCount.characters() >= maxLength && (
+        <div className='p-2 text-sm text-red-500 absolute bottom-0 right-0'>
+          {editor.storage.characterCount.characters()}/{maxLength} characters
+        </div>
+      )}
     </div>
   );
 };
