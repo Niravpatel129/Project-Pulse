@@ -6,18 +6,21 @@ import { Card } from '@/components/ui/card';
 import { useProject } from '@/contexts/ProjectContext';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import {
-  AtSign,
+  Bold,
   FootprintsIcon,
   ImageIcon,
+  Italic,
   Link2,
   MessageSquare,
   Paperclip,
   Search,
   Smile,
   Sparkles,
+  Strikethrough,
+  Underline,
   X,
 } from 'lucide-react';
-import { ReactNode, useCallback, useMemo, useRef, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createEditor, Descendant, Editor, Text, Transforms } from 'slate';
 import { withHistory } from 'slate-history';
 import { Editable, ReactEditor, Slate, useFocused, useSelected, withReact } from 'slate-react';
@@ -57,6 +60,9 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
   const [isSending, setIsSending] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const mentionInputRef = useRef<HTMLInputElement>(null);
+  const [showFloatingToolbar, setShowFloatingToolbar] = useState(false);
+  const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
+  const floatingToolbarRef = useRef<HTMLDivElement>(null);
 
   // Initialize Slate editor
   const editor = useMemo(() => {
@@ -148,6 +154,28 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
         }
       }
     }
+
+    // Handle keyboard shortcuts for formatting
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key) {
+        case 'b':
+          e.preventDefault();
+          toggleFormat('bold');
+          break;
+        case 'i':
+          e.preventDefault();
+          toggleFormat('italic');
+          break;
+        case 'u':
+          e.preventDefault();
+          toggleFormat('underline');
+          break;
+        case 's':
+          e.preventDefault();
+          toggleFormat('strikethrough');
+          break;
+      }
+    }
   };
 
   const renderElement = useCallback((props) => {
@@ -159,6 +187,26 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
       default:
         return <p {...attributes}>{children}</p>;
     }
+  }, []);
+
+  const renderLeaf = useCallback((props) => {
+    const { attributes, children, leaf } = props;
+    let newChildren = children;
+
+    if (leaf.bold) {
+      newChildren = <strong>{newChildren}</strong>;
+    }
+    if (leaf.italic) {
+      newChildren = <em>{newChildren}</em>;
+    }
+    if (leaf.underline) {
+      newChildren = <u>{newChildren}</u>;
+    }
+    if (leaf.strikethrough) {
+      newChildren = <s>{newChildren}</s>;
+    }
+
+    return <span {...attributes}>{newChildren}</span>;
   }, []);
 
   const MentionComponent = ({
@@ -444,6 +492,92 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
     }
   };
 
+  const toggleFormat = (format: string) => {
+    const isActive = isFormatActive(format);
+    Transforms.setNodes(
+      editor,
+      { [format]: isActive ? null : true },
+      { match: Text.isText, split: true },
+    );
+  };
+
+  const isFormatActive = (format: string) => {
+    const [match] = Editor.nodes(editor, {
+      match: (n) => {
+        return n[format] === true;
+      },
+      universal: true,
+    });
+    return !!match;
+  };
+
+  // Handle selection change
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const handleSelectionChange = () => {
+      // Clear any existing timeout
+      clearTimeout(timeoutId);
+
+      // Use a small delay to ensure the selection is stable
+      timeoutId = setTimeout(() => {
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed) {
+          setShowFloatingToolbar(false);
+          return;
+        }
+
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        const editorRect = editorRef.current?.getBoundingClientRect();
+
+        if (editorRect) {
+          setToolbarPosition({
+            top: rect.top - editorRect.top - 40,
+            left: rect.left - editorRect.left + rect.width / 2,
+          });
+          setShowFloatingToolbar(true);
+        }
+      }, 50); // Small delay to ensure selection is stable
+    };
+
+    // Listen for both selection and mouseup events
+    document.addEventListener('selectionchange', handleSelectionChange);
+    document.addEventListener('mouseup', handleSelectionChange);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('selectionchange', handleSelectionChange);
+      document.removeEventListener('mouseup', handleSelectionChange);
+    };
+  }, []);
+
+  // Add mouse selection handling
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed) {
+      setShowFloatingToolbar(false);
+      return;
+    }
+
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+    const editorRect = editorRef.current?.getBoundingClientRect();
+
+    if (editorRect) {
+      setToolbarPosition({
+        top: rect.top - editorRect.top - 40,
+        left: rect.left - editorRect.left + rect.width / 2,
+      });
+      setShowFloatingToolbar(true);
+    }
+  }, []);
+
+  // Close toolbar when clicking outside
+  useClickOutside(floatingToolbarRef, () => {
+    setShowFloatingToolbar(false);
+  });
+
   return (
     <Card className='border border-gray-200 bg-white shadow-sm'>
       {!isExpanded ? (
@@ -478,12 +612,80 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
                   <div ref={editorRef}>
                     <Editable
                       renderElement={renderElement}
+                      renderLeaf={renderLeaf}
                       placeholder='Try uploading files and adding comments...'
                       className='pr-20 text-sm  focus-visible:ring-0 border-0 shadow-none resize-none px-3 overflow-hidden outline-none'
                       onKeyDown={handleKeyDown}
+                      onMouseUp={handleMouseUp}
                     />
                   </div>
                 </Slate>
+
+                {showFloatingToolbar && (
+                  <div
+                    ref={floatingToolbarRef}
+                    className='absolute z-50 flex items-center gap-1 bg-white border rounded-lg shadow-lg p-1'
+                    style={{
+                      top: toolbarPosition.top,
+                      left: toolbarPosition.left,
+                      transform: 'translateX(-50%)',
+                    }}
+                  >
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className={`h-8 w-8 hover:bg-gray-100 ${
+                        isFormatActive('bold') ? 'bg-gray-100' : ''
+                      }`}
+                      onClick={() => {
+                        return toggleFormat('bold');
+                      }}
+                      title='Bold (Ctrl+B)'
+                    >
+                      <Bold className='w-4 h-4' />
+                    </Button>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className={`h-8 w-8 hover:bg-gray-100 ${
+                        isFormatActive('italic') ? 'bg-gray-100' : ''
+                      }`}
+                      onClick={() => {
+                        return toggleFormat('italic');
+                      }}
+                      title='Italic (Ctrl+I)'
+                    >
+                      <Italic className='w-4 h-4' />
+                    </Button>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className={`h-8 w-8 hover:bg-gray-100 ${
+                        isFormatActive('underline') ? 'bg-gray-100' : ''
+                      }`}
+                      onClick={() => {
+                        return toggleFormat('underline');
+                      }}
+                      title='Underline (Ctrl+U)'
+                    >
+                      <Underline className='w-4 h-4' />
+                    </Button>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className={`h-8 w-8 hover:bg-gray-100 ${
+                        isFormatActive('strikethrough') ? 'bg-gray-100' : ''
+                      }`}
+                      onClick={() => {
+                        return toggleFormat('strikethrough');
+                      }}
+                      title='Strikethrough (Ctrl+S)'
+                    >
+                      <Strikethrough className='w-4 h-4' />
+                    </Button>
+                  </div>
+                )}
+
                 {isMentionPopoverOpen && mentionPosition && (
                   <div
                     className='absolute z-50'
@@ -594,45 +796,6 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
                     }}
                   >
                     <Paperclip className='w-4 h-4' />
-                  </Button>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='h-8 w-8 hover:bg-gray-100'
-                    onClick={() => {
-                      // Insert @ and move cursor after it
-                      const currentOffset = editor.selection?.anchor.offset || 0;
-                      Transforms.insertText(editor, '@');
-
-                      // Move cursor after the @
-                      const newSelection = {
-                        anchor: { path: [0, 0], offset: currentOffset + 1 },
-                        focus: { path: [0, 0], offset: currentOffset + 1 },
-                      };
-                      Transforms.select(editor, newSelection);
-
-                      // Get cursor position and show mention popover
-                      const domRange = window.getSelection()?.getRangeAt(0);
-                      const rect = domRange?.getBoundingClientRect();
-                      const editorRect = editorRef.current?.getBoundingClientRect();
-
-                      if (rect && editorRect) {
-                        setMentionPosition({
-                          top: rect.top - editorRect.top + 20,
-                          left: rect.left - editorRect.left,
-                        });
-                        setIsMentionPopoverOpen(true);
-                        setSelectedMentionIndex(0);
-                        setMentionQuery('');
-
-                        // Focus the mention input after a small delay
-                        setTimeout(() => {
-                          mentionInputRef.current?.focus();
-                        }, 0);
-                      }
-                    }}
-                  >
-                    <AtSign className='w-4 h-4' />
                   </Button>
                   <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
                     <Smile className='w-4 h-4' />
