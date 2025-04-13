@@ -45,6 +45,10 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
   const [isSending, setIsSending] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [enhancementResult, setEnhancementResult] = useState<{
+    original: string;
+    enhanced: string;
+  } | null>(null);
 
   const { mutate: enhanceText, isPending: isEnhancing } = useAiEnhancement();
 
@@ -154,9 +158,12 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
       },
       {
         onSuccess: (data) => {
+          setEnhancementResult({
+            original: data.originalText,
+            enhanced: data.enhancedText,
+          });
           editorRef.current?.updateSelection(data.enhancedText);
           setCustomEnhancePrompt('');
-          setIsPopoverOpen(false);
           toast.success('Text enhanced!', {
             description: 'Your text has been enhanced.',
           });
@@ -281,6 +288,21 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
                             Tell AI how to enhance your selected text
                           </p>
                         </div>
+
+                        {enhancementResult && (
+                          <div className='space-y-2 rounded-md border p-2'>
+                            <div className='space-y-1'>
+                              <p className='text-xs font-medium text-muted-foreground'>Original</p>
+                              <p className='text-sm'>{enhancementResult.original}</p>
+                            </div>
+                            <div className='my-2 border-t' />
+                            <div className='space-y-1'>
+                              <p className='text-xs font-medium text-muted-foreground'>Enhanced</p>
+                              <p className='text-sm'>{enhancementResult.enhanced}</p>
+                            </div>
+                          </div>
+                        )}
+
                         <div className='space-y-2'>
                           <Input
                             type='text'

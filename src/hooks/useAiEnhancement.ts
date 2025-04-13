@@ -9,22 +9,33 @@ interface EnhanceTextRequest {
 }
 
 interface EnhanceTextResponse {
-  enhancedText: string;
+  status: 'success' | 'error';
+  data: {
+    enhancedText: string;
+    originalText: string;
+    enhanceType: string;
+    customPrompt: string;
+  };
 }
 
 export const useAiEnhancement = (): UseMutationResult<
-  EnhanceTextResponse,
+  EnhanceTextResponse['data'],
   Error,
   EnhanceTextRequest
 > => {
-  return useMutation<EnhanceTextResponse, Error, EnhanceTextRequest>({
+  return useMutation<EnhanceTextResponse['data'], Error, EnhanceTextRequest>({
     mutationFn: async ({ text, enhanceType, customPrompt }) => {
-      const { data } = await newRequest.post<EnhanceTextResponse>('/ai/enhance-text', {
+      const response = await newRequest.post<EnhanceTextResponse>('/ai/enhance-text', {
         text,
         enhanceType,
         customPrompt,
       });
-      return data;
+
+      if (response.data.status === 'error') {
+        throw new Error('Failed to enhance text');
+      }
+
+      return response.data.data;
     },
     onError: (error) => {
       console.error('Error enhancing text:', error);
