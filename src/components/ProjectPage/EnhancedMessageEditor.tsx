@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { EmojiPicker } from '@/components/ui/emoji-picker';
 import CharacterCount from '@tiptap/extension-character-count';
 import Link from '@tiptap/extension-link';
 import Mention from '@tiptap/extension-mention';
@@ -13,7 +12,6 @@ import {
   Code,
   Heading1,
   Heading2,
-  Heading3,
   Italic,
   Link as LinkIcon,
   Underline as UnderlineIcon,
@@ -187,10 +185,6 @@ const EnhancedMessageEditor = forwardRef<EnhancedMessageEditorRef, EnhancedMessa
       editor.chain().focus().unsetLink().run();
     };
 
-    const handleEmojiSelect = (emoji: string) => {
-      editor.chain().focus().insertContent(emoji).run();
-    };
-
     const isLinkActive = editor.isActive('link');
 
     return (
@@ -220,7 +214,7 @@ const EnhancedMessageEditor = forwardRef<EnhancedMessageEditorRef, EnhancedMessa
               },
             }}
           >
-            <div className='flex gap-1'>
+            <div className='flex w-full gap-1'>
               <Button
                 variant='ghost'
                 size='sm'
@@ -285,16 +279,6 @@ const EnhancedMessageEditor = forwardRef<EnhancedMessageEditorRef, EnhancedMessa
                 variant='ghost'
                 size='sm'
                 onClick={() => {
-                  return editor.chain().focus().toggleHeading({ level: 3 }).run();
-                }}
-                className={editor.isActive('heading', { level: 3 }) ? 'bg-gray-100' : ''}
-              >
-                <Heading3 className='h-4 w-4' />
-              </Button>
-              <Button
-                variant='ghost'
-                size='sm'
-                onClick={() => {
                   if (isLinkActive) {
                     handleRemoveLink();
                   } else {
@@ -305,7 +289,6 @@ const EnhancedMessageEditor = forwardRef<EnhancedMessageEditorRef, EnhancedMessa
               >
                 <LinkIcon className='h-4 w-4' />
               </Button>
-              <EmojiPicker onSelect={handleEmojiSelect} />
             </div>
             {showLinkInput && (
               <LinkInput

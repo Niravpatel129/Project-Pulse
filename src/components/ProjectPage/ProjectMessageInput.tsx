@@ -7,7 +7,9 @@ import { EmojiPicker } from '@/components/ui/emoji-picker';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useProject } from '@/contexts/ProjectContext';
+import { useAiEnhancement } from '@/hooks/useAiEnhancement';
 import { useClickOutside } from '@/hooks/useClickOutside';
+import { cn } from '@/lib/utils';
 import { ImageIcon, Link2, MessageSquare, Paperclip, Sparkles, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -42,7 +44,9 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
   const editorRef = useRef<EnhancedMessageEditorRef>(null);
   const [isSending, setIsSending] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+
+  const { mutate: enhanceText, isPending: isEnhancing } = useAiEnhancement();
 
   const handleSend = () => {
     if (!content.trim() && attachments.length === 0) {
@@ -142,25 +146,23 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
       return;
     }
 
-    setIsEnhancing(true);
-    try {
-      // Here you would call your AI enhancement API with enhanceType and customEnhancePrompt
-      // For now, we'll just simulate an enhancement
-      const enhancedText = `✨ ${selectedText} ✨`;
-      editorRef.current?.updateSelection(enhancedText);
-
-      toast.success('Text enhanced!', {
-        description: 'Your text has been enhanced.',
-      });
-      setCustomEnhancePrompt('');
-    } catch (error) {
-      console.error('Error enhancing text:', error);
-      toast.error('Failed to enhance text', {
-        description: 'There was a problem enhancing your text. Please try again.',
-      });
-    } finally {
-      setIsEnhancing(false);
-    }
+    enhanceText(
+      {
+        text: selectedText,
+        enhanceType,
+        customPrompt: customEnhancePrompt,
+      },
+      {
+        onSuccess: (data) => {
+          editorRef.current?.updateSelection(data.enhancedText);
+          setCustomEnhancePrompt('');
+          setIsPopoverOpen(false);
+          toast.success('Text enhanced!', {
+            description: 'Your text has been enhanced.',
+          });
+        },
+      },
+    );
   };
 
   return (
@@ -260,7 +262,7 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
                       return editorRef.current?.insertEmoji(emoji);
                     }}
                   />
-                  <Popover>
+                  <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant='ghost'
@@ -268,7 +270,7 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
                         className='h-8 w-8 hover:bg-gray-100'
                         disabled={isEnhancing}
                       >
-                        <Sparkles className='w-4 h-4' />
+                        <Sparkles className={cn('w-4 h-4', isEnhancing && 'animate-spin')} />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className='w-80 p-3' align='start'>
@@ -292,6 +294,7 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
                                 handleEnhanceText(customEnhancePrompt);
                               }
                             }}
+                            disabled={isEnhancing}
                           />
                         </div>
                         <div className='space-y-2'>
@@ -310,6 +313,9 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
                                 >
                                   <Sparkles className='mr-2 h-4 w-4' />
                                   {option.label}
+                                  {isEnhancing && (
+                                    <span className='ml-2 h-4 w-4 animate-spin rounded-full border-2 border-zinc-800 border-r-transparent' />
+                                  )}
                                 </Button>
                               );
                             })}
