@@ -3,6 +3,13 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from '@/components/ui/command';
 import { useProject } from '@/contexts/ProjectContext';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import {
@@ -30,6 +37,12 @@ interface MessageAttachment {
   file?: File;
 }
 
+interface Mention {
+  id: string;
+  name: string;
+  avatar?: string;
+}
+
 interface ProjectMessageInputProps {
   onSendMessage: (content: string, attachments: File[]) => Promise<void>;
 }
@@ -39,6 +52,138 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
   const fileInputRef = useRef<HTMLInputElement>(null);
   const expandedRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isMentionPopoverOpen, setIsMentionPopoverOpen] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionPosition, setMentionPosition] = useState<{ top: number; left: number } | null>(
+    null,
+  );
+  const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
+
+  // Mock data for mentions - replace with actual project members
+  const [mentions] = useState<Mention[]>([
+    { id: '1', name: 'John Doe', avatar: '/avatars/john.jpg' },
+    { id: '2', name: 'Jane Smith', avatar: '/avatars/jane.jpg' },
+    { id: '3', name: 'Bob Johnson', avatar: '/avatars/bob.jpg' },
+  ]);
+
+  // Filter mentions based on search query
+  const filteredMentions = mentions.filter((mention) => {
+    return mention.name.toLowerCase().includes(mentionQuery.toLowerCase());
+  });
+
+  // Handle @ key press
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    // Handle Enter + Shift for sending message
+    if (e.key === 'Enter' && e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+      return;
+    }
+
+    // Handle @ key press
+    if (e.key === '@') {
+      const rect = textarea.getBoundingClientRect();
+      const cursorPosition = textarea.selectionStart;
+      const textBeforeCursor = textarea.value.substring(0, cursorPosition);
+
+      // Check if @ is at the start of the line or after a space
+      const isAtStart = cursorPosition === 0;
+      const lastSpaceIndex = textBeforeCursor.lastIndexOf(' ');
+      const isAfterSpace = lastSpaceIndex === cursorPosition - 1;
+
+      if (isAtStart || isAfterSpace) {
+        setMentionQuery('');
+        setMentionPosition({
+          top: rect.top + textarea.scrollTop + 20,
+          left: rect.left + 10,
+        });
+        setIsMentionPopoverOpen(true);
+        setSelectedMentionIndex(0);
+      }
+    } else if (isMentionPopoverOpen) {
+      // Handle navigation in mention popover
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedMentionIndex((prev) => {
+          return Math.min(prev + 1, filteredMentions.length - 1);
+        });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedMentionIndex((prev) => {
+          return Math.max(prev - 1, 0);
+        });
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (filteredMentions[selectedMentionIndex]) {
+          handleMentionSelect(filteredMentions[selectedMentionIndex]);
+        }
+      } else if (e.key === 'Escape') {
+        setIsMentionPopoverOpen(false);
+      } else if (e.key === 'Backspace') {
+        // If backspace is pressed and we're at the start of a mention
+        const cursorPosition = textarea.selectionStart;
+        const textBeforeCursor = textarea.value.substring(0, cursorPosition);
+        const lastSpaceIndex = textBeforeCursor.lastIndexOf(' ');
+        const lastAtSignIndex = textBeforeCursor.lastIndexOf('@');
+
+        if (lastAtSignIndex > lastSpaceIndex && cursorPosition === lastAtSignIndex + 1) {
+          setIsMentionPopoverOpen(false);
+        }
+      }
+    }
+  };
+
+  // Handle text changes to update mention query
+  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setMessage(newValue);
+
+    if (isMentionPopoverOpen) {
+      const cursorPosition = e.target.selectionStart;
+      const textBeforeCursor = newValue.substring(0, cursorPosition);
+      const lastSpaceIndex = textBeforeCursor.lastIndexOf(' ');
+      const lastAtSignIndex = textBeforeCursor.lastIndexOf('@');
+
+      if (lastAtSignIndex > lastSpaceIndex) {
+        setMentionQuery(textBeforeCursor.substring(lastAtSignIndex + 1));
+      } else {
+        setIsMentionPopoverOpen(false);
+      }
+    }
+  };
+
+  // Handle mention selection
+  const handleMentionSelect = (mention: Mention) => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const cursorPosition = textarea.selectionStart;
+      const textBeforeCursor = textarea.value.substring(0, cursorPosition);
+      const lastSpaceIndex = textBeforeCursor.lastIndexOf(' ');
+      const lastAtSignIndex = textBeforeCursor.lastIndexOf('@');
+
+      if (lastAtSignIndex > lastSpaceIndex) {
+        const newText =
+          textBeforeCursor.substring(0, lastAtSignIndex) +
+          `@${mention.name}` +
+          textarea.value.substring(cursorPosition);
+
+        setMessage(newText);
+        setIsMentionPopoverOpen(false);
+        setMentionQuery('');
+
+        // Set cursor position after the mention
+        setTimeout(() => {
+          if (textarea) {
+            const newCursorPosition = lastAtSignIndex + mention.name.length + 1;
+            textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+          }
+        }, 0);
+      }
+    }
+  };
 
   // Initial value for Slate editor
   const initialValue: Descendant[] = [
@@ -242,18 +387,50 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
                 <Textarea
                   ref={textareaRef}
                   value={message}
-                  onChange={(e) => {
-                    return setMessage(e.target.value);
-                  }}
+                  onChange={handleMessageChange}
                   placeholder='Try uploading files and adding comments...'
                   className='pr-20 text-sm min-h-[80px] focus-visible:ring-0 border-0 shadow-none resize-none py-2 overflow-hidden'
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
+                  onKeyDown={handleKeyDown}
                 />
+                {isMentionPopoverOpen && mentionPosition && (
+                  <div
+                    className='absolute z-50'
+                    style={{
+                      top: mentionPosition.top,
+                      left: mentionPosition.left,
+                    }}
+                  >
+                    <Command className='rounded-lg border shadow-md'>
+                      <CommandInput
+                        placeholder='Search people...'
+                        value={mentionQuery}
+                        onValueChange={setMentionQuery}
+                      />
+                      <CommandEmpty>No people found.</CommandEmpty>
+                      <CommandGroup className='max-h-[200px] overflow-auto'>
+                        {filteredMentions.map((mention, index) => {
+                          return (
+                            <CommandItem
+                              key={mention.id}
+                              onSelect={() => {
+                                return handleMentionSelect(mention);
+                              }}
+                              className={`flex items-center gap-2 px-2 py-1.5 cursor-pointer ${
+                                index === selectedMentionIndex ? 'bg-accent' : ''
+                              }`}
+                            >
+                              <Avatar className='h-6 w-6'>
+                                <AvatarImage src={mention.avatar} alt={mention.name} />
+                                <AvatarFallback>{mention.name[0]}</AvatarFallback>
+                              </Avatar>
+                              <span>{mention.name}</span>
+                            </CommandItem>
+                          );
+                        })}
+                      </CommandGroup>
+                    </Command>
+                  </div>
+                )}
               </div>
 
               {/* Attachments */}
