@@ -511,47 +511,6 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
     return !!match;
   };
 
-  // Handle selection change
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    const handleSelectionChange = () => {
-      // Clear any existing timeout
-      clearTimeout(timeoutId);
-
-      // Use a small delay to ensure the selection is stable
-      timeoutId = setTimeout(() => {
-        const selection = window.getSelection();
-        if (!selection || selection.isCollapsed) {
-          setShowFloatingToolbar(false);
-          return;
-        }
-
-        const range = selection.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-        const editorRect = editorRef.current?.getBoundingClientRect();
-
-        if (editorRect) {
-          setToolbarPosition({
-            top: rect.top - editorRect.top - 40,
-            left: rect.left - editorRect.left + rect.width / 2,
-          });
-          setShowFloatingToolbar(true);
-        }
-      }, 50); // Small delay to ensure selection is stable
-    };
-
-    // Listen for both selection and mouseup events
-    document.addEventListener('selectionchange', handleSelectionChange);
-    document.addEventListener('mouseup', handleSelectionChange);
-
-    return () => {
-      clearTimeout(timeoutId);
-      document.removeEventListener('selectionchange', handleSelectionChange);
-      document.removeEventListener('mouseup', handleSelectionChange);
-    };
-  }, []);
-
   // Add mouse selection handling
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
     const selection = window.getSelection();
@@ -565,12 +524,66 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
     const editorRect = editorRef.current?.getBoundingClientRect();
 
     if (editorRect) {
+      // Calculate position relative to the editor
+      const top = rect.top - editorRect.top - 40;
+      const left = rect.left - editorRect.left;
+
+      // Ensure the toolbar stays within the editor bounds
+      const toolbarWidth = 200; // Approximate width of the toolbar
+      const adjustedLeft = Math.min(Math.max(left, 0), editorRect.width - toolbarWidth);
+
       setToolbarPosition({
-        top: rect.top - editorRect.top - 40,
-        left: rect.left - editorRect.left + rect.width / 2,
+        top,
+        left: adjustedLeft,
       });
       setShowFloatingToolbar(true);
     }
+  }, []);
+
+  // Handle selection change
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const handleSelectionChange = () => {
+      clearTimeout(timeoutId);
+
+      timeoutId = setTimeout(() => {
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed) {
+          setShowFloatingToolbar(false);
+          return;
+        }
+
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        const editorRect = editorRef.current?.getBoundingClientRect();
+
+        if (editorRect) {
+          // Calculate position relative to the editor
+          const top = rect.top - editorRect.top - 40;
+          const left = rect.left - editorRect.left;
+
+          // Ensure the toolbar stays within the editor bounds
+          const toolbarWidth = 200; // Approximate width of the toolbar
+          const adjustedLeft = Math.min(Math.max(left, 0), editorRect.width - toolbarWidth);
+
+          setToolbarPosition({
+            top,
+            left: adjustedLeft,
+          });
+          setShowFloatingToolbar(true);
+        }
+      }, 50);
+    };
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    document.addEventListener('mouseup', handleSelectionChange);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('selectionchange', handleSelectionChange);
+      document.removeEventListener('mouseup', handleSelectionChange);
+    };
   }, []);
 
   // Close toolbar when clicking outside
@@ -628,7 +641,6 @@ export default function ProjectMessageInput({ onSendMessage }: ProjectMessageInp
                     style={{
                       top: toolbarPosition.top,
                       left: toolbarPosition.left,
-                      transform: 'translateX(-50%)',
                     }}
                   >
                     <Button
