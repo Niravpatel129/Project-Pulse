@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,8 +20,9 @@ import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { ChevronRight, Grid, Plus, X } from 'lucide-react';
+import { Grid, InfoIcon, Plus, X } from 'lucide-react';
 import { useState } from 'react';
+import { FcDocument } from 'react-icons/fc';
 
 export default function NewTemplateModuleModal({ isOpen, onClose, template, templateName }) {
   const [selectedTemplates, setSelectedTemplates] = useState<string[]>(['shipping']);
@@ -92,7 +93,7 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
     const existingSectionsCount = sections.filter((s) => {
       return s.templateId === templateId;
     }).length;
-    const newSectionId = `${templateId}-${existingSectionsCount}`;
+    const newSectionId = `${templateId}-${Date.now()}`; // Use timestamp to ensure uniqueness
 
     // Add new section
     setSections((prev) => {
@@ -284,7 +285,7 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
                       <Grid className='h-3.5 w-3.5' />
                     </div>
                     <span className='text-sm font-medium text-gray-800 capitalize'>
-                      {templateName}
+                      {sections[0]?.templateName || template.name}
                     </span>
                   </div>
                 </motion.div>
@@ -295,26 +296,25 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
                   APPENDED TEMPLATES
                 </p>
                 <div className='space-y-0.5'>
-                  {availableTemplates.map((templateId) => {
-                    console.log('🚀 templateId:', templateId);
-                    const template = availableTemplates.find((t) => {
-                      return t._id === templateId;
-                    });
-                    if (!template) return null;
+                  {sections.slice(1).map((section, index) => {
+                    const templateData = templateDataMap[section.templateId]?.data;
+                    if (!templateData) return null;
 
                     return (
                       <motion.div
-                        key={template.id}
+                        key={`${section.sectionId}-${index}`}
                         className='flex cursor-pointer items-center justify-between rounded-md p-2 transition-all hover:bg-gray-50'
                         whileHover={{ backgroundColor: 'rgba(249, 250, 251, 1)' }}
                         whileTap={{ scale: 0.98 }}
                         layout
                       >
                         <div className='flex items-center gap-2'>
-                          {React.cloneElement(template.icon, {
-                            className: `h-4 w-4 text-gray-400`,
-                          })}
-                          <span className='text-sm font-medium text-gray-700'>{template.name}</span>
+                          <div className='flex h-6 w-6 items-center justify-center rounded border border-gray-200 bg-gray-50'>
+                            <Grid className='h-3.5 w-3.5 text-gray-500' />
+                          </div>
+                          <span className='text-sm font-medium text-gray-700'>
+                            {section.templateName}
+                          </span>
                         </div>
                         <TooltipProvider>
                           <Tooltip>
@@ -322,7 +322,7 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
                               <motion.button
                                 className='text-gray-400 hover:text-gray-600'
                                 onClick={() => {
-                                  return handleRemoveTemplate(template.id);
+                                  return removeSection(section.sectionId);
                                 }}
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
@@ -339,7 +339,7 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
                     );
                   })}
 
-                  <Popover>
+                  <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                     <PopoverTrigger asChild>
                       <motion.div
                         className='flex cursor-pointer items-center gap-2 rounded-md p-2 transition-all border border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -357,10 +357,10 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
                       avoidCollisions={false}
                     >
                       <div className='py-1'>
-                        {availableTemplates.map((template) => {
+                        {availableTemplates?.map((template) => {
                           return (
                             <motion.div
-                              key={template.id}
+                              key={template._id}
                               className='flex cursor-pointer items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-50'
                               whileTap={{ scale: 0.98 }}
                               onClick={() => {
@@ -368,10 +368,20 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
                               }}
                             >
                               <div className='flex items-center gap-2'>
+                                <FcDocument className='h-4 w-4 text-gray-400' />
                                 {template.icon}
                                 <span>{template.name}</span>
                               </div>
-                              <ChevronRight className='h-3 w-3 text-gray-400' />
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <InfoIcon className='h-3 w-3 text-gray-400' />
+                                  </TooltipTrigger>
+                                  <TooltipContent side='right'>
+                                    <p className='text-xs max-w-[200px]'>{template.description}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </motion.div>
                           );
                         })}
