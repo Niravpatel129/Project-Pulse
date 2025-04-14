@@ -281,7 +281,7 @@ export default function ProjectHome() {
 
       {/* Combined Activity and Email Feed */}
       <div className='space-y-4'>
-        <h3 className='text-sm font-medium'>Recent activity & messages</h3>
+        <h3 className='text-sm font-medium'>Recent activity & project notes</h3>
         <div className='space-y-4'>
           {isLoadingActivities || isLoadingEmails || isLoadingNotes ? (
             <div className='text-sm text-gray-500'>Loading activities and emails...</div>
