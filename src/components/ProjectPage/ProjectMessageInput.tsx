@@ -11,6 +11,7 @@ import { useAiEnhancement } from '@/hooks/useAiEnhancement';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { cn } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ImageIcon, Link2, MessageSquare, Paperclip, Sparkles, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -42,7 +43,7 @@ const ProjectMessageInput = () => {
   const [isFileModalOpen, setIsFileModalOpen] = useState(false);
   const expandedRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<EnhancedMessageEditorRef>(null);
-  const [isSending, setIsSending] = useState(false);
+  const queryClient = useQueryClient();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [enhancementResult, setEnhancementResult] = useState<{
@@ -52,44 +53,45 @@ const ProjectMessageInput = () => {
 
   const { mutate: enhanceText, isPending: isEnhancing } = useAiEnhancement();
 
-  const handleSend = async () => {
-    if (!content.trim() && attachments.length === 0) {
-      toast.error('Please enter a message or attach a file');
-      return;
-    }
+  const { mutate: sendMessage, isPending: isSending } = useMutation({
+    mutationFn: async () => {
+      if (!content.trim() && attachments.length === 0) {
+        throw new Error('Please enter a message or attach a file');
+      }
 
-    setIsSending(true);
-    try {
       const response = await newRequest.post('/notes', {
         content,
         attachments,
         projectId: project?._id,
       });
-      console.log('🚀 response:', response);
 
-      if (response.status === 201) {
-        setContent('');
-        editorRef.current?.clearContent();
-        setAttachments([]);
-        toast.success('Message sent', {
-          description: 'Your message has been sent successfully.',
-        });
-
-        setIsExpanded(false);
-      } else {
-        throw new Error(response.data.message || 'Failed to send message');
-      }
-    } catch (error) {
+      return response.data;
+    },
+    onSuccess: () => {
+      setContent('');
+      editorRef.current?.clearContent();
+      setAttachments([]);
+      toast.success('Message sent', {
+        description: 'Your message has been sent successfully.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['notes', project?._id] });
+      setIsExpanded(false);
+    },
+    onError: (error: Error) => {
       console.error('Error sending message:', error);
       toast.error('Failed to send message', {
-        description:
-          error instanceof Error
-            ? error.message
-            : 'There was a problem sending your message. Please try again.',
+        description: error.message || 'There was a problem sending your message. Please try again.',
       });
-    } finally {
-      setIsSending(false);
+    },
+  });
+
+  const handleSend = () => {
+    if (!content.trim() && attachments.length === 0) {
+      toast.error('Please enter a message or attach a file');
+      return;
     }
+
+    sendMessage();
   };
 
   const handleAddFileToProject = (file: any) => {
