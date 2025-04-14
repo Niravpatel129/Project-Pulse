@@ -51,8 +51,8 @@ export function MentionHoverCard({ userId, children }: MentionHoverCardProps) {
                 <AvatarFallback>{userDetails.name.charAt(0)}</AvatarFallback>
               </Avatar>
               <div>
-                <h4 className='text-sm font-semibold'>{userDetails.name}</h4>
-                <p className='text-sm text-gray-500'>{userDetails.email}</p>
+                <div className='text-sm font-semibold'>{userDetails.name}</div>
+                <div className='text-sm text-gray-500'>{userDetails.email}</div>
               </div>
             </div>
           </div>
