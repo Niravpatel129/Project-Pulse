@@ -2,6 +2,7 @@ import { Template, TemplateField } from '@/api/models';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -126,6 +127,7 @@ export default function NewModuleFromTemplateSheet({
 }: NewModuleFromTemplateSheetProps) {
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [moduleName, setModuleName] = useState(templateName || template.name);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [sections, setSections] = useState<TemplateSection[]>([
     {
       templateId: template._id,
@@ -293,6 +295,7 @@ export default function NewModuleFromTemplateSheet({
         },
       ];
     });
+    setIsPopoverOpen(false);
   };
 
   const renderField = (field: ExtendedTemplateField) => {
@@ -339,7 +342,7 @@ export default function NewModuleFromTemplateSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='sm:max-w-md'>
+      <SheetContent className='sm:max-w-md h-full overflow-scroll'>
         <SheetHeader>
           <SheetTitle>Create from Template</SheetTitle>
           <SheetDescription>Create a new module by combining multiple templates.</SheetDescription>
@@ -360,7 +363,10 @@ export default function NewModuleFromTemplateSheet({
 
           {sections.map((section, sectionIndex) => {
             return (
-              <div key={section.templateId} className='space-y-4'>
+              <div
+                key={`section-${sectionIndex}-template-${section.templateId}`}
+                className='space-y-4'
+              >
                 {sectionIndex > 0 && <Separator className='my-4' />}
                 <div className='space-y-2'>
                   <h3 className='text-lg font-semibold'>{section.templateName}</h3>
@@ -372,7 +378,7 @@ export default function NewModuleFromTemplateSheet({
                 {templateQueries.data?.[sectionIndex]?.data.fields.map(
                   (field: ExtendedTemplateField) => {
                     return (
-                      <div key={field._id} className='space-y-2'>
+                      <div key={`section-${sectionIndex}-field-${field._id}`} className='space-y-2'>
                         <div className='flex items-center gap-2'>
                           {getFieldIcon(field.type)}
                           <Label htmlFor={field._id}>{field.name}</Label>
@@ -389,31 +395,32 @@ export default function NewModuleFromTemplateSheet({
             );
           })}
 
-          <div className='flex items-center gap-2'>
-            <Select onValueChange={handleAddTemplate}>
-              <SelectTrigger className='w-full'>
-                <SelectValue placeholder='Add another template' />
-              </SelectTrigger>
-              <SelectContent>
-                {availableTemplates
-                  ?.filter((t) => {
-                    return !sections.some((s) => {
-                      return s.templateId === t._id;
-                    });
-                  })
-                  .map((template) => {
-                    return (
-                      <SelectItem key={template._id} value={template._id}>
-                        {template.name}
-                      </SelectItem>
-                    );
-                  })}
-              </SelectContent>
-            </Select>
-            <Button type='button' variant='outline' size='icon'>
-              <Plus className='h-4 w-4' />
-            </Button>
-          </div>
+          <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button type='button' variant='outline' className='w-full justify-start'>
+                <Plus className='mr-2 h-4 w-4' />
+                Add another template
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className='w-[var(--radix-popover-trigger-width)] p-0' align='start'>
+              <div className='grid gap-2 p-4'>
+                {availableTemplates?.map((template) => {
+                  return (
+                    <Button
+                      key={template._id}
+                      variant='ghost'
+                      className='w-full justify-start'
+                      onClick={() => {
+                        return handleAddTemplate(template._id);
+                      }}
+                    >
+                      {template.name}
+                    </Button>
+                  );
+                })}
+              </div>
+            </PopoverContent>
+          </Popover>
 
           <SheetFooter>
             <Button
