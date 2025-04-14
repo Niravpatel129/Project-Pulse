@@ -119,6 +119,23 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
           // Convert all p tags to div
           const finalTagName = tagName === 'p' ? 'div' : tagName;
 
+          // For empty paragraphs, add a non-breaking space to ensure they take up space
+          if (tagName === 'p' && children.length === 0) {
+            return React.createElement(
+              finalTagName,
+              {
+                key: Math.random(),
+                className: `${element.className} min-h-[1.5em]`,
+                ...Object.fromEntries(
+                  Array.from(element.attributes).map((attr) => {
+                    return [attr.name, attr.value];
+                  }),
+                ),
+              },
+              '\u00A0', // Non-breaking space
+            );
+          }
+
           return React.createElement(
             finalTagName,
             {
