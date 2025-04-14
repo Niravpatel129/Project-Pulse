@@ -1,5 +1,6 @@
 'use client';
 
+import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -19,14 +20,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
 import { Grid, InfoIcon, Plus, X } from 'lucide-react';
 import { useState } from 'react';
 import { FcDocument } from 'react-icons/fc';
 
 export default function NewTemplateModuleModal({ isOpen, onClose, template, templateName }) {
   const [selectedTemplates, setSelectedTemplates] = useState<string[]>(['shipping']);
-  const [moduleName, setModuleName] = useState(templateName || template.name);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [sections, setSections] = useState([
     {
@@ -178,101 +177,110 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
     if (!template || !template.fields) return null;
 
     return (
-      <>
-        <Card
-          ref={(el) => {
-            if (el) {
-              sectionRefs.current[section.sectionId] = el;
-            }
-          }}
-          className='overflow-hidden border border-gray-200 shadow-sm relative group'
+      <AnimatePresence mode='wait'>
+        <motion.div
+          key={section.sectionId}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20, transition: { duration: 0.2 } }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
         >
-          {sections.length > 1 && (
-            <X
-              className='absolute top-2 right-2 cursor-pointer text-gray-400 hover:text-gray-700 transition-all h-4 w-4 opacity-0 group-hover:opacity-100'
-              onClick={() => {
-                return removeSection(section.sectionId);
-              }}
-            />
-          )}
-          <CardContent className='p-4'>
-            <div className='flex items-center gap-2 pb-3'>
-              <div className='flex h-6 w-6 items-center justify-center rounded border border-gray-200 bg-gray-50'>
-                <Grid className='h-3.5 w-3.5 text-gray-500' />
+          <Card
+            ref={(el) => {
+              if (el) {
+                sectionRefs.current[section.sectionId] = el;
+              }
+            }}
+            className='overflow-hidden border border-gray-200 shadow-sm relative group'
+          >
+            {sections.length > 1 && (
+              <X
+                className='absolute top-2 right-2 cursor-pointer text-gray-400 hover:text-gray-700 transition-all h-4 w-4 opacity-0 group-hover:opacity-100'
+                onClick={() => {
+                  return removeSection(section.sectionId);
+                }}
+              />
+            )}
+            <CardContent className='p-4'>
+              <div className='flex items-center gap-2 pb-3'>
+                <div className='flex h-6 w-6 items-center justify-center rounded border border-gray-200 bg-gray-50'>
+                  <Grid className='h-3.5 w-3.5 text-gray-500' />
+                </div>
+                <span className='text-sm font-medium text-gray-800'>{template.name}</span>
               </div>
-              <span className='text-sm font-medium text-gray-800'>{template.name}</span>
-            </div>
-
-            <div className='space-y-3'>
-              {template.fields.map((field) => {
-                return (
-                  <div key={field._id}>
-                    <Label htmlFor={field._id} className='text-xs font-medium text-gray-700'>
-                      {field.name}
-                      {field.required && <span className='text-red-500 ml-1'>*</span>}
-                    </Label>
-
-                    {field.type === 'text' && (
-                      <Input
-                        id={field._id}
-                        placeholder={`Enter ${field.name}`}
-                        className='mt-1 h-9 border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm transition-all focus-visible:border-gray-300 focus-visible:ring-1 focus-visible:ring-gray-300'
-                        value={sectionFormValues[section.templateId]?.[field._id] || ''}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setSectionFormValues((prev) => {
-                            return {
-                              ...prev,
-                              [section.templateId]: {
-                                ...(prev[section.templateId] || {}),
-                                [field._id]: value,
-                              },
-                            };
-                          });
-                        }}
-                      />
-                    )}
-
-                    {field.type === 'relation' && (
-                      <Select
-                        value={sectionFormValues[section.templateId]?.[field._id] || ''}
-                        onValueChange={(value) => {
-                          setSectionFormValues((prev) => {
-                            return {
-                              ...prev,
-                              [section.templateId]: {
-                                ...(prev[section.templateId] || {}),
-                                [field._id]: value,
-                              },
-                            };
-                          });
-                        }}
-                      >
-                        <SelectTrigger className='mt-1 h-9 border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm transition-all focus-visible:border-gray-300 focus-visible:ring-1 focus-visible:ring-gray-300'>
-                          <SelectValue placeholder={`Select ${field.name}`} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {field.selectOptions?.map((option) => {
-                            return (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                    )}
-
-                    {field.description && (
-                      <p className='mt-1 text-xs text-gray-500'>{field.description}</p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      </>
+              <div className='space-y-3'>
+                {template.fields.map((field) => {
+                  return (
+                    <motion.div
+                      key={field._id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.2, delay: 0.1 }}
+                    >
+                      <Label htmlFor={field._id} className='text-xs font-medium text-gray-700'>
+                        {field.name}
+                        {field.required && <span className='text-red-500 ml-1'>*</span>}
+                      </Label>
+                      {field.type === 'text' && (
+                        <Input
+                          id={field._id}
+                          placeholder={`Enter ${field.name}`}
+                          className='mt-1 h-9 border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm transition-all focus-visible:border-gray-300 focus-visible:ring-1 focus-visible:ring-gray-300'
+                          value={sectionFormValues[section.templateId]?.[field._id] || ''}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setSectionFormValues((prev) => {
+                              return {
+                                ...prev,
+                                [section.templateId]: {
+                                  ...(prev[section.templateId] || {}),
+                                  [field._id]: value,
+                                },
+                              };
+                            });
+                          }}
+                        />
+                      )}
+                      {field.type === 'relation' && (
+                        <Select
+                          value={sectionFormValues[section.templateId]?.[field._id] || ''}
+                          onValueChange={(value) => {
+                            setSectionFormValues((prev) => {
+                              return {
+                                ...prev,
+                                [section.templateId]: {
+                                  ...(prev[section.templateId] || {}),
+                                  [field._id]: value,
+                                },
+                              };
+                            });
+                          }}
+                        >
+                          <SelectTrigger className='mt-1 h-9 border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm transition-all focus-visible:border-gray-300 focus-visible:ring-1 focus-visible:ring-gray-300'>
+                            <SelectValue placeholder={`Select ${field.name}`} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {field.selectOptions?.map((option) => {
+                              return (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      )}
+                      {field.description && (
+                        <p className='mt-1 text-xs text-gray-500'>{field.description}</p>
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </AnimatePresence>
     );
   };
 
@@ -411,7 +419,7 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
           </div>
 
           {/* Main content */}
-          <div className='flex-1 overflow-auto bg-white p-0 scrollbar-hide max-h-[90vh] min-h-[85vh] overflow-y-auto flex flex-col'>
+          <div className='flex-1 overflow-auto bg-white p-0 scrollbar-hide max-h-[80vh] min-h-[85vh] overflow-y-auto flex flex-col'>
             <div className='px-5 pt-5'>
               <h1 className='text-lg font-medium tracking-tight text-gray-900'>New Module</h1>
 
