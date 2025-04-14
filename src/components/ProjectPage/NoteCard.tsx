@@ -75,22 +75,72 @@ export function NoteCard({ note, onUpdate, participants = [] }: NoteCardProps) {
       });
       return response.data;
     },
-    onSuccess: () => {
-      toast.success('Note updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-      setIsEditing(false);
+    onMutate: async (newNote) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['notes'] });
+
+      // Snapshot the previous value
+      const previousNotes = queryClient.getQueryData(['notes']);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(['notes'], (old: any) => {
+        if (!old) return old;
+        return old.map((n: any) => {
+          if (n._id === note._id) {
+            return {
+              ...n,
+              content: newNote.content,
+              attachments: newNote.attachments.map((attachment) => {
+                return {
+                  _id: attachment.fileId,
+                  name: attachment.name,
+                  originalName: attachment.name,
+                  downloadURL: attachment.downloadURL,
+                  contentType: attachment.type,
+                  size: attachment.size,
+                };
+              }),
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return n;
+        });
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousNotes };
     },
-    onError: (error: Error) => {
+    onError: (error: Error, variables, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousNotes) {
+        queryClient.setQueryData(['notes'], context.previousNotes);
+      }
       toast.error('Failed to update note', {
         description: error.message || 'There was a problem updating the note. Please try again.',
       });
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure data is in sync
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+    },
+    onSuccess: () => {
+      toast.success('Note updated successfully');
+      setIsEditing(false);
     },
   });
 
   const handleSave = async () => {
     if (editorRef.current) {
       const content = editorRef.current.getHTML();
-      updateNote({ content, attachments });
+      // Only update if content or attachments have changed
+      if (
+        content !== note.content ||
+        JSON.stringify(attachments) !== JSON.stringify(note.attachments)
+      ) {
+        updateNote({ content, attachments });
+      } else {
+        setIsEditing(false);
+      }
     }
   };
 
