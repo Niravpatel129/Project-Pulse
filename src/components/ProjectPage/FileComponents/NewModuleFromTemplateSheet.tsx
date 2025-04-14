@@ -93,6 +93,7 @@ interface TemplateSection {
   templateName: string;
   templateDescription: string;
   fields: FormFieldValue[];
+  sectionId: string;
 }
 
 interface ModuleData {
@@ -172,18 +173,24 @@ export default function NewModuleFromTemplateSheet({
   template,
   templateName,
 }: NewModuleFromTemplateSheetProps) {
-  const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [moduleName, setModuleName] = useState(templateName || template.name);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [sections, setSections] = useState<TemplateSection[]>([
     {
       templateId: template._id,
       templateName: template.name,
       templateDescription: template.description,
       fields: [],
+      sectionId: `${template._id}-0`,
     },
   ]);
+  const [templateDataMap, setTemplateDataMap] = useState<Record<string, ApiResponse>>({});
+  const [sectionFormValues, setSectionFormValues] = useState<Record<string, Record<string, any>>>(
+    {},
+  );
+  const [sectionFieldErrors, setSectionFieldErrors] = useState<
+    Record<string, Record<string, string>>
+  >({});
   const queryClient = useQueryClient();
   const { project } = useProject();
 
@@ -192,44 +199,35 @@ export default function NewModuleFromTemplateSheet({
     queryKey: ['templates'],
     queryFn: async () => {
       const response = await newRequest.get('/module-templates');
-      return response.data.data; // Access the data array from the response
+      return response.data.data;
     },
     enabled: isOpen,
   });
 
-  // Fetch full template data for each section
-  const templateQueries = useQuery({
-    queryKey: [
-      'templates',
-      sections.map((s) => {
-        return s.templateId;
-      }),
-    ],
-    queryFn: async () => {
-      const responses = await Promise.all(
-        sections.map((section) => {
-          return newRequest.get(`/module-templates/${section.templateId}`);
-        }),
-      );
-      return responses.map((r) => {
-        return r.data;
-      });
-    },
-    enabled: sections.length > 0 && isOpen,
-  });
-
-  // Initialize form values when template data is fetched
+  // Fetch initial template data
   useEffect(() => {
-    if (templateQueries.data) {
-      const initialValues: Record<string, any> = {};
-      templateQueries.data.forEach((templateData) => {
-        templateData.data.fields.forEach((field: ExtendedTemplateField) => {
+    if (isOpen) {
+      newRequest.get(`/module-templates/${template._id}`).then((response) => {
+        setTemplateDataMap((prev) => {
+          return {
+            ...prev,
+            [template._id]: response.data,
+          };
+        });
+        // Initialize form values for the first section
+        const initialValues: Record<string, any> = {};
+        response.data.data.fields.forEach((field: ExtendedTemplateField) => {
           initialValues[field._id] = field.multiple ? [] : '';
         });
+        setSectionFormValues((prev) => {
+          return {
+            ...prev,
+            [template._id]: initialValues,
+          };
+        });
       });
-      setFormValues(initialValues);
     }
-  }, [templateQueries.data]);
+  }, [isOpen, template._id]);
 
   // Mutation for creating a module
   const createModuleMutation = useMutation({
@@ -240,48 +238,156 @@ export default function NewModuleFromTemplateSheet({
       );
       return response.data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projectModules'] });
       toast.success('Module created successfully');
       onClose();
-      setFormValues({});
+      setSectionFormValues({});
       setSections([
         {
           templateId: template._id,
           templateName: template.name,
           templateDescription: template.description,
           fields: [],
+          sectionId: `${template._id}-0`,
         },
       ]);
     },
   });
 
+  const handleAddTemplate = (templateId: string) => {
+    const selectedTemplate = availableTemplates?.find((t) => {
+      return t._id === templateId;
+    });
+    if (!selectedTemplate) return;
+
+    // Count existing sections with this template to create unique sectionId
+    const existingSectionsCount = sections.filter((s) => {
+      return s.templateId === templateId;
+    }).length;
+    const newSectionId = `${templateId}-${existingSectionsCount}`;
+
+    // Add new section
+    setSections((prev) => {
+      return [
+        ...prev,
+        {
+          templateId: selectedTemplate._id,
+          templateName: selectedTemplate.name,
+          templateDescription: selectedTemplate.description,
+          fields: [],
+          sectionId: newSectionId,
+        },
+      ];
+    });
+
+    // Fetch and add new template data if not already in map
+    if (!templateDataMap[templateId]) {
+      newRequest.get(`/module-templates/${templateId}`).then((response) => {
+        const templateData = response.data;
+        setTemplateDataMap((prev) => {
+          return {
+            ...prev,
+            [templateId]: templateData,
+          };
+        });
+        // Initialize form values for the new section
+        const initialValues: Record<string, any> = {};
+        templateData.data.fields.forEach((field: ExtendedTemplateField) => {
+          initialValues[field._id] = field.multiple ? [] : '';
+        });
+        setSectionFormValues((prev) => {
+          return {
+            ...prev,
+            [newSectionId]: initialValues,
+          };
+        });
+      });
+    } else {
+      // If template data already exists, just initialize the form values
+      const templateData = templateDataMap[templateId];
+      const initialValues: Record<string, any> = {};
+      templateData.data.fields.forEach((field: ExtendedTemplateField) => {
+        initialValues[field._id] = field.multiple ? [] : '';
+      });
+      setSectionFormValues((prev) => {
+        return {
+          ...prev,
+          [newSectionId]: initialValues,
+        };
+      });
+    }
+
+    setIsPopoverOpen(false);
+  };
+
+  const handleFieldChange = (templateId: string, fieldId: string, value: any) => {
+    setSectionFormValues((prev) => {
+      const newValues = {
+        ...prev,
+        [templateId]: {
+          ...prev[templateId],
+          [fieldId]: value,
+        },
+      };
+
+      // Validate the field
+      const templateData = templateDataMap[templateId];
+      const field = templateData?.data.fields.find((f) => {
+        return f._id === fieldId;
+      });
+
+      if (field) {
+        const error = validateField(field, value);
+        setSectionFieldErrors((prev) => {
+          return {
+            ...prev,
+            [templateId]: {
+              ...prev[templateId],
+              [fieldId]: error || '',
+            },
+          };
+        });
+      }
+
+      return newValues;
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!templateQueries.data) return;
-
     // Validate all fields
-    const errors: Record<string, string> = {};
-    templateQueries.data.forEach((templateData) => {
+    const errors: Record<string, Record<string, string>> = {};
+    let hasErrors = false;
+
+    sections.forEach((section) => {
+      const templateData = templateDataMap[section.templateId];
+      if (!templateData?.data?.fields) return;
+
+      const sectionErrors: Record<string, string> = {};
       templateData.data.fields.forEach((field) => {
-        const error = validateField(field, formValues[field._id]);
+        const error = validateField(field, sectionFormValues[section.sectionId]?.[field._id]);
         if (error) {
-          errors[field._id] = error;
+          sectionErrors[field._id] = error;
+          hasErrors = true;
         }
       });
+      errors[section.sectionId] = sectionErrors;
     });
 
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors);
+    if (hasErrors) {
+      setSectionFieldErrors(errors);
       toast.error('Please fix the errors in the form');
       return;
     }
 
-    const updatedSections = sections.map((section, index) => {
-      const templateData = templateQueries.data[index];
+    const updatedSections = sections.map((section) => {
+      const templateData = templateDataMap[section.templateId];
+      if (!templateData?.data?.fields) return section;
+
       const fields: FormFieldValue[] = templateData.data.fields.map((field) => {
-        const fieldValue = formValues[field._id];
+        const fieldValue = sectionFormValues[section.sectionId]?.[field._id];
 
         if (field.type === 'relation') {
           const selectedOption = field.selectOptions?.find((opt) => {
@@ -334,59 +440,9 @@ export default function NewModuleFromTemplateSheet({
     createModuleMutation.mutate(moduleData);
   };
 
-  const handleFieldChange = (fieldId: string, value: any) => {
-    setFormValues((prev) => {
-      const newValues = {
-        ...prev,
-        [fieldId]: value,
-      };
-
-      // Validate the field
-      const templateData = templateQueries.data?.find((t) => {
-        return t.data.fields.some((f) => {
-          return f._id === fieldId;
-        });
-      });
-      const field = templateData?.data.fields.find((f) => {
-        return f._id === fieldId;
-      });
-
-      if (field) {
-        const error = validateField(field, value);
-        setFieldErrors((prev) => {
-          return {
-            ...prev,
-            [fieldId]: error || '',
-          };
-        });
-      }
-
-      return newValues;
-    });
-  };
-
-  const handleAddTemplate = (templateId: string) => {
-    const selectedTemplate = availableTemplates?.find((t) => {
-      return t._id === templateId;
-    });
-    if (!selectedTemplate) return;
-
-    setSections((prev) => {
-      return [
-        ...prev,
-        {
-          templateId: selectedTemplate._id,
-          templateName: selectedTemplate.name,
-          templateDescription: selectedTemplate.description,
-          fields: [],
-        },
-      ];
-    });
-    setIsPopoverOpen(false);
-  };
-
-  const renderField = (field: ExtendedTemplateField) => {
-    const error = fieldErrors[field._id];
+  const renderField = (templateId: string, field: ExtendedTemplateField) => {
+    const error = sectionFieldErrors[templateId]?.[field._id];
+    const value = sectionFormValues[templateId]?.[field._id];
 
     switch (field.type) {
       case 'text':
@@ -394,9 +450,9 @@ export default function NewModuleFromTemplateSheet({
           <div className='space-y-1'>
             <Input
               id={field._id}
-              value={formValues[field._id] || ''}
+              value={value || ''}
               onChange={(e) => {
-                return handleFieldChange(field._id, e.target.value);
+                return handleFieldChange(templateId, field._id, e.target.value);
               }}
               placeholder={`Enter ${field.name}`}
               required={field.required}
@@ -410,9 +466,9 @@ export default function NewModuleFromTemplateSheet({
           <div className='space-y-1'>
             <Textarea
               id={field._id}
-              value={formValues[field._id] || ''}
+              value={value || ''}
               onChange={(e) => {
-                return handleFieldChange(field._id, e.target.value);
+                return handleFieldChange(templateId, field._id, e.target.value);
               }}
               placeholder={`Enter ${field.name}`}
               required={field.required}
@@ -427,9 +483,9 @@ export default function NewModuleFromTemplateSheet({
             <Input
               id={field._id}
               type='number'
-              value={formValues[field._id] || ''}
+              value={value || ''}
               onChange={(e) => {
-                return handleFieldChange(field._id, e.target.valueAsNumber);
+                return handleFieldChange(templateId, field._id, e.target.valueAsNumber);
               }}
               placeholder={`Enter ${field.name}`}
               required={field.required}
@@ -444,9 +500,9 @@ export default function NewModuleFromTemplateSheet({
             <Input
               id={field._id}
               type='date'
-              value={formValues[field._id] || ''}
+              value={value || ''}
               onChange={(e) => {
-                return handleFieldChange(field._id, e.target.value);
+                return handleFieldChange(templateId, field._id, e.target.value);
               }}
               placeholder={`Enter ${field.name}`}
               required={field.required}
@@ -459,9 +515,9 @@ export default function NewModuleFromTemplateSheet({
         return (
           <div className='space-y-1'>
             <Select
-              value={formValues[field._id] || ''}
+              value={value || ''}
               onValueChange={(value) => {
-                return handleFieldChange(field._id, value);
+                return handleFieldChange(templateId, field._id, value);
               }}
               required={field.required}
             >
@@ -485,9 +541,9 @@ export default function NewModuleFromTemplateSheet({
         return (
           <div className='space-y-1'>
             <Select
-              value={formValues[field._id] || ''}
+              value={value || ''}
               onValueChange={(value) => {
-                return handleFieldChange(field._id, value);
+                return handleFieldChange(templateId, field._id, value);
               }}
               required={field.required}
             >
@@ -510,6 +566,37 @@ export default function NewModuleFromTemplateSheet({
       default:
         return null;
     }
+  };
+
+  const renderSection = (section: TemplateSection, index: number) => {
+    const templateData = templateDataMap[section.templateId];
+    if (!templateData?.data?.fields) return null;
+
+    return (
+      <div key={section.sectionId} className='space-y-4'>
+        {index > 0 && <Separator className='my-4' />}
+        <div className='space-y-2'>
+          <h3 className='text-lg font-semibold'>{section.templateName}</h3>
+          {section.templateDescription && (
+            <p className='text-sm text-gray-500'>{section.templateDescription}</p>
+          )}
+        </div>
+
+        {templateData.data.fields.map((field: ExtendedTemplateField) => {
+          return (
+            <div key={`${section.sectionId}-field-${field._id}`} className='space-y-2'>
+              <div className='flex items-center gap-2'>
+                {getFieldIcon(field.type)}
+                <Label htmlFor={field._id}>{field.name}</Label>
+                {field.required && <span className='text-red-500'>*</span>}
+              </div>
+              {field.description && <p className='text-sm text-gray-500'>{field.description}</p>}
+              {renderField(section.sectionId, field)}
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   return (
@@ -535,42 +622,8 @@ export default function NewModuleFromTemplateSheet({
               />
             </div>
 
-            {sections.map((section, sectionIndex) => {
-              return (
-                <div
-                  key={`section-${sectionIndex}-template-${section.templateId}`}
-                  className='space-y-4'
-                >
-                  {sectionIndex > 0 && <Separator className='my-4' />}
-                  <div className='space-y-2'>
-                    <h3 className='text-lg font-semibold'>{section.templateName}</h3>
-                    {section.templateDescription && (
-                      <p className='text-sm text-gray-500'>{section.templateDescription}</p>
-                    )}
-                  </div>
-
-                  {templateQueries.data?.[sectionIndex]?.data.fields.map(
-                    (field: ExtendedTemplateField) => {
-                      return (
-                        <div
-                          key={`section-${sectionIndex}-field-${field._id}`}
-                          className='space-y-2'
-                        >
-                          <div className='flex items-center gap-2'>
-                            {getFieldIcon(field.type)}
-                            <Label htmlFor={field._id}>{field.name}</Label>
-                            {field.required && <span className='text-red-500'>*</span>}
-                          </div>
-                          {field.description && (
-                            <p className='text-sm text-gray-500'>{field.description}</p>
-                          )}
-                          {renderField(field)}
-                        </div>
-                      );
-                    },
-                  )}
-                </div>
-              );
+            {sections.map((section, index) => {
+              return renderSection(section, index);
             })}
 
             <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
@@ -602,10 +655,7 @@ export default function NewModuleFromTemplateSheet({
           </div>
 
           <SheetFooter className='flex-none border-t pt-4 pb-0'>
-            <Button
-              type='submit'
-              disabled={createModuleMutation.isPending || templateQueries.isLoading}
-            >
+            <Button type='submit' disabled={createModuleMutation.isPending}>
               {createModuleMutation.isPending ? 'Creating...' : 'Create Module'}
             </Button>
           </SheetFooter>
