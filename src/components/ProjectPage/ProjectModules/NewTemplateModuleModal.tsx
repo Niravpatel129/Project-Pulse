@@ -193,7 +193,7 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
             }}
             className='overflow-hidden border border-gray-200 shadow-sm relative group'
           >
-            {sections.length > 1 && (
+            {sections.length > 1 && section.sectionId !== `${template._id}-0` && (
               <X
                 className='absolute top-2 right-2 cursor-pointer text-gray-400 hover:text-gray-700 transition-all h-4 w-4 opacity-0 group-hover:opacity-100'
                 onClick={() => {
