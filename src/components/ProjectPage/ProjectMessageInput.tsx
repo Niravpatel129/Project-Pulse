@@ -23,14 +23,6 @@ interface MessageAttachment {
   downloadURL: string;
 }
 
-const QUICK_ENHANCE_OPTIONS = [
-  { label: 'Make it more professional', value: 'professional' },
-  { label: 'Make it more friendly', value: 'friendly' },
-  { label: 'Fix grammar and spelling', value: 'grammar' },
-  { label: 'Make it more concise', value: 'concise' },
-  { label: 'Make it more detailed', value: 'detailed' },
-];
-
 const ProjectMessageInput = () => {
   const { project } = useProject();
   const [content, setContent] = useState('');

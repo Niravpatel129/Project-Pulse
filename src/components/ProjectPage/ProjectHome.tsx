@@ -6,6 +6,7 @@ import { NotesProvider } from '@/contexts/NotesContext';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
+import { format, isThisWeek, isThisYear, isToday, isYesterday } from 'date-fns';
 import { AnimatePresence } from 'framer-motion';
 import { FileText, Mail, User } from 'lucide-react';
 import { EmailCard } from './EmailCard';
@@ -173,6 +174,15 @@ const mapApiAttachmentToEmailAttachment = (apiAttachment: ApiAttachment): EmailA
   };
 };
 
+// Helper function to get date group label
+const getDateGroupLabel = (date: Date): string => {
+  if (isToday(date)) return 'Today';
+  if (isYesterday(date)) return 'Yesterday';
+  if (isThisWeek(date)) return 'This week';
+  if (isThisYear(date)) return format(date, 'MMMM d');
+  return format(date, 'MMMM d, yyyy');
+};
+
 export default function ProjectHome() {
   const { project } = useProject();
 
@@ -252,6 +262,20 @@ export default function ProjectHome() {
     return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
   });
 
+  // Group items by date
+  const groupedTimelineItems = sortedTimelineItems.reduce((groups, item) => {
+    const date = new Date(item.timestamp);
+    const dateKey = format(date, 'yyyy-MM-dd');
+    if (!groups[dateKey]) {
+      groups[dateKey] = {
+        label: getDateGroupLabel(date),
+        items: [],
+      };
+    }
+    groups[dateKey].items.push(item);
+    return groups;
+  }, {} as Record<string, { label: string; items: TimelineItem[] }>);
+
   return (
     <div className='space-y-6'>
       {/* Message Input */}
@@ -265,78 +289,95 @@ export default function ProjectHome() {
             <div className='text-sm text-gray-500'>Loading activities and emails...</div>
           ) : (
             <AnimatePresence mode='popLayout'>
-              {sortedTimelineItems.map((item) => {
-                if (item.type === 'activity') {
-                  const activity = item.data as Activity;
-                  // Determine icon based on activity type/action
-                  let icon = 'file-text';
-                  if (activity.type === 'user') icon = 'user';
-                  else if (activity.type === 'email' || activity.type === 'message') icon = 'mail';
+              {Object.entries(groupedTimelineItems).map(([dateKey, group]) => {
+                return (
+                  <div key={dateKey} className='space-y-4'>
+                    {group.items.map((item) => {
+                      if (item.type === 'activity') {
+                        const activity = item.data as Activity;
+                        // Determine icon based on activity type/action
+                        let icon = 'file-text';
+                        if (activity.type === 'user') icon = 'user';
+                        else if (activity.type === 'email' || activity.type === 'message')
+                          icon = 'mail';
 
-                  return (
-                    <div key={`activity-${activity._id}`}>
-                      {/* line across */}
-                      <Card className='p-3'>
-                        <div className='flex items-center gap-3'>
-                          <div className='flex-shrink-0 bg-gray-100 p-2 rounded-full'>
-                            {icon === 'user' && <User className='h-4 w-4 text-gray-500' />}
-                            {icon === 'file-text' && <FileText className='h-4 w-4 text-gray-500' />}
-                            {icon === 'mail' && <Mail className='h-4 w-4 text-gray-500' />}
+                        return (
+                          <div key={`activity-${activity._id}`}>
+                            {/* line across */}
+                            <Card className='p-3'>
+                              <div className='flex items-center gap-3'>
+                                <div className='flex-shrink-0 bg-gray-100 p-2 rounded-full'>
+                                  {icon === 'user' && <User className='h-4 w-4 text-gray-500' />}
+                                  {icon === 'file-text' && (
+                                    <FileText className='h-4 w-4 text-gray-500' />
+                                  )}
+                                  {icon === 'mail' && <Mail className='h-4 w-4 text-gray-500' />}
+                                </div>
+                                <div className='flex-1'>
+                                  <p className='text-sm font-medium'>{activity.description}</p>
+                                  <p className='text-xs text-gray-500'>
+                                    {new Date(activity.createdAt).toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
+                            </Card>
                           </div>
-                          <div className='flex-1'>
-                            <p className='text-sm font-medium'>{activity.description}</p>
-                            <p className='text-xs text-gray-500'>
-                              {new Date(activity.createdAt).toLocaleString()}
-                            </p>
+                        );
+                      } else if (item.type === 'note') {
+                        const note = item.data as Note;
+                        return (
+                          <NotesProvider key={`note-${note._id}`} projectId={project._id}>
+                            <NoteCard note={note} />
+                          </NotesProvider>
+                        );
+                      } else {
+                        const thread = item.data as EmailThread & {
+                          latestMessage: EmailMessage;
+                          isLatestInThread: boolean;
+                        };
+                        const latestMessage = thread.latestMessage;
+                        return (
+                          <div
+                            key={`email-${thread.threadId || latestMessage._id}`}
+                            className='w-full'
+                          >
+                            <EmailCard
+                              email={{
+                                id: latestMessage._id,
+                                from: {
+                                  name: latestMessage.sentBy?.name,
+                                  email: latestMessage.from,
+                                },
+                                to: latestMessage.to.join(', '),
+                                subject: thread.subject,
+                                content: latestMessage.body,
+                                date: latestMessage.sentAt || latestMessage.createdAt,
+                                attachments: latestMessage.attachments.map(
+                                  mapApiAttachmentToEmailAttachment,
+                                ),
+                                messageCount: thread.messageCount,
+                                messageId: latestMessage.messageId,
+                                references: latestMessage.references,
+                                trackingData: latestMessage.trackingData,
+                                replies: latestMessage.replies.map(mapEmailMessage),
+                                direction: latestMessage.direction as 'inbound' | 'outbound',
+                                sentBy: latestMessage.sentBy,
+                                isLatestInThread: true,
+                                threadId: thread.threadId,
+                                isRead: latestMessage.isRead,
+                              }}
+                            />
                           </div>
-                        </div>
-                      </Card>
+                        );
+                      }
+                    })}
+                    <div className='flex items-center gap-2'>
+                      <div className='h-px flex-1 bg-gray-200' />
+                      <span className='text-xs font-medium text-gray-500 px-2'>{group.label}</span>
+                      <div className='h-px flex-1 bg-gray-200' />
                     </div>
-                  );
-                } else if (item.type === 'note') {
-                  const note = item.data as Note;
-                  return (
-                    <NotesProvider key={`note-${note._id}`} projectId={project._id}>
-                      <NoteCard note={note} />
-                    </NotesProvider>
-                  );
-                } else {
-                  const thread = item.data as EmailThread & {
-                    latestMessage: EmailMessage;
-                    isLatestInThread: boolean;
-                  };
-                  const latestMessage = thread.latestMessage;
-                  return (
-                    <div key={`email-${thread.threadId || latestMessage._id}`} className='w-full'>
-                      <EmailCard
-                        email={{
-                          id: latestMessage._id,
-                          from: {
-                            name: latestMessage.sentBy?.name,
-                            email: latestMessage.from,
-                          },
-                          to: latestMessage.to.join(', '),
-                          subject: thread.subject,
-                          content: latestMessage.body,
-                          date: latestMessage.sentAt || latestMessage.createdAt,
-                          attachments: latestMessage.attachments.map(
-                            mapApiAttachmentToEmailAttachment,
-                          ),
-                          messageCount: thread.messageCount,
-                          messageId: latestMessage.messageId,
-                          references: latestMessage.references,
-                          trackingData: latestMessage.trackingData,
-                          replies: latestMessage.replies.map(mapEmailMessage),
-                          direction: latestMessage.direction as 'inbound' | 'outbound',
-                          sentBy: latestMessage.sentBy,
-                          isLatestInThread: true,
-                          threadId: thread.threadId,
-                          isRead: latestMessage.isRead,
-                        }}
-                      />
-                    </div>
-                  );
-                }
+                  </div>
+                );
               })}
             </AnimatePresence>
           )}
