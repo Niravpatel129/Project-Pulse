@@ -172,6 +172,7 @@ export function useProjects() {
             status: project.status || { name: '', order: 0, color: '', _id: '' },
             projectType: project.projectType || '',
             manager: project.manager || { name: '' },
+            createdAt: project.createdAt || '',
             clients: project.clients || [],
           };
         });

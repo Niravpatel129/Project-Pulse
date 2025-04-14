@@ -120,6 +120,29 @@ export function ProjectSidebar({
     passwordProtected?: string;
   }>({});
 
+  // Load open accordion items from localStorage
+  const [openAccordionItems, setOpenAccordionItems] = useState<string[]>(() => {
+    if (typeof window !== 'undefined' && project?._id) {
+      const savedItems = localStorage.getItem(`project_${project._id}_accordion`);
+      return savedItems ? JSON.parse(savedItems) : [];
+    }
+    return [];
+  });
+
+  // Save open accordion items to localStorage
+  const handleAccordionChange = (value: string) => {
+    if (!project?._id) return;
+
+    const newOpenItems = openAccordionItems.includes(value)
+      ? openAccordionItems.filter((item) => {
+          return item !== value;
+        })
+      : [...openAccordionItems, value];
+
+    setOpenAccordionItems(newOpenItems);
+    localStorage.setItem(`project_${project._id}_accordion`, JSON.stringify(newOpenItems));
+  };
+
   // Fetch initial sharing settings and portal URL
   const { data: sharingData, isLoading: isLoadingSharingData } = useQuery({
     queryKey: ['projectSharing', project?._id],
@@ -307,9 +330,19 @@ export function ProjectSidebar({
           <span className='text-sm font-medium text-foreground'>Project Details</span>
         </div>
 
-        <Accordion type='single' collapsible className='w-full'>
+        <Accordion
+          type='multiple'
+          value={openAccordionItems}
+          onValueChange={setOpenAccordionItems}
+          className='w-full'
+        >
           <AccordionItem value='properties'>
-            <AccordionTrigger className='text-sm font-medium text-foreground'>
+            <AccordionTrigger
+              className='text-sm font-medium text-foreground'
+              onClick={() => {
+                return handleAccordionChange('properties');
+              }}
+            >
               Properties
             </AccordionTrigger>
             <AccordionContent>
@@ -397,26 +430,13 @@ export function ProjectSidebar({
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value='description'>
-            <AccordionTrigger className='text-sm font-medium text-foreground'>
-              Description
-            </AccordionTrigger>
-            <AccordionContent>
-              <div className='pt-2'>
-                <Textarea
-                  placeholder='Add a project description...'
-                  className='min-h-[100px] text-sm'
-                  value={project?.description || ''}
-                  onChange={(e) => {
-                    return onUpdateProject?.({ description: e.target.value });
-                  }}
-                />
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
           <AccordionItem value='sharing'>
-            <AccordionTrigger className='text-sm font-medium text-foreground'>
+            <AccordionTrigger
+              className='text-sm font-medium text-foreground'
+              onClick={() => {
+                return handleAccordionChange('sharing');
+              }}
+            >
               Sharing Settings
             </AccordionTrigger>
             <AccordionContent>

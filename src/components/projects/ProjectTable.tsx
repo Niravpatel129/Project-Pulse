@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { formatDistanceToNow } from 'date-fns';
 import { MoreHorizontal } from 'lucide-react';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 
@@ -33,6 +34,7 @@ interface ProjectTableProps {
     manager: {
       name: string;
     };
+    createdAt: string;
     tasks?: Array<{
       _id: string | number;
       title: string;
@@ -68,6 +70,7 @@ export function ProjectTable({
             <TableHead>Manager</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Stage</TableHead>
+            <TableHead>Created</TableHead>
             <TableHead className='text-right'>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -108,6 +111,11 @@ export function ProjectTable({
                     ></div>
                     {project.stage?.name || '-'}
                   </span>
+                </TableCell>
+                <TableCell>
+                  {project.createdAt
+                    ? formatDistanceToNow(new Date(project.createdAt), { addSuffix: true })
+                    : '-'}
                 </TableCell>
                 <TableCell className='text-right'>
                   <DropdownMenu>
