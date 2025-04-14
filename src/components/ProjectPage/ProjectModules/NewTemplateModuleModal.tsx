@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Grid, InfoIcon, Plus, X } from 'lucide-react';
+import { Grid, InfoIcon, Plus, Search, X } from 'lucide-react';
 import { useState } from 'react';
 import { FcDocument } from 'react-icons/fc';
 import ModuleFieldRenderer from './ModuleFieldRenderer';
@@ -19,6 +19,7 @@ import ModuleFieldRenderer from './ModuleFieldRenderer';
 export default function NewTemplateModuleModal({ isOpen, onClose, template, templateName }) {
   const [selectedTemplates, setSelectedTemplates] = useState<string[]>(['shipping']);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [sections, setSections] = useState([
     {
       templateId: template._id,
@@ -333,35 +334,55 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
                       sideOffset={5}
                       avoidCollisions={false}
                     >
-                      <div className='py-1'>
-                        {availableTemplates?.map((template) => {
-                          return (
-                            <motion.div
-                              key={template._id}
-                              className='flex cursor-pointer items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-50'
-                              whileTap={{ scale: 0.98 }}
-                              onClick={() => {
-                                return handleAddTemplate(template._id);
-                              }}
-                            >
-                              <div className='flex items-center gap-2'>
-                                <FcDocument className='h-4 w-4 text-gray-400' />
-                                {template.icon}
-                                <span>{template.name}</span>
-                              </div>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <InfoIcon className='h-3 w-3 text-gray-400' />
-                                  </TooltipTrigger>
-                                  <TooltipContent side='right'>
-                                    <p className='text-xs max-w-[200px]'>{template.description}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </motion.div>
-                          );
-                        })}
+                      <div className='p-2 border-b border-gray-100'>
+                        <div className='relative'>
+                          <Search className='absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
+                          <input
+                            type='text'
+                            placeholder='Search templates...'
+                            className='w-full pl-8 pr-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500'
+                            value={searchTerm}
+                            onChange={(e) => {
+                              return setSearchTerm(e.target.value);
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div className='py-1 max-h-[300px] overflow-y-auto'>
+                        {availableTemplates
+                          ?.filter((template) => {
+                            return template.name.toLowerCase().includes(searchTerm.toLowerCase());
+                          })
+                          .map((template) => {
+                            return (
+                              <motion.div
+                                key={template._id}
+                                className='flex cursor-pointer items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-50'
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => {
+                                  return handleAddTemplate(template._id);
+                                }}
+                              >
+                                <div className='flex items-center gap-2'>
+                                  <FcDocument className='h-4 w-4 text-gray-400' />
+                                  {template.icon}
+                                  <span>{template.name}</span>
+                                </div>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <InfoIcon className='h-3 w-3 text-gray-400' />
+                                    </TooltipTrigger>
+                                    <TooltipContent side='right'>
+                                      <p className='text-xs max-w-[200px]'>
+                                        {template.description}
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </motion.div>
+                            );
+                          })}
                       </div>
                     </PopoverContent>
                   </Popover>
