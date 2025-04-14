@@ -6,8 +6,9 @@ import { Card } from '@/components/ui/card';
 import { useNotes } from '@/contexts/NotesContext';
 import { formatDistanceToNow } from 'date-fns';
 import { FileText, Pencil, Save, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import EnhancedMessageEditor, { EnhancedMessageEditorRef } from './EnhancedMessageEditor';
+import { MentionHoverCard } from './MentionHoverCard';
 
 interface NoteCardProps {
   note: {
@@ -37,10 +38,18 @@ interface NoteCardProps {
   }[];
 }
 
+interface UserDetails {
+  _id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+}
+
 export function NoteCard({ note, participants = [] }: NoteCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const editorRef = useRef<EnhancedMessageEditorRef>(null);
   const [localNote, setLocalNote] = useState(note);
+  const [renderedContent, setRenderedContent] = useState<React.ReactNode>(null);
   const [attachments, setAttachments] = useState(
     note.attachments.map((attachment) => {
       return {
@@ -55,6 +64,83 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
   );
 
   const { updateNote } = useNotes();
+
+  useEffect(() => {
+    const renderContentWithMentions = (content: string) => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(content, 'text/html');
+
+      // Convert the HTML content into React nodes
+      const processNode = (node: Node, parentTag?: string): React.ReactNode => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          return node.textContent;
+        }
+
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const element = node as Element;
+          const tagName = element.tagName.toLowerCase();
+
+          // If we're inside a p tag and encounter another p tag, convert it to a div
+          if (parentTag === 'p' && tagName === 'p') {
+            return React.createElement(
+              'div',
+              {
+                key: Math.random(),
+                className: element.className,
+                ...Object.fromEntries(
+                  Array.from(element.attributes).map((attr) => {
+                    return [attr.name, attr.value];
+                  }),
+                ),
+              },
+              Array.from(element.childNodes).map((child, index) => {
+                return processNode(child, 'div');
+              }),
+            );
+          }
+
+          if (element.classList.contains('mention')) {
+            const userId = element.getAttribute('data-mention-id');
+            const mentionText = element.textContent;
+            if (userId && mentionText) {
+              return (
+                <MentionHoverCard key={`${userId}-${Math.random()}`} userId={userId}>
+                  {mentionText}
+                </MentionHoverCard>
+              );
+            }
+          }
+
+          const children = Array.from(element.childNodes).map((child, index) => {
+            return processNode(child, tagName);
+          });
+
+          return React.createElement(
+            tagName,
+            {
+              key: Math.random(),
+              className: element.className,
+              ...Object.fromEntries(
+                Array.from(element.attributes).map((attr) => {
+                  return [attr.name, attr.value];
+                }),
+              ),
+            },
+            children,
+          );
+        }
+
+        return null;
+      };
+
+      // Process all child nodes of the body
+      return Array.from(doc.body.childNodes).map((node, index) => {
+        return <React.Fragment key={index}>{processNode(node)}</React.Fragment>;
+      });
+    };
+
+    setRenderedContent(renderContentWithMentions(localNote.content));
+  }, [localNote.content]);
 
   const handleSave = async () => {
     if (editorRef.current) {
@@ -160,10 +246,7 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
                 </div>
               </div>
             ) : (
-              <div
-                className='prose prose-sm max-w-none'
-                dangerouslySetInnerHTML={{ __html: localNote.content }}
-              />
+              <div className='prose prose-sm max-w-none'>{renderedContent}</div>
             )}
           </div>
           {!isEditing && localNote.attachments && localNote.attachments.length > 0 && (
