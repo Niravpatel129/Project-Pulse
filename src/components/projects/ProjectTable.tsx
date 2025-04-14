@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatDistanceToNow } from 'date-fns';
-import { MoreHorizontal } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 
 interface ProjectTableProps {
@@ -51,6 +51,9 @@ interface ProjectTableProps {
     name: string;
     color: string;
   }>;
+  sort: string;
+  direction: 'asc' | 'desc';
+  onSort: (field: string) => void;
 }
 
 export function ProjectTable({
@@ -60,17 +63,100 @@ export function ProjectTable({
   onProjectClick,
   renderStatusBadge,
   pipelineStages,
+  sort,
+  direction,
+  onSort,
 }: ProjectTableProps) {
   return (
     <div className='rounded-lg border shadow-sm overflow-hidden'>
       <Table>
         <TableHeader>
           <TableRow className='bg-muted/30'>
-            <TableHead className='py-3'>Project Name</TableHead>
-            <TableHead>Manager</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Stage</TableHead>
-            <TableHead>Created</TableHead>
+            <TableHead className='py-3'>
+              <Button
+                variant='ghost'
+                className='flex items-center gap-1'
+                onClick={() => {
+                  return onSort('name');
+                }}
+              >
+                Project Name
+                {sort === 'name' && (
+                  <ArrowUpDown
+                    className='h-3 w-3'
+                    style={{ transform: direction === 'desc' ? 'rotate(180deg)' : 'none' }}
+                  />
+                )}
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button
+                variant='ghost'
+                className='flex items-center gap-1'
+                onClick={() => {
+                  return onSort('manager');
+                }}
+              >
+                Manager
+                {sort === 'manager' && (
+                  <ArrowUpDown
+                    className='h-3 w-3'
+                    style={{ transform: direction === 'desc' ? 'rotate(180deg)' : 'none' }}
+                  />
+                )}
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button
+                variant='ghost'
+                className='flex items-center gap-1'
+                onClick={() => {
+                  return onSort('status');
+                }}
+              >
+                Status
+                {sort === 'status' && (
+                  <ArrowUpDown
+                    className='h-3 w-3'
+                    style={{ transform: direction === 'desc' ? 'rotate(180deg)' : 'none' }}
+                  />
+                )}
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button
+                variant='ghost'
+                className='flex items-center gap-1'
+                onClick={() => {
+                  return onSort('stage');
+                }}
+              >
+                Stage
+                {sort === 'stage' && (
+                  <ArrowUpDown
+                    className='h-3 w-3'
+                    style={{ transform: direction === 'desc' ? 'rotate(180deg)' : 'none' }}
+                  />
+                )}
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button
+                variant='ghost'
+                className='flex items-center gap-1'
+                onClick={() => {
+                  return onSort('createdAt');
+                }}
+              >
+                Created
+                {sort === 'createdAt' && (
+                  <ArrowUpDown
+                    className='h-3 w-3'
+                    style={{ transform: direction === 'desc' ? 'rotate(180deg)' : 'none' }}
+                  />
+                )}
+              </Button>
+            </TableHead>
             <TableHead className='text-right'>Actions</TableHead>
           </TableRow>
         </TableHeader>

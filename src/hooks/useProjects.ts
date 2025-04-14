@@ -30,6 +30,7 @@ interface Project {
   leadSource?: string;
   progress?: number;
   teamSize?: number;
+  createdAt: string;
   tasks?: Array<{
     _id: string | number;
     title: string;
@@ -53,6 +54,7 @@ const MOCK_PROJECTS: Project[] = [
     projectType: 'Software Implementation',
     manager: { name: 'Sarah Johnson' },
     status: { name: 'On Track', order: 0, color: '', _id: '' },
+    createdAt: '',
   },
 ];
 
@@ -70,8 +72,8 @@ export function useProjects() {
   const isKanban = searchParams.get('view') === 'kanban';
   const search = searchParams.get('search') || '';
   const status = searchParams.get('status') || 'all';
-  const sort = searchParams.get('sort') || 'name';
-  const direction = (searchParams.get('direction') as 'asc' | 'desc') || 'asc';
+  const sort = searchParams.get('sort') || 'createdAt';
+  const direction = (searchParams.get('direction') as 'asc' | 'desc') || 'desc';
 
   // Memoize URL params updates
   const updateParams = useCallback(
@@ -163,19 +165,24 @@ export function useProjects() {
     queryFn: async () => {
       try {
         const response = await newRequest.get('/projects');
-        return (response.data?.data || []).map((project: any) => {
-          return {
-            _id: project._id,
-            id: project._id,
-            name: project.name || '',
-            stage: project.stage || { name: '', order: 0, color: '', _id: '' },
-            status: project.status || { name: '', order: 0, color: '', _id: '' },
-            projectType: project.projectType || '',
-            manager: project.manager || { name: '' },
-            createdAt: project.createdAt || '',
-            clients: project.clients || [],
-          };
-        });
+        return (response.data?.data || [])
+          .map((project: any) => {
+            return {
+              _id: project._id,
+              id: project._id,
+              name: project.name || '',
+              stage: project.stage || { name: '', order: 0, color: '', _id: '' },
+              status: project.status || { name: '', order: 0, color: '', _id: '' },
+              projectType: project.projectType || '',
+              manager: project.manager || { name: '' },
+              createdAt: project.createdAt || '',
+              clients: project.clients || [],
+            };
+          })
+          .sort((a: any, b: any) => {
+            // Sort by createdAt date, latest first
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          });
       } catch (err) {
         console.error('Failed to fetch projects:', err);
         return MOCK_PROJECTS;
@@ -212,10 +219,22 @@ export function useProjects() {
       if (!a || !b) return 0;
 
       let comparison = 0;
-      if (sort === 'progress' || sort === 'teamSize') {
-        const aValue = (a[sort] as number) || 0;
-        const bValue = (b[sort] as number) || 0;
-        comparison = aValue - bValue;
+      if (sort === 'createdAt') {
+        const aDate = new Date(a.createdAt).getTime();
+        const bDate = new Date(b.createdAt).getTime();
+        comparison = aDate - bDate;
+      } else if (sort === 'manager') {
+        const aValue = String(a.manager?.name || '').toLowerCase();
+        const bValue = String(b.manager?.name || '').toLowerCase();
+        comparison = aValue.localeCompare(bValue);
+      } else if (sort === 'status') {
+        const aValue = String(a.status?.name || '').toLowerCase();
+        const bValue = String(b.status?.name || '').toLowerCase();
+        comparison = aValue.localeCompare(bValue);
+      } else if (sort === 'stage') {
+        const aValue = String(a.stage?.name || '').toLowerCase();
+        const bValue = String(b.stage?.name || '').toLowerCase();
+        comparison = aValue.localeCompare(bValue);
       } else {
         const aValue = String(a[sort as keyof Project] || '').toLowerCase();
         const bValue = String(b[sort as keyof Project] || '').toLowerCase();

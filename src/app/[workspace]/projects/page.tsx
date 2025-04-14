@@ -456,6 +456,9 @@ export default function ProjectsPage() {
             onProjectClick={navigateToProject}
             renderStatusBadge={renderStatusBadge}
             pipelineStages={pipelineStages}
+            sort={sort}
+            direction={direction}
+            onSort={setSort}
           />
         )}
 
