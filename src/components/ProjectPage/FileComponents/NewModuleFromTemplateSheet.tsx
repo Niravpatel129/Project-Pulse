@@ -342,14 +342,14 @@ export default function NewModuleFromTemplateSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='sm:max-w-md h-full flex flex-col'>
+      <SheetContent className='sm:max-w-md h-full flex flex-col min-w-[650px]'>
         <SheetHeader>
           <SheetTitle>Create from Template</SheetTitle>
           <SheetDescription>Create a new module by combining multiple templates.</SheetDescription>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit} className='flex-1 flex flex-col min-h-0'>
-          <div className='flex-1 overflow-y-auto space-y-4 py-4'>
+        <form onSubmit={handleSubmit} className='flex-1 flex flex-col min-h-0 scrollbar-hide'>
+          <div className='flex-1 overflow-y-auto space-y-4 py-4 scrollbar-hide'>
             <div className='space-y-2'>
               <Label htmlFor='moduleName'>Module Name</Label>
               <Input
@@ -427,7 +427,7 @@ export default function NewModuleFromTemplateSheet({
             </Popover>
           </div>
 
-          <SheetFooter className='flex-none border-t pt-4 pb-4'>
+          <SheetFooter className='flex-none border-t pt-4 pb-0'>
             <Button
               type='submit'
               disabled={createModuleMutation.isPending || templateQueries.isLoading}
