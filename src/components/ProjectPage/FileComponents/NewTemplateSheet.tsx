@@ -34,6 +34,7 @@ const fieldTypes: Array<{ id: string; name: string; icon: string; description?: 
   { id: 'date', name: 'Date', icon: '📅' },
   { id: 'select', name: 'Select', icon: '📋' },
   { id: 'relation', name: 'Relation To Database', icon: '📖' },
+  { id: 'files', name: 'File', icon: '📎' },
 ];
 
 interface NewTemplateSheetProps {
@@ -165,6 +166,9 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
         type: 'text' as FieldType,
         required: false,
         options: [],
+        fieldSettings: {
+          multipleFiles: false,
+        },
       },
     ]);
   };
@@ -196,11 +200,22 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
       _id: '',
       name: templateName,
       description: templateDescription,
-      fields: templateFields.filter((field) => {
-        if (!field.name.trim()) return false;
-        if (field.type === 'select' && (!field.options || field.options.length === 0)) return false;
-        return true;
-      }),
+      fields: templateFields
+        .filter((field) => {
+          if (!field.name.trim()) return false;
+          if (field.type === 'select' && (!field.options || field.options.length === 0))
+            return false;
+          return true;
+        })
+        .map((field) => {
+          return {
+            ...field,
+            fieldSettings:
+              field.type === 'files'
+                ? { multipleFiles: field.fieldSettings?.multipleFiles || false }
+                : undefined,
+          };
+        }),
     };
 
     try {
@@ -214,6 +229,9 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
           type: 'text' as FieldType,
           required: false,
           options: [],
+          fieldSettings: {
+            multipleFiles: false,
+          },
         },
       ]);
       onClose();
@@ -325,6 +343,15 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
                                                   }
                                                 </span>
                                               </div>
+                                            ) : field.type === 'files' ? (
+                                              <div className='flex items-center gap-2'>
+                                                <span>📎</span>
+                                                <span>
+                                                  {field.fieldSettings?.multipleFiles
+                                                    ? 'Files'
+                                                    : 'File'}
+                                                </span>
+                                              </div>
                                             ) : (
                                               fieldTypes.find((type) => {
                                                 return type.id === field.type;
@@ -419,7 +446,27 @@ Option 3`}
                                       </div>
                                     )}
 
-                                    <Collapsible>
+                                    {field.type === 'files' && (
+                                      <div className='flex items-center space-x-2 mt-2'>
+                                        <Switch
+                                          id={`multiple-files-${field.id}`}
+                                          checked={field.fieldSettings?.multipleFiles || false}
+                                          onCheckedChange={(checked) => {
+                                            return updateField(index, {
+                                              fieldSettings: {
+                                                ...field.fieldSettings,
+                                                multipleFiles: checked,
+                                              },
+                                            });
+                                          }}
+                                        />
+                                        <Label htmlFor={`multiple-files-${field.id}`}>
+                                          Allow multiple files
+                                        </Label>
+                                      </div>
+                                    )}
+
+                                    <Collapsible defaultOpen={field.type === 'files'}>
                                       <CollapsibleTrigger asChild>
                                         <Button
                                           variant='ghost'

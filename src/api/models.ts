@@ -62,7 +62,8 @@ export type FieldType =
   | 'select'
   | 'multiselect'
   | 'file'
-  | 'relation';
+  | 'relation'
+  | 'files';
 
 // ===================
 // Template Models
@@ -80,7 +81,8 @@ export interface TemplateField {
   relationType?: 'inventory' | 'customers' | 'orders';
   lookupFields?: string[]; // Fields to show from the linked record
   defaultValue?: string | number;
-  validations?: {
+  fieldSettings?: {
+    multipleFiles?: boolean;
     minLength?: number;
     maxLength?: number;
     pattern?: string;
