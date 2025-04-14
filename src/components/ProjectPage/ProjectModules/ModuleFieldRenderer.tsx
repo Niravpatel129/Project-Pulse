@@ -11,6 +11,7 @@ import {
 import { motion } from 'framer-motion';
 import { Image as ImageIcon } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 import FilePreview from './FilePreview';
 
@@ -41,6 +42,19 @@ export default function ModuleFieldRenderer({ field, value, onChange }: ModuleFi
   const handleAddFileToProject = (file) => {
     if (field.fieldSettings?.multipleFiles) {
       const currentFiles = Array.isArray(value) ? value : [];
+      // Check if file already exists in the array
+      const fileExists = currentFiles.some((existingFile) => {
+        return existingFile._id === file._id;
+      });
+
+      if (fileExists) {
+        // Show toast message for duplicate file
+        toast.info('File already added', {
+          description: 'This file has already been added to the field.',
+        });
+        return;
+      }
+
       onChange([...currentFiles, file]);
     } else {
       onChange(file);

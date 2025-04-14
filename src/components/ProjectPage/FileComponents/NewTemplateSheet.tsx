@@ -137,26 +137,6 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
     };
   });
 
-  // Helper function to get appropriate icon based on file type
-  const getFileIcon = (contentType: string) => {
-    if (contentType.startsWith('image/')) return '🖼️';
-    if (contentType === 'text/plain') return '📄';
-    if (contentType === 'application/pdf') return '📑';
-    if (contentType.includes('word')) return '📝';
-    if (contentType.includes('excel') || contentType.includes('spreadsheet')) return '📊';
-    if (contentType.includes('presentation')) return '📽️';
-    return '📁';
-  };
-
-  // Helper function to format file size
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
   const addField = () => {
     setTemplateFields([
       ...templateFields,
