@@ -115,8 +115,11 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
             return processNode(child, tagName);
           });
 
+          // Convert all p tags to div
+          const finalTagName = tagName === 'p' ? 'div' : tagName;
+
           return React.createElement(
-            tagName,
+            finalTagName,
             {
               key: Math.random(),
               className: element.className,
@@ -202,13 +205,13 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
         <div className='flex-1'>
           <div className='flex items-center justify-between'>
             <div>
-              <p className='text-sm font-medium'>{localNote.createdBy.name}</p>
-              <p className='text-xs text-gray-500'>{localNote.createdBy.email}</p>
+              <div className='text-sm font-medium'>{localNote.createdBy.name}</div>
+              <div className='text-xs text-gray-500'>{localNote.createdBy.email}</div>
             </div>
             <div className='flex items-center gap-2'>
-              <p className='text-xs text-gray-500'>
+              <div className='text-xs text-gray-500'>
                 {formatDistanceToNow(new Date(localNote.createdAt), { addSuffix: true })}
-              </p>
+              </div>
               {!isEditing && (
                 <Button
                   variant='ghost'
