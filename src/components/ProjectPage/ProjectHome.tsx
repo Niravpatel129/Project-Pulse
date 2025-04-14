@@ -109,11 +109,31 @@ interface EmailsResponse {
   };
 }
 
+interface Note {
+  _id: string;
+  content: string;
+  attachments: {
+    _id: string;
+    name: string;
+    originalName: string;
+    downloadURL: string;
+    contentType: string;
+    size: number;
+  }[];
+  createdBy: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Combined type for chronological sorting
 interface TimelineItem {
-  type: 'activity' | 'email';
+  type: 'activity' | 'email' | 'note';
   timestamp: string;
-  data: Activity | EmailThread;
+  data: Activity | EmailThread | Note;
 }
 
 // Helper function to recursively map email messages
@@ -163,6 +183,16 @@ export default function ProjectHome() {
     enabled: !!project?._id,
   });
 
+  const { data: notesData, isLoading: isLoadingNotes } = useQuery({
+    queryKey: ['notes', project?._id],
+    queryFn: async () => {
+      const response = await newRequest.get(`/notes/project/${project._id}`);
+      return response.data;
+    },
+    enabled: !!project?._id,
+  });
+  console.log('🚀 notesData:', notesData);
+
   const { data: activitiesData, isLoading: isLoadingActivities } = useQuery({
     queryKey: ['recentActivities', project?._id],
     queryFn: async () => {
@@ -181,8 +211,9 @@ export default function ProjectHome() {
 
   const recentActivities = activitiesData?.data || [];
   const emailThreads = emailsData?.threads || [];
+  const notes = notesData?.data || [];
 
-  // Combine activities and email threads into a single timeline
+  // Combine activities, email threads, and notes into a single timeline
   const timelineItems: TimelineItem[] = [
     ...recentActivities.map((activity) => {
       return {
@@ -203,6 +234,14 @@ export default function ProjectHome() {
           latestMessage,
           isLatestInThread: true,
         },
+      };
+    }),
+    // Add notes to the timeline
+    ...notes.map((note) => {
+      return {
+        type: 'note' as const,
+        timestamp: note.createdAt,
+        data: note,
       };
     }),
   ];
@@ -248,6 +287,48 @@ export default function ProjectHome() {
                             <p className='text-xs text-gray-500'>
                               {new Date(activity.createdAt).toLocaleString()}
                             </p>
+                          </div>
+                        </div>
+                      </Card>
+                    </div>
+                  );
+                } else if (item.type === 'note') {
+                  const note = item.data as Note;
+                  return (
+                    <div key={`note-${note._id}`}>
+                      <Card className='p-3'>
+                        <div className='flex items-center gap-3'>
+                          <div className='flex-shrink-0 bg-gray-100 p-2 rounded-full'>
+                            <FileText className='h-4 w-4 text-gray-500' />
+                          </div>
+                          <div className='flex-1'>
+                            <div className='flex items-center justify-between'>
+                              <p className='text-sm font-medium'>{note.createdBy.name}</p>
+                              <p className='text-xs text-gray-500'>
+                                {new Date(note.createdAt).toLocaleString()}
+                              </p>
+                            </div>
+                            <div
+                              className='mt-1 text-sm text-gray-700'
+                              dangerouslySetInnerHTML={{ __html: note.content }}
+                            />
+                            {note.attachments && note.attachments.length > 0 && (
+                              <div className='mt-2 flex flex-wrap gap-2'>
+                                {note.attachments.map((attachment) => {
+                                  return (
+                                    <a
+                                      key={attachment._id}
+                                      href={attachment.downloadURL}
+                                      target='_blank'
+                                      rel='noopener noreferrer'
+                                      className='text-xs text-blue-500 hover:underline'
+                                    >
+                                      {attachment.originalName}
+                                    </a>
+                                  );
+                                })}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </Card>
