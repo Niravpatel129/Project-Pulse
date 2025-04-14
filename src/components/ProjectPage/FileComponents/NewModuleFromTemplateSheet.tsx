@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import {
   Sheet,
   SheetContent,
@@ -20,7 +21,7 @@ import {
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Calendar, CheckSquare, Database, File, FileText, Hash, Type } from 'lucide-react';
+import { Calendar, CheckSquare, Database, File, FileText, Hash, Plus, Type } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -85,11 +86,15 @@ interface FormFieldValue {
   multiple?: boolean;
 }
 
-interface ModuleData {
+interface TemplateSection {
   templateId: string;
   templateName: string;
   templateDescription: string;
   fields: FormFieldValue[];
+}
+
+interface ModuleData {
+  sections: TemplateSection[];
 }
 
 const getFieldIcon = (type: string) => {
@@ -121,30 +126,60 @@ export default function NewModuleFromTemplateSheet({
 }: NewModuleFromTemplateSheetProps) {
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [moduleName, setModuleName] = useState(templateName || template.name);
+  const [sections, setSections] = useState<TemplateSection[]>([
+    {
+      templateId: template._id,
+      templateName: template.name,
+      templateDescription: template.description,
+      fields: [],
+    },
+  ]);
   const queryClient = useQueryClient();
   const { project } = useProject();
 
-  // Fetch full template data when template ID is available
-  const { data: fullTemplateData, isLoading } = useQuery<ApiResponse>({
-    queryKey: ['template', template?._id],
+  // Fetch all available templates for the dropdown
+  const { data: availableTemplates } = useQuery({
+    queryKey: ['templates'],
     queryFn: async () => {
-      if (!template?._id) return null;
-      const response = await newRequest.get(`/module-templates/${template._id}`);
-      return response.data;
+      const response = await newRequest.get('/module-templates');
+      return response.data.data; // Access the data array from the response
     },
-    enabled: !!template?._id && isOpen,
+    enabled: isOpen,
+  });
+
+  // Fetch full template data for each section
+  const templateQueries = useQuery({
+    queryKey: [
+      'templates',
+      sections.map((s) => {
+        return s.templateId;
+      }),
+    ],
+    queryFn: async () => {
+      const responses = await Promise.all(
+        sections.map((section) => {
+          return newRequest.get(`/module-templates/${section.templateId}`);
+        }),
+      );
+      return responses.map((r) => {
+        return r.data;
+      });
+    },
+    enabled: sections.length > 0 && isOpen,
   });
 
   // Initialize form values when template data is fetched
   useEffect(() => {
-    if (fullTemplateData?.data) {
+    if (templateQueries.data) {
       const initialValues: Record<string, any> = {};
-      fullTemplateData.data.fields.forEach((field: ExtendedTemplateField) => {
-        initialValues[field._id] = field.multiple ? [] : '';
+      templateQueries.data.forEach((templateData) => {
+        templateData.data.fields.forEach((field: ExtendedTemplateField) => {
+          initialValues[field._id] = field.multiple ? [] : '';
+        });
       });
       setFormValues(initialValues);
     }
-  }, [fullTemplateData]);
+  }, [templateQueries.data]);
 
   // Mutation for creating a module
   const createModuleMutation = useMutation({
@@ -156,39 +191,59 @@ export default function NewModuleFromTemplateSheet({
       return response.data;
     },
     onSuccess: (data) => {
-      // invalidate the query
       queryClient.invalidateQueries({ queryKey: ['projectModules'] });
-      // Reset form
       toast.success('Module created successfully');
       onClose();
       setFormValues({});
+      setSections([
+        {
+          templateId: template._id,
+          templateName: template.name,
+          templateDescription: template.description,
+          fields: [],
+        },
+      ]);
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!fullTemplateData?.data) return;
+    if (!templateQueries.data) return;
 
-    const fields: FormFieldValue[] = fullTemplateData.data.fields.map((field) => {
-      const fieldValue = formValues[field._id];
+    const updatedSections = sections.map((section, index) => {
+      const templateData = templateQueries.data[index];
+      const fields: FormFieldValue[] = templateData.data.fields.map((field) => {
+        const fieldValue = formValues[field._id];
 
-      // Handle relation fields differently
-      if (field.type === 'relation') {
-        // Find the selected option's data
-        const selectedOption = field.selectOptions?.find((opt) => {
-          return opt.value === fieldValue;
-        });
+        if (field.type === 'relation') {
+          const selectedOption = field.selectOptions?.find((opt) => {
+            return opt.value === fieldValue;
+          });
+
+          return {
+            fieldName: field.name,
+            fieldType: field.type,
+            fieldValue: selectedOption
+              ? {
+                  rowId: selectedOption.value,
+                  displayValues: selectedOption.rowData,
+                }
+              : null,
+            templateFieldId: field._id,
+            isRequired: field.required || false,
+            description: field.description || '',
+            relationType: field.relationType,
+            relationTable: field.relationTable,
+            lookupFields: field.lookupFields,
+            multiple: field.multiple || false,
+          };
+        }
 
         return {
           fieldName: field.name,
           fieldType: field.type,
-          fieldValue: selectedOption
-            ? {
-                rowId: selectedOption.value,
-                displayValues: selectedOption.rowData,
-              }
-            : null,
+          fieldValue: fieldValue || '',
           templateFieldId: field._id,
           isRequired: field.required || false,
           description: field.description || '',
@@ -197,28 +252,16 @@ export default function NewModuleFromTemplateSheet({
           lookupFields: field.lookupFields,
           multiple: field.multiple || false,
         };
-      }
+      });
 
-      // Handle non-relation fields normally
       return {
-        fieldName: field.name,
-        fieldType: field.type,
-        fieldValue: fieldValue || '',
-        templateFieldId: field._id,
-        isRequired: field.required || false,
-        description: field.description || '',
-        relationType: field.relationType,
-        relationTable: field.relationTable,
-        lookupFields: field.lookupFields,
-        multiple: field.multiple || false,
+        ...section,
+        fields,
       };
     });
 
     const moduleData: ModuleData = {
-      templateId: template._id,
-      templateName: moduleName,
-      templateDescription: fullTemplateData.data.description,
-      fields,
+      sections: updatedSections,
     };
 
     createModuleMutation.mutate(moduleData);
@@ -230,6 +273,25 @@ export default function NewModuleFromTemplateSheet({
         ...prev,
         [fieldId]: value,
       };
+    });
+  };
+
+  const handleAddTemplate = (templateId: string) => {
+    const selectedTemplate = availableTemplates?.find((t) => {
+      return t._id === templateId;
+    });
+    if (!selectedTemplate) return;
+
+    setSections((prev) => {
+      return [
+        ...prev,
+        {
+          templateId: selectedTemplate._id,
+          templateName: selectedTemplate.name,
+          templateDescription: selectedTemplate.description,
+          fields: [],
+        },
+      ];
     });
   };
 
@@ -280,9 +342,7 @@ export default function NewModuleFromTemplateSheet({
       <SheetContent className='sm:max-w-md'>
         <SheetHeader>
           <SheetTitle>Create from Template</SheetTitle>
-          <SheetDescription>
-            Create a new module based on the template &ldquo;{template?.name}&rdquo;.
-          </SheetDescription>
+          <SheetDescription>Create a new module by combining multiple templates.</SheetDescription>
         </SheetHeader>
 
         <form onSubmit={handleSubmit} className='space-y-4 py-4'>
@@ -298,21 +358,68 @@ export default function NewModuleFromTemplateSheet({
             />
           </div>
 
-          {fullTemplateData?.data.fields.map((field: ExtendedTemplateField) => {
+          {sections.map((section, sectionIndex) => {
             return (
-              <div key={field._id} className='space-y-2'>
-                <div className='flex items-center gap-2'>
-                  {getFieldIcon(field.type)}
-                  <Label htmlFor={field._id}>{field.name}</Label>
+              <div key={section.templateId} className='space-y-4'>
+                {sectionIndex > 0 && <Separator className='my-4' />}
+                <div className='space-y-2'>
+                  <h3 className='text-lg font-semibold'>{section.templateName}</h3>
+                  {section.templateDescription && (
+                    <p className='text-sm text-gray-500'>{section.templateDescription}</p>
+                  )}
                 </div>
-                {field.description && <p className='text-sm text-gray-500'>{field.description}</p>}
-                {renderField(field)}
+
+                {templateQueries.data?.[sectionIndex]?.data.fields.map(
+                  (field: ExtendedTemplateField) => {
+                    return (
+                      <div key={field._id} className='space-y-2'>
+                        <div className='flex items-center gap-2'>
+                          {getFieldIcon(field.type)}
+                          <Label htmlFor={field._id}>{field.name}</Label>
+                        </div>
+                        {field.description && (
+                          <p className='text-sm text-gray-500'>{field.description}</p>
+                        )}
+                        {renderField(field)}
+                      </div>
+                    );
+                  },
+                )}
               </div>
             );
           })}
 
+          <div className='flex items-center gap-2'>
+            <Select onValueChange={handleAddTemplate}>
+              <SelectTrigger className='w-full'>
+                <SelectValue placeholder='Add another template' />
+              </SelectTrigger>
+              <SelectContent>
+                {availableTemplates
+                  ?.filter((t) => {
+                    return !sections.some((s) => {
+                      return s.templateId === t._id;
+                    });
+                  })
+                  .map((template) => {
+                    return (
+                      <SelectItem key={template._id} value={template._id}>
+                        {template.name}
+                      </SelectItem>
+                    );
+                  })}
+              </SelectContent>
+            </Select>
+            <Button type='button' variant='outline' size='icon'>
+              <Plus className='h-4 w-4' />
+            </Button>
+          </div>
+
           <SheetFooter>
-            <Button type='submit' disabled={createModuleMutation.isPending || isLoading}>
+            <Button
+              type='submit'
+              disabled={createModuleMutation.isPending || templateQueries.isLoading}
+            >
               {createModuleMutation.isPending ? 'Creating...' : 'Create Module'}
             </Button>
           </SheetFooter>
