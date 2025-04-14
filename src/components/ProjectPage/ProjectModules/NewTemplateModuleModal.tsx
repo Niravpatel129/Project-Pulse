@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -46,6 +46,7 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
   >({});
   const queryClient = useQueryClient();
   const { project } = useProject();
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   console.log('🚀 sections:', sections);
   console.log('🚀 templateDataMap:', templateDataMap);
@@ -165,13 +166,27 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
     );
   };
 
+  const scrollToSection = (sectionId: string) => {
+    const section = sectionRefs.current[sectionId];
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const renderSection = (section) => {
     const template = templateDataMap[section.templateId]?.data;
     if (!template || !template.fields) return null;
 
     return (
       <>
-        <Card className='overflow-hidden border border-gray-200 shadow-sm relative group'>
+        <Card
+          ref={(el) => {
+            if (el) {
+              sectionRefs.current[section.sectionId] = el;
+            }
+          }}
+          className='overflow-hidden border border-gray-200 shadow-sm relative group'
+        >
           {sections.length > 1 && (
             <X
               className='absolute top-2 right-2 cursor-pointer text-gray-400 hover:text-gray-700 transition-all h-4 w-4 opacity-0 group-hover:opacity-100'
@@ -307,6 +322,9 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
                         whileHover={{ backgroundColor: 'rgba(249, 250, 251, 1)' }}
                         whileTap={{ scale: 0.98 }}
                         layout
+                        onClick={() => {
+                          return scrollToSection(section.sectionId);
+                        }}
                       >
                         <div className='flex items-center gap-2'>
                           <div className='flex h-6 w-6 items-center justify-center rounded border border-gray-200 bg-gray-50'>
