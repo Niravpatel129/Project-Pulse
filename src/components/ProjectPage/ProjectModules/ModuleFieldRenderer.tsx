@@ -9,10 +9,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { motion } from 'framer-motion';
-import { File, Image as ImageIcon, X } from 'lucide-react';
-import Image from 'next/image';
+import { Image as ImageIcon } from 'lucide-react';
 import { useState } from 'react';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
+import FilePreview from './FilePreview';
 
 interface ModuleFieldRendererProps {
   field: {
@@ -225,91 +225,15 @@ export default function ModuleFieldRenderer({ field, value, onChange }: ModuleFi
               {Array.isArray(value) ? (
                 value.map((file, index) => {
                   return (
-                    <div key={`${file._id}-${index}`} className='relative w-24'>
-                      {file.contentType?.startsWith('image/') ? (
-                        <div className='relative w-24 h-24 rounded-md overflow-hidden border'>
-                          <Image
-                            src={file.downloadURL}
-                            alt={file.originalName}
-                            fill
-                            className='object-cover'
-                          />
-                          <div className='absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] font-bold py-0.5 px-1 text-center'>
-                            {file.contentType.split('/')[1]?.toUpperCase() || 'IMG'}
-                          </div>
-                          <button
-                            onClick={() => {
-                              return handleRemoveFile(file._id);
-                            }}
-                            className='absolute top-1 right-1 p-1 bg-black/40 rounded-full text-white -hover:opacity-100 transition-opacity z-10'
-                          >
-                            <X className='h-3 w-3' />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className='relative w-24 h-24 rounded-md overflow-hidden border bg-gray-100 flex flex-col items-center justify-center p-2 group'>
-                          <File className='h-6 w-6 text-gray-500' />
-                          <span className='text-xs text-center text-gray-700 mt-1 line-clamp-2'>
-                            {file.originalName}
-                          </span>
-                          <div className='absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] font-bold py-0.5 px-1 text-center'>
-                            {file.contentType.split('/')[1]?.toUpperCase() || 'FILE'}
-                          </div>
-                          <button
-                            onClick={() => {
-                              return handleRemoveFile(file._id);
-                            }}
-                            className='absolute top-1 right-1 p-1 bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity z-10'
-                          >
-                            <X className='h-3 w-3' />
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <FilePreview
+                      key={`${file._id}-${index}`}
+                      file={file}
+                      onRemove={handleRemoveFile}
+                    />
                   );
                 })
               ) : value ? (
-                <div key={`${value._id}-single`} className='relative w-24'>
-                  {value.contentType?.startsWith('image/') ? (
-                    <div className='relative w-24 h-24 rounded-md overflow-hidden border group'>
-                      <Image
-                        src={value.downloadURL}
-                        alt={value.originalName}
-                        fill
-                        className='object-cover'
-                      />
-                      <div className='absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] font-bold py-0.5 px-1 text-center'>
-                        {value.contentType.split('/')[1]?.toUpperCase() || 'IMG'}
-                      </div>
-                      <button
-                        onClick={() => {
-                          return handleRemoveFile(value._id);
-                        }}
-                        className='absolute top-1 right-1 p-1 bg-black/50 rounded-full text-white opacity-100 transition-opacity z-10'
-                      >
-                        <X className='h-3 w-3' />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className='relative w-24 h-24 rounded-md overflow-hidden border bg-gray-100 flex flex-col items-center justify-center p-2 group'>
-                      <File className='h-6 w-6 text-gray-500' />
-                      <span className='text-xs text-center text-gray-700 mt-1 line-clamp-2'>
-                        {value.originalName}
-                      </span>
-                      <div className='absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] font-bold py-0.5 px-1 text-center'>
-                        {value.contentType.split('/')[1]?.toUpperCase() || 'FILE'}
-                      </div>
-                      <button
-                        onClick={() => {
-                          return handleRemoveFile(value._id);
-                        }}
-                        className='absolute top-1 right-1 p-1 bg-black/50 rounded-full text-white opacity-100 transition-opacity z-10'
-                      >
-                        <X className='h-3 w-3' />
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <FilePreview key={`${value._id}-single`} file={value} onRemove={handleRemoveFile} />
               ) : null}
             </div>
             <Button
