@@ -44,14 +44,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Load user from cookie on initial render
   useEffect(() => {
     const loadUserFromCookie = async () => {
       try {
         const token = localStorage.getItem('authToken');
         if (token) {
           const response = await newRequest.get('/auth/me');
-          const userData = response.data;
+          const userData = response?.data?.data?.user;
           setUser(userData);
           setIsAuthenticated(true);
         }
@@ -86,7 +85,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return;
       }
 
-      const redirectUrl = new URL(window.location.href).searchParams.get('redirect');
       const localRedirectUrl = localStorage.getItem('redirect');
 
       if (localRedirectUrl && localRedirectUrl !== '/login') {
@@ -150,6 +148,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const token = localStorage.getItem('authToken');
       if (token) {
+        console.log('🚀 reloading auth');
         const response = await newRequest.get('/auth/me');
         const userData = response.data;
         setUser(userData);

@@ -3,6 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
 import { useProject } from '@/contexts/ProjectContext';
 import { useAiEnhancement } from '@/hooks/useAiEnhancement';
 import { useClickOutside } from '@/hooks/useClickOutside';
@@ -32,8 +33,9 @@ const ProjectMessageInput = () => {
   const expandedRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<EnhancedMessageEditorRef>(null);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  console.log('🚀 user:', user);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [enhancementResult, setEnhancementResult] = useState<{
     original: string;
     enhanced: string;
@@ -175,7 +177,7 @@ const ProjectMessageInput = () => {
             onClick={toggleExpand}
           >
             <Avatar className='h-8 w-8 mr-4'>
-              <AvatarImage src='/message-icon.png' alt='Message' />
+              <AvatarImage src={user?.avatar} alt='Message' />
               <AvatarFallback>
                 <MessageSquare className='h-5 w-5' />
               </AvatarFallback>
@@ -191,10 +193,10 @@ const ProjectMessageInput = () => {
             }}
           >
             <div className='flex items-start gap-4'>
-              <Avatar className='h-8 w-8 shrink-0 mt-1'>
-                <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=AS`} alt='User' />
-                <AvatarFallback className='bg-green-600 text-white font-bold text-sm'>
-                  AS
+              <Avatar className='h-8 w-8 shrink-0 mt-1 bg-[#e94574]'>
+                <AvatarImage src={user?.avatar} alt='User' />
+                <AvatarFallback className='bg-[#e94574] text-white font-bold text-sm uppercase'>
+                  {user?.name.substring(0, 2)}
                 </AvatarFallback>
               </Avatar>
 

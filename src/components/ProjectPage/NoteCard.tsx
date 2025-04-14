@@ -26,6 +26,7 @@ interface NoteCardProps {
       _id: string;
       name: string;
       email: string;
+      avatar?: string;
     };
     createdAt: string;
     updatedAt: string;
@@ -196,12 +197,9 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
       <div className='flex items-start gap-4'>
         <div className='flex-shrink-0'>
           <Avatar className='h-8 w-8 shrink-0 mt-1'>
-            <AvatarImage
-              src={`https://api.dicebear.com/7.x/initials/svg?seed=${localNote.createdBy.name}`}
-              className='object-cover'
-            />
-            <AvatarFallback className='text-sm font-medium text-gray-600'>
-              {localNote.createdBy.name.charAt(0)}
+            <AvatarImage src={localNote.createdBy.avatar} alt='User' />
+            <AvatarFallback className='bg-green-600 text-white font-bold text-sm uppercase'>
+              {localNote.createdBy.name.substring(0, 2)}
             </AvatarFallback>
           </Avatar>
         </div>
