@@ -191,7 +191,6 @@ export default function ProjectHome() {
     },
     enabled: !!project?._id,
   });
-  console.log('🚀 notesData:', notesData);
 
   const { data: activitiesData, isLoading: isLoadingActivities } = useQuery({
     queryKey: ['recentActivities', project?._id],
