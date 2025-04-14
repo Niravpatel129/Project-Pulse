@@ -106,7 +106,7 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
             if (userId && mentionText) {
               return (
                 <MentionHoverCard key={`${userId}-${Math.random()}`} userId={userId}>
-                  {mentionText}
+                  @{mentionText}
                 </MentionHoverCard>
               );
             }
