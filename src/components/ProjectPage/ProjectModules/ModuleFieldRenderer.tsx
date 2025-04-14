@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -8,6 +9,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { motion } from 'framer-motion';
+import { File } from 'lucide-react';
+import { useState } from 'react';
+import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 
 interface ModuleFieldRendererProps {
   field: {
@@ -22,12 +26,40 @@ interface ModuleFieldRendererProps {
     min?: number;
     max?: number;
     step?: number;
+    fieldSettings?: {
+      multipleFiles?: boolean;
+    };
   };
   value: any;
   onChange: (value: any) => void;
 }
 
 export default function ModuleFieldRenderer({ field, value, onChange }: ModuleFieldRendererProps) {
+  const [isFileModalOpen, setIsFileModalOpen] = useState(false);
+
+  const handleAddFileToProject = (file) => {
+    if (field.fieldSettings?.multipleFiles) {
+      const currentFiles = Array.isArray(value) ? value : [];
+      onChange([...currentFiles, file]);
+    } else {
+      onChange(file);
+    }
+    setIsFileModalOpen(false);
+  };
+
+  const handleRemoveFile = (fileId) => {
+    if (field.fieldSettings?.multipleFiles) {
+      const currentFiles = Array.isArray(value) ? value : [];
+      onChange(
+        currentFiles.filter((file) => {
+          return file._id !== fileId;
+        }),
+      );
+    } else {
+      onChange(null);
+    }
+  };
+
   const renderField = () => {
     switch (field.type) {
       case 'text':
@@ -183,6 +215,68 @@ export default function ModuleFieldRenderer({ field, value, onChange }: ModuleFi
             }}
             rows={3}
           />
+        );
+
+      case 'files':
+        return (
+          <div className='space-y-2'>
+            <div className='flex flex-wrap gap-2'>
+              {Array.isArray(value) ? (
+                value.map((file, index) => {
+                  return (
+                    <div
+                      key={`${file._id}-${index}`}
+                      className='flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-md'
+                    >
+                      <File className='h-4 w-4' />
+                      <span className='text-sm'>{file.originalName}</span>
+                      <button
+                        onClick={() => {
+                          return handleRemoveFile(file._id);
+                        }}
+                        className='text-gray-500 hover:text-gray-700'
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })
+              ) : value ? (
+                <div
+                  key={`${value._id}-single`}
+                  className='flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-md'
+                >
+                  <File className='h-4 w-4' />
+                  <span className='text-sm'>{value.originalName}</span>
+                  <button
+                    onClick={() => {
+                      return handleRemoveFile(value._id);
+                    }}
+                    className='text-gray-500 hover:text-gray-700'
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : null}
+            </div>
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              onClick={() => {
+                return setIsFileModalOpen(true);
+              }}
+            >
+              {field.fieldSettings?.multipleFiles ? 'Add Files' : 'Add File'}
+            </Button>
+            <FileUploadManagerModal
+              isOpen={isFileModalOpen}
+              onClose={() => {
+                return setIsFileModalOpen(false);
+              }}
+              handleAddFileToProject={handleAddFileToProject}
+            />
+          </div>
         );
 
       default:
