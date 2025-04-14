@@ -18,9 +18,9 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { ChevronRight, CreditCard, FileText, Grid, Paperclip, Plus, User, X } from 'lucide-react';
+import { ChevronRight, Grid, Plus, X } from 'lucide-react';
 import { useState } from 'react';
 
 export default function NewTemplateModuleModal({ isOpen, onClose, template, templateName }) {
@@ -48,6 +48,16 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
 
   console.log('🚀 sections:', sections);
   console.log('🚀 templateDataMap:', templateDataMap);
+
+  const { data: availableTemplates } = useQuery({
+    queryKey: ['templates'],
+    queryFn: async () => {
+      const response = await newRequest.get('/module-templates');
+      return response.data.data;
+    },
+    enabled: isOpen,
+  });
+
   useEffect(() => {
     if (isOpen) {
       newRequest.get(`/module-templates/${template._id}`).then((response) => {
@@ -72,17 +82,70 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
     }
   }, [isOpen, template._id]);
 
-  const templateOptions = [
-    { id: 'shipping', name: 'Shipping Template', icon: <Paperclip className='h-3.5 w-3.5' /> },
-    { id: 'billing', name: 'Billing Template', icon: <CreditCard className='h-3.5 w-3.5' /> },
-    { id: 'product', name: 'Product Template', icon: <FileText className='h-3.5 w-3.5' /> },
-    { id: 'customer', name: 'Customer Template', icon: <User className='h-3.5 w-3.5' /> },
-  ];
-
   const handleAddTemplate = (templateId: string) => {
-    if (!selectedTemplates.includes(templateId)) {
-      setSelectedTemplates([...selectedTemplates, templateId]);
+    const selectedTemplate = availableTemplates?.find((t) => {
+      return t._id === templateId;
+    });
+    if (!selectedTemplate) return;
+
+    // Count existing sections with this template to create unique sectionId
+    const existingSectionsCount = sections.filter((s) => {
+      return s.templateId === templateId;
+    }).length;
+    const newSectionId = `${templateId}-${existingSectionsCount}`;
+
+    // Add new section
+    setSections((prev) => {
+      return [
+        ...prev,
+        {
+          templateId: selectedTemplate._id,
+          templateName: selectedTemplate.name,
+          templateDescription: selectedTemplate.description,
+          fields: [],
+          sectionId: newSectionId,
+        },
+      ];
+    });
+
+    // Fetch and add new template data if not already in map
+    if (!templateDataMap[templateId]) {
+      newRequest.get(`/module-templates/${templateId}`).then((response) => {
+        const templateData = response.data;
+        setTemplateDataMap((prev) => {
+          return {
+            ...prev,
+            [templateId]: templateData,
+          };
+        });
+        // Initialize form values for the new section
+        const initialValues: Record<string, any> = {};
+        templateData.data.fields.forEach((field) => {
+          initialValues[field._id] = field.multiple ? [] : '';
+        });
+        setSectionFormValues((prev) => {
+          return {
+            ...prev,
+            [newSectionId]: initialValues,
+          };
+        });
+      });
+    } else {
+      // If template data already exists, just initialize the form values
+      const templateData = templateDataMap[templateId];
+      const initialValues: Record<string, any> = {};
+      templateData.data.fields.forEach((field) => {
+        initialValues[field._id] = field.multiple ? [] : '';
+      });
+      setSectionFormValues((prev) => {
+        return {
+          ...prev,
+          [newSectionId]: initialValues,
+        };
+      });
     }
+
+    setIsPopoverOpen(false);
   };
 
   const handleRemoveTemplate = (templateId: string) => {
@@ -93,13 +156,29 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
     );
   };
 
+  const removeSection = (sectionId: string) => {
+    setSections(
+      sections.filter((section) => {
+        return section.sectionId !== sectionId;
+      }),
+    );
+  };
+
   const renderSection = (section) => {
     const template = templateDataMap[section.templateId]?.data;
     if (!template || !template.fields) return null;
 
     return (
       <>
-        <Card className='overflow-hidden border border-gray-200 shadow-sm'>
+        <Card className='overflow-hidden border border-gray-200 shadow-sm relative group'>
+          {sections.length > 1 && (
+            <X
+              className='absolute top-2 right-2 cursor-pointer text-gray-400 hover:text-gray-700 transition-all h-4 w-4 opacity-0 group-hover:opacity-100'
+              onClick={() => {
+                return removeSection(section.sectionId);
+              }}
+            />
+          )}
           <CardContent className='p-4'>
             <div className='flex items-center gap-2 pb-3'>
               <div className='flex h-6 w-6 items-center justify-center rounded border border-gray-200 bg-gray-50'>
@@ -204,7 +283,9 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
                     <div className='flex h-6 w-6 items-center justify-center rounded bg-blue-500 text-white shadow-sm'>
                       <Grid className='h-3.5 w-3.5' />
                     </div>
-                    <span className='text-sm font-medium text-gray-800'>Order Template</span>
+                    <span className='text-sm font-medium text-gray-800 capitalize'>
+                      {templateName}
+                    </span>
                   </div>
                 </motion.div>
               </div>
@@ -214,9 +295,10 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
                   APPENDED TEMPLATES
                 </p>
                 <div className='space-y-0.5'>
-                  {selectedTemplates.map((templateId) => {
-                    const template = templateOptions.find((t) => {
-                      return t.id === templateId;
+                  {availableTemplates.map((templateId) => {
+                    console.log('🚀 templateId:', templateId);
+                    const template = availableTemplates.find((t) => {
+                      return t._id === templateId;
                     });
                     if (!template) return null;
 
@@ -275,34 +357,24 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
                       avoidCollisions={false}
                     >
                       <div className='py-1'>
-                        {templateOptions
-                          .filter((template) => {
-                            return !selectedTemplates.includes(template.id);
-                          })
-                          .map((template) => {
-                            return (
-                              <motion.div
-                                key={template.id}
-                                className='flex cursor-pointer items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-50'
-                                whileHover={{ backgroundColor: 'rgba(249, 250, 251, 1)' }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => {
-                                  return handleAddTemplate(template.id);
-                                }}
-                              >
-                                <div className='flex items-center gap-2'>
-                                  {template.icon}
-                                  <span>{template.name}</span>
-                                </div>
-                                <ChevronRight className='h-3 w-3 text-gray-400' />
-                              </motion.div>
-                            );
-                          })}
-                        {templateOptions.length === selectedTemplates.length && (
-                          <div className='px-3 py-2 text-sm text-gray-500 italic'>
-                            All templates added
-                          </div>
-                        )}
+                        {availableTemplates.map((template) => {
+                          return (
+                            <motion.div
+                              key={template.id}
+                              className='flex cursor-pointer items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-50'
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => {
+                                return handleAddTemplate(template._id);
+                              }}
+                            >
+                              <div className='flex items-center gap-2'>
+                                {template.icon}
+                                <span>{template.name}</span>
+                              </div>
+                              <ChevronRight className='h-3 w-3 text-gray-400' />
+                            </motion.div>
+                          );
+                        })}
                       </div>
                     </PopoverContent>
                   </Popover>
@@ -313,10 +385,11 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
 
           {/* Main content */}
           <div className='flex-1 overflow-auto bg-white p-5 max-h-[90vh] min-h-[85vh] overflow-y-auto flex flex-col'>
-            <h1 className='text-lg font-medium tracking-tight text-gray-900'>Create Order</h1>
+            <h1 className='text-lg font-medium tracking-tight text-gray-900'>New Module</h1>
 
             <div className='mt-4 space-y-4 flex-1'>
               <motion.div
+                className='flex flex-col gap-4'
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
