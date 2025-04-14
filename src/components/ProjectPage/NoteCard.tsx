@@ -3,12 +3,10 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { newRequest } from '@/utils/newRequest';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNotes } from '@/contexts/NotesContext';
 import { formatDistanceToNow } from 'date-fns';
 import { FileText, Pencil, Save, X } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { toast } from 'sonner';
 import EnhancedMessageEditor, { EnhancedMessageEditorRef } from './EnhancedMessageEditor';
 
 interface NoteCardProps {
@@ -31,7 +29,6 @@ interface NoteCardProps {
     createdAt: string;
     updatedAt: string;
   };
-  onUpdate?: (noteId: string, content: string, attachments: any[]) => Promise<void>;
   participants?: {
     _id: string;
     name: string;
@@ -40,9 +37,10 @@ interface NoteCardProps {
   }[];
 }
 
-export function NoteCard({ note, onUpdate, participants = [] }: NoteCardProps) {
+export function NoteCard({ note, participants = [] }: NoteCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const editorRef = useRef<EnhancedMessageEditorRef>(null);
+  const [localNote, setLocalNote] = useState(note);
   const [attachments, setAttachments] = useState(
     note.attachments.map((attachment) => {
       return {
@@ -56,91 +54,33 @@ export function NoteCard({ note, onUpdate, participants = [] }: NoteCardProps) {
     }),
   );
 
-  const queryClient = useQueryClient();
-
-  const { mutate: updateNote, isPending: isUpdating } = useMutation({
-    mutationFn: async ({ content, attachments }: { content: string; attachments: any[] }) => {
-      const response = await newRequest.put(`/notes/${note._id}`, {
-        content,
-        attachments: attachments.map((attachment) => {
-          return {
-            _id: attachment.fileId,
-            name: attachment.name,
-            originalName: attachment.name,
-            downloadURL: attachment.downloadURL,
-            contentType: attachment.type,
-            size: attachment.size,
-          };
-        }),
-      });
-      return response.data;
-    },
-    onMutate: async (newNote) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['notes'] });
-
-      // Snapshot the previous value
-      const previousNotes = queryClient.getQueryData(['notes']);
-
-      // Optimistically update to the new value
-      queryClient.setQueryData(['notes'], (old: any) => {
-        if (!old) return old;
-        return old.map((n: any) => {
-          if (n._id === note._id) {
-            return {
-              ...n,
-              content: newNote.content,
-              attachments: newNote.attachments.map((attachment) => {
-                return {
-                  _id: attachment.fileId,
-                  name: attachment.name,
-                  originalName: attachment.name,
-                  downloadURL: attachment.downloadURL,
-                  contentType: attachment.type,
-                  size: attachment.size,
-                };
-              }),
-              updatedAt: new Date().toISOString(),
-            };
-          }
-          return n;
-        });
-      });
-
-      // Return a context object with the snapshotted value
-      return { previousNotes };
-    },
-    onError: (error: Error, variables, context) => {
-      // If the mutation fails, use the context returned from onMutate to roll back
-      if (context?.previousNotes) {
-        queryClient.setQueryData(['notes'], context.previousNotes);
-      }
-      toast.error('Failed to update note', {
-        description: error.message || 'There was a problem updating the note. Please try again.',
-      });
-    },
-    onSettled: () => {
-      // Always refetch after error or success to ensure data is in sync
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-    },
-    onSuccess: () => {
-      toast.success('Note updated successfully');
-      setIsEditing(false);
-    },
-  });
+  const { updateNote } = useNotes();
 
   const handleSave = async () => {
     if (editorRef.current) {
       const content = editorRef.current.getHTML();
-      // Only update if content or attachments have changed
-      if (
-        content !== note.content ||
-        JSON.stringify(attachments) !== JSON.stringify(note.attachments)
-      ) {
-        updateNote({ content, attachments });
-      } else {
-        setIsEditing(false);
-      }
+      // Update local state immediately
+      setLocalNote((prev) => {
+        return {
+          ...prev,
+          content,
+          attachments: attachments.map((attachment) => {
+            return {
+              _id: attachment.fileId,
+              name: attachment.name,
+              originalName: attachment.name,
+              downloadURL: attachment.downloadURL,
+              contentType: attachment.type,
+              size: attachment.size,
+            };
+          }),
+          updatedAt: new Date().toISOString(),
+        };
+      });
+
+      // Then make the API call
+      await updateNote(note._id, content, attachments);
+      setIsEditing(false);
     }
   };
 
@@ -158,6 +98,7 @@ export function NoteCard({ note, onUpdate, participants = [] }: NoteCardProps) {
         };
       }),
     );
+    setLocalNote(note);
     setIsEditing(false);
   };
 
@@ -167,20 +108,20 @@ export function NoteCard({ note, onUpdate, participants = [] }: NoteCardProps) {
         <div className='flex-shrink-0'>
           <Avatar>
             <AvatarImage
-              src={`https://api.dicebear.com/7.x/initials/svg?seed=${note.createdBy.name}`}
+              src={`https://api.dicebear.com/7.x/initials/svg?seed=${localNote.createdBy.name}`}
             />
-            <AvatarFallback>{note.createdBy.name.charAt(0)}</AvatarFallback>
+            <AvatarFallback>{localNote.createdBy.name.charAt(0)}</AvatarFallback>
           </Avatar>
         </div>
         <div className='flex-1'>
           <div className='flex items-center justify-between'>
             <div>
-              <p className='text-sm font-medium'>{note.createdBy.name}</p>
-              <p className='text-xs text-gray-500'>{note.createdBy.email}</p>
+              <p className='text-sm font-medium'>{localNote.createdBy.name}</p>
+              <p className='text-xs text-gray-500'>{localNote.createdBy.email}</p>
             </div>
             <div className='flex items-center gap-2'>
               <p className='text-xs text-gray-500'>
-                {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true })}
+                {formatDistanceToNow(new Date(localNote.createdAt), { addSuffix: true })}
               </p>
               {!isEditing && (
                 <Button
@@ -201,42 +142,33 @@ export function NoteCard({ note, onUpdate, participants = [] }: NoteCardProps) {
               <div className='space-y-2'>
                 <EnhancedMessageEditor
                   ref={editorRef}
-                  content={note.content}
+                  content={localNote.content}
                   editable={true}
                   participants={participants}
                   attachments={attachments}
                   onAttachmentsChange={setAttachments}
                 />
                 <div className='flex justify-end gap-2'>
-                  <Button variant='outline' size='sm' onClick={handleCancel} disabled={isUpdating}>
+                  <Button variant='outline' size='sm' onClick={handleCancel}>
                     <X className='h-4 w-4 mr-1' />
                     Cancel
                   </Button>
-                  <Button size='sm' onClick={handleSave} disabled={isUpdating}>
-                    {isUpdating ? (
-                      <>
-                        <span className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent' />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className='h-4 w-4 mr-1' />
-                        Save
-                      </>
-                    )}
+                  <Button size='sm' onClick={handleSave}>
+                    <Save className='h-4 w-4 mr-1' />
+                    Save
                   </Button>
                 </div>
               </div>
             ) : (
               <div
                 className='prose prose-sm max-w-none'
-                dangerouslySetInnerHTML={{ __html: note.content }}
+                dangerouslySetInnerHTML={{ __html: localNote.content }}
               />
             )}
           </div>
-          {!isEditing && note.attachments && note.attachments.length > 0 && (
+          {!isEditing && localNote.attachments && localNote.attachments.length > 0 && (
             <div className='mt-2 flex flex-wrap gap-2'>
-              {note.attachments.map((attachment) => {
+              {localNote.attachments.map((attachment) => {
                 return (
                   <a
                     key={attachment._id}

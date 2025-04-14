@@ -2,6 +2,7 @@
 
 import { Attachment as ApiAttachment } from '@/api/models';
 import { Card } from '@/components/ui/card';
+import { NotesProvider } from '@/contexts/NotesContext';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
@@ -295,15 +296,9 @@ export default function ProjectHome() {
                 } else if (item.type === 'note') {
                   const note = item.data as Note;
                   return (
-                    <div key={`note-${note._id}`}>
-                      <NoteCard
-                        note={note}
-                        onUpdate={async (noteId, content) => {
-                          // TODO: Implement note update functionality
-                          console.log('Updating note:', noteId, content);
-                        }}
-                      />
-                    </div>
+                    <NotesProvider key={`note-${note._id}`} projectId={project._id}>
+                      <NoteCard note={note} />
+                    </NotesProvider>
                   );
                 } else {
                   const thread = item.data as EmailThread & {
