@@ -32,7 +32,7 @@ export function MentionHoverCard({ userId, children }: MentionHoverCardProps) {
       <HoverCardTrigger asChild>
         <span className='cursor-pointer text-blue-500 hover:underline'>{children}</span>
       </HoverCardTrigger>
-      <HoverCardContent className='w-80'>
+      <HoverCardContent className='w-80 z-50' sideOffset={5} align='start' side='top'>
         {isLoading ? (
           <div className='space-y-4'>
             <div className='flex items-center space-x-4'>
