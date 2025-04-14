@@ -195,7 +195,7 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
     <Card className='p-5 space-y-5 transition-all duration-200 hover:shadow-sm group'>
       <div className='flex items-start gap-4'>
         <div className='flex-shrink-0'>
-          <Avatar className='h-10 w-10 ring-1 ring-gray-100'>
+          <Avatar className='h-8 w-8 shrink-0 mt-1'>
             <AvatarImage
               src={`https://api.dicebear.com/7.x/initials/svg?seed=${localNote.createdBy.name}`}
               className='object-cover'

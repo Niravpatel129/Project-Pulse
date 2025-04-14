@@ -179,16 +179,16 @@ const ProjectMessageInput = () => {
       <Card className='border border-gray-200 bg-white shadow-sm'>
         {!isExpanded ? (
           <div
-            className='flex items-center p-4 cursor-pointer hover:bg-gray-50 transition-colors rounded-t-lg'
+            className='flex items-center p-3 cursor-pointer hover:bg-gray-50 transition-colors rounded-t-lg'
             onClick={toggleExpand}
           >
-            <Avatar className='h-10 w-10 mr-4'>
+            <Avatar className='h-8 w-8 mr-4'>
               <AvatarImage src='/message-icon.png' alt='Message' />
               <AvatarFallback>
                 <MessageSquare className='h-5 w-5' />
               </AvatarFallback>
             </Avatar>
-            <span className='text-gray-500'>Send message</span>
+            <span className='text-gray-500 text-sm'>Add message or project note...</span>
           </div>
         ) : (
           <div
@@ -199,9 +199,12 @@ const ProjectMessageInput = () => {
             }}
           >
             <div className='flex items-start gap-4'>
-              <div className='w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm shrink-0 mt-1'>
-                AS
-              </div>
+              <Avatar className='h-8 w-8 shrink-0 mt-1'>
+                <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=AS`} alt='User' />
+                <AvatarFallback className='bg-green-600 text-white font-bold text-sm'>
+                  AS
+                </AvatarFallback>
+              </Avatar>
 
               <div className='flex-1 min-w-0 space-y-3'>
                 <div className='relative'>
