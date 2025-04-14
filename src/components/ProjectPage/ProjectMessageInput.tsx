@@ -10,6 +10,7 @@ import { useProject } from '@/contexts/ProjectContext';
 import { useAiEnhancement } from '@/hooks/useAiEnhancement';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { cn } from '@/lib/utils';
+import { newRequest } from '@/utils/newRequest';
 import { ImageIcon, Link2, MessageSquare, Paperclip, Sparkles, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -25,10 +26,6 @@ interface MessageAttachment {
   downloadURL: string;
 }
 
-interface ProjectMessageInputProps {
-  onSend: (data: any) => void;
-}
-
 const QUICK_ENHANCE_OPTIONS = [
   { label: 'Make it more professional', value: 'professional' },
   { label: 'Make it more friendly', value: 'friendly' },
@@ -37,7 +34,7 @@ const QUICK_ENHANCE_OPTIONS = [
   { label: 'Make it more detailed', value: 'detailed' },
 ];
 
-const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
+const ProjectMessageInput = () => {
   const { project } = useProject();
   const [content, setContent] = useState('');
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
@@ -63,17 +60,32 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
 
     setIsSending(true);
     try {
-      await onSend({ content, attachments });
-      setContent('');
-      editorRef.current?.clearContent();
-      setAttachments([]);
-      toast.success('Message sent', {
-        description: 'Your message has been sent successfully.',
+      const response = await newRequest.post('/notes', {
+        content,
+        attachments,
+        projectId: project?._id,
       });
+      console.log('🚀 response:', response);
+
+      if (response.status === 201) {
+        setContent('');
+        editorRef.current?.clearContent();
+        setAttachments([]);
+        toast.success('Message sent', {
+          description: 'Your message has been sent successfully.',
+        });
+
+        setIsExpanded(false);
+      } else {
+        throw new Error(response.data.message || 'Failed to send message');
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message', {
-        description: 'There was a problem sending your message. Please try again.',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'There was a problem sending your message. Please try again.',
       });
     } finally {
       setIsSending(false);
@@ -341,8 +353,16 @@ const ProjectMessageInput = ({ onSend }: ProjectMessageInputProps) => {
                     size='sm'
                     className='text-sm text-muted-foreground hover:text-foreground text-white hover:text-white'
                     onClick={handleSend}
+                    disabled={isSending}
                   >
-                    Send
+                    {isSending ? (
+                      <>
+                        <span className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent' />
+                        Sending...
+                      </>
+                    ) : (
+                      'Send'
+                    )}
                   </Button>
                 </div>
               </div>
