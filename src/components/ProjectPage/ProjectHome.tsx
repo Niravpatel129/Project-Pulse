@@ -259,7 +259,7 @@ export default function ProjectHome() {
       <div className='space-y-4'>
         <h3 className='text-sm font-medium'>Recent activity & messages</h3>
         <div className='space-y-4'>
-          {isLoadingActivities || isLoadingEmails ? (
+          {isLoadingActivities || isLoadingEmails || isLoadingNotes ? (
             <div className='text-sm text-gray-500'>Loading activities and emails...</div>
           ) : (
             <AnimatePresence mode='popLayout'>
