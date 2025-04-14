@@ -138,35 +138,6 @@ const ProjectMessageInput = () => {
     }
   };
 
-  const handleEnhanceText = async (enhanceType: string) => {
-    const selectedText = editorRef.current?.enhanceSelection();
-    if (!selectedText) {
-      toast.error('Please select some text to enhance');
-      return;
-    }
-
-    enhanceText(
-      {
-        text: selectedText,
-        enhanceType,
-        customPrompt: customEnhancePrompt,
-      },
-      {
-        onSuccess: (data) => {
-          setEnhancementResult({
-            original: data.originalText,
-            enhanced: data.enhancedText,
-          });
-          editorRef.current?.updateSelection(data.enhancedText);
-          setCustomEnhancePrompt('');
-          toast.success('Text enhanced!', {
-            description: 'Your text has been enhanced.',
-          });
-        },
-      },
-    );
-  };
-
   return (
     <>
       <Card className='border border-gray-200 bg-white shadow-sm'>

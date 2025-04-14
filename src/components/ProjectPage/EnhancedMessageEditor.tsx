@@ -127,7 +127,18 @@ const EnhancedMessageEditor = forwardRef<EnhancedMessageEditorRef, EnhancedMessa
 
     const editor = useEditor({
       extensions: [
-        StarterKit,
+        StarterKit.configure({
+          paragraph: {
+            HTMLAttributes: {
+              class: 'mb-2',
+            },
+          },
+          hardBreak: {
+            HTMLAttributes: {
+              class: 'break',
+            },
+          },
+        }),
         Underline,
         Link.configure({
           openOnClick: false,
