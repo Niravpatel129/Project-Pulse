@@ -141,8 +141,6 @@ interface TimelineItem {
 
 // Helper function to recursively map email messages
 const mapEmailMessage = (message: EmailMessage) => {
-  console.log('🚀 message:', message);
-
   return {
     id: message._id,
     from: {

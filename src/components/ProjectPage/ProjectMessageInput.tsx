@@ -34,7 +34,6 @@ const ProjectMessageInput = () => {
   const editorRef = useRef<EnhancedMessageEditorRef>(null);
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  console.log('🚀 user:', user);
   const [isExpanded, setIsExpanded] = useState(false);
   const [enhancementResult, setEnhancementResult] = useState<{
     original: string;
