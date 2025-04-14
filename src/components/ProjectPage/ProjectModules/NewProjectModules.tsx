@@ -34,10 +34,10 @@ import { LuFigma } from 'react-icons/lu';
 import { toast } from 'sonner';
 import FigmaManagerModal from '../FileComponents/FigmaManagerModal';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
-import NewModuleFromTemplateSheet from '../FileComponents/NewModuleFromTemplateSheet';
 import NewTemplateSheet from '../FileComponents/NewTemplateSheet';
 import { Module } from '../ModuleComponents/types';
 import ModuleDialog from './ModuleDialog';
+import NewTemplateModuleModal from './NewTemplateModuleModal';
 
 export default function NewProjectModules() {
   const {
@@ -383,13 +383,24 @@ export default function NewProjectModules() {
         onSave={handleSaveTemplate}
       />
 
-      {selectedTemplate && (
+      {/* {selectedTemplate && (
         <NewModuleFromTemplateSheet
           isOpen={isNewModuleFromTemplateSheetOpen}
           onClose={() => {
             setIsNewModuleFromTemplateSheetOpen(false);
             setSelectedTemplate(null);
           }}
+          template={selectedTemplate}
+        />
+      )} */}
+      {selectedTemplate && (
+        <NewTemplateModuleModal
+          isOpen={isNewModuleFromTemplateSheetOpen}
+          onClose={() => {
+            setIsNewModuleFromTemplateSheetOpen(false);
+            setSelectedTemplate(null);
+          }}
+          onSave={handleSaveTemplate}
           template={selectedTemplate}
         />
       )}
