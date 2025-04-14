@@ -192,43 +192,50 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
   };
 
   return (
-    <Card className='p-3'>
-      <div className='flex items-start gap-3'>
+    <Card className='p-5 space-y-5 transition-all duration-200 hover:shadow-sm group'>
+      <div className='flex items-start gap-4'>
         <div className='flex-shrink-0'>
-          <Avatar>
+          <Avatar className='h-10 w-10 ring-1 ring-gray-100'>
             <AvatarImage
               src={`https://api.dicebear.com/7.x/initials/svg?seed=${localNote.createdBy.name}`}
+              className='object-cover'
             />
-            <AvatarFallback>{localNote.createdBy.name.charAt(0)}</AvatarFallback>
+            <AvatarFallback className='text-sm font-medium text-gray-600'>
+              {localNote.createdBy.name.charAt(0)}
+            </AvatarFallback>
           </Avatar>
         </div>
-        <div className='flex-1'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <div className='text-sm font-medium'>{localNote.createdBy.name}</div>
-              <div className='text-xs text-gray-500'>{localNote.createdBy.email}</div>
+        <div className='flex-1 min-w-0'>
+          <div className='flex items-center justify-between mb-3'>
+            <div className='space-y-1'>
+              <div className='text-sm font-medium text-gray-900 tracking-tight'>
+                {localNote.createdBy.name}
+              </div>
+              <div className='text-xs text-gray-500 tracking-tight'>
+                {localNote.createdBy.email}
+              </div>
             </div>
-            <div className='flex items-center gap-2'>
-              <div className='text-xs text-gray-500'>
+            <div className='flex items-center gap-3'>
+              <div className='text-xs text-gray-500 tracking-tight'>
                 {formatDistanceToNow(new Date(localNote.createdAt), { addSuffix: true })}
               </div>
               {!isEditing && (
                 <Button
                   variant='ghost'
                   size='icon'
-                  className='h-6 w-6'
+                  className='h-8 w-8 hover:bg-gray-50 transition-colors opacity-0 group-hover:opacity-100'
                   onClick={() => {
                     return setIsEditing(true);
                   }}
                 >
-                  <Pencil className='h-4 w-4' />
+                  <Pencil className='h-3.5 w-3.5 text-gray-500' />
                 </Button>
               )}
             </div>
           </div>
-          <div className='mt-2'>
+          <div className='mt-3'>
             {isEditing ? (
-              <div className='space-y-2'>
+              <div className='space-y-4'>
                 <EnhancedMessageEditor
                   ref={editorRef}
                   content={localNote.content}
@@ -237,23 +244,34 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
                   attachments={attachments}
                   onAttachmentsChange={setAttachments}
                 />
-                <div className='flex justify-end gap-2'>
-                  <Button variant='outline' size='sm' onClick={handleCancel}>
-                    <X className='h-4 w-4 mr-1' />
+                <div className='flex justify-end gap-3'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={handleCancel}
+                    className='h-8 px-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors'
+                  >
+                    <X className='h-3.5 w-3.5 mr-1.5' />
                     Cancel
                   </Button>
-                  <Button size='sm' onClick={handleSave}>
-                    <Save className='h-4 w-4 mr-1' />
+                  <Button
+                    size='sm'
+                    onClick={handleSave}
+                    className='h-8 px-3 text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition-colors'
+                  >
+                    <Save className='h-3.5 w-3.5 mr-1.5' />
                     Save
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className='prose prose-sm max-w-none'>{renderedContent}</div>
+              <div className='prose prose-sm max-w-none text-gray-700 leading-relaxed'>
+                {renderedContent}
+              </div>
             )}
           </div>
           {!isEditing && localNote.attachments && localNote.attachments.length > 0 && (
-            <div className='mt-2 flex flex-wrap gap-2'>
+            <div className='mt-4 flex flex-wrap gap-2'>
               {localNote.attachments.map((attachment) => {
                 return (
                   <a
@@ -261,10 +279,10 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
                     href={attachment.downloadURL}
                     target='_blank'
                     rel='noopener noreferrer'
-                    className='inline-flex items-center gap-1 text-xs text-blue-500 hover:underline'
+                    className='inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-all duration-200'
                   >
-                    <FileText className='h-3 w-3' />
-                    {attachment.originalName}
+                    <FileText className='h-3.5 w-3.5' />
+                    <span className='truncate max-w-[200px]'>{attachment.originalName}</span>
                   </a>
                 );
               })}
