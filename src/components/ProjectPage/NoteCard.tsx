@@ -90,7 +90,16 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
                 className: element.className,
                 ...Object.fromEntries(
                   Array.from(element.attributes).map((attr) => {
-                    return [attr.name, attr.value];
+                    // Convert HTML attributes to React props
+                    const name =
+                      attr.name === 'class'
+                        ? 'className'
+                        : attr.name === 'for'
+                        ? 'htmlFor'
+                        : attr.name === 'tabindex'
+                        ? 'tabIndex'
+                        : attr.name;
+                    return [name, attr.value];
                   }),
                 ),
               },
@@ -128,7 +137,16 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
                 className: `${element.className} min-h-[1.5em]`,
                 ...Object.fromEntries(
                   Array.from(element.attributes).map((attr) => {
-                    return [attr.name, attr.value];
+                    // Convert HTML attributes to React props
+                    const name =
+                      attr.name === 'class'
+                        ? 'className'
+                        : attr.name === 'for'
+                        ? 'htmlFor'
+                        : attr.name === 'tabindex'
+                        ? 'tabIndex'
+                        : attr.name;
+                    return [name, attr.value];
                   }),
                 ),
               },
@@ -143,7 +161,16 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
               className: element.className,
               ...Object.fromEntries(
                 Array.from(element.attributes).map((attr) => {
-                  return [attr.name, attr.value];
+                  // Convert HTML attributes to React props
+                  const name =
+                    attr.name === 'class'
+                      ? 'className'
+                      : attr.name === 'for'
+                      ? 'htmlFor'
+                      : attr.name === 'tabindex'
+                      ? 'tabIndex'
+                      : attr.name;
+                  return [name, attr.value];
                 }),
               ),
             },

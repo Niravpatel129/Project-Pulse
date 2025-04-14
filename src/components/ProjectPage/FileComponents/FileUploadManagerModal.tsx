@@ -117,13 +117,13 @@ export default function FileUploadManagerModal({
         className='h-[90vh] max-h-[90vh] w-screen flex flex-col rounded-t-2xl'
       >
         <VisuallyHidden>
-          <SheetTitle>My Storage</SheetTitle>
+          <SheetTitle>Workspace Storage</SheetTitle>
           <SheetDescription>Storage</SheetDescription>
         </VisuallyHidden>
         <div className='px-6 flex h-full'>
           <div className={`flex-1 flex flex-col ${showDetails ? 'pr-4' : ''}`}>
             <CardHeader className='flex flex-row items-center justify-between shrink-0 pb-0'>
-              <CardTitle className='text-lg font-bold'>My Storage</CardTitle>
+              <CardTitle className='text-lg font-bold'>Workspace Storage</CardTitle>
               <input
                 type='file'
                 ref={fileInputRef}
