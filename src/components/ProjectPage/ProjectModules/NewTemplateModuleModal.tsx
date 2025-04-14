@@ -6,16 +6,7 @@ import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
@@ -23,6 +14,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Grid, InfoIcon, Plus, X } from 'lucide-react';
 import { useState } from 'react';
 import { FcDocument } from 'react-icons/fc';
+import ModuleFieldRenderer from './ModuleFieldRenderer';
 
 export default function NewTemplateModuleModal({ isOpen, onClose, template, templateName }) {
   const [selectedTemplates, setSelectedTemplates] = useState<string[]>(['shipping']);
@@ -211,69 +203,22 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
               <div className='space-y-3'>
                 {template.fields.map((field) => {
                   return (
-                    <motion.div
+                    <ModuleFieldRenderer
                       key={field._id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.2, delay: 0.1 }}
-                    >
-                      <Label htmlFor={field._id} className='text-xs font-medium text-gray-700'>
-                        {field.name}
-                        {field.required && <span className='text-red-500 ml-1'>*</span>}
-                      </Label>
-                      {field.type === 'text' && (
-                        <Input
-                          id={field._id}
-                          placeholder={`Enter ${field.name}`}
-                          className='mt-1 h-9 border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm transition-all focus-visible:border-gray-300 focus-visible:ring-1 focus-visible:ring-gray-300'
-                          value={sectionFormValues[section.templateId]?.[field._id] || ''}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            setSectionFormValues((prev) => {
-                              return {
-                                ...prev,
-                                [section.templateId]: {
-                                  ...(prev[section.templateId] || {}),
-                                  [field._id]: value,
-                                },
-                              };
-                            });
-                          }}
-                        />
-                      )}
-                      {field.type === 'relation' && (
-                        <Select
-                          value={sectionFormValues[section.templateId]?.[field._id] || ''}
-                          onValueChange={(value) => {
-                            setSectionFormValues((prev) => {
-                              return {
-                                ...prev,
-                                [section.templateId]: {
-                                  ...(prev[section.templateId] || {}),
-                                  [field._id]: value,
-                                },
-                              };
-                            });
-                          }}
-                        >
-                          <SelectTrigger className='mt-1 h-9 border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm transition-all focus-visible:border-gray-300 focus-visible:ring-1 focus-visible:ring-gray-300'>
-                            <SelectValue placeholder={`Select ${field.name}`} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {field.selectOptions?.map((option, index) => {
-                              return (
-                                <SelectItem key={`${option.value}-${index}`} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                        </Select>
-                      )}
-                      {field.description && (
-                        <p className='mt-1 text-xs text-gray-500'>{field.description}</p>
-                      )}
-                    </motion.div>
+                      field={field}
+                      value={sectionFormValues[section.templateId]?.[field._id] || ''}
+                      onChange={(value) => {
+                        setSectionFormValues((prev) => {
+                          return {
+                            ...prev,
+                            [section.templateId]: {
+                              ...(prev[section.templateId] || {}),
+                              [field._id]: value,
+                            },
+                          };
+                        });
+                      }}
+                    />
                   );
                 })}
               </div>
