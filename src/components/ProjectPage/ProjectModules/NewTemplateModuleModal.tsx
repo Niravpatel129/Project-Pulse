@@ -412,29 +412,31 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
           </div>
 
           {/* Main content */}
-          <div className='flex-1 overflow-auto bg-white p-5 max-h-[90vh] min-h-[85vh] overflow-y-auto flex flex-col'>
-            <h1 className='text-lg font-medium tracking-tight text-gray-900'>New Module</h1>
+          <div className='flex-1 overflow-auto bg-white p-0 scrollbar-hide max-h-[90vh] min-h-[85vh] overflow-y-auto flex flex-col'>
+            <div className='px-5 pt-5'>
+              <h1 className='text-lg font-medium tracking-tight text-gray-900'>New Module</h1>
 
-            <div className='mt-4 space-y-4 flex-1'>
-              <motion.div
-                className='flex flex-col gap-4'
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-                layout
-              >
-                {sections.map((section) => {
-                  return renderSection(section);
-                })}
-              </motion.div>
-            </div>
+              <div className='mt-4 space-y-4 flex-1'>
+                <motion.div
+                  className='flex flex-col gap-4'
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  layout
+                >
+                  {sections.map((section) => {
+                    return renderSection(section);
+                  })}
+                </motion.div>
+              </div>
 
-            <div className='mt-5 flex justify-end sticky bottom-0 bg-white pt-4 border-t border-gray-100'>
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button className='h-9 px-4 text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors'>
-                  Create
-                </Button>
-              </motion.div>
+              <div className='mt-5 flex justify-end sticky bottom-0 bg-white pt-4 border-t border-gray-100 pb-5'>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button className='h-9 px-4 text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors'>
+                    Create
+                  </Button>
+                </motion.div>
+              </div>
             </div>
           </div>
         </div>
