@@ -19,6 +19,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { Textarea } from '@/components/ui/textarea';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -119,6 +120,52 @@ const getFieldIcon = (type: string) => {
   }
 };
 
+const validateField = (field: ExtendedTemplateField, value: any): string | null => {
+  if (field.required && (!value || (Array.isArray(value) && value.length === 0))) {
+    return `${field.name} is required`;
+  }
+
+  if (field.validations) {
+    if (
+      field.validations.minLength &&
+      typeof value === 'string' &&
+      value.length < field.validations.minLength
+    ) {
+      return `${field.name} must be at least ${field.validations.minLength} characters`;
+    }
+    if (
+      field.validations.maxLength &&
+      typeof value === 'string' &&
+      value.length > field.validations.maxLength
+    ) {
+      return `${field.name} must be at most ${field.validations.maxLength} characters`;
+    }
+    if (
+      field.validations.pattern &&
+      typeof value === 'string' &&
+      !new RegExp(field.validations.pattern).test(value)
+    ) {
+      return `${field.name} must match the required pattern`;
+    }
+    if (
+      field.validations.minItems &&
+      Array.isArray(value) &&
+      value.length < field.validations.minItems
+    ) {
+      return `${field.name} must have at least ${field.validations.minItems} items`;
+    }
+    if (
+      field.validations.maxItems &&
+      Array.isArray(value) &&
+      value.length > field.validations.maxItems
+    ) {
+      return `${field.name} must have at most ${field.validations.maxItems} items`;
+    }
+  }
+
+  return null;
+};
+
 export default function NewModuleFromTemplateSheet({
   isOpen,
   onClose,
@@ -128,6 +175,7 @@ export default function NewModuleFromTemplateSheet({
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [moduleName, setModuleName] = useState(templateName || template.name);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [sections, setSections] = useState<TemplateSection[]>([
     {
       templateId: template._id,
@@ -213,6 +261,23 @@ export default function NewModuleFromTemplateSheet({
 
     if (!templateQueries.data) return;
 
+    // Validate all fields
+    const errors: Record<string, string> = {};
+    templateQueries.data.forEach((templateData) => {
+      templateData.data.fields.forEach((field) => {
+        const error = validateField(field, formValues[field._id]);
+        if (error) {
+          errors[field._id] = error;
+        }
+      });
+    });
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      toast.error('Please fix the errors in the form');
+      return;
+    }
+
     const updatedSections = sections.map((section, index) => {
       const templateData = templateQueries.data[index];
       const fields: FormFieldValue[] = templateData.data.fields.map((field) => {
@@ -271,10 +336,32 @@ export default function NewModuleFromTemplateSheet({
 
   const handleFieldChange = (fieldId: string, value: any) => {
     setFormValues((prev) => {
-      return {
+      const newValues = {
         ...prev,
         [fieldId]: value,
       };
+
+      // Validate the field
+      const templateData = templateQueries.data?.find((t) => {
+        return t.data.fields.some((f) => {
+          return f._id === fieldId;
+        });
+      });
+      const field = templateData?.data.fields.find((f) => {
+        return f._id === fieldId;
+      });
+
+      if (field) {
+        const error = validateField(field, value);
+        setFieldErrors((prev) => {
+          return {
+            ...prev,
+            [fieldId]: error || '',
+          };
+        });
+      }
+
+      return newValues;
     });
   };
 
@@ -299,41 +386,126 @@ export default function NewModuleFromTemplateSheet({
   };
 
   const renderField = (field: ExtendedTemplateField) => {
+    const error = fieldErrors[field._id];
+
     switch (field.type) {
       case 'text':
         return (
-          <Input
-            id={field._id}
-            value={formValues[field._id] || ''}
-            onChange={(e) => {
-              return handleFieldChange(field._id, e.target.value);
-            }}
-            placeholder={`Enter ${field.name}`}
-            required={field.required}
-          />
+          <div className='space-y-1'>
+            <Input
+              id={field._id}
+              value={formValues[field._id] || ''}
+              onChange={(e) => {
+                return handleFieldChange(field._id, e.target.value);
+              }}
+              placeholder={`Enter ${field.name}`}
+              required={field.required}
+              className={error ? 'border-red-500' : ''}
+            />
+            {error && <p className='text-sm text-red-500'>{error}</p>}
+          </div>
+        );
+      case 'longtext':
+        return (
+          <div className='space-y-1'>
+            <Textarea
+              id={field._id}
+              value={formValues[field._id] || ''}
+              onChange={(e) => {
+                return handleFieldChange(field._id, e.target.value);
+              }}
+              placeholder={`Enter ${field.name}`}
+              required={field.required}
+              className={error ? 'border-red-500' : ''}
+            />
+            {error && <p className='text-sm text-red-500'>{error}</p>}
+          </div>
+        );
+      case 'number':
+        return (
+          <div className='space-y-1'>
+            <Input
+              id={field._id}
+              type='number'
+              value={formValues[field._id] || ''}
+              onChange={(e) => {
+                return handleFieldChange(field._id, e.target.valueAsNumber);
+              }}
+              placeholder={`Enter ${field.name}`}
+              required={field.required}
+              className={error ? 'border-red-500' : ''}
+            />
+            {error && <p className='text-sm text-red-500'>{error}</p>}
+          </div>
+        );
+      case 'date':
+        return (
+          <div className='space-y-1'>
+            <Input
+              id={field._id}
+              type='date'
+              value={formValues[field._id] || ''}
+              onChange={(e) => {
+                return handleFieldChange(field._id, e.target.value);
+              }}
+              placeholder={`Enter ${field.name}`}
+              required={field.required}
+              className={error ? 'border-red-500' : ''}
+            />
+            {error && <p className='text-sm text-red-500'>{error}</p>}
+          </div>
         );
       case 'relation':
         return (
-          <Select
-            value={formValues[field._id] || ''}
-            onValueChange={(value) => {
-              return handleFieldChange(field._id, value);
-            }}
-            required={field.required}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={`Select ${field.name}`} />
-            </SelectTrigger>
-            <SelectContent>
-              {field.selectOptions?.map((option) => {
-                return (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+          <div className='space-y-1'>
+            <Select
+              value={formValues[field._id] || ''}
+              onValueChange={(value) => {
+                return handleFieldChange(field._id, value);
+              }}
+              required={field.required}
+            >
+              <SelectTrigger className={error ? 'border-red-500' : ''}>
+                <SelectValue placeholder={`Select ${field.name}`} />
+              </SelectTrigger>
+              <SelectContent>
+                {field.selectOptions?.map((option) => {
+                  return (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+            {error && <p className='text-sm text-red-500'>{error}</p>}
+          </div>
+        );
+      case 'select':
+        return (
+          <div className='space-y-1'>
+            <Select
+              value={formValues[field._id] || ''}
+              onValueChange={(value) => {
+                return handleFieldChange(field._id, value);
+              }}
+              required={field.required}
+            >
+              <SelectTrigger className={error ? 'border-red-500' : ''}>
+                <SelectValue placeholder={`Select ${field.name}`} />
+              </SelectTrigger>
+              <SelectContent>
+                {field.options?.map((option) => {
+                  return (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+            {error && <p className='text-sm text-red-500'>{error}</p>}
+          </div>
         );
       default:
         return null;
@@ -359,6 +531,7 @@ export default function NewModuleFromTemplateSheet({
                   return setModuleName(e.target.value);
                 }}
                 placeholder='Enter module name'
+                required
               />
             </div>
 
@@ -386,6 +559,7 @@ export default function NewModuleFromTemplateSheet({
                           <div className='flex items-center gap-2'>
                             {getFieldIcon(field.type)}
                             <Label htmlFor={field._id}>{field.name}</Label>
+                            {field.required && <span className='text-red-500'>*</span>}
                           </div>
                           {field.description && (
                             <p className='text-sm text-gray-500'>{field.description}</p>
