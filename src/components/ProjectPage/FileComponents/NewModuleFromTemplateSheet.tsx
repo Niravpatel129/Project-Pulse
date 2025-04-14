@@ -342,87 +342,92 @@ export default function NewModuleFromTemplateSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='sm:max-w-md h-full overflow-scroll'>
+      <SheetContent className='sm:max-w-md h-full flex flex-col'>
         <SheetHeader>
           <SheetTitle>Create from Template</SheetTitle>
           <SheetDescription>Create a new module by combining multiple templates.</SheetDescription>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit} className='space-y-4 py-4'>
-          <div className='space-y-2'>
-            <Label htmlFor='moduleName'>Module Name</Label>
-            <Input
-              id='moduleName'
-              value={moduleName}
-              onChange={(e) => {
-                return setModuleName(e.target.value);
-              }}
-              placeholder='Enter module name'
-            />
-          </div>
+        <form onSubmit={handleSubmit} className='flex-1 flex flex-col min-h-0'>
+          <div className='flex-1 overflow-y-auto space-y-4 py-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='moduleName'>Module Name</Label>
+              <Input
+                id='moduleName'
+                value={moduleName}
+                onChange={(e) => {
+                  return setModuleName(e.target.value);
+                }}
+                placeholder='Enter module name'
+              />
+            </div>
 
-          {sections.map((section, sectionIndex) => {
-            return (
-              <div
-                key={`section-${sectionIndex}-template-${section.templateId}`}
-                className='space-y-4'
-              >
-                {sectionIndex > 0 && <Separator className='my-4' />}
-                <div className='space-y-2'>
-                  <h3 className='text-lg font-semibold'>{section.templateName}</h3>
-                  {section.templateDescription && (
-                    <p className='text-sm text-gray-500'>{section.templateDescription}</p>
+            {sections.map((section, sectionIndex) => {
+              return (
+                <div
+                  key={`section-${sectionIndex}-template-${section.templateId}`}
+                  className='space-y-4'
+                >
+                  {sectionIndex > 0 && <Separator className='my-4' />}
+                  <div className='space-y-2'>
+                    <h3 className='text-lg font-semibold'>{section.templateName}</h3>
+                    {section.templateDescription && (
+                      <p className='text-sm text-gray-500'>{section.templateDescription}</p>
+                    )}
+                  </div>
+
+                  {templateQueries.data?.[sectionIndex]?.data.fields.map(
+                    (field: ExtendedTemplateField) => {
+                      return (
+                        <div
+                          key={`section-${sectionIndex}-field-${field._id}`}
+                          className='space-y-2'
+                        >
+                          <div className='flex items-center gap-2'>
+                            {getFieldIcon(field.type)}
+                            <Label htmlFor={field._id}>{field.name}</Label>
+                          </div>
+                          {field.description && (
+                            <p className='text-sm text-gray-500'>{field.description}</p>
+                          )}
+                          {renderField(field)}
+                        </div>
+                      );
+                    },
                   )}
                 </div>
+              );
+            })}
 
-                {templateQueries.data?.[sectionIndex]?.data.fields.map(
-                  (field: ExtendedTemplateField) => {
+            <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button type='button' variant='outline' className='w-full justify-start'>
+                  <Plus className='mr-2 h-4 w-4' />
+                  Append from another template
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className='w-[var(--radix-popover-trigger-width)] p-0' align='start'>
+                <div className='grid gap-2 p-4'>
+                  {availableTemplates?.map((template) => {
                     return (
-                      <div key={`section-${sectionIndex}-field-${field._id}`} className='space-y-2'>
-                        <div className='flex items-center gap-2'>
-                          {getFieldIcon(field.type)}
-                          <Label htmlFor={field._id}>{field.name}</Label>
-                        </div>
-                        {field.description && (
-                          <p className='text-sm text-gray-500'>{field.description}</p>
-                        )}
-                        {renderField(field)}
-                      </div>
+                      <Button
+                        key={template._id}
+                        variant='ghost'
+                        className='w-full justify-start'
+                        onClick={() => {
+                          return handleAddTemplate(template._id);
+                        }}
+                      >
+                        {template.name}
+                      </Button>
                     );
-                  },
-                )}
-              </div>
-            );
-          })}
+                  })}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
 
-          <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-            <PopoverTrigger asChild>
-              <Button type='button' variant='outline' className='w-full justify-start'>
-                <Plus className='mr-2 h-4 w-4' />
-                Add another template
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className='w-[var(--radix-popover-trigger-width)] p-0' align='start'>
-              <div className='grid gap-2 p-4'>
-                {availableTemplates?.map((template) => {
-                  return (
-                    <Button
-                      key={template._id}
-                      variant='ghost'
-                      className='w-full justify-start'
-                      onClick={() => {
-                        return handleAddTemplate(template._id);
-                      }}
-                    >
-                      {template.name}
-                    </Button>
-                  );
-                })}
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <SheetFooter>
+          <SheetFooter className='flex-none border-t pt-4 pb-4'>
             <Button
               type='submit'
               disabled={createModuleMutation.isPending || templateQueries.isLoading}
