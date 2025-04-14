@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence } from 'framer-motion';
 import { FileText, Mail, User } from 'lucide-react';
 import { EmailCard } from './EmailCard';
+import { NoteCard } from './NoteCard';
 import ProjectMessageInput from './ProjectMessageInput';
 
 interface ActivityUser {
@@ -295,42 +296,13 @@ export default function ProjectHome() {
                   const note = item.data as Note;
                   return (
                     <div key={`note-${note._id}`}>
-                      <Card className='p-3'>
-                        <div className='flex items-center gap-3'>
-                          <div className='flex-shrink-0 bg-gray-100 p-2 rounded-full'>
-                            <FileText className='h-4 w-4 text-gray-500' />
-                          </div>
-                          <div className='flex-1'>
-                            <div className='flex items-center justify-between'>
-                              <p className='text-sm font-medium'>{note.createdBy.name}</p>
-                              <p className='text-xs text-gray-500'>
-                                {new Date(note.createdAt).toLocaleString()}
-                              </p>
-                            </div>
-                            <div
-                              className='mt-1 text-sm text-gray-700'
-                              dangerouslySetInnerHTML={{ __html: note.content }}
-                            />
-                            {note.attachments && note.attachments.length > 0 && (
-                              <div className='mt-2 flex flex-wrap gap-2'>
-                                {note.attachments.map((attachment) => {
-                                  return (
-                                    <a
-                                      key={attachment._id}
-                                      href={attachment.downloadURL}
-                                      target='_blank'
-                                      rel='noopener noreferrer'
-                                      className='text-xs text-blue-500 hover:underline'
-                                    >
-                                      {attachment.originalName}
-                                    </a>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </Card>
+                      <NoteCard
+                        note={note}
+                        onUpdate={async (noteId, content) => {
+                          // TODO: Implement note update functionality
+                          console.log('Updating note:', noteId, content);
+                        }}
+                      />
                     </div>
                   );
                 } else {
