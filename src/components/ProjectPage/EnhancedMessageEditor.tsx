@@ -94,6 +94,8 @@ export interface EnhancedMessageEditorRef {
   getHTML: () => string;
   setContent: (content: string) => void;
   insertEmoji: (emoji: string) => void;
+  enhanceSelection: () => string | undefined;
+  updateSelection: (text: string) => void;
 }
 
 interface EnhancedMessageEditorProps {
@@ -195,6 +197,18 @@ const EnhancedMessageEditor = forwardRef<EnhancedMessageEditorRef, EnhancedMessa
         },
         insertEmoji: (emoji: string) => {
           editor?.commands.insertContent(emoji);
+        },
+        enhanceSelection: () => {
+          if (!editor) return undefined;
+          const { from, to } = editor.state.selection;
+          if (from === to) return undefined;
+          return editor.state.doc.textBetween(from, to);
+        },
+        updateSelection: (text: string) => {
+          if (!editor) return;
+          const { from, to } = editor.state.selection;
+          editor.commands.deleteRange({ from, to });
+          editor.commands.insertContent(text);
         },
       };
     });

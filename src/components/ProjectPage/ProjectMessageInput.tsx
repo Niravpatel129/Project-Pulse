@@ -3,16 +3,12 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { EmojiPicker } from '@/components/ui/emoji-picker';
-import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useProject } from '@/contexts/ProjectContext';
 import { useAiEnhancement } from '@/hooks/useAiEnhancement';
 import { useClickOutside } from '@/hooks/useClickOutside';
-import { cn } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ImageIcon, Link2, MessageSquare, Paperclip, Sparkles, X } from 'lucide-react';
+import { ImageIcon, Link2, MessageSquare, Paperclip, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import EnhancedMessageEditor, { EnhancedMessageEditorRef } from './EnhancedMessageEditor';
@@ -251,105 +247,7 @@ const ProjectMessageInput = () => {
                   </div>
                 )}
 
-                <div className='flex items-center justify-between gap-1.5 text-muted-foreground'>
-                  <div className='flex items-center gap-1.5'>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      className='h-8 w-8 hover:bg-gray-100'
-                      onClick={() => {
-                        return setIsFileModalOpen(true);
-                      }}
-                    >
-                      <Paperclip className='w-4 h-4' />
-                    </Button>
-                    <EmojiPicker
-                      onSelect={(emoji) => {
-                        return editorRef.current?.insertEmoji(emoji);
-                      }}
-                    />
-                    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          className='h-8 w-8 hover:bg-gray-100'
-                          disabled={isEnhancing}
-                        >
-                          <Sparkles className={cn('w-4 h-4', isEnhancing && 'animate-spin')} />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className='w-80 p-3' align='start'>
-                        <div className='space-y-4'>
-                          <div className='space-y-2'>
-                            <h4 className='font-medium leading-none'>Enhance text with AI</h4>
-                            <p className='text-sm text-muted-foreground'>
-                              Tell AI how to enhance your selected text
-                            </p>
-                          </div>
-
-                          {enhancementResult && (
-                            <div className='space-y-2 rounded-md border p-2'>
-                              <div className='space-y-1'>
-                                <p className='text-xs font-medium text-muted-foreground'>
-                                  Original
-                                </p>
-                                <p className='text-sm'>{enhancementResult.original}</p>
-                              </div>
-                              <div className='my-2 border-t' />
-                              <div className='space-y-1'>
-                                <p className='text-xs font-medium text-muted-foreground'>
-                                  Enhanced
-                                </p>
-                                <p className='text-sm'>{enhancementResult.enhanced}</p>
-                              </div>
-                            </div>
-                          )}
-
-                          <div className='space-y-2'>
-                            <Input
-                              type='text'
-                              placeholder='Enter custom instructions...'
-                              value={customEnhancePrompt}
-                              onChange={(e) => {
-                                return setCustomEnhancePrompt(e.target.value);
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' && customEnhancePrompt) {
-                                  handleEnhanceText(customEnhancePrompt);
-                                }
-                              }}
-                              disabled={isEnhancing}
-                            />
-                          </div>
-                          <div className='space-y-2'>
-                            <p className='text-sm font-medium'>Quick options</p>
-                            <div className='grid gap-2'>
-                              {QUICK_ENHANCE_OPTIONS.map((option) => {
-                                return (
-                                  <Button
-                                    key={option.value}
-                                    variant='outline'
-                                    className='justify-start'
-                                    onClick={() => {
-                                      return handleEnhanceText(option.value);
-                                    }}
-                                    disabled={isEnhancing}
-                                  >
-                                    <Sparkles className='mr-2 h-4 w-4' />
-                                    {option.label}
-                                    {isEnhancing && (
-                                      <span className='ml-2 h-4 w-4 animate-spin rounded-full border-2 border-zinc-800 border-r-transparent' />
-                                    )}
-                                  </Button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                <div className='flex items-center justify-end gap-1.5 text-muted-foreground'>
                   <Button
                     variant='default'
                     size='sm'
