@@ -321,7 +321,6 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
                         className='flex cursor-pointer items-center justify-between rounded-md p-2 transition-all hover:bg-gray-50'
                         whileHover={{ backgroundColor: 'rgba(249, 250, 251, 1)' }}
                         whileTap={{ scale: 0.98 }}
-                        layout
                         onClick={() => {
                           return scrollToSection(section.sectionId);
                         }}
@@ -422,7 +421,6 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2 }}
-                  layout
                 >
                   {sections.map((section) => {
                     return renderSection(section);
