@@ -34,7 +34,6 @@ import { LuFigma } from 'react-icons/lu';
 import { toast } from 'sonner';
 import FigmaManagerModal from '../FileComponents/FigmaManagerModal';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
-import NewModuleFromTemplateSheet from '../FileComponents/NewModuleFromTemplateSheet';
 import NewTemplateSheet from '../FileComponents/NewTemplateSheet';
 import { Module } from '../ModuleComponents/types';
 import ModuleDialog from './ModuleDialog';
@@ -384,7 +383,7 @@ export default function NewProjectModules() {
         onSave={handleSaveTemplate}
       />
 
-      {selectedTemplate && (
+      {/* {selectedTemplate && (
         <NewModuleFromTemplateSheet
           isOpen={isNewModuleFromTemplateSheetOpen}
           onClose={() => {
@@ -394,7 +393,7 @@ export default function NewProjectModules() {
           template={selectedTemplate}
           templateName={selectedTemplate?.name}
         />
-      )}
+      )} */}
       {selectedTemplate && (
         <NewTemplateModuleModal
           isOpen={isNewModuleFromTemplateSheetOpen}

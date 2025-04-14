@@ -177,7 +177,7 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
     if (!template || !template.fields) return null;
 
     return (
-      <AnimatePresence mode='wait'>
+      <AnimatePresence mode='wait' key={section.sectionId}>
         <motion.div
           key={section.sectionId}
           initial={{ opacity: 0, y: 20 }}
@@ -260,9 +260,9 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
                             <SelectValue placeholder={`Select ${field.name}`} />
                           </SelectTrigger>
                           <SelectContent>
-                            {field.selectOptions?.map((option) => {
+                            {field.selectOptions?.map((option, index) => {
                               return (
-                                <SelectItem key={option.value} value={option.value}>
+                                <SelectItem key={`${option.value}-${index}`} value={option.value}>
                                   {option.label}
                                 </SelectItem>
                               );

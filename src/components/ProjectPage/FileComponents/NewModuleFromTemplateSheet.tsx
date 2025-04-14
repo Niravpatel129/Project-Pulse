@@ -551,9 +551,9 @@ export default function NewModuleFromTemplateSheet({
                 <SelectValue placeholder={`Select ${field.name}`} />
               </SelectTrigger>
               <SelectContent>
-                {field.options?.map((option) => {
+                {field.options?.map((option, index) => {
                   return (
-                    <SelectItem key={option} value={option}>
+                    <SelectItem key={`${option}-${index}`} value={option}>
                       {option}
                     </SelectItem>
                   );

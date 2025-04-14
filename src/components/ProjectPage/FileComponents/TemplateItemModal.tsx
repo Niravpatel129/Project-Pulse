@@ -63,10 +63,12 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
       setFieldValues(existingItem.templateValues);
     } else {
       // Initialize with default values from template
-      const initialValues = template.fields.map((field) => {return {
-        fieldId: field.id,
-        value: field.defaultValue !== undefined ? field.defaultValue : null,
-      }});
+      const initialValues = template.fields.map((field) => {
+        return {
+          fieldId: field.id,
+          value: field.defaultValue !== undefined ? field.defaultValue : null,
+        };
+      });
       setFieldValues(initialValues);
     }
   }, [existingItem, template.fields]);
@@ -92,7 +94,11 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
     });
 
     // If field wasn't found, add it
-    if (!newValues.some((f) => {return f.fieldId === fieldId})) {
+    if (
+      !newValues.some((f) => {
+        return f.fieldId === fieldId;
+      })
+    ) {
       newValues.push({
         fieldId,
         value,
@@ -126,12 +132,16 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
   };
 
   const getFieldValue = (fieldId: string) => {
-    const field = fieldValues.find((f) => {return f.fieldId === fieldId});
+    const field = fieldValues.find((f) => {
+      return f.fieldId === fieldId;
+    });
     return field ? field.value : null;
   };
 
   const getFieldFileUrl = (fieldId: string) => {
-    const field = fieldValues.find((f) => {return f.fieldId === fieldId});
+    const field = fieldValues.find((f) => {
+      return f.fieldId === fieldId;
+    });
     return field ? field.fileUrl : undefined;
   };
 
@@ -157,7 +167,9 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
     // Track inventory usage for any inventory items selected
     fieldValues.forEach((fieldValue) => {
       if (fieldValue.inventoryItemId && trackInventoryUsage) {
-        const field = template.fields.find((f) => {return f.id === fieldValue.fieldId});
+        const field = template.fields.find((f) => {
+          return f.id === fieldValue.fieldId;
+        });
 
         if (field?.type === 'inventory_item') {
           // Get the quantity (default to 1 if not specified)
@@ -169,7 +181,12 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
           const item = findInventoryItem(inventoryItemId);
 
           if (item) {
-            if (variantId && item.variants?.some((v) => {return v.id === variantId})) {
+            if (
+              variantId &&
+              item.variants?.some((v) => {
+                return v.id === variantId;
+              })
+            ) {
               // Decrease the variant stock by the specified quantity
               updateInventoryStock?.(variantId, quantity);
             } else {
@@ -222,7 +239,9 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
   };
 
   const findInventoryItem = (itemId: string): InventoryItem | undefined => {
-    return inventoryItems.find((item) => {return item.id === itemId});
+    return inventoryItems.find((item) => {
+      return item.id === itemId;
+    });
   };
 
   const renderFieldInput = (field: TemplateField) => {
@@ -263,17 +282,21 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
         return (
           <Select
             value={currentValue?.toString() || ''}
-            onValueChange={(value) => {return handleFieldChange(field.id, value)}}
+            onValueChange={(value) => {
+              return handleFieldChange(field.id, value);
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder={`Select ${field.name}...`} />
             </SelectTrigger>
             <SelectContent>
-              {field.options?.map((option) => {return (
-                <SelectItem key={option} value={option}>
-                  {option}
-                </SelectItem>
-              )})}
+              {field.options?.map((option, index) => {
+                return (
+                  <SelectItem key={`${option}-${index}`} value={option}>
+                    {option}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         );
@@ -284,13 +307,17 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
             <div className='flex items-center space-x-2'>
               <Input
                 type='file'
-                onChange={(e) =>
-                  {return handleFileChange(
+                onChange={(e) => {
+                  return handleFileChange(
                     field.id,
                     e.target.files && e.target.files.length > 0 ? e.target.files[0] : null,
-                  )}
-                }
-                accept={field.fileTypes?.map((type) => {return `.${type}`}).join(',')}
+                  );
+                }}
+                accept={field.fileTypes
+                  ?.map((type) => {
+                    return `.${type}`;
+                  })
+                  .join(',')}
               />
             </div>
             {fileUrl && (
@@ -310,7 +337,9 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
 
       case 'inventory_item':
         const filteredItems = field.inventoryCategory
-          ? inventoryItems.filter((item) => {return item.category === field.inventoryCategory})
+          ? inventoryItems.filter((item) => {
+              return item.category === field.inventoryCategory;
+            })
           : inventoryItems;
 
         const selectedItemId = currentValue as string;
@@ -320,7 +349,9 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
         const selectedVariantId = selectedVariants[field.id];
 
         // Find the current quantity if any
-        const currentFieldValue = fieldValues.find((fv) => {return fv.fieldId === field.id});
+        const currentFieldValue = fieldValues.find((fv) => {
+          return fv.fieldId === field.id;
+        });
         const currentQuantity = currentFieldValue?.quantity || 1;
 
         return (
@@ -343,25 +374,27 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
                 <SelectValue placeholder={`Select ${field.name}...`} />
               </SelectTrigger>
               <SelectContent>
-                {filteredItems.map((item) => {return (
-                  <SelectItem key={item.id} value={item.id}>
-                    <div className='flex items-center gap-2'>
-                      {item.imageUrl && (
-                        <Image
-                          src={item.imageUrl}
-                          alt={item.name}
-                          width={24}
-                          height={24}
-                          className='h-6 w-6 rounded-md object-cover'
-                        />
-                      )}
-                      <div className='flex flex-col'>
-                        <span>{item.name}</span>
-                        <span className='text-xs text-gray-500'>SKU: {item.sku}</span>
+                {filteredItems.map((item) => {
+                  return (
+                    <SelectItem key={item.id} value={item.id}>
+                      <div className='flex items-center gap-2'>
+                        {item.imageUrl && (
+                          <Image
+                            src={item.imageUrl}
+                            alt={item.name}
+                            width={24}
+                            height={24}
+                            className='h-6 w-6 rounded-md object-cover'
+                          />
+                        )}
+                        <div className='flex flex-col'>
+                          <span>{item.name}</span>
+                          <span className='text-xs text-gray-500'>SKU: {item.sku}</span>
+                        </div>
                       </div>
-                    </div>
-                  </SelectItem>
-                )})}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
 
@@ -372,30 +405,38 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
                 </Label>
                 <Select
                   value={selectedVariantId || ''}
-                  onValueChange={(value) => {return handleVariantChange(field.id, value)}}
+                  onValueChange={(value) => {
+                    return handleVariantChange(field.id, value);
+                  }}
                 >
                   <SelectTrigger id={`variant-${field.id}`}>
                     <SelectValue placeholder='Select size/variant...' />
                   </SelectTrigger>
                   <SelectContent>
-                    {selectedItem.variants.map((variant) => {return (
-                      <SelectItem key={variant.id} value={variant.id} disabled={variant.stock <= 0}>
-                        <div className='flex justify-between w-full'>
-                          <span>{variant.name}</span>
-                          <span
-                            className={`text-xs ${
-                              variant.stock <= 0
-                                ? 'text-red-500'
-                                : variant.stock < 10
-                                ? 'text-amber-500'
-                                : 'text-green-500'
-                            }`}
-                          >
-                            {variant.stock <= 0 ? 'Out of stock' : `Stock: ${variant.stock}`}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    )})}
+                    {selectedItem.variants.map((variant) => {
+                      return (
+                        <SelectItem
+                          key={variant.id}
+                          value={variant.id}
+                          disabled={variant.stock <= 0}
+                        >
+                          <div className='flex justify-between w-full'>
+                            <span>{variant.name}</span>
+                            <span
+                              className={`text-xs ${
+                                variant.stock <= 0
+                                  ? 'text-red-500'
+                                  : variant.stock < 10
+                                  ? 'text-amber-500'
+                                  : 'text-green-500'
+                              }`}
+                            >
+                              {variant.stock <= 0 ? 'Out of stock' : `Stock: ${variant.stock}`}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -441,7 +482,11 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
                     {hasVariants && selectedVariantId && (
                       <div className='text-xs font-medium mt-1 text-blue-600'>
                         Selected:{' '}
-                        {selectedItem.variants.find((v) => {return v.id === selectedVariantId})?.name}
+                        {
+                          selectedItem.variants.find((v) => {
+                            return v.id === selectedVariantId;
+                          })?.name
+                        }
                       </div>
                     )}
                   </div>
@@ -486,31 +531,37 @@ const TemplateItemModal: React.FC<TemplateItemModalProps> = ({
             <Input
               id='item-name'
               value={name}
-              onChange={(e) => {return setName(e.target.value)}}
+              onChange={(e) => {
+                return setName(e.target.value);
+              }}
               placeholder='Enter a name for this item...'
             />
           </div>
 
           <div className='space-y-4'>
-            {template.fields.map((field) => {return (
-              <div key={field.id} className='space-y-2'>
-                <Label htmlFor={`field-${field.id}`} className='flex items-center'>
-                  {field.name}
-                  {field.required && <span className='text-red-500 ml-1'>*</span>}
-                </Label>
-                {field.description && <p className='text-sm text-gray-500'>{field.description}</p>}
-                {renderFieldInput(field)}
-              </div>
-            )})}
+            {template.fields.map((field) => {
+              return (
+                <div key={field.id} className='space-y-2'>
+                  <Label htmlFor={`field-${field.id}`} className='flex items-center'>
+                    {field.name}
+                    {field.required && <span className='text-red-500 ml-1'>*</span>}
+                  </Label>
+                  {field.description && (
+                    <p className='text-sm text-gray-500'>{field.description}</p>
+                  )}
+                  {renderFieldInput(field)}
+                </div>
+              );
+            })}
           </div>
 
           {formErrors.length > 0 && (
             <div className='bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md'>
               <p className='font-medium'>Please correct the following errors:</p>
               <ul className='list-disc list-inside text-sm mt-1'>
-                {formErrors.map((error, index) => {return (
-                  <li key={index}>{error}</li>
-                )})}
+                {formErrors.map((error, index) => {
+                  return <li key={index}>{error}</li>;
+                })}
               </ul>
             </div>
           )}

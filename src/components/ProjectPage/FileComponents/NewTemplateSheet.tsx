@@ -378,6 +378,47 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
                                       </Button>
                                     </div>
 
+                                    {field.type === 'select' && (
+                                      <div className='space-y-2 mt-2'>
+                                        <Label>Options (one per line)</Label>
+                                        <Textarea
+                                          value={field.options?.join('\n') || ''}
+                                          onChange={(e) => {
+                                            const newOptions = e.target.value
+                                              .split('\n')
+                                              .map((line) => {
+                                                return line.trim();
+                                              })
+                                              .filter((line) => {
+                                                return line.length > 0;
+                                              });
+                                            updateField(index, { options: newOptions });
+                                          }}
+                                          onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                              e.preventDefault();
+                                              const textarea = e.target as HTMLTextAreaElement;
+                                              const cursorPosition = textarea.selectionStart;
+                                              const text = textarea.value;
+                                              const newText =
+                                                text.slice(0, cursorPosition) +
+                                                '\n' +
+                                                text.slice(cursorPosition);
+                                              textarea.value = newText;
+                                              textarea.setSelectionRange(
+                                                cursorPosition + 1,
+                                                cursorPosition + 1,
+                                              );
+                                            }
+                                          }}
+                                          placeholder={`Option 1
+Option 2
+Option 3`}
+                                          className='h-20 text-sm min-h-[80px] resize-y'
+                                        />
+                                      </div>
+                                    )}
+
                                     <Collapsible>
                                       <CollapsibleTrigger asChild>
                                         <Button
@@ -402,27 +443,6 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
                                             placeholder='Field description'
                                           />
                                         </div>
-
-                                        {field.type === 'select' && (
-                                          <div className='space-y-2'>
-                                            <Label>Options (one per line)</Label>
-                                            <Textarea
-                                              value={field.options?.join('\n') || ''}
-                                              onChange={(e) => {
-                                                const newOptions = e.target.value
-                                                  .split('\n')
-                                                  .filter((line) => {
-                                                    return line.trim();
-                                                  });
-                                                updateField(index, { options: newOptions });
-                                              }}
-                                              placeholder={`Option 1
-Option 2
-Option 3`}
-                                              className='h-20 text-sm min-h-[80px] resize-y'
-                                            />
-                                          </div>
-                                        )}
                                       </CollapsibleContent>
                                     </Collapsible>
                                   </div>
