@@ -1,4 +1,8 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
+import { EmojiPicker } from '@/components/ui/emoji-picker';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import CharacterCount from '@tiptap/extension-character-count';
 import Link from '@tiptap/extension-link';
 import Mention from '@tiptap/extension-mention';
@@ -12,12 +16,17 @@ import {
   Code,
   Heading1,
   Heading2,
+  Image as ImageIcon,
   Italic,
   Link as LinkIcon,
+  Paperclip,
+  Sparkles,
   Underline as UnderlineIcon,
+  X,
 } from 'lucide-react';
 import { forwardRef, useImperativeHandle, useState } from 'react';
 import './EnhancedMessageEditor.css';
+import FileUploadManagerModal from './FileComponents/FileUploadManagerModal';
 import mentionSuggestion from './mentionSuggestion';
 
 interface Participant {
@@ -25,6 +34,15 @@ interface Participant {
   name: string;
   email?: string;
   avatar?: string;
+}
+
+interface MessageAttachment {
+  id: string;
+  fileId: string;
+  name: string;
+  type: string;
+  size: number;
+  downloadURL: string;
 }
 
 interface LinkInputProps {
@@ -71,23 +89,39 @@ const LinkInput = ({ onSubmit, onCancel }: LinkInputProps) => {
   );
 };
 
-interface EnhancedMessageEditorProps {
-  content: string;
-  onContentChange: (content: string) => void;
-  maxLength?: number;
-  participants?: Participant[];
+export interface EnhancedMessageEditorRef {
+  clearContent: () => void;
+  getHTML: () => string;
+  setContent: (content: string) => void;
+  insertEmoji: (emoji: string) => void;
 }
 
-export interface EnhancedMessageEditorRef {
-  insertEmoji: (emoji: string) => void;
-  enhanceSelection: () => string | null;
-  updateSelection: (enhancedText: string) => void;
-  clearContent: () => void;
+interface EnhancedMessageEditorProps {
+  content: string;
+  onContentChange?: (content: string) => void;
+  editable?: boolean;
+  maxLength?: number;
+  participants?: Participant[];
+  onAttachmentsChange?: (attachments: MessageAttachment[]) => void;
+  attachments?: MessageAttachment[];
 }
 
 const EnhancedMessageEditor = forwardRef<EnhancedMessageEditorRef, EnhancedMessageEditorProps>(
-  ({ content, onContentChange, maxLength = 10000, participants = [] }, ref) => {
+  (
+    {
+      content,
+      onContentChange,
+      editable = true,
+      maxLength = 5000,
+      participants = [],
+      onAttachmentsChange,
+      attachments = [],
+    },
+    ref,
+  ) => {
     const [showLinkInput, setShowLinkInput] = useState(false);
+    const [isFileModalOpen, setIsFileModalOpen] = useState(false);
+    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
     const editor = useEditor({
       extensions: [
@@ -139,34 +173,28 @@ const EnhancedMessageEditor = forwardRef<EnhancedMessageEditorRef, EnhancedMessa
         }),
       ],
       content,
+      editable,
       onUpdate: ({ editor }) => {
         const html = editor.getHTML();
-        onContentChange(html);
+        if (onContentChange) {
+          onContentChange(html);
+        }
       },
     });
 
     useImperativeHandle(ref, () => {
       return {
-        insertEmoji: (emoji: string) => {
-          if (editor) {
-            editor.commands.insertContent(emoji);
-          }
-        },
-        enhanceSelection: () => {
-          if (editor) {
-            return editor.state.selection.content().content.firstChild?.textContent || null;
-          }
-          return null;
-        },
-        updateSelection: (enhancedText: string) => {
-          if (editor) {
-            editor.commands.insertContent(enhancedText);
-          }
-        },
         clearContent: () => {
-          if (editor) {
-            editor.commands.clearContent(true);
-          }
+          editor?.commands.clearContent();
+        },
+        getHTML: () => {
+          return editor?.getHTML() || '';
+        },
+        setContent: (content: string) => {
+          editor?.commands.setContent(content);
+        },
+        insertEmoji: (emoji: string) => {
+          editor?.commands.insertContent(emoji);
         },
       };
     });
@@ -185,6 +213,48 @@ const EnhancedMessageEditor = forwardRef<EnhancedMessageEditorRef, EnhancedMessa
     };
 
     const isLinkActive = editor.isActive('link');
+
+    const handleAddFile = (file: any) => {
+      const newAttachment: MessageAttachment = {
+        id: file._id,
+        fileId: file._id,
+        name: file.originalName,
+        type: file.contentType,
+        size: file.size,
+        downloadURL: file.downloadURL,
+      };
+
+      if (onAttachmentsChange) {
+        onAttachmentsChange([...attachments, newAttachment]);
+      }
+      setIsFileModalOpen(false);
+    };
+
+    const removeAttachment = (id: string) => {
+      if (onAttachmentsChange) {
+        onAttachmentsChange(
+          attachments.filter((attachment) => {
+            return attachment.id !== id;
+          }),
+        );
+      }
+    };
+
+    const formatFileSize = (bytes: number) => {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+
+    const getAttachmentIcon = (type: string) => {
+      if (type.startsWith('image/')) {
+        return <ImageIcon className='h-4 w-4 mr-2 text-gray-500' />;
+      } else {
+        return <Paperclip className='h-4 w-4 mr-2 text-gray-500' />;
+      }
+    };
 
     return (
       <div className='rounded-lg'>
@@ -301,11 +371,91 @@ const EnhancedMessageEditor = forwardRef<EnhancedMessageEditorRef, EnhancedMessa
         )}
         <EditorContent editor={editor} className='prose max-w-none min-h-[200px]' />
 
+        {attachments.length > 0 && (
+          <div className='mt-2 space-y-2'>
+            {attachments.map((attachment) => {
+              return (
+                <div
+                  key={attachment.id}
+                  className='flex items-center justify-between bg-gray-50 p-2 rounded'
+                >
+                  <div className='flex items-center'>
+                    {getAttachmentIcon(attachment.type)}
+                    <span className='text-sm'>{attachment.name}</span>
+                    {attachment.size > 0 && (
+                      <span className='text-xs text-gray-500 ml-2'>
+                        ({formatFileSize(attachment.size)})
+                      </span>
+                    )}
+                  </div>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={() => {
+                      return removeAttachment(attachment.id);
+                    }}
+                    className='h-6 w-6 p-0'
+                  >
+                    <X className='h-4 w-4' />
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className='flex items-center justify-between gap-1.5 text-muted-foreground mt-2'>
+          <div className='flex items-center gap-1.5'>
+            <Button
+              variant='ghost'
+              size='icon'
+              className='h-8 w-8 hover:bg-gray-100'
+              onClick={() => {
+                return setIsFileModalOpen(true);
+              }}
+            >
+              <Paperclip className='w-4 h-4' />
+            </Button>
+            <EmojiPicker
+              onSelect={(emoji) => {
+                if (ref && 'current' in ref && ref.current) {
+                  ref.current.insertEmoji(emoji);
+                }
+              }}
+            />
+            <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
+                  <Sparkles className='w-4 h-4' />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className='w-80 p-3' align='start'>
+                <div className='space-y-4'>
+                  <div className='space-y-2'>
+                    <h4 className='font-medium leading-none'>Enhance text with AI</h4>
+                    <p className='text-sm text-muted-foreground'>
+                      Tell AI how to enhance your selected text
+                    </p>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+
         {editor.storage.characterCount.characters() >= maxLength && (
           <div className='p-2 text-sm text-red-500 absolute bottom-0 right-0'>
             {editor.storage.characterCount.characters()}/{maxLength} characters
           </div>
         )}
+
+        <FileUploadManagerModal
+          isOpen={isFileModalOpen}
+          onClose={() => {
+            return setIsFileModalOpen(false);
+          }}
+          handleAddFileToProject={handleAddFile}
+        />
       </div>
     );
   },
