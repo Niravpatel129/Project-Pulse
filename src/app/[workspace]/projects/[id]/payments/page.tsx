@@ -6,13 +6,13 @@ import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { ProjectProvider } from '@/contexts/ProjectContext';
 import { useParams } from 'next/navigation';
 import { Suspense } from 'react';
-
+import ProjectWrapper from '../components/ProjectWrapper';
 export default function ProjectPage() {
   const { id } = useParams();
 
   return (
     <ProjectProvider projectId={id as string}>
-      <div className='min-h-screen w-full mt-1 flex flex-col gap-4 p-10'>
+      <ProjectWrapper>
         <div className='flex-1'>
           <ProjectHeader />
           <BlockWrapper>
@@ -27,7 +27,7 @@ export default function ProjectPage() {
             </div>
           </BlockWrapper>
         </div>
-      </div>
+      </ProjectWrapper>
     </ProjectProvider>
   );
 }
