@@ -27,6 +27,7 @@ import { useProjectModules } from '@/hooks/useProjectModules';
 import { newRequest } from '@/utils/newRequest';
 import { useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
+import { AnimatePresence, motion } from 'framer-motion';
 import { PaintRoller } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
@@ -48,6 +49,52 @@ import { DeleteModuleDialog } from '../ModuleComponents/DeleteModuleDialog';
 import { Module } from '../ModuleComponents/types';
 import ModuleDialog from './ModuleDialog';
 import NewTemplateModuleModal from './NewTemplateModuleModal';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.3,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -20,
+    transition: {
+      duration: 0.2,
+    },
+  },
+};
+
+const modalVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.3,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -20,
+    transition: {
+      duration: 0.2,
+    },
+  },
+};
 
 export default function NewProjectModules() {
   const {
@@ -76,7 +123,6 @@ export default function NewProjectModules() {
   const MAX_NAME_LENGTH = 50;
   const [duplicateModuleName, setDuplicateModuleName] = useState('');
   const [moduleToDuplicate, setModuleToDuplicate] = useState<Module | null>(null);
-  const [isTemplateDropdownOpen, setIsTemplateDropdownOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const handleEditTemplate = (template: Template) => {
@@ -323,7 +369,12 @@ export default function NewProjectModules() {
       item.content.fileId.contentType.startsWith('image/');
 
     return (
-      <div
+      <motion.div
+        layout
+        variants={itemVariants}
+        initial='hidden'
+        animate='visible'
+        exit='exit'
         className='border rounded-xl w-full aspect-video hover:shadow cursor-pointer flex flex-col relative overflow-hidden min-h-[250px] group'
         onClick={() => {
           return setSelectedModule(item);
@@ -441,13 +492,18 @@ export default function NewProjectModules() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
+      </motion.div>
     );
   };
 
   const renderModuleSkeleton = () => {
     return (
-      <div className='border rounded-xl w-full aspect-square max-w-[220px] flex flex-col'>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className='border rounded-xl w-full aspect-square max-w-[220px] flex flex-col'
+      >
         {/* Top Part Skeleton */}
         <div className='flex items-center justify-center flex-grow p-4'>
           <Skeleton className='h-[60px] w-[60px] rounded-md' />
@@ -459,29 +515,41 @@ export default function NewProjectModules() {
             <Skeleton className='h-3 w-1/2' />
           </div>
         </div>
-      </div>
+      </motion.div>
     );
   };
   const renderModals = () => {
     return (
       <>
-        <FileUploadManagerModal
-          isOpen={isFileUploadModalOpen}
-          onClose={() => {
-            return setIsFileUploadModalOpen(false);
-          }}
-          handleAddFileToProject={(files) => {
-            return handleAddFileToProject({ type: 'file', content: files });
-          }}
-        />
+        <AnimatePresence>
+          {isFileUploadModalOpen && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <FileUploadManagerModal
+                isOpen={isFileUploadModalOpen}
+                onClose={() => {
+                  return setIsFileUploadModalOpen(false);
+                }}
+                handleAddFileToProject={(files) => {
+                  return handleAddFileToProject({ type: 'file', content: files });
+                }}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <FigmaManagerModal
-          isOpen={isFigmaModalOpen}
-          onClose={() => {
-            return setIsFigmaModalOpen(false);
-          }}
-          handleAddFigmaToProject={handleAddFigmaToProject}
-        />
+        <AnimatePresence>
+          {isFigmaModalOpen && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <FigmaManagerModal
+                isOpen={isFigmaModalOpen}
+                onClose={() => {
+                  return setIsFigmaModalOpen(false);
+                }}
+                handleAddFigmaToProject={handleAddFigmaToProject}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <NewTemplateSheet
           isOpen={isNewTemplateSheetOpen}
@@ -693,7 +761,7 @@ export default function NewProjectModules() {
   }
 
   return (
-    <div>
+    <motion.div variants={containerVariants} initial='hidden' animate='visible'>
       <div className='flex items-center justify-between mb-4'>
         <div className='text-sm font-medium'>All Modules</div>
         <DropdownMenu>
@@ -710,35 +778,61 @@ export default function NewProjectModules() {
       </div>
       <div className=''>
         {isLoading ? (
-          <div className='grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-4 auto-rows-fr'>
+          <motion.div
+            className='grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-4 auto-rows-fr'
+            variants={containerVariants}
+            initial='hidden'
+            animate='visible'
+          >
             {Array(5)
               .fill(0)
               .map((_, index) => {
                 return (
-                  <div key={index} className='flex justify-center w-full h-full'>
+                  <motion.div
+                    key={index}
+                    className='flex justify-center w-full h-full'
+                    variants={itemVariants}
+                  >
                     {renderModuleSkeleton()}
-                  </div>
+                  </motion.div>
                 );
               })}
-          </div>
+          </motion.div>
         ) : (
-          <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-4 auto-rows-fr'>
-            {modules.map((item, index) => {
-              return (
-                <div key={index} className='flex justify-center w-full h-full'>
-                  {renderProjectItem(item)}
-                </div>
-              );
-            })}
-          </div>
+          <motion.div
+            className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-4 auto-rows-fr'
+            variants={containerVariants}
+            initial='hidden'
+            animate='visible'
+          >
+            <AnimatePresence mode='popLayout'>
+              {modules.map((item, index) => {
+                return (
+                  <motion.div
+                    key={item._id}
+                    className='flex justify-center w-full h-full'
+                    variants={itemVariants}
+                    layout
+                  >
+                    {renderProjectItem(item)}
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </motion.div>
         )}
         {!isLoading && !modules.length && (
-          <div className='flex items-center justify-center h-full'>
+          <motion.div
+            className='flex items-center justify-center h-full'
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
             <p className='text-sm text-muted-foreground'>No modules found</p>
-          </div>
+          </motion.div>
         )}
       </div>
       {renderModals()}
-    </div>
+    </motion.div>
   );
 }

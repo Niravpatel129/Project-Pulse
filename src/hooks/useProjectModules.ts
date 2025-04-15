@@ -88,7 +88,6 @@ export function useProjectModules() {
   const handleAddFileToProject = ({ type, content }: { type: string; content: any }) => {
     setIsFileUploadModalOpen(false);
     console.log('Uploaded files:', content);
-    toast.success('File uploaded successfully');
     addModuleMutation.mutate({
       content: {
         fileId: content._id,
