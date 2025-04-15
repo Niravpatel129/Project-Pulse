@@ -7,7 +7,7 @@ import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
 import { format, isThisWeek, isThisYear, isToday, isYesterday } from 'date-fns';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { FileText, Mail, User } from 'lucide-react';
 import { EmailCard } from './EmailCard';
 import { NoteCard } from './NoteCard';
@@ -275,33 +275,60 @@ export default function ProjectHome() {
   }, {} as Record<string, { label: string; items: TimelineItem[] }>);
 
   return (
-    <div className='space-y-6'>
+    <motion.div
+      className='space-y-6'
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
       {/* Message Input */}
-      <ProjectMessageInput />
+      <motion.div layout transition={{ duration: 0.3 }}>
+        <ProjectMessageInput />
+      </motion.div>
 
       {/* Combined Activity and Email Feed */}
-      <div className='space-y-4'>
+      <motion.div className='space-y-4' layout transition={{ duration: 0.3 }}>
         <h3 className='text-sm font-medium'>Recent activity & project notes</h3>
         <div className='space-y-4'>
           {isLoadingActivities || isLoadingEmails || isLoadingNotes ? (
-            <div className='text-sm text-gray-500'>Loading activities and emails...</div>
+            <motion.div
+              className='text-sm text-gray-500'
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              Loading activities and emails...
+            </motion.div>
           ) : (
             <AnimatePresence mode='popLayout'>
               {Object.entries(groupedTimelineItems).map(([dateKey, group]) => {
                 return (
-                  <div key={dateKey} className='space-y-4'>
+                  <motion.div
+                    key={dateKey}
+                    className='space-y-4'
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                  >
                     {group.items.map((item) => {
                       if (item.type === 'activity') {
                         const activity = item.data as Activity;
-                        // Determine icon based on activity type/action
                         let icon = 'file-text';
                         if (activity.type === 'user') icon = 'user';
                         else if (activity.type === 'email' || activity.type === 'message')
                           icon = 'mail';
 
                         return (
-                          <div key={`activity-${activity._id}`}>
-                            {/* line across */}
+                          <motion.div
+                            key={`activity-${activity._id}`}
+                            layout
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            transition={{ duration: 0.2 }}
+                          >
                             <Card className='p-3'>
                               <div className='flex items-center gap-3'>
                                 <div className='flex-shrink-0 bg-gray-100 p-2 rounded-full'>
@@ -319,14 +346,23 @@ export default function ProjectHome() {
                                 </div>
                               </div>
                             </Card>
-                          </div>
+                          </motion.div>
                         );
                       } else if (item.type === 'note') {
                         const note = item.data as Note;
                         return (
-                          <NotesProvider key={`note-${note._id}`} projectId={project._id}>
-                            <NoteCard note={note} />
-                          </NotesProvider>
+                          <motion.div
+                            key={`note-${note._id}`}
+                            layout
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <NotesProvider projectId={project._id}>
+                              <NoteCard note={note} />
+                            </NotesProvider>
+                          </motion.div>
                         );
                       } else {
                         const thread = item.data as EmailThread & {
@@ -335,9 +371,14 @@ export default function ProjectHome() {
                         };
                         const latestMessage = thread.latestMessage;
                         return (
-                          <div
+                          <motion.div
                             key={`email-${thread.threadId || latestMessage._id}`}
                             className='w-full'
+                            layout
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            transition={{ duration: 0.2 }}
                           >
                             <EmailCard
                               email={{
@@ -365,30 +406,43 @@ export default function ProjectHome() {
                                 isRead: latestMessage.isRead,
                               }}
                             />
-                          </div>
+                          </motion.div>
                         );
                       }
                     })}
-                    <div className='flex items-center gap-2'>
+                    <motion.div
+                      className='flex items-center gap-2'
+                      layout
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
                       <div className='h-px flex-1 bg-gray-200' />
                       <span className='text-xs font-medium text-gray-500 px-2'>{group.label}</span>
                       <div className='h-px flex-1 bg-gray-200' />
-                    </div>
-                  </div>
+                    </motion.div>
+                  </motion.div>
                 );
               })}
             </AnimatePresence>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Footer information */}
-      <div className='mt-6 pt-4 border-t border-gray-200 text-center w-full flex justify-center items-center'>
+      <motion.div
+        className='mt-6 pt-4 border-t border-gray-200 text-center w-full flex justify-center items-center'
+        layout
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
         <div className='flex items-center gap-2'>
           <Mail className='h-4 w-4 text-gray-500' />
           <p className='text-sm text-gray-500'>You can respond to messages here or via email</p>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
