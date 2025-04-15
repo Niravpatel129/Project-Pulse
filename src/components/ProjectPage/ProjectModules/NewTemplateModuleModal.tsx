@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Grid, InfoIcon, Plus, Search, X } from 'lucide-react';
 import { useState } from 'react';
 import { FcDocument } from 'react-icons/fc';
@@ -33,15 +33,8 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
   const [sectionFormValues, setSectionFormValues] = useState<Record<string, Record<string, any>>>(
     {},
   );
-  const [sectionFieldErrors, setSectionFieldErrors] = useState<
-    Record<string, Record<string, string>>
-  >({});
-  const queryClient = useQueryClient();
   const { project } = useProject();
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
-  console.log('🚀 sections:', sections);
-  console.log('🚀 templateDataMap:', templateDataMap);
 
   const { data: availableTemplates } = useQuery({
     queryKey: ['templates'],
@@ -51,6 +44,21 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
     },
     enabled: isOpen,
   });
+
+  const handleCreateModule = async () => {
+    try {
+      const response = await newRequest.post(`/project-modules/templated-module/${project._id}`, {
+        name: template.name,
+        description: template.description,
+        sections: sections,
+        formValues: sectionFormValues,
+      });
+
+      console.log('🚀 response:', response);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -411,12 +419,11 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
             </div>
 
             <div className='sticky bottom-0 bg-white border-t border-gray-100 px-5 py-4'>
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className='flex justify-end'
-              >
-                <Button className='h-9 px-4 text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors'>
+              <motion.div className='flex justify-end'>
+                <Button
+                  className='h-9 px-4 text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors'
+                  onClick={handleCreateModule}
+                >
                   Create
                 </Button>
               </motion.div>
