@@ -106,6 +106,7 @@ interface EnhancedMessageEditorProps {
   participants?: Participant[];
   onAttachmentsChange?: (attachments: MessageAttachment[]) => void;
   attachments?: MessageAttachment[];
+  buttons?: React.ReactNode;
 }
 
 const EnhancedMessageEditor = forwardRef<EnhancedMessageEditorRef, EnhancedMessageEditorProps>(
@@ -118,6 +119,7 @@ const EnhancedMessageEditor = forwardRef<EnhancedMessageEditorRef, EnhancedMessa
       participants = [],
       onAttachmentsChange,
       attachments = [],
+      buttons,
     },
     ref,
   ) => {
@@ -466,6 +468,8 @@ const EnhancedMessageEditor = forwardRef<EnhancedMessageEditorRef, EnhancedMessa
               </PopoverContent>
             </Popover>
           </div>
+
+          {buttons}
         </div>
 
         {editor.storage.characterCount.characters() >= maxLength && (

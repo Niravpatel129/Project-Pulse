@@ -285,26 +285,30 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
                   participants={participants}
                   attachments={attachments}
                   onAttachmentsChange={setAttachments}
+                  buttons={
+                    <>
+                      <div className='flex justify-end gap-3'>
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={handleCancel}
+                          className='h-8 px-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors'
+                        >
+                          <X className='h-3.5 w-3.5 mr-1.5' />
+                          Cancel
+                        </Button>
+                        <Button
+                          size='sm'
+                          onClick={handleSave}
+                          className='h-8 px-3 text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition-colors'
+                        >
+                          <Save className='h-3.5 w-3.5 mr-1.5' />
+                          Save
+                        </Button>
+                      </div>
+                    </>
+                  }
                 />
-                <div className='flex justify-end gap-3'>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={handleCancel}
-                    className='h-8 px-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors'
-                  >
-                    <X className='h-3.5 w-3.5 mr-1.5' />
-                    Cancel
-                  </Button>
-                  <Button
-                    size='sm'
-                    onClick={handleSave}
-                    className='h-8 px-3 text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition-colors'
-                  >
-                    <Save className='h-3.5 w-3.5 mr-1.5' />
-                    Save
-                  </Button>
-                </div>
               </div>
             ) : (
               <div className='prose prose-sm max-w-none text-gray-700 leading-relaxed'>

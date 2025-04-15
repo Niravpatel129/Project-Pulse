@@ -178,6 +178,28 @@ const ProjectMessageInput = () => {
                     onContentChange={setContent}
                     maxLength={5000}
                     participants={project?.participants || []}
+                    buttons={
+                      <>
+                        <div className='flex items-center justify-end gap-1.5 text-muted-foreground'>
+                          <Button
+                            variant='default'
+                            size='sm'
+                            className='text-sm text-muted-foreground hover:text-foreground text-white hover:text-white'
+                            onClick={handleSend}
+                            disabled={isSending}
+                          >
+                            {isSending ? (
+                              <>
+                                <span className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent' />
+                                Sending...
+                              </>
+                            ) : (
+                              'Send'
+                            )}
+                          </Button>
+                        </div>
+                      </>
+                    }
                   />
                 </div>
 
@@ -213,25 +235,6 @@ const ProjectMessageInput = () => {
                     })}
                   </div>
                 )}
-
-                <div className='flex items-center justify-end gap-1.5 text-muted-foreground'>
-                  <Button
-                    variant='default'
-                    size='sm'
-                    className='text-sm text-muted-foreground hover:text-foreground text-white hover:text-white'
-                    onClick={handleSend}
-                    disabled={isSending}
-                  >
-                    {isSending ? (
-                      <>
-                        <span className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent' />
-                        Sending...
-                      </>
-                    ) : (
-                      'Send'
-                    )}
-                  </Button>
-                </div>
               </div>
             </div>
           </div>
