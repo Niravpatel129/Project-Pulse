@@ -1,48 +1,54 @@
-import { Template, TemplateField } from '@/api/models';
+import { TemplateField } from '@/api/models';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Calendar, CheckSquare, Database, File, FileText, Hash, Type } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Grid, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import ModuleFieldRenderer from '../ProjectModules/ModuleFieldRenderer';
+
+interface Module {
+  _id: string;
+  name: string;
+  moduleType: string;
+  versions: Array<{
+    number: number;
+    contentSnapshot: {
+      sections: Array<{
+        templateId: string;
+        templateName: string;
+        templateDescription: string;
+        fields: Array<{
+          templateFieldId: string;
+          fieldName: string;
+          fieldType: string;
+          isRequired: boolean;
+          description?: string;
+          multiple?: boolean;
+          fieldValue: any;
+          relationType?: string;
+        }>;
+        sectionId: string;
+      }>;
+    };
+  }>;
+  currentVersion: number;
+}
 
 interface EditModuleFromTemplateSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  template: Template;
-  moduleId: string;
-  initialData: {
-    name: string;
-    fields: Array<{
-      fieldName: string;
-      fieldType: string;
-      fieldValue: any;
-      templateFieldId: string;
-    }>;
-  };
+  module: Module;
 }
 
-// Extend the TemplateField type to include the API response structure
 interface ExtendedTemplateField extends Omit<TemplateField, 'id' | 'relationType'> {
-  _id: string; // This is the fieldId from Mongoose
+  _id: string;
   selectOptions?: Array<{
     value: string;
     label: string;
@@ -95,110 +101,125 @@ interface FormFieldValue {
 }
 
 interface ModuleData {
-  templateId: string;
-  templateName: string;
-  templateDescription: string;
-  fields: FormFieldValue[];
+  name: string;
+  sections: Array<{
+    templateId: string;
+    templateName: string;
+    templateDescription: string;
+    fields: Array<{
+      templateFieldId: string;
+      fieldName: string;
+      fieldType: string;
+      isRequired: boolean;
+      description?: string;
+      multiple?: boolean;
+      fieldValue: any;
+      relationType?: string;
+    }>;
+    sectionId: string;
+  }>;
 }
-
-const getFieldIcon = (type: string) => {
-  switch (type) {
-    case 'text':
-      return <Type className='h-4 w-4 text-gray-500' />;
-    case 'relation':
-      return <Database className='h-4 w-4 text-gray-500' />;
-    case 'number':
-      return <Hash className='h-4 w-4 text-gray-500' />;
-    case 'date':
-      return <Calendar className='h-4 w-4 text-gray-500' />;
-    case 'select':
-      return <CheckSquare className='h-4 w-4 text-gray-500' />;
-    case 'file':
-      return <File className='h-4 w-4 text-gray-500' />;
-    case 'longtext':
-      return <FileText className='h-4 w-4 text-gray-500' />;
-    default:
-      return <Type className='h-4 w-4 text-gray-500' />;
-  }
-};
 
 export default function EditModuleFromTemplateSheet({
   isOpen,
   onClose,
-  template,
-  moduleId,
-  initialData,
+  module,
 }: EditModuleFromTemplateSheetProps) {
   const [formValues, setFormValues] = useState<Record<string, any>>({});
-  const [moduleName, setModuleName] = useState(initialData.name);
+  const [moduleName, setModuleName] = useState(module.name);
   const [isLoading, setIsLoading] = useState(true);
   const queryClient = useQueryClient();
 
-  // Fetch full template data when template ID is available
-  const { data: fullTemplateData } = useQuery<ApiResponse>({
-    queryKey: ['template', template?._id],
-    queryFn: async () => {
-      if (!template?._id) return null;
-      const response = await newRequest.get(`/module-templates/${template._id}`);
+  // Get the current version's content
+  const currentVersion = module.versions.find((v) => {
+    return v.number === module.currentVersion;
+  });
+  const sections = currentVersion?.contentSnapshot.sections || [];
 
-      return response.data;
+  // Fetch template data for each section
+  const { data: templatesData } = useQuery<Record<string, ApiResponse>>({
+    queryKey: [
+      'templates',
+      sections.map((s) => {
+        return s.templateId;
+      }),
+    ],
+    queryFn: async () => {
+      const responses = await Promise.all(
+        sections.map((section) => {
+          return newRequest.get(`/module-templates/${section.templateId}`);
+        }),
+      );
+      return responses.reduce((acc, response, index) => {
+        acc[sections[index].templateId] = response.data;
+        return acc;
+      }, {} as Record<string, ApiResponse>);
     },
-    enabled: !!template?._id && isOpen,
+    enabled: isOpen && sections.length > 0,
   });
 
   useEffect(() => {
-    if (fullTemplateData?.data) {
+    if (templatesData) {
       new Promise((resolve) => {
         return setTimeout(resolve, 500);
+      }).then(() => {
+        setIsLoading(false);
       });
-      setIsLoading(false);
     }
-  }, [fullTemplateData]);
+  }, [templatesData]);
 
   // Initialize form values when template data is fetched
   useEffect(() => {
-    const setInitialValues = async () => {
-      if (fullTemplateData?.data) {
-        new Promise((resolve) => {
-          return setTimeout(resolve, 300);
-        });
-
-        const initialValues: Record<string, any> = {};
-        fullTemplateData.data.fields.forEach((field: ExtendedTemplateField) => {
-          // Find the corresponding field in initialData
-          const existingField = initialData.fields.find((f) => {
-            return f.templateFieldId === field._id;
-          });
-
-          // Handle relation fields differently
-          if (field.type === 'relation' && existingField?.fieldValue) {
-            // For relation fields, we need to extract the rowId from the fieldValue object
-            initialValues[field._id] = existingField.fieldValue.rowId || '';
+    if (templatesData) {
+      const initialValues: Record<string, any> = {};
+      sections.forEach((section) => {
+        section.fields.forEach((field) => {
+          if (field.fieldType === 'relation' && field.fieldValue) {
+            initialValues[field.templateFieldId] = field.fieldValue.rowId || '';
           } else {
-            // For non-relation fields, use the value directly
-            initialValues[field._id] = existingField?.fieldValue || (field.multiple ? [] : '');
+            initialValues[field.templateFieldId] = field.fieldValue || '';
           }
         });
-        setFormValues(initialValues);
-      }
-    };
-    setInitialValues();
-  }, [fullTemplateData, initialData, isLoading]);
+      });
+      setFormValues(initialValues);
+    }
+  }, [templatesData, sections]);
 
   // Mutation for updating a module
   const updateModuleMutation = useMutation({
-    mutationFn: async (moduleData: ModuleData) => {
+    mutationFn: async (moduleData: {
+      name: string;
+      versions: Array<{
+        number: number;
+        contentSnapshot: {
+          sections: Array<{
+            templateId: string;
+            templateName: string;
+            templateDescription: string;
+            fields: Array<{
+              templateFieldId: string;
+              fieldName: string;
+              fieldType: string;
+              isRequired: boolean;
+              description?: string;
+              multiple?: boolean;
+              fieldValue: any;
+              relationType?: string;
+            }>;
+            sectionId: string;
+          }>;
+        };
+      }>;
+    }) => {
       const response = await newRequest.put(
-        `/project-modules/templated-module/${moduleId}`,
+        `/project-modules/templated-module/${module._id}`,
         moduleData,
       );
       return response.data;
     },
-    onSuccess: (data) => {
-      // invalidate the query
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projectModules'] });
-      queryClient.invalidateQueries({ queryKey: ['module', moduleId] });
-      // Reset form
+      queryClient.invalidateQueries({ queryKey: ['module', module._id] });
       toast.success('Module updated successfully');
       onClose();
       setFormValues({});
@@ -207,58 +228,56 @@ export default function EditModuleFromTemplateSheet({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!templatesData) return;
 
-    if (!fullTemplateData?.data) return;
+    const updatedSections = sections.map((section) => {
+      const templateData = templatesData[section.templateId]?.data;
+      if (!templateData) return section;
 
-    const fields: FormFieldValue[] = fullTemplateData.data.fields.map((field) => {
-      const fieldValue = formValues[field._id];
-
-      // Handle relation fields differently
-      if (field.type === 'relation') {
-        // Find the selected option's data
-        const selectedOption = field.selectOptions?.find((opt) => {
-          return opt.value === fieldValue;
+      const updatedFields = templateData.fields.map((field) => {
+        const fieldValue = formValues[field._id];
+        const existingField = section.fields.find((f) => {
+          return f.templateFieldId === field._id;
         });
 
-        return {
-          fieldName: field.name,
-          fieldType: field.type,
-          fieldValue: selectedOption
-            ? {
-                rowId: selectedOption.value,
-                displayValues: selectedOption.rowData,
-              }
-            : null,
-          templateFieldId: field._id,
-          isRequired: field.required || false,
-          description: field.description || '',
-          relationType: field.relationType,
-          relationTable: field.relationTable,
-          lookupFields: field.lookupFields,
-          multiple: field.multiple || false,
-        };
-      }
+        if (field.type === 'relation') {
+          const selectedOption = field.selectOptions?.find((opt) => {
+            return opt.value === fieldValue;
+          });
+          return {
+            ...existingField,
+            fieldValue: selectedOption
+              ? {
+                  rowId: selectedOption.value,
+                  displayValues: selectedOption.rowData,
+                  selectedAt: new Date().toISOString(),
+                }
+              : null,
+          };
+        }
 
-      // Handle non-relation fields normally
+        return {
+          ...existingField,
+          fieldValue: fieldValue || '',
+        };
+      });
+
       return {
-        fieldName: field.name,
-        fieldType: field.type,
-        fieldValue: fieldValue || '',
-        templateFieldId: field._id,
-        isRequired: field.required || false,
-        description: field.description || '',
-        relationType: field.relationType,
-        relationTable: field.relationTable,
-        lookupFields: field.lookupFields,
-        multiple: field.multiple || false,
+        ...section,
+        fields: updatedFields,
       };
     });
 
-    const moduleData: ModuleData = {
-      templateId: template._id,
-      templateName: moduleName,
-      templateDescription: fullTemplateData.data.description,
-      fields,
+    const moduleData = {
+      name: moduleName,
+      versions: [
+        {
+          number: module.currentVersion + 1,
+          contentSnapshot: {
+            sections: updatedSections,
+          },
+        },
+      ],
     };
 
     updateModuleMutation.mutate(moduleData);
@@ -273,110 +292,134 @@ export default function EditModuleFromTemplateSheet({
     });
   };
 
-  const renderField = (field: ExtendedTemplateField) => {
-    switch (field.type) {
-      case 'text':
-        return (
-          <Input
-            id={field._id}
-            value={formValues[field._id] || ''}
-            onChange={(e) => {
-              return handleFieldChange(field._id, e.target.value);
-            }}
-            placeholder={`Enter ${field.name}`}
-            required={field.required}
-          />
-        );
-      case 'relation':
-        return (
-          <Select
-            value={formValues[field._id] || ''}
-            onValueChange={(value) => {
-              return handleFieldChange(field._id, value);
-            }}
-            required={field.required}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={`Select ${field.name}`} />
-            </SelectTrigger>
-            <SelectContent>
-              {field.selectOptions?.map((option) => {
-                return (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className='sm:max-w-md'>
-        <SheetHeader>
-          <SheetTitle>Edit Form Response</SheetTitle>
-          <SheetDescription>
-            Edit the form response for &ldquo;{template?.name}&rdquo;.
-          </SheetDescription>
-        </SheetHeader>
-
-        <form onSubmit={handleSubmit} className='space-y-4 py-4'>
-          <div className='space-y-2'>
-            <Label htmlFor='moduleName'>Module Name</Label>
-            <Input
-              id='moduleName'
-              value={moduleName}
-              onChange={(e) => {
-                return setModuleName(e.target.value);
-              }}
-              placeholder='Enter module name'
-            />
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className='max-w-5xl p-0 gap-0'>
+        <DialogTitle className='sr-only'>Edit Module</DialogTitle>
+        <button
+          onClick={onClose}
+          className='absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground'
+        >
+          <X className='h-4 w-4' />
+          <span className='sr-only'>Close</span>
+        </button>
+        <div className='flex w-full overflow-hidden rounded-lg bg-white'>
+          {/* Left sidebar */}
+          <div className='w-72 border-r border-gray-100 bg-white'>
+            <div className='p-5'>
+              <h2 className='text-base font-medium tracking-tight text-gray-900'>Templates</h2>
+              <div className='mt-6'>
+                <p className='mb-2 text-xs font-medium uppercase tracking-wider text-gray-500'>
+                  SECTIONS
+                </p>
+                {sections.map((section, index) => {
+                  return (
+                    <motion.div
+                      key={section.sectionId}
+                      className='mt-1 rounded-md bg-gray-50 p-2 transition-all'
+                      whileHover={{ backgroundColor: 'rgba(249, 250, 251, 1)' }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className='flex items-center gap-2'>
+                        <div className='flex h-6 w-6 items-center justify-center rounded bg-blue-500 text-white shadow-sm'>
+                          <Grid className='h-3.5 w-3.5' />
+                        </div>
+                        <span className='text-sm font-medium text-gray-800 capitalize'>
+                          {section.templateName}
+                        </span>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
-          {isLoading ? (
-            <>
-              <div className='space-y-2'>
-                <Skeleton className='h-4 w-24' />
-                <Skeleton className='h-10 w-full' />
-              </div>
-              <div className='space-y-2'>
-                <Skeleton className='h-4 w-32' />
-                <Skeleton className='h-10 w-full' />
-              </div>
-              <div className='space-y-2'>
-                <Skeleton className='h-4 w-28' />
-                <Skeleton className='h-10 w-full' />
-              </div>
-            </>
-          ) : (
-            fullTemplateData?.data.fields.map((field: ExtendedTemplateField) => {
-              return (
-                <div key={field._id} className='space-y-2'>
-                  <div className='flex items-center gap-2'>
-                    {getFieldIcon(field.type)}
-                    <Label htmlFor={field._id}>{field.name}</Label>
-                  </div>
-                  {field.description && (
-                    <p className='text-sm text-gray-500'>{field.description}</p>
-                  )}
-                  {renderField(field)}
-                </div>
-              );
-            })
-          )}
+          {/* Main content */}
+          <div className='flex-1 overflow-auto bg-white p-0 scrollbar-hide max-h-[80vh] min-h-[85vh] overflow-y-auto flex flex-col'>
+            <div className='flex-1 px-5 pt-5'>
+              <h1 className='text-lg font-medium tracking-tight text-gray-900'>Edit Module</h1>
 
-          <SheetFooter>
-            <Button type='submit' disabled={updateModuleMutation.isPending || isLoading}>
-              {updateModuleMutation.isPending ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
+              <div className='mt-4 space-y-4'>
+                <motion.div
+                  className='flex flex-col gap-4'
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Card className='overflow-hidden border border-gray-200 shadow-sm'>
+                    <CardContent className='p-4'>
+                      <div className='space-y-4'>
+                        <div className='space-y-2'>
+                          <Label htmlFor='moduleName'>Module Name</Label>
+                          <Input
+                            id='moduleName'
+                            value={moduleName}
+                            onChange={(e) => {
+                              return setModuleName(e.target.value);
+                            }}
+                            placeholder='Enter module name'
+                          />
+                        </div>
+
+                        {isLoading ? (
+                          <>
+                            <div className='space-y-2'>
+                              <Skeleton className='h-4 w-24' />
+                              <Skeleton className='h-10 w-full' />
+                            </div>
+                            <div className='space-y-2'>
+                              <Skeleton className='h-4 w-32' />
+                              <Skeleton className='h-10 w-full' />
+                            </div>
+                          </>
+                        ) : (
+                          sections.map((section) => {
+                            const templateData = templatesData?.[section.templateId]?.data;
+                            if (!templateData) return null;
+
+                            return (
+                              <div key={section.sectionId} className='space-y-4'>
+                                <h3 className='text-sm font-medium text-gray-700'>
+                                  {section.templateName}
+                                </h3>
+                                {templateData.fields.map((field) => {
+                                  return (
+                                    <ModuleFieldRenderer
+                                      key={field._id}
+                                      field={field}
+                                      value={formValues[field._id] || ''}
+                                      onChange={(value) => {
+                                        return handleFieldChange(field._id, value);
+                                      }}
+                                    />
+                                  );
+                                })}
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </div>
+            </div>
+
+            <div className='sticky bottom-0 bg-white border-t border-gray-100 px-5 py-4'>
+              <motion.div className='flex justify-end'>
+                <Button
+                  className='h-9 px-4 text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors'
+                  onClick={handleSubmit}
+                  disabled={updateModuleMutation.isPending || isLoading}
+                >
+                  {updateModuleMutation.isPending ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

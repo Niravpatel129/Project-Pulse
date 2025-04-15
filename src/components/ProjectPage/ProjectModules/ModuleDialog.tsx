@@ -219,6 +219,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
     rejectApprovalMutation,
     deleteApprovalMutation,
   } = useModuleDialog({ moduleId });
+  console.log('🚀 module:', module);
   const { project } = useProject();
 
   const {
@@ -1028,12 +1029,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
           onClose={() => {
             return setShowEditSheet(false);
           }}
-          template={module.content?.templateId}
-          moduleId={moduleId}
-          initialData={{
-            name: module?.name,
-            fields: module?.versions?.[currentVersion - 1]?.contentSnapshot?.fields || [],
-          }}
+          module={module}
         />
       )}
 
