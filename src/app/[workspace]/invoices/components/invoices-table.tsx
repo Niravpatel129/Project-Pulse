@@ -46,7 +46,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
 
   const deleteInvoice = (invoiceId: string) => {
     newRequest
-      .delete(`/projects/invoices/${invoiceId}`)
+      .delete(`/projects/${project?._id}/invoices/${invoiceId}`)
       .then(() => {
         toast.success('Invoice deleted successfully');
         queryClient.invalidateQueries({
