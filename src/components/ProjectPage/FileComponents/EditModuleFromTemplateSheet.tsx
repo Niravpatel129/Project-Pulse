@@ -4,12 +4,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Grid, X } from 'lucide-react';
+import { Grid, InfoIcon, Plus, Search, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { FcDocument } from 'react-icons/fc';
 import { toast } from 'sonner';
 import ModuleFieldRenderer from '../ProjectModules/ModuleFieldRenderer';
 
@@ -128,13 +131,20 @@ export default function EditModuleFromTemplateSheet({
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [moduleName, setModuleName] = useState(module.name);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [templateDataMap, setTemplateDataMap] = useState<Record<string, any>>({});
+  const [sectionFormValues, setSectionFormValues] = useState<Record<string, Record<string, any>>>(
+    {},
+  );
+  const [localSections, setLocalSections] = useState(module.versions[0].contentSnapshot.sections);
   const queryClient = useQueryClient();
 
   // Get the current version's content
   const currentVersion = module.versions.find((v) => {
     return v.number === module.currentVersion;
   });
-  const sections = currentVersion?.contentSnapshot.sections || [];
+  const sections = localSections;
 
   // Fetch template data for each section
   const { data: templatesData } = useQuery<Record<string, ApiResponse>>({
@@ -158,30 +168,32 @@ export default function EditModuleFromTemplateSheet({
     enabled: isOpen && sections.length > 0,
   });
 
-  useEffect(() => {
-    if (templatesData) {
-      new Promise((resolve) => {
-        return setTimeout(resolve, 500);
-      }).then(() => {
-        setIsLoading(false);
-      });
-    }
-  }, [templatesData]);
+  // Fetch available templates for the append button
+  const { data: availableTemplates } = useQuery({
+    queryKey: ['templates'],
+    queryFn: async () => {
+      const response = await newRequest.get('/module-templates');
+      return response.data.data;
+    },
+    enabled: isOpen,
+  });
 
-  // Initialize form values when template data is fetched
   useEffect(() => {
     if (templatesData) {
-      const initialValues: Record<string, any> = {};
+      setTemplateDataMap(templatesData);
+      // Initialize form values for each section
+      const initialValues: Record<string, Record<string, any>> = {};
       sections.forEach((section) => {
-        section.fields.forEach((field) => {
-          if (field.fieldType === 'relation' && field.fieldValue) {
-            initialValues[field.templateFieldId] = field.fieldValue.rowId || '';
-          } else {
-            initialValues[field.templateFieldId] = field.fieldValue || '';
-          }
-        });
+        const templateData = templatesData[section.templateId]?.data;
+        if (templateData) {
+          initialValues[section.sectionId] = {};
+          templateData.fields.forEach((field) => {
+            initialValues[section.sectionId][field._id] = field.multiple ? [] : '';
+          });
+        }
       });
-      setFormValues(initialValues);
+      setSectionFormValues(initialValues);
+      setIsLoading(false);
     }
   }, [templatesData, sections]);
 
@@ -226,6 +238,59 @@ export default function EditModuleFromTemplateSheet({
     },
   });
 
+  const removeSection = (sectionId: string) => {
+    // Update local sections
+    const updatedSections = sections.filter((section) => {
+      return section.sectionId !== sectionId;
+    });
+    setLocalSections(updatedSections);
+  };
+
+  const handleAddTemplate = (templateId: string) => {
+    const selectedTemplate = availableTemplates?.find((t) => {
+      return t._id === templateId;
+    });
+    if (!selectedTemplate) return;
+
+    // Create new section with empty fields
+    const newSection = {
+      templateId: selectedTemplate._id,
+      templateName: selectedTemplate.name,
+      templateDescription: selectedTemplate.description,
+      fields: [],
+      sectionId: `${templateId}-${Date.now()}`,
+    };
+
+    // Update local sections
+    setLocalSections([...sections, newSection]);
+
+    // Initialize form values for the new section
+    const initialValues: Record<string, any> = {};
+    selectedTemplate.fields.forEach((field) => {
+      initialValues[field._id] = field.multiple ? [] : '';
+    });
+    setSectionFormValues((prev) => {
+      return {
+        ...prev,
+        [newSection.sectionId]: initialValues,
+      };
+    });
+
+    setIsPopoverOpen(false);
+  };
+
+  const handleFieldChange = (sectionId: string, fieldId: string, value: any) => {
+    setSectionFormValues((prev) => {
+      return {
+        ...prev,
+        [sectionId]: {
+          ...(prev[sectionId] || {}),
+          [fieldId]: value,
+        },
+      };
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!templatesData) return;
@@ -235,7 +300,7 @@ export default function EditModuleFromTemplateSheet({
       if (!templateData) return section;
 
       const updatedFields = templateData.fields.map((field) => {
-        const fieldValue = formValues[field._id];
+        const fieldValue = sectionFormValues[section.sectionId]?.[field._id] || '';
         const existingField = section.fields.find((f) => {
           return f.templateFieldId === field._id;
         });
@@ -283,13 +348,48 @@ export default function EditModuleFromTemplateSheet({
     updateModuleMutation.mutate(moduleData);
   };
 
-  const handleFieldChange = (fieldId: string, value: any) => {
-    setFormValues((prev) => {
-      return {
-        ...prev,
-        [fieldId]: value,
-      };
-    });
+  const renderSection = (section) => {
+    const template = templateDataMap[section.templateId]?.data;
+    if (!template || !template.fields) return null;
+
+    return (
+      <Card
+        key={section.sectionId}
+        id={section.sectionId}
+        className='overflow-hidden border border-gray-200 shadow-sm relative group/section'
+      >
+        {sections.length > 1 && section.sectionId !== `${sections[0].templateId}-0` && (
+          <X
+            className='absolute top-2 right-2 cursor-pointer text-gray-400 hover:text-gray-700 transition-all h-4 w-4 opacity-0 group-hover/section:opacity-100'
+            onClick={() => {
+              return removeSection(section.sectionId);
+            }}
+          />
+        )}
+        <CardContent className='p-4'>
+          <div className='flex items-center gap-2 pb-3'>
+            <div className='flex h-6 w-6 items-center justify-center rounded border border-gray-200 bg-gray-50'>
+              <Grid className='h-3.5 w-3.5 text-gray-500' />
+            </div>
+            <span className='text-sm font-medium text-gray-800'>{template.name}</span>
+          </div>
+          <div className='space-y-3'>
+            {template.fields.map((field) => {
+              return (
+                <ModuleFieldRenderer
+                  key={field._id}
+                  field={field}
+                  value={sectionFormValues[section.sectionId]?.[field._id] || ''}
+                  onChange={(value) => {
+                    return handleFieldChange(section.sectionId, field._id, value);
+                  }}
+                />
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
   return (
@@ -356,9 +456,99 @@ export default function EditModuleFromTemplateSheet({
                             {section.templateName}
                           </span>
                         </div>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <motion.button
+                                className='text-gray-400 hover:text-gray-600'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // TODO: Implement remove section functionality
+                                }}
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                              >
+                                <X className='h-3.5 w-3.5' />
+                              </motion.button>
+                            </TooltipTrigger>
+                            <TooltipContent side='right'>
+                              <p className='text-xs'>Remove template</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </motion.div>
                     );
                   })}
+
+                  <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <motion.div
+                        className='flex cursor-pointer items-center gap-2 rounded-md p-2 transition-all border border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        whileHover={{ backgroundColor: 'rgba(249, 250, 251, 1)' }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Plus className='h-4 w-4 text-gray-400' />
+                        <span className='text-sm font-medium text-gray-700'>Append Template</span>
+                      </motion.div>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className='w-60 p-0 border border-gray-200 shadow-md'
+                      align='start'
+                      sideOffset={5}
+                      avoidCollisions={false}
+                    >
+                      <div className='p-2 border-b border-gray-100'>
+                        <div className='relative'>
+                          <Search className='absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
+                          <input
+                            type='text'
+                            placeholder='Search templates...'
+                            className='w-full pl-8 pr-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500'
+                            value={searchTerm}
+                            onChange={(e) => {
+                              return setSearchTerm(e.target.value);
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div className='py-1 max-h-[300px] overflow-y-auto'>
+                        {availableTemplates
+                          ?.filter((template) => {
+                            return template.name.toLowerCase().includes(searchTerm.toLowerCase());
+                          })
+                          .map((template) => {
+                            return (
+                              <motion.div
+                                key={template._id}
+                                className='flex cursor-pointer items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-50'
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => {
+                                  return handleAddTemplate(template._id);
+                                }}
+                              >
+                                <div className='flex items-center gap-2'>
+                                  <FcDocument className='h-4 w-4 text-gray-400' />
+                                  {template.icon}
+                                  <span>{template.name}</span>
+                                </div>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <InfoIcon className='h-3 w-3 text-gray-400' />
+                                    </TooltipTrigger>
+                                    <TooltipContent side='right'>
+                                      <p className='text-xs max-w-[200px]'>
+                                        {template.description}
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </motion.div>
+                            );
+                          })}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
             </div>
@@ -404,32 +594,7 @@ export default function EditModuleFromTemplateSheet({
                           </>
                         ) : (
                           sections.map((section) => {
-                            const templateData = templatesData?.[section.templateId]?.data;
-                            if (!templateData) return null;
-
-                            return (
-                              <div
-                                key={section.sectionId}
-                                id={section.sectionId}
-                                className='space-y-4'
-                              >
-                                <h3 className='text-sm font-medium text-gray-700'>
-                                  {section.templateName}
-                                </h3>
-                                {templateData.fields.map((field) => {
-                                  return (
-                                    <ModuleFieldRenderer
-                                      key={field._id}
-                                      field={field}
-                                      value={formValues[field._id] || ''}
-                                      onChange={(value) => {
-                                        return handleFieldChange(field._id, value);
-                                      }}
-                                    />
-                                  );
-                                })}
-                              </div>
-                            );
+                            return renderSection(section);
                           })
                         )}
                       </div>
