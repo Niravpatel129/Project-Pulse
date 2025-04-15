@@ -18,7 +18,7 @@ import {
   TimelineSeparator,
   TimelineTitle,
 } from '@/components/ui/timeline';
-import { useApprovalRequest } from '@/hooks/useApprovalRequest';
+import { useApprovalRequest, Version } from '@/hooks/useApprovalRequest';
 import { motion } from 'framer-motion';
 import {
   CheckCircle,
@@ -33,6 +33,81 @@ import {
 import Image from 'next/image';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+
+interface ContentSnapshot {
+  sections?: Array<{
+    sectionId: string;
+    templateId: string;
+    templateName: string;
+    templateDescription?: string;
+    fields: Array<{
+      templateFieldId: string;
+      fieldName: string;
+      fieldType: string;
+      fieldValue: any;
+      description?: string;
+    }>;
+  }>;
+  fileId?: {
+    name: string;
+    contentType: string;
+    downloadURL: string;
+  };
+  fields?: Array<{
+    templateFieldId: string;
+    fieldName: string;
+    fieldType: string;
+    fieldValue: any;
+    description?: string;
+  }>;
+}
+
+interface ModuleVersion {
+  number: number;
+  contentSnapshot: ContentSnapshot;
+  updatedAt: string;
+}
+
+interface Module {
+  _id: string;
+  name: string;
+  moduleType: string;
+  currentVersion: number;
+  versions: ModuleVersion[];
+  content: {
+    fileId?: {
+      name: string;
+      contentType: string;
+      downloadURL: string;
+    };
+    figmaUrl?: string;
+    sections?: Array<{
+      sectionId: string;
+      templateId: string;
+      templateName: string;
+      templateDescription?: string;
+      fields: Array<{
+        templateFieldId: string;
+        fieldName: string;
+        fieldType: string;
+        fieldValue: any;
+        description?: string;
+      }>;
+    }>;
+  };
+}
+
+interface ApprovalRequest {
+  _id: string;
+  moduleId: Module;
+  status: string;
+  requestedBy: {
+    name: string;
+    avatar?: string;
+  };
+  approverEmail: string;
+  createdAt: string;
+}
 
 export default function ApprovalRequestPage() {
   const { id } = useParams();
@@ -148,14 +223,16 @@ export default function ApprovalRequestPage() {
     }) || []),
   ];
 
-  const handleStatusUpdate = async (status: 'approved' | 'rejected') => {
+  const handleConfirmAction = async () => {
     try {
-      await updateStatus(status, comment.trim() ? comment : undefined);
+      await updateStatus.mutate({
+        status: confirmAction as 'approved' | 'rejected',
+        comment: comment.trim() || undefined,
+      });
       setConfirmAction(null);
       setComment('');
     } catch (error) {
       console.error('Error updating status:', error);
-      // You might want to add a toast notification here to show the error to the user
     }
   };
 
@@ -350,56 +427,82 @@ export default function ApprovalRequestPage() {
                       <div className='grid gap-6'>
                         {selectedVersion &&
                           approvalRequest.moduleId.versions
-                            .find((v) => {
+                            .find((v: Version) => {
                               return v.number === selectedVersion;
                             })
-                            ?.contentSnapshot?.fields?.map((field) => {
+                            ?.contentSnapshot?.sections?.map((section) => {
                               return (
-                                <div
-                                  key={field.templateFieldId}
-                                  className='bg-gray-50 rounded-lg p-4 border border-gray-100'
-                                >
-                                  <div className='flex items-center justify-between mb-2'>
-                                    <div className='text-sm font-medium text-gray-700'>
-                                      {field.fieldName}
+                                <div key={section.sectionId} className='space-y-4'>
+                                  <div className='flex items-center gap-2'>
+                                    <div className='flex h-6 w-6 items-center justify-center rounded border border-gray-200 bg-gray-50'>
+                                      <FileText className='h-3.5 w-3.5 text-gray-500' />
                                     </div>
-                                    <Badge variant='outline' className='text-xs bg-white'>
-                                      {field.fieldType === 'text' ? 'Text Field' : 'Linked Item'}
-                                    </Badge>
+                                    <span className='text-sm font-medium text-gray-800'>
+                                      {section.templateName}
+                                    </span>
+                                    {section.templateDescription && (
+                                      <span className='text-xs text-gray-500'>
+                                        ({section.templateDescription})
+                                      </span>
+                                    )}
                                   </div>
-                                  {field.fieldType === 'text' && (
-                                    <div className='text-sm text-gray-600 bg-white rounded-md p-3 border border-gray-200'>
-                                      {field.fieldValue as string}
-                                    </div>
-                                  )}
-                                  {field.fieldType === 'relation' &&
-                                    field.fieldValue &&
-                                    typeof field.fieldValue === 'object' &&
-                                    'displayValues' in field.fieldValue && (
-                                      <div className='text-sm text-gray-600 bg-white rounded-md p-3 border border-gray-200'>
-                                        <div className='grid gap-2'>
-                                          {Object.entries(field.fieldValue.displayValues).map(
-                                            ([key, value]) => {
-                                              return (
-                                                <div key={key} className='flex items-center gap-2'>
-                                                  <span className='font-medium text-gray-500 min-w-[100px]'>
-                                                    {key}
-                                                  </span>
-                                                  <span className='text-gray-700'>
-                                                    {value as string}
-                                                  </span>
+                                  <div className='grid gap-4 pl-8'>
+                                    {section.fields.map((field) => {
+                                      return (
+                                        <div
+                                          key={field.templateFieldId}
+                                          className='bg-gray-50 rounded-lg p-4 border border-gray-100'
+                                        >
+                                          <div className='flex items-center justify-between mb-2'>
+                                            <div className='text-sm font-medium text-gray-700'>
+                                              {field.fieldName}
+                                            </div>
+                                            <Badge variant='outline' className='text-xs bg-white'>
+                                              {field.fieldType === 'text'
+                                                ? 'Text Field'
+                                                : 'Linked Item'}
+                                            </Badge>
+                                          </div>
+                                          {field.fieldType === 'text' && (
+                                            <div className='text-sm text-gray-600 bg-white rounded-md p-3 border border-gray-200'>
+                                              {field.fieldValue as string}
+                                            </div>
+                                          )}
+                                          {field.fieldType === 'relation' &&
+                                            field.fieldValue &&
+                                            typeof field.fieldValue === 'object' &&
+                                            'displayValues' in field.fieldValue && (
+                                              <div className='text-sm text-gray-600 bg-white rounded-md p-3 border border-gray-200'>
+                                                <div className='grid gap-2'>
+                                                  {Object.entries(
+                                                    field.fieldValue.displayValues,
+                                                  ).map(([key, value]) => {
+                                                    return (
+                                                      <div
+                                                        key={key}
+                                                        className='flex items-center gap-2'
+                                                      >
+                                                        <span className='font-medium text-gray-500 min-w-[100px]'>
+                                                          {key}
+                                                        </span>
+                                                        <span className='text-gray-700'>
+                                                          {value as string}
+                                                        </span>
+                                                      </div>
+                                                    );
+                                                  })}
                                                 </div>
-                                              );
-                                            },
+                                              </div>
+                                            )}
+                                          {field.description && (
+                                            <div className='mt-2 text-xs text-gray-500'>
+                                              {field.description}
+                                            </div>
                                           )}
                                         </div>
-                                      </div>
-                                    )}
-                                  {field.description && (
-                                    <div className='mt-2 text-xs text-gray-500'>
-                                      {field.description}
-                                    </div>
-                                  )}
+                                      );
+                                    })}
+                                  </div>
                                 </div>
                               );
                             })}
@@ -567,7 +670,7 @@ export default function ApprovalRequestPage() {
                   size='sm'
                   className='bg-rose-600 hover:bg-rose-700'
                   onClick={() => {
-                    return handleStatusUpdate('rejected');
+                    return handleConfirmAction();
                   }}
                 >
                   Confirm Reject
@@ -624,7 +727,7 @@ export default function ApprovalRequestPage() {
                   size='sm'
                   className='bg-teal-600 hover:bg-teal-700'
                   onClick={() => {
-                    return handleStatusUpdate('approved');
+                    return handleConfirmAction();
                   }}
                 >
                   Confirm Approve
