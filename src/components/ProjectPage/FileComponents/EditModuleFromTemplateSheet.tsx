@@ -308,29 +308,58 @@ export default function EditModuleFromTemplateSheet({
           <div className='w-72 border-r border-gray-100 bg-white'>
             <div className='p-5'>
               <h2 className='text-base font-medium tracking-tight text-gray-900'>Templates</h2>
+
               <div className='mt-6'>
                 <p className='mb-2 text-xs font-medium uppercase tracking-wider text-gray-500'>
-                  SECTIONS
+                  BASE Template
                 </p>
-                {sections.map((section, index) => {
-                  return (
-                    <motion.div
-                      key={section.sectionId}
-                      className='mt-1 rounded-md bg-gray-50 p-2 transition-all'
-                      whileHover={{ backgroundColor: 'rgba(249, 250, 251, 1)' }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className='flex items-center gap-2'>
-                        <div className='flex h-6 w-6 items-center justify-center rounded bg-blue-500 text-white shadow-sm'>
-                          <Grid className='h-3.5 w-3.5' />
+                <motion.div
+                  className='mt-1 rounded-md bg-gray-50 p-2 transition-all'
+                  whileHover={{ backgroundColor: 'rgba(249, 250, 251, 1)' }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className='flex items-center gap-2'>
+                    <div className='flex h-6 w-6 items-center justify-center rounded bg-blue-500 text-white shadow-sm'>
+                      <Grid className='h-3.5 w-3.5' />
+                    </div>
+                    <span className='text-sm font-medium text-gray-800 capitalize'>
+                      {sections[0]?.templateName}
+                    </span>
+                  </div>
+                </motion.div>
+              </div>
+
+              <div className='mt-6'>
+                <p className='mb-2 text-xs font-medium uppercase tracking-wider text-gray-500'>
+                  APPENDED TEMPLATES
+                </p>
+                <div className='space-y-0.5'>
+                  {sections.slice(1).map((section, index) => {
+                    return (
+                      <motion.div
+                        key={`${section.sectionId}-${index}`}
+                        className='flex cursor-pointer items-center justify-between rounded-md p-2 transition-all hover:bg-gray-50'
+                        whileHover={{ backgroundColor: 'rgba(249, 250, 251, 1)' }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          const sectionElement = document.getElementById(section.sectionId);
+                          if (sectionElement) {
+                            sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
+                        }}
+                      >
+                        <div className='flex items-center gap-2'>
+                          <div className='flex h-6 w-6 items-center justify-center rounded border border-gray-200 bg-gray-50'>
+                            <Grid className='h-3.5 w-3.5 text-gray-500' />
+                          </div>
+                          <span className='text-sm font-medium text-gray-700'>
+                            {section.templateName}
+                          </span>
                         </div>
-                        <span className='text-sm font-medium text-gray-800 capitalize'>
-                          {section.templateName}
-                        </span>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+                      </motion.div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
@@ -379,7 +408,11 @@ export default function EditModuleFromTemplateSheet({
                             if (!templateData) return null;
 
                             return (
-                              <div key={section.sectionId} className='space-y-4'>
+                              <div
+                                key={section.sectionId}
+                                id={section.sectionId}
+                                className='space-y-4'
+                              >
                                 <h3 className='text-sm font-medium text-gray-700'>
                                   {section.templateName}
                                 </h3>
