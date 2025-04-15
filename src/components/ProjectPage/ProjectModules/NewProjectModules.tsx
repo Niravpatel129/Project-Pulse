@@ -29,8 +29,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { FileText, MoreVertical, PaintRoller, Pencil, Plus, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
-import { FcDocument } from 'react-icons/fc';
-import { LuFigma } from 'react-icons/lu';
+import { LuBook, LuFigma } from 'react-icons/lu';
 import { toast } from 'sonner';
 import FigmaManagerModal from '../FileComponents/FigmaManagerModal';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
@@ -235,7 +234,7 @@ export default function NewProjectModules() {
           ) : item.moduleType === 'figma' ? (
             <LuFigma className='h-[50%] w-[50%] max-h-[60px] max-w-[60px] text-[#F24E1E]' />
           ) : (
-            <FcDocument className='h-[50%] w-[50%] max-h-[60px] max-w-[60px]' />
+            <LuBook className='h-[50%] w-[50%] max-h-[60px] max-w-[60px] text-[#393939]' />
           )}
         </div>
         {/* Bottom Part */}
@@ -243,7 +242,11 @@ export default function NewProjectModules() {
           <div className='py-3 px-3 flex flex-col gap-1'>
             <p className='text-sm font-medium truncate'>{item.name}</p>
             <p className='text-xs text-gray-500 truncate'>
-              {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
+              Updated{' '}
+              {formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true }).replace(
+                /^about\s+/,
+                '',
+              )}
             </p>
           </div>
         </div>
