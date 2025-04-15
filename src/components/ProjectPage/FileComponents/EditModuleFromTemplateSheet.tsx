@@ -128,6 +128,7 @@ export default function EditModuleFromTemplateSheet({
   onClose,
   module,
 }: EditModuleFromTemplateSheetProps) {
+  console.log('🚀 module:', module);
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [moduleName, setModuleName] = useState(module.name);
   const [isLoading, setIsLoading] = useState(true);
@@ -183,15 +184,21 @@ export default function EditModuleFromTemplateSheet({
       setTemplateDataMap(templatesData);
       // Initialize form values for each section
       const initialValues: Record<string, Record<string, any>> = {};
+      console.log('🚀 sections:', sections);
       sections.forEach((section) => {
-        const templateData = templatesData[section.templateId]?.data;
-        if (templateData) {
-          initialValues[section.sectionId] = {};
-          templateData.fields.forEach((field) => {
-            initialValues[section.sectionId][field._id] = field.multiple ? [] : '';
-          });
-        }
+        console.log('🚀 section:', section);
+        initialValues[section.sectionId] = {};
+        // Initialize with existing field values from the module
+        section.fields.forEach((field) => {
+          console.log('🚀 field:', field);
+          if (field.fieldType === 'relation' && field.fieldValue) {
+            initialValues[section.sectionId][field.templateFieldId] = field.fieldValue.rowId || '';
+          } else {
+            initialValues[section.sectionId][field.templateFieldId] = field.fieldValue || '';
+          }
+        });
       });
+      console.log('🚀 initialValues:', initialValues);
       setSectionFormValues(initialValues);
       setIsLoading(false);
     }
@@ -280,6 +287,7 @@ export default function EditModuleFromTemplateSheet({
   };
 
   const handleFieldChange = (sectionId: string, fieldId: string, value: any) => {
+    console.log('🚀 handleFieldChange:', { sectionId, fieldId, value });
     setSectionFormValues((prev) => {
       return {
         ...prev,
@@ -352,6 +360,12 @@ export default function EditModuleFromTemplateSheet({
     const template = templateDataMap[section.templateId]?.data;
     if (!template || !template.fields) return null;
 
+    console.log('🚀 rendering section:', {
+      sectionId: section.sectionId,
+      formValues: sectionFormValues[section.sectionId],
+      templateFields: template.fields,
+    });
+
     return (
       <Card
         key={section.sectionId}
@@ -375,12 +389,25 @@ export default function EditModuleFromTemplateSheet({
           </div>
           <div className='space-y-3'>
             {template.fields.map((field) => {
+              console.log('🚀 rendering field:', {
+                fieldId: field._id,
+                value: sectionFormValues[section.sectionId]?.[field._id],
+                fieldType: field.type,
+                fieldName: field.name,
+                fieldConfig: field,
+                sectionFormValues: sectionFormValues[section.sectionId],
+              });
               return (
                 <ModuleFieldRenderer
                   key={field._id}
                   field={field}
                   value={sectionFormValues[section.sectionId]?.[field._id] || ''}
                   onChange={(value) => {
+                    console.log('🚀 field onChange:', {
+                      fieldId: field._id,
+                      oldValue: sectionFormValues[section.sectionId]?.[field._id],
+                      newValue: value,
+                    });
                     return handleFieldChange(section.sectionId, field._id, value);
                   }}
                 />
