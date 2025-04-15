@@ -35,6 +35,7 @@ import { toast } from 'sonner';
 import FigmaManagerModal from '../FileComponents/FigmaManagerModal';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 import NewTemplateSheet from '../FileComponents/NewTemplateSheet';
+import { DeleteModuleDialog } from '../ModuleComponents';
 import { Module } from '../ModuleComponents/types';
 import ModuleDialog from './ModuleDialog';
 import NewTemplateModuleModal from './NewTemplateModuleModal';
@@ -59,6 +60,8 @@ export default function NewProjectModules() {
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [moduleToDelete, setModuleToDelete] = useState<Module | null>(null);
   const MAX_NAME_LENGTH = 50;
   const [duplicateModuleName, setDuplicateModuleName] = useState('');
   const [moduleToDuplicate, setModuleToDuplicate] = useState<Module | null>(null);
@@ -71,18 +74,20 @@ export default function NewProjectModules() {
     console.log('Saving template:', template);
   };
 
-  const handleDeleteModule = async (moduleId: string) => {
+  const handleDeleteModule = async (module: Module) => {
     // Optimistically update the UI
     const previousModules = queryClient.getQueryData(['projectModules']);
     queryClient.setQueryData(['projectModules'], (old: any) => {
-      return old.filter((module: any) => {
-        return module._id !== moduleId;
+      return old.filter((m: any) => {
+        return m._id !== module._id;
       });
     });
 
     try {
-      await newRequest.delete(`/project-modules/${moduleId}`);
+      await newRequest.delete(`/project-modules/${module._id}`);
       toast.success('Module deleted successfully');
+      setIsDeleteDialogOpen(false);
+      setModuleToDelete(null);
     } catch (error) {
       // Revert on error
       queryClient.setQueryData(['projectModules'], previousModules);
@@ -353,7 +358,8 @@ export default function NewProjectModules() {
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleDeleteModule(item._id);
+                  setModuleToDelete(item);
+                  setIsDeleteDialogOpen(true);
                 }}
                 className='text-red-600 focus:text-red-600 focus:bg-red-50'
               >
@@ -579,6 +585,13 @@ export default function NewProjectModules() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <DeleteModuleDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        moduleToDelete={moduleToDelete}
+        onDelete={handleDeleteModule}
+      />
     </div>
   );
 }
