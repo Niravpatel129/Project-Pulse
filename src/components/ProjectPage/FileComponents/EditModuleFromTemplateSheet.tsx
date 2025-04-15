@@ -128,7 +128,6 @@ export default function EditModuleFromTemplateSheet({
   onClose,
   module,
 }: EditModuleFromTemplateSheetProps) {
-  console.log('🚀 module:', module);
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [moduleName, setModuleName] = useState(module.name);
   const [isLoading, setIsLoading] = useState(true);
@@ -184,13 +183,10 @@ export default function EditModuleFromTemplateSheet({
       setTemplateDataMap(templatesData);
       // Initialize form values for each section
       const initialValues: Record<string, Record<string, any>> = {};
-      console.log('🚀 sections:', sections);
       sections.forEach((section) => {
-        console.log('🚀 section:', section);
         initialValues[section.sectionId] = {};
         // Initialize with existing field values from the module
         section.fields.forEach((field) => {
-          console.log('🚀 field:', field);
           if (field.fieldType === 'relation' && field.fieldValue) {
             initialValues[section.sectionId][field.templateFieldId] = field.fieldValue.rowId || '';
           } else {
@@ -198,7 +194,6 @@ export default function EditModuleFromTemplateSheet({
           }
         });
       });
-      console.log('🚀 initialValues:', initialValues);
       setSectionFormValues(initialValues);
       setIsLoading(false);
     }
@@ -208,27 +203,24 @@ export default function EditModuleFromTemplateSheet({
   const updateModuleMutation = useMutation({
     mutationFn: async (moduleData: {
       name: string;
-      versions: Array<{
-        number: number;
-        contentSnapshot: {
-          sections: Array<{
-            templateId: string;
-            templateName: string;
-            templateDescription: string;
-            fields: Array<{
-              templateFieldId: string;
-              fieldName: string;
-              fieldType: string;
-              isRequired: boolean;
-              description?: string;
-              multiple?: boolean;
-              fieldValue: any;
-              relationType?: string;
-            }>;
-            sectionId: string;
-          }>;
-        };
+      description: string;
+      sections: Array<{
+        templateId: string;
+        templateName: string;
+        templateDescription: string;
+        fields: Array<{
+          templateFieldId: string;
+          fieldName: string;
+          fieldType: string;
+          isRequired: boolean;
+          description?: string;
+          multiple?: boolean;
+          fieldValue: any;
+          relationType?: string;
+        }>;
+        sectionId: string;
       }>;
+      formValues: Record<string, Record<string, any>>;
     }) => {
       const response = await newRequest.put(
         `/project-modules/templated-module/${module._id}`,
@@ -287,7 +279,6 @@ export default function EditModuleFromTemplateSheet({
   };
 
   const handleFieldChange = (sectionId: string, fieldId: string, value: any) => {
-    console.log('🚀 handleFieldChange:', { sectionId, fieldId, value });
     setSectionFormValues((prev) => {
       return {
         ...prev,
@@ -303,54 +294,11 @@ export default function EditModuleFromTemplateSheet({
     e.preventDefault();
     if (!templatesData) return;
 
-    const updatedSections = sections.map((section) => {
-      const templateData = templatesData[section.templateId]?.data;
-      if (!templateData) return section;
-
-      const updatedFields = templateData.fields.map((field) => {
-        const fieldValue = sectionFormValues[section.sectionId]?.[field._id] || '';
-        const existingField = section.fields.find((f) => {
-          return f.templateFieldId === field._id;
-        });
-
-        if (field.type === 'relation') {
-          const selectedOption = field.selectOptions?.find((opt) => {
-            return opt.value === fieldValue;
-          });
-          return {
-            ...existingField,
-            fieldValue: selectedOption
-              ? {
-                  rowId: selectedOption.value,
-                  displayValues: selectedOption.rowData,
-                  selectedAt: new Date().toISOString(),
-                }
-              : null,
-          };
-        }
-
-        return {
-          ...existingField,
-          fieldValue: fieldValue || '',
-        };
-      });
-
-      return {
-        ...section,
-        fields: updatedFields,
-      };
-    });
-
     const moduleData = {
       name: moduleName,
-      versions: [
-        {
-          number: module.currentVersion + 1,
-          contentSnapshot: {
-            sections: updatedSections,
-          },
-        },
-      ],
+      description: module.versions[0].contentSnapshot.sections[0].templateDescription,
+      sections: sections,
+      formValues: sectionFormValues,
     };
 
     updateModuleMutation.mutate(moduleData);
@@ -359,12 +307,6 @@ export default function EditModuleFromTemplateSheet({
   const renderSection = (section) => {
     const template = templateDataMap[section.templateId]?.data;
     if (!template || !template.fields) return null;
-
-    console.log('🚀 rendering section:', {
-      sectionId: section.sectionId,
-      formValues: sectionFormValues[section.sectionId],
-      templateFields: template.fields,
-    });
 
     return (
       <Card
@@ -389,25 +331,12 @@ export default function EditModuleFromTemplateSheet({
           </div>
           <div className='space-y-3'>
             {template.fields.map((field) => {
-              console.log('🚀 rendering field:', {
-                fieldId: field._id,
-                value: sectionFormValues[section.sectionId]?.[field._id],
-                fieldType: field.type,
-                fieldName: field.name,
-                fieldConfig: field,
-                sectionFormValues: sectionFormValues[section.sectionId],
-              });
               return (
                 <ModuleFieldRenderer
                   key={field._id}
                   field={field}
                   value={sectionFormValues[section.sectionId]?.[field._id] || ''}
                   onChange={(value) => {
-                    console.log('🚀 field onChange:', {
-                      fieldId: field._id,
-                      oldValue: sectionFormValues[section.sectionId]?.[field._id],
-                      newValue: value,
-                    });
                     return handleFieldChange(section.sectionId, field._id, value);
                   }}
                 />
