@@ -600,36 +600,53 @@ export default function NewProjectModules() {
             </div>
           </div>
           <div className='mx-auto'>
-            <h2 className='text-3xl font-bold text-gray-800 mb-6'>No Modules</h2>
-            <p className='text-gray-600 mb-8'>Create a module to get started.</p>
+            <h2 className='text-3xl font-bold text-gray-800 mb-6'>Project Modules</h2>
+            <p className='text-gray-600 mb-6'>
+              Add files, Figma designs, and templates to your project. All modules can be versioned,
+              shared, and commented on.
+            </p>
 
-            <div className='mb-8 flex justify-center gap-2'>
-              <Button
-                className='bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md'
-                onClick={() => {
-                  return setIsFileUploadModalOpen(true);
-                }}
-              >
-                New File
-              </Button>
-              <Button
-                variant='outline'
-                className=' px-6 py-2 rounded-md'
-                onClick={() => {
-                  return setIsFigmaModalOpen(true);
-                }}
-              >
-                New Figma
-              </Button>
+            <div className='mb-8 flex flex-col items-center gap-6'>
+              <div className='grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl'>
+                <Button
+                  className='bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-md hover:shadow-lg transition-all duration-300 rounded-xl h-[120px] flex flex-col items-center justify-center gap-3'
+                  onClick={() => {
+                    return setIsFileUploadModalOpen(true);
+                  }}
+                >
+                  <div className='bg-white/20 p-2 rounded-full'>
+                    <LuFileText className='h-6 w-6' />
+                  </div>
+                  <span className='font-medium'>Add File</span>
+                </Button>
+                <Button
+                  variant='outline'
+                  className='border-2 hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-300 rounded-xl h-[120px] flex flex-col items-center justify-center gap-3'
+                  onClick={() => {
+                    return setIsFigmaModalOpen(true);
+                  }}
+                >
+                  <div className='bg-orange-100 p-2 rounded-full'>
+                    <LuFigma className='h-6 w-6 text-orange-600' />
+                  </div>
+                  <span className='font-medium'>Add Figma</span>
+                </Button>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant='outline' className='px-6 py-2 rounded-md w-[180px]'>
-                    Choose Template
-                  </Button>
-                </DropdownMenuTrigger>
-                {renderTemplateDropdownMenu()}
-              </DropdownMenu>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant='outline'
+                      className='border-2 hover:border-purple-300 hover:bg-purple-50/50 transition-all duration-300 rounded-xl h-[120px] flex flex-col items-center justify-center gap-3'
+                    >
+                      <div className='bg-purple-100 p-2 rounded-full'>
+                        <PaintRoller className='h-6 w-6 text-purple-600' />
+                      </div>
+                      <span className='font-medium'>Add from Template</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  {renderTemplateDropdownMenu()}
+                </DropdownMenu>
+              </div>
             </div>
           </div>
         </div>

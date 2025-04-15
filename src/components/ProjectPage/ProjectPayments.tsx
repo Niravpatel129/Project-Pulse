@@ -28,7 +28,7 @@ export default function ProjectPayments() {
     }
   };
 
-  if (invoices.length > 0) {
+  if (invoices?.length > 0) {
     return (
       <>
         <div className='flex justify-between items-center mb-4'>

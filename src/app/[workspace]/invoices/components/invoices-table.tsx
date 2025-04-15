@@ -27,6 +27,7 @@ import {
   Link2Icon,
   MoreHorizontal,
   PencilIcon,
+  TrashIcon,
   XIcon,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -42,6 +43,20 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
   const queryClient = useQueryClient();
   const { project } = useProject();
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+
+  const deleteInvoice = (invoiceId: string) => {
+    newRequest
+      .delete(`/projects/invoices/${invoiceId}`)
+      .then(() => {
+        toast.success('Invoice deleted successfully');
+        queryClient.invalidateQueries({
+          queryKey: ['invoices'],
+        });
+      })
+      .catch(() => {
+        toast.error('Failed to delete invoice');
+      });
+  };
 
   const updateInvoiceStatus = (invoice: Invoice, status: string) => {
     newRequest
@@ -246,6 +261,16 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                             <Link2Icon className='w-4 h-4 mr-2' />
                             Payment link
                           </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className='flex gap-1 text-red-600 hover:text-red-700'
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteInvoice(invoice._id);
+                          }}
+                        >
+                          <TrashIcon className='w-4 h-4 mr-2' />
+                          Delete Invoice
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
