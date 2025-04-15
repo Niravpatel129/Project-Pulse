@@ -35,7 +35,7 @@ import { toast } from 'sonner';
 import FigmaManagerModal from '../FileComponents/FigmaManagerModal';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 import NewTemplateSheet from '../FileComponents/NewTemplateSheet';
-import { DeleteModuleDialog } from '../ModuleComponents';
+import { DeleteModuleDialog } from '../ModuleComponents/DeleteModuleDialog';
 import { Module } from '../ModuleComponents/types';
 import ModuleDialog from './ModuleDialog';
 import NewTemplateModuleModal from './NewTemplateModuleModal';
@@ -65,6 +65,7 @@ export default function NewProjectModules() {
   const MAX_NAME_LENGTH = 50;
   const [duplicateModuleName, setDuplicateModuleName] = useState('');
   const [moduleToDuplicate, setModuleToDuplicate] = useState<Module | null>(null);
+  const [isTemplateDropdownOpen, setIsTemplateDropdownOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const handleSaveTemplate = (
@@ -244,6 +245,45 @@ export default function NewProjectModules() {
     );
   };
 
+  const renderTemplateDropdownMenu = () => {
+    return (
+      <DropdownMenuContent className='min-w-[230px]' align='end'>
+        {templates.map((template, index) => {
+          return (
+            <DropdownMenuItem
+              key={index}
+              onClick={() => {
+                setSelectedTemplate(template);
+                setIsNewModuleFromTemplateSheetOpen(true);
+              }}
+            >
+              <div className='flex items-center gap-2'>
+                <FileText className='h-4 w-4' />
+                <div>
+                  <p className='text-sm font-medium'>{template.name}</p>
+                  <p className='text-xs text-muted-foreground'>{template.description}</p>
+                </div>
+              </div>
+            </DropdownMenuItem>
+          );
+        })}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => {
+            return setIsNewTemplateSheetOpen(true);
+          }}
+        >
+          <Plus className='h-4 w-4' />
+          <div className='text-sm text-popover-foreground'>New Template</div>
+          <CommandShortcut className='ml-auto '>
+            <span className=''>⌘</span>
+            <span className=''>T</span>
+          </CommandShortcut>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    );
+  };
+
   const renderProjectItem = (item) => {
     const isImage =
       item.moduleType === 'file' &&
@@ -390,6 +430,204 @@ export default function NewProjectModules() {
       </div>
     );
   };
+  const renderModals = () => {
+    return (
+      <>
+        <FileUploadManagerModal
+          isOpen={isFileUploadModalOpen}
+          onClose={() => {
+            return setIsFileUploadModalOpen(false);
+          }}
+          handleAddFileToProject={(files) => {
+            return handleAddFileToProject({ type: 'file', content: files });
+          }}
+        />
+
+        <FigmaManagerModal
+          isOpen={isFigmaModalOpen}
+          onClose={() => {
+            return setIsFigmaModalOpen(false);
+          }}
+          handleAddFigmaToProject={handleAddFigmaToProject}
+        />
+
+        <NewTemplateSheet
+          isOpen={isNewTemplateSheetOpen}
+          onClose={() => {
+            return setIsNewTemplateSheetOpen(false);
+          }}
+          onSave={handleSaveTemplate}
+        />
+
+        {selectedTemplate && (
+          <NewTemplateModuleModal
+            isOpen={isNewModuleFromTemplateSheetOpen}
+            onClose={() => {
+              setIsNewModuleFromTemplateSheetOpen(false);
+              setSelectedTemplate(null);
+            }}
+            template={selectedTemplate}
+            templateName={selectedTemplate?.name}
+          />
+        )}
+
+        {selectedModule && (
+          <ModuleDialog
+            moduleId={selectedModule?._id}
+            onOpenChange={(open) => {
+              return !open && setSelectedModule(null);
+            }}
+          />
+        )}
+
+        <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
+          <DialogContent className='sm:max-w-[425px]'>
+            <DialogHeader>
+              <DialogTitle>Rename Module</DialogTitle>
+            </DialogHeader>
+            <div className='py-4'>
+              <Input
+                value={newModuleName}
+                onChange={(e) => {
+                  return setNewModuleName(e.target.value);
+                }}
+                placeholder='Enter new name'
+                className='w-full'
+                autoFocus
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                variant='outline'
+                onClick={() => {
+                  return setIsRenameDialogOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (renamingModule) {
+                    handleRenameModule(renamingModule.id, newModuleName);
+                  }
+                }}
+              >
+                Save
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isDuplicateDialogOpen} onOpenChange={setIsDuplicateDialogOpen}>
+          <DialogContent className='sm:max-w-[425px] p-6'>
+            <DialogHeader>
+              <DialogTitle>Duplicate Module</DialogTitle>
+            </DialogHeader>
+            <div className='flex flex-col gap-4 py-4'>
+              <div className='space-y-2'>
+                <p className='text-sm text-muted-foreground'>
+                  Create a copy of this module with a new name.
+                </p>
+              </div>
+              <div className='space-y-1'>
+                <Input
+                  value={duplicateModuleName}
+                  onChange={handleNameChange}
+                  className='h-9'
+                  autoFocus
+                  maxLength={MAX_NAME_LENGTH}
+                />
+                <div className='h-5'>
+                  {duplicateModuleName.length > MAX_NAME_LENGTH * 0.8 && (
+                    <p className='text-xs text-muted-foreground'>
+                      {MAX_NAME_LENGTH - duplicateModuleName.length} characters remaining
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className='flex justify-end gap-2'>
+                <Button
+                  variant='ghost'
+                  onClick={() => {
+                    setIsDuplicateDialogOpen(false);
+                    setModuleToDuplicate(null);
+                    setDuplicateModuleName('');
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (moduleToDuplicate) {
+                      handleDuplicateModule(moduleToDuplicate._id, duplicateModuleName);
+                    }
+                  }}
+                >
+                  Create Duplicate
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <DeleteModuleDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          moduleToDelete={moduleToDelete}
+          onDelete={handleDeleteModule}
+        />
+      </>
+    );
+  };
+
+  if (!isLoading && !modules.length) {
+    return (
+      <div className='flex justify-center items-center relative z-10'>
+        <div className='flex flex-col justify-center p-6 max-w-2xl text-center mt-[50px]'>
+          <div className='relative mb-4'>
+            <div className='absolute inset-0 bg-gradient-to-r from-green-100 to-blue-100 rounded-full opacity-30 blur-md'></div>
+            <div className='relative flex items-center justify-center'>
+              <LuBook className='h-16 w-16 mx-auto text-green-500 drop-shadow-md' />
+            </div>
+          </div>
+          <div className='mx-auto'>
+            <h2 className='text-3xl font-bold text-gray-800 mb-6'>No Modules</h2>
+            <p className='text-gray-600 mb-8'>Create a module to get started.</p>
+
+            <div className='mb-8 flex justify-center gap-2'>
+              <Button
+                className='bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md'
+                onClick={() => {
+                  return setIsFileUploadModalOpen(true);
+                }}
+              >
+                New File
+              </Button>
+              <Button
+                variant='outline'
+                className=' px-6 py-2 rounded-md'
+                onClick={() => {
+                  return setIsFigmaModalOpen(true);
+                }}
+              >
+                New Figma
+              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant='outline' className='px-6 py-2 rounded-md'>
+                    Choose Template
+                  </Button>
+                </DropdownMenuTrigger>
+                {renderTemplateDropdownMenu()}
+              </DropdownMenu>
+            </div>
+          </div>
+        </div>
+        {renderModals()}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -437,161 +675,7 @@ export default function NewProjectModules() {
           </div>
         )}
       </div>
-
-      <FileUploadManagerModal
-        isOpen={isFileUploadModalOpen}
-        onClose={() => {
-          return setIsFileUploadModalOpen(false);
-        }}
-        handleAddFileToProject={(files) => {
-          return handleAddFileToProject({ type: 'file', content: files });
-        }}
-      />
-
-      <FigmaManagerModal
-        isOpen={isFigmaModalOpen}
-        onClose={() => {
-          return setIsFigmaModalOpen(false);
-        }}
-        handleAddFigmaToProject={handleAddFigmaToProject}
-      />
-
-      <NewTemplateSheet
-        isOpen={isNewTemplateSheetOpen}
-        onClose={() => {
-          return setIsNewTemplateSheetOpen(false);
-        }}
-        onSave={handleSaveTemplate}
-      />
-
-      {/* {selectedTemplate && (
-        <NewModuleFromTemplateSheet
-          isOpen={isNewModuleFromTemplateSheetOpen}
-          onClose={() => {
-            setIsNewModuleFromTemplateSheetOpen(false);
-            setSelectedTemplate(null);
-          }}
-          template={selectedTemplate}
-          templateName={selectedTemplate?.name}
-        />
-      )} */}
-      {selectedTemplate && (
-        <NewTemplateModuleModal
-          isOpen={isNewModuleFromTemplateSheetOpen}
-          onClose={() => {
-            setIsNewModuleFromTemplateSheetOpen(false);
-            setSelectedTemplate(null);
-          }}
-          template={selectedTemplate}
-          templateName={selectedTemplate?.name}
-        />
-      )}
-
-      {selectedModule && (
-        <ModuleDialog
-          moduleId={selectedModule?._id}
-          onOpenChange={(open) => {
-            return !open && setSelectedModule(null);
-          }}
-        />
-      )}
-
-      <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
-        <DialogContent className='sm:max-w-[425px]'>
-          <DialogHeader>
-            <DialogTitle>Rename Module</DialogTitle>
-          </DialogHeader>
-          <div className='py-4'>
-            <Input
-              value={newModuleName}
-              onChange={(e) => {
-                return setNewModuleName(e.target.value);
-              }}
-              placeholder='Enter new name'
-              className='w-full'
-              autoFocus
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant='outline'
-              onClick={() => {
-                return setIsRenameDialogOpen(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                if (renamingModule) {
-                  handleRenameModule(renamingModule.id, newModuleName);
-                }
-              }}
-            >
-              Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isDuplicateDialogOpen} onOpenChange={setIsDuplicateDialogOpen}>
-        <DialogContent className='sm:max-w-[425px] p-6'>
-          <DialogHeader>
-            <DialogTitle>Duplicate Module</DialogTitle>
-          </DialogHeader>
-          <div className='flex flex-col gap-4 py-4'>
-            <div className='space-y-2'>
-              <p className='text-sm text-muted-foreground'>
-                Create a copy of this module with a new name.
-              </p>
-            </div>
-            <div className='space-y-1'>
-              <Input
-                value={duplicateModuleName}
-                onChange={handleNameChange}
-                className='h-9'
-                autoFocus
-                maxLength={MAX_NAME_LENGTH}
-              />
-              <div className='h-5'>
-                {duplicateModuleName.length > MAX_NAME_LENGTH * 0.8 && (
-                  <p className='text-xs text-muted-foreground'>
-                    {MAX_NAME_LENGTH - duplicateModuleName.length} characters remaining
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className='flex justify-end gap-2'>
-              <Button
-                variant='ghost'
-                onClick={() => {
-                  setIsDuplicateDialogOpen(false);
-                  setModuleToDuplicate(null);
-                  setDuplicateModuleName('');
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  if (moduleToDuplicate) {
-                    handleDuplicateModule(moduleToDuplicate._id, duplicateModuleName);
-                  }
-                }}
-              >
-                Create Duplicate
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <DeleteModuleDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        moduleToDelete={moduleToDelete}
-        onDelete={handleDeleteModule}
-      />
+      {renderModals()}
     </div>
   );
 }
