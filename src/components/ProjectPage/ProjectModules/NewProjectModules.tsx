@@ -26,7 +26,7 @@ import { useProjectModules } from '@/hooks/useProjectModules';
 import { newRequest } from '@/utils/newRequest';
 import { useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
-import { FileText, MoreVertical, PaintRoller, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Copy, FileText, MoreVertical, PaintRoller, Pencil, Plus, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import { LuBook, LuFigma } from 'react-icons/lu';
@@ -57,6 +57,10 @@ export default function NewProjectModules() {
   const [newModuleName, setNewModuleName] = useState('');
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+  const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
+  const MAX_NAME_LENGTH = 50;
+  const [duplicateModuleName, setDuplicateModuleName] = useState('');
+  const [moduleToDuplicate, setModuleToDuplicate] = useState<Module | null>(null);
   const queryClient = useQueryClient();
 
   const handleSaveTemplate = (
@@ -113,6 +117,27 @@ export default function NewProjectModules() {
     }
   };
 
+  const handleDuplicateModule = async (moduleId: string, newName: string) => {
+    try {
+      const response = await newRequest.post(`/project-modules/${moduleId}/duplicate`, {
+        name: newName,
+      });
+
+      // Optimistically update the UI
+      queryClient.setQueryData(['projectModules'], (old: any) => {
+        return [...old, response.data];
+      });
+
+      toast.success('Module duplicated successfully');
+      setIsDuplicateDialogOpen(false);
+      setModuleToDuplicate(null);
+      setDuplicateModuleName('');
+    } catch (error) {
+      console.error('Failed to duplicate module:', error);
+      toast.error('Failed to duplicate module');
+    }
+  };
+
   const handleAddFigmaToProject = (figmaFile: any) => {
     addModule({
       type: 'figma',
@@ -123,6 +148,13 @@ export default function NewProjectModules() {
       },
     });
     setIsFigmaModalOpen(false);
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value.length <= MAX_NAME_LENGTH) {
+      setDuplicateModuleName(value);
+    }
   };
 
   const renderDropdownMenu = () => {
@@ -288,6 +320,17 @@ export default function NewProjectModules() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end' className='w-48'>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setModuleToDuplicate(item);
+                  setDuplicateModuleName(`Duplicate of ${item.name}`);
+                  setIsDuplicateDialogOpen(true);
+                }}
+              >
+                <Copy className='mr-2 h-4 w-4' />
+                <span>Duplicate</span>
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
@@ -474,6 +517,58 @@ export default function NewProjectModules() {
               Save
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDuplicateDialogOpen} onOpenChange={setIsDuplicateDialogOpen}>
+        <DialogContent className='sm:max-w-[425px] p-6'>
+          <DialogHeader>
+            <DialogTitle>Duplicate Module</DialogTitle>
+          </DialogHeader>
+          <div className='flex flex-col gap-4 py-4'>
+            <div className='space-y-2'>
+              <p className='text-sm text-muted-foreground'>
+                Create a copy of this module with a new name.
+              </p>
+            </div>
+            <div className='space-y-1'>
+              <Input
+                value={duplicateModuleName}
+                onChange={handleNameChange}
+                className='h-9'
+                autoFocus
+                maxLength={MAX_NAME_LENGTH}
+              />
+              <div className='h-5'>
+                {duplicateModuleName.length > MAX_NAME_LENGTH * 0.8 && (
+                  <p className='text-xs text-muted-foreground'>
+                    {MAX_NAME_LENGTH - duplicateModuleName.length} characters remaining
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className='flex justify-end gap-2'>
+              <Button
+                variant='ghost'
+                onClick={() => {
+                  setIsDuplicateDialogOpen(false);
+                  setModuleToDuplicate(null);
+                  setDuplicateModuleName('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (moduleToDuplicate) {
+                    handleDuplicateModule(moduleToDuplicate._id, duplicateModuleName);
+                  }
+                }}
+              >
+                Create Duplicate
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
