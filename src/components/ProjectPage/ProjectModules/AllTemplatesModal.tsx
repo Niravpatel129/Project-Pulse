@@ -11,7 +11,7 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Calendar, File, Grid, MoreVertical, Search, Text, X } from 'lucide-react';
 import { useState } from 'react';
 
@@ -83,26 +83,48 @@ export default function AllTemplatesModal({
     }).format(date);
   };
 
+  const filteredTemplates =
+    templates?.filter((template) => {
+      return template.name.toLowerCase().includes(searchTerm.toLowerCase());
+    }) || [];
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className='max-w-4xl p-0 gap-0'>
         <DialogTitle className='sr-only'>All Templates</DialogTitle>
-        <button
+        <motion.button
           onClick={onClose}
           className='absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground'
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
         >
           <X className='h-4 w-4' />
           <span className='sr-only'>Close</span>
-        </button>
+        </motion.button>
 
-        <div className='flex w-full overflow-hidden rounded-lg bg-white'>
+        <motion.div
+          className='flex w-full overflow-hidden rounded-lg bg-white'
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
           <div className='w-full p-5'>
-            <div className='mb-6'>
+            <motion.div
+              className='mb-6'
+              initial={{ y: -10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
               <h1 className='text-2xl font-semibold text-gray-900'>All Templates</h1>
               <p className='mt-1 text-sm text-gray-500'>Select a template to create a new module</p>
-            </div>
+            </motion.div>
 
-            <div className='mb-4'>
+            <motion.div
+              className='mb-4'
+              initial={{ y: -5, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+            >
               <div className='relative'>
                 <Search className='absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
                 <input
@@ -115,28 +137,39 @@ export default function AllTemplatesModal({
                   }}
                 />
               </div>
-            </div>
+            </motion.div>
 
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-              {templates
-                ?.filter((template) => {
-                  return template.name.toLowerCase().includes(searchTerm.toLowerCase());
-                })
-                .map((template) => {
+            <motion.div
+              className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
+              layout
+              transition={{
+                layout: { duration: 0.3, type: 'spring' },
+              }}
+            >
+              <AnimatePresence mode='popLayout'>
+                {filteredTemplates.map((template) => {
                   return (
                     <motion.div
                       key={template._id}
                       className='flex flex-col p-4 border border-gray-200 rounded-lg hover:border-blue-500 transition-colors cursor-pointer relative group'
-                      whileHover={{ scale: 1.02 }}
+                      layout
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                      whileHover={{ scale: 1.02, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
                       whileTap={{ scale: 0.98 }}
+                      transition={{ duration: 0.2 }}
                       onClick={() => {
                         return onTemplateSelect(template);
                       }}
                     >
                       <div className='flex items-center gap-2 mb-2'>
-                        <div className='flex h-8 w-8 items-center justify-center rounded bg-blue-500 text-white'>
+                        <motion.div
+                          className='flex h-8 w-8 items-center justify-center rounded bg-blue-500 text-white'
+                          whileHover={{ rotate: 5 }}
+                        >
                           <Grid className='h-4 w-4' />
-                        </div>
+                        </motion.div>
                         <h3 className='text-sm font-medium text-gray-900'>{template.name}</h3>
                       </div>
 
@@ -146,22 +179,32 @@ export default function AllTemplatesModal({
 
                       <div className='mt-auto'>
                         <div className='flex flex-wrap gap-1 mb-2'>
-                          {template.fields.slice(0, 3).map((field) => {
-                            return (
-                              <div
-                                key={field._id}
-                                className='flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded text-xs'
+                          <AnimatePresence>
+                            {template.fields.slice(0, 3).map((field) => {
+                              return (
+                                <motion.div
+                                  key={field._id}
+                                  className='flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded text-xs'
+                                  initial={{ opacity: 0, y: 5 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ duration: 0.2 }}
+                                >
+                                  {getFieldTypeIcon(field.type)}
+                                  <span className='truncate max-w-[80px]'>{field.name}</span>
+                                </motion.div>
+                              );
+                            })}
+                            {template.fields.length > 3 && (
+                              <motion.div
+                                className='bg-gray-100 px-2 py-0.5 rounded text-xs'
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.2 }}
                               >
-                                {getFieldTypeIcon(field.type)}
-                                <span className='truncate max-w-[80px]'>{field.name}</span>
-                              </div>
-                            );
-                          })}
-                          {template.fields.length > 3 && (
-                            <div className='bg-gray-100 px-2 py-0.5 rounded text-xs'>
-                              +{template.fields.length - 3} more
-                            </div>
-                          )}
+                                +{template.fields.length - 3} more
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
 
                         <div className='text-xs text-gray-400 mt-1'>
@@ -169,7 +212,11 @@ export default function AllTemplatesModal({
                         </div>
                       </div>
 
-                      <div className='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity'>
+                      <motion.div
+                        className='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity'
+                        initial={{ opacity: 0 }}
+                        whileHover={{ opacity: 1 }}
+                      >
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
@@ -203,13 +250,14 @@ export default function AllTemplatesModal({
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </div>
+                      </motion.div>
                     </motion.div>
                   );
                 })}
-            </div>
+              </AnimatePresence>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </DialogContent>
     </Dialog>
   );
