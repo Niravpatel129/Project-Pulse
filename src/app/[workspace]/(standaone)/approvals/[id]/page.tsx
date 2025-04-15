@@ -1,5 +1,6 @@
 'use client';
 
+import FilePreview from '@/components/ProjectPage/ProjectModules/FilePreview';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -466,6 +467,24 @@ export default function ApprovalRequestPage() {
                                           {field.fieldType === 'text' && (
                                             <div className='text-sm text-gray-600 bg-white rounded-md p-3 border border-gray-200'>
                                               {field.fieldValue as string}
+                                            </div>
+                                          )}
+                                          {field.fieldType === 'files' && (
+                                            <div className='text-sm text-gray-600 bg-white rounded-md p-3 border border-gray-200'>
+                                              {field.fieldValue ? (
+                                                <FilePreview
+                                                  file={{
+                                                    _id: field.fieldValue._id,
+                                                    downloadURL: field.fieldValue.downloadURL,
+                                                    originalName: field.fieldValue.originalName,
+                                                    contentType: field.fieldValue.contentType,
+                                                  }}
+                                                />
+                                              ) : (
+                                                <span className='text-xs text-muted-foreground'>
+                                                  No file uploaded
+                                                </span>
+                                              )}
                                             </div>
                                           )}
                                           {field.fieldType === 'relation' &&

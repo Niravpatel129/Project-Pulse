@@ -51,6 +51,7 @@ import EditModuleFromTemplateSheet from '../FileComponents/EditModuleFromTemplat
 import FigmaManagerModal from '../FileComponents/FigmaManagerModal';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 import { ApproverDialog } from './ApproverDialog';
+import FilePreview from './FilePreview';
 
 interface ModuleDialogProps {
   moduleId: string;
@@ -807,6 +808,24 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                                                     ) : (
                                                       <span className='text-xs text-muted-foreground'>
                                                         No relation data
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                ) : field.fieldType === 'files' ? (
+                                                  <div className='bg-white p-2 rounded border'>
+                                                    {field.fieldValue ? (
+                                                      <FilePreview
+                                                        file={{
+                                                          _id: field.fieldValue._id,
+                                                          downloadURL: field.fieldValue.downloadURL,
+                                                          originalName:
+                                                            field.fieldValue.originalName,
+                                                          contentType: field.fieldValue.contentType,
+                                                        }}
+                                                      />
+                                                    ) : (
+                                                      <span className='text-xs text-muted-foreground'>
+                                                        No file uploaded
                                                       </span>
                                                     )}
                                                   </div>
