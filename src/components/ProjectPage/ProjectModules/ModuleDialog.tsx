@@ -44,6 +44,7 @@ import {
   Trash,
   Undo,
   Upload,
+  X,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
@@ -333,6 +334,20 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
           <VisuallyHidden>
             <DialogTitle>Module Details</DialogTitle>
           </VisuallyHidden>
+
+          {/* Close button (X) in the top right */}
+          <Button
+            variant='ghost'
+            size='icon'
+            className='absolute right-4 top-4 z-10'
+            onClick={() => {
+              return onOpenChange(false);
+            }}
+          >
+            <X className='h-4 w-4' />
+            <span className='sr-only'>Close</span>
+          </Button>
+
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
