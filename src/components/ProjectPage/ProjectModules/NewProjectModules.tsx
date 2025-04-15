@@ -1,4 +1,5 @@
 import { Template } from '@/api/models';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CommandShortcut } from '@/components/ui/command';
 import {
@@ -293,15 +294,22 @@ export default function NewProjectModules() {
         </div>
         {/* Bottom Part */}
         <div className='border-t'>
+          <div className='absolute bottom-2 right-2'></div>
           <div className='py-3 px-3 flex flex-col gap-1'>
-            <p className='text-sm font-medium truncate'>{item.name}</p>
-            <p className='text-xs text-gray-500 truncate'>
-              Updated{' '}
+            <div className='text-sm font-medium truncate flex items-center gap-2'>
+              {item.name}
+
+              <Badge variant='outline' className='rounded-sm'>
+                V{item.currentVersion}
+              </Badge>
+            </div>
+            <div className='text-xs text-gray-500 truncate'>
+              Udivdated{' '}
               {formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true }).replace(
                 /^about\s+/,
                 '',
               )}
-            </p>
+            </div>
           </div>
         </div>
         {/* Options Menu */}
