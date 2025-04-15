@@ -11,8 +11,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useProject } from '@/contexts/ProjectContext';
+import { useProject, type Project } from '@/contexts/ProjectContext';
+import { useBreakpoints, useMediaQuery } from '@/hooks/useMediaQuery';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -20,6 +22,7 @@ import {
   CheckCircle2,
   Clock,
   Mail,
+  Menu,
   Plus,
   UserCircle,
   UserCog,
@@ -31,6 +34,7 @@ import { toast } from 'sonner';
 import BlockWrapper from '../wrappers/BlockWrapper';
 import AddParticipantDialog from './AddParticipantDialog';
 import AddTeamDialog from './AddTeamDialog';
+import { ProjectSidebar } from './ProjectSidebar';
 
 interface Participant {
   id: string;
@@ -88,11 +92,18 @@ interface ProjectData {
 }
 
 export default function ProjectHeader() {
-  const { project, error, loading: isLoadingProject } = useProject();
+  const { project, error, loading: isLoadingProject, updateProject } = useProject();
   const queryClient = useQueryClient();
   const [isSticky, setIsSticky] = useState(false);
   const bannerRef = useRef<HTMLDivElement>(null);
   const [showParticipantsDialog, setShowParticipantsDialog] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { isSm, isMd, isLg } = useBreakpoints();
+  const isMobile = useMediaQuery('(max-width: 768px)');
+
+  const handleUpdateProject = async (data: Partial<Project>) => {
+    await updateProject(data);
+  };
 
   // Use React Query to manage collaborators state
   const { data: collaborators = [], isLoading: isLoadingCollaborators } = useQuery<Collaborator[]>({
@@ -116,27 +127,6 @@ export default function ProjectHeader() {
     enabled: !!project?._id,
   });
 
-  const removeClientMutation = useMutation({
-    mutationFn: async (clientId: string) => {
-      const response = await newRequest.delete(`/projects/${project?._id}/clients/${clientId}`);
-      return response.data.data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['project', project?._id] });
-      queryClient.invalidateQueries({ queryKey: ['clients', project?._id] });
-    },
-    onError: (error) => {
-      console.error('Error removing client:', error);
-    },
-  });
-  const handleRemoveClient = (clientId: string) => {
-    toast.promise(removeClientMutation.mutateAsync(clientId), {
-      loading: 'Removing client...',
-      success: 'Client removed successfully',
-      error: 'Failed to remove client',
-    });
-  };
-
   // Handle sticky header on scroll
   useEffect(() => {
     const handleScroll = () => {
@@ -151,15 +141,6 @@ export default function ProjectHeader() {
       return window.removeEventListener('scroll', handleScroll);
     };
   }, []);
-
-  // Use React Query to manage participants state
-  const { data: participants = [] } = useQuery<Participant[]>({
-    queryKey: ['participants'],
-    queryFn: () => {
-      return Promise.resolve([]);
-    },
-    initialData: [],
-  });
 
   const addParticipantMutation = useMutation({
     mutationFn: (newParticipant: Participant) => {
@@ -363,42 +344,10 @@ export default function ProjectHeader() {
     );
   };
 
-  const handleShowParticipants = () => {
-    setShowParticipantsDialog(true);
-  };
-
-  const handleProjectStatus = () => {
-    toast.info(`Current status: ${project?.status || 'Active'}`);
-  };
-
   const ParticipantSkeleton = () => {
     return (
       <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg'>
         <Skeleton className='h-8 w-8 rounded-full' />
-        <div className='hidden sm:block space-y-2'>
-          <Skeleton className='h-4 w-24' />
-          <Skeleton className='h-3 w-16' />
-        </div>
-      </div>
-    );
-  };
-
-  const CollaboratorSkeleton = () => {
-    return (
-      <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg'>
-        <Skeleton className='h-8 w-8 rounded-full bg-indigo-100' />
-        <div className='hidden sm:block space-y-2'>
-          <Skeleton className='h-4 w-24' />
-          <Skeleton className='h-3 w-16' />
-        </div>
-      </div>
-    );
-  };
-
-  const TeamSkeleton = () => {
-    return (
-      <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg'>
-        <Skeleton className='h-8 w-8 rounded-full bg-green-100' />
         <div className='hidden sm:block space-y-2'>
           <Skeleton className='h-4 w-24' />
           <Skeleton className='h-3 w-16' />
@@ -425,80 +374,412 @@ export default function ProjectHeader() {
     );
   };
 
+  if (isMobile) {
+    return (
+      <div>
+        <div className='fixed bg-white top-0 left-0 right-0 z-50 shadow-md border-b'>
+          <div className='container mx-auto px-4 py-2'>
+            <div className='flex items-center justify-between'>
+              <div className='flex items-center gap-3'>
+                <div className='relative h-8 w-8 rounded-md overflow-hidden'>
+                  <Image
+                    src='https://picsum.photos/200'
+                    alt='Project Thumbnail'
+                    fill
+                    className='object-cover'
+                    priority
+                  />
+                </div>
+                <h2 className='text-lg font-medium capitalize'>{project?.name}</h2>
+                <div className='flex flex-wrap items-center gap-0'>
+                  {/* Participants */}
+                  {isLoadingProject ? (
+                    <>
+                      <ParticipantSkeleton />
+                      <ParticipantSkeleton />
+                      <ParticipantSkeleton />
+                    </>
+                  ) : (
+                    project?.participants?.map((participant) => {
+                      return (
+                        <DropdownMenu key={participant._id}>
+                          <DropdownMenuTrigger className='w-auto'>
+                            <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg cursor-pointer hover:bg-gray-50'>
+                              <Avatar className='h-8 w-8 border-2 border-transparent hover:border-gray-300 transition-colors bg-gray-200'>
+                                {participant.avatar ? (
+                                  <AvatarImage src={participant.avatar} alt={participant.name} />
+                                ) : (
+                                  <AvatarFallback className='bg-gray-200 text-gray-800 font-medium'>
+                                    {participant.name
+                                      .split(' ')
+                                      .map((n) => {
+                                        return n.charAt(0).toUpperCase();
+                                      })
+                                      .join('')}
+                                  </AvatarFallback>
+                                )}
+                              </Avatar>
+                              <div className='hidden sm:block'>
+                                <div className='flex items-center gap-1'>
+                                  <p className='text-sm font-medium capitalize'>
+                                    {participant.name.length > 15
+                                      ? `${participant.name.substring(0, 15)}...`
+                                      : participant.name}
+                                  </p>
+                                </div>
+                                <div className='flex items-center gap-1.5 mt-0.5'>
+                                  {getRoleBadge(participant.role)}
+                                </div>
+                              </div>
+                            </div>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align='center' className='w-64'>
+                            <DropdownMenuItem
+                              className='cursor-pointer '
+                              onClick={() => {
+                                if (participant.email) {
+                                  navigator.clipboard?.writeText(participant.email);
+                                  toast.success('Email copied to clipboard');
+                                }
+                              }}
+                            >
+                              <Mail className='h-4 w-4 mr-2' />
+                              {participant.email && participant.email.length > 30
+                                ? `${participant.email.substring(0, 30)}...`
+                                : participant.email || 'No email'}
+                            </DropdownMenuItem>
+                            <DropdownMenuLabel className='px-2 py-1.5 text-xs text-gray-500'>
+                              <hr />
+                            </DropdownMenuLabel>
+                            <DropdownMenuItem
+                              className='cursor-pointer text-red-500'
+                              onClick={() => {
+                                return handleRemoveParticipant(participant._id);
+                              }}
+                            >
+                              Remove from project
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      );
+                    })
+                  )}
+
+                  {/* Collaborators */}
+                  {isLoadingCollaborators ? (
+                    <>
+                      {/* <ParticipantSkeleton />
+                    <ParticipantSkeleton />
+                    <ParticipantSkeleton />
+                    <ParticipantSkeleton /> */}
+                    </>
+                  ) : (
+                    collaborators.map((collaborator) => {
+                      return (
+                        <DropdownMenu key={collaborator._id}>
+                          <DropdownMenuTrigger className='w-auto'>
+                            <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg cursor-pointer hover:bg-gray-50'>
+                              <Avatar className='h-8 w-8 border-2 border-indigo-200 hover:border-indigo-300 transition-colors bg-indigo-100'>
+                                {collaborator.avatar ? (
+                                  <AvatarImage src={collaborator.avatar} alt={collaborator.name} />
+                                ) : (
+                                  <AvatarFallback className='bg-indigo-100 text-indigo-800 font-medium'>
+                                    {collaborator.name
+                                      .split(' ')
+                                      .map((n) => {
+                                        return n.charAt(0).toUpperCase();
+                                      })
+                                      .join('')}
+                                  </AvatarFallback>
+                                )}
+                              </Avatar>
+                              <div className='hidden sm:block'>
+                                <div className='flex items-center gap-1'>
+                                  <p className='text-sm font-medium capitalize'>
+                                    {collaborator.name.length > 15
+                                      ? `${collaborator.name.substring(0, 15)}...`
+                                      : collaborator.name}{' '}
+                                  </p>
+                                </div>
+                                <div className='flex items-center gap-1.5 mt-0.5'>
+                                  {getRoleBadge(collaborator.role)}
+
+                                  <Badge
+                                    variant='outline'
+                                    className='bg-indigo-100 text-indigo-800 font-normal'
+                                  >
+                                    Collaborator
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align='center' className='w-64'>
+                            <DropdownMenuItem
+                              className='cursor-pointer'
+                              onClick={() => {
+                                if (collaborator.email) {
+                                  navigator.clipboard?.writeText(collaborator.email);
+                                  toast.success('Email copied to clipboard');
+                                }
+                              }}
+                            >
+                              <Mail className='h-4 w-4 mr-2' />
+                              {collaborator.email && collaborator.email.length > 30
+                                ? `${collaborator.email.substring(0, 30)}...`
+                                : collaborator.email || 'No email'}
+                            </DropdownMenuItem>
+                            <DropdownMenuLabel className='px-2 py-1.5 text-xs text-gray-500'>
+                              <hr />
+                            </DropdownMenuLabel>
+                            <DropdownMenuItem
+                              className='cursor-pointer text-red-500'
+                              onClick={() => {
+                                return handleRemoveCollaborator(collaborator._id);
+                              }}
+                            >
+                              Remove from project
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      );
+                    })
+                  )}
+
+                  {/* Teams */}
+                  {isLoadingTeams ? (
+                    <>
+                      {/* <TeamSkeleton />
+                    <TeamSkeleton />
+                    <TeamSkeleton /> */}
+                    </>
+                  ) : (
+                    teams.map((team) => {
+                      return (
+                        <DropdownMenu key={team.id}>
+                          <DropdownMenuTrigger className='w-auto'>
+                            <div className='flex items-center gap-3 transition-all p-1.5 rounded-lg cursor-pointer hover:bg-gray-50'>
+                              <Avatar className='h-8 w-8 border-2 border-green-200 hover:border-green-300 transition-colors bg-green-100'>
+                                {team.avatar ? (
+                                  <AvatarImage src={team.avatar} alt={team.name} />
+                                ) : (
+                                  <AvatarFallback className='bg-green-100 text-green-800 font-medium'>
+                                    {team.name
+                                      ? team.name
+                                          .split(' ')
+                                          .map((n) => {
+                                            return n.charAt(0).toUpperCase();
+                                          })
+                                          .join('')
+                                      : team.email
+                                      ? team.email.split('@')[0].charAt(0).toUpperCase()
+                                      : 'T'}
+                                  </AvatarFallback>
+                                )}
+                              </Avatar>
+                              <div className='hidden sm:block'>
+                                <div className='flex items-center gap-1'>
+                                  <p className='text-sm font-medium capitalize'>
+                                    {team.name
+                                      ? team.name.length > 15
+                                        ? `${team.name.substring(0, 15)}...`
+                                        : team.name
+                                      : team.email
+                                      ? team.email.split('@')[0]
+                                      : 'Team'}{' '}
+                                  </p>
+                                </div>
+                                <div className='flex items-center gap-1.5 mt-0.5'>
+                                  <Badge
+                                    variant='outline'
+                                    className='bg-green-100 text-green-800 font-normal'
+                                  >
+                                    Team
+                                  </Badge>
+                                  {team.members && (
+                                    <Badge
+                                      variant='outline'
+                                      className='bg-gray-100 text-gray-800 font-normal'
+                                    >
+                                      {team.members} members
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align='center' className='w-64'>
+                            <DropdownMenuItem
+                              className='cursor-pointer'
+                              onClick={() => {
+                                toast.info('View team details');
+                              }}
+                            >
+                              <Users className='h-4 w-4 mr-2' />
+                              View team details
+                            </DropdownMenuItem>
+                            <DropdownMenuLabel className='px-2 py-1.5 text-xs text-gray-500'>
+                              <hr />
+                            </DropdownMenuLabel>
+                            <DropdownMenuItem
+                              className='cursor-pointer text-red-500'
+                              onClick={() => {
+                                return handleRemoveTeam(team.id);
+                              }}
+                            >
+                              Remove from project
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      );
+                    })
+                  )}
+
+                  {/* Add Participant Button with Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant='outline'
+                        size='icon'
+                        className='rounded-full h-8 w-8 border-dashed hover:border-primary hover:bg-primary/5 transition-colors'
+                      >
+                        <Plus className='h-4 w-4' />
+                        <span className='sr-only'>Add participant</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align='center' className='w-[300px] p-2'>
+                      <DropdownMenuLabel className='text-center py-2 border-b mb-2'>
+                        Add Participant
+                      </DropdownMenuLabel>
+                      <div className='space-y-1'>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            return handleSelectRole('CLIENT');
+                          }}
+                          className='flex items-start gap-3 p-3 rounded-md hover:bg-primary/5 cursor-pointer'
+                        >
+                          <div
+                            className='bg-blue-50 flex size-10 items-center justify-center rounded-full border border-blue-100 flex-shrink-0'
+                            aria-hidden='true'
+                          >
+                            <UserCircle className='h-5 w-5 text-blue-600' />
+                          </div>
+                          <div className='overflow-hidden'>
+                            <div className='text-sm font-medium'>Client</div>
+                            <div className='text-muted-foreground text-xs line-clamp-2'>
+                              Can view and download files, and leave comments
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            return handleSelectRole('COLLABORATOR');
+                          }}
+                          className='flex items-start gap-3 p-3 rounded-md hover:bg-primary/5 cursor-pointer'
+                        >
+                          <div
+                            className='bg-indigo-50 flex size-10 items-center justify-center rounded-full border border-indigo-100 flex-shrink-0'
+                            aria-hidden='true'
+                          >
+                            <Users className='h-5 w-5 text-indigo-600' />
+                          </div>
+                          <div className='overflow-hidden'>
+                            <div className='text-sm font-medium'>Collaborator</div>
+                            <div className='text-muted-foreground text-xs line-clamp-2'>
+                              Can contribute to the project with editing and commenting abilities
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            return handleSelectRole('TEAM MEMBER');
+                          }}
+                          className='flex items-start gap-3 p-3 rounded-md hover:bg-primary/5 cursor-pointer'
+                        >
+                          <div
+                            className='bg-green-50 flex size-10 items-center justify-center rounded-full border border-green-100 flex-shrink-0'
+                            aria-hidden='true'
+                          >
+                            <UserCog className='h-5 w-5 text-green-600' />
+                          </div>
+                          <div className='overflow-hidden'>
+                            <div className='text-sm font-medium'>Team Member</div>
+                            <div className='text-muted-foreground text-xs line-clamp-2'>
+                              Full access to edit, upload, and manage project content
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                      </div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <AddParticipantDialog
+                    isOpen={isAddParticipantOpen}
+                    onOpenChange={setIsAddParticipantOpen}
+                    onAddParticipant={handleAddParticipant}
+                    predefinedRoles={predefinedRoles}
+                    onAddRole={handleAddRole}
+                    getRoleBadge={getRoleBadge}
+                  />
+
+                  <AddTeamDialog
+                    isOpen={isAddTeamOpen}
+                    onOpenChange={setIsAddTeamOpen}
+                    selectedRole={selectedRole}
+                    onAddParticipant={handleAddParticipant}
+                  />
+                </div>
+              </div>
+
+              <div className='lg:hidden flex justify-end py-3'>
+                <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+                  <SheetTrigger asChild>
+                    <button className='p-2 rounded-md transition-all duration-200 hover:bg-accent/90'>
+                      <Menu size={24} />
+                    </button>
+                  </SheetTrigger>
+                  <SheetContent className='w-[85%] sm:max-w-md'>
+                    <ProjectSidebar onUpdateProject={handleUpdateProject} />
+                  </SheetContent>
+                </Sheet>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <BlockWrapper className='mb-0 md:mb-4'>
       <div className=''>
         {/* Project Banner */}
-        <div ref={bannerRef} className='w-full'>
-          {isLoadingProject ? (
-            <ProjectBannerSkeleton />
-          ) : (
-            <div className='container mx-auto px-4 py-1 sm:py-1'>
-              <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4'>
-                <div>
-                  <h1 className='text-xl sm:text-2xl font-medium capitalize'>{project?.name}</h1>
-                  <p className='text-xs sm:text-sm text-muted-foreground'>
-                    Created on{' '}
-                    {project?.createdAt &&
-                      new Date(project.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Sticky Banner that appears when scrolling */}
-        {isSticky && (
-          <div className='fixed bg-white top-0 left-0 right-0 z-50 shadow-md border-b'>
-            <div className='container mx-auto px-4 py-2'>
-              <div className='flex items-center justify-between'>
-                <div className='flex items-center gap-3'>
-                  <div className='relative h-8 w-8 rounded-md overflow-hidden'>
-                    <Image
-                      src='https://picsum.photos/200'
-                      alt='Project Thumbnail'
-                      fill
-                      className='object-cover'
-                      priority
-                    />
+        {!isMobile && (
+          <div ref={bannerRef} className='w-full'>
+            {isLoadingProject ? (
+              <ProjectBannerSkeleton />
+            ) : (
+              <div className='container mx-auto px-4 py-1 sm:py-1'>
+                <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4'>
+                  <div>
+                    <h1 className='text-xl sm:text-2xl font-medium capitalize'>{project?.name}</h1>
+                    <p className='text-xs sm:text-sm text-muted-foreground'>
+                      Created on{' '}
+                      {project?.createdAt &&
+                        new Date(project.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                    </p>
                   </div>
-                  <h2 className='text-lg font-medium capitalize'>{project?.name}</h2>
-                  <Badge variant='outline' className='ml-2 bg-gray-100 text-gray-800'>
-                    {project?.projectType}
-                  </Badge>
-                </div>
-                <div className='flex items-center gap-2'>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    className='flex items-center gap-1'
-                    onClick={handleShowParticipants}
-                  >
-                    <Users className='h-4 w-4' />
-                    <span className='hidden sm:inline'>Participants</span>
-                  </Button>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    className='flex items-center gap-1'
-                    onClick={handleProjectStatus}
-                  >
-                    <Clock className='h-4 w-4' />
-                    <span className='hidden sm:inline'>Project Status</span>
-                    <Badge variant='outline' className='ml-2 bg-gray-100 text-gray-800'>
-                      {project?.status || 'Active'}
-                    </Badge>
-                  </Button>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
+
+        {/* Sticky Banner that appears when scrolling */}
 
         {/* Participants Section */}
         <div id='participants-section' className='container mx-auto px-4 py-3 sm:py-4'>

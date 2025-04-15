@@ -1,13 +1,12 @@
 'use client';
 
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useProject, type Project } from '@/contexts/ProjectContext';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CalendarDays, CreditCard, Home, Menu, PanelsTopLeft } from 'lucide-react';
+import { CalendarDays, CreditCard, Home, PanelsTopLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense } from 'react';
 import ProjectActivity from './ProjectActivity';
 import ProjectHome from './ProjectHome';
 import ProjectModules from './ProjectModules/ProjectModules';
@@ -17,11 +16,7 @@ import { ProjectSidebar } from './ProjectSidebar';
 import TimelineExample from './TimelineExample';
 
 export default function ProjectMain() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [windowWidth, setWindowWidth] = useState(
-    typeof window !== 'undefined' ? window.innerWidth : 0,
-  );
-  const { project, updateProject } = useProject();
+  const { updateProject } = useProject();
   const params = useParams();
   const pathname = usePathname();
   const projectId = params.id as string;
@@ -33,16 +28,6 @@ export default function ProjectMain() {
   };
 
   const activeTab = getActiveTab();
-
-  useEffect(() => {
-    const handleResize = () => {
-      return setWindowWidth(window.innerWidth);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => {
-      return window.removeEventListener('resize', handleResize);
-    };
-  }, []);
 
   const handleUpdateProject = async (data: Partial<Project>) => {
     await updateProject(data);
@@ -99,7 +84,7 @@ export default function ProjectMain() {
 
   return (
     <div className='min-h-screen w-full bg-white/30 backdrop-blur-sm'>
-      <div className='lg:hidden flex justify-end py-3'>
+      {/* <div className='lg:hidden flex justify-end py-3'>
         <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
           <SheetTrigger asChild>
             <button className='p-2 rounded-md transition-all duration-200 hover:bg-accent/90'>
@@ -110,7 +95,7 @@ export default function ProjectMain() {
             <ProjectSidebar onUpdateProject={handleUpdateProject} />
           </SheetContent>
         </Sheet>
-      </div>
+      </div> */}
 
       <div className='w-full'>
         <ScrollArea className='pb-2'>
