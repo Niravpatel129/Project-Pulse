@@ -172,13 +172,14 @@ export function useInvoiceEditor() {
       setIsNewCustomerDialogOpen(true);
     } else {
       setSelectedCustomer(value);
-      const customer = customers.find((c) => {
-        return c.id === value;
+      const participant = project?.participants.find((p) => {
+        return p._id === value;
       });
-      if (customer) {
+      if (participant) {
         setCurrentCustomer({
-          ...customer,
-          id: value,
+          id: participant._id,
+          name: participant.name,
+          email: participant.email,
         });
         setIsCustomerPicked(true);
       }
