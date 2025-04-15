@@ -20,6 +20,7 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
   const [selectedTemplates, setSelectedTemplates] = useState<string[]>(['shipping']);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [formErrors, setFormErrors] = useState<Record<string, string[]>>({});
   const [sections, setSections] = useState([
     {
       templateId: template._id,
@@ -45,7 +46,39 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
     enabled: isOpen,
   });
 
+  const validateForm = () => {
+    const errors: Record<string, string[]> = {};
+    let isValid = true;
+
+    sections.forEach((section) => {
+      const template = templateDataMap[section.templateId]?.data;
+      if (!template) return;
+
+      const sectionErrors: string[] = [];
+      template.fields.forEach((field) => {
+        if (field.required) {
+          const value = sectionFormValues[section.templateId]?.[field._id];
+          if (!value || (Array.isArray(value) && value.length === 0)) {
+            sectionErrors.push(`${field.name} is required`);
+            isValid = false;
+          }
+        }
+      });
+
+      if (sectionErrors.length > 0) {
+        errors[section.templateId] = sectionErrors;
+      }
+    });
+
+    setFormErrors(errors);
+    return isValid;
+  };
+
   const handleCreateModule = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
     try {
       const response = await newRequest.post(`/project-modules/templated-module/${project._id}`, {
         name: template.name,
@@ -55,6 +88,7 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
       });
 
       console.log('🚀 response:', response);
+      onClose();
     } catch (error) {
       console.log(error);
     }
@@ -212,22 +246,49 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
               <div className='space-y-3'>
                 {template.fields.map((field) => {
                   return (
-                    <ModuleFieldRenderer
-                      key={field._id}
-                      field={field}
-                      value={sectionFormValues[section.templateId]?.[field._id] || ''}
-                      onChange={(value) => {
-                        setSectionFormValues((prev) => {
-                          return {
-                            ...prev,
-                            [section.templateId]: {
-                              ...(prev[section.templateId] || {}),
-                              [field._id]: value,
-                            },
-                          };
-                        });
-                      }}
-                    />
+                    <div key={field._id}>
+                      <ModuleFieldRenderer
+                        field={field}
+                        value={sectionFormValues[section.templateId]?.[field._id] || ''}
+                        onChange={(value) => {
+                          setSectionFormValues((prev) => {
+                            return {
+                              ...prev,
+                              [section.templateId]: {
+                                ...(prev[section.templateId] || {}),
+                                [field._id]: value,
+                              },
+                            };
+                          });
+                          // Clear error when field is updated
+                          if (formErrors[section.templateId]?.length > 0) {
+                            setFormErrors((prev) => {
+                              const newErrors = { ...prev };
+                              if (newErrors[section.templateId]) {
+                                newErrors[section.templateId] = newErrors[
+                                  section.templateId
+                                ].filter((error) => {
+                                  return !error.includes(field.name);
+                                });
+                                if (newErrors[section.templateId].length === 0) {
+                                  delete newErrors[section.templateId];
+                                }
+                              }
+                              return newErrors;
+                            });
+                          }
+                        }}
+                      />
+                      {formErrors[section.templateId]?.some((error) => {
+                        return error.includes(field.name);
+                      }) && (
+                        <p className='text-sm text-red-500 mt-1'>
+                          {formErrors[section.templateId].find((error) => {
+                            return error.includes(field.name);
+                          })}
+                        </p>
+                      )}
+                    </div>
                   );
                 })}
               </div>
