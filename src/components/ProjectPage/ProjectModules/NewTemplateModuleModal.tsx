@@ -3,6 +3,14 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef } from 'react';
 
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -14,6 +22,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Grid, InfoIcon, Plus, Search, X } from 'lucide-react';
 import { useState } from 'react';
 import { FcDocument } from 'react-icons/fc';
+import { LuFolder } from 'react-icons/lu';
 import ModuleFieldRenderer from './ModuleFieldRenderer';
 
 interface ModuleData {
@@ -340,7 +349,19 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
           {/* Left sidebar */}
           <div className='w-72 border-r border-gray-100 bg-white'>
             <div className='p-5'>
-              <h2 className='text-base font-medium tracking-tight text-gray-900'>Templates</h2>
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink href='#' className='flex items-center'>
+                      <LuFolder className='w-4 h-4 mr-1' /> All Templates
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator> / </BreadcrumbSeparator>
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>{template.name}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
 
               <div className='mt-6'>
                 <p className='mb-2 text-xs font-medium uppercase tracking-wider text-gray-500'>
