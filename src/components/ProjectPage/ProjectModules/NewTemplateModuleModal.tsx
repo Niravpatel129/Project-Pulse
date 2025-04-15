@@ -45,6 +45,7 @@ interface NewTemplateModuleModalProps {
   template: any;
   templateName: string;
   onTemplateSelect?: (template: any) => void;
+  onEdit?: (template: any) => void;
 }
 
 export default function NewTemplateModuleModal({
@@ -53,6 +54,7 @@ export default function NewTemplateModuleModal({
   template,
   templateName,
   onTemplateSelect,
+  onEdit,
 }: NewTemplateModuleModalProps) {
   const [selectedTemplates, setSelectedTemplates] = useState<string[]>(['shipping']);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -95,7 +97,7 @@ export default function NewTemplateModuleModal({
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['module-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['projectModules'] });
       onClose();
     },
     onError: (error) => {
@@ -590,6 +592,7 @@ export default function NewTemplateModuleModal({
           return setShowAllTemplates(false);
         }}
         onTemplateSelect={handleTemplateSelect}
+        onEdit={onEdit}
       />
     </>
   );

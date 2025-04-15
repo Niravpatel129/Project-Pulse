@@ -23,9 +23,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { useTemplates } from '@/hooks/useTemplates';
 import { newRequest } from '@/utils/newRequest';
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { GripVertical, Plus, Settings2, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 // Empty arrays for database and field options
 const fieldTypes: Array<{ id: string; name: string; icon: string; description?: string }> = [
@@ -41,12 +42,21 @@ interface NewTemplateSheetProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (template: Omit<Template, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>) => void;
+  initialTemplate?: Template;
 }
 
-export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplateSheetProps) {
+export default function NewTemplateSheet({
+  isOpen,
+  onClose,
+  onSave,
+  initialTemplate,
+}: NewTemplateSheetProps) {
   const { createTemplate } = useTemplates();
-  const [templateName, setTemplateName] = useState('');
-  const [templateDescription, setTemplateDescription] = useState('');
+  const [templateName, setTemplateName] = useState(initialTemplate?.name || '');
+  const [templateDescription, setTemplateDescription] = useState(
+    initialTemplate?.description || '',
+  );
+  const queryClient = useQueryClient();
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [isCreateTableModalOpen, setIsCreateTableModalOpen] = useState(false);
   const [selectedDatabase, setSelectedDatabase] = useState<string>('');
@@ -66,15 +76,43 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
       options: [],
     },
   ]);
-  const [templateFields, setTemplateFields] = useState<TemplateField[]>([
-    {
-      id: `field-${Date.now()}`,
-      name: '',
-      type: 'text' as FieldType,
-      required: false,
-      options: [],
-    },
-  ]);
+  const [templateFields, setTemplateFields] = useState<TemplateField[]>(
+    initialTemplate?.fields || [
+      {
+        id: `field-${Date.now()}`,
+        name: '',
+        type: 'text' as FieldType,
+        required: false,
+        options: [],
+      },
+    ],
+  );
+
+  // Reset form when modal is closed
+  useEffect(() => {
+    if (!isOpen) {
+      setTemplateName('');
+      setTemplateDescription('');
+      setTemplateFields([
+        {
+          id: `field-${Date.now()}`,
+          name: '',
+          type: 'text' as FieldType,
+          required: false,
+          options: [],
+        },
+      ]);
+    }
+  }, [isOpen]);
+
+  // Update form when initialTemplate changes
+  useEffect(() => {
+    if (initialTemplate) {
+      setTemplateName(initialTemplate.name);
+      setTemplateDescription(initialTemplate.description);
+      setTemplateFields(initialTemplate.fields);
+    }
+  }, [initialTemplate]);
 
   // Fetch tables using React Query
   const { data: tables = [] } = useQuery({
@@ -176,8 +214,8 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
   const handleSave = async () => {
     if (!templateName.trim()) return;
 
-    const templateData = {
-      _id: '',
+    const templateData: Omit<Template, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'> = {
+      _id: initialTemplate?._id || '',
       name: templateName,
       description: templateDescription,
       fields: templateFields
@@ -199,7 +237,15 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
     };
 
     try {
-      await createTemplate.mutateAsync(templateData);
+      if (initialTemplate) {
+        // Update existing template
+        await newRequest.put(`/module-templates/${initialTemplate._id}`, templateData);
+        toast.success('Template updated successfully');
+      } else {
+        // Create new template
+        await newRequest.post('/module-templates', templateData);
+        toast.success('Template created successfully');
+      }
       setTemplateName('');
       setTemplateDescription('');
       setTemplateFields([
@@ -209,15 +255,14 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
           type: 'text' as FieldType,
           required: false,
           options: [],
-          fieldSettings: {
-            multipleFiles: false,
-          },
         },
       ]);
       onClose();
+
+      queryClient.invalidateQueries({ queryKey: ['templates'] });
     } catch (error) {
-      // Error handling is done in the hook
       console.error('Error saving template:', error);
+      toast.error('Failed to save template');
     }
   };
 
@@ -225,7 +270,7 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent className='h-full sm:max-w-[800px]'>
         <SheetHeader>
-          <SheetTitle>Create New Template</SheetTitle>
+          <SheetTitle>{initialTemplate ? 'Edit Template' : 'Create New Template'}</SheetTitle>
         </SheetHeader>
 
         <div className='mt-6 space-y-6 overflow-scroll h-full pb-36 scrollbar-hide p-1'>
@@ -274,7 +319,11 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
                     <div {...provided.droppableProps} ref={provided.innerRef} className='space-y-2'>
                       {templateFields.map((field, index) => {
                         return (
-                          <Draggable key={field.id} draggableId={field.id} index={index}>
+                          <Draggable
+                            key={field.id || `field-${index}`}
+                            draggableId={field.id || `field-${index}`}
+                            index={index}
+                          >
                             {(provided) => {
                               return (
                                 <div
@@ -288,6 +337,7 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
                                   <div className='flex-1 space-y-3'>
                                     <div className='flex items-center gap-2'>
                                       <Input
+                                        key={`name-${field.id || index}`}
                                         value={field.name}
                                         onChange={(e) => {
                                           return updateField(index, { name: e.target.value });
@@ -296,6 +346,7 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
                                         className='flex-1'
                                       />
                                       <Select
+                                        key={`type-${field.id || index}`}
                                         value={field.type}
                                         onValueChange={(value) => {
                                           if (value === 'relation') {
@@ -303,7 +354,7 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
                                             setIsLinkModalOpen(true);
                                             return;
                                           }
-                                          return updateField(index, { type: value as FieldType });
+                                          updateField(index, { type: value as FieldType });
                                         }}
                                       >
                                         <SelectTrigger className='w-[200px]'>
@@ -343,14 +394,8 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
                                           {fieldTypes.map((type) => {
                                             return (
                                               <SelectItem
-                                                key={type.id}
+                                                key={`type-option-${type.id}`}
                                                 value={type.id}
-                                                onClick={(e) => {
-                                                  if (type.id === 'relation') {
-                                                    e.preventDefault();
-                                                    setIsLinkModalOpen(true);
-                                                  }
-                                                }}
                                               >
                                                 <div className='flex items-center gap-2'>
                                                   <span>{type.icon}</span>
@@ -362,6 +407,7 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
                                         </SelectContent>
                                       </Select>
                                       <Button
+                                        key={`required-${field.id || index}`}
                                         variant='ghost'
                                         size='sm'
                                         onClick={() => {
@@ -374,6 +420,7 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
                                         Required
                                       </Button>
                                       <Button
+                                        key={`remove-${field.id || index}`}
                                         variant='ghost'
                                         size='sm'
                                         onClick={() => {
@@ -386,7 +433,10 @@ export default function NewTemplateSheet({ isOpen, onClose, onSave }: NewTemplat
                                     </div>
 
                                     {field.type === 'select' && (
-                                      <div className='space-y-2 mt-2'>
+                                      <div
+                                        key={`options-${field.id || index}`}
+                                        className='space-y-2 mt-2'
+                                      >
                                         <Label>Options (one per line)</Label>
                                         <Textarea
                                           value={field.options?.join('\n') || ''}
@@ -427,9 +477,12 @@ Option 3`}
                                     )}
 
                                     {field.type === 'files' && (
-                                      <div className='flex items-center space-x-2 mt-2'>
+                                      <div
+                                        key={`files-${field.id || index}`}
+                                        className='flex items-center space-x-2 mt-2'
+                                      >
                                         <Switch
-                                          id={`multiple-files-${field.id}`}
+                                          id={`multiple-files-${field.id || index}`}
                                           checked={field.fieldSettings?.multipleFiles || false}
                                           onCheckedChange={(checked) => {
                                             return updateField(index, {
@@ -440,13 +493,16 @@ Option 3`}
                                             });
                                           }}
                                         />
-                                        <Label htmlFor={`multiple-files-${field.id}`}>
+                                        <Label htmlFor={`multiple-files-${field.id || index}`}>
                                           Allow multiple files
                                         </Label>
                                       </div>
                                     )}
 
-                                    <Collapsible defaultOpen={field.type === 'files'}>
+                                    <Collapsible
+                                      key={`settings-${field.id || index}`}
+                                      defaultOpen={field.type === 'files'}
+                                    >
                                       <CollapsibleTrigger asChild>
                                         <Button
                                           variant='ghost'
@@ -872,7 +928,7 @@ Option 3`}
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={!templateName.trim()}>
-              Create Database
+              {initialTemplate ? 'Save Changes' : 'Create Template'}
             </Button>
           </div>
         </div>

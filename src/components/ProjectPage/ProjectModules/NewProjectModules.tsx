@@ -64,6 +64,8 @@ export default function NewProjectModules() {
   const [isNewTemplateSheetOpen, setIsNewTemplateSheetOpen] = useState(false);
   const [isNewModuleFromTemplateSheetOpen, setIsNewModuleFromTemplateSheetOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [templateToEdit, setTemplateToEdit] = useState<Template | null>(null);
+  const [isEditTemplateSheetOpen, setIsEditTemplateSheetOpen] = useState(false);
   const [renamingModule, setRenamingModule] = useState<{ id: string; name: string } | null>(null);
   const [newModuleName, setNewModuleName] = useState('');
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
@@ -77,11 +79,32 @@ export default function NewProjectModules() {
   const [isTemplateDropdownOpen, setIsTemplateDropdownOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const handleSaveTemplate = (
+  const handleEditTemplate = (template: Template) => {
+    setTemplateToEdit(template);
+    setIsEditTemplateSheetOpen(true);
+  };
+
+  const handleSaveTemplate = async (
     template: Omit<Template, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>,
   ) => {
-    // TODO: Implement template saving logic
-    console.log('Saving template:', template);
+    try {
+      if (templateToEdit) {
+        // Update existing template
+        await newRequest.put(`/module-templates/${templateToEdit._id}`, template);
+        toast.success('Template updated successfully');
+      } else {
+        // Create new template
+        await newRequest.post('/module-templates', template);
+        toast.success('Template created successfully');
+      }
+      queryClient.invalidateQueries({ queryKey: ['templates'] });
+      setIsNewTemplateSheetOpen(false);
+      setIsEditTemplateSheetOpen(false);
+      setTemplateToEdit(null);
+    } catch (error) {
+      console.error('Failed to save template:', error);
+      toast.error('Failed to save template');
+    }
   };
 
   const handleDeleteModule = async (module: Module) => {
@@ -468,6 +491,16 @@ export default function NewProjectModules() {
           onSave={handleSaveTemplate}
         />
 
+        <NewTemplateSheet
+          isOpen={isEditTemplateSheetOpen}
+          onClose={() => {
+            setIsEditTemplateSheetOpen(false);
+            setTemplateToEdit(null);
+          }}
+          onSave={handleSaveTemplate}
+          initialTemplate={templateToEdit}
+        />
+
         {selectedTemplate && (
           <NewTemplateModuleModal
             isOpen={isNewModuleFromTemplateSheetOpen}
@@ -480,6 +513,7 @@ export default function NewProjectModules() {
             onTemplateSelect={(newTemplate) => {
               setSelectedTemplate(newTemplate);
             }}
+            onEdit={handleEditTemplate}
           />
         )}
 
