@@ -128,6 +128,7 @@ export default function EditModuleFromTemplateSheet({
   onClose,
   module,
 }: EditModuleFromTemplateSheetProps) {
+  console.log('🚀 module:', module);
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [moduleName, setModuleName] = useState(module.name);
   const [isLoading, setIsLoading] = useState(true);
@@ -137,7 +138,11 @@ export default function EditModuleFromTemplateSheet({
   const [sectionFormValues, setSectionFormValues] = useState<Record<string, Record<string, any>>>(
     {},
   );
-  const [localSections, setLocalSections] = useState(module.versions[0].contentSnapshot.sections);
+  const [localSections, setLocalSections] = useState(
+    module.versions.find((v) => {
+      return v.number === module.currentVersion;
+    })?.contentSnapshot.sections || [],
+  );
   const queryClient = useQueryClient();
 
   // Get the current version's content
@@ -222,6 +227,7 @@ export default function EditModuleFromTemplateSheet({
       }>;
       formValues: Record<string, Record<string, any>>;
     }) => {
+      console.log('🚀 sections:', sections);
       const response = await newRequest.put(
         `/project-modules/templated-module/${module._id}`,
         moduleData,

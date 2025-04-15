@@ -69,7 +69,6 @@ const ApprovalBanner = ({
   onReject: (approvalId: string) => void;
   onDelete: (approvalId: string) => void;
 }) => {
-  console.log('🚀 approvalDetails:', approvalDetails);
   if (!approvalDetails?.length) return null;
 
   return (
@@ -1023,13 +1022,37 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
         </AlertDialogContent>
       </AlertDialog>
 
-      {moduleType === 'template' && (
+      {moduleType === 'template' && module && (
         <EditModuleFromTemplateSheet
           isOpen={showEditSheet}
           onClose={() => {
             return setShowEditSheet(false);
           }}
-          module={module}
+          module={{
+            ...module,
+            versions: module.versions.map((version, index) => {
+              if (index === module.currentVersion - 1) {
+                return {
+                  ...version,
+                  contentSnapshot: {
+                    ...version.contentSnapshot,
+                    sections: version.contentSnapshot.sections.map((section) => {
+                      return {
+                        ...section,
+                        fields: section.fields.map((field) => {
+                          return {
+                            ...field,
+                            fieldValue: field.fieldValue || '',
+                          };
+                        }),
+                      };
+                    }),
+                  },
+                };
+              }
+              return version;
+            }),
+          }}
         />
       )}
 
