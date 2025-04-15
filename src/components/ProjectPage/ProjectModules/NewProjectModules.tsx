@@ -214,15 +214,37 @@ export default function NewProjectModules() {
 
     return (
       <div
-        className='border rounded-xl w-full aspect-square max-w-[220px] hover:bg-muted/50 cursor-pointer flex flex-col relative'
+        className='border rounded-xl w-full aspect-video hover:shadow cursor-pointer flex flex-col relative overflow-hidden min-h-[250px] group'
         onClick={() => {
           return setSelectedModule(item);
         }}
       >
         {/* Top Part */}
-        <div className='flex items-center justify-center flex-grow'>
+        <div className='flex items-center justify-center flex-grow relative'>
+          <div className='absolute top-3 left-1'>
+            {item.moduleType === 'file' && (
+              <div className='px-2 py-1 text-[10px] font-medium tracking-wider uppercase bg-white/90 backdrop-blur-sm rounded-full text-blue-700'>
+                {item.moduleType}
+              </div>
+            )}
+            {item.moduleType === 'figma' && (
+              <div className='px-2 py-1 text-[10px] font-medium tracking-wider uppercase bg-white/90 backdrop-blur-sm rounded-full text-orange-700'>
+                {item.moduleType}
+              </div>
+            )}
+            {item.moduleType === 'template' && (
+              <div className='px-2 py-1 text-[10px] font-medium tracking-wider uppercase bg-white/90 backdrop-blur-sm rounded-full text-purple-700'>
+                {item.moduleType}
+              </div>
+            )}
+            {!['file', 'figma', 'template'].includes(item.moduleType) && (
+              <div className='px-2 py-1 text-[10px] font-medium tracking-wider uppercase bg-white/90 backdrop-blur-sm rounded-full text-gray-700'>
+                {item.moduleType}
+              </div>
+            )}
+          </div>
           {isImage ? (
-            <div className='h-full w-full p-2 flex items-center justify-center'>
+            <div className='h-full w-full p-2 flex items-center justify-center '>
               <Image
                 src={item.content.fileId.downloadURL}
                 alt={item.name}
@@ -251,7 +273,7 @@ export default function NewProjectModules() {
           </div>
         </div>
         {/* Options Menu */}
-        <div className='absolute top-2 right-2'>
+        <div className='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -335,24 +357,23 @@ export default function NewProjectModules() {
               .fill(0)
               .map((_, index) => {
                 return (
-                  <div key={index} className='flex justify-center'>
+                  <div key={index} className='flex justify-center w-full h-full'>
                     {renderModuleSkeleton()}
                   </div>
                 );
               })}
           </div>
         ) : (
-          <div className='grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-4 auto-rows-fr'>
+          <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-4 auto-rows-fr'>
             {modules.map((item, index) => {
               return (
-                <div key={index} className='flex justify-center'>
+                <div key={index} className='flex justify-center w-full h-full'>
                   {renderProjectItem(item)}
                 </div>
               );
             })}
           </div>
         )}
-
         {!isLoading && !modules.length && (
           <div className='flex items-center justify-center h-full'>
             <p className='text-sm text-muted-foreground'>No modules found</p>
