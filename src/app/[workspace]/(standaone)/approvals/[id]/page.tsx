@@ -19,7 +19,7 @@ import {
   TimelineSeparator,
   TimelineTitle,
 } from '@/components/ui/timeline';
-import { useApprovalRequest, Version } from '@/hooks/useApprovalRequest';
+import { useApprovalRequest } from '@/hooks/useApprovalRequest';
 import { motion } from 'framer-motion';
 import {
   CheckCircle,
@@ -35,7 +35,28 @@ import Image from 'next/image';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  avatar: string | null;
+}
+
+interface FileData {
+  _id: string;
+  name: string;
+  originalName: string;
+  downloadURL: string;
+  contentType: string;
+  size: number;
+  updatedAt?: string;
+}
+
 interface ContentSnapshot {
+  fileId: FileData;
+  fileName?: string;
+  fileSize?: number;
+  fields: any[];
   sections?: Array<{
     sectionId: string;
     templateId: string;
@@ -47,19 +68,10 @@ interface ContentSnapshot {
       fieldType: string;
       fieldValue: any;
       description?: string;
+      isRequired?: boolean;
+      multiple?: boolean;
+      relationType?: string;
     }>;
-  }>;
-  fileId?: {
-    name: string;
-    contentType: string;
-    downloadURL: string;
-  };
-  fields?: Array<{
-    templateFieldId: string;
-    fieldName: string;
-    fieldType: string;
-    fieldValue: any;
-    description?: string;
   }>;
 }
 
@@ -67,6 +79,8 @@ interface ModuleVersion {
   number: number;
   contentSnapshot: ContentSnapshot;
   updatedAt: string;
+  _id: string;
+  updatedBy: User;
 }
 
 interface Module {
@@ -226,10 +240,7 @@ export default function ApprovalRequestPage() {
 
   const handleConfirmAction = async () => {
     try {
-      await updateStatus.mutate({
-        status: confirmAction as 'approved' | 'rejected',
-        comment: comment.trim() || undefined,
-      });
+      await updateStatus(confirmAction as 'approved' | 'rejected', comment.trim() || undefined);
       setConfirmAction(null);
       setComment('');
     } catch (error) {
@@ -421,14 +432,10 @@ export default function ApprovalRequestPage() {
                     </div>
                   ) : (
                     <div className='space-y-6 p-4'>
-                      <div className='flex items-center gap-2 text-sm text-gray-500 mb-4'>
-                        <FileText className='h-4 w-4' />
-                        <span>Form Details</span>
-                      </div>
                       <div className='grid gap-6'>
                         {selectedVersion &&
                           approvalRequest.moduleId.versions
-                            .find((v: Version) => {
+                            .find((v: ModuleVersion) => {
                               return v.number === selectedVersion;
                             })
                             ?.contentSnapshot?.sections?.map((section) => {
@@ -461,6 +468,8 @@ export default function ApprovalRequestPage() {
                                             <Badge variant='outline' className='text-xs bg-white'>
                                               {field.fieldType === 'text'
                                                 ? 'Text Field'
+                                                : field.fieldType === 'files'
+                                                ? 'File'
                                                 : 'Linked Item'}
                                             </Badge>
                                           </div>

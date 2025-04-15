@@ -26,6 +26,22 @@ interface Version {
     fileName?: string;
     fileSize?: number;
     fields: any[];
+    sections?: Array<{
+      sectionId: string;
+      templateId: string;
+      templateName: string;
+      templateDescription?: string;
+      fields: Array<{
+        templateFieldId: string;
+        fieldName: string;
+        fieldType: string;
+        fieldValue: any;
+        description?: string;
+        isRequired?: boolean;
+        multiple?: boolean;
+        relationType?: string;
+      }>;
+    }>;
   };
   updatedBy: User;
   _id: string;
