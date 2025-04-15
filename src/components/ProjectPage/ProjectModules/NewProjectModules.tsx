@@ -27,10 +27,19 @@ import { useProjectModules } from '@/hooks/useProjectModules';
 import { newRequest } from '@/utils/newRequest';
 import { useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
-import { Copy, FileText, MoreVertical, PaintRoller, Pencil, Plus, Trash2 } from 'lucide-react';
+import { PaintRoller } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
-import { LuBook, LuFigma } from 'react-icons/lu';
+import {
+  LuBook,
+  LuCopy,
+  LuEllipsis,
+  LuFigma,
+  LuFileText,
+  LuPencil,
+  LuPlus,
+  LuTrash2,
+} from 'react-icons/lu';
 import { toast } from 'sonner';
 import FigmaManagerModal from '../FileComponents/FigmaManagerModal';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
@@ -173,7 +182,7 @@ export default function NewProjectModules() {
           }}
         >
           <>
-            <FileText className='h-4 w-4' />
+            <LuFileText className='h-4 w-4' />
             <div className='text-sm text-popover-foreground'>New File</div>
             <CommandShortcut className='ml-auto '>
               <span className=''>⌘</span>
@@ -215,7 +224,7 @@ export default function NewProjectModules() {
                       }}
                     >
                       <div className='flex items-center gap-2'>
-                        <FileText className='h-4 w-4' />
+                        <LuFileText className='h-4 w-4' />
                         <div>
                           <p className='text-sm font-medium'>{template.name}</p>
                           <p className='text-xs text-muted-foreground'>{template.description}</p>
@@ -230,7 +239,7 @@ export default function NewProjectModules() {
                     return setIsNewTemplateSheetOpen(true);
                   }}
                 >
-                  <Plus className='h-4 w-4' />
+                  <LuPlus className='h-4 w-4' />
                   <div className='text-sm text-popover-foreground'>New Template</div>
                   <CommandShortcut className='ml-auto '>
                     <span className=''>⌘</span>
@@ -247,7 +256,7 @@ export default function NewProjectModules() {
 
   const renderTemplateDropdownMenu = () => {
     return (
-      <DropdownMenuContent className='min-w-[230px]' align='end'>
+      <DropdownMenuContent className='w-[180px]' align='end'>
         {templates.map((template, index) => {
           return (
             <DropdownMenuItem
@@ -258,7 +267,7 @@ export default function NewProjectModules() {
               }}
             >
               <div className='flex items-center gap-2'>
-                <FileText className='h-4 w-4' />
+                <LuFileText className='h-4 w-4' />
                 <div>
                   <p className='text-sm font-medium'>{template.name}</p>
                   <p className='text-xs text-muted-foreground'>{template.description}</p>
@@ -273,7 +282,7 @@ export default function NewProjectModules() {
             return setIsNewTemplateSheetOpen(true);
           }}
         >
-          <Plus className='h-4 w-4' />
+          <LuPlus className='h-4 w-4' />
           <div className='text-sm text-popover-foreground'>New Template</div>
           <CommandShortcut className='ml-auto '>
             <span className=''>⌘</span>
@@ -369,7 +378,7 @@ export default function NewProjectModules() {
                   return e.stopPropagation();
                 }}
               >
-                <MoreVertical className='h-4 w-4' />
+                <LuEllipsis className='h-4 w-4' />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end' className='w-48'>
@@ -381,7 +390,7 @@ export default function NewProjectModules() {
                   setIsDuplicateDialogOpen(true);
                 }}
               >
-                <Copy className='mr-2 h-4 w-4' />
+                <LuCopy className='mr-2 h-4 w-4' />
                 <span>Duplicate</span>
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -392,7 +401,7 @@ export default function NewProjectModules() {
                   setIsRenameDialogOpen(true);
                 }}
               >
-                <Pencil className='mr-2 h-4 w-4' />
+                <LuPencil className='mr-2 h-4 w-4' />
                 <span>Rename</span>
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -403,7 +412,7 @@ export default function NewProjectModules() {
                 }}
                 className='text-red-600 focus:text-red-600 focus:bg-red-50'
               >
-                <Trash2 className='mr-2 h-4 w-4' />
+                <LuTrash2 className='mr-2 h-4 w-4' />
                 <span>Delete</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -615,7 +624,7 @@ export default function NewProjectModules() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant='outline' className='px-6 py-2 rounded-md'>
+                  <Button variant='outline' className='px-6 py-2 rounded-md w-[180px]'>
                     Choose Template
                   </Button>
                 </DropdownMenuTrigger>
@@ -637,7 +646,7 @@ export default function NewProjectModules() {
           <DropdownMenuTrigger asChild>
             <Button variant='outline' size='sm'>
               <div className='flex items-center gap-2'>
-                <Plus className='h-4 w-4' />
+                <LuPlus className='h-4 w-4' />
                 <div className='text-sm text-muted-foreground'>Add New</div>
               </div>
             </Button>
