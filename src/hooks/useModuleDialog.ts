@@ -192,24 +192,6 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
     },
   });
 
-  // Update template mutation
-  const updateTemplateMutation = useMutation({
-    mutationFn: async (templateData: any) => {
-      const { data } = await newRequest.patch(
-        `/project-modules/${moduleId}/template`,
-        templateData,
-      );
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['module', moduleId] });
-      toast.success('Template updated successfully');
-    },
-    onError: () => {
-      toast.error('Failed to update template');
-    },
-  });
-
   // Restore version mutation
   const restoreVersionMutation = useMutation({
     mutationFn: async (versionNumber: number) => {
@@ -286,23 +268,27 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
 
   const getModuleTypeLabel = (type: string) => {
     switch (type) {
+      case 'file':
+        return 'File';
       case 'template':
-        return 'Template';
+        return 'Form Response';
       case 'figma':
         return 'Figma';
       default:
-        return 'File';
+        return 'Unknown';
     }
   };
 
   const getModuleTypeColor = (type: string) => {
     switch (type) {
+      case 'file':
+        return 'bg-purple-100 text-purple-800 hover:bg-purple-100';
       case 'template':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
+        return 'bg-teal-100 text-teal-800 hover:bg-teal-100';
       case 'figma':
-        return 'bg-pink-100 text-pink-800 border-pink-200';
+        return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
       default:
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
     }
   };
 
@@ -319,7 +305,6 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
     deleteModuleMutation,
     replaceFileMutation,
     replaceFigmaMutation,
-    updateTemplateMutation,
     restoreVersionMutation,
     getApprovalStatusColor,
     getApprovalStatusText,
