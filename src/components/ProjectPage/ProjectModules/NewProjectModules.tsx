@@ -477,6 +477,9 @@ export default function NewProjectModules() {
             }}
             template={selectedTemplate}
             templateName={selectedTemplate?.name}
+            onTemplateSelect={(newTemplate) => {
+              setSelectedTemplate(newTemplate);
+            }}
           />
         )}
 

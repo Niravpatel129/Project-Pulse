@@ -23,6 +23,7 @@ import { Grid, InfoIcon, Plus, Search, X } from 'lucide-react';
 import { useState } from 'react';
 import { FcDocument } from 'react-icons/fc';
 import { LuFolder } from 'react-icons/lu';
+import AllTemplatesModal from './AllTemplatesModal';
 import ModuleFieldRenderer from './ModuleFieldRenderer';
 
 interface ModuleData {
@@ -38,11 +39,27 @@ interface ModuleData {
   formValues: Record<string, Record<string, any>>;
 }
 
-export default function NewTemplateModuleModal({ isOpen, onClose, template, templateName }) {
+interface NewTemplateModuleModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  template: any;
+  templateName: string;
+  onTemplateSelect?: (template: any) => void;
+}
+
+export default function NewTemplateModuleModal({
+  isOpen,
+  onClose,
+  template,
+  templateName,
+  onTemplateSelect,
+}: NewTemplateModuleModalProps) {
   const [selectedTemplates, setSelectedTemplates] = useState<string[]>(['shipping']);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string[]>>({});
+  const [showAllTemplates, setShowAllTemplates] = useState(false);
+  const [currentTemplate, setCurrentTemplate] = useState(template);
   const [sections, setSections] = useState([
     {
       templateId: template._id,
@@ -334,212 +351,246 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
     );
   };
 
+  const handleTemplateSelect = (selectedTemplate) => {
+    setCurrentTemplate(selectedTemplate);
+    setSections([
+      {
+        templateId: selectedTemplate._id,
+        templateName: selectedTemplate.name,
+        templateDescription: selectedTemplate.description,
+        fields: [],
+        sectionId: `${selectedTemplate._id}-0`,
+      },
+    ]);
+    setSectionFormValues({});
+    setFormErrors({});
+    setShowAllTemplates(false);
+    if (onTemplateSelect) {
+      onTemplateSelect(selectedTemplate);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className='max-w-5xl p-0 gap-0 '>
-        <DialogTitle className='sr-only'>Create Order Template</DialogTitle>
-        <button
-          onClick={onClose}
-          className='absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground'
-        >
-          <X className='h-4 w-4' />
-          <span className='sr-only'>Close</span>
-        </button>
-        <div className='flex w-full overflow-hidden rounded-lg bg-white'>
-          {/* Left sidebar */}
-          <div className='w-72 border-r border-gray-100 bg-white'>
-            <div className='p-5'>
-              <Breadcrumb>
-                <BreadcrumbList>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink href='#' className='flex items-center'>
-                      <LuFolder className='w-4 h-4 mr-1' /> All Templates
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator> / </BreadcrumbSeparator>
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>{template.name}</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </BreadcrumbList>
-              </Breadcrumb>
-
-              <div className='mt-6'>
-                <p className='mb-2 text-xs font-medium uppercase tracking-wider text-gray-500'>
-                  BASE Template
-                </p>
-                <motion.div
-                  className='mt-1 rounded-md bg-gray-50 p-2 transition-all'
-                  whileHover={{ backgroundColor: 'rgba(249, 250, 251, 1)' }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className='flex items-center gap-2'>
-                    <div className='flex h-6 w-6 items-center justify-center rounded bg-blue-500 text-white shadow-sm'>
-                      <Grid className='h-3.5 w-3.5' />
-                    </div>
-                    <span className='text-sm font-medium text-gray-800 capitalize'>
-                      {sections[0]?.templateName || template.name}
-                    </span>
-                  </div>
-                </motion.div>
-              </div>
-
-              <div className='mt-6'>
-                <p className='mb-2 text-xs font-medium uppercase tracking-wider text-gray-500'>
-                  APPENDED TEMPLATES
-                </p>
-                <div className='space-y-0.5'>
-                  {sections.slice(1).map((section, index) => {
-                    const templateData = templateDataMap[section.templateId]?.data;
-                    if (!templateData) return null;
-
-                    return (
-                      <motion.div
-                        key={`${section.sectionId}-${index}`}
-                        className='flex cursor-pointer items-center justify-between rounded-md p-2 transition-all hover:bg-gray-50'
-                        whileHover={{ backgroundColor: 'rgba(249, 250, 251, 1)' }}
-                        whileTap={{ scale: 0.98 }}
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className='max-w-5xl p-0 gap-0 '>
+          <DialogTitle className='sr-only'>Create Order Template</DialogTitle>
+          <button
+            onClick={onClose}
+            className='absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground'
+          >
+            <X className='h-4 w-4' />
+            <span className='sr-only'>Close</span>
+          </button>
+          <div className='flex w-full overflow-hidden rounded-lg bg-white'>
+            {/* Left sidebar */}
+            <div className='w-72 border-r border-gray-100 bg-white'>
+              <div className='p-5'>
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink
+                        href='#'
+                        className='flex items-center cursor-pointer'
                         onClick={() => {
-                          return scrollToSection(section.sectionId);
+                          return setShowAllTemplates(true);
                         }}
                       >
-                        <div className='flex items-center gap-2'>
-                          <div className='flex h-6 w-6 items-center justify-center rounded border border-gray-200 bg-gray-50'>
-                            <Grid className='h-3.5 w-3.5 text-gray-500' />
-                          </div>
-                          <span className='text-sm font-medium text-gray-700'>
-                            {section.templateName}
-                          </span>
-                        </div>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <motion.button
-                                className='text-gray-400 hover:text-gray-600'
-                                onClick={() => {
-                                  return removeSection(section.sectionId);
-                                }}
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                              >
-                                <X className='h-3.5 w-3.5' />
-                              </motion.button>
-                            </TooltipTrigger>
-                            <TooltipContent side='right'>
-                              <p className='text-xs'>Remove template</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </motion.div>
-                    );
-                  })}
+                        <LuFolder className='w-4 h-4 mr-1' /> All Templates
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator> / </BreadcrumbSeparator>
+                    <BreadcrumbItem>
+                      <BreadcrumbPage>{currentTemplate.name}</BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
 
-                  <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <motion.div
-                        className='flex cursor-pointer items-center gap-2 rounded-md p-2 transition-all border border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                        whileHover={{ backgroundColor: 'rgba(249, 250, 251, 1)' }}
-                        whileTap={{ scale: 0.98 }}
+                <div className='mt-6'>
+                  <p className='mb-2 text-xs font-medium uppercase tracking-wider text-gray-500'>
+                    BASE Template
+                  </p>
+                  <motion.div
+                    className='mt-1 rounded-md bg-gray-50 p-2 transition-all'
+                    whileHover={{ backgroundColor: 'rgba(249, 250, 251, 1)' }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className='flex items-center gap-2'>
+                      <div className='flex h-6 w-6 items-center justify-center rounded bg-blue-500 text-white shadow-sm'>
+                        <Grid className='h-3.5 w-3.5' />
+                      </div>
+                      <span className='text-sm font-medium text-gray-800 capitalize'>
+                        {sections[0]?.templateName || currentTemplate.name}
+                      </span>
+                    </div>
+                  </motion.div>
+                </div>
+
+                <div className='mt-6'>
+                  <p className='mb-2 text-xs font-medium uppercase tracking-wider text-gray-500'>
+                    APPENDED TEMPLATES
+                  </p>
+                  <div className='space-y-0.5'>
+                    {sections.slice(1).map((section, index) => {
+                      const templateData = templateDataMap[section.templateId]?.data;
+                      if (!templateData) return null;
+
+                      return (
+                        <motion.div
+                          key={`${section.sectionId}-${index}`}
+                          className='flex cursor-pointer items-center justify-between rounded-md p-2 transition-all hover:bg-gray-50'
+                          whileHover={{ backgroundColor: 'rgba(249, 250, 251, 1)' }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => {
+                            return scrollToSection(section.sectionId);
+                          }}
+                        >
+                          <div className='flex items-center gap-2'>
+                            <div className='flex h-6 w-6 items-center justify-center rounded border border-gray-200 bg-gray-50'>
+                              <Grid className='h-3.5 w-3.5 text-gray-500' />
+                            </div>
+                            <span className='text-sm font-medium text-gray-700'>
+                              {section.templateName}
+                            </span>
+                          </div>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <motion.button
+                                  className='text-gray-400 hover:text-gray-600'
+                                  onClick={() => {
+                                    return removeSection(section.sectionId);
+                                  }}
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                >
+                                  <X className='h-3.5 w-3.5' />
+                                </motion.button>
+                              </TooltipTrigger>
+                              <TooltipContent side='right'>
+                                <p className='text-xs'>Remove template</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </motion.div>
+                      );
+                    })}
+
+                    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <motion.div
+                          className='flex cursor-pointer items-center gap-2 rounded-md p-2 transition-all border border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          whileHover={{ backgroundColor: 'rgba(249, 250, 251, 1)' }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <Plus className='h-4 w-4 text-gray-400' />
+                          <span className='text-sm font-medium text-gray-700'>Append Template</span>
+                        </motion.div>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className='w-60 p-0 border border-gray-200 shadow-md'
+                        align='start'
+                        sideOffset={5}
+                        avoidCollisions={false}
                       >
-                        <Plus className='h-4 w-4 text-gray-400' />
-                        <span className='text-sm font-medium text-gray-700'>Append Template</span>
-                      </motion.div>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className='w-60 p-0 border border-gray-200 shadow-md'
-                      align='start'
-                      sideOffset={5}
-                      avoidCollisions={false}
-                    >
-                      <div className='p-2 border-b border-gray-100'>
-                        <div className='relative'>
-                          <Search className='absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
-                          <input
-                            type='text'
-                            placeholder='Search templates...'
-                            className='w-full pl-8 pr-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500'
-                            value={searchTerm}
-                            onChange={(e) => {
-                              return setSearchTerm(e.target.value);
-                            }}
-                          />
+                        <div className='p-2 border-b border-gray-100'>
+                          <div className='relative'>
+                            <Search className='absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
+                            <input
+                              type='text'
+                              placeholder='Search templates...'
+                              className='w-full pl-8 pr-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500'
+                              value={searchTerm}
+                              onChange={(e) => {
+                                return setSearchTerm(e.target.value);
+                              }}
+                            />
+                          </div>
                         </div>
-                      </div>
-                      <div className='py-1 max-h-[300px] overflow-y-auto'>
-                        {availableTemplates
-                          ?.filter((template) => {
-                            return template.name.toLowerCase().includes(searchTerm.toLowerCase());
-                          })
-                          .map((template) => {
-                            return (
-                              <motion.div
-                                key={template._id}
-                                className='flex cursor-pointer items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-50'
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => {
-                                  return handleAddTemplate(template._id);
-                                }}
-                              >
-                                <div className='flex items-center gap-2'>
-                                  <FcDocument className='h-4 w-4 text-gray-400' />
-                                  {template.icon}
-                                  <span>{template.name}</span>
-                                </div>
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <InfoIcon className='h-3 w-3 text-gray-400' />
-                                    </TooltipTrigger>
-                                    <TooltipContent side='right'>
-                                      <p className='text-xs max-w-[200px]'>
-                                        {template.description}
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              </motion.div>
-                            );
-                          })}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                        <div className='py-1 max-h-[300px] overflow-y-auto'>
+                          {availableTemplates
+                            ?.filter((template) => {
+                              return template.name.toLowerCase().includes(searchTerm.toLowerCase());
+                            })
+                            .map((template) => {
+                              return (
+                                <motion.div
+                                  key={template._id}
+                                  className='flex cursor-pointer items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-50'
+                                  whileTap={{ scale: 0.98 }}
+                                  onClick={() => {
+                                    return handleAddTemplate(template._id);
+                                  }}
+                                >
+                                  <div className='flex items-center gap-2'>
+                                    <FcDocument className='h-4 w-4 text-gray-400' />
+                                    {template.icon}
+                                    <span>{template.name}</span>
+                                  </div>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <InfoIcon className='h-3 w-3 text-gray-400' />
+                                      </TooltipTrigger>
+                                      <TooltipContent side='right'>
+                                        <p className='text-xs max-w-[200px]'>
+                                          {template.description}
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </motion.div>
+                              );
+                            })}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Main content */}
-          <div className='flex-1 overflow-auto bg-white p-0 scrollbar-hide max-h-[80vh] min-h-[85vh] overflow-y-auto flex flex-col'>
-            <div className='flex-1 px-5 pt-5'>
-              <h1 className='text-lg font-medium tracking-tight text-gray-900'>New Module</h1>
+            {/* Main content */}
+            <div className='flex-1 overflow-auto bg-white p-0 scrollbar-hide max-h-[80vh] min-h-[85vh] overflow-y-auto flex flex-col'>
+              <div className='flex-1 px-5 pt-5'>
+                <h1 className='text-lg font-medium tracking-tight text-gray-900'>New Module</h1>
 
-              <div className='mt-4 space-y-4'>
-                <motion.div
-                  className='flex flex-col gap-4'
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {sections.map((section) => {
-                    return renderSection(section);
-                  })}
+                <div className='mt-4 space-y-4'>
+                  <motion.div
+                    className='flex flex-col gap-4'
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {sections.map((section) => {
+                      return renderSection(section);
+                    })}
+                  </motion.div>
+                </div>
+              </div>
+
+              <div className='sticky bottom-0 bg-white border-t border-gray-100 px-5 py-4'>
+                <motion.div className='flex justify-end'>
+                  <Button
+                    className='h-9 px-4 text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors'
+                    onClick={handleCreateModule}
+                    disabled={createModuleMutation.isPending}
+                  >
+                    {createModuleMutation.isPending ? 'Creating...' : 'Create'}
+                  </Button>
                 </motion.div>
               </div>
             </div>
-
-            <div className='sticky bottom-0 bg-white border-t border-gray-100 px-5 py-4'>
-              <motion.div className='flex justify-end'>
-                <Button
-                  className='h-9 px-4 text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors'
-                  onClick={handleCreateModule}
-                  disabled={createModuleMutation.isPending}
-                >
-                  {createModuleMutation.isPending ? 'Creating...' : 'Create'}
-                </Button>
-              </motion.div>
-            </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+      <AllTemplatesModal
+        isOpen={showAllTemplates}
+        onClose={() => {
+          return setShowAllTemplates(false);
+        }}
+        onTemplateSelect={handleTemplateSelect}
+      />
+    </>
   );
 }
