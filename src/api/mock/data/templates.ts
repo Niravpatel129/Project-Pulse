@@ -20,7 +20,7 @@ export const mockTemplates: Template[] = [
         required: true,
         description: 'The title to display on the banner',
         defaultValue: '',
-        validations: {
+        fieldSettings: {
           minLength: 3,
           maxLength: 50,
         },
@@ -32,7 +32,7 @@ export const mockTemplates: Template[] = [
         required: false,
         description: 'Additional text to display on the banner',
         defaultValue: '',
-        validations: {
+        fieldSettings: {
           maxLength: 200,
         },
       },
@@ -52,7 +52,7 @@ export const mockTemplates: Template[] = [
         type: 'file',
         required: true,
         description: 'Upload your logo (PNG or JPG, min 300dpi)',
-        validations: {
+        fieldSettings: {
           maxSize: 5000000, // 5MB
         },
       },
@@ -82,7 +82,7 @@ export const mockTemplates: Template[] = [
         required: true,
         description: 'Name to display on the business card',
         defaultValue: '',
-        validations: {
+        fieldSettings: {
           minLength: 2,
           maxLength: 40,
         },
@@ -94,7 +94,7 @@ export const mockTemplates: Template[] = [
         required: true,
         description: 'Your job title',
         defaultValue: '',
-        validations: {
+        fieldSettings: {
           maxLength: 40,
         },
       },
@@ -105,7 +105,7 @@ export const mockTemplates: Template[] = [
         required: true,
         description: 'Contact phone number',
         defaultValue: '',
-        validations: {
+        fieldSettings: {
           pattern: '^[+]?[(]?[0-9]{3}[)]?[-\\s.]?[0-9]{3}[-\\s.]?[0-9]{4,6}$',
         },
       },
@@ -116,7 +116,7 @@ export const mockTemplates: Template[] = [
         required: true,
         description: 'Contact email address',
         defaultValue: '',
-        validations: {
+        fieldSettings: {
           pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
         },
       },
@@ -148,7 +148,7 @@ export const mockTemplates: Template[] = [
         required: true,
         description: 'Main title of the brochure',
         defaultValue: '',
-        validations: {
+        fieldSettings: {
           minLength: 3,
           maxLength: 50,
         },
@@ -159,7 +159,7 @@ export const mockTemplates: Template[] = [
         type: 'relation',
         required: true,
         description: 'Content sections for the brochure',
-        validations: {
+        fieldSettings: {
           minItems: 1,
           maxItems: 5,
           itemFields: [
@@ -168,7 +168,7 @@ export const mockTemplates: Template[] = [
               name: 'Section Title',
               type: 'text',
               required: true,
-              validations: {
+              fieldSettings: {
                 maxLength: 30,
               },
             },
@@ -177,7 +177,7 @@ export const mockTemplates: Template[] = [
               name: 'Section Content',
               type: 'text',
               required: true,
-              validations: {
+              fieldSettings: {
                 maxLength: 300,
               },
             },
@@ -190,7 +190,7 @@ export const mockTemplates: Template[] = [
         type: 'file',
         required: true,
         description: 'Upload images for the brochure (PNG or JPG, min 300dpi)',
-        validations: {
+        fieldSettings: {
           maxSize: 10000000, // 10MB
           minItems: 1,
           maxItems: 5,
