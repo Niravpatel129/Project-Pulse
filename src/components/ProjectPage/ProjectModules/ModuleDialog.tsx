@@ -606,7 +606,12 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                     <>
                       {/* File Preview */}
                       {moduleType === 'file' && (
-                        <div className='space-y-4 md:space-y-6'>
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.3 }}
+                          className='space-y-4 md:space-y-6'
+                        >
                           <div className='bg-white rounded-lg border shadow-sm overflow-hidden'>
                             {fileDetails.previewUrl ? (
                               <div className='flex justify-center p-4 md:p-6'>
@@ -660,12 +665,17 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                               {isFullscreen ? 'Exit Fullscreen' : 'View Fullscreen'}
                             </Button>
                           </div>
-                        </div>
+                        </motion.div>
                       )}
 
                       {/* Figma Preview */}
                       {moduleType === 'figma' && (
-                        <div className='space-y-4 md:space-y-6'>
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.3 }}
+                          className='space-y-4 md:space-y-6'
+                        >
                           <div className='bg-white rounded-lg border shadow-sm overflow-hidden'>
                             {figmaDetails.url ? (
                               <div className='flex flex-col'>
@@ -710,16 +720,24 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                               </div>
                             )}
                           </div>
-                        </div>
+                        </motion.div>
                       )}
 
                       {/* Template Preview */}
                       {moduleType === 'template' && (
-                        <div className='space-y-6 md:space-y-8'>
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.3 }}
+                          className='space-y-6 md:space-y-8'
+                        >
                           {templateDetails.map((section) => {
                             return (
-                              <div
+                              <motion.div
                                 key={section.sectionId}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.2 }}
                                 className='bg-white rounded-lg border shadow-sm p-4 md:p-6'
                               >
                                 <div className='space-y-4 md:space-y-6'>
@@ -875,16 +893,21 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                                     </div>
                                   </div>
                                 </div>
-                              </div>
+                              </motion.div>
                             );
                           })}
-                        </div>
+                        </motion.div>
                       )}
                     </>
                   )}
 
                   {activeTab === 'history' && (
-                    <div className='space-y-3 md:space-y-4'>
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                      className='space-y-3 md:space-y-4'
+                    >
                       <h3 className='font-medium'>Version History</h3>
                       <div className='space-y-2 md:space-y-3'>
                         {Array.from({ length: totalVersions }, (_, i) => {
@@ -942,11 +965,16 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                           );
                         })}
                       </div>
-                    </div>
+                    </motion.div>
                   )}
 
                   {activeTab === 'comments' && (
-                    <div className='space-y-3 md:space-y-4'>
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                      className='space-y-3 md:space-y-4'
+                    >
                       <h3 className='font-medium'>Comments & Feedback</h3>
 
                       {approvalStatus === 'rejected' ? (
@@ -985,7 +1013,7 @@ export default function ModuleDialog({ moduleId, onOpenChange }: ModuleDialogPro
                           </div>
                         </div>
                       )}
-                    </div>
+                    </motion.div>
                   )}
                 </motion.div>
               </AnimatePresence>
