@@ -426,7 +426,7 @@ export default function ProjectHeader() {
   };
 
   return (
-    <BlockWrapper>
+    <BlockWrapper className='mb-4'>
       <div className=''>
         {/* Project Banner */}
         <div ref={bannerRef} className='w-full'>
