@@ -227,7 +227,8 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
-                            return setIsCustomerPicked(false);
+                            setIsCustomerPicked(false);
+                            handleCustomerSelect('');
                           }}
                         >
                           Switch customer
