@@ -10,11 +10,24 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Grid, InfoIcon, Plus, Search, X } from 'lucide-react';
 import { useState } from 'react';
 import { FcDocument } from 'react-icons/fc';
 import ModuleFieldRenderer from './ModuleFieldRenderer';
+
+interface ModuleData {
+  name: string;
+  description: string;
+  sections: Array<{
+    templateId: string;
+    templateName: string;
+    templateDescription: string;
+    fields: any[];
+    sectionId: string;
+  }>;
+  formValues: Record<string, Record<string, any>>;
+}
 
 export default function NewTemplateModuleModal({ isOpen, onClose, template, templateName }) {
   const [selectedTemplates, setSelectedTemplates] = useState<string[]>(['shipping']);
@@ -36,6 +49,7 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
   );
   const { project } = useProject();
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const queryClient = useQueryClient();
 
   const { data: availableTemplates } = useQuery({
     queryKey: ['templates'],
@@ -44,6 +58,23 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
       return response.data.data;
     },
     enabled: isOpen,
+  });
+
+  const createModuleMutation = useMutation({
+    mutationFn: async (moduleData: ModuleData) => {
+      const response = await newRequest.post(
+        `/project-modules/templated-module/${project._id}`,
+        moduleData,
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['module-templates'] });
+      onClose();
+    },
+    onError: (error) => {
+      console.error('Failed to create module:', error);
+    },
   });
 
   const validateForm = () => {
@@ -79,19 +110,14 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
       return;
     }
 
-    try {
-      const response = await newRequest.post(`/project-modules/templated-module/${project._id}`, {
-        name: template.name,
-        description: template.description,
-        sections: sections,
-        formValues: sectionFormValues,
-      });
+    const moduleData = {
+      name: template.name,
+      description: template.description,
+      sections: sections,
+      formValues: sectionFormValues,
+    };
 
-      console.log('🚀 response:', response);
-      onClose();
-    } catch (error) {
-      console.log(error);
-    }
+    createModuleMutation.mutate(moduleData);
   };
 
   useEffect(() => {
@@ -484,8 +510,9 @@ export default function NewTemplateModuleModal({ isOpen, onClose, template, temp
                 <Button
                   className='h-9 px-4 text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors'
                   onClick={handleCreateModule}
+                  disabled={createModuleMutation.isPending}
                 >
-                  Create
+                  {createModuleMutation.isPending ? 'Creating...' : 'Create'}
                 </Button>
               </motion.div>
             </div>
