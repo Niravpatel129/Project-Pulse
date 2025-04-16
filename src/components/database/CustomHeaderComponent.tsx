@@ -34,6 +34,16 @@ const CustomHeaderComponent = (props) => {
       defaultState: { sort: null },
     });
   };
+
+  const renameColumn = (columnId: string, newName: string) => {
+    console.log('🚀 columnId:', columnId);
+    console.log('🚀 newName:', newName);
+
+    api.applyColumnState({
+      state: [{ colId: columnId, headerName: newName }],
+    });
+  };
+
   return (
     <div className='flex items-center h-full px-2' onClick={toggleSort}>
       <div className='flex-1 flex items-center gap-1 cursor-pointer select-none'>
@@ -47,7 +57,9 @@ const CustomHeaderComponent = (props) => {
         )}
       </div>
 
-      {enableMenu && <ColumnHeaderMenu column={column} deleteColumn={deleteColumn} />}
+      {enableMenu && (
+        <ColumnHeaderMenu column={column} deleteColumn={deleteColumn} renameColumn={renameColumn} />
+      )}
     </div>
   );
 };
