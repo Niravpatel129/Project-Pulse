@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { File, Star } from 'lucide-react';
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Attachment } from './AttachmentCellEditor';
 
 // Date formatter for table cells
@@ -310,14 +311,36 @@ export const fileCellRenderer = (params: {
 
         {/* Count indicator for additional files */}
         {attachments.length > 1 && (
-          <div
-            className='text-xs bg-none rounded-full py-0.5 text-blue-600 cursor-pointer hover:bg-blue-100 transition-colors'
-            onMouseEnter={() => {
-              return setShowAttachmentsList(true);
-            }}
-          >
-            +{attachments.length - 1}
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div
+                className='text-xs bg-none rounded-full py-0.5 text-blue-600 cursor-pointer hover:bg-blue-100 transition-colors'
+                onMouseEnter={() => {
+                  return setShowAttachmentsList(true);
+                }}
+              >
+                +{attachments.length - 1}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent className='w-60 bg-white text-black'>
+              <div className='flex flex-col gap-2 bg-white p-2 rounded-md'>
+                {attachments.map((attachment, index) => {
+                  return (
+                    <div
+                      key={`${attachment.id}-${index}`}
+                      className='flex items-center gap-2 justify-between'
+                    >
+                      <div className='flex items-center gap-2'>
+                        <File className='h-4 w-4 text-blue-500' />
+                        <div className='text-xs'>{attachment.name}</div>
+                      </div>
+                      <div className='text-xs text-red-500 cursor-pointer'>X</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </TooltipContent>
+          </Tooltip>
         )}
 
         {/* Add more button */}
