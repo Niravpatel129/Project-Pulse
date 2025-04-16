@@ -144,3 +144,9 @@
   border-top: 1px solid var(--ag-border-color);
   color: #6b7280;
 }
+
+.ag-cell-wrapper {
+  input {
+    padding: 10px;
+  }
+}

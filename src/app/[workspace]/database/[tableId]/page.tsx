@@ -67,7 +67,6 @@ export default function TablePage() {
   const {
     columns,
     records,
-    allSelected,
     isAddColumnSheetOpen,
     propertySearchQuery,
     selectedPropertyType,
@@ -77,7 +76,6 @@ export default function TablePage() {
     addNewColumn,
     saveNewColumn,
     backToPropertySelection,
-    toggleSelectAll,
     toggleSelectRecord,
     setIsAddColumnSheetOpen,
     setPropertySearchQuery,
@@ -87,10 +85,6 @@ export default function TablePage() {
     setNewPropertyPrefix,
     getIconComponent,
     renameColumn,
-    toggleColumnVisibility,
-    setPrimaryColumn,
-    deleteColumn,
-    rowOrder,
     setRowOrder,
     setRecords,
   } = useDatabase([]);
@@ -382,17 +376,6 @@ export default function TablePage() {
     };
   }, []);
 
-  // Configure custom theme
-  const customTheme = useMemo(() => {
-    return themeQuartz.withParams({
-      browserColorScheme: 'light',
-      fontFamily: {
-        googleFont: 'IBM Plex Sans',
-      },
-      headerFontSize: 14,
-    });
-  }, []);
-
   // Card view implementation
   const renderCardView = () => {
     return (
@@ -487,14 +470,6 @@ export default function TablePage() {
     );
   };
 
-  // Get total number of selected records
-  const selectedCount = useMemo(() => {
-    if (gridRef.current) {
-      return gridRef.current.api.getSelectedNodes().length;
-    }
-    return 0;
-  }, [records]); // Re-compute when records change
-
   // Register components with AG Grid
   const components = useMemo(() => {
     return {
@@ -588,17 +563,13 @@ export default function TablePage() {
 
       <div className='pt-1 rounded-md shadow-sm'>
         {viewMode === 'table' ? (
-          <div
-            className='ag-theme-alpine w-full dark:ag-theme-alpine-dark'
-            style={{ height: 'calc(100vh - 200px)', width: '100%' }}
-          >
+          <div className='' style={{ height: 'calc(100vh - 200px)', width: '100%' }}>
             <AgGridReact
               ref={gridRef}
               rowData={records}
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
               rowSelection='multiple'
-              suppressRowClickSelection={true}
               onCellValueChanged={onCellValueChanged}
               components={components}
               animateRows={true}
@@ -615,7 +586,7 @@ export default function TablePage() {
               rowDragManaged={true}
               onRowDragEnd={onRowDragEnd}
               suppressMoveWhenRowDragging={false}
-              theme={customTheme}
+              theme={themeQuartz}
               stopEditingWhenCellsLoseFocus={true}
             />
           </div>
@@ -643,7 +614,6 @@ export default function TablePage() {
               {records.length} record{records.length !== 1 ? 's' : ''}
             </div>
           </div>
-          <div className='text-sm text-gray-500'>{selectedCount} selected</div>
         </div>
       </div>
 
