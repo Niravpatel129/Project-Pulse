@@ -251,8 +251,12 @@ export const fileCellRenderer = (params: {
     if (attachments.length === 0) {
       return (
         <div className='flex items-center space-x-1'>
-          <File className='h-4 w-4 text-gray-400' />
-          <Button variant='ghost' size='sm' className='p-0 h-6 w-6' onClick={openAttachmentManager}>
+          <Button
+            variant='ghost'
+            size='sm'
+            className='p-0 h-6 w-6 bg-blue-100 hover:bg-blue-200'
+            onClick={openAttachmentManager}
+          >
             <span className='text-blue-500 text-xs font-bold'>+</span>
           </Button>
 
@@ -288,25 +292,26 @@ export const fileCellRenderer = (params: {
         }}
       >
         {/* First attachment with icon */}
-        <div className='flex items-center'>
-          <File className='h-4 w-4 text-blue-500' />
-          <a
-            href={attachments[0].url}
-            target='_blank'
-            rel='noopener noreferrer'
-            className='ml-1 text-xs text-blue-600 hover:underline truncate max-w-[60px]'
-            onClick={(e) => {
-              return e.stopPropagation();
-            }}
-          >
-            {attachments[0].name || 'File'}
-          </a>
-        </div>
+        {attachments.length > 0 && (
+          <div className='flex items-center'>
+            <a
+              href={attachments[0].url}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='text-xs text-blue-600 hover:underline truncate max-w-[60px]'
+              onClick={(e) => {
+                return e.stopPropagation();
+              }}
+            >
+              <File className='h-6 w-6 text-blue-500' />
+            </a>
+          </div>
+        )}
 
         {/* Count indicator for additional files */}
         {attachments.length > 1 && (
           <div
-            className='text-xs bg-gray-100 rounded-full px-1.5 text-gray-600 cursor-pointer hover:bg-gray-200'
+            className='text-xs bg-none rounded-full py-0.5 text-blue-600 cursor-pointer hover:bg-blue-100 transition-colors'
             onMouseEnter={() => {
               return setShowAttachmentsList(true);
             }}
@@ -319,7 +324,7 @@ export const fileCellRenderer = (params: {
         <Button
           variant='ghost'
           size='sm'
-          className='p-0 h-6 w-6 ml-1'
+          className='p-0 h-6 w-6 bg-blue-100 hover:bg-blue-200 ml-2'
           onClick={openAttachmentManager}
         >
           <span className='text-blue-500 text-xs font-bold'>+</span>
@@ -331,7 +336,7 @@ export const fileCellRenderer = (params: {
             <ul className='text-xs'>
               {attachments.map((attachment, index) => {
                 return (
-                  <li key={attachment.id || index} className='py-1 flex items-center'>
+                  <li key={`${attachment.id}-${index}`} className='py-1 flex items-center'>
                     <File className='h-3 w-3 mr-1 text-blue-500' />
                     <a
                       href={attachment.url}
