@@ -157,24 +157,6 @@ export default function TablePage() {
     setFilters([]);
   }, []);
 
-  // Handle column rename
-  const handleRenameColumn = useCallback((columnId: string, currentName: string) => {
-    setRenamingColumn({ id: columnId, name: currentName });
-    setNewColumnName(currentName);
-  }, []);
-
-  const saveColumnRename = useCallback(async () => {
-    if (renamingColumn && newColumnName.trim()) {
-      try {
-        await renameColumn(renamingColumn.id, newColumnName.trim());
-        setRenamingColumn(null);
-        setNewColumnName('');
-      } catch (error) {
-        console.error('Failed to rename column:', error);
-      }
-    }
-  }, [renamingColumn, newColumnName, renameColumn]);
-
   const handleDeleteSelected = useCallback(() => {
     // Get selected rows from AG Grid
     const selectedNodes = gridRef.current?.api.getSelectedNodes();
@@ -347,6 +329,7 @@ export default function TablePage() {
         let valueFormatter;
         let cellEditor;
         let editable = true;
+        let cellEditorParams = {};
 
         // Handle column type-specific rendering
         if (column.id === 'tags') {
@@ -389,9 +372,19 @@ export default function TablePage() {
               break;
             case 'single_select':
               cellEditor = 'agSelectCellEditor';
+              cellRenderer = 'singleSelectCellRenderer';
+              // Set up the dropdown options from the column definition
+              if (column.options && column.options.selectOptions) {
+                cellEditorParams = {
+                  values: column.options.selectOptions.map((option) => {
+                    return option.name;
+                  }),
+                };
+              }
               break;
             case 'user':
               cellEditor = 'agSelectCellEditor';
+              // For user dropdowns, you might need similar options handling
               break;
             case 'date':
               cellEditor = 'agDateCellEditor';
@@ -432,6 +425,7 @@ export default function TablePage() {
           editable,
           cellRenderer,
           cellEditor,
+          cellEditorParams, // Include the cell editor params
           valueFormatter,
           resizable: true,
           // Add custom header component
@@ -668,15 +662,20 @@ export default function TablePage() {
     );
   };
 
-  // Register components with AG Grid
   const components = useMemo(() => {
     return {
-      // Using imported cell renderers from CellRenderers.tsx
+      // Existing renderers
       tagsCellRenderer,
       linkCellRenderer,
       imageCellRenderer,
       fileCellRenderer,
       ratingCellRenderer,
+      // Add single select renderer
+      singleSelectCellRenderer: (params) => {
+        if (!params.value) return '-';
+        // Handle both object format and string format
+        return typeof params.value === 'object' ? params.value.name : params.value;
+      },
     };
   }, []);
 
