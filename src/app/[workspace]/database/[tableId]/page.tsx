@@ -19,7 +19,7 @@ import { SortConfig } from '@/types/database';
 import { newRequest } from '@/utils/newRequest';
 import { useQueryClient } from '@tanstack/react-query';
 import { themeQuartz } from 'ag-grid-community';
-import { ChevronDown, Filter, Plus, Search, Trash2 } from 'lucide-react';
+import { ChevronDown, ColumnsIcon, Filter, Plus, RowsIcon, Search, Trash2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -538,7 +538,6 @@ export default function TablePage() {
               <TooltipContent>Toggle filters</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant='outline' size='sm'>
@@ -548,16 +547,16 @@ export default function TablePage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end'>
               <DropdownMenuItem onClick={addNewRow}>
-                <Plus className='mr-2 h-4 w-4' />
+                <RowsIcon className='mr-2 h-4 w-4' />
                 Add New Row
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDeleteSelected}>
-                <Trash2 className='mr-2 h-4 w-4' />
-                Delete Selected
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleAddColumn}>
-                <Plus className='mr-2 h-4 w-4' />
+                <ColumnsIcon className='mr-2 h-4 w-4' />
                 Add New Column
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDeleteSelected}>
+                <Trash2 className='mr-2 h-4 w-4 text-destructive' />
+                Delete Selected
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
