@@ -9,6 +9,14 @@ export const dateFormatter = (params) => {
   return date.toLocaleDateString();
 };
 
+// Time formatter for table cells
+export const timeFormatter = (params) => {
+  if (!params.value) return '-';
+  // Format time in HH:MM format
+  const time = new Date(params.value);
+  return time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
 // Currency formatter for table cells
 export const currencyFormatter = (params) => {
   if (!params.value && params.value !== 0) return '-';
@@ -30,23 +38,35 @@ export const numberFormatter = (params) => {
   return Number(params.value).toLocaleString();
 };
 
-// Renderer for URL links
+// Link cell renderer
 export const linkCellRenderer = (params) => {
   if (!params.value) return '-';
-  // Return a clickable link
+
+  const value = params.value;
+  const displayText = value.length > 30 ? value.substring(0, 27) + '...' : value;
+
   return (
-    <a
-      href={params.value.startsWith('http') ? params.value : `https://${params.value}`}
-      target='_blank'
-      rel='noopener noreferrer'
-      className='text-blue-600 hover:underline'
-      onClick={(e) => {
-        return e.stopPropagation();
-      }}
-    >
-      {params.value}
-    </a>
+    <div className='text-blue-500 underline'>
+      <a
+        href={value.startsWith('http') ? value : `https://${value}`}
+        target='_blank'
+        rel='noopener noreferrer'
+      >
+        {displayText}
+      </a>
+    </div>
   );
+};
+
+// Time cell renderer
+export const timeCellRenderer = (params) => {
+  if (!params.value) return '-';
+
+  const time = new Date(params.value);
+  const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  // Use a simple div without extra styling that might interfere with editing
+  return timeString;
 };
 
 // Renderer for image cells
@@ -199,6 +219,8 @@ export const getValueFormatter = (formatterName) => {
   switch (formatterName) {
     case 'dateFormatter':
       return dateFormatter;
+    case 'timeFormatter':
+      return timeFormatter;
     case 'numberFormatter':
       return numberFormatter;
     case 'currencyFormatter':

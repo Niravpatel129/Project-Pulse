@@ -58,7 +58,11 @@ import {
   phoneCellRenderer,
   ratingCellRenderer,
   tagsCellRenderer,
+  timeCellRenderer,
 } from '@/components/database/CellRenderers';
+
+// Import custom TimeEditor component
+import TimeEditor from '@/components/database/TimeEditor';
 
 const myTheme = themeQuartz.withParams({
   browserColorScheme: 'light',
@@ -404,6 +408,12 @@ export default function TablePage() {
               cellEditor = 'agDateCellEditor';
               valueFormatter = 'dateFormatter';
               break;
+            case 'time':
+              // Use the custom TimeEditor component
+              cellEditor = 'timeEditor';
+              valueFormatter = 'timeFormatter';
+              editable = true; // Explicitly set editable to true
+              break;
             case 'number':
               cellEditor = 'agTextCellEditor';
               valueFormatter = 'numberFormatter';
@@ -528,6 +538,28 @@ export default function TablePage() {
               console.error('Invalid number format:', newValue);
               toast.error('Invalid number format');
               return; // Don't proceed with invalid number
+            }
+          }
+        } else if (typeId === 'time') {
+          // For time type, ensure we're storing a valid time string
+          if (newValue === '' || newValue === null || newValue === undefined) {
+            processedValue = null;
+          } else {
+            try {
+              // Check if it's a valid time format (e.g. "14:30")
+              const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+              if (timeRegex.test(newValue)) {
+                processedValue = newValue;
+                console.log('Processed time value:', processedValue);
+              } else {
+                console.error('Invalid time format:', newValue);
+                toast.error('Invalid time format. Please use HH:MM format.');
+                return; // Don't proceed with invalid time
+              }
+            } catch (error) {
+              console.error('Invalid time format:', newValue, error);
+              toast.error('Invalid time format');
+              return; // Don't proceed with invalid time
             }
           }
         }
@@ -698,6 +730,9 @@ export default function TablePage() {
       fileCellRenderer,
       ratingCellRenderer,
       phoneCellRenderer,
+      timeCellRenderer,
+      // Custom editors
+      timeEditor: TimeEditor,
       // Add single select renderer
       singleSelectCellRenderer: (params) => {
         if (!params.value) return '-';
