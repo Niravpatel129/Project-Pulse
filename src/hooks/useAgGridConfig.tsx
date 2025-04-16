@@ -88,6 +88,7 @@ export const useAgGridConfig = (
         break;
       case 'checkbox':
         cellEditor = 'agCheckboxCellEditor';
+        cellRenderer = 'checkboxCellRenderer';
         break;
       case 'multi_select':
         cellRenderer = 'tagsCellRenderer';

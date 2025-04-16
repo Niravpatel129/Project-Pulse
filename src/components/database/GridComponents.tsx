@@ -1,6 +1,7 @@
 import React from 'react';
 import AttachmentCellEditor from './AttachmentCellEditor';
 import {
+  checkboxCellRenderer,
   fileCellRenderer,
   imageCellRenderer,
   linkCellRenderer,
@@ -21,6 +22,7 @@ export const gridComponents = {
   ratingCellRenderer,
   phoneCellRenderer,
   timeCellRenderer,
+  checkboxCellRenderer,
 
   // Custom cell editors
   timeEditor: TimeEditor,

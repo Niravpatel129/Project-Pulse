@@ -15,7 +15,6 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  AlignLeft,
   ArrowLeft,
   Calendar,
   Check,
@@ -36,7 +35,6 @@ import {
   Star,
   Trash,
   Type,
-  User,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { IconType } from 'react-icons';
@@ -86,22 +84,13 @@ interface PropertySheetProps {
 // Define default property types if not provided
 const defaultPropertyTypes: PropertyType[] = [
   {
-    id: 'single_line',
-    name: 'Single line text',
+    id: 'text',
+    name: 'text',
     iconName: 'text',
     icon: <Type size={18} />,
     description: 'For short text like names, emails, etc.',
     hasValidation: true,
     editorType: 'agTextCellEditor',
-  },
-  {
-    id: 'long_text',
-    name: 'Long text',
-    iconName: 'textarea',
-    icon: <AlignLeft size={18} />,
-    description: 'For longer text like descriptions, notes, etc.',
-    hasValidation: true,
-    editorType: 'agLargeTextCellEditor',
   },
   {
     id: 'attachment',
@@ -156,14 +145,6 @@ const defaultPropertyTypes: PropertyType[] = [
     editorType: 'agTextCellEditor',
     cellRenderer: 'phoneCellRenderer',
     hasOptions: true,
-  },
-  {
-    id: 'user',
-    name: 'User',
-    iconName: 'user',
-    icon: <User size={18} />,
-    description: 'Assign or mention a user',
-    editorType: 'agSelectCellEditor',
   },
   {
     id: 'date',
@@ -709,7 +690,7 @@ export function PropertySheet({
                     </div>
 
                     {/* Basic validation - focus on what AG Grid supports easily */}
-                    {['single_line', 'long_text', 'number', 'email', 'url'].includes(
+                    {['text', 'number', 'email', 'url'].includes(
                       selectedPropertyType?.id || '',
                     ) && (
                       <div className='space-y-2 mt-4 pt-2 border-t'>
@@ -865,7 +846,7 @@ export function PropertySheet({
                   </div>
                   {filteredPropertyTypes
                     .filter((type) => {
-                      return ['single_line', 'long_text', 'checkbox'].includes(type.id);
+                      return ['text', 'checkbox'].includes(type.id);
                     })
                     .map((type) => {
                       return (

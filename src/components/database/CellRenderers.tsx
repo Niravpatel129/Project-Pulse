@@ -627,3 +627,51 @@ export const getValueFormatter = (formatterName) => {
       return undefined;
   }
 };
+
+// Checkbox cell renderer
+export const checkboxCellRenderer = (params) => {
+  // Handle undefined or null values
+  const checked = params.value === true || params.value === 'true';
+
+  return (
+    <div className='flex items-center justify-center'>
+      <input
+        type='checkbox'
+        checked={checked}
+        className='w-4 h-4 rounded border-gray-300 focus:ring-blue-500 cursor-pointer'
+        onChange={(e) => {
+          e.stopPropagation();
+          const newValue = e.target.checked;
+
+          // This triggers the grid's valueChanged event which handles API calls
+          const colId = params.column.getColId();
+
+          // Create a synthetic event that mimics cell editing completion
+          if (params.api && params.node) {
+            // First update the UI immediately for responsiveness
+            params.node.setDataValue(colId, newValue);
+
+            // Then dispatch a cellValueChanged event
+            params.api.dispatchEvent({
+              type: 'cellValueChanged',
+              node: params.node,
+              column: params.column,
+              value: newValue,
+              oldValue: params.value,
+              newValue: newValue,
+              colDef: params.colDef,
+              api: params.api,
+              columnApi: params.columnApi,
+              context: params.context,
+              data: params.data,
+              rowIndex: params.rowIndex,
+            });
+          }
+        }}
+        onClick={(e) => {
+          return e.stopPropagation();
+        }}
+      />
+    </div>
+  );
+};

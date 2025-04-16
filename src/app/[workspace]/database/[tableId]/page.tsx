@@ -12,6 +12,7 @@ import { useCallback, useRef, useState } from 'react';
 
 // AG Grid imports
 import {
+  CheckboxEditorModule,
   ClientSideRowModelModule,
   ColumnApiModule,
   CustomEditorModule,
@@ -61,6 +62,7 @@ ModuleRegistry.registerModules([
   DateEditorModule,
   CustomEditorModule,
   UndoRedoEditModule,
+  CheckboxEditorModule,
 ]);
 
 export default function TablePage() {
