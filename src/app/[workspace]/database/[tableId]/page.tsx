@@ -270,6 +270,9 @@ export default function TablePage() {
       headerCheckboxSelection: true,
       pinned: 'left',
       filter: false,
+      resizable: false,
+      sortable: false,
+      editable: false,
     };
 
     // Map our column definitions to AG Grid format
