@@ -89,6 +89,51 @@ export function CardView({ records, columns, toggleSelectRecord }: CardViewProps
                               );
                             })}
                           </div>
+                        ) : column.type === 'attachment' ? (
+                          // Handle attachment type
+                          Array.isArray(record.values[column.id]) ? (
+                            <div className='flex flex-wrap gap-1'>
+                              {record.values[column.id]?.map((file: any, idx: number) => {
+                                return (
+                                  <a
+                                    key={`file-${idx}-${file.id}`}
+                                    href={file.downloadURL || file.url}
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                    className='no-underline hover:opacity-80 transition-opacity'
+                                  >
+                                    <Badge
+                                      variant='outline'
+                                      className='bg-blue-50 text-blue-700 cursor-pointer'
+                                    >
+                                      {file.name || file.originalName || 'File'}
+                                    </Badge>
+                                  </a>
+                                );
+                              })}
+                            </div>
+                          ) : record.values[column.id] ? (
+                            // Handle single attachment
+                            <a
+                              href={
+                                record.values[column.id].downloadURL || record.values[column.id].url
+                              }
+                              target='_blank'
+                              rel='noopener noreferrer'
+                              className='no-underline hover:opacity-80 transition-opacity'
+                            >
+                              <Badge
+                                variant='outline'
+                                className='bg-blue-50 text-blue-700 cursor-pointer'
+                              >
+                                {record.values[column.id].name ||
+                                  record.values[column.id].originalName ||
+                                  'File'}
+                              </Badge>
+                            </a>
+                          ) : (
+                            '-'
+                          )
                         ) : (
                           record.values[column.id] || '-'
                         )}
