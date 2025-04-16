@@ -130,11 +130,21 @@ export const useColumnDefinitions = (
             case 'date':
               cellEditor = 'agDateCellEditor';
               valueFormatter = 'dateFormatter';
+              // Pass column options to params
+              cellRendererParams = {
+                ...(cellRendererParams || {}),
+                options: column.options,
+              };
               break;
             case 'time':
               cellEditor = 'timeEditor';
               valueFormatter = 'timeFormatter';
               editable = true;
+              // Pass column options to params
+              cellRendererParams = {
+                ...(cellRendererParams || {}),
+                options: column.options,
+              };
               break;
             case 'number':
               cellEditor = 'agTextCellEditor';

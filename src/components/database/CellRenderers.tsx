@@ -2,6 +2,7 @@ import FileUploadManagerModal from '@/components/ProjectPage/FileComponents/File
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getFileIcon } from '@/utils/fileIcons';
+import { format as formatDate, isValid } from 'date-fns';
 import { File, Star, X } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
@@ -12,9 +13,37 @@ import { Attachment } from './AttachmentCellEditor';
 // Date formatter for table cells
 export const dateFormatter = (params) => {
   if (!params.value) return '-';
-  // Format date in a user-friendly way
-  const date = new Date(params.value);
-  return date.toLocaleDateString();
+
+  try {
+    // Get options from cellRendererParams
+    const options = params.colDef?.cellRendererParams?.options || {};
+    // Get date format from options
+    const dateFormat = options?.dateFormat || 'MM/dd/yyyy';
+
+    // Map our UI format patterns to date-fns format patterns
+    const formatMap = {
+      'MM/DD/YYYY': 'MM/dd/yyyy',
+      'DD/MM/YYYY': 'dd/MM/yyyy',
+      'YYYY-MM-DD': 'yyyy-MM-dd',
+      'MM/DD/YYYY HH:mm': 'MM/dd/yyyy HH:mm',
+      'YYYY-MM-DD HH:mm': 'yyyy-MM-dd HH:mm',
+    };
+
+    // Get the correct date-fns format string
+    const dateFnsFormat = formatMap[dateFormat] || dateFormat;
+
+    // Parse the date
+    const date = new Date(params.value);
+
+    // Check if it's a valid date
+    if (!isValid(date)) return params.value;
+
+    // Format the date using date-fns
+    return formatDate(date, dateFnsFormat);
+  } catch (error) {
+    console.error('Error in dateFormatter:', error, params.value);
+    return params.value || '-';
+  }
 };
 
 // Time formatter for table cells
@@ -22,24 +51,25 @@ export const timeFormatter = (params) => {
   if (!params.value) return '-';
   try {
     console.log('timeFormatter received:', params.value, 'type:', typeof params.value);
-    // Format time in HH:MM format
-    const time = new Date(params.value);
-    if (!isNaN(time.getTime())) {
-      const formattedTime = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      console.log('timeFormatter output:', formattedTime);
-      return formattedTime;
-    }
-    // If not a valid date, try to return directly if it matches time format
+
+    // If it's already in HH:MM format, return it directly
     if (
       typeof params.value === 'string' &&
       /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(params.value)
     ) {
       return params.value;
     }
-    return '-';
+
+    // Format time using date-fns
+    const time = new Date(params.value);
+    if (isValid(time)) {
+      return formatDate(time, 'h:mm a');
+    }
+
+    return params.value || '-';
   } catch (error) {
     console.error('Error in timeFormatter:', error);
-    return '-';
+    return params.value || '-';
   }
 };
 
@@ -50,15 +80,19 @@ export const currencyFormatter = (params) => {
   // Look for currency symbol from cellRendererParams which contains the column options
   const options = params.colDef?.cellRendererParams?.options || {};
   const currencySymbol = options?.currencySymbol || '$';
+  const hasDecimals = options?.hasDecimals !== false; // Default to true if not specified
+  const decimalPlaces = hasDecimals ? options?.decimalPlaces ?? 2 : 0;
 
   console.log('Currency formatter:', {
     value: params.value,
     options: options,
     symbol: currencySymbol,
+    hasDecimals: hasDecimals,
+    decimalPlaces: decimalPlaces,
   });
 
-  // Format as currency with 2 decimal places
-  return `${currencySymbol}${Number(params.value).toFixed(2)}`;
+  // Format as currency with appropriate decimal places
+  return `${currencySymbol}${Number(params.value).toFixed(decimalPlaces)}`;
 };
 
 // Percentage formatter for table cells
@@ -77,8 +111,10 @@ export const numberFormatter = (params) => {
   if (!params.value && params.value !== 0) return '-';
   // Get options from cellRendererParams
   const options = params.colDef?.cellRendererParams?.options || {};
+  // Check if decimals are enabled
+  const hasDecimals = options?.hasDecimals !== false; // Default to true if not specified
   // Get decimal places from options or use 0 as default
-  const decimalPlaces = options?.decimalPlaces ?? 0;
+  const decimalPlaces = hasDecimals ? options?.decimalPlaces ?? 0 : 0;
   // Format number with commas for thousands and optional decimal places
   return Number(params.value).toLocaleString(undefined, {
     minimumFractionDigits: decimalPlaces,
@@ -112,15 +148,8 @@ export const timeCellRenderer = (params) => {
 
   try {
     console.log('timeCellRenderer received:', params.value, 'type:', typeof params.value);
-    // Try to parse as Date
-    const time = new Date(params.value);
-    if (!isNaN(time.getTime())) {
-      const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      console.log('timeCellRenderer output:', timeString);
-      return timeString;
-    }
 
-    // If it's already in HH:MM format, return it
+    // If it's already in HH:MM format, return it directly
     if (
       typeof params.value === 'string' &&
       /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(params.value)
@@ -128,10 +157,18 @@ export const timeCellRenderer = (params) => {
       return params.value;
     }
 
-    return '-';
+    // Try to parse as Date and format with date-fns
+    const time = new Date(params.value);
+    if (isValid(time)) {
+      const timeString = formatDate(time, 'h:mm a');
+      console.log('timeCellRenderer output:', timeString);
+      return timeString;
+    }
+
+    return params.value || '-';
   } catch (error) {
     console.error('Error in timeCellRenderer:', error);
-    return '-';
+    return params.value || '-';
   }
 };
 
