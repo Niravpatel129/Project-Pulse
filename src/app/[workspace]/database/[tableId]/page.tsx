@@ -25,17 +25,7 @@ import {
   SelectEditorModule,
   themeQuartz,
 } from 'ag-grid-community';
-import {
-  ChevronDown,
-  ColumnsIcon,
-  File,
-  Filter,
-  Plus,
-  RowsIcon,
-  Search,
-  Star,
-  Trash2,
-} from 'lucide-react';
+import { ChevronDown, ColumnsIcon, Filter, Plus, RowsIcon, Search, Trash2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -57,6 +47,16 @@ import {
   ValidationModule,
 } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
+
+// Import cell renderers from modularized component
+import {
+  fileCellRenderer,
+  getValueFormatter,
+  imageCellRenderer,
+  linkCellRenderer,
+  ratingCellRenderer,
+  tagsCellRenderer,
+} from '@/components/database/CellRenderers';
 
 const myTheme = themeQuartz.withParams({
   browserColorScheme: 'light',
@@ -84,104 +84,6 @@ ModuleRegistry.registerModules([
   NumberEditorModule,
   SelectEditorModule,
 ]);
-
-// Custom cell renderers and formatters for AG Grid
-const dateFormatter = (params) => {
-  if (!params.value) return '-';
-  // Format date in a user-friendly way
-  const date = new Date(params.value);
-  return date.toLocaleDateString();
-};
-
-const currencyFormatter = (params) => {
-  if (!params.value && params.value !== 0) return '-';
-  // Format as currency with 2 decimal places
-  return `$${Number(params.value).toFixed(2)}`;
-};
-
-const percentFormatter = (params) => {
-  if (!params.value && params.value !== 0) return '-';
-  // Format as percentage
-  return `${Number(params.value).toFixed(1)}%`;
-};
-
-const numberFormatter = (params) => {
-  if (!params.value && params.value !== 0) return '-';
-  // Format number with commas for thousands
-  return Number(params.value).toLocaleString();
-};
-
-const linkCellRenderer = (params) => {
-  if (!params.value) return '-';
-  // Return a clickable link
-  return (
-    <a
-      href={params.value.startsWith('http') ? params.value : `https://${params.value}`}
-      target='_blank'
-      rel='noopener noreferrer'
-      className='text-blue-600 hover:underline'
-      onClick={(e) => {
-        return e.stopPropagation();
-      }}
-    >
-      {params.value}
-    </a>
-  );
-};
-
-const imageCellRenderer = (params) => {
-  if (!params.value) return '-';
-  // Display an image with a maximum width
-  return (
-    <img
-      src={params.value}
-      alt='Image'
-      className='max-w-[100px] max-h-[50px] object-contain'
-      onClick={(e) => {
-        return e.stopPropagation();
-      }}
-    />
-  );
-};
-
-const fileCellRenderer = (params) => {
-  if (!params.value) return '-';
-  // Display a file link with an icon
-  return (
-    <a
-      href={params.value.url}
-      target='_blank'
-      rel='noopener noreferrer'
-      className='flex items-center text-blue-600 hover:underline'
-      onClick={(e) => {
-        return e.stopPropagation();
-      }}
-    >
-      <File className='h-4 w-4 mr-1' />
-      {params.value.name || 'Download'}
-    </a>
-  );
-};
-
-const ratingCellRenderer = (params) => {
-  if (!params.value && params.value !== 0) return '-';
-  // Display stars for rating (1-5)
-  const rating = Math.min(Math.max(0, Number(params.value)), 5);
-  return (
-    <div className='flex items-center'>
-      {Array.from({ length: 5 }).map((_, i) => {
-        return (
-          <Star
-            key={i}
-            className={`h-4 w-4 ${
-              i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'
-            }`}
-          />
-        );
-      })}
-    </div>
-  );
-};
 
 export default function TablePage() {
   const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
@@ -547,24 +449,6 @@ export default function TablePage() {
     return [selectColumn, ...columnDefs];
   }, [columns, columnOrder, columnWidths, handleDeleteColumn]);
 
-  // Custom cell renderer for tags
-  const tagsCellRenderer = useCallback((params) => {
-    if (!params.value) return '-';
-
-    // Assuming tags are in the format [{id: string, name: string}]
-    return (
-      <div className='flex flex-wrap gap-1'>
-        {params.value.map((tag) => {
-          return (
-            <Badge key={tag.id} variant='outline' className='bg-amber-50 text-amber-700'>
-              {tag.name}
-            </Badge>
-          );
-        })}
-      </div>
-    );
-  }, []);
-
   // Handle cell value change with AG Grid's built-in editing
   const onCellValueChanged = useCallback(
     (cellParams) => {
@@ -787,13 +671,14 @@ export default function TablePage() {
   // Register components with AG Grid
   const components = useMemo(() => {
     return {
-      tagsCellRenderer: tagsCellRenderer,
-      linkCellRenderer: linkCellRenderer,
-      imageCellRenderer: imageCellRenderer,
-      fileCellRenderer: fileCellRenderer,
-      ratingCellRenderer: ratingCellRenderer,
+      // Using imported cell renderers from CellRenderers.tsx
+      tagsCellRenderer,
+      linkCellRenderer,
+      imageCellRenderer,
+      fileCellRenderer,
+      ratingCellRenderer,
     };
-  }, [tagsCellRenderer]);
+  }, []);
 
   // Track when components are available
   useEffect(() => {
@@ -809,22 +694,6 @@ export default function TablePage() {
       setComponentUpdated(false);
     }
   }, [componentUpdated, gridRef]);
-
-  // AG Grid formatters (convert to functions to use directly in columnDefs)
-  const getValueFormatter = (formatterName) => {
-    switch (formatterName) {
-      case 'dateFormatter':
-        return dateFormatter;
-      case 'numberFormatter':
-        return numberFormatter;
-      case 'currencyFormatter':
-        return currencyFormatter;
-      case 'percentFormatter':
-        return percentFormatter;
-      default:
-        return undefined;
-    }
-  };
 
   // Update columnDefs to use value formatters properly
   const enhancedColumnDefs = useMemo(() => {
