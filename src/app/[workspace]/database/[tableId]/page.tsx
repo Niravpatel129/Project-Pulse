@@ -2,77 +2,44 @@
 
 import { FilterPanel } from '@/components/database/FilterPanel';
 import { PropertySheet } from '@/components/database/property-sheet';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useDatabase } from '@/hooks/useDatabase';
-import { newRequest } from '@/utils/newRequest';
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  ColumnApiModule,
-  CustomEditorModule,
-  DateEditorModule,
-  NumberEditorModule,
-  RenderApiModule,
-  RowApiModule,
-  SelectEditorModule,
-  themeQuartz,
-  UndoRedoEditModule,
-} from 'ag-grid-community';
-import { ChevronDown, ColumnsIcon, Filter, Plus, RowsIcon, Search, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { useCallback, useRef, useState } from 'react';
 
 // AG Grid imports
-import CustomHeaderComponent from '@/components/database/CustomHeaderComponent';
 import {
   ClientSideRowModelModule,
-  ColDef,
+  ColumnApiModule,
+  CustomEditorModule,
   CustomFilterModule,
+  DateEditorModule,
   DateFilterModule,
   ModuleRegistry,
+  NumberEditorModule,
   NumberFilterModule,
   PaginationModule,
+  RenderApiModule,
+  RowApiModule,
   RowDragModule,
   RowSelectionModule,
+  SelectEditorModule,
   TextEditorModule,
   TextFilterModule,
+  UndoRedoEditModule,
   ValidationModule,
 } from 'ag-grid-community';
-import { AgGridReact } from 'ag-grid-react';
 
-// Import cell renderers from modularized component
-import {
-  fileCellRenderer,
-  getValueFormatter,
-  imageCellRenderer,
-  linkCellRenderer,
-  phoneCellRenderer,
-  ratingCellRenderer,
-  tagsCellRenderer,
-  timeCellRenderer,
-} from '@/components/database/CellRenderers';
-
-// Import custom TimeEditor component
-import TimeEditor from '@/components/database/TimeEditor';
-
-const myTheme = themeQuartz.withParams({
-  browserColorScheme: 'light',
-  fontFamily: {
-    googleFont: 'IBM Plex Sans',
-  },
-  headerFontSize: 14,
-});
+// Import modular components created for this refactoring
+import { CardView } from '@/components/database/CardView';
+import { useColumnDefinitions } from '@/components/database/ColumnDefinitions';
+import { handleDeleteSelected, handleRowDragEnd } from '@/components/database/RowHandlers';
+import { TableGrid } from '@/components/database/TableGrid';
+import { TableToolbar } from '@/components/database/TableToolbar';
+import { useAgGridConfig } from '@/hooks/useAgGridConfig';
 
 // Register the required modules
 ModuleRegistry.registerModules([
@@ -101,9 +68,12 @@ export default function TablePage() {
   const [showFilters, setShowFilters] = useState(false);
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
-  const gridRef = useRef<AgGridReact>(null);
   const quickFilterRef = useRef<HTMLInputElement>(null);
-  const [componentUpdated, setComponentUpdated] = useState(false);
+
+  // Filter state
+  const [filters, setFilters] = useState<Array<{ column: string; value: string }>>([]);
+  const [filterColumn, setFilterColumn] = useState('');
+  const [filterValue, setFilterValue] = useState('');
 
   const {
     columns,
@@ -134,15 +104,6 @@ export default function TablePage() {
   const queryClient = useQueryClient();
   const params = useParams();
 
-  // Filter state
-  const [filters, setFilters] = useState<Array<{ column: string; value: string }>>([]);
-  const [filterColumn, setFilterColumn] = useState('');
-  const [filterValue, setFilterValue] = useState('');
-
-  // Add state for column rename
-  const [renamingColumn, setRenamingColumn] = useState<{ id: string; name: string } | null>(null);
-  const [newColumnName, setNewColumnName] = useState('');
-
   // Add a new filter
   const addFilter = useCallback(() => {
     if (filterColumn && filterValue) {
@@ -168,119 +129,8 @@ export default function TablePage() {
     setFilters([]);
   }, []);
 
-  const handleDeleteSelected = useCallback(() => {
-    // Get selected rows from AG Grid
-    const selectedNodes = gridRef.current?.api.getSelectedNodes();
-    if (!selectedNodes || selectedNodes.length === 0) {
-      toast.error('No records selected');
-      return;
-    }
-
-    const selectedRecordIds = selectedNodes.map((node) => {
-      return node.data._id;
-    });
-
-    // Delete each selected record
-    Promise.all(
-      selectedRecordIds.map((recordId) => {
-        return newRequest.delete(`/tables/${params.tableId}/rows/${recordId}`);
-      }),
-    )
-      .then(() => {
-        // AG Grid will automatically update when the rowData changes
-        setRecords((prevRecords) => {
-          return prevRecords.filter((record) => {
-            return !selectedRecordIds.includes(record._id);
-          });
-        });
-
-        // Update row order
-        setRowOrder((prevOrder) => {
-          return prevOrder.filter((id) => {
-            return !selectedRecordIds.includes(id);
-          });
-        });
-
-        // Invalidate queries to refresh data
-        queryClient.invalidateQueries({ queryKey: ['table-records', params.tableId] });
-        toast.success('Selected records deleted successfully');
-      })
-      .catch((error) => {
-        console.error('Failed to delete records:', error);
-        toast.error('Failed to delete records');
-      });
-  }, [gridRef, params.tableId, setRecords, setRowOrder, queryClient]);
-
-  // Handle adding a new column
-  const handleAddColumn = useCallback(() => {
-    setIsAddColumnSheetOpen(true);
-  }, [setIsAddColumnSheetOpen]);
-
-  // Apply quick filter for search
-  const onFilterTextChange = useCallback(() => {
-    if (gridRef.current && quickFilterRef.current) {
-      // Use the correct API method for filtering
-      const filterValue = quickFilterRef.current.value || '';
-      gridRef.current.api.setGridOption('quickFilterText', filterValue);
-    }
-  }, []);
-
-  // Handle row drag end
-  const onRowDragEnd = useCallback(
-    (event: any) => {
-      const { node, overIndex } = event;
-      const draggedId = node.data._id;
-      const newRecords = [...records];
-
-      // Find the record being dragged
-      const draggedRecordIndex = newRecords.findIndex((r) => {
-        return r._id === draggedId;
-      });
-      if (draggedRecordIndex === -1) return;
-
-      const draggedRecord = newRecords[draggedRecordIndex];
-
-      // Remove the record from its current position
-      newRecords.splice(draggedRecordIndex, 1);
-
-      // Insert it at the new position
-      newRecords.splice(overIndex, 0, draggedRecord);
-
-      // Update positions
-      const updatedRecords = newRecords.map((record, index) => {
-        return {
-          ...record,
-          position: index + 1,
-        };
-      });
-
-      // Update local state
-      setRecords(updatedRecords);
-
-      // Update row order
-      setRowOrder(
-        updatedRecords.map((record) => {
-          return record._id;
-        }),
-      );
-
-      // Save the new order to the backend
-      // Debounce this operation in a real application
-      updatedRecords.forEach((record) => {
-        newRequest
-          .patch(`/tables/${params.tableId}/rows/${record._id}`, {
-            position: record.position,
-          })
-          .catch((error) => {
-            console.error('Failed to update row position:', error);
-          });
-      });
-    },
-    [records, params.tableId, setRecords, setRowOrder],
-  );
-
   // Handle column deletion
-  const handleDeleteColumn = useCallback(
+  const handleDeleteColumnCallback = useCallback(
     (columnId: string) => {
       // Show a confirmation dialog before deleting
       if (
@@ -292,857 +142,66 @@ export default function TablePage() {
     [deleteColumn],
   );
 
-  // Get AG Grid column definitions from our custom columns
-  const columnDefs = useMemo<ColDef[]>(() => {
-    if (!columns || columns.length === 0) return [];
+  // Get AG Grid configuration from custom hook
+  const { defaultColDef } = useAgGridConfig(columnWidths, handleDeleteColumnCallback);
 
-    // Debug column structures
-    console.log('Column definitions:', columns);
-
-    // Create a checkbox column for selection
-    const selectColumn: ColDef = {
-      headerName: '',
-      field: 'selected',
-      width: 20,
-      minWidth: 49,
-      maxWidth: 49,
-      checkboxSelection: true,
-      headerCheckboxSelection: true,
-      pinned: 'left',
-      filter: false,
-      resizable: false,
-      sortable: false,
-      editable: false,
-    };
-
-    // Map our column definitions to AG Grid format
-    const columnDefs: ColDef[] = columns
-      .filter((col) => {
-        return !col.hidden;
-      })
-      .sort((a, b) => {
-        // Use columnOrder if available, otherwise sort by order property
-        if (columnOrder.length > 0) {
-          const aIndex = columnOrder.indexOf(a.id);
-          const bIndex = columnOrder.indexOf(b.id);
-          if (aIndex !== -1 && bIndex !== -1) {
-            return aIndex - bIndex;
-          }
-        }
-        return (a.order || 0) - (b.order || 0);
-      })
-      .map((column) => {
-        // Convert width from our format to AG Grid format
-        const width = columnWidths[column.id] || 200;
-
-        // Set up column definition based on column type
-        let cellRenderer;
-        let valueFormatter;
-        let cellEditor;
-        let editable = true;
-        let cellEditorParams = {};
-        let cellRendererParams = {};
-
-        // Handle column type-specific rendering
-        if (column.id === 'tags') {
-          cellRenderer = 'tagsCellRenderer';
-        } else {
-          // Check if column type is an object or a string
-          let typeId = '';
-
-          if (typeof column.type === 'string') {
-            typeId = column.type;
-          } else if (column.type && typeof column.type === 'object') {
-            // Use type assertion for the id property access
-            typeId = (column.type as any).id || '';
-          }
-
-          // Log the column type for debugging
-          console.log(`Column ${column.name} has type:`, column.type, 'typeId:', typeId);
-
-          // Assign proper renderers and editors based on type
-          switch (typeId) {
-            case 'single_line':
-              cellEditor = 'agTextCellEditor';
-              break;
-            case 'long_text':
-              cellEditor = 'agLargeTextCellEditor';
-              break;
-            case 'attachment':
-              cellRenderer = 'fileCellRenderer';
-              editable = false;
-              break;
-            case 'image':
-              cellRenderer = 'imageCellRenderer';
-              editable = false;
-              break;
-            case 'checkbox':
-              cellEditor = 'agCheckboxCellEditor';
-              break;
-            case 'multi_select':
-              cellRenderer = 'tagsCellRenderer';
-              break;
-            case 'single_select':
-              cellEditor = 'agSelectCellEditor';
-              cellRenderer = 'singleSelectCellRenderer';
-              // Set up the dropdown options from the column definition
-              if (column.options && column.options.selectOptions) {
-                cellEditorParams = {
-                  values: column.options.selectOptions.map((option) => {
-                    return option.name;
-                  }),
-                };
-              }
-              break;
-            case 'phone':
-              cellEditor = 'agTextCellEditor';
-              cellRenderer = 'phoneCellRenderer';
-              // Add phoneFormat to cellRendererParams if available
-              if (column.options && (column.options as any).phoneFormat) {
-                cellRendererParams = {
-                  phoneFormat: (column.options as any).phoneFormat,
-                };
-              }
-              break;
-            case 'user':
-              cellEditor = 'agSelectCellEditor';
-              // For user dropdowns, you might need similar options handling
-              break;
-            case 'date':
-              cellEditor = 'agDateCellEditor';
-              valueFormatter = 'dateFormatter';
-              break;
-            case 'time':
-              // Use the custom TimeEditor component
-              cellEditor = 'timeEditor';
-              valueFormatter = 'timeFormatter';
-              editable = true; // Explicitly set editable to true
-              break;
-            case 'number':
-              cellEditor = 'agTextCellEditor';
-              valueFormatter = 'numberFormatter';
-              break;
-            case 'currency':
-              cellEditor = 'agTextCellEditor';
-              valueFormatter = 'currencyFormatter';
-              break;
-            case 'percent':
-              cellEditor = 'agTextCellEditor';
-              valueFormatter = 'percentFormatter';
-              break;
-            case 'rating':
-              cellRenderer = 'ratingCellRenderer';
-              break;
-            case 'url':
-              cellRenderer = 'linkCellRenderer';
-              break;
-            case 'created_time':
-            case 'last_modified':
-              valueFormatter = 'dateFormatter';
-              editable = false;
-              break;
-          }
-        }
-
-        // Get the typeId for header params
-        let columnTypeId = '';
-        if (typeof column.type === 'string') {
-          columnTypeId = column.type;
-        } else if (column.type && typeof column.type === 'object') {
-          columnTypeId = (column.type as any).id || '';
-        }
-
-        // Add extra logging for time and date columns
-        if (columnTypeId === 'time') {
-          console.log('Setting up time column:', column.name, 'with id:', column.id);
-        } else if (columnTypeId === 'date') {
-          console.log('Setting up date column:', column.name, 'with id:', column.id);
-        }
-
-        return {
-          headerName: column.name,
-          sortable: true,
-          field: `values.${column.id}`,
-          filter: true,
-          width,
-          editable,
-          cellRenderer,
-          cellEditor,
-          cellEditorParams, // Include the cell editor params
-          cellRendererParams, // Add this line to pass cell renderer params
-          valueFormatter,
-          resizable: true,
-          // For time columns, ensure we explicitly set these properties
-          ...(columnTypeId === 'time'
-            ? {
-                cellEditorPopup: false, // Use inline editor
-                editable: true, // Explicitly mark as editable
-                valueParser: (params) => {
-                  // Parse time values when entered
-                  console.log('Time value parser called with:', params.newValue);
-                  return params.newValue; // Return as-is, let onCellValueChanged handle conversion
-                },
-              }
-            : {}),
-          // For date columns, ensure we explicitly set these properties
-          ...(columnTypeId === 'date'
-            ? {
-                cellEditorPopup: false, // Use inline editor
-                editable: true, // Explicitly mark as editable
-                valueParser: (params) => {
-                  // Parse date values when entered
-                  console.log('Date value parser called with:', params.newValue);
-                  return params.newValue; // Return as-is, let onCellValueChanged handle conversion
-                },
-              }
-            : {}),
-          // Add custom header component
-          headerComponent: CustomHeaderComponent,
-          headerComponentParams: {
-            displayName: column.name,
-            deleteColumn: handleDeleteColumn,
-            enableMenu: true,
-            enableSorting: column.sortable !== false,
-            // Pass phone format options if needed - use type assertion to avoid TS errors
-            ...(columnTypeId === 'phone' && column.options
-              ? { phoneFormat: (column.options as any).phoneFormat || 'international' }
-              : {}),
-          },
-        };
-      });
-
-    // Add selection column at the beginning
-    return [selectColumn, ...columnDefs];
-  }, [columns, columnOrder, columnWidths, handleDeleteColumn]);
-
-  // Handle cell value change with AG Grid's built-in editing
-  const onCellValueChanged = useCallback(
-    (cellParams) => {
-      console.log('Cell value changed event triggered with params:', cellParams);
-      const { data, colDef, newValue, oldValue } = cellParams;
-
-      // Skip if no data or no new value for non-zero values
-      if (!data || (newValue === undefined && newValue !== 0)) {
-        console.log('Cell value change skipped - no data or no value');
-        return;
-      }
-
-      const columnId = colDef.field.replace('values.', '');
-
-      // Get tableId from component params
-      const tableId = params.tableId;
-
-      // Find the column definition to get its type
-      const column = columns.find((col) => {
-        return col.id === columnId;
-      });
-
-      if (!column) {
-        console.log('Cell value change skipped - column not found:', columnId);
-        return;
-      }
-
-      let processedValue = newValue;
-
-      console.log('Column being edited:', column);
-      console.log('Original value type:', typeof newValue, 'Value:', newValue);
-      console.log('Old value:', oldValue);
-
-      // Process value based on column type
-      // Handle both string type and object type columns
-      let typeId = '';
-      if (typeof column.type === 'string') {
-        typeId = column.type;
-      } else if (column.type && typeof column.type === 'object') {
-        typeId = (column.type as any).id || '';
-      }
-
-      console.log('Column type detected:', typeId);
-
-      if (['number', 'currency', 'percent', 'rating'].includes(typeId)) {
-        // Ensure numeric values are properly converted
-        if (newValue === '' || newValue === null || newValue === undefined) {
-          processedValue = null;
-        } else {
-          // For numeric fields, ensure we're storing a number
-          const numValue = Number(newValue);
-          if (!isNaN(numValue)) {
-            processedValue = numValue;
-            console.log('Converted to number:', processedValue);
-
-            // Update the actual cell in the grid with the numeric value
-            setTimeout(() => {
-              if (gridRef.current && gridRef.current.api) {
-                const node = gridRef.current.api.getRowNode(data._id);
-                if (node) {
-                  // Update the node data directly
-                  const valuePath = `values.${columnId}`;
-                  node.setDataValue(valuePath, numValue);
-                }
-              }
-            }, 0);
-          } else {
-            console.error('Invalid number format:', newValue);
-            toast.error('Invalid number format');
-            return; // Don't proceed with invalid number
-          }
-        }
-      } else if (typeId === 'time') {
-        // For time type, ensure we're storing a valid time string
-        if (newValue === '' || newValue === null || newValue === undefined) {
-          processedValue = null;
-          console.log('Time value is empty, setting to null');
-        } else {
-          try {
-            console.log('Processing time value:', newValue, 'Type:', typeof newValue);
-
-            // Check if it's already a valid time format (e.g. "14:30")
-            const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-
-            if (timeRegex.test(newValue)) {
-              // Create a date object for today with the specified time
-              const [hours, minutes] = newValue.split(':').map(Number);
-              const dateWithTime = new Date();
-              dateWithTime.setHours(hours, minutes, 0, 0);
-
-              // Store the time as an ISO string
-              processedValue = dateWithTime.toISOString();
-              console.log('Valid time - Processed to date value:', processedValue);
-            } else {
-              console.error('Invalid time format:', newValue);
-              toast.error('Invalid time format. Please use HH:MM format.');
-              return; // Don't proceed with invalid time
-            }
-          } catch (error) {
-            console.error('Invalid time format or processing error:', newValue, error);
-            toast.error('Invalid time format');
-            return; // Don't proceed with invalid time
-          }
-        }
-      } else if (typeId === 'date') {
-        // For date type, ensure we're storing a valid date
-        if (newValue === '' || newValue === null || newValue === undefined) {
-          processedValue = null;
-          console.log('Date value is empty, setting to null');
-        } else {
-          try {
-            console.log('Processing date value:', newValue, 'Type:', typeof newValue);
-
-            let dateObj;
-
-            if (newValue instanceof Date) {
-              dateObj = newValue;
-            } else if (typeof newValue === 'string') {
-              // Try to parse the date string
-              dateObj = new Date(newValue);
-
-              if (isNaN(dateObj.getTime())) {
-                // If parsing failed, try to handle common formats
-                const parts = newValue.split(/[\/\-\.]/);
-                if (parts.length === 3) {
-                  // Try common date formats: MM/DD/YYYY, DD/MM/YYYY, YYYY-MM-DD
-                  if (parts[0].length === 4) {
-                    // YYYY-MM-DD
-                    dateObj = new Date(
-                      parseInt(parts[0]),
-                      parseInt(parts[1]) - 1,
-                      parseInt(parts[2]),
-                    );
-                  } else if (parseInt(parts[0]) > 12 && parseInt(parts[0]) <= 31) {
-                    // DD/MM/YYYY
-                    dateObj = new Date(
-                      parseInt(parts[2]),
-                      parseInt(parts[1]) - 1,
-                      parseInt(parts[0]),
-                    );
-                  } else {
-                    // MM/DD/YYYY
-                    dateObj = new Date(
-                      parseInt(parts[2]),
-                      parseInt(parts[0]) - 1,
-                      parseInt(parts[1]),
-                    );
-                  }
-                }
-              }
-            }
-
-            if (dateObj && !isNaN(dateObj.getTime())) {
-              processedValue = dateObj.toISOString();
-              console.log('Valid date - Processed to ISO string:', processedValue);
-            } else {
-              console.error('Invalid date format:', newValue);
-              toast.error('Invalid date format. Please use a valid date format (e.g. YYYY-MM-DD).');
-              return; // Don't proceed with invalid date
-            }
-          } catch (error) {
-            console.error('Invalid date format or processing error:', newValue, error);
-            toast.error('Invalid date format');
-            return; // Don't proceed with invalid date
-          }
-        }
-      }
-
-      console.log(
-        'Final processed value ready for API:',
-        processedValue,
-        'Type:',
-        typeof processedValue,
-      );
-
-      // Update the local records state first to prevent UI from reverting
-      setRecords((prevRecords) => {
-        return prevRecords.map((record) => {
-          if (record._id === data._id) {
-            const updatedValues = { ...record.values };
-            updatedValues[columnId] = processedValue;
-            console.log('Updating local record:', record._id, 'with value:', processedValue);
-            return {
-              ...record,
-              values: updatedValues,
-            };
-          }
-          return record;
-        });
-      });
-
-      console.log(
-        'Sending API request with value:',
-        processedValue,
-        'for column:',
-        columnId,
-        'rowId:',
-        data._id,
-      );
-
-      // Make the actual API call
-      newRequest
-        .post(`/tables/${tableId}/records`, {
-          values: {
-            [columnId]: processedValue,
-          },
-          columnId: columnId,
-          rowId: data._id,
-        })
-        .then((response) => {
-          console.log('API response for value update:', response);
-
-          // Ensure the grid shows the correct formatted value
-          setTimeout(() => {
-            if (gridRef.current && gridRef.current.api) {
-              console.log('Refreshing cell after successful API call');
-              gridRef.current.api.refreshCells({
-                force: true,
-                columns: [colDef.field],
-                rowNodes: [gridRef.current.api.getRowNode(data._id)!],
-              });
-            }
-          }, 0);
-        })
-        .catch((error) => {
-          console.error('Failed to update cell value:', error);
-          toast.error('Failed to update cell value');
-
-          // Revert the change in case of API failure
-          setRecords((prevRecords) => {
-            return prevRecords.map((record) => {
-              if (record._id === data._id) {
-                const revertedValues = { ...record.values };
-                revertedValues[columnId] = oldValue;
-                return {
-                  ...record,
-                  values: revertedValues,
-                };
-              }
-              return record;
-            });
-          });
-        });
-    },
-    [queryClient, params.tableId, columns, setRecords, gridRef],
+  // Get column definitions from custom hook
+  const columnDefs = useColumnDefinitions(
+    columns,
+    columnOrder,
+    columnWidths,
+    handleDeleteColumnCallback,
   );
 
-  // Custom event handler for cell editing
-  const handleCellEditingStopped = useCallback(
-    (event) => {
-      console.log('Cell editing stopped:', event);
-
-      // If it's a time or date column and has a value, manually update
-      const columnId = event.column.getId().replace('values.', '');
-      const column = columns.find((col) => {
-        return col.id === columnId;
-      });
-
-      if (column) {
-        let typeId = '';
-        if (typeof column.type === 'string') {
-          typeId = column.type;
-        } else if (column.type && typeof column.type === 'object') {
-          typeId = (column.type as any).id || '';
-        }
-
-        if ((typeId === 'time' || typeId === 'date') && event.value) {
-          console.log(`Manual handling for ${typeId} column edit:`, event.value);
-
-          try {
-            let processedValue;
-
-            if (typeId === 'time') {
-              // Process time value (HH:MM)
-              const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-              if (timeRegex.test(event.value)) {
-                // Create a date object for today with the specified time
-                const [hours, minutes] = event.value.split(':').map(Number);
-                const dateWithTime = new Date();
-                dateWithTime.setHours(hours, minutes, 0, 0);
-
-                processedValue = dateWithTime.toISOString();
-              } else {
-                console.error('Invalid time format:', event.value);
-                return;
-              }
-            } else if (typeId === 'date') {
-              // Process date value - could be in several formats
-              let dateObj;
-
-              if (event.value instanceof Date) {
-                dateObj = event.value;
-              } else if (typeof event.value === 'string') {
-                // Try to parse the date string
-                dateObj = new Date(event.value);
-
-                if (isNaN(dateObj.getTime())) {
-                  // If parsing failed, try to handle common formats
-                  const parts = event.value.split(/[\/\-\.]/);
-                  if (parts.length === 3) {
-                    // Try common date formats: MM/DD/YYYY, DD/MM/YYYY, YYYY-MM-DD
-                    if (parts[0].length === 4) {
-                      // YYYY-MM-DD
-                      dateObj = new Date(
-                        parseInt(parts[0]),
-                        parseInt(parts[1]) - 1,
-                        parseInt(parts[2]),
-                      );
-                    } else if (parseInt(parts[0]) > 12 && parseInt(parts[0]) <= 31) {
-                      // DD/MM/YYYY
-                      dateObj = new Date(
-                        parseInt(parts[2]),
-                        parseInt(parts[1]) - 1,
-                        parseInt(parts[0]),
-                      );
-                    } else {
-                      // MM/DD/YYYY
-                      dateObj = new Date(
-                        parseInt(parts[2]),
-                        parseInt(parts[0]) - 1,
-                        parseInt(parts[1]),
-                      );
-                    }
-                  }
-                }
-              }
-
-              if (dateObj && !isNaN(dateObj.getTime())) {
-                processedValue = dateObj.toISOString();
-              } else {
-                console.error('Invalid date format:', event.value);
-                return;
-              }
-            }
-
-            console.log(`Manually processing ${typeId} value to:`, processedValue);
-
-            if (!processedValue) {
-              console.error(`Failed to process ${typeId} value:`, event.value);
-              return;
-            }
-
-            // Update the records state
-            setRecords((prevRecords) => {
-              return prevRecords.map((record) => {
-                if (record._id === event.node.id) {
-                  const updatedValues = { ...record.values };
-                  updatedValues[columnId] = processedValue;
-                  console.log(
-                    `Manually updating record: ${record._id} with ${typeId} value:`,
-                    processedValue,
-                  );
-                  return {
-                    ...record,
-                    values: updatedValues,
-                  };
-                }
-                return record;
-              });
-            });
-
-            // Make the API call directly
-            console.log(`Making manual API call for ${typeId} value`);
-            newRequest
-              .post(`/tables/${params.tableId}/records`, {
-                values: {
-                  [columnId]: processedValue,
-                },
-                columnId: columnId,
-                rowId: event.node.id,
-              })
-              .then((response) => {
-                console.log(`Manual ${typeId} update API response:`, response);
-
-                // Refresh the cell
-                if (gridRef.current && gridRef.current.api) {
-                  setTimeout(() => {
-                    gridRef.current!.api.refreshCells({
-                      force: true,
-                      columns: [event.column.getId()],
-                      rowNodes: [event.node],
-                    });
-                  }, 0);
-                }
-              })
-              .catch((error) => {
-                console.error(`Failed to update ${typeId} value:`, error);
-                toast.error(`Failed to update ${typeId} value`);
-              });
-          } catch (error) {
-            console.error(`Error manually processing ${typeId} value:`, error);
-          }
-        }
+  // Apply quick filter for search
+  const onFilterTextChange = useCallback(() => {
+    if (quickFilterRef.current) {
+      const filterValue = quickFilterRef.current.value || '';
+      if (document.querySelector('.ag-grid-react')) {
+        const gridApi = (document.querySelector('.ag-grid-react') as any).__agGridReact.api;
+        gridApi.setGridOption('quickFilterText', filterValue);
       }
+    }
+  }, []);
+
+  // Handler for delete selected
+  const handleDeleteSelectedCallback = useCallback(() => {
+    // Use type assertion to access the __agGridReact property
+    const gridElement = document.querySelector('.ag-grid-react');
+    const gridRef = {
+      current: gridElement ? (gridElement as any).__agGridReact : null,
+    };
+
+    handleDeleteSelected(gridRef, params.tableId as string, setRecords, setRowOrder, queryClient);
+  }, [params.tableId, setRecords, setRowOrder, queryClient]);
+
+  // Handle adding a new column
+  const handleAddColumn = useCallback(() => {
+    setIsAddColumnSheetOpen(true);
+  }, [setIsAddColumnSheetOpen]);
+
+  // Handle row drag end
+  const handleRowDragEndCallback = useCallback(
+    (event: any) => {
+      handleRowDragEnd(event, records, params.tableId as string, setRecords, setRowOrder);
     },
-    [columns, newRequest, params.tableId, setRecords],
+    [records, params.tableId, setRecords, setRowOrder],
   );
-
-  // Default column definitions
-  const defaultColDef = useMemo(() => {
-    return {
-      flex: 1,
-      minWidth: 100,
-      resizable: true,
-      sortable: true,
-      filter: true,
-      editable: true, // Set everything editable by default
-    };
-  }, []);
-
-  // Card view implementation
-  const renderCardView = () => {
-    return (
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4'>
-        {records.length === 0
-          ? // Skeleton loading for card view
-            Array.from({ length: 6 }).map((_, index) => {
-              return (
-                <div key={`skeleton-card-${index}`} className='border rounded-md p-3'>
-                  <div className='flex justify-between items-center mb-2'>
-                    <div className='h-5 w-32 bg-gray-200 rounded'></div>
-                    <div className='h-4 w-4 bg-gray-200 rounded'></div>
-                  </div>
-                  {Array.from({ length: 3 }).map((_, fieldIndex) => {
-                    return (
-                      <div
-                        key={`skeleton-field-${index}-${fieldIndex}`}
-                        className='flex py-1 text-sm'
-                      >
-                        <div className='h-4 w-1/3 mr-2 bg-gray-200 rounded'></div>
-                        <div className='h-4 w-2/3 bg-gray-200 rounded'></div>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })
-          : // Actual card data
-            records
-              .sort((a, b) => {
-                // Sort by position or createdAt
-                if (a.position !== undefined && b.position !== undefined) {
-                  return a.position - b.position;
-                }
-                return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-              })
-              .map((record) => {
-                return (
-                  <div
-                    key={`card-${record._id}`}
-                    className='border rounded-md p-3 hover:shadow-md transition-shadow'
-                  >
-                    <div className='flex justify-between items-center mb-2'>
-                      <h3 className='font-medium'>{record.values.name}</h3>
-                      <Checkbox
-                        checked={record.values?.selected}
-                        onCheckedChange={() => {
-                          return toggleSelectRecord(record._id);
-                        }}
-                      />
-                    </div>
-                    {columns
-                      .filter((col) => {
-                        return !col.hidden && col.id !== 'name';
-                      })
-                      .sort((a, b) => {
-                        return (a.order || 0) - (b.order || 0);
-                      })
-                      .map((column) => {
-                        return (
-                          <div
-                            key={`card-field-${record._id}-${column.id}`}
-                            className='flex py-1 text-sm'
-                          >
-                            <span className='text-gray-500 w-1/3'>{column.name}:</span>
-                            <span className='w-2/3'>
-                              {column.id === 'tags' ? (
-                                <div className='flex flex-wrap gap-1'>
-                                  {record.values.tags?.map((tag) => {
-                                    return (
-                                      <Badge
-                                        key={`tag-${tag.id}`}
-                                        variant='outline'
-                                        className='bg-amber-50 text-amber-700'
-                                      >
-                                        {tag.name}
-                                      </Badge>
-                                    );
-                                  })}
-                                </div>
-                              ) : (
-                                record.values[column.id] || '-'
-                              )}
-                            </span>
-                          </div>
-                        );
-                      })}
-                  </div>
-                );
-              })}
-      </div>
-    );
-  };
-
-  const components = useMemo(() => {
-    return {
-      // Existing renderers
-      tagsCellRenderer,
-      linkCellRenderer,
-      imageCellRenderer,
-      fileCellRenderer,
-      ratingCellRenderer,
-      phoneCellRenderer,
-      timeCellRenderer,
-      // Custom editors
-      timeEditor: TimeEditor,
-      // Add single select renderer
-      singleSelectCellRenderer: (params) => {
-        if (!params.value) return '-';
-        // Handle both object format and string format
-        return typeof params.value === 'object' ? params.value.name : params.value;
-      },
-    };
-  }, []);
-
-  // Track when components are available
-  useEffect(() => {
-    // Signal that components are ready to be used
-    setComponentUpdated(true);
-
-    // Register the TimeEditor when components are initialized
-    if (gridRef.current?.api) {
-      console.log('Registering TimeEditor component');
-      gridRef.current.api.refreshCells({ force: true });
-    }
-  }, [components]);
-
-  // Ensure grid refreshes when components are updated
-  useEffect(() => {
-    if (componentUpdated && gridRef.current?.api) {
-      // Refresh cells to apply new renderers
-      gridRef.current.api.refreshCells({ force: true });
-      setComponentUpdated(false);
-    }
-  }, [componentUpdated, gridRef]);
-
-  // Update columnDefs to use value formatters properly
-  const enhancedColumnDefs = useMemo(() => {
-    return columnDefs.map((colDef) => {
-      if (colDef.valueFormatter && typeof colDef.valueFormatter === 'string') {
-        return {
-          ...colDef,
-          valueFormatter: getValueFormatter(colDef.valueFormatter),
-        };
-      }
-      return colDef;
-    });
-  }, [columnDefs]);
 
   return (
     <div>
-      <div className='flex justify-between items-center mb-4'>
-        <div className='flex items-center gap-2'>
-          <Tabs
-            value={viewMode}
-            onValueChange={(value) => {
-              return setViewMode(value as 'table' | 'card');
-            }}
-          >
-            <TabsList>
-              <TabsTrigger value='table'>Table View</TabsTrigger>
-              <TabsTrigger value='card'>Card View</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-        <div className='flex items-center gap-2'>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={showFilters ? 'default' : 'outline'}
-                  size='sm'
-                  onClick={() => {
-                    return setShowFilters(!showFilters);
-                  }}
-                  className={showFilters ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}
-                >
-                  <Filter className='h-4 w-4 mr-2' />
-                  Filters {filters.length > 0 && `(${filters.length})`}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Toggle filters</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant='outline' size='sm'>
-                Actions
-                <ChevronDown className='ml-2 h-4 w-4' />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end'>
-              <DropdownMenuItem onClick={addNewRow}>
-                <RowsIcon className='mr-2 h-4 w-4' />
-                Add New Row
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleAddColumn}>
-                <ColumnsIcon className='mr-2 h-4 w-4' />
-                Add New Column
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDeleteSelected}>
-                <Trash2 className='mr-2 h-4 w-4 text-destructive' />
-                Delete Selected
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <div className='relative'>
-            <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
-            <Input
-              placeholder='Search...'
-              className='pl-8 h-9'
-              ref={quickFilterRef}
-              onChange={onFilterTextChange}
-            />
-          </div>
-        </div>
-      </div>
+      <TableToolbar
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        showFilters={showFilters}
+        setShowFilters={setShowFilters}
+        filters={filters}
+        quickFilterRef={quickFilterRef}
+        onFilterTextChange={onFilterTextChange}
+        addNewRow={addNewRow}
+        handleAddColumn={handleAddColumn}
+        handleDeleteSelected={handleDeleteSelectedCallback}
+      />
 
       <FilterPanel
         showFilters={showFilters}
@@ -1159,42 +218,17 @@ export default function TablePage() {
 
       <div className='pt-1 rounded-md shadow-sm'>
         {viewMode === 'table' ? (
-          <div className='' style={{ height: 'calc(100vh - 200px)', width: '100%' }}>
-            <AgGridReact
-              ref={gridRef}
-              rowData={records}
-              columnDefs={enhancedColumnDefs}
-              defaultColDef={defaultColDef}
-              rowSelection='multiple'
-              onCellValueChanged={onCellValueChanged}
-              components={components}
-              animateRows={true}
-              suppressDragLeaveHidesColumns={true}
-              getRowId={(params) => {
-                return params.data._id;
-              }}
-              enableCellTextSelection={true}
-              suppressScrollOnNewData={true}
-              singleClickEdit={false}
-              stopEditingWhenCellsLoseFocus={true}
-              suppressMovableColumns={false}
-              undoRedoCellEditing={true}
-              debug={true} // Enable AG Grid debugging
-              onCellEditingStarted={(event) => {
-                console.log('Cell editing started:', event);
-              }}
-              onCellEditingStopped={handleCellEditingStopped}
-              pagination={true}
-              paginationPageSize={25}
-              domLayout='autoHeight'
-              rowDragManaged={true}
-              onRowDragEnd={onRowDragEnd}
-              suppressMoveWhenRowDragging={false}
-              theme={myTheme}
-            />
-          </div>
+          <TableGrid
+            records={records}
+            columnDefs={columnDefs}
+            defaultColDef={defaultColDef}
+            columns={columns}
+            params={params}
+            setRecords={setRecords}
+            handleRowDragEnd={handleRowDragEndCallback}
+          />
         ) : (
-          renderCardView()
+          <CardView records={records} columns={columns} toggleSelectRecord={toggleSelectRecord} />
         )}
         <div className='flex items-center justify-between border-t p-2'>
           <div className='flex items-center'>
