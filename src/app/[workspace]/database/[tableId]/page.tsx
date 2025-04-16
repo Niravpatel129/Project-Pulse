@@ -18,6 +18,7 @@ import { useDatabase } from '@/hooks/useDatabase';
 import { SortConfig } from '@/types/database';
 import { newRequest } from '@/utils/newRequest';
 import { useQueryClient } from '@tanstack/react-query';
+import { themeQuartz } from 'ag-grid-community';
 import { ChevronDown, Filter, Plus, Search, Trash2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useCallback, useMemo, useRef, useState } from 'react';
@@ -37,9 +38,16 @@ import {
   TextEditorModule,
   TextFilterModule,
   ValidationModule,
-  themeQuartz,
 } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
+
+const myTheme = themeQuartz.withParams({
+  browserColorScheme: 'light',
+  fontFamily: {
+    googleFont: 'IBM Plex Sans',
+  },
+  headerFontSize: 14,
+});
 
 // Register the required modules
 ModuleRegistry.registerModules([
@@ -581,7 +589,7 @@ export default function TablePage() {
               rowDragManaged={true}
               onRowDragEnd={onRowDragEnd}
               suppressMoveWhenRowDragging={false}
-              theme={themeQuartz}
+              theme={myTheme}
               stopEditingWhenCellsLoseFocus={true}
             />
           </div>
