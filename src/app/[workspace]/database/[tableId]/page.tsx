@@ -726,7 +726,6 @@ export default function TablePage() {
         })
         .then((response) => {
           console.log('API response for value update:', response);
-          toast.success('Value updated successfully');
 
           // Ensure the grid shows the correct formatted value
           setTimeout(() => {

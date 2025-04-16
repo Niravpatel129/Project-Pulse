@@ -232,20 +232,12 @@ const defaultPropertyTypes: PropertyType[] = [
     cellRenderer: 'ratingCellRenderer',
   },
   {
-    id: 'created_time',
-    name: 'Created time',
-    iconName: 'createdtime',
+    id: 'time',
+    name: 'Time',
+    iconName: 'time',
     icon: <Clock size={18} />,
-    description: 'Automatically record creation time',
-    valueFormatter: 'dateFormatter',
-  },
-  {
-    id: 'last_modified',
-    name: 'Last modified time',
-    iconName: 'modifiedtime',
-    icon: <Clock size={18} />,
-    description: 'Automatically track last modified time',
-    valueFormatter: 'dateFormatter',
+    description: 'Time values',
+    valueFormatter: 'timeFormatter',
   },
 ];
 
@@ -971,7 +963,7 @@ export function PropertySheet({
                   </div>
                   {filteredPropertyTypes
                     .filter((type) => {
-                      return ['date', 'created_time', 'last_modified'].includes(type.id);
+                      return ['date', 'time'].includes(type.id);
                     })
                     .map((type) => {
                       return (
