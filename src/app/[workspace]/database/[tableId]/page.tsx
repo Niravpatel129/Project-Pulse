@@ -19,6 +19,7 @@ import { newRequest } from '@/utils/newRequest';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ColumnApiModule,
+  DateEditorModule,
   NumberEditorModule,
   RenderApiModule,
   RowApiModule,
@@ -84,6 +85,7 @@ ModuleRegistry.registerModules([
   RenderApiModule,
   NumberEditorModule,
   SelectEditorModule,
+  DateEditorModule,
 ]);
 
 export default function TablePage() {

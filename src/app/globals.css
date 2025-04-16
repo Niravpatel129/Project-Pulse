@@ -150,3 +150,9 @@
     padding: 10px;
   }
 }
+
+.ag-cell {
+  display: flex;
+  align-items: center;
+  overflow: scroll;
+}
