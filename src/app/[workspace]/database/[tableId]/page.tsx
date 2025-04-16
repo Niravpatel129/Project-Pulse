@@ -25,6 +25,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 // AG Grid imports
+import CustomHeaderComponent from '@/components/database/CustomHeaderComponent';
 import {
   ClientSideRowModelModule,
   ColDef,
@@ -95,6 +96,7 @@ export default function TablePage() {
     renameColumn,
     setRowOrder,
     setRecords,
+    deleteColumn,
   } = useDatabase([]);
 
   const queryClient = useQueryClient();
@@ -263,6 +265,19 @@ export default function TablePage() {
     [records, params.tableId, setRecords, setRowOrder],
   );
 
+  // Handle column deletion
+  const handleDeleteColumn = useCallback(
+    (columnId: string) => {
+      // Show a confirmation dialog before deleting
+      if (
+        window.confirm(`Are you sure you want to delete this column? This action cannot be undone.`)
+      ) {
+        deleteColumn(columnId);
+      }
+    },
+    [deleteColumn],
+  );
+
   // Get AG Grid column definitions from our custom columns
   const columnDefs = useMemo<ColDef[]>(() => {
     if (!columns || columns.length === 0) return [];
@@ -315,12 +330,20 @@ export default function TablePage() {
           editable: true,
           cellRenderer,
           resizable: true,
+          // Add custom header component
+          headerComponent: CustomHeaderComponent,
+          headerComponentParams: {
+            displayName: column.name,
+            deleteColumn: handleDeleteColumn,
+            enableMenu: true,
+            enableSorting: column.sortable !== false,
+          },
         };
       });
 
     // Add selection column at the beginning
     return [selectColumn, ...columnDefs];
-  }, [columns, columnOrder, columnWidths]);
+  }, [columns, columnOrder, columnWidths, handleDeleteColumn]);
 
   // Custom cell renderer for tags
   const tagsCellRenderer = useCallback((params) => {
