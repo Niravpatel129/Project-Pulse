@@ -171,6 +171,7 @@ export default function FileUploadManagerModal({
                             key={file._id}
                             className='flex flex-col items-center p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer'
                             onClick={() => {
+                              console.log('🚀 file:', file);
                               return handleAddFileToProject(file);
                             }}
                           >

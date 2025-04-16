@@ -399,6 +399,7 @@ export const fileCellRenderer = (params: {
               return setIsModalOpen(false);
             }}
             handleAddFileToProject={(file) => {
+              console.log('🚀 file:', file);
               handleUpdateAttachments([
                 ...attachments,
                 {

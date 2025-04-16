@@ -17,12 +17,6 @@ interface ViewAttachmentsButtonProps {
 export function ViewAttachmentsButton({ attachments }: ViewAttachmentsButtonProps) {
   const [open, setOpen] = useState(false);
 
-  // Format file size for display if available
-  const formatSize = (size?: string) => {
-    if (!size) return '';
-    return `(${size})`;
-  };
-
   return (
     <>
       <Button
