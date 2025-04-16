@@ -26,6 +26,7 @@ import {
   RowApiModule,
   SelectEditorModule,
   themeQuartz,
+  UndoRedoEditModule,
 } from 'ag-grid-community';
 import { ChevronDown, ColumnsIcon, Filter, Plus, RowsIcon, Search, Trash2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
@@ -92,6 +93,7 @@ ModuleRegistry.registerModules([
   SelectEditorModule,
   DateEditorModule,
   CustomEditorModule,
+  UndoRedoEditModule,
 ]);
 
 export default function TablePage() {
@@ -450,6 +452,13 @@ export default function TablePage() {
           columnTypeId = (column.type as any).id || '';
         }
 
+        // Add extra logging for time and date columns
+        if (columnTypeId === 'time') {
+          console.log('Setting up time column:', column.name, 'with id:', column.id);
+        } else if (columnTypeId === 'date') {
+          console.log('Setting up date column:', column.name, 'with id:', column.id);
+        }
+
         return {
           headerName: column.name,
           sortable: true,
@@ -463,6 +472,30 @@ export default function TablePage() {
           cellRendererParams, // Add this line to pass cell renderer params
           valueFormatter,
           resizable: true,
+          // For time columns, ensure we explicitly set these properties
+          ...(columnTypeId === 'time'
+            ? {
+                cellEditorPopup: false, // Use inline editor
+                editable: true, // Explicitly mark as editable
+                valueParser: (params) => {
+                  // Parse time values when entered
+                  console.log('Time value parser called with:', params.newValue);
+                  return params.newValue; // Return as-is, let onCellValueChanged handle conversion
+                },
+              }
+            : {}),
+          // For date columns, ensure we explicitly set these properties
+          ...(columnTypeId === 'date'
+            ? {
+                cellEditorPopup: false, // Use inline editor
+                editable: true, // Explicitly mark as editable
+                valueParser: (params) => {
+                  // Parse date values when entered
+                  console.log('Date value parser called with:', params.newValue);
+                  return params.newValue; // Return as-is, let onCellValueChanged handle conversion
+                },
+              }
+            : {}),
           // Add custom header component
           headerComponent: CustomHeaderComponent,
           headerComponentParams: {
@@ -485,8 +518,15 @@ export default function TablePage() {
   // Handle cell value change with AG Grid's built-in editing
   const onCellValueChanged = useCallback(
     (cellParams) => {
-      console.log('Cell value changed:', cellParams);
+      console.log('Cell value changed event triggered with params:', cellParams);
       const { data, colDef, newValue, oldValue } = cellParams;
+
+      // Skip if no data or no new value for non-zero values
+      if (!data || (newValue === undefined && newValue !== 0)) {
+        console.log('Cell value change skipped - no data or no value');
+        return;
+      }
+
       const columnId = colDef.field.replace('values.', '');
 
       // Get tableId from component params
@@ -496,6 +536,12 @@ export default function TablePage() {
       const column = columns.find((col) => {
         return col.id === columnId;
       });
+
+      if (!column) {
+        console.log('Cell value change skipped - column not found:', columnId);
+        return;
+      }
+
       let processedValue = newValue;
 
       console.log('Column being edited:', column);
@@ -503,71 +549,146 @@ export default function TablePage() {
       console.log('Old value:', oldValue);
 
       // Process value based on column type
-      if (column) {
-        // Handle both string type and object type columns
-        let typeId = '';
-        if (typeof column.type === 'string') {
-          typeId = column.type;
-        } else if (column.type && typeof column.type === 'object') {
-          typeId = (column.type as any).id || '';
-        }
+      // Handle both string type and object type columns
+      let typeId = '';
+      if (typeof column.type === 'string') {
+        typeId = column.type;
+      } else if (column.type && typeof column.type === 'object') {
+        typeId = (column.type as any).id || '';
+      }
 
-        console.log('Column type detected:', typeId);
+      console.log('Column type detected:', typeId);
 
-        if (['number', 'currency', 'percent', 'rating'].includes(typeId)) {
-          // Ensure numeric values are properly converted
-          if (newValue === '' || newValue === null || newValue === undefined) {
-            processedValue = null;
-          } else {
-            // For numeric fields, ensure we're storing a number
-            const numValue = Number(newValue);
-            if (!isNaN(numValue)) {
-              processedValue = numValue;
-              console.log('Converted to number:', processedValue);
+      if (['number', 'currency', 'percent', 'rating'].includes(typeId)) {
+        // Ensure numeric values are properly converted
+        if (newValue === '' || newValue === null || newValue === undefined) {
+          processedValue = null;
+        } else {
+          // For numeric fields, ensure we're storing a number
+          const numValue = Number(newValue);
+          if (!isNaN(numValue)) {
+            processedValue = numValue;
+            console.log('Converted to number:', processedValue);
 
-              // Update the actual cell in the grid with the numeric value
-              setTimeout(() => {
-                if (gridRef.current && gridRef.current.api) {
-                  const node = gridRef.current.api.getRowNode(data._id);
-                  if (node) {
-                    // Update the node data directly
-                    const valuePath = `values.${columnId}`;
-                    node.setDataValue(valuePath, numValue);
-                  }
+            // Update the actual cell in the grid with the numeric value
+            setTimeout(() => {
+              if (gridRef.current && gridRef.current.api) {
+                const node = gridRef.current.api.getRowNode(data._id);
+                if (node) {
+                  // Update the node data directly
+                  const valuePath = `values.${columnId}`;
+                  node.setDataValue(valuePath, numValue);
                 }
-              }, 0);
-            } else {
-              console.error('Invalid number format:', newValue);
-              toast.error('Invalid number format');
-              return; // Don't proceed with invalid number
-            }
-          }
-        } else if (typeId === 'time') {
-          // For time type, ensure we're storing a valid time string
-          if (newValue === '' || newValue === null || newValue === undefined) {
-            processedValue = null;
-          } else {
-            try {
-              // Check if it's a valid time format (e.g. "14:30")
-              const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-              if (timeRegex.test(newValue)) {
-                processedValue = newValue;
-                console.log('Processed time value:', processedValue);
-              } else {
-                console.error('Invalid time format:', newValue);
-                toast.error('Invalid time format. Please use HH:MM format.');
-                return; // Don't proceed with invalid time
               }
-            } catch (error) {
-              console.error('Invalid time format:', newValue, error);
-              toast.error('Invalid time format');
+            }, 0);
+          } else {
+            console.error('Invalid number format:', newValue);
+            toast.error('Invalid number format');
+            return; // Don't proceed with invalid number
+          }
+        }
+      } else if (typeId === 'time') {
+        // For time type, ensure we're storing a valid time string
+        if (newValue === '' || newValue === null || newValue === undefined) {
+          processedValue = null;
+          console.log('Time value is empty, setting to null');
+        } else {
+          try {
+            console.log('Processing time value:', newValue, 'Type:', typeof newValue);
+
+            // Check if it's already a valid time format (e.g. "14:30")
+            const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+
+            if (timeRegex.test(newValue)) {
+              // Create a date object for today with the specified time
+              const [hours, minutes] = newValue.split(':').map(Number);
+              const dateWithTime = new Date();
+              dateWithTime.setHours(hours, minutes, 0, 0);
+
+              // Store the time as an ISO string
+              processedValue = dateWithTime.toISOString();
+              console.log('Valid time - Processed to date value:', processedValue);
+            } else {
+              console.error('Invalid time format:', newValue);
+              toast.error('Invalid time format. Please use HH:MM format.');
               return; // Don't proceed with invalid time
             }
+          } catch (error) {
+            console.error('Invalid time format or processing error:', newValue, error);
+            toast.error('Invalid time format');
+            return; // Don't proceed with invalid time
+          }
+        }
+      } else if (typeId === 'date') {
+        // For date type, ensure we're storing a valid date
+        if (newValue === '' || newValue === null || newValue === undefined) {
+          processedValue = null;
+          console.log('Date value is empty, setting to null');
+        } else {
+          try {
+            console.log('Processing date value:', newValue, 'Type:', typeof newValue);
+
+            let dateObj;
+
+            if (newValue instanceof Date) {
+              dateObj = newValue;
+            } else if (typeof newValue === 'string') {
+              // Try to parse the date string
+              dateObj = new Date(newValue);
+
+              if (isNaN(dateObj.getTime())) {
+                // If parsing failed, try to handle common formats
+                const parts = newValue.split(/[\/\-\.]/);
+                if (parts.length === 3) {
+                  // Try common date formats: MM/DD/YYYY, DD/MM/YYYY, YYYY-MM-DD
+                  if (parts[0].length === 4) {
+                    // YYYY-MM-DD
+                    dateObj = new Date(
+                      parseInt(parts[0]),
+                      parseInt(parts[1]) - 1,
+                      parseInt(parts[2]),
+                    );
+                  } else if (parseInt(parts[0]) > 12 && parseInt(parts[0]) <= 31) {
+                    // DD/MM/YYYY
+                    dateObj = new Date(
+                      parseInt(parts[2]),
+                      parseInt(parts[1]) - 1,
+                      parseInt(parts[0]),
+                    );
+                  } else {
+                    // MM/DD/YYYY
+                    dateObj = new Date(
+                      parseInt(parts[2]),
+                      parseInt(parts[0]) - 1,
+                      parseInt(parts[1]),
+                    );
+                  }
+                }
+              }
+            }
+
+            if (dateObj && !isNaN(dateObj.getTime())) {
+              processedValue = dateObj.toISOString();
+              console.log('Valid date - Processed to ISO string:', processedValue);
+            } else {
+              console.error('Invalid date format:', newValue);
+              toast.error('Invalid date format. Please use a valid date format (e.g. YYYY-MM-DD).');
+              return; // Don't proceed with invalid date
+            }
+          } catch (error) {
+            console.error('Invalid date format or processing error:', newValue, error);
+            toast.error('Invalid date format');
+            return; // Don't proceed with invalid date
           }
         }
       }
 
-      console.log('Processed value:', processedValue, 'Type:', typeof processedValue);
+      console.log(
+        'Final processed value ready for API:',
+        processedValue,
+        'Type:',
+        typeof processedValue,
+      );
 
       // Update the local records state first to prevent UI from reverting
       setRecords((prevRecords) => {
@@ -575,6 +696,7 @@ export default function TablePage() {
           if (record._id === data._id) {
             const updatedValues = { ...record.values };
             updatedValues[columnId] = processedValue;
+            console.log('Updating local record:', record._id, 'with value:', processedValue);
             return {
               ...record,
               values: updatedValues,
@@ -584,6 +706,16 @@ export default function TablePage() {
         });
       });
 
+      console.log(
+        'Sending API request with value:',
+        processedValue,
+        'for column:',
+        columnId,
+        'rowId:',
+        data._id,
+      );
+
+      // Make the actual API call
       newRequest
         .post(`/tables/${tableId}/records`, {
           values: {
@@ -593,7 +725,20 @@ export default function TablePage() {
           rowId: data._id,
         })
         .then((response) => {
-          console.log('API response:', response);
+          console.log('API response for value update:', response);
+          toast.success('Value updated successfully');
+
+          // Ensure the grid shows the correct formatted value
+          setTimeout(() => {
+            if (gridRef.current && gridRef.current.api) {
+              console.log('Refreshing cell after successful API call');
+              gridRef.current.api.refreshCells({
+                force: true,
+                columns: [colDef.field],
+                rowNodes: [gridRef.current.api.getRowNode(data._id)!],
+              });
+            }
+          }, 0);
         })
         .catch((error) => {
           console.error('Failed to update cell value:', error);
@@ -618,6 +763,157 @@ export default function TablePage() {
     [queryClient, params.tableId, columns, setRecords, gridRef],
   );
 
+  // Custom event handler for cell editing
+  const handleCellEditingStopped = useCallback(
+    (event) => {
+      console.log('Cell editing stopped:', event);
+
+      // If it's a time or date column and has a value, manually update
+      const columnId = event.column.getId().replace('values.', '');
+      const column = columns.find((col) => {
+        return col.id === columnId;
+      });
+
+      if (column) {
+        let typeId = '';
+        if (typeof column.type === 'string') {
+          typeId = column.type;
+        } else if (column.type && typeof column.type === 'object') {
+          typeId = (column.type as any).id || '';
+        }
+
+        if ((typeId === 'time' || typeId === 'date') && event.value) {
+          console.log(`Manual handling for ${typeId} column edit:`, event.value);
+
+          try {
+            let processedValue;
+
+            if (typeId === 'time') {
+              // Process time value (HH:MM)
+              const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+              if (timeRegex.test(event.value)) {
+                // Create a date object for today with the specified time
+                const [hours, minutes] = event.value.split(':').map(Number);
+                const dateWithTime = new Date();
+                dateWithTime.setHours(hours, minutes, 0, 0);
+
+                processedValue = dateWithTime.toISOString();
+              } else {
+                console.error('Invalid time format:', event.value);
+                return;
+              }
+            } else if (typeId === 'date') {
+              // Process date value - could be in several formats
+              let dateObj;
+
+              if (event.value instanceof Date) {
+                dateObj = event.value;
+              } else if (typeof event.value === 'string') {
+                // Try to parse the date string
+                dateObj = new Date(event.value);
+
+                if (isNaN(dateObj.getTime())) {
+                  // If parsing failed, try to handle common formats
+                  const parts = event.value.split(/[\/\-\.]/);
+                  if (parts.length === 3) {
+                    // Try common date formats: MM/DD/YYYY, DD/MM/YYYY, YYYY-MM-DD
+                    if (parts[0].length === 4) {
+                      // YYYY-MM-DD
+                      dateObj = new Date(
+                        parseInt(parts[0]),
+                        parseInt(parts[1]) - 1,
+                        parseInt(parts[2]),
+                      );
+                    } else if (parseInt(parts[0]) > 12 && parseInt(parts[0]) <= 31) {
+                      // DD/MM/YYYY
+                      dateObj = new Date(
+                        parseInt(parts[2]),
+                        parseInt(parts[1]) - 1,
+                        parseInt(parts[0]),
+                      );
+                    } else {
+                      // MM/DD/YYYY
+                      dateObj = new Date(
+                        parseInt(parts[2]),
+                        parseInt(parts[0]) - 1,
+                        parseInt(parts[1]),
+                      );
+                    }
+                  }
+                }
+              }
+
+              if (dateObj && !isNaN(dateObj.getTime())) {
+                processedValue = dateObj.toISOString();
+              } else {
+                console.error('Invalid date format:', event.value);
+                return;
+              }
+            }
+
+            console.log(`Manually processing ${typeId} value to:`, processedValue);
+
+            if (!processedValue) {
+              console.error(`Failed to process ${typeId} value:`, event.value);
+              return;
+            }
+
+            // Update the records state
+            setRecords((prevRecords) => {
+              return prevRecords.map((record) => {
+                if (record._id === event.node.id) {
+                  const updatedValues = { ...record.values };
+                  updatedValues[columnId] = processedValue;
+                  console.log(
+                    `Manually updating record: ${record._id} with ${typeId} value:`,
+                    processedValue,
+                  );
+                  return {
+                    ...record,
+                    values: updatedValues,
+                  };
+                }
+                return record;
+              });
+            });
+
+            // Make the API call directly
+            console.log(`Making manual API call for ${typeId} value`);
+            newRequest
+              .post(`/tables/${params.tableId}/records`, {
+                values: {
+                  [columnId]: processedValue,
+                },
+                columnId: columnId,
+                rowId: event.node.id,
+              })
+              .then((response) => {
+                console.log(`Manual ${typeId} update API response:`, response);
+
+                // Refresh the cell
+                if (gridRef.current && gridRef.current.api) {
+                  setTimeout(() => {
+                    gridRef.current!.api.refreshCells({
+                      force: true,
+                      columns: [event.column.getId()],
+                      rowNodes: [event.node],
+                    });
+                  }, 0);
+                }
+              })
+              .catch((error) => {
+                console.error(`Failed to update ${typeId} value:`, error);
+                toast.error(`Failed to update ${typeId} value`);
+              });
+          } catch (error) {
+            console.error(`Error manually processing ${typeId} value:`, error);
+          }
+        }
+      }
+    },
+    [columns, newRequest, params.tableId, setRecords],
+  );
+
   // Default column definitions
   const defaultColDef = useMemo(() => {
     return {
@@ -626,6 +922,7 @@ export default function TablePage() {
       resizable: true,
       sortable: true,
       filter: true,
+      editable: true, // Set everything editable by default
     };
   }, []);
 
@@ -748,6 +1045,12 @@ export default function TablePage() {
   useEffect(() => {
     // Signal that components are ready to be used
     setComponentUpdated(true);
+
+    // Register the TimeEditor when components are initialized
+    if (gridRef.current?.api) {
+      console.log('Registering TimeEditor component');
+      gridRef.current.api.refreshCells({ force: true });
+    }
   }, [components]);
 
   // Ensure grid refreshes when components are updated
@@ -873,7 +1176,15 @@ export default function TablePage() {
               }}
               enableCellTextSelection={true}
               suppressScrollOnNewData={true}
-              singleClickEdit={true}
+              singleClickEdit={false}
+              stopEditingWhenCellsLoseFocus={true}
+              suppressMovableColumns={false}
+              undoRedoCellEditing={true}
+              debug={true} // Enable AG Grid debugging
+              onCellEditingStarted={(event) => {
+                console.log('Cell editing started:', event);
+              }}
+              onCellEditingStopped={handleCellEditingStopped}
               pagination={true}
               paginationPageSize={25}
               domLayout='autoHeight'
@@ -881,7 +1192,6 @@ export default function TablePage() {
               onRowDragEnd={onRowDragEnd}
               suppressMoveWhenRowDragging={false}
               theme={myTheme}
-              stopEditingWhenCellsLoseFocus={true}
             />
           </div>
         ) : (

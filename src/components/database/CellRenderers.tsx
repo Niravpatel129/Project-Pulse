@@ -12,9 +12,27 @@ export const dateFormatter = (params) => {
 // Time formatter for table cells
 export const timeFormatter = (params) => {
   if (!params.value) return '-';
-  // Format time in HH:MM format
-  const time = new Date(params.value);
-  return time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  try {
+    console.log('timeFormatter received:', params.value, 'type:', typeof params.value);
+    // Format time in HH:MM format
+    const time = new Date(params.value);
+    if (!isNaN(time.getTime())) {
+      const formattedTime = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      console.log('timeFormatter output:', formattedTime);
+      return formattedTime;
+    }
+    // If not a valid date, try to return directly if it matches time format
+    if (
+      typeof params.value === 'string' &&
+      /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(params.value)
+    ) {
+      return params.value;
+    }
+    return '-';
+  } catch (error) {
+    console.error('Error in timeFormatter:', error);
+    return '-';
+  }
 };
 
 // Currency formatter for table cells
@@ -62,11 +80,29 @@ export const linkCellRenderer = (params) => {
 export const timeCellRenderer = (params) => {
   if (!params.value) return '-';
 
-  const time = new Date(params.value);
-  const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  try {
+    console.log('timeCellRenderer received:', params.value, 'type:', typeof params.value);
+    // Try to parse as Date
+    const time = new Date(params.value);
+    if (!isNaN(time.getTime())) {
+      const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      console.log('timeCellRenderer output:', timeString);
+      return timeString;
+    }
 
-  // Use a simple div without extra styling that might interfere with editing
-  return timeString;
+    // If it's already in HH:MM format, return it
+    if (
+      typeof params.value === 'string' &&
+      /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(params.value)
+    ) {
+      return params.value;
+    }
+
+    return '-';
+  } catch (error) {
+    console.error('Error in timeCellRenderer:', error);
+    return '-';
+  }
 };
 
 // Renderer for image cells
