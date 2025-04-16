@@ -49,10 +49,9 @@ export function CardView({ records, columns, toggleSelectRecord }: CardViewProps
           return (
             <div
               key={`card-${record._id}`}
-              className='border rounded-md p-3 hover:shadow-md transition-shadow'
+              className='border rounded-md p-3 hover:shadow-md transition-shadow relative'
             >
-              <div className='flex justify-between items-center mb-2'>
-                <h3 className='font-medium'>{record.values.name}</h3>
+              <div className='flex justify-between items-center mb-2 absolute top-2 right-2'>
                 <Checkbox
                   checked={record.values?.selected}
                   onCheckedChange={() => {
