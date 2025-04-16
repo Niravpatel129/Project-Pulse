@@ -76,7 +76,7 @@ interface PropertySheetProps {
   onPropertySearchChange: (value: string) => void;
   onPropertyNameChange: (value: string) => void;
   onIconSelect: (name: string) => void;
-  onSaveProperty: () => void;
+  onSaveProperty: (payload: Record<string, any>) => void;
   onAddNewColumn: (type: PropertyType) => void;
   getIconComponent: (name: string) => IconType;
 }
@@ -758,7 +758,74 @@ export function PropertySheet({
 
               <Button
                 className='w-full mt-8 transition-colors hover:bg-blue-600'
-                onClick={onSaveProperty}
+                onClick={() => {
+                  if (!selectedPropertyType) return;
+
+                  // Create the payload structure according to backend requirements
+                  const payload: Record<string, any> = {
+                    name: newPropertyName.trim(), // Ensure name is trimmed
+                    type: selectedPropertyType.id, // Just the string value
+                    icon: newPropertyIconName || selectedPropertyType.iconName,
+                  };
+
+                  // Create options object for all type-specific settings
+                  const options: Record<string, any> = {};
+
+                  // Add type-specific settings to the options object
+                  if (selectedPropertyType.hasSymbol) {
+                    options.symbol = currencySymbol;
+                  }
+
+                  if (selectedPropertyType.hasFormat) {
+                    if (selectedPropertyType.id === 'date') {
+                      options.format = dateFormat;
+                    } else if (selectedPropertyType.id === 'phone') {
+                      options.format = phoneFormat;
+                    }
+                  }
+
+                  if (selectedPropertyType.hasDecimals) {
+                    options.decimalsEnabled = decimalsEnabled;
+                    if (decimalsEnabled) {
+                      options.decimalPlaces = parseInt(decimalPlaces);
+                    }
+                  }
+
+                  if (selectedPropertyType.hasRange) {
+                    if (minValue) options.minValue = minValue;
+                    if (maxValue) options.maxValue = maxValue;
+                  }
+
+                  if (selectedPropertyType.hasDefault) {
+                    options.defaultValue = defaultValue;
+                  }
+
+                  // Handle select options differently
+                  if (selectedPropertyType.hasOptions && fieldOptions.length > 0) {
+                    options.selectOptions = fieldOptions.map((option) => {
+                      return {
+                        id: option.id,
+                        name: option.name,
+                        color: option.color,
+                      };
+                    });
+                  }
+
+                  // Only add options if we have any
+                  if (Object.keys(options).length > 0) {
+                    payload.options = options;
+                  }
+
+                  // Validate the payload
+                  if (!payload.name) {
+                    alert('Field name is required');
+                    return;
+                  }
+
+                  console.log('🚀 Final payload for saveNewColumn:', payload);
+                  // Call the original onSaveProperty with the complete payload
+                  onSaveProperty(payload);
+                }}
                 disabled={!newPropertyName.trim()}
               >
                 <Save className='mr-2 h-4 w-4' />

@@ -23,11 +23,10 @@ export function useDatabaseColumns(initialColumns: Column[]) {
     mutationFn: async (newColumn: Column) => {
       const response = await newRequest.post(`/tables/${params.tableId}/columns`, {
         name: newColumn.name,
-        type: {
-          id: selectedPropertyType.id,
-          iconName: newPropertyIconName,
-        },
+        type: newColumn.type,
+        icon: newColumn.icon,
         order: newColumn.order,
+        options: newColumn.options,
       });
       return response.data;
     },
@@ -50,6 +49,7 @@ export function useDatabaseColumns(initialColumns: Column[]) {
             isUnique: newColumnFromServer.isUnique,
             hidden: newColumnFromServer.isHidden,
             icon: newColumnFromServer.icon,
+            options: newColumnFromServer.options,
           },
         ];
       });
@@ -93,16 +93,18 @@ export function useDatabaseColumns(initialColumns: Column[]) {
     setNewPropertyIconName(propertyType.iconName);
   };
 
-  const saveNewColumn = async () => {
+  const saveNewColumn = async (payload: Record<string, any>) => {
     if (!selectedPropertyType) return;
 
+    // Create a new column object that matches our API structure
     const newColumn = {
       id: `temp-${Date.now()}`, // Temporary ID for optimistic update
-      name: newPropertyName || `New Column`,
-      sortable: true,
-      iconName: newPropertyIconName,
-      type: selectedPropertyType,
+      name: payload.name,
+      type: payload.type,
+      icon: payload.icon,
       order: columns.length,
+      sortable: true,
+      options: payload.options || {},
     };
 
     try {
