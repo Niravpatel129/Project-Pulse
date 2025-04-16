@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getFileIcon } from '@/utils/fileIcons';
 import { File, Star } from 'lucide-react';
+import Image from 'next/image';
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
@@ -325,7 +326,7 @@ export const fileCellRenderer = (params: {
           <Tooltip>
             <TooltipTrigger asChild>
               <div
-                className='flex items-center gap-1 text-xs bg-none rounded-full py-0.5 text-blue-600 cursor-pointer hover:bg-blue-100 transition-colors'
+                className='flex items-center gap-1 text-xs bg-none rounded-full py-0.5 text-blue-600 cursor-pointer  transition-colors'
                 onMouseEnter={() => {
                   return setShowAttachmentsList(true);
                 }}
@@ -333,9 +334,11 @@ export const fileCellRenderer = (params: {
                 {/* Display image preview or file type icon based on content type */}
                 {attachments[0].contentType?.startsWith('image/') ? (
                   <div className='h-6 w-6 relative overflow-hidden rounded-sm border border-blue-200'>
-                    <img
+                    <Image
                       src={attachments[0].url || attachments[0].downloadURL}
                       alt={attachments[0].name}
+                      width={24}
+                      height={24}
                       className='h-full w-full object-cover'
                     />
                   </div>
