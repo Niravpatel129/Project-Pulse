@@ -15,13 +15,29 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useDatabase } from '@/hooks/useDatabase';
-import { SortConfig } from '@/types/database';
 import { newRequest } from '@/utils/newRequest';
 import { useQueryClient } from '@tanstack/react-query';
-import { ColumnApiModule, themeQuartz } from 'ag-grid-community';
-import { ChevronDown, ColumnsIcon, Filter, Plus, RowsIcon, Search, Trash2 } from 'lucide-react';
+import {
+  ColumnApiModule,
+  NumberEditorModule,
+  RenderApiModule,
+  RowApiModule,
+  SelectEditorModule,
+  themeQuartz,
+} from 'ag-grid-community';
+import {
+  ChevronDown,
+  ColumnsIcon,
+  File,
+  Filter,
+  Plus,
+  RowsIcon,
+  Search,
+  Star,
+  Trash2,
+} from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 // AG Grid imports
@@ -52,6 +68,7 @@ const myTheme = themeQuartz.withParams({
 
 // Register the required modules
 ModuleRegistry.registerModules([
+  RowApiModule,
   ClientSideRowModelModule,
   ValidationModule,
   RowSelectionModule,
@@ -63,16 +80,117 @@ ModuleRegistry.registerModules([
   DateFilterModule,
   CustomFilterModule,
   ColumnApiModule,
+  RenderApiModule,
+  NumberEditorModule,
+  SelectEditorModule,
 ]);
+
+// Custom cell renderers and formatters for AG Grid
+const dateFormatter = (params) => {
+  if (!params.value) return '-';
+  // Format date in a user-friendly way
+  const date = new Date(params.value);
+  return date.toLocaleDateString();
+};
+
+const currencyFormatter = (params) => {
+  if (!params.value && params.value !== 0) return '-';
+  // Format as currency with 2 decimal places
+  return `$${Number(params.value).toFixed(2)}`;
+};
+
+const percentFormatter = (params) => {
+  if (!params.value && params.value !== 0) return '-';
+  // Format as percentage
+  return `${Number(params.value).toFixed(1)}%`;
+};
+
+const numberFormatter = (params) => {
+  if (!params.value && params.value !== 0) return '-';
+  // Format number with commas for thousands
+  return Number(params.value).toLocaleString();
+};
+
+const linkCellRenderer = (params) => {
+  if (!params.value) return '-';
+  // Return a clickable link
+  return (
+    <a
+      href={params.value.startsWith('http') ? params.value : `https://${params.value}`}
+      target='_blank'
+      rel='noopener noreferrer'
+      className='text-blue-600 hover:underline'
+      onClick={(e) => {
+        return e.stopPropagation();
+      }}
+    >
+      {params.value}
+    </a>
+  );
+};
+
+const imageCellRenderer = (params) => {
+  if (!params.value) return '-';
+  // Display an image with a maximum width
+  return (
+    <img
+      src={params.value}
+      alt='Image'
+      className='max-w-[100px] max-h-[50px] object-contain'
+      onClick={(e) => {
+        return e.stopPropagation();
+      }}
+    />
+  );
+};
+
+const fileCellRenderer = (params) => {
+  if (!params.value) return '-';
+  // Display a file link with an icon
+  return (
+    <a
+      href={params.value.url}
+      target='_blank'
+      rel='noopener noreferrer'
+      className='flex items-center text-blue-600 hover:underline'
+      onClick={(e) => {
+        return e.stopPropagation();
+      }}
+    >
+      <File className='h-4 w-4 mr-1' />
+      {params.value.name || 'Download'}
+    </a>
+  );
+};
+
+const ratingCellRenderer = (params) => {
+  if (!params.value && params.value !== 0) return '-';
+  // Display stars for rating (1-5)
+  const rating = Math.min(Math.max(0, Number(params.value)), 5);
+  return (
+    <div className='flex items-center'>
+      {Array.from({ length: 5 }).map((_, i) => {
+        return (
+          <Star
+            key={i}
+            className={`h-4 w-4 ${
+              i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'
+            }`}
+          />
+        );
+      })}
+    </div>
+  );
+};
 
 export default function TablePage() {
   const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
   const [showFilters, setShowFilters] = useState(false);
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
-  const [sortConfig, setSortConfig] = useState<SortConfig>(null);
   const gridRef = useRef<AgGridReact>(null);
   const quickFilterRef = useRef<HTMLInputElement>(null);
+  const [componentUpdated, setComponentUpdated] = useState(false);
 
   const {
     columns,
@@ -283,6 +401,9 @@ export default function TablePage() {
   const columnDefs = useMemo<ColDef[]>(() => {
     if (!columns || columns.length === 0) return [];
 
+    // Debug column structures
+    console.log('Column definitions:', columns);
+
     // Create a checkbox column for selection
     const selectColumn: ColDef = {
       headerName: '',
@@ -319,8 +440,86 @@ export default function TablePage() {
         // Convert width from our format to AG Grid format
         const width = columnWidths[column.id] || 200;
 
-        // Handle different column types
-        const cellRenderer = column.id === 'tags' ? 'tagsCellRenderer' : undefined;
+        // Set up column definition based on column type
+        let cellRenderer;
+        let valueFormatter;
+        let cellEditor;
+        let editable = true;
+
+        // Handle column type-specific rendering
+        if (column.id === 'tags') {
+          cellRenderer = 'tagsCellRenderer';
+        } else {
+          // Check if column type is an object or a string
+          let typeId = '';
+
+          if (typeof column.type === 'string') {
+            typeId = column.type;
+          } else if (column.type && typeof column.type === 'object') {
+            // Use type assertion for the id property access
+            typeId = (column.type as any).id || '';
+          }
+
+          // Log the column type for debugging
+          console.log(`Column ${column.name} has type:`, column.type, 'typeId:', typeId);
+
+          // Assign proper renderers and editors based on type
+          switch (typeId) {
+            case 'single_line':
+              cellEditor = 'agTextCellEditor';
+              break;
+            case 'long_text':
+              cellEditor = 'agLargeTextCellEditor';
+              break;
+            case 'attachment':
+              cellRenderer = 'fileCellRenderer';
+              editable = false;
+              break;
+            case 'image':
+              cellRenderer = 'imageCellRenderer';
+              editable = false;
+              break;
+            case 'checkbox':
+              cellEditor = 'agCheckboxCellEditor';
+              break;
+            case 'multi_select':
+              cellRenderer = 'tagsCellRenderer';
+              break;
+            case 'single_select':
+              cellEditor = 'agSelectCellEditor';
+              break;
+            case 'user':
+              cellEditor = 'agSelectCellEditor';
+              break;
+            case 'date':
+              cellEditor = 'agDateCellEditor';
+              valueFormatter = 'dateFormatter';
+              break;
+            case 'number':
+              cellEditor = 'agTextCellEditor';
+              valueFormatter = 'numberFormatter';
+              break;
+            case 'currency':
+              cellEditor = 'agTextCellEditor';
+              valueFormatter = 'currencyFormatter';
+              break;
+            case 'percent':
+              cellEditor = 'agTextCellEditor';
+              valueFormatter = 'percentFormatter';
+              break;
+            case 'rating':
+              cellRenderer = 'ratingCellRenderer';
+              break;
+            case 'url':
+              cellRenderer = 'linkCellRenderer';
+              break;
+            case 'created_time':
+            case 'last_modified':
+              valueFormatter = 'dateFormatter';
+              editable = false;
+              break;
+          }
+        }
 
         return {
           headerName: column.name,
@@ -328,8 +527,10 @@ export default function TablePage() {
           field: `values.${column.id}`,
           filter: true,
           width,
-          editable: true,
+          editable,
           cellRenderer,
+          cellEditor,
+          valueFormatter,
           resizable: true,
           // Add custom header component
           headerComponent: CustomHeaderComponent,
@@ -367,29 +568,115 @@ export default function TablePage() {
   // Handle cell value change with AG Grid's built-in editing
   const onCellValueChanged = useCallback(
     (cellParams) => {
-      const { data, colDef, newValue } = cellParams;
+      console.log('Cell value changed:', cellParams);
+      const { data, colDef, newValue, oldValue } = cellParams;
       const columnId = colDef.field.replace('values.', '');
 
       // Get tableId from component params
       const tableId = params.tableId;
 
+      // Find the column definition to get its type
+      const column = columns.find((col) => {
+        return col.id === columnId;
+      });
+      let processedValue = newValue;
+
+      console.log('Column being edited:', column);
+      console.log('Original value type:', typeof newValue, 'Value:', newValue);
+      console.log('Old value:', oldValue);
+
+      // Process value based on column type
+      if (column) {
+        // Handle both string type and object type columns
+        let typeId = '';
+        if (typeof column.type === 'string') {
+          typeId = column.type;
+        } else if (column.type && typeof column.type === 'object') {
+          typeId = (column.type as any).id || '';
+        }
+
+        console.log('Column type detected:', typeId);
+
+        if (['number', 'currency', 'percent', 'rating'].includes(typeId)) {
+          // Ensure numeric values are properly converted
+          if (newValue === '' || newValue === null || newValue === undefined) {
+            processedValue = null;
+          } else {
+            // For numeric fields, ensure we're storing a number
+            const numValue = Number(newValue);
+            if (!isNaN(numValue)) {
+              processedValue = numValue;
+              console.log('Converted to number:', processedValue);
+
+              // Update the actual cell in the grid with the numeric value
+              setTimeout(() => {
+                if (gridRef.current && gridRef.current.api) {
+                  const node = gridRef.current.api.getRowNode(data._id);
+                  if (node) {
+                    // Update the node data directly
+                    const valuePath = `values.${columnId}`;
+                    node.setDataValue(valuePath, numValue);
+                  }
+                }
+              }, 0);
+            } else {
+              console.error('Invalid number format:', newValue);
+              toast.error('Invalid number format');
+              return; // Don't proceed with invalid number
+            }
+          }
+        }
+      }
+
+      console.log('Processed value:', processedValue, 'Type:', typeof processedValue);
+
+      // Update the local records state first to prevent UI from reverting
+      setRecords((prevRecords) => {
+        return prevRecords.map((record) => {
+          if (record._id === data._id) {
+            const updatedValues = { ...record.values };
+            updatedValues[columnId] = processedValue;
+            return {
+              ...record,
+              values: updatedValues,
+            };
+          }
+          return record;
+        });
+      });
+
       newRequest
         .post(`/tables/${tableId}/records`, {
           values: {
-            [columnId]: newValue,
+            [columnId]: processedValue,
           },
           columnId: columnId,
           rowId: data._id,
         })
-        .then(() => {
-          // queryClient.invalidateQueries({ queryKey: ['table-records', tableId] });
+        .then((response) => {
+          console.log('API response:', response);
         })
         .catch((error) => {
           console.error('Failed to update cell value:', error);
           toast.error('Failed to update cell value');
+
+          // Revert the change in case of API failure
+          setRecords((prevRecords) => {
+            return prevRecords.map((record) => {
+              if (record._id === data._id) {
+                const revertedValues = { ...record.values };
+                revertedValues[columnId] = oldValue;
+                return {
+                  ...record,
+                  values: revertedValues,
+                };
+              }
+              return record;
+            });
+          });
         });
     },
-    [queryClient, params.tableId],
+    [queryClient, params.tableId, columns, setRecords, gridRef],
   );
 
   // Default column definitions
@@ -501,8 +788,56 @@ export default function TablePage() {
   const components = useMemo(() => {
     return {
       tagsCellRenderer: tagsCellRenderer,
+      linkCellRenderer: linkCellRenderer,
+      imageCellRenderer: imageCellRenderer,
+      fileCellRenderer: fileCellRenderer,
+      ratingCellRenderer: ratingCellRenderer,
     };
   }, [tagsCellRenderer]);
+
+  // Track when components are available
+  useEffect(() => {
+    // Signal that components are ready to be used
+    setComponentUpdated(true);
+  }, [components]);
+
+  // Ensure grid refreshes when components are updated
+  useEffect(() => {
+    if (componentUpdated && gridRef.current?.api) {
+      // Refresh cells to apply new renderers
+      gridRef.current.api.refreshCells({ force: true });
+      setComponentUpdated(false);
+    }
+  }, [componentUpdated, gridRef]);
+
+  // AG Grid formatters (convert to functions to use directly in columnDefs)
+  const getValueFormatter = (formatterName) => {
+    switch (formatterName) {
+      case 'dateFormatter':
+        return dateFormatter;
+      case 'numberFormatter':
+        return numberFormatter;
+      case 'currencyFormatter':
+        return currencyFormatter;
+      case 'percentFormatter':
+        return percentFormatter;
+      default:
+        return undefined;
+    }
+  };
+
+  // Update columnDefs to use value formatters properly
+  const enhancedColumnDefs = useMemo(() => {
+    return columnDefs.map((colDef) => {
+      if (colDef.valueFormatter && typeof colDef.valueFormatter === 'string') {
+        return {
+          ...colDef,
+          valueFormatter: getValueFormatter(colDef.valueFormatter),
+        };
+      }
+      return colDef;
+    });
+  }, [columnDefs]);
 
   return (
     <div>
@@ -593,7 +928,7 @@ export default function TablePage() {
             <AgGridReact
               ref={gridRef}
               rowData={records}
-              columnDefs={columnDefs}
+              columnDefs={enhancedColumnDefs}
               defaultColDef={defaultColDef}
               rowSelection='multiple'
               onCellValueChanged={onCellValueChanged}
