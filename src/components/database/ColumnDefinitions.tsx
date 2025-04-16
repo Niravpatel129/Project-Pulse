@@ -139,14 +139,29 @@ export const useColumnDefinitions = (
             case 'number':
               cellEditor = 'agTextCellEditor';
               valueFormatter = 'numberFormatter';
+              // Pass column options to params
+              cellRendererParams = {
+                ...(cellRendererParams || {}),
+                options: column.options,
+              };
               break;
             case 'currency':
               cellEditor = 'agTextCellEditor';
               valueFormatter = 'currencyFormatter';
+              // Pass column options to params
+              cellRendererParams = {
+                ...(cellRendererParams || {}),
+                options: column.options,
+              };
               break;
             case 'percent':
               cellEditor = 'agTextCellEditor';
               valueFormatter = 'percentFormatter';
+              // Pass column options to params
+              cellRendererParams = {
+                ...(cellRendererParams || {}),
+                options: column.options,
+              };
               break;
             case 'rating':
               cellRenderer = 'ratingCellRenderer';

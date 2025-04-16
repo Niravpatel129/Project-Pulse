@@ -46,22 +46,44 @@ export const timeFormatter = (params) => {
 // Currency formatter for table cells
 export const currencyFormatter = (params) => {
   if (!params.value && params.value !== 0) return '-';
+
+  // Look for currency symbol from cellRendererParams which contains the column options
+  const options = params.colDef?.cellRendererParams?.options || {};
+  const currencySymbol = options?.currencySymbol || '$';
+
+  console.log('Currency formatter:', {
+    value: params.value,
+    options: options,
+    symbol: currencySymbol,
+  });
+
   // Format as currency with 2 decimal places
-  return `$${Number(params.value).toFixed(2)}`;
+  return `${currencySymbol}${Number(params.value).toFixed(2)}`;
 };
 
 // Percentage formatter for table cells
 export const percentFormatter = (params) => {
   if (!params.value && params.value !== 0) return '-';
+  // Get options from cellRendererParams
+  const options = params.colDef?.cellRendererParams?.options || {};
+  // Get decimal places from options or use 1 as default
+  const decimalPlaces = options?.decimalPlaces ?? 1;
   // Format as percentage
-  return `${Number(params.value).toFixed(1)}%`;
+  return `${Number(params.value).toFixed(decimalPlaces)}%`;
 };
 
 // Number formatter for table cells
 export const numberFormatter = (params) => {
   if (!params.value && params.value !== 0) return '-';
-  // Format number with commas for thousands
-  return Number(params.value).toLocaleString();
+  // Get options from cellRendererParams
+  const options = params.colDef?.cellRendererParams?.options || {};
+  // Get decimal places from options or use 0 as default
+  const decimalPlaces = options?.decimalPlaces ?? 0;
+  // Format number with commas for thousands and optional decimal places
+  return Number(params.value).toLocaleString(undefined, {
+    minimumFractionDigits: decimalPlaces,
+    maximumFractionDigits: decimalPlaces,
+  });
 };
 
 // Link cell renderer
