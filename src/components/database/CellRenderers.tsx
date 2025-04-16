@@ -164,6 +164,16 @@ const AttachmentManager = ({
       url: file.downloadURL || URL.createObjectURL(file),
       size: file.size ? formatBytes(file.size) : undefined,
       id: file._id || uuidv4(),
+      fileId: file._id,
+      contentType: file.contentType,
+      originalName: file.originalName,
+      storagePath: file.storagePath,
+      downloadURL: file.downloadURL,
+      workspaceId: file.workspaceId,
+      uploadedBy: file.uploadedBy,
+      status: file.status,
+      createdAt: file.createdAt,
+      updatedAt: file.updatedAt,
     };
 
     newAttachments.push(attachment);
@@ -283,6 +293,16 @@ export const fileCellRenderer = (params: {
                     url: file.downloadURL || URL.createObjectURL(file),
                     size: file.size ? formatBytes(file.size) : undefined,
                     id: file._id || uuidv4(),
+                    fileId: file._id,
+                    contentType: file.contentType,
+                    originalName: file.originalName,
+                    storagePath: file.storagePath,
+                    downloadURL: file.downloadURL,
+                    workspaceId: file.workspaceId,
+                    uploadedBy: file.uploadedBy,
+                    status: file.status,
+                    createdAt: file.createdAt,
+                    updatedAt: file.updatedAt,
                   },
                 ]);
                 setIsModalOpen(false);
@@ -317,6 +337,7 @@ export const fileCellRenderer = (params: {
             <TooltipContent className='w-60 bg-white text-black'>
               <div className='flex flex-col gap-2 bg-white p-2 rounded-md'>
                 {attachments.map((attachment, index) => {
+                  console.log('🚀 attachment:', attachment);
                   return (
                     <div
                       key={`${attachment.id}-${index}`}
@@ -407,6 +428,16 @@ export const fileCellRenderer = (params: {
                   url: file.downloadURL || URL.createObjectURL(file),
                   size: file.size ? formatBytes(file.size) : undefined,
                   id: file._id || uuidv4(),
+                  fileId: file._id,
+                  contentType: file.contentType,
+                  originalName: file.originalName,
+                  storagePath: file.storagePath,
+                  downloadURL: file.downloadURL,
+                  workspaceId: file.workspaceId,
+                  uploadedBy: file.uploadedBy,
+                  status: file.status,
+                  createdAt: file.createdAt,
+                  updatedAt: file.updatedAt,
                 },
               ]);
               setIsModalOpen(false);
