@@ -300,23 +300,6 @@ export const fileCellRenderer = (params: {
           return setShowAttachmentsList(false);
         }}
       >
-        {/* First attachment with icon */}
-        {/* {attachments.length > 0 && (
-          <div className='flex items-center'>
-            <a
-              href={attachments[0].url}
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-xs text-blue-600 hover:underline truncate max-w-[60px]'
-              onClick={(e) => {
-                return e.stopPropagation();
-              }}
-            >
-              <File className='h-6 w-6 text-blue-500' />
-            </a>
-          </div>
-        )} */}
-
         {/* Count indicator for additional files */}
         {attachments.length >= 1 && (
           <Tooltip>
