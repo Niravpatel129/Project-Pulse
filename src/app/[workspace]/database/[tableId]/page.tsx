@@ -54,6 +54,7 @@ import {
   getValueFormatter,
   imageCellRenderer,
   linkCellRenderer,
+  phoneCellRenderer,
   ratingCellRenderer,
   tagsCellRenderer,
 } from '@/components/database/CellRenderers';
@@ -330,6 +331,7 @@ export default function TablePage() {
         let cellEditor;
         let editable = true;
         let cellEditorParams = {};
+        let cellRendererParams = {};
 
         // Handle column type-specific rendering
         if (column.id === 'tags') {
@@ -382,6 +384,16 @@ export default function TablePage() {
                 };
               }
               break;
+            case 'phone':
+              cellEditor = 'agTextCellEditor';
+              cellRenderer = 'phoneCellRenderer';
+              // Add phoneFormat to cellRendererParams if available
+              if (column.options && (column.options as any).phoneFormat) {
+                cellRendererParams = {
+                  phoneFormat: (column.options as any).phoneFormat,
+                };
+              }
+              break;
             case 'user':
               cellEditor = 'agSelectCellEditor';
               // For user dropdowns, you might need similar options handling
@@ -416,6 +428,14 @@ export default function TablePage() {
           }
         }
 
+        // Get the typeId for header params
+        let columnTypeId = '';
+        if (typeof column.type === 'string') {
+          columnTypeId = column.type;
+        } else if (column.type && typeof column.type === 'object') {
+          columnTypeId = (column.type as any).id || '';
+        }
+
         return {
           headerName: column.name,
           sortable: true,
@@ -426,6 +446,7 @@ export default function TablePage() {
           cellRenderer,
           cellEditor,
           cellEditorParams, // Include the cell editor params
+          cellRendererParams, // Add this line to pass cell renderer params
           valueFormatter,
           resizable: true,
           // Add custom header component
@@ -435,6 +456,10 @@ export default function TablePage() {
             deleteColumn: handleDeleteColumn,
             enableMenu: true,
             enableSorting: column.sortable !== false,
+            // Pass phone format options if needed - use type assertion to avoid TS errors
+            ...(columnTypeId === 'phone' && column.options
+              ? { phoneFormat: (column.options as any).phoneFormat || 'international' }
+              : {}),
           },
         };
       });
@@ -670,6 +695,7 @@ export default function TablePage() {
       imageCellRenderer,
       fileCellRenderer,
       ratingCellRenderer,
+      phoneCellRenderer,
       // Add single select renderer
       singleSelectCellRenderer: (params) => {
         if (!params.value) return '-';

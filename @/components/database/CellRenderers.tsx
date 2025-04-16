@@ -9,43 +9,47 @@ export const dateFormatter = (params) => {
   return date.toLocaleDateString();
 };
 
-// Currency formatter for table cells
-export const currencyFormatter = (params) => {
-  if (!params.value && params.value !== 0) return '-';
-  // Format as currency with 2 decimal places
-  return `$${Number(params.value).toFixed(2)}`;
-};
-
-// Percentage formatter for table cells
-export const percentFormatter = (params) => {
-  if (!params.value && params.value !== 0) return '-';
-  // Format as percentage
-  return `${Number(params.value).toFixed(1)}%`;
-};
-
-// Number formatter for table cells
+// Number formatter
 export const numberFormatter = (params) => {
   if (!params.value && params.value !== 0) return '-';
-  // Format number with commas for thousands
   return Number(params.value).toLocaleString();
 };
 
-// Renderer for URL links
-export const linkCellRenderer = (params) => {
-  if (!params.value) return '-';
-  // Return a clickable link
+// Currency formatter
+export const currencyFormatter = (params) => {
+  if (!params.value && params.value !== 0) return '-';
+  const currency = params.column?.colDef?.currencySymbol || '$';
+  return `${currency}${Number(params.value).toLocaleString()}`;
+};
+
+// Percent formatter
+export const percentFormatter = (params) => {
+  if (!params.value && params.value !== 0) return '-';
+  return `${Number(params.value).toLocaleString()}%`;
+};
+
+// Tags cell renderer
+export const tagsCellRenderer = (params) => {
+  if (!params.value || !Array.isArray(params.value) || params.value.length === 0) return '-';
+
+  // Render array of tags as badges
   return (
-    <a
-      href={params.value.startsWith('http') ? params.value : `https://${params.value}`}
-      target='_blank'
-      rel='noopener noreferrer'
-      className='text-blue-600 hover:underline'
-      onClick={(e) => {
-        return e.stopPropagation();
-      }}
-    >
-      {params.value}
-    </a>
+    <div className='flex flex-wrap gap-1'>
+      {params.value.map((tag, index) => {
+        return (
+          <Badge
+            key={index}
+            variant='outline'
+            className='bg-amber-50 text-amber-700'
+            onClick={(e) => {
+              return e.stopPropagation();
+            }}
+          >
+            {typeof tag === 'object' ? tag.name : tag}
+          </Badge>
+        );
+      })}
+    </div>
   );
 };
 
@@ -106,21 +110,27 @@ export const ratingCellRenderer = (params) => {
   );
 };
 
-// Renderer for tags/multi-select values
-export const tagsCellRenderer = (params) => {
+// Renderer for link cells
+export const linkCellRenderer = (params) => {
   if (!params.value) return '-';
+  // Display a clickable link
+  let url = params.value;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = `https://${url}`;
+  }
 
-  // Assuming tags are in the format [{id: string, name: string}]
   return (
-    <div className='flex flex-wrap gap-1'>
-      {params.value.map((tag) => {
-        return (
-          <Badge key={tag.id} variant='outline' className='bg-amber-50 text-amber-700'>
-            {tag.name}
-          </Badge>
-        );
-      })}
-    </div>
+    <a
+      href={url}
+      target='_blank'
+      rel='noopener noreferrer'
+      className='text-blue-600 hover:underline'
+      onClick={(e) => {
+        return e.stopPropagation();
+      }}
+    >
+      {params.value}
+    </a>
   );
 };
 
@@ -129,7 +139,7 @@ export const phoneCellRenderer = (params) => {
   if (!params.value) return '-';
 
   // Get phone format from column definition or use international as default
-  const phoneFormat = params.colDef?.cellRendererParams?.phoneFormat || 'international';
+  const phoneFormat = params.colDef?.phoneFormat || 'international';
   const phoneNumber = params.value.toString();
   let formattedNumber = phoneNumber;
 

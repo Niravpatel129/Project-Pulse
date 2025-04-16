@@ -146,6 +146,16 @@ const defaultPropertyTypes: PropertyType[] = [
     editorType: 'agSelectCellEditor',
   },
   {
+    id: 'phone',
+    name: 'Phone',
+    iconName: 'phone',
+    icon: <Phone size={18} />,
+    description: 'Phone numbers with optional formatting',
+    editorType: 'agTextCellEditor',
+    cellRenderer: 'phoneCellRenderer',
+    hasOptions: true,
+  },
+  {
     id: 'user',
     name: 'User',
     iconName: 'user',
@@ -162,15 +172,6 @@ const defaultPropertyTypes: PropertyType[] = [
     hasFormat: true,
     editorType: 'agDateCellEditor',
     valueFormatter: 'dateFormatter',
-  },
-  {
-    id: 'phone',
-    name: 'Phone number',
-    iconName: 'phone',
-    icon: <Phone size={18} />,
-    description: 'International or local phone numbers',
-    hasFormat: true,
-    editorType: 'agTextCellEditor',
   },
   {
     id: 'email',
