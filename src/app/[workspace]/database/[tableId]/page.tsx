@@ -263,21 +263,13 @@ export default function TablePage() {
     const selectColumn: ColDef = {
       headerName: '',
       field: 'selected',
-      width: 50,
+      width: 20,
+      minWidth: 49,
+      maxWidth: 49,
       checkboxSelection: true,
       headerCheckboxSelection: true,
       pinned: 'left',
-    };
-
-    // Create a drag handle column
-    const dragColumn: ColDef = {
-      headerName: '',
-      field: 'position',
-      width: 30,
-      rowDrag: true,
-      suppressMovable: true,
-      resizable: false,
-      pinned: 'left',
+      filter: false,
     };
 
     // Map our column definitions to AG Grid format
@@ -315,8 +307,8 @@ export default function TablePage() {
         };
       });
 
-    // Add selection and drag columns at the beginning
-    return [selectColumn, dragColumn, ...columnDefs];
+    // Add selection column at the beginning
+    return [selectColumn, ...columnDefs];
   }, [columns, columnOrder, columnWidths]);
 
   // Custom cell renderer for tags
