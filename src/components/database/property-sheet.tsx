@@ -53,10 +53,14 @@ export function PropertySheet({
             <div className='flex items-center gap-2'>
               {selectedPropertyType ? (
                 <>
-                  <div className='cursor-pointer' onClick={onBackToPropertySelection}>
+                  <button
+                    className='cursor-pointer flex items-center justify-center hover:bg-gray-100 rounded-full p-1 transition-colors'
+                    onClick={onBackToPropertySelection}
+                    aria-label='Back to property selection'
+                  >
                     <ArrowLeft className='text-muted-foreground hover:text-black' size={20} />
-                  </div>
-                  {selectedPropertyType.name}
+                  </button>
+                  <span className='font-medium'>{selectedPropertyType.name}</span>
                 </>
               ) : (
                 'New property'
@@ -71,11 +75,14 @@ export function PropertySheet({
                 <label className='text-sm font-medium'>Property Type</label>
                 <Button
                   variant='outline'
-                  className='w-full justify-start h-12 px-4'
+                  className='w-full justify-start h-12 px-4 transition-colors'
                   onClick={onBackToPropertySelection}
                 >
                   <div className='flex items-center'>
-                    <div>{selectedPropertyType.name}</div>
+                    {React.createElement(getIconComponent(selectedPropertyType.iconName), {
+                      className: 'mr-2',
+                    })}
+                    <span>{selectedPropertyType.name}</span>
                   </div>
                 </Button>
               </div>
@@ -92,7 +99,7 @@ export function PropertySheet({
                     />
                   </div>
                   <Input
-                    className='h-12 pr-10'
+                    className='h-12 pr-10 transition-all focus:ring-2 focus:ring-blue-500'
                     id='property-name'
                     value={newPropertyName}
                     onChange={(e) => {
@@ -103,7 +110,10 @@ export function PropertySheet({
                 </div>
               </div>
 
-              <Button className='w-full mt-4' onClick={onSaveProperty}>
+              <Button
+                className='w-full mt-4 transition-colors hover:bg-blue-600'
+                onClick={onSaveProperty}
+              >
                 <Save className='mr-2 h-4 w-4' />
                 Save Property
               </Button>
@@ -114,29 +124,29 @@ export function PropertySheet({
                 <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
                 <Input
                   placeholder='Search property types...'
-                  className='pl-8'
+                  className='pl-8 transition-all focus:ring-2 focus:ring-blue-500'
                   value={propertySearchQuery}
                   onChange={(e) => {
                     return onPropertySearchChange(e.target.value);
                   }}
                 />
               </div>
-              <div className='grid grid-cols-1 gap-0'>
+              <div className='grid grid-cols-1 gap-1 max-h-[60vh] overflow-y-auto pr-1'>
                 {propertyTypes.map((type) => {
                   return (
                     <Button
                       key={type.id}
                       variant='ghost'
-                      className='justify-start h-10 px-2 hover:bg-blue-50'
+                      className='justify-start h-12 px-3 hover:bg-blue-50 transition-colors rounded-md'
                       onClick={() => {
                         return onAddNewColumn(type);
                       }}
                     >
-                      <div className='mr-2'>
-                        {React.createElement(getIconComponent(type.iconName))}
+                      <div className='mr-3 text-blue-600'>
+                        {React.createElement(getIconComponent(type.iconName), { size: 18 })}
                       </div>
                       <div className='flex items-center'>
-                        <div>{type.name}</div>
+                        <span className='font-medium'>{type.name}</span>
                       </div>
                     </Button>
                   );
