@@ -18,7 +18,7 @@ import { useDatabase } from '@/hooks/useDatabase';
 import { SortConfig } from '@/types/database';
 import { newRequest } from '@/utils/newRequest';
 import { useQueryClient } from '@tanstack/react-query';
-import { themeQuartz } from 'ag-grid-community';
+import { ColumnApiModule, themeQuartz } from 'ag-grid-community';
 import { ChevronDown, ColumnsIcon, Filter, Plus, RowsIcon, Search, Trash2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useCallback, useMemo, useRef, useState } from 'react';
@@ -62,6 +62,7 @@ ModuleRegistry.registerModules([
   NumberFilterModule,
   DateFilterModule,
   CustomFilterModule,
+  ColumnApiModule,
 ]);
 
 export default function TablePage() {
@@ -323,8 +324,8 @@ export default function TablePage() {
 
         return {
           headerName: column.name,
+          sortable: true,
           field: `values.${column.id}`,
-          sortable: column.sortable,
           filter: true,
           width,
           editable: true,
