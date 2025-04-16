@@ -431,42 +431,8 @@ export function PropertySheet({
                     </div>
                   )}
 
-                  {selectedPropertyType.hasRange && (
-                    <div className='space-y-2 mt-6'>
-                      <label className='text-sm font-medium'>Range (Optional)</label>
-                      <div className='grid grid-cols-2 gap-2'>
-                        <div>
-                          <label className='text-xs'>Min Value</label>
-                          <Input
-                            type='number'
-                            value={minValue}
-                            onChange={(e) => {
-                              return setMinValue(e.target.value);
-                            }}
-                            placeholder='Minimum'
-                          />
-                        </div>
-                        <div>
-                          <label className='text-xs'>Max Value</label>
-                          <Input
-                            type='number'
-                            value={maxValue}
-                            onChange={(e) => {
-                              return setMaxValue(e.target.value);
-                            }}
-                            placeholder='Maximum'
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   {selectedPropertyType.hasDecimals && (
                     <div className='space-y-2 mt-6'>
-                      <div className='flex items-center justify-between'>
-                        <label className='text-sm font-medium'>Decimal Places</label>
-                        <Switch checked={decimalsEnabled} onCheckedChange={setDecimalsEnabled} />
-                      </div>
                       {decimalsEnabled && (
                         <Select value={decimalPlaces} onValueChange={setDecimalPlaces}>
                           <SelectTrigger>
@@ -560,33 +526,6 @@ export function PropertySheet({
                         >
                           Default value for new records
                         </label>
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedPropertyType.hasRange && selectedPropertyType.id === 'rating' && (
-                    <div className='space-y-2 mt-6'>
-                      <label className='text-sm font-medium'>Rating Scale</label>
-                      <Select value={maxValue || '5'} onValueChange={setMaxValue}>
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select max stars' />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value='3'>3 Stars</SelectItem>
-                          <SelectItem value='5'>5 Stars</SelectItem>
-                          <SelectItem value='10'>10 Stars</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <div className='mt-2 flex'>
-                        {Array.from({ length: parseInt(maxValue || '5', 10) }).map((_, i) => {
-                          return (
-                            <Star
-                              key={i}
-                              className={`h-4 w-4 ${i < 3 ? 'text-yellow-400' : 'text-gray-300'}`}
-                              fill={i < 3 ? 'currentColor' : 'none'}
-                            />
-                          );
-                        })}
                       </div>
                     </div>
                   )}
