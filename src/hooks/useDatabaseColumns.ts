@@ -167,15 +167,6 @@ export function useDatabaseColumns(initialColumns: Column[]) {
   };
 
   const deleteColumn = async (columnId: string) => {
-    // Don't allow deleting the primary column
-    if (
-      columns.find((col) => {
-        return col.id === columnId;
-      })?.isPrimary
-    ) {
-      return;
-    }
-
     setColumns(
       columns.filter((col) => {
         return col.id !== columnId;

@@ -773,19 +773,19 @@ export function PropertySheet({
 
                   // Add type-specific settings to the options object
                   if (selectedPropertyType.hasSymbol) {
-                    options.symbol = currencySymbol;
+                    options.currencySymbol = currencySymbol;
                   }
 
                   if (selectedPropertyType.hasFormat) {
                     if (selectedPropertyType.id === 'date') {
-                      options.format = dateFormat;
+                      options.dateFormat = dateFormat;
                     } else if (selectedPropertyType.id === 'phone') {
-                      options.format = phoneFormat;
+                      options.phoneFormat = phoneFormat;
                     }
                   }
 
                   if (selectedPropertyType.hasDecimals) {
-                    options.decimalsEnabled = decimalsEnabled;
+                    options.hasDecimals = decimalsEnabled;
                     if (decimalsEnabled) {
                       options.decimalPlaces = parseInt(decimalPlaces);
                     }
@@ -809,6 +809,38 @@ export function PropertySheet({
                         color: option.color,
                       };
                     });
+                  }
+
+                  // Get header and cell alignment values
+                  const headerAlignmentElement = document.getElementById(
+                    'header-align',
+                  ) as HTMLSelectElement;
+                  const cellAlignmentElement = document.getElementById(
+                    'cell-align',
+                  ) as HTMLSelectElement;
+
+                  if (headerAlignmentElement) {
+                    options.headerAlignment = headerAlignmentElement.value || 'left';
+                  }
+
+                  if (cellAlignmentElement) {
+                    options.cellAlignment = cellAlignmentElement.value || 'left';
+                  }
+
+                  // Get show as badges option for select types
+                  if (['single_select', 'multi_select'].includes(selectedPropertyType.id)) {
+                    const badgesElement = document.getElementById('use-badges') as HTMLInputElement;
+                    if (badgesElement) {
+                      options.showAsBadges = badgesElement.checked;
+                    }
+                  }
+
+                  // Get description
+                  const descriptionElement = document.getElementById(
+                    'description',
+                  ) as HTMLTextAreaElement;
+                  if (descriptionElement && descriptionElement.value) {
+                    payload.description = descriptionElement.value;
                   }
 
                   // Only add options if we have any
