@@ -1,10 +1,7 @@
 'use client';
 
-import { DraggableRow } from '@/components/database/DraggableRow';
 import { FilterPanel } from '@/components/database/FilterPanel';
 import { PropertySheet } from '@/components/database/property-sheet';
-import { TableCellMemo } from '@/components/database/TableCell';
-import { TableHeaderMemo } from '@/components/database/TableHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -15,58 +12,73 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Table, TableBody, TableCell } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useDatabase } from '@/hooks/useDatabase';
-import { Column, SortConfig } from '@/types/database';
+import { SortConfig } from '@/types/database';
 import { newRequest } from '@/utils/newRequest';
 import { useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, Filter, Plus, Search, Trash2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+
+// AG Grid imports
+import {
+  ClientSideRowModelModule,
+  ColDef,
+  CustomFilterModule,
+  DateFilterModule,
+  ModuleRegistry,
+  NumberFilterModule,
+  PaginationModule,
+  RowDragModule,
+  RowSelectionModule,
+  TextEditorModule,
+  TextFilterModule,
+  ValidationModule,
+  themeQuartz,
+} from 'ag-grid-community';
+import { AgGridReact } from 'ag-grid-react';
+
+// Register the required modules
+ModuleRegistry.registerModules([
+  ClientSideRowModelModule,
+  ValidationModule,
+  RowSelectionModule,
+  TextEditorModule,
+  RowDragModule,
+  PaginationModule,
+  TextFilterModule,
+  NumberFilterModule,
+  DateFilterModule,
+  CustomFilterModule,
+]);
 
 export default function TablePage() {
   const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
   const [showFilters, setShowFilters] = useState(false);
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
-  const [resizingColumnId, setResizingColumnId] = useState<string | null>(null);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
-  const resizeStartX = useRef<number>(0);
-  const initialWidth = useRef<number>(0);
+  const gridRef = useRef<AgGridReact>(null);
+  const quickFilterRef = useRef<HTMLInputElement>(null);
 
   const {
     columns,
     records,
-    editingCell,
-    newTagText,
     allSelected,
     isAddColumnSheetOpen,
     propertySearchQuery,
-    inputRef,
     selectedPropertyType,
     newPropertyName,
     propertyTypes,
-    requestSort,
     addNewRow,
     addNewColumn,
     saveNewColumn,
     backToPropertySelection,
-    startEditing,
-    stopEditing,
-    handleCellChange,
-    handleCellKeyDown,
-    addTag,
-    removeTag,
-    handleTagInputKeyDown,
     toggleSelectAll,
     toggleSelectRecord,
-    setNewTagText,
     setIsAddColumnSheetOpen,
     setPropertySearchQuery,
     newPropertyIconName,
@@ -78,7 +90,6 @@ export default function TablePage() {
     toggleColumnVisibility,
     setPrimaryColumn,
     deleteColumn,
-    updateRecordMutation,
     rowOrder,
     setRowOrder,
     setRecords,
@@ -86,38 +97,6 @@ export default function TablePage() {
 
   const queryClient = useQueryClient();
   const params = useParams();
-
-  // Initialize column order and widths
-  useEffect(() => {
-    if (columns.length > 0) {
-      // Update column order with any new columns
-      const newColumnOrder = [...columnOrder];
-      const newColumnWidths = { ...columnWidths };
-
-      columns.forEach((col) => {
-        if (!newColumnOrder.includes(col.id)) {
-          newColumnOrder.push(col.id);
-        }
-        if (!(col.id in newColumnWidths)) {
-          newColumnWidths[col.id] = col.width || 200; // Default width
-        }
-      });
-
-      setColumnOrder(newColumnOrder);
-      setColumnWidths(newColumnWidths);
-    }
-  }, [columns]);
-
-  // Initialize row order
-  useEffect(() => {
-    if (records.length > 0 && rowOrder.length === 0) {
-      setRowOrder(
-        records.map((record) => {
-          return record._id;
-        }),
-      );
-    }
-  }, [records, rowOrder.length]);
 
   // Filter state
   const [filters, setFilters] = useState<Array<{ column: string; value: string }>>([]);
@@ -171,148 +150,17 @@ export default function TablePage() {
     }
   }, [renamingColumn, newColumnName, renameColumn]);
 
-  // Handle column reordering
-  const moveColumn = useCallback((dragIndex: number, hoverIndex: number) => {
-    setColumnOrder((prev) => {
-      const draggedColumnId = prev[dragIndex];
-      const newColumnOrder = [...prev];
-      newColumnOrder.splice(dragIndex, 1);
-      newColumnOrder.splice(hoverIndex, 0, draggedColumnId);
-      return newColumnOrder;
-    });
-  }, []);
-
-  // Handle row reordering
-  const moveRow = useCallback(
-    (dragIndex: number, hoverIndex: number) => {
-      const dragRecord = records[dragIndex];
-      const newRecords = [...records];
-      newRecords.splice(dragIndex, 1);
-      newRecords.splice(hoverIndex, 0, dragRecord);
-
-      // Update positions to maintain order
-      const updatedRecords = newRecords.map((record, index) => {
-        return {
-          ...record,
-          position: index + 1,
-        };
-      });
-
-      setRecords(updatedRecords);
-      // Update rowOrder to match the new order
-      setRowOrder(
-        updatedRecords.map((record) => {
-          return record._id;
-        }),
-      );
-    },
-    [records, setRowOrder, setRecords],
-  );
-
-  // Handle column resizing
-  const handleResizeStart = useCallback(
-    (e: React.MouseEvent, columnId: string) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setResizingColumnId(columnId);
-      resizeStartX.current = e.clientX;
-      initialWidth.current = columnWidths[columnId] || 200;
-
-      const handleMouseMove = (e: MouseEvent) => {
-        if (resizingColumnId) {
-          const deltaX = e.clientX - resizeStartX.current;
-          const newWidth = Math.max(100, initialWidth.current + deltaX); // Minimum width of 100px
-          setColumnWidths((prev) => {
-            return {
-              ...prev,
-              [resizingColumnId]: newWidth,
-            };
-          });
-        }
-      };
-
-      const handleMouseUp = () => {
-        setResizingColumnId(null);
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    },
-    [columnWidths, resizingColumnId],
-  );
-
-  // Handle column sorting
-  const handleSort = useCallback(
-    (columnId: string) => {
-      let direction: 'asc' | 'desc' = 'asc';
-
-      if (sortConfig && sortConfig.key === columnId) {
-        direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
-      }
-
-      setSortConfig({ key: columnId, direction });
-
-      // Sort the records
-      const sortedRecords = [...records].sort((a, b) => {
-        const aValue = a.values[columnId] || '';
-        const bValue = b.values[columnId] || '';
-
-        if (aValue < bValue) {
-          return direction === 'asc' ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return direction === 'asc' ? 1 : -1;
-        }
-        return 0;
-      });
-
-      // Update positions based on sorted order
-      const updatedRecords = sortedRecords.map((record, index) => {
-        return {
-          ...record,
-          position: index + 1,
-        };
-      });
-
-      // Update records with new positions
-      setRecords(updatedRecords);
-    },
-    [records, sortConfig, setRecords],
-  );
-
-  // Make the entire column clickable for sorting
-  const handleColumnClick = useCallback(
-    (columnId: string) => {
-      const column = columns.find((col) => {
-        return col.id === columnId;
-      });
-      if (column?.sortable) {
-        handleSort(columnId);
-      }
-    },
-    [columns, handleSort],
-  );
-
-  const handleAddColumn = useCallback(() => {
-    setIsAddColumnSheetOpen(true);
-  }, [setIsAddColumnSheetOpen]);
-
   const handleDeleteSelected = useCallback(() => {
-    // Get all selected record IDs
-    const selectedRecordIds = records
-      .filter((record) => {
-        return record.values?.selected;
-      })
-      .map((record) => {
-        return record._id;
-      });
-
-    if (selectedRecordIds.length === 0) {
+    // Get selected rows from AG Grid
+    const selectedNodes = gridRef.current?.api.getSelectedNodes();
+    if (!selectedNodes || selectedNodes.length === 0) {
       toast.error('No records selected');
       return;
     }
+
+    const selectedRecordIds = selectedNodes.map((node) => {
+      return node.data._id;
+    });
 
     // Delete each selected record
     Promise.all(
@@ -321,18 +169,20 @@ export default function TablePage() {
       }),
     )
       .then(() => {
-        // Update local state by removing deleted records
+        // AG Grid will automatically update when the rowData changes
         setRecords((prevRecords) => {
           return prevRecords.filter((record) => {
             return !selectedRecordIds.includes(record._id);
           });
         });
+
         // Update row order
         setRowOrder((prevOrder) => {
           return prevOrder.filter((id) => {
             return !selectedRecordIds.includes(id);
           });
         });
+
         // Invalidate queries to refresh data
         queryClient.invalidateQueries({ queryKey: ['table-records', params.tableId] });
         toast.success('Selected records deleted successfully');
@@ -341,59 +191,319 @@ export default function TablePage() {
         console.error('Failed to delete records:', error);
         toast.error('Failed to delete records');
       });
-  }, [records, params.tableId, setRecords, setRowOrder, queryClient]);
+  }, [gridRef, params.tableId, setRecords, setRowOrder, queryClient]);
 
-  // Get ordered records
-  const orderedRecords = useMemo(() => {
-    // Use rowOrder to maintain the order of records
-    return rowOrder
-      .map((id) => {
-        return records.find((r) => {
-          return r._id === id;
-        });
-      })
-      .filter(Boolean);
-  }, [rowOrder, records]);
+  // Handle adding a new column
+  const handleAddColumn = useCallback(() => {
+    setIsAddColumnSheetOpen(true);
+  }, [setIsAddColumnSheetOpen]);
 
-  // Get ordered columns
-  const orderedColumns = useMemo(() => {
-    // If no columns, return empty array
-    if (!columns || columns.length === 0) {
-      return [];
+  // Apply quick filter for search
+  const onFilterTextChange = useCallback(() => {
+    if (gridRef.current && quickFilterRef.current) {
+      // Use the correct API method for filtering
+      const filterValue = quickFilterRef.current.value || '';
+      gridRef.current.api.setGridOption('quickFilterText', filterValue);
     }
+  }, []);
 
-    // If columnOrder is empty, return columns sorted by their order property
-    if (columnOrder.length === 0) {
-      return [...columns]
-        .sort((a, b) => {
-          return (a.order || 0) - (b.order || 0);
-        })
-        .filter((col) => {
-          return !col.hidden;
-        });
-    }
+  // Handle row drag end
+  const onRowDragEnd = useCallback(
+    (event: any) => {
+      const { node, overIndex } = event;
+      const draggedId = node.data._id;
+      const newRecords = [...records];
 
-    // Otherwise, return columns in the specified order, filtering out hidden ones
-    return columnOrder
-      .map((id) => {
-        return columns.find((col) => {
-          return col.id === id;
-        });
-      })
-      .filter((col): col is Column => {
-        return col !== null && !col?.hidden;
+      // Find the record being dragged
+      const draggedRecordIndex = newRecords.findIndex((r) => {
+        return r._id === draggedId;
       });
-  }, [columns, columnOrder]);
+      if (draggedRecordIndex === -1) return;
 
-  // Count selected records
+      const draggedRecord = newRecords[draggedRecordIndex];
+
+      // Remove the record from its current position
+      newRecords.splice(draggedRecordIndex, 1);
+
+      // Insert it at the new position
+      newRecords.splice(overIndex, 0, draggedRecord);
+
+      // Update positions
+      const updatedRecords = newRecords.map((record, index) => {
+        return {
+          ...record,
+          position: index + 1,
+        };
+      });
+
+      // Update local state
+      setRecords(updatedRecords);
+
+      // Update row order
+      setRowOrder(
+        updatedRecords.map((record) => {
+          return record._id;
+        }),
+      );
+
+      // Save the new order to the backend
+      // Debounce this operation in a real application
+      updatedRecords.forEach((record) => {
+        newRequest
+          .patch(`/tables/${params.tableId}/rows/${record._id}`, {
+            position: record.position,
+          })
+          .catch((error) => {
+            console.error('Failed to update row position:', error);
+          });
+      });
+    },
+    [records, params.tableId, setRecords, setRowOrder],
+  );
+
+  // Get AG Grid column definitions from our custom columns
+  const columnDefs = useMemo<ColDef[]>(() => {
+    if (!columns || columns.length === 0) return [];
+
+    // Create a checkbox column for selection
+    const selectColumn: ColDef = {
+      headerName: '',
+      field: 'selected',
+      width: 50,
+      checkboxSelection: true,
+      headerCheckboxSelection: true,
+      pinned: 'left',
+    };
+
+    // Create a drag handle column
+    const dragColumn: ColDef = {
+      headerName: '',
+      field: 'position',
+      width: 30,
+      rowDrag: true,
+      suppressMovable: true,
+      resizable: false,
+      pinned: 'left',
+    };
+
+    // Map our column definitions to AG Grid format
+    const columnDefs: ColDef[] = columns
+      .filter((col) => {
+        return !col.hidden;
+      })
+      .sort((a, b) => {
+        // Use columnOrder if available, otherwise sort by order property
+        if (columnOrder.length > 0) {
+          const aIndex = columnOrder.indexOf(a.id);
+          const bIndex = columnOrder.indexOf(b.id);
+          if (aIndex !== -1 && bIndex !== -1) {
+            return aIndex - bIndex;
+          }
+        }
+        return (a.order || 0) - (b.order || 0);
+      })
+      .map((column) => {
+        // Convert width from our format to AG Grid format
+        const width = columnWidths[column.id] || 200;
+
+        // Handle different column types
+        const cellRenderer = column.id === 'tags' ? 'tagsCellRenderer' : undefined;
+
+        return {
+          headerName: column.name,
+          field: `values.${column.id}`,
+          sortable: column.sortable,
+          filter: true,
+          width,
+          editable: true,
+          cellRenderer,
+          resizable: true,
+        };
+      });
+
+    // Add selection and drag columns at the beginning
+    return [selectColumn, dragColumn, ...columnDefs];
+  }, [columns, columnOrder, columnWidths]);
+
+  // Custom cell renderer for tags
+  const tagsCellRenderer = useCallback((params) => {
+    if (!params.value) return '-';
+
+    // Assuming tags are in the format [{id: string, name: string}]
+    return (
+      <div className='flex flex-wrap gap-1'>
+        {params.value.map((tag) => {
+          return (
+            <Badge key={tag.id} variant='outline' className='bg-amber-50 text-amber-700'>
+              {tag.name}
+            </Badge>
+          );
+        })}
+      </div>
+    );
+  }, []);
+
+  // Handle cell value change with AG Grid's built-in editing
+  const onCellValueChanged = useCallback(
+    (cellParams) => {
+      const { data, colDef, newValue } = cellParams;
+      const columnId = colDef.field.replace('values.', '');
+
+      // Get tableId from component params
+      const tableId = params.tableId;
+
+      newRequest
+        .post(`/tables/${tableId}/records`, {
+          values: {
+            [columnId]: newValue,
+          },
+          columnId: columnId,
+          rowId: data._id,
+        })
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['table-records', tableId] });
+        })
+        .catch((error) => {
+          console.error('Failed to update cell value:', error);
+          toast.error('Failed to update cell value');
+        });
+    },
+    [queryClient, params.tableId],
+  );
+
+  // Default column definitions
+  const defaultColDef = useMemo(() => {
+    return {
+      flex: 1,
+      minWidth: 100,
+      resizable: true,
+      sortable: true,
+      filter: true,
+    };
+  }, []);
+
+  // Configure custom theme
+  const customTheme = useMemo(() => {
+    return themeQuartz.withParams({
+      browserColorScheme: 'light',
+      fontFamily: {
+        googleFont: 'IBM Plex Sans',
+      },
+      headerFontSize: 14,
+    });
+  }, []);
+
+  // Card view implementation
+  const renderCardView = () => {
+    return (
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4'>
+        {records.length === 0
+          ? // Skeleton loading for card view
+            Array.from({ length: 6 }).map((_, index) => {
+              return (
+                <div key={`skeleton-card-${index}`} className='border rounded-md p-3'>
+                  <div className='flex justify-between items-center mb-2'>
+                    <div className='h-5 w-32 bg-gray-200 rounded'></div>
+                    <div className='h-4 w-4 bg-gray-200 rounded'></div>
+                  </div>
+                  {Array.from({ length: 3 }).map((_, fieldIndex) => {
+                    return (
+                      <div
+                        key={`skeleton-field-${index}-${fieldIndex}`}
+                        className='flex py-1 text-sm'
+                      >
+                        <div className='h-4 w-1/3 mr-2 bg-gray-200 rounded'></div>
+                        <div className='h-4 w-2/3 bg-gray-200 rounded'></div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })
+          : // Actual card data
+            records
+              .sort((a, b) => {
+                // Sort by position or createdAt
+                if (a.position !== undefined && b.position !== undefined) {
+                  return a.position - b.position;
+                }
+                return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+              })
+              .map((record) => {
+                return (
+                  <div
+                    key={`card-${record._id}`}
+                    className='border rounded-md p-3 hover:shadow-md transition-shadow'
+                  >
+                    <div className='flex justify-between items-center mb-2'>
+                      <h3 className='font-medium'>{record.values.name}</h3>
+                      <Checkbox
+                        checked={record.values?.selected}
+                        onCheckedChange={() => {
+                          return toggleSelectRecord(record._id);
+                        }}
+                      />
+                    </div>
+                    {columns
+                      .filter((col) => {
+                        return !col.hidden && col.id !== 'name';
+                      })
+                      .sort((a, b) => {
+                        return (a.order || 0) - (b.order || 0);
+                      })
+                      .map((column) => {
+                        return (
+                          <div
+                            key={`card-field-${record._id}-${column.id}`}
+                            className='flex py-1 text-sm'
+                          >
+                            <span className='text-gray-500 w-1/3'>{column.name}:</span>
+                            <span className='w-2/3'>
+                              {column.id === 'tags' ? (
+                                <div className='flex flex-wrap gap-1'>
+                                  {record.values.tags?.map((tag) => {
+                                    return (
+                                      <Badge
+                                        key={`tag-${tag.id}`}
+                                        variant='outline'
+                                        className='bg-amber-50 text-amber-700'
+                                      >
+                                        {tag.name}
+                                      </Badge>
+                                    );
+                                  })}
+                                </div>
+                              ) : (
+                                record.values[column.id] || '-'
+                              )}
+                            </span>
+                          </div>
+                        );
+                      })}
+                  </div>
+                );
+              })}
+      </div>
+    );
+  };
+
+  // Get total number of selected records
   const selectedCount = useMemo(() => {
-    return records.filter((r) => {
-      return r.values?.selected || false;
-    }).length;
-  }, [records]);
+    if (gridRef.current) {
+      return gridRef.current.api.getSelectedNodes().length;
+    }
+    return 0;
+  }, [records]); // Re-compute when records change
+
+  // Register components with AG Grid
+  const components = useMemo(() => {
+    return {
+      tagsCellRenderer: tagsCellRenderer,
+    };
+  }, [tagsCellRenderer]);
 
   return (
-    <DndProvider backend={HTML5Backend}>
+    <div>
       <div className='flex justify-between items-center mb-4'>
         <div className='flex items-center gap-2'>
           <Tabs
@@ -444,12 +554,21 @@ export default function TablePage() {
                 <Trash2 className='mr-2 h-4 w-4' />
                 Delete Selected
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleAddColumn}>
+                <Plus className='mr-2 h-4 w-4' />
+                Add New Column
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
           <div className='relative'>
             <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
-            <Input placeholder='Search...' className='pl-8 h-9' />
+            <Input
+              placeholder='Search...'
+              className='pl-8 h-9'
+              ref={quickFilterRef}
+              onChange={onFilterTextChange}
+            />
           </div>
         </div>
       </div>
@@ -469,181 +588,39 @@ export default function TablePage() {
 
       <div className='pt-1 rounded-md shadow-sm'>
         {viewMode === 'table' ? (
-          <Table>
-            <TableHeaderMemo
-              columns={orderedColumns}
-              sortConfig={sortConfig}
-              onSort={handleSort}
-              onAddColumn={handleAddColumn}
-              allSelected={allSelected}
-              toggleSelectAll={toggleSelectAll}
-              onRenameColumn={handleRenameColumn}
-              onToggleVisibility={toggleColumnVisibility}
-              onSetPrimary={setPrimaryColumn}
-              onDeleteColumn={deleteColumn}
-              renamingColumn={renamingColumn}
-              newColumnName={newColumnName}
-              setNewColumnName={setNewColumnName}
-              saveColumnRename={saveColumnRename}
-              setRenamingColumn={setRenamingColumn}
-              columnWidths={columnWidths}
-              handleResizeStart={handleResizeStart}
-              moveColumn={moveColumn}
+          <div
+            className='ag-theme-alpine w-full dark:ag-theme-alpine-dark'
+            style={{ height: 'calc(100vh - 200px)', width: '100%' }}
+          >
+            <AgGridReact
+              ref={gridRef}
+              rowData={records}
+              columnDefs={columnDefs}
+              defaultColDef={defaultColDef}
+              rowSelection='multiple'
+              suppressRowClickSelection={true}
+              onCellValueChanged={onCellValueChanged}
+              components={components}
+              animateRows={true}
+              suppressDragLeaveHidesColumns={true}
+              getRowId={(params) => {
+                return params.data._id;
+              }}
+              enableCellTextSelection={true}
+              suppressScrollOnNewData={true}
+              singleClickEdit={true}
+              pagination={true}
+              paginationPageSize={25}
+              domLayout='autoHeight'
+              rowDragManaged={true}
+              onRowDragEnd={onRowDragEnd}
+              suppressMoveWhenRowDragging={false}
+              theme={customTheme}
+              stopEditingWhenCellsLoseFocus={true}
             />
-            <TableBody>
-              {records.length === 0
-                ? // Skeleton loading state when no records are available
-                  Array.from({ length: 5 }).map((_, index) => {
-                    return (
-                      <tr key={`skeleton-row-${index}`}>
-                        <TableCell className='border-r p-0 text-center'>
-                          <div className='flex h-full items-center justify-center'>
-                            <Skeleton className='h-4 w-4 rounded' />
-                          </div>
-                        </TableCell>
-                        {Array.from({ length: 4 }).map((_, colIndex) => {
-                          return (
-                            <TableCell key={`skeleton-cell-${index}-${colIndex}`}>
-                              <Skeleton className='h-5 w-full' />
-                            </TableCell>
-                          );
-                        })}
-                        <TableCell></TableCell>
-                      </tr>
-                    );
-                  })
-                : orderedRecords.map((record, index) => {
-                    return (
-                      <DraggableRow
-                        key={`row-${record._id}`}
-                        record={record}
-                        index={index}
-                        moveRow={moveRow}
-                      >
-                        <TableCell className='border-r p-0 text-center '>
-                          <div className='flex h-full items-center justify-center'>
-                            <Checkbox
-                              checked={record.values?.selected}
-                              onCheckedChange={() => {
-                                return toggleSelectRecord(record._id);
-                              }}
-                            />
-                          </div>
-                        </TableCell>
-                        {orderedColumns.map((column) => {
-                          if (!column) return;
-
-                          return (
-                            <TableCellMemo
-                              key={`cell-${record._id}-${column.id}`}
-                              record={record}
-                              column={column}
-                              editingCell={editingCell}
-                              onEdit={() => {
-                                return startEditing(record._id, column.id);
-                              }}
-                              onCellChange={handleCellChange}
-                              onCellKeyDown={handleCellKeyDown}
-                              stopEditing={stopEditing}
-                              inputRef={inputRef}
-                              newTagText={newTagText}
-                              setNewTagText={setNewTagText}
-                              handleTagInputKeyDown={handleTagInputKeyDown}
-                              removeTag={removeTag}
-                              addTag={addTag}
-                              columnWidths={columnWidths}
-                              handleColumnClick={handleColumnClick}
-                              isUpdating={
-                                updateRecordMutation.isPending &&
-                                editingCell.recordId === record._id &&
-                                editingCell.columnId === column.id
-                              }
-                            />
-                          );
-                        })}
-                        <TableCell></TableCell>
-                      </DraggableRow>
-                    );
-                  })}
-            </TableBody>
-          </Table>
-        ) : (
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4'>
-            {records.length === 0
-              ? // Skeleton loading state for card view
-                Array.from({ length: 6 }).map((_, index) => {
-                  return (
-                    <div key={`skeleton-card-${index}`} className='border rounded-md p-3'>
-                      <div className='flex justify-between items-center mb-2'>
-                        <Skeleton className='h-5 w-32' />
-                        <Skeleton className='h-4 w-4 rounded' />
-                      </div>
-                      {Array.from({ length: 3 }).map((_, fieldIndex) => {
-                        return (
-                          <div
-                            key={`skeleton-field-${index}-${fieldIndex}`}
-                            className='flex py-1 text-sm'
-                          >
-                            <Skeleton className='h-4 w-1/3 mr-2' />
-                            <Skeleton className='h-4 w-2/3' />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })
-              : orderedRecords.map((record) => {
-                  return (
-                    <div
-                      key={`card-${record._id}`}
-                      className='border rounded-md p-3 hover:shadow-md transition-shadow'
-                    >
-                      <div className='flex justify-between items-center mb-2'>
-                        <h3 className='font-medium'>{record.values.name}</h3>
-                        <Checkbox
-                          checked={record.values?.selected}
-                          onCheckedChange={() => {
-                            return toggleSelectRecord(record._id);
-                          }}
-                        />
-                      </div>
-                      {orderedColumns
-                        .filter((col) => {
-                          return col.id !== 'name';
-                        })
-                        .map((column) => {
-                          return (
-                            <div
-                              key={`card-field-${record._id}-${column.id}`}
-                              className='flex py-1 text-sm'
-                            >
-                              <span className='text-gray-500 w-1/3'>{column.name}:</span>
-                              <span className='w-2/3'>
-                                {column.id === 'tags' ? (
-                                  <div className='flex flex-wrap gap-1'>
-                                    {record.values.tags?.map((tag) => {
-                                      return (
-                                        <Badge
-                                          key={`tag-${tag.id}`}
-                                          variant='outline'
-                                          className='bg-amber-50 text-amber-700'
-                                        >
-                                          {tag.name}
-                                        </Badge>
-                                      );
-                                    })}
-                                  </div>
-                                ) : (
-                                  record.values[column.id] || '-'
-                                )}
-                              </span>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  );
-                })}
           </div>
+        ) : (
+          renderCardView()
         )}
         <div className='flex items-center justify-between border-t p-2'>
           <div className='flex items-center'>
@@ -693,6 +670,6 @@ export default function TablePage() {
         onAddNewColumn={addNewColumn}
         getIconComponent={getIconComponent}
       />
-    </DndProvider>
+    </div>
   );
 }
