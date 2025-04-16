@@ -1,5 +1,11 @@
+import FileUploadManagerModal from '@/components/ProjectPage/FileComponents/FileUploadManagerModal';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { File, Star } from 'lucide-react';
+import { useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { Attachment } from './AttachmentCellEditor';
+import { ViewAttachmentsButton } from './ViewAttachmentsButton';
 
 // Date formatter for table cells
 export const dateFormatter = (params) => {
@@ -121,23 +127,179 @@ export const imageCellRenderer = (params) => {
   );
 };
 
-// Renderer for file attachment cells
-export const fileCellRenderer = (params) => {
-  if (!params.value) return '-';
-  // Display a file link with an icon
+// Helper function to format file size in bytes to human-readable format
+const formatBytes = (bytes: number, decimals = 2): string => {
+  if (bytes === 0) return '0 Bytes';
+
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+};
+
+const AttachmentManager = ({
+  value,
+  onUpdate,
+}: {
+  value: any;
+  onUpdate: (newVal: any) => void;
+}) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Fix: Check if value is a string that needs parsing or already an object/array
+  const attachments = value ? (typeof value === 'string' ? JSON.parse(value) : value) : [];
+
+  console.log('🚀 value:', value);
+
+  const handleAddFileToProject = (file) => {
+    console.log('🚀 file:', file);
+    const newAttachments = [...attachments];
+
+    // Create a new attachment object
+    const attachment: Attachment = {
+      name: file.name,
+      url: file.downloadURL || URL.createObjectURL(file),
+      size: file.size ? formatBytes(file.size) : undefined,
+      id: file._id || uuidv4(),
+    };
+
+    newAttachments.push(attachment);
+
+    onUpdate(JSON.stringify(newAttachments));
+    setIsModalOpen(false);
+  };
+
   return (
-    <a
-      href={params.value.url}
-      target='_blank'
-      rel='noopener noreferrer'
-      className='flex items-center text-blue-600 hover:underline'
-      onClick={(e) => {
-        return e.stopPropagation();
-      }}
-    >
-      <File className='h-4 w-4 mr-1' />
-      {params.value.name || 'Download'}
-    </a>
+    <div>
+      {attachments.length === 0 ? (
+        <Button
+          className='w-full'
+          onClick={() => {
+            return setIsModalOpen(true);
+          }}
+        >
+          Attach Files
+        </Button>
+      ) : (
+        <Button
+          className='w-full'
+          onClick={() => {
+            return setIsModalOpen(true);
+          }}
+        >
+          Manage ({attachments.length})
+        </Button>
+      )}
+
+      <FileUploadManagerModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          return setIsModalOpen(false);
+        }}
+        handleAddFileToProject={handleAddFileToProject}
+      />
+    </div>
+  );
+};
+
+// Update the fileCellRenderer to use our new AttachmentManager component
+export const fileCellRenderer = (params: {
+  value?: Attachment | Attachment[];
+  api?: any;
+  rowIndex?: number;
+  node?: any;
+  column?: any;
+  data?: any;
+}) => {
+  if (!params.value) {
+    // Show a button to add attachments when there are none
+    return (
+      <AttachmentManager
+        value={params.value}
+        onUpdate={(newVal) => {
+          // Update the cell value directly
+          if (params.node && params.column) {
+            // Set value in the grid
+            params.node.setDataValue(params.column.getId(), newVal);
+
+            // Refresh the cell
+            if (params.api) {
+              params.api.refreshCells({
+                force: true,
+                rowNodes: [params.node],
+                columns: [params.column.getId()],
+              });
+            }
+          }
+        }}
+      />
+    );
+  }
+
+  // Handle both single attachment and array of attachments
+  const attachments = Array.isArray(params.value) ? params.value : [params.value];
+
+  if (attachments.length === 0) {
+    return '-';
+  }
+
+  return (
+    <div className='flex flex-col gap-1'>
+      {/* If we have multiple attachments or a single attachment with a long name */}
+      {attachments.length > 1 || (attachments[0].name && attachments[0].name.length > 15) ? (
+        <div className='flex items-center justify-between'>
+          {/* Show first attachment name with truncation */}
+          <div className='flex items-center'>
+            <File className='h-4 w-4 mr-1 text-blue-500' />
+            <span className='truncate max-w-[100px] text-sm'>
+              {attachments[0].name || 'Attachment'}
+              {attachments.length > 1 && ` +${attachments.length - 1} more`}
+            </span>
+          </div>
+
+          {/* View button to open dialog with all attachments */}
+          <ViewAttachmentsButton attachments={attachments} />
+        </div>
+      ) : (
+        // For single short-named attachment, show direct link
+        <a
+          href={attachments[0].url}
+          target='_blank'
+          rel='noopener noreferrer'
+          className='flex items-center text-blue-600 hover:underline'
+          onClick={(e) => {
+            return e.stopPropagation();
+          }}
+        >
+          <File className='h-4 w-4 mr-1' />
+          <span className='text-sm'>{attachments[0].name || 'Download'}</span>
+        </a>
+      )}
+
+      {/* Use the AttachmentManager component for the Manage button */}
+      <AttachmentManager
+        value={params.value}
+        onUpdate={(newVal) => {
+          // Update the cell value directly
+          if (params.node && params.column) {
+            // Set value in the grid
+            params.node.setDataValue(params.column.getId(), newVal);
+
+            // Refresh the cell
+            if (params.api) {
+              params.api.refreshCells({
+                force: true,
+                rowNodes: [params.node],
+                columns: [params.column.getId()],
+              });
+            }
+          }
+        }}
+      />
+    </div>
   );
 };
 

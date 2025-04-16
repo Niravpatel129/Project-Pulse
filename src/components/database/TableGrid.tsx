@@ -64,9 +64,10 @@ export function TableGrid({
     // Signal that components are ready to be used
     setComponentUpdated(true);
 
-    // Register the TimeEditor when components are initialized
+    // Register custom components when grid is initialized
     if (gridRef.current?.api) {
-      console.log('Registering TimeEditor component');
+      console.log('Registering custom editor components');
+      // Force a refresh to apply components
       gridRef.current.api.refreshCells({ force: true });
     }
   }, []);

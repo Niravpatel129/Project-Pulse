@@ -63,6 +63,7 @@ interface PropertyType {
   editorType?: string;
   cellRenderer?: string;
   valueFormatter?: string;
+  cellEditor?: string;
 }
 
 interface PropertySheetProps {
@@ -109,6 +110,7 @@ const defaultPropertyTypes: PropertyType[] = [
     icon: <File size={18} />,
     description: 'Upload and link to files',
     cellRenderer: 'fileCellRenderer',
+    cellEditor: 'attachmentCellEditor',
   },
   {
     id: 'image',

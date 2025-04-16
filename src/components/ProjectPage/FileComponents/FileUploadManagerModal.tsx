@@ -93,10 +93,14 @@ export default function FileUploadManagerModal({
   isOpen,
   onClose,
   handleAddFileToProject,
+  initialFiles,
+  onDeleteFile,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  handleAddFileToProject;
+  handleAddFileToProject: any;
+  initialFiles?: any[];
+  onDeleteFile?: (fileToRemove: any) => void;
 }) {
   const {
     files,

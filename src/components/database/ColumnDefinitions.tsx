@@ -68,6 +68,7 @@ export const useColumnDefinitions = (
         let editable = true;
         let cellEditorParams = {};
         let cellRendererParams = {};
+        let cellEditorPopup = false;
 
         // Get type ID
         const columnTypeId = getColumnTypeId(column);
@@ -86,7 +87,9 @@ export const useColumnDefinitions = (
               break;
             case 'attachment':
               cellRenderer = 'fileCellRenderer';
-              editable = false;
+              cellEditor = 'attachmentCellEditor';
+              editable = true;
+              cellEditorPopup = true;
               break;
             case 'image':
               cellRenderer = 'imageCellRenderer';
@@ -178,10 +181,10 @@ export const useColumnDefinitions = (
           cellRendererParams,
           valueFormatter,
           resizable: true,
+          cellEditorPopup,
           // For time columns, ensure we explicitly set these properties
           ...(columnTypeId === 'time'
             ? {
-                cellEditorPopup: false, // Use inline editor
                 editable: true, // Explicitly mark as editable
                 valueParser: (params) => {
                   // Parse time values when entered
@@ -193,7 +196,6 @@ export const useColumnDefinitions = (
           // For date columns, ensure we explicitly set these properties
           ...(columnTypeId === 'date'
             ? {
-                cellEditorPopup: false, // Use inline editor
                 editable: true, // Explicitly mark as editable
                 valueParser: (params) => {
                   // Parse date values when entered

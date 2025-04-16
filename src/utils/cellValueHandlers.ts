@@ -127,6 +127,44 @@ export const processCellValue = (
         errorMessage = 'Invalid date format';
       }
     }
+  } else if (typeId === 'attachment') {
+    // For attachment type
+    if (newValue === '' || newValue === null || newValue === undefined) {
+      processedValue = null;
+      console.log('Attachment value is empty, setting to null');
+    } else if (Array.isArray(newValue)) {
+      // If it's an array of attachments, validate each one
+      if (
+        newValue.every((attachment) => {
+          return (
+            typeof attachment === 'object' &&
+            attachment !== null &&
+            'name' in attachment &&
+            'url' in attachment
+          );
+        })
+      ) {
+        console.log('Valid attachment array:', newValue);
+        processedValue = newValue;
+      } else {
+        console.error('Invalid attachment array format:', newValue);
+        isValid = false;
+        errorMessage = 'Invalid attachment format';
+      }
+    } else if (
+      typeof newValue === 'object' &&
+      newValue !== null &&
+      'name' in newValue &&
+      'url' in newValue
+    ) {
+      // If it's a single attachment object, convert to array for consistency
+      console.log('Valid attachment object, converting to array:', newValue);
+      processedValue = [newValue];
+    } else {
+      console.error('Invalid attachment format:', newValue);
+      isValid = false;
+      errorMessage = 'Invalid attachment format';
+    }
   }
 
   return { processedValue, isValid, errorMessage };

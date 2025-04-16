@@ -66,6 +66,7 @@ export const useAgGridConfig = (
     let editable = true;
     let cellEditorParams = {};
     let cellRendererParams = {};
+    let cellEditorPopup = false;
 
     // Handle column type-specific rendering
     switch (columnTypeId) {
@@ -77,7 +78,9 @@ export const useAgGridConfig = (
         break;
       case 'attachment':
         cellRenderer = 'fileCellRenderer';
-        editable = false;
+        cellEditor = 'attachmentCellEditor';
+        editable = true;
+        cellEditorPopup = true;
         break;
       case 'image':
         cellRenderer = 'imageCellRenderer';
@@ -182,6 +185,7 @@ export const useAgGridConfig = (
       editable,
       cellEditorParams,
       cellRendererParams,
+      cellEditorPopup,
       ...specialConfig,
     };
   };
