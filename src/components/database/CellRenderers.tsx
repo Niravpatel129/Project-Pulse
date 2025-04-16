@@ -5,7 +5,6 @@ import { File, Star } from 'lucide-react';
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Attachment } from './AttachmentCellEditor';
-import { ViewAttachmentsButton } from './ViewAttachmentsButton';
 
 // Date formatter for table cells
 export const dateFormatter = (params) => {
@@ -214,93 +213,170 @@ export const fileCellRenderer = (params: {
   column?: any;
   data?: any;
 }) => {
-  if (!params.value) {
-    // Show a button to add attachments when there are none
-    return (
-      <AttachmentManager
-        value={params.value}
-        onUpdate={(newVal) => {
-          // Update the cell value directly
-          if (params.node && params.column) {
-            // Set value in the grid
-            params.node.setDataValue(params.column.getId(), newVal);
+  // Create a wrapper component that uses React hooks properly
+  const FileAttachmentDisplay = () => {
+    const [showAttachmentsList, setShowAttachmentsList] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-            // Refresh the cell
-            if (params.api) {
-              params.api.refreshCells({
-                force: true,
-                rowNodes: [params.node],
-                columns: [params.column.getId()],
-              });
-            }
-          }
-        }}
-      />
-    );
-  }
+    // Handle both single attachment and array of attachments
+    const attachments = Array.isArray(params.value)
+      ? params.value
+      : params.value
+      ? [params.value]
+      : [];
 
-  // Handle both single attachment and array of attachments
-  const attachments = Array.isArray(params.value) ? params.value : [params.value];
+    const handleUpdateAttachments = (newVal) => {
+      // Update the cell value directly
+      if (params.node && params.column) {
+        params.node.setDataValue(params.column.getId(), newVal);
 
-  if (attachments.length === 0) {
-    return '-';
-  }
+        // Refresh the cell
+        if (params.api) {
+          params.api.refreshCells({
+            force: true,
+            rowNodes: [params.node],
+            columns: [params.column.getId()],
+          });
+        }
+      }
+    };
 
-  return (
-    <div className='flex flex-col gap-1'>
-      {/* If we have multiple attachments or a single attachment with a long name */}
-      {attachments.length > 1 || (attachments[0].name && attachments[0].name.length > 15) ? (
-        <div className='flex items-center justify-between'>
-          {/* Show first attachment name with truncation */}
-          <div className='flex items-center'>
-            <File className='h-4 w-4 mr-1 text-blue-500' />
-            <span className='truncate max-w-[100px] text-sm'>
-              {attachments[0].name || 'Attachment'}
-              {attachments.length > 1 && ` +${attachments.length - 1} more`}
-            </span>
-          </div>
+    const openAttachmentManager = (e) => {
+      if (e) e.stopPropagation();
+      // Create a placeholder element for modal
+      setIsModalOpen(true);
+    };
 
-          {/* View button to open dialog with all attachments */}
-          <ViewAttachmentsButton attachments={attachments} />
+    // Return to hide the FileUploadManagerModal when not in use
+    if (attachments.length === 0) {
+      return (
+        <div className='flex items-center space-x-1'>
+          <File className='h-4 w-4 text-gray-400' />
+          <Button variant='ghost' size='sm' className='p-0 h-6 w-6' onClick={openAttachmentManager}>
+            <span className='text-blue-500 text-xs font-bold'>+</span>
+          </Button>
+
+          {isModalOpen && (
+            <FileUploadManagerModal
+              isOpen={isModalOpen}
+              onClose={() => {
+                return setIsModalOpen(false);
+              }}
+              handleAddFileToProject={(file) => {
+                handleUpdateAttachments([
+                  ...attachments,
+                  {
+                    name: file.originalName || file.name,
+                    url: file.downloadURL || URL.createObjectURL(file),
+                    size: file.size ? formatBytes(file.size) : undefined,
+                    id: file._id || uuidv4(),
+                  },
+                ]);
+                setIsModalOpen(false);
+              }}
+            />
+          )}
         </div>
-      ) : (
-        // For single short-named attachment, show direct link
-        <a
-          href={attachments[0].url}
-          target='_blank'
-          rel='noopener noreferrer'
-          className='flex items-center text-blue-600 hover:underline'
-          onClick={(e) => {
-            return e.stopPropagation();
-          }}
-        >
-          <File className='h-4 w-4 mr-1' />
-          <span className='text-sm'>{attachments[0].name || 'Download'}</span>
-        </a>
-      )}
+      );
+    }
 
-      {/* Use the AttachmentManager component for the Manage button */}
-      <AttachmentManager
-        value={params.value}
-        onUpdate={(newVal) => {
-          // Update the cell value directly
-          if (params.node && params.column) {
-            // Set value in the grid
-            params.node.setDataValue(params.column.getId(), newVal);
-
-            // Refresh the cell
-            if (params.api) {
-              params.api.refreshCells({
-                force: true,
-                rowNodes: [params.node],
-                columns: [params.column.getId()],
-              });
-            }
-          }
+    return (
+      <div
+        className='flex items-center gap-1 relative'
+        onMouseLeave={() => {
+          return setShowAttachmentsList(false);
         }}
-      />
-    </div>
-  );
+      >
+        {/* First attachment with icon */}
+        <div className='flex items-center'>
+          <File className='h-4 w-4 text-blue-500' />
+          <a
+            href={attachments[0].url}
+            target='_blank'
+            rel='noopener noreferrer'
+            className='ml-1 text-xs text-blue-600 hover:underline truncate max-w-[60px]'
+            onClick={(e) => {
+              return e.stopPropagation();
+            }}
+          >
+            {attachments[0].name || 'File'}
+          </a>
+        </div>
+
+        {/* Count indicator for additional files */}
+        {attachments.length > 1 && (
+          <div
+            className='text-xs bg-gray-100 rounded-full px-1.5 text-gray-600 cursor-pointer hover:bg-gray-200'
+            onMouseEnter={() => {
+              return setShowAttachmentsList(true);
+            }}
+          >
+            +{attachments.length - 1}
+          </div>
+        )}
+
+        {/* Add more button */}
+        <Button
+          variant='ghost'
+          size='sm'
+          className='p-0 h-6 w-6 ml-1'
+          onClick={openAttachmentManager}
+        >
+          <span className='text-blue-500 text-xs font-bold'>+</span>
+        </Button>
+
+        {/* Hover list of all attachments */}
+        {showAttachmentsList && attachments.length > 1 && (
+          <div className='absolute top-full left-0 mt-1 bg-white shadow-md rounded-md p-2 z-10 w-60'>
+            <ul className='text-xs'>
+              {attachments.map((attachment, index) => {
+                return (
+                  <li key={attachment.id || index} className='py-1 flex items-center'>
+                    <File className='h-3 w-3 mr-1 text-blue-500' />
+                    <a
+                      href={attachment.url}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='text-blue-600 hover:underline truncate'
+                      onClick={(e) => {
+                        return e.stopPropagation();
+                      }}
+                    >
+                      {attachment.name || `File ${index + 1}`}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        {isModalOpen && (
+          <FileUploadManagerModal
+            isOpen={isModalOpen}
+            onClose={() => {
+              return setIsModalOpen(false);
+            }}
+            handleAddFileToProject={(file) => {
+              handleUpdateAttachments([
+                ...attachments,
+                {
+                  name: file.originalName || file.name,
+                  url: file.downloadURL || URL.createObjectURL(file),
+                  size: file.size ? formatBytes(file.size) : undefined,
+                  id: file._id || uuidv4(),
+                },
+              ]);
+              setIsModalOpen(false);
+            }}
+          />
+        )}
+      </div>
+    );
+  };
+
+  // Return the React component
+  return <FileAttachmentDisplay />;
 };
 
 // Renderer for rating cells (stars)
