@@ -160,7 +160,7 @@ const AttachmentManager = ({
 
     // Create a new attachment object
     const attachment: Attachment = {
-      name: file.name,
+      name: file.originalName || file.name,
       url: file.downloadURL || URL.createObjectURL(file),
       size: file.size ? formatBytes(file.size) : undefined,
       id: file._id || uuidv4(),
@@ -168,7 +168,7 @@ const AttachmentManager = ({
 
     newAttachments.push(attachment);
 
-    onUpdate(JSON.stringify(newAttachments));
+    onUpdate(typeof value === 'string' ? JSON.stringify(newAttachments) : newAttachments);
     setIsModalOpen(false);
   };
 
