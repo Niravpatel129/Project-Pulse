@@ -242,6 +242,14 @@ export const fileCellRenderer = (params: {
       }
     };
 
+    const handleRemoveAttachment = (attachmentId, e) => {
+      if (e) e.stopPropagation();
+      const updatedAttachments = attachments.filter((attachment) => {
+        return attachment.id !== attachmentId;
+      });
+      handleUpdateAttachments(updatedAttachments);
+    };
+
     const openAttachmentManager = (e) => {
       if (e) e.stopPropagation();
       // Create a placeholder element for modal
@@ -293,7 +301,7 @@ export const fileCellRenderer = (params: {
         }}
       >
         {/* First attachment with icon */}
-        {attachments.length > 0 && (
+        {/* {attachments.length > 0 && (
           <div className='flex items-center'>
             <a
               href={attachments[0].url}
@@ -307,19 +315,20 @@ export const fileCellRenderer = (params: {
               <File className='h-6 w-6 text-blue-500' />
             </a>
           </div>
-        )}
+        )} */}
 
         {/* Count indicator for additional files */}
-        {attachments.length > 1 && (
+        {attachments.length >= 1 && (
           <Tooltip>
             <TooltipTrigger asChild>
               <div
-                className='text-xs bg-none rounded-full py-0.5 text-blue-600 cursor-pointer hover:bg-blue-100 transition-colors'
+                className='flex items-center gap-1 text-xs bg-none rounded-full py-0.5 text-blue-600 cursor-pointer hover:bg-blue-100 transition-colors'
                 onMouseEnter={() => {
                   return setShowAttachmentsList(true);
                 }}
               >
-                +{attachments.length - 1}
+                <File className='h-6 w-6 text-blue-500' />
+                {attachments.length > 1 && `+${attachments.length - 1}`}
               </div>
             </TooltipTrigger>
             <TooltipContent className='w-60 bg-white text-black'>
@@ -334,7 +343,15 @@ export const fileCellRenderer = (params: {
                         <File className='h-4 w-4 text-blue-500' />
                         <div className='text-xs'>{attachment.name}</div>
                       </div>
-                      <div className='text-xs text-red-500 cursor-pointer'>X</div>
+                      {/* Remove attachment */}
+                      <div
+                        className='text-xs text-red-500 cursor-pointer'
+                        onClick={(e) => {
+                          return handleRemoveAttachment(attachment.id, e);
+                        }}
+                      >
+                        X
+                      </div>
                     </div>
                   );
                 })}
@@ -359,19 +376,32 @@ export const fileCellRenderer = (params: {
             <ul className='text-xs'>
               {attachments.map((attachment, index) => {
                 return (
-                  <li key={`${attachment.id}-${index}`} className='py-1 flex items-center'>
-                    <File className='h-3 w-3 mr-1 text-blue-500' />
-                    <a
-                      href={attachment.url}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                      className='text-blue-600 hover:underline truncate'
+                  <li
+                    key={`${attachment.id}-${index}`}
+                    className='py-1 flex items-center justify-between'
+                  >
+                    <div className='flex items-center'>
+                      <File className='h-3 w-3 mr-1 text-blue-500' />
+                      <a
+                        href={attachment.url}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='text-blue-600 hover:underline truncate'
+                        onClick={(e) => {
+                          return e.stopPropagation();
+                        }}
+                      >
+                        {attachment.name || `File ${index + 1}`}
+                      </a>
+                    </div>
+                    <div
+                      className='text-xs text-red-500 cursor-pointer ml-2'
                       onClick={(e) => {
-                        return e.stopPropagation();
+                        return handleRemoveAttachment(attachment.id, e);
                       }}
                     >
-                      {attachment.name || `File ${index + 1}`}
-                    </a>
+                      X
+                    </div>
                   </li>
                 );
               })}
