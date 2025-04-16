@@ -6,7 +6,6 @@ import ColumnHeaderMenu from './ColumnHeaderMenu';
 const CustomHeaderComponent = (props) => {
   // Props from AG Grid header component
   const column = props.column;
-  console.log('🚀 column:', column);
   const displayName = props.displayName || '';
   const deleteColumn = props.deleteColumn;
   const enableSorting = props.enableSorting !== false;
