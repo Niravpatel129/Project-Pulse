@@ -350,7 +350,7 @@ export default function TablePage() {
           rowId: data._id,
         })
         .then(() => {
-          queryClient.invalidateQueries({ queryKey: ['table-records', tableId] });
+          // queryClient.invalidateQueries({ queryKey: ['table-records', tableId] });
         })
         .catch((error) => {
           console.error('Failed to update cell value:', error);
