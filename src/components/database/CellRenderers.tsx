@@ -1,6 +1,7 @@
 import FileUploadManagerModal from '@/components/ProjectPage/FileComponents/FileUploadManagerModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { getFileIcon } from '@/utils/fileIcons';
 import { File, Star } from 'lucide-react';
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
@@ -312,7 +313,6 @@ export const fileCellRenderer = (params: {
         </div>
       );
     }
-
     return (
       <div
         className='flex items-center gap-1 relative'
@@ -330,7 +330,18 @@ export const fileCellRenderer = (params: {
                   return setShowAttachmentsList(true);
                 }}
               >
-                <File className='h-6 w-6 text-blue-500' />
+                {/* Display image preview or file type icon based on content type */}
+                {attachments[0].contentType?.startsWith('image/') ? (
+                  <div className='h-6 w-6 relative overflow-hidden rounded-sm border border-blue-200'>
+                    <img
+                      src={attachments[0].url || attachments[0].downloadURL}
+                      alt={attachments[0].name}
+                      className='h-full w-full object-cover'
+                    />
+                  </div>
+                ) : (
+                  getFileIcon(attachments[0].name, attachments[0].contentType)
+                )}
                 {attachments.length > 1 && `+${attachments.length - 1}`}
               </div>
             </TooltipTrigger>
@@ -344,7 +355,17 @@ export const fileCellRenderer = (params: {
                       className='flex items-center gap-2 justify-between'
                     >
                       <div className='flex items-center gap-2'>
-                        <File className='h-4 w-4 text-blue-500' />
+                        {attachment.contentType?.startsWith('image/') ? (
+                          <div className='h-4 w-4 relative overflow-hidden rounded-sm border border-blue-200'>
+                            <img
+                              src={attachment.url || attachment.downloadURL}
+                              alt={attachment.name}
+                              className='h-full w-full object-cover'
+                            />
+                          </div>
+                        ) : (
+                          getFileIcon(attachment.name, attachment.contentType, 'h-4 w-4')
+                        )}
                         <div className='text-xs'>{attachment.name}</div>
                       </div>
                       {/* Remove attachment */}
