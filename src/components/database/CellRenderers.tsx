@@ -2,7 +2,7 @@ import FileUploadManagerModal from '@/components/ProjectPage/FileComponents/File
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getFileIcon } from '@/utils/fileIcons';
-import { File, Star } from 'lucide-react';
+import { File, Star, X } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
@@ -349,36 +349,61 @@ export const fileCellRenderer = (params: {
               </div>
             </TooltipTrigger>
             <TooltipContent className='w-60 bg-white text-black'>
-              <div className='flex flex-col gap-2 bg-white p-2 rounded-md'>
+              <div className='flex flex-col space-y-1.5 p-2'>
                 {attachments.map((attachment, index) => {
-                  console.log('🚀 attachment:', attachment);
                   return (
                     <div
                       key={`${attachment.id}-${index}`}
-                      className='flex items-center gap-2 justify-between'
+                      className='flex items-center justify-between py-0.5 hover:bg-gray-50 rounded px-1'
                     >
-                      <div className='flex items-center gap-2'>
+                      <div className='flex items-center space-x-2'>
                         {attachment.contentType?.startsWith('image/') ? (
-                          <div className='h-4 w-4 relative overflow-hidden rounded-sm border border-blue-200'>
-                            <img
+                          <div className='h-5 w-5 overflow-hidden rounded-sm border border-gray-200'>
+                            <Image
                               src={attachment.url || attachment.downloadURL}
                               alt={attachment.name}
-                              className='h-full w-full object-cover'
+                              width={20}
+                              height={20}
+                              className='object-cover'
                             />
                           </div>
                         ) : (
                           getFileIcon(attachment.name, attachment.contentType, 'h-4 w-4')
                         )}
-                        <div className='text-xs'>{attachment.name}</div>
+                        <div className='flex flex-col'>
+                          <span className='text-xs font-medium text-gray-700 truncate max-w-[180px]'>
+                            {attachment.name}
+                          </span>
+                          <span className='text-[10px] text-gray-500'>{attachment.size || ''}</span>
+                        </div>
                       </div>
-                      {/* Remove attachment */}
-                      <div
-                        className='text-xs text-red-500 cursor-pointer'
-                        onClick={(e) => {
-                          return handleRemoveAttachment(attachment.id, e);
-                        }}
-                      >
-                        X
+                      <div className='flex items-center gap-1'>
+                        <a
+                          href={attachment.downloadURL}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className='text-blue-500 hover:text-blue-700'
+                          onClick={(e) => {
+                            return e.stopPropagation();
+                          }}
+                        >
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Star className='h-3 w-3' />
+                            </TooltipTrigger>
+                            <TooltipContent side='bottom' className='text-xs'>
+                              Open file
+                            </TooltipContent>
+                          </Tooltip>
+                        </a>
+                        <button
+                          className='text-gray-400 hover:text-red-500 transition-colors'
+                          onClick={(e) => {
+                            return handleRemoveAttachment(attachment.id, e);
+                          }}
+                        >
+                          <X className='h-3 w-3' />
+                        </button>
                       </div>
                     </div>
                   );
