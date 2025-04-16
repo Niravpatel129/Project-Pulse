@@ -16,6 +16,20 @@ export interface Attachment {
   size?: string;
   id: string;
   fileRef?: any;
+  contentType?: string;
+  fileId?: string;
+  originalName?: string;
+  storagePath?: string;
+  downloadURL?: string;
+  workspaceId?: string;
+  uploadedBy?: {
+    _id?: string;
+    name?: string;
+    email?: string;
+  };
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Interface for the cell editor params
