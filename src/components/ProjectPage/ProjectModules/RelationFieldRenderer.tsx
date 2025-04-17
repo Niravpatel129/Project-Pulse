@@ -3,7 +3,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { getFileIcon } from '@/utils/fileIcons';
 import { Paperclip } from 'lucide-react';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 interface FieldItem {
   id: string;
@@ -48,6 +48,29 @@ export default function RelationFieldRenderer({
 }: RelationFieldRendererProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [buttonWidth, setButtonWidth] = useState<number>(0);
+
+  // Measure button width
+  useLayoutEffect(() => {
+    if (buttonRef.current) {
+      setButtonWidth(buttonRef.current.offsetWidth);
+    }
+  }, []);
+
+  // Update width on window resize
+  useEffect(() => {
+    const updateWidth = () => {
+      if (buttonRef.current) {
+        setButtonWidth(buttonRef.current.offsetWidth);
+      }
+    };
+
+    window.addEventListener('resize', updateWidth);
+    return () => {
+      return window.removeEventListener('resize', updateWidth);
+    };
+  }, []);
 
   // Check if we're on mobile
   useEffect(() => {
@@ -84,6 +107,7 @@ export default function RelationFieldRenderer({
     <Popover open={isOpen} onOpenChange={setIsOpen} modal>
       <PopoverTrigger asChild>
         <Button
+          ref={buttonRef}
           variant='outline'
           className='w-full justify-start text-left h-9 border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm transition-all focus-visible:border-gray-300 focus-visible:ring-1 focus-visible:ring-gray-300'
         >
@@ -91,10 +115,13 @@ export default function RelationFieldRenderer({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className={`${isMobile ? 'w-[calc(100vw-32px)]' : 'w-[400px]'} p-0`}
+        className='p-0'
         align='start'
         side={isMobile ? 'bottom' : undefined}
         sideOffset={isMobile ? 4 : 8}
+        style={{
+          width: buttonWidth > 0 ? `${buttonWidth}px` : isMobile ? 'calc(100vw-32px)' : '400px',
+        }}
       >
         {/* Scrollable content with relation items */}
         <div className={`${isMobile ? 'max-h-[50vh]' : 'max-h-[300px]'} overflow-y-auto`}>
