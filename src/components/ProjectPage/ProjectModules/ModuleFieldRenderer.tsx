@@ -253,7 +253,7 @@ export default function ModuleFieldRenderer({ field, value, onChange }: ModuleFi
               ) : (
                 <>
                   <ImageIcon className='h-4 w-4' />
-                  Add Image
+                  Add Attachment
                 </>
               )}
             </Button>

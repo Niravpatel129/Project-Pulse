@@ -518,29 +518,6 @@ Option 3`}
                                       </div>
                                     )}
 
-                                    {field.type === 'files' && (
-                                      <div
-                                        key={`files-${field.id || index}`}
-                                        className='flex items-center space-x-2 mt-2'
-                                      >
-                                        <Switch
-                                          id={`multiple-files-${field.id || index}`}
-                                          checked={field.fieldSettings?.multipleFiles || false}
-                                          onCheckedChange={(checked) => {
-                                            return updateField(index, {
-                                              fieldSettings: {
-                                                ...field.fieldSettings,
-                                                multipleFiles: checked,
-                                              },
-                                            });
-                                          }}
-                                        />
-                                        <Label htmlFor={`multiple-files-${field.id || index}`}>
-                                          Allow multiple files
-                                        </Label>
-                                      </div>
-                                    )}
-
                                     <Collapsible
                                       key={`settings-${field.id || index}`}
                                       defaultOpen={field.type === 'files'}
