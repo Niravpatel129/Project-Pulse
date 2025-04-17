@@ -3,10 +3,16 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Paperclip } from 'lucide-react';
 import { useState } from 'react';
 
-interface RelationItem {
+interface FieldItem {
   id: string;
-  value: string;
-  [key: string]: any; // For additional fields
+  value: any;
+  label: string;
+  type: string;
+}
+
+interface RelationItem {
+  rowId: string;
+  fields: FieldItem[];
 }
 
 interface RelationField {
@@ -16,13 +22,14 @@ interface RelationField {
   required?: boolean;
   description?: string;
   selectOptions?: { label: string; value: string }[];
+  popoverOptions?: RelationItem[];
   // New properties for relation display
   relationConfig?: {
     displayFields: Array<{
       key: string;
       label: string;
     }>;
-    data?: RelationItem[];
+    data?: any[];
   };
 }
 
@@ -38,31 +45,19 @@ export default function RelationFieldRenderer({
   onChange,
 }: RelationFieldRendererProps) {
   const [isOpen, setIsOpen] = useState(false);
+  console.log('🚀 field:', field.popoverOptions);
 
-  // Mock data if not provided through field.relationConfig
-  const relationItems = field.relationConfig?.data || [
-    {
-      1: { id: '1', value: 'John Doe', label: 'Name', type: 'text' },
-      2: { id: '2', value: '22', label: 'Age', type: 'text' },
-      3: { id: '3', value: '14 street', label: 'Address', type: 'text' },
-      4: { id: '4', value: 'www.imageurl.com', label: 'Attachment', type: 'attachment' },
-    },
-    {
-      1: { id: '1', value: 'John Doe', label: 'Name', type: 'text' },
-      2: { id: '2', value: '22', label: 'Age', type: 'text' },
-      3: { id: '3', value: '14 street', label: 'Address', type: 'text' },
-      4: { id: '4', value: 'www.imageurl.com', label: 'Attachment', type: 'attachment' },
-    },
-  ];
+  // Use the popoverOptions if provided, otherwise use empty array
+  const relationItems: RelationItem[] = field.popoverOptions || [];
 
-  // Find the selected item
+  // Find the selected item by looking for a match in the fields array
   const selectedItem = relationItems.find((item) => {
-    return item[1].value === value;
+    return item.rowId === value;
   });
 
-  // Generate grid template columns style based on the number of display fields
-  const gridStyle = {
-    gridTemplateColumns: `repeat(${field.relationConfig?.displayFields?.length || 2}, 1fr)`,
+  // Get the display value from the first field if available
+  const getDisplayValue = (item: RelationItem) => {
+    return item.fields.length > 0 ? `${item.fields[0].label}: ${item.fields[0].value}` : '';
   };
 
   return (
@@ -72,44 +67,42 @@ export default function RelationFieldRenderer({
           variant='outline'
           className='w-full justify-start text-left h-9 border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm transition-all focus-visible:border-gray-300 focus-visible:ring-1 focus-visible:ring-gray-300'
         >
-          {selectedItem ? selectedItem[1].value : `Select ${field.name}`}
+          {selectedItem ? getDisplayValue(selectedItem) : `Select ${field.name}`}
         </Button>
       </PopoverTrigger>
       <PopoverContent className='w-[400px] p-0' align='start'>
         {/* Scrollable content with relation items */}
-        <div className='max-h-[200px] overflow-y-auto'>
+        <div className='max-h-[300px] overflow-y-auto'>
           {relationItems.map((item) => {
             return (
               <div
-                key={item.id}
-                className={`flex items-center p-3 hover:bg-gray-50 cursor-pointer ${
-                  item.value === value ? 'bg-gray-50' : ''
+                key={item.rowId}
+                className={`flex flex-row w-full p-3 hover:bg-gray-50 cursor-pointer ${
+                  selectedItem?.rowId === item.rowId ? 'bg-gray-50' : ''
                 }`}
                 onClick={() => {
-                  onChange(item.value);
+                  // Use the rowId as the selected value
+                  onChange(item.rowId);
                   setIsOpen(false);
                 }}
               >
-                <div className='flex-1 grid gap-4 items-center'>
-                  <div className='flex justify-between w-full items-center'>
-                    {Object.keys(item).map((key) => {
-                      if (item[key].type === 'attachment') {
-                        return (
-                          <>
-                            <div className='flex-shrink-0'>
-                              <Paperclip className='h-5 w-5 text-gray-400' />
-                            </div>
-                          </>
-                        );
-                      }
-                      return (
-                        <div key={`item-${item.id}-field-${key}`} className='text-sm'>
-                          <div className='text-gray-500 text-xs truncate'>{item[key].label}</div>
-                          <div className='truncate'>{item[key].value}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                <div className='flex flex-row gap-2 justify-between w-full'>
+                  {item.fields.map((field) => {
+                    return (
+                      <div key={field.id} className='flex justify-between w-full items-center'>
+                        {field.type === 'attachment' ? (
+                          <div className='flex-shrink-0'>
+                            <Paperclip className='h-5 w-5 text-gray-400' />
+                          </div>
+                        ) : (
+                          <div className='text-sm'>
+                            <div className='text-gray-500 text-xs'>{field.label}</div>
+                            <div className='font-medium'>{field.value}</div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
