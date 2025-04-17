@@ -144,6 +144,7 @@ export default function NewProjectModules() {
         toast.success('Template created successfully');
       }
       queryClient.invalidateQueries({ queryKey: ['templates'] });
+      queryClient.invalidateQueries({ queryKey: ['template'] });
       setIsNewTemplateSheetOpen(false);
       setIsEditTemplateSheetOpen(false);
       setTemplateToEdit(null);

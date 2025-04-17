@@ -52,7 +52,6 @@ export default function NewTemplateModuleModal({
   isOpen,
   onClose,
   template,
-  templateName,
   onTemplateSelect,
   onEdit,
 }: NewTemplateModuleModalProps) {
@@ -87,6 +86,78 @@ export default function NewTemplateModuleModal({
     },
     enabled: isOpen,
   });
+
+  // Fetch template data for initial template
+  const { data: initialTemplateData } = useQuery({
+    queryKey: ['template', template._id],
+    queryFn: async () => {
+      const response = await newRequest.get(`/module-templates/${template._id}`);
+      return response.data;
+    },
+    enabled: isOpen,
+  });
+
+  // Effect to handle template data when it's loaded
+  useEffect(() => {
+    if (initialTemplateData) {
+      setTemplateDataMap((prev) => {
+        return {
+          ...prev,
+          [template._id]: initialTemplateData,
+        };
+      });
+
+      // Initialize form values for the first section
+      const initialValues: Record<string, any> = {};
+      initialTemplateData.data.fields.forEach((field) => {
+        initialValues[field._id] = field.multiple ? [] : '';
+      });
+
+      setSectionFormValues((prev) => {
+        return {
+          ...prev,
+          [template._id]: initialValues,
+        };
+      });
+    }
+  }, [initialTemplateData, template._id]);
+
+  // Function to fetch template data using React Query
+  const fetchTemplateData = async (templateId: string, sectionId: string) => {
+    try {
+      const { data } = await queryClient.fetchQuery({
+        queryKey: ['template', templateId],
+        queryFn: async () => {
+          const response = await newRequest.get(`/module-templates/${templateId}`);
+          return response.data;
+        },
+      });
+
+      setTemplateDataMap((prev) => {
+        return {
+          ...prev,
+          [templateId]: data,
+        };
+      });
+
+      // Initialize form values for the new section
+      const initialValues: Record<string, any> = {};
+      data.data.fields.forEach((field) => {
+        initialValues[field._id] = field.multiple ? [] : '';
+      });
+
+      setSectionFormValues((prev) => {
+        return {
+          ...prev,
+          [sectionId]: initialValues,
+        };
+      });
+
+      return data;
+    } catch (error) {
+      console.error(`Failed to fetch template data for ${templateId}:`, error);
+    }
+  };
 
   const createModuleMutation = useMutation({
     mutationFn: async (moduleData: ModuleData) => {
@@ -148,30 +219,6 @@ export default function NewTemplateModuleModal({
     createModuleMutation.mutate(moduleData);
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      newRequest.get(`/module-templates/${template._id}`).then((response) => {
-        setTemplateDataMap((prev) => {
-          return {
-            ...prev,
-            [template._id]: response.data,
-          };
-        });
-        // Initialize form values for the first section
-        const initialValues: Record<string, any> = {};
-        response.data.data.fields.forEach((field) => {
-          initialValues[field._id] = field.multiple ? [] : '';
-        });
-        setSectionFormValues((prev) => {
-          return {
-            ...prev,
-            [template._id]: initialValues,
-          };
-        });
-      });
-    }
-  }, [isOpen, template._id]);
-
   const handleAddTemplate = (templateId: string) => {
     const selectedTemplate = availableTemplates?.find((t) => {
       return t._id === templateId;
@@ -200,26 +247,7 @@ export default function NewTemplateModuleModal({
 
     // Fetch and add new template data if not already in map
     if (!templateDataMap[templateId]) {
-      newRequest.get(`/module-templates/${templateId}`).then((response) => {
-        const templateData = response.data;
-        setTemplateDataMap((prev) => {
-          return {
-            ...prev,
-            [templateId]: templateData,
-          };
-        });
-        // Initialize form values for the new section
-        const initialValues: Record<string, any> = {};
-        templateData.data.fields.forEach((field) => {
-          initialValues[field._id] = field.multiple ? [] : '';
-        });
-        setSectionFormValues((prev) => {
-          return {
-            ...prev,
-            [newSectionId]: initialValues,
-          };
-        });
-      });
+      fetchTemplateData(templateId, newSectionId);
     } else {
       // If template data already exists, just initialize the form values
       const templateData = templateDataMap[templateId];
