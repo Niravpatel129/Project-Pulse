@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { getFileIcon } from '@/utils/fileIcons';
 import { Paperclip } from 'lucide-react';
@@ -50,6 +51,7 @@ export default function RelationFieldRenderer({
   const [isMobile, setIsMobile] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [buttonWidth, setButtonWidth] = useState<number>(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Measure button width
   useLayoutEffect(() => {
@@ -103,6 +105,55 @@ export default function RelationFieldRenderer({
     return item.fields.length > 0 ? `${item.fields[0].label}: ${item.fields[0].value}` : '';
   };
 
+  // Enhanced search function that searches across all fields and values
+  const filterItems = (items: RelationItem[], query: string) => {
+    if (!query.trim()) return items;
+
+    const lowercaseQuery = query.toLowerCase().trim();
+
+    return items.filter((item) => {
+      // Search through all fields
+      return item.fields.some((field) => {
+        // Check field label
+        if (field.label.toLowerCase().includes(lowercaseQuery)) return true;
+
+        // Check field value - handle different types of values
+        if (field.value !== null && field.value !== undefined) {
+          // Handle string values
+          if (
+            typeof field.value === 'string' &&
+            field.value.toLowerCase().includes(lowercaseQuery)
+          ) {
+            return true;
+          }
+
+          // Handle number values
+          if (typeof field.value === 'number' && field.value.toString().includes(lowercaseQuery)) {
+            return true;
+          }
+
+          // Handle array values (like attachments)
+          if (Array.isArray(field.value) && field.value.length > 0) {
+            return field.value.some((val) => {
+              if (val.name && val.name.toLowerCase().includes(lowercaseQuery)) return true;
+              if (val.url && val.url.toLowerCase().includes(lowercaseQuery)) return true;
+              return false;
+            });
+          }
+
+          // Handle object values
+          if (typeof field.value === 'object') {
+            return Object.values(field.value).some((val) => {
+              return typeof val === 'string' && val.toLowerCase().includes(lowercaseQuery);
+            });
+          }
+        }
+
+        return false;
+      });
+    });
+  };
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen} modal>
       <PopoverTrigger asChild>
@@ -123,9 +174,20 @@ export default function RelationFieldRenderer({
           width: buttonWidth > 0 ? `${buttonWidth}px` : isMobile ? 'calc(100vw-32px)' : '400px',
         }}
       >
+        {/* Search bar */}
+        <div className='p-3'>
+          <Input
+            className='outline-none focus-visible:ring-0'
+            placeholder='Search across all fields'
+            value={searchQuery}
+            onChange={(e) => {
+              return setSearchQuery(e.target.value);
+            }}
+          />
+        </div>
         {/* Scrollable content with relation items */}
         <div className={`${isMobile ? 'max-h-[50vh]' : 'max-h-[300px]'} overflow-y-auto`}>
-          {relationItems.map((item) => {
+          {filterItems(relationItems, searchQuery).map((item) => {
             return (
               <div
                 key={item.rowId}

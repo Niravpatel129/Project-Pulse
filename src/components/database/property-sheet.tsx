@@ -24,7 +24,6 @@ import {
   FormInput,
   Hash,
   Link,
-  List,
   Mail,
   Percent,
   Phone,
@@ -109,15 +108,6 @@ const defaultPropertyTypes: PropertyType[] = [
     description: 'Binary yes/no values',
     hasDefault: true,
     editorType: 'agCheckboxCellEditor',
-  },
-  {
-    id: 'multi_select',
-    name: 'Multiple select',
-    iconName: 'multiselect',
-    icon: <List size={18} />,
-    description: 'Choose multiple options from a list',
-    hasOptions: true,
-    cellRenderer: 'tagsCellRenderer',
   },
   {
     id: 'single_select',
