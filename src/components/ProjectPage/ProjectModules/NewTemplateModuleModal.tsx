@@ -71,7 +71,7 @@ export default function NewTemplateModuleModal({
       formValues: {},
     },
   ]);
-  const [templateDataMap, setTemplateDataMap] = useState({});
+  const [templateDataMap, setTemplateDataMap] = useState<Record<string, any>>({});
   const [sectionFormValues, setSectionFormValues] = useState<Record<string, Record<string, any>>>(
     {},
   );
@@ -110,9 +110,16 @@ export default function NewTemplateModuleModal({
 
       // Initialize form values for the first section
       const initialValues: Record<string, any> = {};
-      initialTemplateData.data.fields.forEach((field) => {
-        initialValues[field._id] = field.multiple ? [] : '';
-      });
+      if (initialTemplateData.data && Array.isArray(initialTemplateData.data.fields)) {
+        initialTemplateData.data.fields.forEach((field) => {
+          initialValues[field._id] = field.multiple ? [] : '';
+        });
+      } else {
+        console.warn(
+          `Initial template data does not have the expected structure`,
+          initialTemplateData,
+        );
+      }
 
       setSectionFormValues((prev) => {
         return {
@@ -123,36 +130,55 @@ export default function NewTemplateModuleModal({
     }
   }, [initialTemplateData, template._id]);
 
+  // Monitor templateDataMap changes to ensure UI is updated when template data is fetched
+  useEffect(() => {
+    console.log('templateDataMap changed:', templateDataMap);
+    // This will force re-render of the component when templateDataMap changes
+  }, [templateDataMap]);
+
   // Function to fetch template data using React Query
   const fetchTemplateData = async (templateId: string, sectionId: string) => {
     try {
-      const { data } = await queryClient.fetchQuery({
-        queryKey: ['template', templateId],
-        queryFn: async () => {
-          const response = await newRequest.get(`/module-templates/${templateId}`);
-          return response.data;
-        },
-      });
+      console.log(`Fetching template data for ${templateId}, section ${sectionId}`);
 
+      // Use a different approach to handle the async query
+      const response = await newRequest.get(`/module-templates/${templateId}`);
+      console.log(`API response for template ${templateId}:`, response.data);
+      const data = response.data;
+
+      // Immediately update the template data map with the fetched data
       setTemplateDataMap((prev) => {
-        return {
+        const updated = {
           ...prev,
           [templateId]: data,
         };
+        console.log('Updated templateDataMap:', updated);
+        return updated;
       });
 
       // Initialize form values for the new section
       const initialValues: Record<string, any> = {};
-      data.data.fields.forEach((field) => {
-        initialValues[field._id] = field.multiple ? [] : '';
-      });
+      if (data && data.data && Array.isArray(data.data.fields)) {
+        console.log(`Found ${data.data.fields.length} fields for template ${templateId}`);
+        data.data.fields.forEach((field) => {
+          initialValues[field._id] = field.multiple ? [] : '';
+        });
+      } else {
+        console.warn(`Template data for ${templateId} does not have the expected structure`, data);
+      }
 
+      console.log(`Setting form values for section ${sectionId}:`, initialValues);
       setSectionFormValues((prev) => {
-        return {
+        const updated = {
           ...prev,
           [sectionId]: initialValues,
         };
+        console.log('Updated sectionFormValues:', updated);
+        return updated;
       });
+
+      // Invalidate the query to ensure the UI updates
+      queryClient.invalidateQueries({ queryKey: ['template', templateId] });
 
       return data;
     } catch (error) {
@@ -226,17 +252,23 @@ export default function NewTemplateModuleModal({
   };
 
   const handleAddTemplate = (templateId: string) => {
+    console.log(`Adding template: ${templateId}`);
     const selectedTemplate = availableTemplates?.find((t) => {
       return t._id === templateId;
     });
-    if (!selectedTemplate) return;
+    if (!selectedTemplate) {
+      console.warn(`Template with ID ${templateId} not found in availableTemplates`);
+      return;
+    }
+    console.log(`Selected template:`, selectedTemplate);
 
     // Create unique sectionId with timestamp
     const newSectionId = `${templateId}-${Date.now()}`; // Use timestamp to ensure uniqueness
+    console.log(`Generated section ID: ${newSectionId}`);
 
     // Add new section
     setSections((prev) => {
-      return [
+      const newSections = [
         ...prev,
         {
           templateId: selectedTemplate._id,
@@ -247,23 +279,45 @@ export default function NewTemplateModuleModal({
           formValues: {},
         },
       ];
+      console.log('Updated sections:', newSections);
+      return newSections;
     });
 
     // Fetch and add new template data if not already in map
+    console.log(
+      `Checking if template ${templateId} exists in templateDataMap:`,
+      templateDataMap[templateId] ? true : false,
+    );
     if (!templateDataMap[templateId]) {
+      console.log(`Template ${templateId} not in templateDataMap, fetching data...`);
       fetchTemplateData(templateId, newSectionId);
     } else {
       // If template data already exists, just initialize the form values
+      console.log(`Template ${templateId} already in templateDataMap, reusing data`);
       const templateData = templateDataMap[templateId];
+      console.log(`Existing template data:`, templateData);
       const initialValues: Record<string, any> = {};
-      templateData.data.fields.forEach((field) => {
-        initialValues[field._id] = field.multiple ? [] : '';
-      });
+
+      if (templateData && templateData.data && Array.isArray(templateData.data.fields)) {
+        console.log(`Found ${templateData.data.fields.length} fields in existing template data`);
+        templateData.data.fields.forEach((field) => {
+          initialValues[field._id] = field.multiple ? [] : '';
+        });
+      } else {
+        console.warn(
+          `Template data for ${templateId} does not have the expected structure`,
+          templateData,
+        );
+      }
+
+      console.log(`Setting form values for section ${newSectionId}:`, initialValues);
       setSectionFormValues((prev) => {
-        return {
+        const updated = {
           ...prev,
           [newSectionId]: initialValues,
         };
+        console.log('Updated sectionFormValues:', updated);
+        return updated;
       });
     }
 
@@ -294,8 +348,15 @@ export default function NewTemplateModuleModal({
   };
 
   const renderSection = (section) => {
+    console.log(`Rendering section ${section.sectionId} for template ${section.templateId}`);
+    console.log(`Section data:`, section);
+    console.log(`Template data from map:`, templateDataMap[section.templateId]);
     const template = templateDataMap[section.templateId]?.data;
-    if (!template || !template.fields) return null;
+    if (!template || !template.fields) {
+      console.warn(`Cannot render section: missing template data for ${section.templateId}`);
+      return null;
+    }
+    console.log(`Template fields:`, template.fields);
 
     return (
       <AnimatePresence mode='wait' key={section.sectionId}>
