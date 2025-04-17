@@ -83,7 +83,7 @@ export default function ModuleFieldRenderer({ field, value, onChange }: ModuleFi
           <Input
             id={field._id}
             placeholder={`Enter ${field.name}`}
-            className='mt-1 h-9 border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm transition-all focus-visible:border-gray-300 focus-visible:ring-1 focus-visible:ring-gray-300'
+            className='mt-1 h-9 border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm transition-all focus-visible:border-gray-300 focus-visible:ring-1 focus-visible:ring-gray-300 '
             value={value || ''}
             onChange={(e) => {
               return onChange(e.target.value);
@@ -292,7 +292,7 @@ export default function ModuleFieldRenderer({ field, value, onChange }: ModuleFi
         {field.name}
         {field.required && <span className='text-red-500 ml-1'>*</span>}
       </Label>
-      {renderField()}
+      <div className='font-medium text-[#1F2937]'>{renderField()}</div>
       {field.description && <p className='mt-1 text-xs text-gray-500'>{field.description}</p>}
     </motion.div>
   );

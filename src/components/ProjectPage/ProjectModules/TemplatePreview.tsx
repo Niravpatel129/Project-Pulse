@@ -111,7 +111,7 @@ export default function TemplatePreview({ templateDetails }: TemplatePreviewProp
                                       return (
                                         <div key={key} className='flex gap-2'>
                                           <span className='text-xs font-medium'>{key}:</span>
-                                          <span className='text-xs'>{value as string}</span>
+                                          {renderFieldValue(value)}
                                         </div>
                                       );
                                     },
@@ -183,4 +183,43 @@ export default function TemplatePreview({ templateDetails }: TemplatePreviewProp
       })}
     </motion.div>
   );
+}
+
+// Helper function to render different types of field values
+function renderFieldValue(value: any) {
+  if (value === null || value === undefined) {
+    return <span className='text-xs text-muted-foreground'>None</span>;
+  }
+
+  if (Array.isArray(value)) {
+    return (
+      <div className='flex flex-col'>
+        {value.length === 0 ? (
+          <span className='text-xs text-muted-foreground'>Empty list</span>
+        ) : (
+          value.map((item, idx) => {
+            return (
+              <div key={idx} className='text-xs'>
+                {typeof item === 'object' && item !== null ? (
+                  item.originalName || item.name ? (
+                    <span>{item.originalName || item.name}</span>
+                  ) : (
+                    <span>[Complex object]</span>
+                  )
+                ) : (
+                  String(item)
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+    );
+  }
+
+  if (typeof value === 'object' && value !== null) {
+    return <span className='text-xs'>[Complex object]</span>;
+  }
+
+  return <span className='text-xs'>{String(value)}</span>;
 }
