@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 import FilePreview from './FilePreview';
+import RelationFieldRenderer from './RelationFieldRenderer';
 
 interface ModuleFieldRendererProps {
   field: {
@@ -110,22 +111,7 @@ export default function ModuleFieldRenderer({ field, value, onChange }: ModuleFi
       case 'select':
       case 'relation':
         if (field.type === 'relation') {
-          return (
-            <Select value={value || ''} onValueChange={onChange}>
-              <SelectTrigger className='mt-1 h-9 border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm transition-all focus-visible:border-gray-300 focus-visible:ring-1 focus-visible:ring-gray-300'>
-                <SelectValue placeholder={`Select ${field.name}`} />
-              </SelectTrigger>
-              <SelectContent>
-                {field.selectOptions?.map((option, index) => {
-                  return (
-                    <SelectItem key={`${option.value}-${index}`} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          );
+          return <RelationFieldRenderer field={field} value={value} onChange={onChange} />;
         }
 
         return (
