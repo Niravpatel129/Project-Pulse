@@ -212,11 +212,7 @@ export default function AllTemplatesModal({
                         </div>
                       </div>
 
-                      <motion.div
-                        className='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity'
-                        initial={{ opacity: 0 }}
-                        whileHover={{ opacity: 1 }}
-                      >
+                      <motion.div className='absolute top-2 right-2'>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
