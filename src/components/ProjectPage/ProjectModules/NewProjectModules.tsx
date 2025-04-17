@@ -164,7 +164,6 @@ export default function NewProjectModules() {
 
     try {
       await newRequest.delete(`/project-modules/${module._id}`);
-      toast.success('Module deleted successfully');
       setIsDeleteDialogOpen(false);
       setModuleToDelete(null);
     } catch (error) {

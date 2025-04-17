@@ -23,7 +23,6 @@ import {
   File,
   FormInput,
   Hash,
-  ImageIcon,
   Link,
   List,
   Mail,
@@ -101,14 +100,7 @@ const defaultPropertyTypes: PropertyType[] = [
     cellRenderer: 'fileCellRenderer',
     cellEditor: 'attachmentCellEditor',
   },
-  {
-    id: 'image',
-    name: 'Image',
-    iconName: 'image',
-    icon: <ImageIcon size={18} />,
-    description: 'Upload and display images',
-    cellRenderer: 'imageCellRenderer',
-  },
+
   {
     id: 'checkbox',
     name: 'Checkbox',

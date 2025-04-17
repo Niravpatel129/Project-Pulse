@@ -155,7 +155,6 @@ export function useModuleDialog({ moduleId }: ModuleDialogHookProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projectModules'] });
-      toast.success('Module deleted successfully');
     },
     onError: () => {
       toast.error('Failed to delete module');
