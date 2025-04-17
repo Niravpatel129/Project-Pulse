@@ -145,6 +145,11 @@ export default function EditModuleFromTemplateSheet({
   );
   const queryClient = useQueryClient();
 
+  // Monitor templateDataMap changes
+  useEffect(() => {
+    console.log('templateDataMap changed:', templateDataMap);
+  }, [templateDataMap]);
+
   // Get the current version's content
   const currentVersion = module.versions.find((v) => {
     return v.number === module.currentVersion;
@@ -224,10 +229,10 @@ export default function EditModuleFromTemplateSheet({
           relationType?: string;
         }>;
         sectionId: string;
+        formValues: Record<string, any>;
       }>;
-      formValues: Record<string, Record<string, any>>;
     }) => {
-      console.log('🚀 sections:', sections);
+      console.log('🚀 Sending update data:', moduleData);
       const response = await newRequest.put(
         `/project-modules/templated-module/${module._id}`,
         moduleData,
@@ -244,18 +249,39 @@ export default function EditModuleFromTemplateSheet({
   });
 
   const removeSection = (sectionId: string) => {
+    console.log(`Removing section ${sectionId}`);
+
     // Update local sections
-    const updatedSections = sections.filter((section) => {
-      return section.sectionId !== sectionId;
+    setLocalSections((prev) => {
+      const updated = prev.filter((section) => {
+        return section.sectionId !== sectionId;
+      });
+      console.log('Updated sections after removal:', updated);
+      return updated;
     });
-    setLocalSections(updatedSections);
+
+    // Also clean up form values for this section
+    setSectionFormValues((prev) => {
+      const updated = { ...prev };
+      delete updated[sectionId];
+      return updated;
+    });
   };
 
-  const handleAddTemplate = (templateId: string) => {
+  const handleAddTemplate = async (templateId: string) => {
+    console.log(`Adding template: ${templateId}`);
     const selectedTemplate = availableTemplates?.find((t) => {
       return t._id === templateId;
     });
-    if (!selectedTemplate) return;
+    if (!selectedTemplate) {
+      console.warn(`Template with ID ${templateId} not found in availableTemplates`);
+      return;
+    }
+    console.log(`Selected template:`, selectedTemplate);
+
+    // Create new unique section ID
+    const newSectionId = `${templateId}-${Date.now()}`;
+    console.log(`Generated section ID: ${newSectionId}`);
 
     // Create new section with empty fields
     const newSection = {
@@ -263,23 +289,90 @@ export default function EditModuleFromTemplateSheet({
       templateName: selectedTemplate.name,
       templateDescription: selectedTemplate.description,
       fields: [],
-      sectionId: `${templateId}-${Date.now()}`,
+      sectionId: newSectionId,
     };
 
     // Update local sections
-    setLocalSections([...sections, newSection]);
+    setLocalSections((prev) => {
+      const newSections = [...prev, newSection];
+      console.log('Updated sections:', newSections);
+      return newSections;
+    });
 
-    // Initialize form values for the new section
-    const initialValues: Record<string, any> = {};
-    selectedTemplate.fields.forEach((field) => {
-      initialValues[field._id] = field.multiple ? [] : '';
-    });
-    setSectionFormValues((prev) => {
-      return {
-        ...prev,
-        [newSection.sectionId]: initialValues,
-      };
-    });
+    // Fetch template data if not already available
+    if (!templateDataMap[templateId]) {
+      console.log(`Template ${templateId} not in templateDataMap, fetching data...`);
+      try {
+        const response = await newRequest.get(`/module-templates/${templateId}`);
+        console.log(`API response for template ${templateId}:`, response.data);
+
+        // Update template data map
+        setTemplateDataMap((prev) => {
+          const updated = {
+            ...prev,
+            [templateId]: response.data,
+          };
+          console.log('Updated templateDataMap:', updated);
+          return updated;
+        });
+
+        // Initialize form values
+        const initialValues: Record<string, any> = {};
+        if (response.data && response.data.data && Array.isArray(response.data.data.fields)) {
+          console.log(
+            `Found ${response.data.data.fields.length} fields for template ${templateId}`,
+          );
+          response.data.data.fields.forEach((field) => {
+            initialValues[field._id] = field.multiple ? [] : '';
+          });
+        } else {
+          console.warn(
+            `Template data for ${templateId} does not have the expected structure`,
+            response.data,
+          );
+        }
+
+        // Update form values for this section
+        setSectionFormValues((prev) => {
+          const updated = {
+            ...prev,
+            [newSectionId]: initialValues,
+          };
+          console.log('Updated sectionFormValues:', updated);
+          return updated;
+        });
+      } catch (error) {
+        console.error(`Failed to fetch template data for ${templateId}:`, error);
+      }
+    } else {
+      // If template data already exists, just initialize the form values
+      console.log(`Template ${templateId} already in templateDataMap, reusing data`);
+      const templateData = templateDataMap[templateId];
+      console.log(`Existing template data:`, templateData);
+
+      const initialValues: Record<string, any> = {};
+      if (templateData && templateData.data && Array.isArray(templateData.data.fields)) {
+        console.log(`Found ${templateData.data.fields.length} fields in existing template data`);
+        templateData.data.fields.forEach((field) => {
+          initialValues[field._id] = field.multiple ? [] : '';
+        });
+      } else {
+        console.warn(
+          `Template data for ${templateId} does not have the expected structure`,
+          templateData,
+        );
+      }
+
+      // Update form values for this section
+      setSectionFormValues((prev) => {
+        const updated = {
+          ...prev,
+          [newSectionId]: initialValues,
+        };
+        console.log('Updated sectionFormValues:', updated);
+        return updated;
+      });
+    }
 
     setIsPopoverOpen(false);
   };
@@ -300,19 +393,33 @@ export default function EditModuleFromTemplateSheet({
     e.preventDefault();
     if (!templatesData) return;
 
+    // Create sections with formValues embedded in each section
+    const sectionsWithFormValues = sections.map((section) => {
+      return {
+        ...section,
+        formValues: sectionFormValues[section.sectionId] || {},
+      };
+    });
+
+    console.log('Prepared sections with form values:', sectionsWithFormValues);
+
     const moduleData = {
       name: moduleName,
-      description: module.versions[0].contentSnapshot.sections[0].templateDescription,
-      sections: sections,
-      formValues: sectionFormValues,
+      description: module.versions[0].contentSnapshot.sections[0].templateDescription || '',
+      sections: sectionsWithFormValues,
     };
 
     updateModuleMutation.mutate(moduleData);
   };
 
   const renderSection = (section) => {
+    console.log(`Rendering section ${section.sectionId} for template ${section.templateId}`);
+
     const template = templateDataMap[section.templateId]?.data;
-    if (!template || !template.fields) return null;
+    if (!template || !template.fields) {
+      console.warn(`Cannot render section: missing template data for ${section.templateId}`);
+      return null;
+    }
 
     return (
       <Card
@@ -321,12 +428,17 @@ export default function EditModuleFromTemplateSheet({
         className='overflow-hidden border border-gray-200 shadow-sm relative group/section'
       >
         {sections.length > 1 && section.sectionId !== `${sections[0].templateId}-0` && (
-          <X
-            className='absolute top-2 right-2 cursor-pointer text-gray-400 hover:text-gray-700 transition-all h-4 w-4 opacity-0 group-hover/section:opacity-100'
-            onClick={() => {
-              return removeSection(section.sectionId);
+          <motion.button
+            className='absolute top-2 right-2 cursor-pointer text-gray-400 hover:text-gray-600'
+            onClick={(e) => {
+              e.stopPropagation();
+              removeSection(section.sectionId);
             }}
-          />
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <X className='h-3.5 w-3.5' />
+          </motion.button>
         )}
         <CardContent className='p-4'>
           <div className='flex items-center gap-2 pb-3'>
@@ -425,7 +537,7 @@ export default function EditModuleFromTemplateSheet({
                                 className='text-gray-400 hover:text-gray-600'
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  // TODO: Implement remove section functionality
+                                  removeSection(section.sectionId);
                                 }}
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
@@ -522,47 +634,43 @@ export default function EditModuleFromTemplateSheet({
               <h1 className='text-lg font-medium tracking-tight text-gray-900'>Edit Module</h1>
 
               <div className='mt-4 space-y-4'>
-                <motion.div
-                  className='flex flex-col gap-4'
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Card className='overflow-hidden border border-gray-200 shadow-sm'>
-                    <CardContent className='p-4'>
-                      <div className='space-y-4'>
-                        <div className='space-y-2'>
-                          <Label htmlFor='moduleName'>Module Name</Label>
-                          <Input
-                            id='moduleName'
-                            value={moduleName}
-                            onChange={(e) => {
-                              return setModuleName(e.target.value);
-                            }}
-                            placeholder='Enter module name'
-                          />
-                        </div>
+                <div className='space-y-4'>
+                  <div className='space-y-2'>
+                    <Label htmlFor='moduleName'>Module Name</Label>
+                    <Input
+                      id='moduleName'
+                      value={moduleName}
+                      onChange={(e) => {
+                        return setModuleName(e.target.value);
+                      }}
+                      placeholder='Enter module name'
+                    />
+                  </div>
 
-                        {isLoading ? (
-                          <>
-                            <div className='space-y-2'>
-                              <Skeleton className='h-4 w-24' />
-                              <Skeleton className='h-10 w-full' />
-                            </div>
-                            <div className='space-y-2'>
-                              <Skeleton className='h-4 w-32' />
-                              <Skeleton className='h-10 w-full' />
-                            </div>
-                          </>
-                        ) : (
-                          sections.map((section) => {
-                            return renderSection(section);
-                          })
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                  <motion.div
+                    className='flex flex-col gap-4'
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className='space-y-2'>
+                          <Skeleton className='h-4 w-24' />
+                          <Skeleton className='h-10 w-full' />
+                        </div>
+                        <div className='space-y-2'>
+                          <Skeleton className='h-4 w-32' />
+                          <Skeleton className='h-10 w-full' />
+                        </div>
+                      </>
+                    ) : (
+                      sections.map((section) => {
+                        return renderSection(section);
+                      })
+                    )}
+                  </motion.div>
+                </div>
               </div>
             </div>
 
