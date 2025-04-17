@@ -28,6 +28,7 @@ interface TemplatePreviewProps {
 }
 
 export default function TemplatePreview({ templateDetails }: TemplatePreviewProps) {
+  console.log('🚀 templateDetails:', templateDetails);
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -122,7 +123,7 @@ export default function TemplatePreview({ templateDetails }: TemplatePreviewProp
                                   </span>
                                 )}
                               </div>
-                            ) : field.fieldType === 'attachment' ? (
+                            ) : field.fieldType === 'attachment' || field.fieldType === 'files' ? (
                               <div className='bg-white p-2 rounded border'>
                                 {field.fieldValue ? (
                                   <FilePreview
@@ -163,7 +164,11 @@ export default function TemplatePreview({ templateDetails }: TemplatePreviewProp
                               </div>
                             ) : (
                               <div className='bg-white p-2 rounded border'>
-                                {field.fieldValue ? (
+                                {field.fieldValue && typeof field.fieldValue === 'object' ? (
+                                  <span className='text-xs text-muted-foreground'>
+                                    [Complex object]
+                                  </span>
+                                ) : field.fieldValue ? (
                                   <span className='text-sm'>{field.fieldValue}</span>
                                 ) : (
                                   <span className='text-xs text-muted-foreground'>No response</span>
