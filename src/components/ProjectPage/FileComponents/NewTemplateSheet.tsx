@@ -724,15 +724,7 @@ Option 3`}
                 </div>
               )}
 
-              <div className='flex items-center justify-between'>
-                <div className='flex items-center space-x-2'>
-                  <Switch
-                    id='multiple'
-                    checked={allowMultiple}
-                    onCheckedChange={setAllowMultiple}
-                  />
-                  <Label htmlFor='multiple'>Allow multiple records</Label>
-                </div>
+              <div className='flex items-center justify-end'>
                 <Button
                   onClick={() => {
                     console.log('selectedDatabase', selectedDatabase);
