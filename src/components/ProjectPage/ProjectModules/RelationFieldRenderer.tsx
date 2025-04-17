@@ -1,6 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { getFileIcon } from '@/utils/fileIcons';
 import { Paperclip } from 'lucide-react';
+import Image from 'next/image';
 import { useState } from 'react';
 
 interface FieldItem {
@@ -61,7 +63,7 @@ export default function RelationFieldRenderer({
   };
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover open={isOpen} onOpenChange={setIsOpen} modal>
       <PopoverTrigger asChild>
         <Button
           variant='outline'
@@ -87,12 +89,49 @@ export default function RelationFieldRenderer({
                 }}
               >
                 <div className='flex flex-row gap-2 justify-between w-full'>
-                  {item.fields.map((field) => {
+                  {item.fields.map((field, index) => {
                     return (
-                      <div key={field.id} className='flex justify-between w-full items-center'>
+                      <div key={field.id} className=''>
                         {field.type === 'attachment' ? (
-                          <div className='flex-shrink-0'>
-                            <Paperclip className='h-5 w-5 text-gray-400' />
+                          <div className='flex flex-row items-center gap-2'>
+                            {field.value && field.value.length > 0 ? (
+                              <>
+                                {field.value[0].contentType?.startsWith('image/') ? (
+                                  <div className='relative h-12 w-12 rounded overflow-hidden border border-gray-200'>
+                                    <Image
+                                      height={74}
+                                      width={74}
+                                      src={field.value[0].url}
+                                      alt={field.value[0].name}
+                                      className='h-full w-full object-cover'
+                                    />
+                                    {field.value.length > 1 && (
+                                      <div className='absolute bottom-0 right-0 bg-gray-800 text-white text-[8px] px-1 rounded-tl'>
+                                        +{field.value.length - 1}
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className='flex-shrink-0 border border-gray-200 rounded-md p-2'>
+                                    {getFileIcon(
+                                      field.value[0].name,
+                                      field.value[0].contentType,
+                                      'h-8 w-8',
+                                    )}
+                                    {field.value.length > 1 && (
+                                      <span className='text-xs text-gray-500 ml-1'>
+                                        +{field.value.length - 1}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <div className='border border-gray-200 rounded-md p-2'>
+                                <Paperclip className='h-8 w-8 text-gray-400' />
+                                <div className='text-sm text-gray-500'></div>
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <div className='text-sm'>
