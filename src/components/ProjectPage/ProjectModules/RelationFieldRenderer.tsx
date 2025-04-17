@@ -3,7 +3,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { getFileIcon } from '@/utils/fileIcons';
 import { Paperclip } from 'lucide-react';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface FieldItem {
   id: string;
@@ -47,7 +47,25 @@ export default function RelationFieldRenderer({
   onChange,
 }: RelationFieldRendererProps) {
   const [isOpen, setIsOpen] = useState(false);
-  console.log('🚀 field:', field.popoverOptions);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if we're on mobile
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Initial check
+    checkIfMobile();
+
+    // Add event listener for window resize
+    window.addEventListener('resize', checkIfMobile);
+
+    // Cleanup
+    return () => {
+      return window.removeEventListener('resize', checkIfMobile);
+    };
+  }, []);
 
   // Use the popoverOptions if provided, otherwise use empty array
   const relationItems: RelationItem[] = field.popoverOptions || [];
@@ -72,9 +90,14 @@ export default function RelationFieldRenderer({
           {selectedItem ? getDisplayValue(selectedItem) : `Select ${field.name}`}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className='w-[400px] p-0' align='start'>
+      <PopoverContent
+        className={`${isMobile ? 'w-[calc(100vw-32px)]' : 'w-[400px]'} p-0`}
+        align='start'
+        side={isMobile ? 'bottom' : undefined}
+        sideOffset={isMobile ? 4 : 8}
+      >
         {/* Scrollable content with relation items */}
-        <div className='max-h-[300px] overflow-y-auto'>
+        <div className={`${isMobile ? 'max-h-[50vh]' : 'max-h-[300px]'} overflow-y-auto`}>
           {relationItems.map((item) => {
             return (
               <div
@@ -88,10 +111,14 @@ export default function RelationFieldRenderer({
                   setIsOpen(false);
                 }}
               >
-                <div className='flex flex-row gap-2 justify-between w-full'>
+                <div
+                  className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-2 ${
+                    isMobile ? '' : 'justify-between'
+                  } w-full`}
+                >
                   {item.fields.map((field, index) => {
                     return (
-                      <div key={field.id} className=''>
+                      <div key={field.id} className={isMobile ? 'mb-2' : ''}>
                         {field.type === 'attachment' ? (
                           <div className='flex flex-row items-center gap-2'>
                             {field.value && field.value.length > 0 ? (
