@@ -110,7 +110,28 @@ export default function NewTemplateSheet({
     if (initialTemplate) {
       setTemplateName(initialTemplate.name);
       setTemplateDescription(initialTemplate.description);
-      setTemplateFields(initialTemplate.fields);
+
+      // Process fields to ensure correct structure with fieldSettings
+      const processedFields = initialTemplate.fields.map((field) => {
+        const processedField = { ...field };
+
+        // Move lookupFields to fieldSettings for relation type fields
+        // @ts-expect-error - Handle potential missing property
+        if (field.type === 'relation' && field.lookupFields) {
+          if (!processedField.fieldSettings) {
+            processedField.fieldSettings = {};
+          }
+
+          // @ts-expect-error - Handle potential missing property
+          processedField.fieldSettings.lookupFields = [...field.lookupFields];
+          // @ts-expect-error - Remove the property after copying
+          delete processedField.lookupFields;
+        }
+
+        return processedField;
+      });
+
+      setTemplateFields(processedFields);
     }
   }, [initialTemplate]);
 
@@ -226,13 +247,34 @@ export default function NewTemplateSheet({
           return true;
         })
         .map((field) => {
-          return {
-            ...field,
-            fieldSettings:
-              field.type === 'files'
-                ? { multipleFiles: field.fieldSettings?.multipleFiles || false }
-                : undefined,
-          };
+          // Create proper field structure with fieldSettings
+          const mappedField = { ...field };
+
+          // For relation type fields, ensure lookupFields are in fieldSettings
+          if (field.type === 'relation') {
+            if (!mappedField.fieldSettings) {
+              mappedField.fieldSettings = {};
+            }
+
+            // Transfer any lookupFields from field to fieldSettings
+            // The property might exist due to the way we're handling data in the UI
+            // @ts-expect-error - We'll remove this property after copying
+            if (mappedField.lookupFields) {
+              // @ts-expect-error - Handle potential missing fieldSettings
+              mappedField.fieldSettings.lookupFields = [...mappedField.lookupFields];
+              // @ts-expect-error - Remove the property after copying
+              delete mappedField.lookupFields;
+            }
+          }
+
+          // Handle files fields
+          if (field.type === 'files' && !mappedField.fieldSettings) {
+            mappedField.fieldSettings = {
+              multipleFiles: field.fieldSettings?.multipleFiles || false,
+            };
+          }
+
+          return mappedField;
         }),
     };
 
@@ -693,17 +735,20 @@ Option 3`}
                 </div>
                 <Button
                   onClick={() => {
+                    console.log('selectedDatabase', selectedDatabase);
                     if (!selectedDatabase) return;
 
                     const selectedDb = databases.find((db) => {
+                      console.log('🚀 templateFields:', templateFields);
                       return db.id === selectedDatabase;
                     });
                     if (!selectedDb) return;
 
                     // Find the current field being edited
                     const currentFieldIndex = templateFields.findIndex((field) => {
-                      return field.type === 'relation' && !field.relationType;
+                      return field.type === 'relation';
                     });
+                    console.log('currentFieldIndex', currentFieldIndex);
                     if (currentFieldIndex === -1) return;
 
                     // Update the current field
@@ -711,13 +756,15 @@ Option 3`}
                       type: 'relation',
                       relationType: selectedDb.id as 'inventory' | 'customers' | 'orders',
                       multiple: allowMultiple,
-                      lookupFields: Object.entries(lookupFields)
-                        .filter(([_, checked]) => {
-                          return checked;
-                        })
-                        .map(([fieldId]) => {
-                          return fieldId;
-                        }),
+                      fieldSettings: {
+                        lookupFields: Object.entries(lookupFields)
+                          .filter(([_, checked]) => {
+                            return checked;
+                          })
+                          .map(([fieldId]) => {
+                            return fieldId;
+                          }),
+                      },
                     });
 
                     setIsLinkModalOpen(false);

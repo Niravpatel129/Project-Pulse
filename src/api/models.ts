@@ -79,12 +79,12 @@ export interface TemplateField {
   options?: string[];
   multiple?: boolean;
   relationType?: 'inventory' | 'customers' | 'orders';
-  lookupFields?: string[]; // Fields to show from the linked record
   defaultValue?: string | number;
   fieldSettings?: {
     multipleFiles?: boolean;
     minLength?: number;
     maxLength?: number;
+    lookupFields?: string[];
     pattern?: string;
     maxSize?: number;
     minItems?: number;
