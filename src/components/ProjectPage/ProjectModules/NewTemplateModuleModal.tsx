@@ -35,8 +35,8 @@ interface ModuleData {
     templateDescription: string;
     fields: any[];
     sectionId: string;
+    formValues: Record<string, any>;
   }>;
-  formValues: Record<string, Record<string, any>>;
 }
 
 interface NewTemplateModuleModalProps {
@@ -68,6 +68,7 @@ export default function NewTemplateModuleModal({
       templateDescription: template.description,
       fields: [],
       sectionId: `${template._id}-0`,
+      formValues: {},
     },
   ]);
   const [templateDataMap, setTemplateDataMap] = useState({});
@@ -116,7 +117,7 @@ export default function NewTemplateModuleModal({
       setSectionFormValues((prev) => {
         return {
           ...prev,
-          [template._id]: initialValues,
+          [`${template._id}-0`]: initialValues,
         };
       });
     }
@@ -187,7 +188,7 @@ export default function NewTemplateModuleModal({
       const sectionErrors: string[] = [];
       template.fields.forEach((field) => {
         if (field.required) {
-          const value = sectionFormValues[section.templateId]?.[field._id];
+          const value = sectionFormValues[section.sectionId]?.[field._id];
           if (!value || (Array.isArray(value) && value.length === 0)) {
             sectionErrors.push(`${field.name} is required`);
             isValid = false;
@@ -196,7 +197,7 @@ export default function NewTemplateModuleModal({
       });
 
       if (sectionErrors.length > 0) {
-        errors[section.templateId] = sectionErrors;
+        errors[section.sectionId] = sectionErrors;
       }
     });
 
@@ -212,8 +213,13 @@ export default function NewTemplateModuleModal({
     const moduleData = {
       name: template.name,
       description: template.description,
-      sections: sections,
-      formValues: sectionFormValues,
+      sections: sections.map((section) => {
+        // Include the form values directly in each section
+        return {
+          ...section,
+          formValues: sectionFormValues[section.sectionId] || {},
+        };
+      }),
     };
 
     createModuleMutation.mutate(moduleData);
@@ -225,10 +231,7 @@ export default function NewTemplateModuleModal({
     });
     if (!selectedTemplate) return;
 
-    // Count existing sections with this template to create unique sectionId
-    const existingSectionsCount = sections.filter((s) => {
-      return s.templateId === templateId;
-    }).length;
+    // Create unique sectionId with timestamp
     const newSectionId = `${templateId}-${Date.now()}`; // Use timestamp to ensure uniqueness
 
     // Add new section
@@ -241,6 +244,7 @@ export default function NewTemplateModuleModal({
           templateDescription: selectedTemplate.description,
           fields: [],
           sectionId: newSectionId,
+          formValues: {},
         },
       ];
     });
@@ -331,29 +335,29 @@ export default function NewTemplateModuleModal({
                     <div key={field._id}>
                       <ModuleFieldRenderer
                         field={field}
-                        value={sectionFormValues[section.templateId]?.[field._id] || ''}
+                        value={sectionFormValues[section.sectionId]?.[field._id] || ''}
                         onChange={(value) => {
                           setSectionFormValues((prev) => {
                             return {
                               ...prev,
-                              [section.templateId]: {
-                                ...(prev[section.templateId] || {}),
+                              [section.sectionId]: {
+                                ...(prev[section.sectionId] || {}),
                                 [field._id]: value,
                               },
                             };
                           });
                           // Clear error when field is updated
-                          if (formErrors[section.templateId]?.length > 0) {
+                          if (formErrors[section.sectionId]?.length > 0) {
                             setFormErrors((prev) => {
                               const newErrors = { ...prev };
-                              if (newErrors[section.templateId]) {
-                                newErrors[section.templateId] = newErrors[
-                                  section.templateId
-                                ].filter((error) => {
-                                  return !error.includes(field.name);
-                                });
-                                if (newErrors[section.templateId].length === 0) {
-                                  delete newErrors[section.templateId];
+                              if (newErrors[section.sectionId]) {
+                                newErrors[section.sectionId] = newErrors[section.sectionId].filter(
+                                  (error) => {
+                                    return !error.includes(field.name);
+                                  },
+                                );
+                                if (newErrors[section.sectionId].length === 0) {
+                                  delete newErrors[section.sectionId];
                                 }
                               }
                               return newErrors;
@@ -361,11 +365,11 @@ export default function NewTemplateModuleModal({
                           }
                         }}
                       />
-                      {formErrors[section.templateId]?.some((error) => {
+                      {formErrors[section.sectionId]?.some((error) => {
                         return error.includes(field.name);
                       }) && (
                         <p className='text-sm text-red-500 mt-1'>
-                          {formErrors[section.templateId].find((error) => {
+                          {formErrors[section.sectionId].find((error) => {
                             return error.includes(field.name);
                           })}
                         </p>
@@ -383,18 +387,24 @@ export default function NewTemplateModuleModal({
 
   const handleTemplateSelect = (selectedTemplate) => {
     setCurrentTemplate(selectedTemplate);
+    const newSectionId = `${selectedTemplate._id}-0`;
     setSections([
       {
         templateId: selectedTemplate._id,
         templateName: selectedTemplate.name,
         templateDescription: selectedTemplate.description,
         fields: [],
-        sectionId: `${selectedTemplate._id}-0`,
+        sectionId: newSectionId,
+        formValues: {},
       },
     ]);
     setSectionFormValues({});
     setFormErrors({});
     setShowAllTemplates(false);
+
+    // Fetch template data and initialize form values
+    fetchTemplateData(selectedTemplate._id, newSectionId);
+
     if (onTemplateSelect) {
       onTemplateSelect(selectedTemplate);
     }
