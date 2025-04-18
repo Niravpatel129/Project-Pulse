@@ -1207,84 +1207,86 @@ export default function FormBuilder() {
 
           {formElements.length === 0 ? (
             <div className='flex flex-col items-center justify-center h-full'>
-              <div className='rounded-full bg-gray-100 p-4 mb-5 shadow-sm'>
-                <HelpCircle className='h-7 w-7 text-gray-400' />
+              <div className='rounded-full bg-gray-100 p-3 md:p-4 mb-3 md:mb-5 shadow-sm'>
+                <HelpCircle className='h-5 w-5 md:h-7 md:w-7 text-gray-400' />
               </div>
-              <h3 className='text-xl font-medium mb-3 text-gray-800'>
+              <h3 className='text-lg md:text-xl font-medium mb-2 md:mb-3 text-gray-800 text-center px-4'>
                 Get started with these Form Fields
               </h3>
-              <p className='text-gray-500 mb-10'>Or right-click anywhere to add elements</p>
+              <p className='text-gray-500 mb-6 md:mb-10 text-sm md:text-base text-center px-4'>
+                Or right-click anywhere to add elements
+              </p>
 
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5 max-w-3xl'>
+              <div className='grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-5 max-w-3xl px-2 md:px-0'>
                 <Button
                   variant='outline'
-                  className='h-28 flex flex-col gap-3 items-center justify-center rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all'
+                  className='h-20 md:h-28 flex flex-col gap-2 md:gap-3 items-center justify-center rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all p-2 md:p-4'
                   onClick={() => {
                     return addElement('Text Block');
                   }}
                 >
-                  <MessageSquare className='h-7 w-7 text-gray-500' />
-                  <span className='font-normal'>Add Text Block</span>
+                  <MessageSquare className='h-5 w-5 md:h-7 md:w-7 text-gray-500' />
+                  <span className='font-normal text-xs md:text-sm'>Add Text Block</span>
                 </Button>
                 <Button
                   variant='outline'
-                  className='h-28 flex flex-col gap-3 items-center justify-center rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all'
+                  className='h-20 md:h-28 flex flex-col gap-2 md:gap-3 items-center justify-center rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all p-2 md:p-4'
                   onClick={() => {
                     return addElement('Single Response');
                   }}
                 >
-                  <MessageSquare className='h-7 w-7 rotate-180 text-gray-500' />
-                  <span className='font-normal'>Add Single Response</span>
+                  <MessageSquare className='h-5 w-5 md:h-7 md:w-7 rotate-180 text-gray-500' />
+                  <span className='font-normal text-xs md:text-sm'>Add Single Response</span>
                 </Button>
                 <Button
                   variant='outline'
-                  className='h-28 flex flex-col gap-3 items-center justify-center rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all'
+                  className='h-20 md:h-28 flex flex-col gap-2 md:gap-3 items-center justify-center rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all p-2 md:p-4'
                   onClick={() => {
                     return addElement('Rating');
                   }}
                 >
-                  <Star className='h-7 w-7 text-gray-500' />
-                  <span className='font-normal'>Add Rating</span>
+                  <Star className='h-5 w-5 md:h-7 md:w-7 text-gray-500' />
+                  <span className='font-normal text-xs md:text-sm'>Add Rating</span>
                 </Button>
                 <Button
                   variant='outline'
-                  className='h-28 flex flex-col gap-3 items-center justify-center rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all'
+                  className='h-20 md:h-28 flex flex-col gap-2 md:gap-3 items-center justify-center rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all p-2 md:p-4'
                   onClick={() => {
                     return addElement('Phone Number');
                   }}
                 >
-                  <Phone className='h-7 w-7 text-gray-500' />
-                  <span className='font-normal'>Add Phone Number</span>
+                  <Phone className='h-5 w-5 md:h-7 md:w-7 text-gray-500' />
+                  <span className='font-normal text-xs md:text-sm'>Add Phone Number</span>
                 </Button>
                 <Button
                   variant='outline'
-                  className='h-28 flex flex-col gap-3 items-center justify-center rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all'
+                  className='h-20 md:h-28 flex flex-col gap-2 md:gap-3 items-center justify-center rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all p-2 md:p-4'
                   onClick={() => {
                     return addElement('Radio Buttons');
                   }}
                 >
-                  <Radio className='h-7 w-7 text-gray-500' />
-                  <span className='font-normal'>Add Radio Buttons</span>
+                  <Radio className='h-5 w-5 md:h-7 md:w-7 text-gray-500' />
+                  <span className='font-normal text-xs md:text-sm'>Add Radio Buttons</span>
                 </Button>
                 <Button
                   variant='outline'
-                  className='h-28 flex flex-col gap-3 items-center justify-center rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all'
+                  className='h-20 md:h-28 flex flex-col gap-2 md:gap-3 items-center justify-center rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all p-2 md:p-4'
                   onClick={() => {
                     return addElement('File Upload');
                   }}
                 >
-                  <FileUp className='h-7 w-7 text-gray-500' />
-                  <span className='font-normal'>Add File Upload</span>
+                  <FileUp className='h-5 w-5 md:h-7 md:w-7 text-gray-500' />
+                  <span className='font-normal text-xs md:text-sm'>Add File Upload</span>
                 </Button>
                 <Button
                   variant='outline'
-                  className='h-28 flex flex-col gap-3 items-center justify-center rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all'
+                  className='h-20 md:h-28 flex flex-col gap-2 md:gap-3 items-center justify-center rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all p-2 md:p-4 sm:col-span-2 lg:col-span-1'
                   onClick={() => {
                     return addClientDetailsSection();
                   }}
                 >
-                  <User2 className='h-7 w-7 text-gray-500' />
-                  <span className='font-normal'>Add Client Details</span>
+                  <User2 className='h-5 w-5 md:h-7 md:w-7 text-gray-500' />
+                  <span className='font-normal text-xs md:text-sm'>Add Client Details</span>
                 </Button>
               </div>
             </div>
@@ -1319,18 +1321,18 @@ export default function FormBuilder() {
                     }}
                   >
                     <div className='flex items-center justify-between mb-2'>
-                      <div className='flex items-center gap-2'>
+                      <div className='flex items-center gap-2 overflow-hidden'>
                         {getElementIcon(element.type)}
-                        <span className='text-sm font-medium truncate max-w-[200px]'>
+                        <span className='text-xs md:text-sm font-medium truncate max-w-[120px] md:max-w-[200px]'>
                           {element.title}
                         </span>
-                        {element.required && <span className='text-red-500'>*</span>}
+                        {element.required && <span className='text-red-500 flex-shrink-0'>*</span>}
 
                         {/* Conditional indicator (only in edit mode) */}
                         {element.conditions && element.conditions.length > 0 && !previewMode && (
                           <Badge
                             variant='outline'
-                            className='ml-1 text-xs bg-blue-50 text-blue-600 border-blue-200'
+                            className='ml-1 text-xs bg-blue-50 text-blue-600 border-blue-200 hidden sm:inline-flex'
                           >
                             Conditional
                           </Badge>
@@ -1341,7 +1343,7 @@ export default function FormBuilder() {
                           <Button
                             variant='ghost'
                             size='icon'
-                            className='h-8 w-8'
+                            className='h-7 w-7'
                             onClick={(e) => {
                               e.stopPropagation();
                               openElementEditor(element);
@@ -1351,7 +1353,7 @@ export default function FormBuilder() {
                           </Button>
                           <Popover>
                             <PopoverTrigger asChild>
-                              <Button variant='ghost' size='icon' className='h-8 w-8'>
+                              <Button variant='ghost' size='icon' className='h-7 w-7'>
                                 <MoreHorizontal className='h-4 w-4' />
                               </Button>
                             </PopoverTrigger>
@@ -1396,7 +1398,9 @@ export default function FormBuilder() {
 
                     {/* Element description */}
                     {element.description && (
-                      <div className='text-sm text-gray-500 mb-2'>{element.description}</div>
+                      <div className='text-xs md:text-sm text-gray-500 mb-2'>
+                        {element.description}
+                      </div>
                     )}
 
                     {/* Render different form elements based on type */}
@@ -1833,14 +1837,14 @@ export default function FormBuilder() {
       {/* Footer */}
       <footer
         className={cn(
-          'border-t p-3 md:p-4 flex items-center justify-between sticky bottom-0 z-10 backdrop-blur-sm w-full',
+          'border-t p-2 md:p-4 flex items-center justify-between sticky bottom-0 z-10 backdrop-blur-sm w-full',
           changesSaved ? 'bg-gray-50/90' : 'bg-white/90',
         )}
       >
         <div className='flex items-center gap-2'>
           {changesSaved ? (
             <>
-              <div className='h-6 w-6 rounded-full bg-green-100 flex items-center justify-center shadow-sm'>
+              <div className='h-5 md:h-6 w-5 md:w-6 rounded-full bg-green-100 flex items-center justify-center shadow-sm'>
                 <svg
                   width='12'
                   height='12'
@@ -1857,27 +1861,29 @@ export default function FormBuilder() {
                   ></path>
                 </svg>
               </div>
-              <span className='text-sm text-gray-500'>Changes saved</span>
+              <span className='text-xs md:text-sm text-gray-500 hidden sm:inline'>
+                Changes saved
+              </span>
             </>
           ) : (
-            <span className='text-sm text-amber-600 font-medium'>Unsaved changes</span>
+            <span className='text-xs md:text-sm text-amber-600 font-medium'>Unsaved changes</span>
           )}
         </div>
-        <div className='flex gap-3'>
+        <div className='flex gap-2 md:gap-3'>
           {previewMode && (
             <Button
               variant='outline'
               onClick={() => {
                 return setPreviewMode(false);
               }}
-              className='rounded-full'
+              className='rounded-full text-xs px-2 md:px-4 md:text-sm'
             >
               Exit Preview
             </Button>
           )}
           <Button
             className={cn(
-              'rounded-full',
+              'rounded-full text-xs px-2 md:px-4 md:text-sm',
               changesSaved
                 ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                 : 'bg-green-600 hover:bg-green-700 text-white',
@@ -1885,8 +1891,9 @@ export default function FormBuilder() {
             onClick={saveChanges}
             disabled={changesSaved}
           >
-            <Save className='h-4 w-4 mr-2' />
-            Save Changes
+            <Save className='h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2' />
+            <span className='hidden sm:inline'>Save Changes</span>
+            <span className='sm:hidden'>Save</span>
           </Button>
         </div>
       </footer>
