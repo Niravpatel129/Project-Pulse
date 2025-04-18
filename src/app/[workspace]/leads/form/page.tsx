@@ -32,9 +32,12 @@ import {
   FileUp,
   Grip,
   HelpCircle,
+  Home,
+  Layout,
   List,
   Mail,
   MapPin,
+  Menu,
   MessageSquare,
   MoreHorizontal,
   Phone,
@@ -125,6 +128,9 @@ export default function FormBuilder() {
   const [showElementTypeMenu, setShowElementTypeMenu] = useState(false);
   const [elementTypeMenuPosition, setElementTypeMenuPosition] = useState({ x: 0, y: 0 });
   const [showValidationSettings, setShowValidationSettings] = useState(false);
+  const [showMobileNav, setShowMobileNav] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Generate a unique ID
   const generateId = () => {
@@ -168,6 +174,18 @@ export default function FormBuilder() {
       setFormValues(initialValues);
     }
   }, [previewMode, formElements]);
+
+  // Check if the device is mobile
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    return () => {
+      return window.removeEventListener('resize', checkIfMobile);
+    };
+  }, []);
 
   const addElement = (elementType: string) => {
     const newElement: FormElement = {
@@ -695,46 +713,133 @@ export default function FormBuilder() {
     >
       {/* Header */}
       <header className='border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10 shadow-sm w-full'>
-        <div className='flex items-center px-4 md:px-6 h-16'>
-          <Button variant='ghost' size='icon' className='mr-3 text-gray-500 hover:text-gray-700'>
-            <ArrowLeft className='h-5 w-5' />
+        <div className='flex items-center px-4 md:px-6 h-14 md:h-16'>
+          <Button
+            variant='ghost'
+            size='icon'
+            className='mr-2 md:mr-3 text-gray-500 hover:text-gray-700'
+            onClick={() => {
+              return isMobile ? setShowMobileMenu(!showMobileMenu) : null;
+            }}
+          >
+            {isMobile ? <Menu className='h-5 w-5' /> : <ArrowLeft className='h-5 w-5' />}
           </Button>
           <div className='flex flex-col'>
             <div className='flex items-center gap-2'>
-              <span className='font-medium text-gray-800 text-lg tracking-tight'>Form Builder</span>
-              <span className='text-gray-400'>/</span>
-              <span className='text-gray-600'>College Intake Form</span>
+              <span className='font-medium text-gray-800 text-base md:text-lg tracking-tight'>
+                Form Builder
+              </span>
+              <span className='text-gray-400 hidden sm:inline'>/</span>
+              <span className='text-gray-600 text-sm hidden sm:inline'>College Intake Form</span>
             </div>
           </div>
-          <div className='ml-auto flex items-center gap-3'>
+          <div className='ml-auto flex items-center gap-2 md:gap-3'>
             <Button
               variant={previewMode ? 'default' : 'outline'}
               size='sm'
               onClick={() => {
                 return setPreviewMode(!previewMode);
               }}
-              className='gap-2 rounded-full px-4'
+              className='gap-1 md:gap-2 rounded-full px-2 md:px-4 text-xs'
             >
-              {previewMode ? <Edit2 className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
-              {previewMode ? 'Edit Mode' : 'Preview Mode'}
+              {previewMode ? (
+                <Edit2 className='h-3 w-3 md:h-4 md:w-4' />
+              ) : (
+                <Eye className='h-3 w-3 md:h-4 md:w-4' />
+              )}
+              <span className='hidden sm:inline'>{previewMode ? 'Edit Mode' : 'Preview Mode'}</span>
             </Button>
             <Button
               variant='ghost'
               size='icon'
-              className='rounded-full text-gray-500 hover:text-gray-700'
+              className='rounded-full text-gray-500 hover:text-gray-700 hidden md:flex'
             >
               <Settings className='h-5 w-5' />
             </Button>
             <Button
               variant='ghost'
               size='icon'
-              className='rounded-full text-gray-500 hover:text-gray-700'
+              className='rounded-full text-gray-500 hover:text-gray-700 hidden md:flex'
             >
               <HelpCircle className='h-5 w-5' />
             </Button>
           </div>
         </div>
       </header>
+
+      {/* Mobile Menu Overlay */}
+      {showMobileMenu && isMobile && (
+        <div
+          className='fixed inset-0 bg-black/50 z-50'
+          onClick={() => {
+            return setShowMobileMenu(false);
+          }}
+        >
+          <div
+            className='absolute top-0 left-0 h-full w-3/4 max-w-xs bg-white shadow-lg p-4'
+            onClick={(e) => {
+              return e.stopPropagation();
+            }}
+          >
+            <div className='flex items-center justify-between mb-6'>
+              <h2 className='font-medium text-xl'>Form Builder</h2>
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={() => {
+                  return setShowMobileMenu(false);
+                }}
+              >
+                <X className='h-5 w-5' />
+              </Button>
+            </div>
+            <div className='space-y-6'>
+              <div>
+                <h3 className='text-sm font-medium text-gray-500 mb-3'>ACTIONS</h3>
+                <div className='space-y-2'>
+                  <Button variant='ghost' className='w-full justify-start text-base'>
+                    <Home className='h-5 w-5 mr-3' />
+                    Dashboard
+                  </Button>
+                  <Button variant='ghost' className='w-full justify-start text-base'>
+                    <Layout className='h-5 w-5 mr-3' />
+                    Forms
+                  </Button>
+                  <Button variant='ghost' className='w-full justify-start text-base'>
+                    <Settings className='h-5 w-5 mr-3' />
+                    Settings
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <h3 className='text-sm font-medium text-gray-500 mb-3'>CURRENT FORM</h3>
+                <Button
+                  variant={!previewMode ? 'default' : 'outline'}
+                  className='w-full justify-start text-base mb-2'
+                  onClick={() => {
+                    setPreviewMode(false);
+                    setShowMobileMenu(false);
+                  }}
+                >
+                  <Edit2 className='h-5 w-5 mr-3' />
+                  Edit Form
+                </Button>
+                <Button
+                  variant={previewMode ? 'default' : 'outline'}
+                  className='w-full justify-start text-base'
+                  onClick={() => {
+                    setPreviewMode(true);
+                    setShowMobileMenu(false);
+                  }}
+                >
+                  <Eye className='h-5 w-5 mr-3' />
+                  Preview Form
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className='flex flex-1 overflow-hidden'>
@@ -743,8 +848,24 @@ export default function FormBuilder() {
           className={cn(
             'w-full md:w-80 border-r bg-white overflow-y-auto shadow-sm',
             previewMode ? 'hidden' : '',
+            !previewMode && isMobile && !showMobileNav ? 'hidden' : '',
+            !previewMode && isMobile && showMobileNav ? 'fixed inset-0 z-40' : '',
           )}
         >
+          {isMobile && (
+            <div className='flex justify-between items-center p-4 border-b'>
+              <h2 className='font-medium'>Form Editor</h2>
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={() => {
+                  return setShowMobileNav(false);
+                }}
+              >
+                <X className='h-5 w-5' />
+              </Button>
+            </div>
+          )}
           <Tabs
             defaultValue='elements'
             value={activeTab}
@@ -1156,7 +1277,10 @@ export default function FormBuilder() {
         {/* Form Canvas */}
         <div
           className={cn('flex-1 overflow-y-auto p-4 md:p-8 bg-white', previewMode ? 'w-full' : '')}
-          onContextMenu={!previewMode ? showElementMenu : undefined}
+          onContextMenu={!previewMode && !isMobile ? showElementMenu : undefined}
+          onClick={() => {
+            return isMobile && showMobileNav ? setShowMobileNav(false) : null;
+          }}
         >
           {previewMode && (
             <div className='mb-6 p-4 bg-blue-50/70 text-blue-700 rounded-xl flex items-center justify-between shadow-sm'>
@@ -1834,71 +1958,124 @@ export default function FormBuilder() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer
-        className={cn(
-          'border-t p-2 md:p-4 flex items-center justify-between sticky bottom-0 z-10 backdrop-blur-sm w-full',
-          changesSaved ? 'bg-gray-50/90' : 'bg-white/90',
-        )}
-      >
-        <div className='flex items-center gap-2'>
-          {changesSaved ? (
-            <>
-              <div className='h-5 md:h-6 w-5 md:w-6 rounded-full bg-green-100 flex items-center justify-center shadow-sm'>
-                <svg
-                  width='12'
-                  height='12'
-                  viewBox='0 0 15 15'
-                  fill='none'
-                  xmlns='http://www.w3.org/2000/svg'
-                >
-                  <path
-                    d='M11.4669 3.72684C11.7558 3.91574 11.8369 4.30308 11.648 4.59198L7.39799 11.092C7.29783 11.2452 7.13556 11.3467 6.95402 11.3699C6.77247 11.3931 6.58989 11.3355 6.45446 11.2124L3.70446 8.71241C3.44905 8.48022 3.43023 8.08494 3.66242 7.82953C3.89461 7.57412 4.28989 7.55529 4.5453 7.78749L6.75292 9.79441L10.6018 3.90792C10.7907 3.61902 11.178 3.53795 11.4669 3.72684Z'
-                    fill='currentColor'
-                    fillRule='evenodd'
-                    clipRule='evenodd'
-                    className='text-green-600'
-                  ></path>
-                </svg>
-              </div>
-              <span className='text-xs md:text-sm text-gray-500 hidden sm:inline'>
-                Changes saved
-              </span>
-            </>
-          ) : (
-            <span className='text-xs md:text-sm text-amber-600 font-medium'>Unsaved changes</span>
-          )}
-        </div>
-        <div className='flex gap-2 md:gap-3'>
-          {previewMode && (
-            <Button
-              variant='outline'
-              onClick={() => {
-                return setPreviewMode(false);
-              }}
-              className='rounded-full text-xs px-2 md:px-4 md:text-sm'
-            >
-              Exit Preview
-            </Button>
-          )}
+      {/* Mobile Bottom Nav */}
+      {isMobile && !previewMode && (
+        <div className='fixed bottom-0 left-0 right-0 h-16 bg-white border-t flex items-center justify-around px-2 z-30'>
           <Button
-            className={cn(
-              'rounded-full text-xs px-2 md:px-4 md:text-sm',
-              changesSaved
-                ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                : 'bg-green-600 hover:bg-green-700 text-white',
-            )}
+            variant={showMobileNav && activeTab === 'elements' ? 'default' : 'ghost'}
+            size='icon'
+            className='flex flex-col items-center gap-1 h-auto py-1 w-16'
+            onClick={() => {
+              setShowMobileNav(true);
+              setActiveTab('elements');
+            }}
+          >
+            <Plus className='h-5 w-5' />
+            <span className='text-xs'>Elements</span>
+          </Button>
+          <Button
+            variant={showMobileNav && activeTab === 'myform' ? 'default' : 'ghost'}
+            size='icon'
+            className='flex flex-col items-center gap-1 h-auto py-1 w-16'
+            onClick={() => {
+              setShowMobileNav(true);
+              setActiveTab('myform');
+            }}
+          >
+            <Layout className='h-5 w-5' />
+            <span className='text-xs'>Form</span>
+          </Button>
+          <Button
+            variant='ghost'
+            size='icon'
+            className='flex flex-col items-center gap-1 h-auto py-1 w-16'
+            onClick={() => {
+              return setPreviewMode(true);
+            }}
+          >
+            <Eye className='h-5 w-5' />
+            <span className='text-xs'>Preview</span>
+          </Button>
+          <Button
+            variant={changesSaved ? 'ghost' : 'default'}
+            size='icon'
+            className='flex flex-col items-center gap-1 h-auto py-1 w-16'
             onClick={saveChanges}
             disabled={changesSaved}
           >
-            <Save className='h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2' />
-            <span className='hidden sm:inline'>Save Changes</span>
-            <span className='sm:hidden'>Save</span>
+            <Save className='h-5 w-5' />
+            <span className='text-xs'>Save</span>
           </Button>
         </div>
-      </footer>
+      )}
 
-      {/* Element Editor Dialog */}
+      {/* Footer (desktop only) */}
+      {!isMobile && (
+        <footer
+          className={cn(
+            'border-t p-2 md:p-4 flex items-center justify-between sticky bottom-0 z-10 backdrop-blur-sm w-full',
+            changesSaved ? 'bg-gray-50/90' : 'bg-white/90',
+          )}
+        >
+          <div className='flex items-center gap-2'>
+            {changesSaved ? (
+              <>
+                <div className='h-5 md:h-6 w-5 md:w-6 rounded-full bg-green-100 flex items-center justify-center shadow-sm'>
+                  <svg
+                    width='12'
+                    height='12'
+                    viewBox='0 0 15 15'
+                    fill='none'
+                    xmlns='http://www.w3.org/2000/svg'
+                  >
+                    <path
+                      d='M11.4669 3.72684C11.7558 3.91574 11.8369 4.30308 11.648 4.59198L7.39799 11.092C7.29783 11.2452 7.13556 11.3467 6.95402 11.3699C6.77247 11.3931 6.58989 11.3355 6.45446 11.2124L3.70446 8.71241C3.44905 8.48022 3.43023 8.08494 3.66242 7.82953C3.89461 7.57412 4.28989 7.55529 4.5453 7.78749L6.75292 9.79441L10.6018 3.90792C10.7907 3.61902 11.178 3.53795 11.4669 3.72684Z'
+                      fill='currentColor'
+                      fillRule='evenodd'
+                      clipRule='evenodd'
+                      className='text-green-600'
+                    ></path>
+                  </svg>
+                </div>
+                <span className='text-xs md:text-sm text-gray-500 hidden sm:inline'>
+                  Changes saved
+                </span>
+              </>
+            ) : (
+              <span className='text-xs md:text-sm text-amber-600 font-medium'>Unsaved changes</span>
+            )}
+          </div>
+          <div className='flex gap-2 md:gap-3'>
+            {previewMode && (
+              <Button
+                variant='outline'
+                onClick={() => {
+                  return setPreviewMode(false);
+                }}
+                className='rounded-full text-xs px-2 md:px-4 md:text-sm'
+              >
+                Exit Preview
+              </Button>
+            )}
+            <Button
+              className={cn(
+                'rounded-full text-xs px-2 md:px-4 md:text-sm',
+                changesSaved
+                  ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  : 'bg-green-600 hover:bg-green-700 text-white',
+              )}
+              onClick={saveChanges}
+              disabled={changesSaved}
+            >
+              <Save className='h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2' />
+              <span className='hidden sm:inline'>Save Changes</span>
+              <span className='sm:hidden'>Save</span>
+            </Button>
+          </div>
+        </footer>
+      )}
+
+      {/* Element Editor Dialog - Make more mobile friendly */}
       {editingElement && (
         <Dialog
           open={!!editingElement}
@@ -1906,16 +2083,25 @@ export default function FormBuilder() {
             return !open && setEditingElement(null);
           }}
         >
-          <DialogContent className='w-[95vw] max-w-[600px] rounded-xl max-h-[90vh] overflow-y-auto'>
+          <DialogContent
+            className={cn(
+              'w-[95vw] max-w-[600px] rounded-xl max-h-[90vh] overflow-y-auto',
+              isMobile ? 'p-4' : '',
+            )}
+          >
             <DialogHeader>
-              <DialogTitle className='text-xl font-medium tracking-tight'>
+              <DialogTitle
+                className={cn('text-xl font-medium tracking-tight', isMobile ? 'text-lg' : '')}
+              >
                 Edit {editingElement.type}
               </DialogTitle>
             </DialogHeader>
 
-            <div className='grid gap-4 py-4'>
-              <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='title' className='text-right'>
+            <div className='grid gap-4 py-2 md:py-4'>
+              <div
+                className={cn('grid items-center gap-3', isMobile ? 'grid-cols-1' : 'grid-cols-4')}
+              >
+                <Label htmlFor='title' className={isMobile ? '' : 'text-right'}>
                   Title
                 </Label>
                 <Input
@@ -1924,7 +2110,7 @@ export default function FormBuilder() {
                   onChange={(e) => {
                     return setEditingElement({ ...editingElement, title: e.target.value });
                   }}
-                  className='col-span-3'
+                  className={isMobile ? 'col-span-1' : 'col-span-3'}
                 />
               </div>
 
@@ -2395,17 +2581,22 @@ export default function FormBuilder() {
               )}
             </div>
 
-            <div className='flex justify-end gap-2'>
+            <div className={cn('flex gap-2', isMobile ? 'flex-col mt-6' : 'justify-end')}>
               <Button
                 type='button'
                 variant='outline'
                 onClick={() => {
                   return setEditingElement(null);
                 }}
+                className={isMobile ? 'w-full' : ''}
               >
                 Cancel
               </Button>
-              <Button type='button' onClick={saveElementChanges}>
+              <Button
+                type='button'
+                onClick={saveElementChanges}
+                className={isMobile ? 'w-full' : ''}
+              >
                 Save Changes
               </Button>
             </div>
