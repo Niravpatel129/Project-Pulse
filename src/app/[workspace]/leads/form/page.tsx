@@ -1003,7 +1003,7 @@ export default function FormBuilder() {
                           <div className='flex items-center gap-2 flex-1'>
                             <Grip className='h-4 w-4 text-gray-400 cursor-grab' />
                             {getElementIcon(element.type)}
-                            <span className='font-medium truncate max-w-[200px]'>
+                            <span className='text-sm font-medium truncate max-w-[200px]'>
                               {element.title}
                             </span>
                             {element.required && <span className='text-red-500 text-xs'>*</span>}
@@ -1046,7 +1046,6 @@ export default function FormBuilder() {
                               </TooltipProvider>
                             )}
                           </div>
-
                           <div className='flex items-center gap-1 opacity-0 group-hover:opacity-100'>
                             <Button
                               variant='ghost'
@@ -1072,39 +1071,60 @@ export default function FormBuilder() {
                             >
                               <ArrowLeft className='h-4 w-4 -rotate-90' />
                             </Button>
-                            <Button
-                              variant='ghost'
-                              size='icon'
-                              className='h-7 w-7'
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                duplicateElement(element.id);
-                              }}
-                            >
-                              <Copy className='h-4 w-4' />
-                            </Button>
-                            <Button
-                              variant='ghost'
-                              size='icon'
-                              className='h-7 w-7'
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openElementEditor(element);
-                              }}
-                            >
-                              <Edit2 className='h-4 w-4' />
-                            </Button>
-                            <Button
-                              variant='ghost'
-                              size='icon'
-                              className='h-7 w-7 text-red-500'
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteElement(element.id);
-                              }}
-                            >
-                              <Trash2 className='h-4 w-4' />
-                            </Button>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant='ghost'
+                                  size='icon'
+                                  className='h-7 w-7'
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <MoreHorizontal className='h-4 w-4' />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className='w-48 p-1'>
+                                <div className='space-y-1'>
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    className='w-full justify-start gap-2'
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      duplicateElement(element.id);
+                                    }}
+                                  >
+                                    <Copy className='h-4 w-4' />
+                                    <span>Duplicate</span>
+                                  </Button>
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    className='w-full justify-start gap-2'
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openElementEditor(element);
+                                    }}
+                                  >
+                                    <Edit2 className='h-4 w-4' />
+                                    <span>Edit</span>
+                                  </Button>
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    className='w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50'
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      deleteElement(element.id);
+                                    }}
+                                  >
+                                    <Trash2 className='h-4 w-4' />
+                                    <span>Delete</span>
+                                  </Button>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
                           </div>
                         </div>
                       );
@@ -1299,7 +1319,9 @@ export default function FormBuilder() {
                     <div className='flex items-center justify-between mb-2'>
                       <div className='flex items-center gap-2'>
                         {getElementIcon(element.type)}
-                        <span className='font-medium truncate max-w-[200px]'>{element.title}</span>
+                        <span className='text-sm font-medium truncate max-w-[200px]'>
+                          {element.title}
+                        </span>
                         {element.required && <span className='text-red-500'>*</span>}
 
                         {/* Conditional indicator (only in edit mode) */}
