@@ -125,21 +125,18 @@
   --ag-selected-row-background-color: rgba(59, 130, 246, 0.2);
 }
 
-/* Remove excess borders */
 .ag-theme-alpine .ag-root-wrapper {
   border: none;
   border-radius: 6px;
   overflow: hidden;
 }
 
-/* Cell editing styles */
 .ag-theme-alpine .ag-cell-inline-editing {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   border-radius: 4px;
   padding: 8px;
 }
 
-/* Pagination styles */
 .ag-theme-alpine .ag-paging-panel {
   border-top: 1px solid var(--ag-border-color);
   color: #6b7280;
@@ -154,4 +151,5 @@
   display: flex;
   align-items: center;
   overflow: scroll;
-} */
+} 
+*/
