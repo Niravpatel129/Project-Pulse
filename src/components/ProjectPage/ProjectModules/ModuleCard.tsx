@@ -72,24 +72,24 @@ const ModuleCard = ({
     >
       {/* Top Part */}
       <div className='flex items-center justify-center flex-grow relative'>
-        <div className='absolute top-3 left-1'>
+        <div className='absolute top-4 left-4 z-10 bg-opacity-50 overflow-hidden rounded bg-white/60 backdrop-blur-sm'>
           {item.moduleType === 'file' && (
-            <div className='px-2 py-1 text-[10px] font-medium tracking-wider uppercase bg-white/90 backdrop-blur-sm rounded-full text-blue-700'>
+            <div className='px-2 py-1 text-[10px] font-medium tracking-wider uppercase backdrop-blur-sm rounded text-blue-700'>
               {item.moduleType}
             </div>
           )}
           {item.moduleType === 'figma' && (
-            <div className='px-2 py-1 text-[10px] font-medium tracking-wider uppercase bg-white/90 backdrop-blur-sm rounded-full text-orange-700'>
+            <div className='px-2 py-1 text-[10px] font-medium tracking-wider uppercase backdrop-blur-sm rounded text-orange-700'>
               {item.moduleType}
             </div>
           )}
           {item.moduleType === 'template' && (
-            <div className='px-2 py-1 text-[10px] font-medium tracking-wider uppercase bg-white/90 backdrop-blur-sm rounded-full text-purple-700'>
+            <div className='px-2 py-1 text-[10px] font-medium tracking-wider uppercase backdrop-blur-sm rounded text-purple-700'>
               {item.moduleType}
             </div>
           )}
           {!['file', 'figma', 'template'].includes(item.moduleType) && (
-            <div className='px-2 py-1 text-[10px] font-medium tracking-wider uppercase bg-white/90 backdrop-blur-sm rounded-full text-gray-700'>
+            <div className='px-2 py-1 text-[10px] font-medium tracking-wider uppercase backdrop-blur-sm rounded text-gray-700 z-10'>
               {item.moduleType}
             </div>
           )}
@@ -99,7 +99,7 @@ const ModuleCard = ({
             <Image
               src={item.content.fileId.downloadURL}
               alt={item.name}
-              className='max-h-full max-w-full object-cover'
+              className='max-h-full max-w-full object-cover p-3 !rounded-2xl'
               fill
             />
           </div>
@@ -108,7 +108,7 @@ const ModuleCard = ({
             <Image
               src={thumbnailUrl}
               alt={item.name}
-              className='max-h-full max-w-full object-cover'
+              className='max-h-full max-w-full object-cover p-3 !rounded-2xl'
               fill
             />
           </div>
