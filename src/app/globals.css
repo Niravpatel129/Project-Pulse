@@ -91,7 +91,7 @@
   background-color: var(--rdp-background-color);
 }
 
-/* AG Grid Custom Styling */
+/* 
 .ag-theme-alpine {
   --ag-header-height: 40px;
   --ag-header-foreground-color: #374151;
@@ -150,9 +150,8 @@
     padding: 10px;
   }
 }
-
 .ag-cell {
   display: flex;
   align-items: center;
   overflow: scroll;
-}
+} */
