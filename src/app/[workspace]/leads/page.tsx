@@ -4,6 +4,7 @@ import { CreateFormModal } from '@/components/leads/CreateFormModal';
 import { FormSettings } from '@/components/leads/FormSettings';
 import { FormsTable } from '@/components/leads/FormsTable';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { CiFolderOn } from 'react-icons/ci';
 
@@ -11,6 +12,7 @@ export default function LeadsInterface() {
   const [activeTab, setActiveTab] = useState('leads');
   const [isCreateFormModalOpen, setIsCreateFormModalOpen] = useState(false);
   const [hasForms, setHasForms] = useState(false);
+  const router = useRouter();
 
   const handleFormCreated = () => {
     setHasForms(true);
@@ -47,7 +49,6 @@ export default function LeadsInterface() {
           </nav>
         </div>
       </div>
-
       {/* Main Content */}
       <div className=''>
         {activeTab === 'leads' ? (
@@ -73,7 +74,7 @@ export default function LeadsInterface() {
                       <Button
                         className='bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md'
                         onClick={() => {
-                          return setIsCreateFormModalOpen(true);
+                          router.push('/leads/form');
                         }}
                       >
                         Create New Form
@@ -103,7 +104,6 @@ export default function LeadsInterface() {
           <FormSettings />
         )}
       </div>
-
       <CreateFormModal
         open={isCreateFormModalOpen}
         onOpenChange={setIsCreateFormModalOpen}
