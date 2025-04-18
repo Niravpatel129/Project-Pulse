@@ -109,7 +109,7 @@ export function TableGrid({
         onCellEditingStopped={onCellEditingStopped}
         pagination={true}
         paginationPageSize={25}
-        domLayout='autoHeight'
+        domLayout='normal'
         rowDragManaged={true}
         onRowDragEnd={handleRowDragEnd}
         suppressMoveWhenRowDragging={false}
