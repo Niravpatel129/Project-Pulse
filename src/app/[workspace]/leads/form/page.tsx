@@ -966,7 +966,7 @@ export default function FormBuilder() {
                   <p className='mt-2 text-sm'>Add elements from the Elements tab</p>
                 </div>
               ) : (
-                <div className='p-2'>
+                <div className='p-2 max-w-full'>
                   <div className='bg-gray-50 p-3 rounded-md mb-4'>
                     <h3 className='font-medium text-sm mb-1'>Form Structure</h3>
                     <p className='text-xs text-gray-500'>Drag and drop to reorder elements</p>
@@ -1000,13 +1000,15 @@ export default function FormBuilder() {
                           }}
                           onDragEnd={handleDragEnd}
                         >
-                          <div className='flex items-center gap-2 flex-1'>
-                            <Grip className='h-4 w-4 text-gray-400 cursor-grab' />
-                            {getElementIcon(element.type)}
-                            <span className='text-sm font-medium truncate max-w-[200px]'>
+                          <div className='flex items-center gap-2 flex-1 min-w-0'>
+                            <Grip className='h-4 w-4 text-gray-400 cursor-grab flex-shrink-0' />
+                            <div className='flex-shrink-0'>{getElementIcon(element.type)}</div>
+                            <span className='text-sm font-medium truncate max-w-[120px]'>
                               {element.title}
                             </span>
-                            {element.required && <span className='text-red-500 text-xs'>*</span>}
+                            {element.required && (
+                              <span className='text-red-500 text-xs flex-shrink-0'>*</span>
+                            )}
 
                             {/* Conditional indicator */}
                             {element.conditions && element.conditions.length > 0 && (
@@ -1015,7 +1017,7 @@ export default function FormBuilder() {
                                   <TooltipTrigger asChild>
                                     <Badge
                                       variant='outline'
-                                      className='ml-1 text-xs bg-blue-50 text-blue-600 border-blue-200'
+                                      className='ml-1 text-xs bg-blue-50 text-blue-600 border-blue-200 flex-shrink-0'
                                     >
                                       Conditional
                                     </Badge>
@@ -1034,7 +1036,7 @@ export default function FormBuilder() {
                                   <TooltipTrigger asChild>
                                     <Badge
                                       variant='outline'
-                                      className='ml-1 text-xs bg-green-50 text-green-600 border-green-200'
+                                      className='ml-1 text-xs bg-green-50 text-green-600 border-green-200 flex-shrink-0'
                                     >
                                       Validated
                                     </Badge>
@@ -1046,7 +1048,7 @@ export default function FormBuilder() {
                               </TooltipProvider>
                             )}
                           </div>
-                          <div className='flex items-center gap-1 opacity-0 group-hover:opacity-100'>
+                          <div className='flex items-center gap-1 opacity-0 group-hover:opacity-100 flex-shrink-0'>
                             <Button
                               variant='ghost'
                               size='icon'
