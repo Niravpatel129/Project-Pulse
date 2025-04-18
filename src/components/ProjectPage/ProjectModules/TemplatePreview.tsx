@@ -51,7 +51,7 @@ export default function TemplatePreview({ templateDetails }: TemplatePreviewProp
                 </Label>
               </div>
               <div className='!m-2'>
-                <div className=''>
+                <div className='flex justify-between flex-wrap'>
                   {section.fields.map((field) => {
                     return (
                       <div key={field.templateFieldId} className='rounded-lg '>
