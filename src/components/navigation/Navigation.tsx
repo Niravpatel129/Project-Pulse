@@ -316,9 +316,6 @@ export function Navigation() {
             )}
           </nav>
         </div>
-
-        {/* Bottom spacer for mobile */}
-        <div className='h-16 w-full lg:hidden'></div>
       </div>
     </>
   );

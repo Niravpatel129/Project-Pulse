@@ -280,7 +280,6 @@ export default function ProjectHome() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      style={{ maxHeight: 'calc(100vh - 180px)' }}
     >
       {/* Message Input */}
       <motion.div layout transition={{ duration: 0.3 }}>
@@ -428,20 +427,6 @@ export default function ProjectHome() {
               })}
             </AnimatePresence>
           )}
-        </div>
-      </motion.div>
-
-      {/* Footer information */}
-      <motion.div
-        className='mt-6 pt-4 border-t border-gray-200 text-center w-full flex justify-center items-center'
-        layout
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className='flex items-center gap-2'>
-          <Mail className='h-4 w-4 text-gray-500' />
-          <p className='text-sm text-gray-500'>You can respond to messages here or via email</p>
         </div>
       </motion.div>
     </motion.div>
