@@ -149,11 +149,6 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
     setSelectedElementId(newElement.id);
     // Hide the element type menu if it's open
     setShowElementTypeMenu(false);
-
-    // Validate the form to clear any "Empty Form" error
-    setTimeout(() => {
-      return validateForm();
-    }, 0);
   };
 
   const addClientDetailsSection = () => {
@@ -238,12 +233,8 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
       setValidationErrors(updatedErrors);
     }
 
-    // Validate the form before saving
-    if (!validateForm()) {
-      // If validation fails, switch to the myform tab to show the errors
-      setActiveTab('myform');
-      return;
-    }
+    // We no longer automatically validate here - validation should happen explicitly
+    // in handleCreateForm
 
     setChangesSaved(true);
     // Actual save logic would go here
