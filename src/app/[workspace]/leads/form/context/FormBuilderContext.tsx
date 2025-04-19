@@ -96,7 +96,7 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [formTitle, setFormTitle] = useState('College Intake Form');
+  const [formTitle, setFormTitle] = useState('Untitled Form');
 
   // Initialize form values for preview mode
   useEffect(() => {
