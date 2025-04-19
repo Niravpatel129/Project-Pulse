@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -5,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { ChevronDown, Plus, X } from 'lucide-react';
+import { Building2, ChevronDown, Mail, MapPin, Phone, Plus, User2, X } from 'lucide-react';
 import React from 'react';
 import { FormElement } from '../types';
 
@@ -64,8 +65,8 @@ const ElementEditor: React.FC<ElementEditorProps> = ({
             />
           </div>
 
-          <div className='grid grid-cols-4 items-start gap-4'>
-            <Label htmlFor='description' className='text-right mt-2'>
+          <div className={cn('grid items-start gap-3', isMobile ? 'grid-cols-1' : 'grid-cols-4')}>
+            <Label htmlFor='description' className={isMobile ? '' : 'text-right mt-2'}>
               Description
             </Label>
             <Textarea
@@ -74,24 +75,26 @@ const ElementEditor: React.FC<ElementEditorProps> = ({
               onChange={(e) => {
                 return setEditingElement({ ...editingElement, description: e.target.value });
               }}
-              className='col-span-3'
+              className={isMobile ? 'col-span-1' : 'col-span-3'}
               placeholder='Optional description or instructions'
             />
           </div>
 
-          <div className='grid grid-cols-4 items-center gap-4'>
-            <Label htmlFor='required' className='text-right'>
+          <div className={cn('grid items-center gap-3', isMobile ? 'grid-cols-1' : 'grid-cols-4')}>
+            <Label htmlFor='required' className={isMobile ? '' : 'text-right'}>
               Required
             </Label>
-            <div className='col-span-3 flex items-center space-x-2'>
-              <Switch
-                id='required'
-                checked={editingElement.required}
-                onCheckedChange={(checked) => {
-                  return setEditingElement({ ...editingElement, required: checked });
-                }}
-              />
-              <Label htmlFor='required'>Make this field required</Label>
+            <div className={isMobile ? 'col-span-1' : 'col-span-3'}>
+              <div className='flex items-center space-x-2'>
+                <Switch
+                  id='required'
+                  checked={editingElement.required}
+                  onCheckedChange={(checked) => {
+                    return setEditingElement({ ...editingElement, required: checked });
+                  }}
+                />
+                <Label htmlFor='required'>Make this field required</Label>
+              </div>
             </div>
           </div>
 
@@ -100,8 +103,10 @@ const ElementEditor: React.FC<ElementEditorProps> = ({
             editingElement.type === 'Long Answer' ||
             editingElement.type === 'Phone Number' ||
             editingElement.type === 'Number') && (
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='placeholder' className='text-right'>
+            <div
+              className={cn('grid items-center gap-3', isMobile ? 'grid-cols-1' : 'grid-cols-4')}
+            >
+              <Label htmlFor='placeholder' className={isMobile ? '' : 'text-right'}>
                 Placeholder
               </Label>
               <Input
@@ -110,7 +115,7 @@ const ElementEditor: React.FC<ElementEditorProps> = ({
                 onChange={(e) => {
                   return setEditingElement({ ...editingElement, placeholder: e.target.value });
                 }}
-                className='col-span-3'
+                className={isMobile ? 'col-span-1' : 'col-span-3'}
                 placeholder='Enter placeholder text'
               />
             </div>
@@ -119,50 +124,52 @@ const ElementEditor: React.FC<ElementEditorProps> = ({
           {(editingElement.type === 'Radio Buttons' ||
             editingElement.type === 'Checkboxes' ||
             editingElement.type === 'Dropdown') && (
-            <div className='grid grid-cols-4 items-start gap-4'>
-              <Label className='text-right mt-2'>Options</Label>
-              <div className='col-span-3 space-y-2 max-h-[200px] overflow-y-auto pr-1'>
-                {editingElement.options?.map((option, index) => {
-                  return (
-                    <div key={index} className='flex items-center gap-2'>
-                      <Input
-                        value={option}
-                        onChange={(e) => {
-                          const newOptions = [...(editingElement.options || [])];
-                          newOptions[index] = e.target.value;
-                          setEditingElement({ ...editingElement, options: newOptions });
-                        }}
-                      />
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        onClick={() => {
-                          const newOptions = [...(editingElement.options || [])];
-                          newOptions.splice(index, 1);
-                          setEditingElement({ ...editingElement, options: newOptions });
-                        }}
-                        disabled={editingElement.options?.length === 1}
-                      >
-                        <X className='h-4 w-4' />
-                      </Button>
-                    </div>
-                  );
-                })}
-                <Button
-                  variant='outline'
-                  size='sm'
-                  className='mt-2'
-                  onClick={() => {
-                    const newOptions = [
-                      ...(editingElement.options || []),
-                      `Option ${(editingElement.options?.length || 0) + 1}`,
-                    ];
-                    setEditingElement({ ...editingElement, options: newOptions });
-                  }}
-                >
-                  <Plus className='h-4 w-4 mr-2' />
-                  Add Option
-                </Button>
+            <div className={cn('grid items-start gap-3', isMobile ? 'grid-cols-1' : 'grid-cols-4')}>
+              <Label className={isMobile ? '' : 'text-right mt-2'}>Options</Label>
+              <div className={isMobile ? 'col-span-1' : 'col-span-3'}>
+                <div className='space-y-2 max-h-[200px] overflow-y-auto pr-1'>
+                  {editingElement.options?.map((option, index) => {
+                    return (
+                      <div key={index} className='flex items-center gap-2'>
+                        <Input
+                          value={option}
+                          onChange={(e) => {
+                            const newOptions = [...(editingElement.options || [])];
+                            newOptions[index] = e.target.value;
+                            setEditingElement({ ...editingElement, options: newOptions });
+                          }}
+                        />
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          onClick={() => {
+                            const newOptions = [...(editingElement.options || [])];
+                            newOptions.splice(index, 1);
+                            setEditingElement({ ...editingElement, options: newOptions });
+                          }}
+                          disabled={editingElement.options?.length === 1}
+                        >
+                          <X className='h-4 w-4' />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    className='mt-2'
+                    onClick={() => {
+                      const newOptions = [
+                        ...(editingElement.options || []),
+                        `Option ${(editingElement.options?.length || 0) + 1}`,
+                      ];
+                      setEditingElement({ ...editingElement, options: newOptions });
+                    }}
+                  >
+                    <Plus className='h-4 w-4 mr-2' />
+                    Add Option
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -173,9 +180,11 @@ const ElementEditor: React.FC<ElementEditorProps> = ({
             editingElement.type === 'Long Answer' ||
             editingElement.type === 'Phone Number' ||
             editingElement.type === 'Number') && (
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label className='text-right'>Validation</Label>
-              <div className='col-span-3'>
+            <div
+              className={cn('grid items-center gap-3', isMobile ? 'grid-cols-1' : 'grid-cols-4')}
+            >
+              <Label className={isMobile ? '' : 'text-right'}>Validation</Label>
+              <div className={isMobile ? 'col-span-1' : 'col-span-3'}>
                 <Button
                   variant='outline'
                   size='sm'
@@ -341,6 +350,183 @@ const ElementEditor: React.FC<ElementEditorProps> = ({
                   </div>
                 </>
               )}
+            </div>
+          )}
+
+          {/* Client Fields Settings */}
+          {editingElement.type === 'Client Details' && (
+            <div className='grid gap-4 pt-2 pb-2'>
+              <div className='col-span-4 mb-2'>
+                <h4 className='font-medium text-sm'>Client Information Fields</h4>
+                <p className='text-xs text-gray-500 mt-1'>
+                  Select which client information fields to include
+                </p>
+              </div>
+
+              <div className='space-y-3 border rounded-md p-4 bg-gray-50'>
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <Mail className='h-4 w-4 text-blue-600' />
+                    <Label htmlFor='client-email' className='font-medium'>
+                      Email
+                    </Label>
+                    <Badge className='text-xs bg-blue-100 text-blue-700 border-blue-200'>
+                      Required
+                    </Badge>
+                  </div>
+                  <Switch id='client-email' checked={true} disabled={true} />
+                </div>
+
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <User2 className='h-4 w-4 text-gray-600' />
+                    <Label htmlFor='client-name'>Full Name</Label>
+                  </div>
+                  <Switch
+                    id='client-name'
+                    checked={editingElement.clientFields?.name || false}
+                    onCheckedChange={(checked) => {
+                      return setEditingElement({
+                        ...editingElement,
+                        clientFields: {
+                          ...editingElement.clientFields,
+                          name: checked,
+                        },
+                      });
+                    }}
+                  />
+                </div>
+
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <Phone className='h-4 w-4 text-gray-600' />
+                    <Label htmlFor='client-phone'>Phone Number</Label>
+                  </div>
+                  <Switch
+                    id='client-phone'
+                    checked={editingElement.clientFields?.phone || false}
+                    onCheckedChange={(checked) => {
+                      return setEditingElement({
+                        ...editingElement,
+                        clientFields: {
+                          ...editingElement.clientFields,
+                          phone: checked,
+                        },
+                      });
+                    }}
+                  />
+                </div>
+
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <Building2 className='h-4 w-4 text-gray-600' />
+                    <Label htmlFor='client-company'>Company</Label>
+                  </div>
+                  <Switch
+                    id='client-company'
+                    checked={editingElement.clientFields?.company || false}
+                    onCheckedChange={(checked) => {
+                      return setEditingElement({
+                        ...editingElement,
+                        clientFields: {
+                          ...editingElement.clientFields,
+                          company: checked,
+                        },
+                      });
+                    }}
+                  />
+                </div>
+
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <MapPin className='h-4 w-4 text-gray-600' />
+                    <Label htmlFor='client-address'>Address</Label>
+                  </div>
+                  <Switch
+                    id='client-address'
+                    checked={editingElement.clientFields?.address || false}
+                    onCheckedChange={(checked) => {
+                      return setEditingElement({
+                        ...editingElement,
+                        clientFields: {
+                          ...editingElement.clientFields,
+                          address: checked,
+                        },
+                      });
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Custom Fields */}
+              <div className='mt-4'>
+                <h4 className='font-medium text-sm mb-2'>Custom Fields</h4>
+                <div className='space-y-2'>
+                  {editingElement.clientFields?.custom?.map((field, index) => {
+                    return (
+                      <div key={index} className='flex items-center gap-2'>
+                        <Input
+                          value={field}
+                          onChange={(e) => {
+                            const newCustomFields = [
+                              ...(editingElement.clientFields?.custom || []),
+                            ];
+                            newCustomFields[index] = e.target.value;
+                            setEditingElement({
+                              ...editingElement,
+                              clientFields: {
+                                ...editingElement.clientFields,
+                                custom: newCustomFields,
+                              },
+                            });
+                          }}
+                          placeholder='Field name'
+                        />
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          onClick={() => {
+                            const newCustomFields = [
+                              ...(editingElement.clientFields?.custom || []),
+                            ];
+                            newCustomFields.splice(index, 1);
+                            setEditingElement({
+                              ...editingElement,
+                              clientFields: {
+                                ...editingElement.clientFields,
+                                custom: newCustomFields,
+                              },
+                            });
+                          }}
+                        >
+                          <X className='h-4 w-4' />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    className='mt-2'
+                    onClick={() => {
+                      const newCustomFields = [
+                        ...(editingElement.clientFields?.custom || []),
+                        `Custom Field ${(editingElement.clientFields?.custom?.length || 0) + 1}`,
+                      ];
+                      setEditingElement({
+                        ...editingElement,
+                        clientFields: {
+                          ...editingElement.clientFields,
+                          custom: newCustomFields,
+                        },
+                      });
+                    }}
+                  >
+                    <Plus className='h-4 w-4 mr-2' />
+                    Add Custom Field
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </div>
