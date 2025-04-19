@@ -1276,7 +1276,11 @@ export default function FormBuilder() {
 
         {/* Form Canvas */}
         <div
-          className={cn('flex-1 overflow-y-auto p-4 md:p-8 bg-white', previewMode ? 'w-full' : '')}
+          className={cn(
+            'flex-1 overflow-y-auto p-4 md:p-8 bg-white pb-24',
+            previewMode ? 'w-full' : '',
+            isMobile && !previewMode ? 'pb-20' : '', // Add padding at bottom for mobile nav
+          )}
           onContextMenu={!previewMode && !isMobile ? showElementMenu : undefined}
           onClick={() => {
             return isMobile && showMobileNav ? setShowMobileNav(false) : null;
@@ -1960,7 +1964,7 @@ export default function FormBuilder() {
 
       {/* Mobile Bottom Nav */}
       {isMobile && !previewMode && (
-        <div className='fixed bottom-0 left-0 right-0 h-16 bg-white border-t flex items-center justify-around px-2 z-30'>
+        <div className='fixed bottom-0 left-0 right-0 h-16 bg-white border-t flex items-center justify-around px-2 z-30 shadow-md'>
           <Button
             variant={showMobileNav && activeTab === 'elements' ? 'default' : 'ghost'}
             size='icon'
@@ -2013,7 +2017,7 @@ export default function FormBuilder() {
       {!isMobile && (
         <footer
           className={cn(
-            'border-t p-2 md:p-4 flex items-center justify-between sticky bottom-0 z-10 backdrop-blur-sm w-full',
+            'border-t p-2 md:p-4 flex items-center justify-between sticky bottom-0 z-10 backdrop-blur-sm w-full bg-white shadow-md',
             changesSaved ? 'bg-gray-50/90' : 'bg-white/90',
           )}
         >
