@@ -17,10 +17,8 @@ import {
   Copy,
   Edit2,
   Grip,
-  List,
   MessageSquare,
   MoreHorizontal,
-  Phone,
   Radio,
   Trash2,
   Upload,
@@ -271,7 +269,7 @@ export default function FormBuilderSidebar({
   return (
     <div
       className={cn(
-        'w-full h-full bg-white overflow-y-auto shadow-sm pt-2',
+        'w-full h-full bg-white overflow-y-auto scrollbar-hide shadow-sm pt-2 pb-8',
         previewMode ? 'hidden' : '',
         !previewMode && isMobile && !showMobileNav ? 'hidden' : '',
         !previewMode && isMobile && showMobileNav ? 'fixed inset-0 z-40' : '',
@@ -314,64 +312,11 @@ export default function FormBuilderSidebar({
         <TabsContent value='elements' className='p-0'>
           <Collapsible defaultOpen>
             <CollapsibleTrigger className='flex w-full items-center justify-between p-4 hover:bg-gray-50'>
-              <span className='font-medium text-sm'>Recent</span>
+              <span className='font-medium text-sm'>Data Fields</span>
               <ChevronDown className='h-4 w-4' />
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className='space-y-1 px-1'>
-                <Button
-                  variant='ghost'
-                  className='w-full justify-start gap-3 pl-8'
-                  onClick={() => {
-                    return addElement('Text Block');
-                  }}
-                >
-                  <MessageSquare className='h-4 w-4' />
-                  <span>Text Block</span>
-                </Button>
-                <Button
-                  variant='ghost'
-                  className='w-full justify-start gap-3 pl-8'
-                  onClick={() => {
-                    return addElement('Single Response');
-                  }}
-                >
-                  <MessageSquare className='h-4 w-4 rotate-180' />
-                  <span>Single Response</span>
-                </Button>
-                <Button
-                  variant='ghost'
-                  className='w-full justify-start gap-3 pl-8'
-                  onClick={() => {
-                    return addElement('Dropdown');
-                  }}
-                >
-                  <CheckSquare className='h-4 w-4' />
-                  <span>Dropdown</span>
-                </Button>
-                <Button
-                  variant='ghost'
-                  className='w-full justify-start gap-3 pl-8 flex items-center'
-                  onClick={() => {
-                    return addElement('Long Answer');
-                  }}
-                >
-                  <List className='h-4 w-4' />
-                  <span>Long Answer</span>
-                  <div className='ml-auto'>
-                    <MoreHorizontal className='h-4 w-4' />
-                  </div>
-                </Button>
-                <Button
-                  variant='ghost'
-                  className='w-full justify-start gap-3 pl-8'
-                  onClick={() => {
-                    return addElement('Phone Number');
-                  }}
-                >
-                  <Phone className='h-4 w-4' />
-                  <span>Phone Number</span>
-                </Button>
                 <Button
                   variant='ghost'
                   className='w-full justify-start gap-3 pl-8'
@@ -388,7 +333,6 @@ export default function FormBuilderSidebar({
               </div>
             </CollapsibleContent>
           </Collapsible>
-
           <Collapsible defaultOpen>
             <CollapsibleTrigger className='flex w-full items-center justify-between p-4 hover:bg-gray-50'>
               <span className='font-medium text-sm'>Basic Fields</span>
@@ -475,19 +419,6 @@ export default function FormBuilderSidebar({
                 >
                   <Calendar className='h-4 w-4' />
                   <span>Date</span>
-                </Button>
-                <Button
-                  variant='ghost'
-                  className='w-full justify-start gap-3 pl-8'
-                  onClick={() => {
-                    return addClientDetailsSection();
-                  }}
-                >
-                  <User2 className='h-4 w-4' />
-                  <span>Client Details</span>
-                  <Badge className='ml-auto text-xs bg-blue-100 text-blue-700 border-blue-200'>
-                    Required
-                  </Badge>
                 </Button>
               </div>
             </CollapsibleContent>
