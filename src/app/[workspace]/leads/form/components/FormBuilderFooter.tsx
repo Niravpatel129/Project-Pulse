@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Save } from 'lucide-react';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface FormBuilderFooterProps {
   changesSaved: boolean;
@@ -18,14 +18,37 @@ const FormBuilderFooter: React.FC<FormBuilderFooterProps> = ({
   setPreviewMode,
   isMobile,
 }) => {
+  // Set a CSS variable for footer height that parent layouts can use
+  useEffect(() => {
+    // Add the CSS variable to document root
+    document.documentElement.style.setProperty('--footer-height', isMobile ? '0px' : '56px');
+
+    // Add padding to the bottom of the body or main content container
+    const mainContent = document.querySelector('main') || document.body;
+    mainContent.style.paddingBottom = isMobile ? '0' : '56px';
+
+    return () => {
+      // Clean up when component unmounts
+      document.documentElement.style.removeProperty('--footer-height');
+      const mainContent = document.querySelector('main') || document.body;
+      mainContent.style.paddingBottom = '';
+    };
+  }, [isMobile]);
+
   if (isMobile) return null;
 
   return (
     <footer
       className={cn(
-        'border-t p-2 md:p-4 flex items-center justify-between sticky bottom-0 z-10 backdrop-blur-sm w-full bg-white shadow-md',
+        'border-t p-2 md:p-4 flex items-center justify-between fixed bottom-0 z-50 backdrop-blur-sm w-full bg-white shadow-md left-0',
         changesSaved ? 'bg-gray-50/90' : 'bg-white/90',
       )}
+      style={{
+        // Apply max-width to match the parent container and avoid extending beyond it
+        maxWidth: 'calc(100% - var(--navigation-width, 0px))',
+        // Add right margin to account for the navigation sidebar if present
+        marginLeft: 'var(--navigation-width, 0px)',
+      }}
     >
       <div className='flex items-center gap-2'>
         {changesSaved ? (

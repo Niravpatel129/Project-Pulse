@@ -85,8 +85,19 @@ export default function FormBuilder() {
     };
     checkIfMobile();
     window.addEventListener('resize', checkIfMobile);
+
+    // Set the navigation width CSS variable for the footer
+    const navigation = document.querySelector('.navigation') as HTMLElement;
+    if (navigation) {
+      const navWidth = navigation.offsetWidth;
+      document.documentElement.style.setProperty('--navigation-width', `${navWidth}px`);
+    } else {
+      document.documentElement.style.setProperty('--navigation-width', '0px');
+    }
+
     return () => {
-      return window.removeEventListener('resize', checkIfMobile);
+      window.removeEventListener('resize', checkIfMobile);
+      document.documentElement.style.removeProperty('--navigation-width');
     };
   }, []);
 
@@ -400,9 +411,9 @@ export default function FormBuilder() {
         {/* Form Canvas */}
         <div
           className={cn(
-            'flex-1 overflow-y-auto p-4 md:p-8 bg-white pb-24',
+            'flex-1 overflow-y-auto p-4 md:p-8 bg-white pb-32',
             previewMode ? 'w-full' : '',
-            isMobile && !previewMode ? 'pb-20' : '', // Add padding at bottom for mobile nav
+            isMobile && !previewMode ? 'pb-24' : '', // Add padding at bottom for mobile nav
           )}
           onContextMenu={!previewMode && !isMobile ? showElementMenu : undefined}
           onClick={() => {
