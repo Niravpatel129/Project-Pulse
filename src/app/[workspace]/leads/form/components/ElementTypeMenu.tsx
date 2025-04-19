@@ -13,22 +13,17 @@ import {
   User2,
 } from 'lucide-react';
 import React from 'react';
+import { useFormBuilder } from '../context/FormBuilderContext';
 
-interface ElementTypeMenuProps {
-  showElementTypeMenu: boolean;
-  elementTypeMenuPosition: { x: number; y: number };
-  setShowElementTypeMenu: (show: boolean) => void;
-  addElement: (elementType: string) => void;
-  addClientDetailsSection: () => void;
-}
+const ElementTypeMenu: React.FC = () => {
+  const {
+    showElementTypeMenu,
+    elementTypeMenuPosition,
+    setShowElementTypeMenu,
+    addElement,
+    addClientDetailsSection,
+  } = useFormBuilder();
 
-const ElementTypeMenu: React.FC<ElementTypeMenuProps> = ({
-  showElementTypeMenu,
-  elementTypeMenuPosition,
-  setShowElementTypeMenu,
-  addElement,
-  addClientDetailsSection,
-}) => {
   if (!showElementTypeMenu) return null;
 
   return (

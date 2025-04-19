@@ -9,7 +9,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { cn } from '@/lib/utils';
 import {
   ArrowDownUp,
-  ArrowLeft,
   Calendar,
   CheckCircle,
   CheckSquare,
@@ -25,7 +24,7 @@ import {
   User2,
   X,
 } from 'lucide-react';
-import { Dispatch, SetStateAction } from 'react';
+import { useFormBuilder } from '../context/FormBuilderContext';
 
 // Import needed types
 type Condition = {
@@ -76,114 +75,38 @@ type FormElement = {
 };
 
 type FormBuilderSidebarProps = {
-  formElements: FormElement[];
-  setFormElements: Dispatch<SetStateAction<FormElement[]>>;
-  activeTab: string;
-  setActiveTab: Dispatch<SetStateAction<string>>;
-  selectedElementId: string | null;
-  setSelectedElementId: Dispatch<SetStateAction<string | null>>;
-  setEditingElement: Dispatch<SetStateAction<FormElement | null>>;
-  setChangesSaved: Dispatch<SetStateAction<boolean>>;
-  previewMode: boolean;
-  isMobile: boolean;
-  showMobileNav: boolean;
-  setShowMobileNav: Dispatch<SetStateAction<boolean>>;
-  isDragging: boolean;
-  draggedElementId: string | null;
-  dragOverElementId: string | null;
-  handleDragStart: (e: React.DragEvent, elementId: string) => void;
-  handleDragOver: (e: React.DragEvent, elementId: string) => void;
-  handleDrop: (e: React.DragEvent, targetElementId: string) => void;
-  handleDragEnd: () => void;
   getElementIcon: (type: string) => React.ReactNode;
-  generateId: () => string;
 };
 
-export default function FormBuilderSidebar({
-  formElements,
-  setFormElements,
-  activeTab,
-  setActiveTab,
-  selectedElementId,
-  setSelectedElementId,
-  setEditingElement,
-  setChangesSaved,
-  previewMode,
-  isMobile,
-  showMobileNav,
-  setShowMobileNav,
-  isDragging,
-  draggedElementId,
-  dragOverElementId,
-  handleDragStart,
-  handleDragOver,
-  handleDrop,
-  handleDragEnd,
-  getElementIcon,
-  generateId,
-}: FormBuilderSidebarProps) {
-  // Functions needed for the sidebar
-  const addElement = (elementType: string) => {
-    const newElement: FormElement = {
-      id: generateId(),
-      type: elementType,
-      title: `New ${elementType}`,
-      required: false,
-      order: formElements.length,
-      showWhen: 'all',
-      options:
-        elementType === 'Radio Buttons' ||
-        elementType === 'Checkboxes' ||
-        elementType === 'Dropdown'
-          ? ['Option 1', 'Option 2', 'Option 3']
-          : undefined,
-    };
+export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSidebarProps) {
+  const {
+    formElements,
+    setFormElements,
+    activeTab,
+    setActiveTab,
+    selectedElementId,
+    setSelectedElementId,
+    setEditingElement,
+    setChangesSaved,
+    isMobile,
+    showMobileNav,
+    setShowMobileNav,
+    isDragging,
+    draggedElementId,
+    dragOverElementId,
+    handleDragStart,
+    handleDragOver,
+    handleDrop,
+    handleDragEnd,
+    addElement,
+    addClientDetailsSection,
+    selectElement,
+    deleteElement,
+    duplicateElement,
+    generateId,
+  } = useFormBuilder();
 
-    setFormElements([...formElements, newElement]);
-    setChangesSaved(false);
-    // Switch to My Form tab after adding an element
-    setActiveTab('myform');
-    // Select the new element
-    setSelectedElementId(newElement.id);
-  };
-
-  const addClientDetailsSection = () => {
-    const newElement: FormElement = {
-      id: generateId(),
-      type: 'Client Details',
-      title: 'Client Details',
-      description: 'Collect client information',
-      required: true, // Client details section is required
-      order: formElements.length,
-      showWhen: 'all',
-      clientFields: {
-        email: true, // Email is required by default
-        name: false,
-        phone: false,
-        address: false,
-        company: false,
-        custom: [],
-      },
-    };
-
-    setFormElements([...formElements, newElement]);
-    setChangesSaved(false);
-    // Switch to My Form tab after adding an element
-    setActiveTab('myform');
-    // Select the new element
-    setSelectedElementId(newElement.id);
-  };
-
-  const selectElement = (id: string) => {
-    setSelectedElementId(id);
-    // Scroll to the element in the form canvas
-    const element = document.getElementById(`form-element-${id}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  };
-
-  const openElementEditor = (element: FormElement) => {
+  const openElementEditor = (element: any) => {
     setEditingElement({ ...element });
   };
 
@@ -221,394 +144,455 @@ export default function FormBuilderSidebar({
     setChangesSaved(false);
   };
 
-  const deleteElement = (id: string) => {
-    // First, remove any conditions that reference this element
-    const updatedElements = formElements.map((element) => {
-      if (element.conditions) {
-        return {
-          ...element,
-          conditions: element.conditions.filter((condition) => {
-            return condition.sourceElementId !== id;
-          }),
-        };
-      }
-      return element;
-    });
-
-    // Then remove the element itself
-    setFormElements(
-      updatedElements.filter((element) => {
-        return element.id !== id;
-      }),
-    );
-    setChangesSaved(false);
-    if (selectedElementId === id) {
-      setSelectedElementId(null);
-    }
-  };
-
-  const duplicateElement = (elementId: string) => {
-    const elementToDuplicate = formElements.find((el) => {
-      return el.id === elementId;
-    });
-    if (!elementToDuplicate) return;
-
-    const newElement = {
-      ...elementToDuplicate,
-      id: generateId(),
-      title: `${elementToDuplicate.title} (Copy)`,
-      order: formElements.length,
-      // Don't copy conditions to avoid circular references
-      conditions: undefined,
-    };
-
-    setFormElements([...formElements, newElement]);
-    setChangesSaved(false);
-  };
-
   return (
-    <div
-      className={cn(
-        'w-full h-full bg-white overflow-y-auto scrollbar-hide shadow-sm pt-2 pb-8',
-        previewMode ? 'hidden' : '',
-        !previewMode && isMobile && !showMobileNav ? 'hidden' : '',
-        !previewMode && isMobile && showMobileNav ? 'fixed inset-0 z-40' : '',
-      )}
-    >
-      {isMobile && (
-        <div className='flex justify-between items-center p-4 border-b'>
-          <h2 className='font-medium'>Form Editor</h2>
+    <div className='h-full flex flex-col'>
+      <div className='p-2 flex items-center justify-between'>
+        <h2 className='font-semibold text-lg flex-1 px-2'>Form Builder</h2>
+        {isMobile && (
           <Button
             variant='ghost'
             size='icon'
             onClick={() => {
               return setShowMobileNav(false);
             }}
+            className='md:hidden'
           >
             <X className='h-5 w-5' />
           </Button>
+        )}
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className='flex-1 flex flex-col'>
+        <div className='px-4 py-2 border-b'>
+          <TabsList className='w-full'>
+            <TabsTrigger value='elements' className='flex-1'>
+              Elements
+            </TabsTrigger>
+            <TabsTrigger value='myform' className='flex-1'>
+              My Form
+            </TabsTrigger>
+          </TabsList>
         </div>
-      )}
-      <Tabs
-        defaultValue='elements'
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className='w-full'
-      >
-        <TabsList className='w-auto grid grid-cols-2 p-1 bg-gray-100/70 mx-2 my-3 rounded-full h-11'>
-          <TabsTrigger
-            value='elements'
-            className='rounded-full data-[state=active]:bg-white data-[state=active]:shadow-sm'
-          >
-            Elements
-          </TabsTrigger>
-          <TabsTrigger
-            value='myform'
-            className='rounded-full data-[state=active]:bg-white data-[state=active]:shadow-sm'
-          >
-            My Form
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value='elements' className='p-0'>
-          <Collapsible defaultOpen>
-            <CollapsibleTrigger className='flex w-full items-center justify-between p-4 hover:bg-gray-50'>
-              <span className='font-medium text-sm'>Data Fields</span>
-              <ChevronDown className='h-4 w-4' />
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className='space-y-1 px-1'>
-                <Button
-                  variant='ghost'
-                  className='w-full justify-start gap-3 pl-8'
-                  onClick={() => {
-                    return addClientDetailsSection();
-                  }}
-                >
-                  <User2 className='h-4 w-4' />
-                  <span>Client Details</span>
-                  <Badge className='ml-auto text-xs bg-blue-100 text-blue-700 border-blue-200'>
-                    Required
-                  </Badge>
-                </Button>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-          <Collapsible defaultOpen>
-            <CollapsibleTrigger className='flex w-full items-center justify-between p-4 hover:bg-gray-50'>
-              <span className='font-medium text-sm'>Basic Fields</span>
-              <ChevronDown className='h-4 w-4' />
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className='space-y-1 px-1'>
-                <Button
-                  variant='ghost'
-                  className='w-full justify-start gap-3 pl-8'
-                  onClick={() => {
-                    return addElement('File Upload');
-                  }}
-                >
-                  <Upload className='h-4 w-4' />
-                  <span>File Upload</span>
-                </Button>
-                <Button
-                  variant='ghost'
-                  className='w-full justify-start gap-3 pl-8'
-                  onClick={() => {
-                    return addElement('Text Block');
-                  }}
-                >
-                  <MessageSquare className='h-4 w-4' />
-                  <span>Text Block</span>
-                </Button>
-                <Button
-                  variant='ghost'
-                  className='w-full justify-start gap-3 pl-8'
-                  onClick={() => {
-                    return addElement('Number');
-                  }}
-                >
-                  <ArrowDownUp className='h-4 w-4' />
-                  <span>Number</span>
-                </Button>
-                <Button
-                  variant='ghost'
-                  className='w-full justify-start gap-3 pl-8'
-                  onClick={() => {
-                    return addElement('Single Response');
-                  }}
-                >
-                  <MessageSquare className='h-4 w-4 rotate-180' />
-                  <span>Single Response</span>
-                </Button>
-                <Button
-                  variant='ghost'
-                  className='w-full justify-start gap-3 pl-8'
-                  onClick={() => {
-                    return addElement('Radio Buttons');
-                  }}
-                >
+
+        <TabsContent value='elements' className='flex-1 overflow-auto p-4 space-y-4 mt-0'>
+          <div>
+            <h3 className='font-medium text-sm mb-2 text-gray-700'>Basic Fields</h3>
+            <div className='grid grid-cols-2 gap-2'>
+              <Button
+                variant='outline'
+                className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
+                onClick={() => {
+                  return addElement('Short Text');
+                }}
+              >
+                <div className='w-6 h-6 flex items-center justify-center'>
+                  {getElementIcon('Short Text')}
+                </div>
+                <span className='text-xs'>Short Text</span>
+              </Button>
+              <Button
+                variant='outline'
+                className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
+                onClick={() => {
+                  return addElement('Long Text');
+                }}
+              >
+                <div className='w-6 h-6 flex items-center justify-center'>
+                  {getElementIcon('Long Text')}
+                </div>
+                <span className='text-xs'>Long Text</span>
+              </Button>
+              <Button
+                variant='outline'
+                className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
+                onClick={() => {
+                  return addElement('Number');
+                }}
+              >
+                <div className='w-6 h-6 flex items-center justify-center'>
+                  {getElementIcon('Number')}
+                </div>
+                <span className='text-xs'>Number</span>
+              </Button>
+              <Button
+                variant='outline'
+                className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
+                onClick={() => {
+                  return addElement('Email');
+                }}
+              >
+                <div className='w-6 h-6 flex items-center justify-center'>
+                  {getElementIcon('Email')}
+                </div>
+                <span className='text-xs'>Email</span>
+              </Button>
+              <Button
+                variant='outline'
+                className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
+                onClick={() => {
+                  return addElement('Phone');
+                }}
+              >
+                <div className='w-6 h-6 flex items-center justify-center'>
+                  {getElementIcon('Phone')}
+                </div>
+                <span className='text-xs'>Phone</span>
+              </Button>
+              <Button
+                variant='outline'
+                className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
+                onClick={() => {
+                  return addElement('URL');
+                }}
+              >
+                <div className='w-6 h-6 flex items-center justify-center'>
+                  {getElementIcon('URL')}
+                </div>
+                <span className='text-xs'>URL</span>
+              </Button>
+            </div>
+          </div>
+
+          <div>
+            <h3 className='font-medium text-sm mb-2 text-gray-700'>Choice Fields</h3>
+            <div className='grid grid-cols-2 gap-2'>
+              <Button
+                variant='outline'
+                className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
+                onClick={() => {
+                  return addElement('Radio Buttons');
+                }}
+              >
+                <div className='w-6 h-6 flex items-center justify-center'>
                   <Radio className='h-4 w-4' />
-                  <span>Radio Buttons</span>
-                </Button>
-                <Button
-                  variant='ghost'
-                  className='w-full justify-start gap-3 pl-8'
-                  onClick={() => {
-                    return addElement('Checkboxes');
-                  }}
-                >
-                  <CheckCircle className='h-4 w-4' />
-                  <span>Checkboxes</span>
-                </Button>
-                <Button
-                  variant='ghost'
-                  className='w-full justify-start gap-3 pl-8'
-                  onClick={() => {
-                    return addElement('Dropdown');
-                  }}
-                >
+                </div>
+                <span className='text-xs'>Radio Buttons</span>
+              </Button>
+              <Button
+                variant='outline'
+                className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
+                onClick={() => {
+                  return addElement('Checkboxes');
+                }}
+              >
+                <div className='w-6 h-6 flex items-center justify-center'>
                   <CheckSquare className='h-4 w-4' />
-                  <span>Dropdown</span>
-                </Button>
-                <Button
-                  variant='ghost'
-                  className='w-full justify-start gap-3 pl-8'
-                  onClick={() => {
-                    return addElement('Date');
-                  }}
-                >
+                </div>
+                <span className='text-xs'>Checkboxes</span>
+              </Button>
+              <Button
+                variant='outline'
+                className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
+                onClick={() => {
+                  return addElement('Dropdown');
+                }}
+              >
+                <div className='w-6 h-6 flex items-center justify-center'>
+                  <ChevronDown className='h-4 w-4' />
+                </div>
+                <span className='text-xs'>Dropdown</span>
+              </Button>
+              <Button
+                variant='outline'
+                className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
+                onClick={() => {
+                  return addElement('Rating');
+                }}
+              >
+                <div className='w-6 h-6 flex items-center justify-center'>
+                  {getElementIcon('Rating')}
+                </div>
+                <span className='text-xs'>Rating</span>
+              </Button>
+            </div>
+          </div>
+
+          <div>
+            <h3 className='font-medium text-sm mb-2 text-gray-700'>Advanced Fields</h3>
+            <div className='grid grid-cols-2 gap-2'>
+              <Button
+                variant='outline'
+                className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
+                onClick={() => {
+                  return addElement('Date');
+                }}
+              >
+                <div className='w-6 h-6 flex items-center justify-center'>
                   <Calendar className='h-4 w-4' />
-                  <span>Date</span>
-                </Button>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+                </div>
+                <span className='text-xs'>Date</span>
+              </Button>
+              <Button
+                variant='outline'
+                className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
+                onClick={() => {
+                  return addElement('File Upload');
+                }}
+              >
+                <div className='w-6 h-6 flex items-center justify-center'>
+                  <Upload className='h-4 w-4' />
+                </div>
+                <span className='text-xs'>File Upload</span>
+              </Button>
+              <Button
+                variant='outline'
+                className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
+                onClick={() => {
+                  return addClientDetailsSection();
+                }}
+              >
+                <div className='w-6 h-6 flex items-center justify-center'>
+                  <User2 className='h-4 w-4' />
+                </div>
+                <span className='text-xs'>Client Details</span>
+              </Button>
+              <Button
+                variant='outline'
+                className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
+                onClick={() => {
+                  return addElement('Signature');
+                }}
+              >
+                <div className='w-6 h-6 flex items-center justify-center'>
+                  {getElementIcon('Signature')}
+                </div>
+                <span className='text-xs'>Signature</span>
+              </Button>
+            </div>
+          </div>
         </TabsContent>
-        <TabsContent value='myform' className='p-0'>
+
+        <TabsContent value='myform' className='flex-1 overflow-auto px-3 mt-0'>
           {formElements.length === 0 ? (
-            <div className='p-8 text-center text-gray-500'>
-              <p>Your form is empty</p>
-              <p className='mt-2 text-sm'>Add elements from the Elements tab</p>
+            <div className='flex flex-col items-center justify-center h-full p-4 text-center'>
+              <MessageSquare className='h-12 w-12 text-gray-300 mb-2' />
+              <h3 className='font-medium text-gray-700 mb-1'>Your form is empty</h3>
+              <p className='text-gray-500 text-sm mb-3'>
+                Add elements from the Elements tab to get started
+              </p>
+              <Button
+                variant='default'
+                size='sm'
+                onClick={() => {
+                  return setActiveTab('elements');
+                }}
+              >
+                Add Elements
+              </Button>
             </div>
           ) : (
-            <div className='p-2 max-w-full'>
-              <div className='bg-gray-50 p-3 rounded-md mb-4'>
-                <h3 className='font-medium text-sm mb-1'>Form Structure</h3>
-                <p className='text-xs text-gray-500'>Drag and drop to reorder elements</p>
-              </div>
-
-              <div className='space-y-1'>
-                {formElements.map((element, index) => {
-                  return (
-                    <div
-                      key={element.id}
-                      className={cn(
-                        'flex items-center p-3 rounded-lg hover:bg-gray-50 cursor-pointer group transition-all',
-                        selectedElementId === element.id ? 'bg-gray-100' : '',
-                        dragOverElementId === element.id
-                          ? 'border border-dashed border-blue-400 bg-blue-50'
-                          : '',
-                        isDragging && draggedElementId === element.id ? 'opacity-50' : '',
-                      )}
-                      onClick={() => {
-                        return selectElement(element.id);
-                      }}
-                      draggable
-                      onDragStart={(e) => {
-                        return handleDragStart(e, element.id);
-                      }}
-                      onDragOver={(e) => {
-                        return handleDragOver(e, element.id);
-                      }}
-                      onDrop={(e) => {
-                        return handleDrop(e, element.id);
-                      }}
-                      onDragEnd={handleDragEnd}
-                    >
-                      <div className='flex items-center gap-2 flex-1 min-w-0'>
-                        <Grip className='h-4 w-4 text-gray-400 cursor-grab flex-shrink-0' />
-                        <div className='flex-shrink-0'>{getElementIcon(element.type)}</div>
-                        <span className='text-sm font-medium truncate max-w-[120px]'>
-                          {element.title}
-                        </span>
-                        {element.required && (
-                          <span className='text-red-500 text-xs flex-shrink-0'>*</span>
-                        )}
-
-                        {/* Conditional indicator */}
-                        {element.conditions && element.conditions.length > 0 && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge
-                                  variant='outline'
-                                  className='ml-1 text-xs bg-blue-50 text-blue-600 border-blue-200 flex-shrink-0'
-                                >
-                                  Conditional
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className='text-xs'>This element is shown conditionally</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-
-                        {/* Validation indicator */}
-                        {element.validation && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge
-                                  variant='outline'
-                                  className='ml-1 text-xs bg-green-50 text-green-600 border-green-200 flex-shrink-0'
-                                >
-                                  Validated
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className='text-xs'>This element has validation rules</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
+            <div className='py-3 space-y-2'>
+              {formElements.map((element, index) => {
+                const icon = getElementIcon(element.type);
+                return (
+                  <div
+                    key={element.id}
+                    className={cn(
+                      'border rounded-md cursor-pointer transition-all',
+                      selectedElementId === element.id
+                        ? 'border-blue-500 bg-blue-50/50'
+                        : 'border-gray-200 hover:border-gray-300',
+                      isDragging && draggedElementId === element.id ? 'opacity-50' : '',
+                      isDragging &&
+                        dragOverElementId === element.id &&
+                        draggedElementId !== element.id
+                        ? 'border-blue-300 bg-blue-50/30'
+                        : '',
+                    )}
+                    onClick={() => {
+                      return selectElement(element.id);
+                    }}
+                    draggable
+                    onDragStart={(e) => {
+                      return handleDragStart(e, element.id);
+                    }}
+                    onDragOver={(e) => {
+                      return handleDragOver(e, element.id);
+                    }}
+                    onDrop={(e) => {
+                      return handleDrop(e, element.id);
+                    }}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <div className='p-2.5 flex items-start gap-2'>
+                      <div className='flex-shrink-0 mt-0.5 cursor-grab'>
+                        <Grip className='h-4 w-4 text-gray-400' />
                       </div>
-                      <div className='flex items-center gap-1 opacity-0 group-hover:opacity-100 flex-shrink-0'>
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          className='h-7 w-7'
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            moveElementUp(index);
-                          }}
-                          disabled={index === 0}
-                        >
-                          <ArrowLeft className='h-4 w-4 rotate-90' />
-                        </Button>
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          className='h-7 w-7'
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            moveElementDown(index);
-                          }}
-                          disabled={index === formElements.length - 1}
-                        >
-                          <ArrowLeft className='h-4 w-4 -rotate-90' />
-                        </Button>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant='ghost'
-                              size='icon'
-                              className='h-7 w-7'
-                              onClick={(e) => {
-                                e.stopPropagation();
-                              }}
+                      <div className='flex-1 min-w-0'>
+                        <div className='flex items-center gap-1.5 mb-0.5'>
+                          <div className='w-4 h-4 flex-shrink-0'>{icon}</div>
+                          <span className='font-medium text-sm text-gray-700 truncate'>
+                            {element.title}
+                          </span>
+                        </div>
+                        <div className='flex items-center gap-1.5'>
+                          <span className='text-xs text-gray-500'>{element.type}</span>
+                          {element.required && (
+                            <Badge
+                              variant='outline'
+                              className='px-1 py-0 h-4 text-[10px] border-red-200 text-red-600 rounded'
                             >
-                              <MoreHorizontal className='h-4 w-4' />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className='w-48 p-1'>
-                            <div className='space-y-1'>
+                              Required
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className='flex items-center'>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
                               <Button
                                 variant='ghost'
-                                size='sm'
-                                className='w-full justify-start gap-2'
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  duplicateElement(element.id);
-                                }}
-                              >
-                                <Copy className='h-4 w-4' />
-                                <span>Duplicate</span>
-                              </Button>
-                              <Button
-                                variant='ghost'
-                                size='sm'
-                                className='w-full justify-start gap-2'
+                                size='icon'
+                                className='h-6 w-6 rounded-full'
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   openElementEditor(element);
                                 }}
                               >
-                                <Edit2 className='h-4 w-4' />
-                                <span>Edit</span>
+                                <Edit2 className='h-3 w-3 text-gray-500' />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Edit Element</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              className='h-6 w-6 rounded-full'
+                              onClick={(e) => {
+                                return e.stopPropagation();
+                              }}
+                            >
+                              <MoreHorizontal className='h-3 w-3 text-gray-500' />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className='w-40 p-1' side='right'>
+                            <div className='space-y-0.5'>
+                              <Button
+                                variant='ghost'
+                                size='sm'
+                                className='w-full justify-start text-xs h-7'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openElementEditor(element);
+                                }}
+                              >
+                                <Edit2 className='h-3 w-3 mr-2' />
+                                Edit
                               </Button>
                               <Button
                                 variant='ghost'
                                 size='sm'
-                                className='w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50'
+                                className='w-full justify-start text-xs h-7'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  duplicateElement(element.id);
+                                }}
+                              >
+                                <Copy className='h-3 w-3 mr-2' />
+                                Duplicate
+                              </Button>
+                              <Button
+                                variant='ghost'
+                                size='sm'
+                                className='w-full justify-start text-xs h-7'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  moveElementUp(index);
+                                }}
+                                disabled={index === 0}
+                              >
+                                <ArrowDownUp className='h-3 w-3 mr-2' />
+                                Move Up
+                              </Button>
+                              <Button
+                                variant='ghost'
+                                size='sm'
+                                className='w-full justify-start text-xs h-7'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  moveElementDown(index);
+                                }}
+                                disabled={index === formElements.length - 1}
+                              >
+                                <ArrowDownUp className='h-3 w-3 mr-2' />
+                                Move Down
+                              </Button>
+                              <Button
+                                variant='ghost'
+                                size='sm'
+                                className='w-full justify-start text-xs h-7 text-red-600 hover:text-red-700 hover:bg-red-50'
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   deleteElement(element.id);
                                 }}
                               >
-                                <Trash2 className='h-4 w-4' />
-                                <span>Delete</span>
+                                <Trash2 className='h-3 w-3 mr-2' />
+                                Delete
                               </Button>
                             </div>
                           </PopoverContent>
                         </Popover>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
 
-              <div className='mt-4 p-4 border border-dashed border-gray-300 rounded-xl text-center hover:bg-gray-50 transition-all'>
-                <Button
-                  variant='ghost'
-                  className='text-sm text-gray-500'
-                  onClick={() => {
-                    return setActiveTab('elements');
-                  }}
-                >
-                  + Add more elements
-                </Button>
-              </div>
+                    {element.conditions && element.conditions.length > 0 && (
+                      <Collapsible className='mt-1 border-t'>
+                        <CollapsibleTrigger className='flex items-center justify-between w-full p-2 hover:bg-gray-50'>
+                          <div className='flex items-center gap-1 text-xs text-gray-600'>
+                            <CheckCircle className='h-3 w-3' />
+                            <span>
+                              Show when{' '}
+                              {element.showWhen === 'all'
+                                ? 'all conditions match'
+                                : 'any condition matches'}
+                            </span>
+                          </div>
+                          <ChevronDown className='h-3 w-3' />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className='px-2 pb-2'>
+                          <div className='text-xs space-y-1'>
+                            {element.conditions.map((condition) => {
+                              const sourceElement = formElements.find((el) => {
+                                return el.id === condition.sourceElementId;
+                              });
+                              return (
+                                <div
+                                  key={condition.id}
+                                  className='flex items-center justify-between p-1 border rounded bg-gray-50'
+                                >
+                                  <span className='truncate'>
+                                    {sourceElement?.title || 'Unknown Element'}{' '}
+                                    {condition.operator.replace(/_/g, ' ')} {condition.value}
+                                  </span>
+                                  <Button
+                                    variant='ghost'
+                                    size='icon'
+                                    className='h-5 w-5 rounded-full'
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      return deleteElement(element.id);
+                                    }}
+                                  >
+                                    <X className='h-3 w-3' />
+                                  </Button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </TabsContent>

@@ -1,75 +1,23 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { useFormBuilder } from '../context/FormBuilderContext';
 import FormBuilderHeader from './FormBuilderHeader';
 import FormBuilderSidebar from './FormBuilderSidebar';
 
 interface FormBuilderLayoutProps {
   children: ReactNode;
-  formElements: any[];
-  setFormElements: (elements: any[]) => void;
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-  selectedElementId: string | null;
-  setSelectedElementId: (id: string | null) => void;
-  setEditingElement: (element: any | null) => void;
-  setChangesSaved: (saved: boolean) => void;
-  previewMode: boolean;
-  setPreviewMode: (mode: boolean) => void;
-  isMobile: boolean;
-  showMobileNav: boolean;
-  setShowMobileNav: (show: boolean) => void;
-  showMobileMenu: boolean;
-  setShowMobileMenu: (show: boolean) => void;
-  isDragging: boolean;
-  draggedElementId: string | null;
-  dragOverElementId: string | null;
-  handleDragStart: (e: React.DragEvent, elementId: string) => void;
-  handleDragOver: (e: React.DragEvent, elementId: string) => void;
-  handleDrop: (e: React.DragEvent, targetElementId: string) => void;
-  handleDragEnd: () => void;
   getElementIcon: (type: string) => React.ReactNode;
-  generateId: () => string;
 }
 
-export default function FormBuilderLayout({
-  children,
-  formElements,
-  setFormElements,
-  activeTab,
-  setActiveTab,
-  selectedElementId,
-  setSelectedElementId,
-  setEditingElement,
-  setChangesSaved,
-  previewMode,
-  setPreviewMode,
-  isMobile,
-  showMobileNav,
-  setShowMobileNav,
-  showMobileMenu,
-  setShowMobileMenu,
-  isDragging,
-  draggedElementId,
-  dragOverElementId,
-  handleDragStart,
-  handleDragOver,
-  handleDrop,
-  handleDragEnd,
-  getElementIcon,
-  generateId,
-}: FormBuilderLayoutProps) {
+export default function FormBuilderLayout({ children, getElementIcon }: FormBuilderLayoutProps) {
+  const { previewMode, isMobile, showMobileNav, showMobileMenu } = useFormBuilder();
+
   return (
     <div className='flex flex-col h-[calc(100vh-66px)] overflow-hidden'>
       {/* Header */}
       <div className=''>
-        <FormBuilderHeader
-          previewMode={previewMode}
-          setPreviewMode={setPreviewMode}
-          isMobile={isMobile}
-          showMobileMenu={showMobileMenu}
-          setShowMobileMenu={setShowMobileMenu}
-        />
+        <FormBuilderHeader />
       </div>
 
       {/* Main content area with sidebar and children */}
@@ -83,29 +31,7 @@ export default function FormBuilderLayout({
             ${!previewMode && isMobile && showMobileNav ? 'fixed inset-0 z-40' : ''}
           `}
           >
-            <FormBuilderSidebar
-              formElements={formElements}
-              setFormElements={setFormElements}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              selectedElementId={selectedElementId}
-              setSelectedElementId={setSelectedElementId}
-              setEditingElement={setEditingElement}
-              setChangesSaved={setChangesSaved}
-              previewMode={previewMode}
-              isMobile={isMobile}
-              showMobileNav={showMobileNav}
-              setShowMobileNav={setShowMobileNav}
-              isDragging={isDragging}
-              draggedElementId={draggedElementId}
-              dragOverElementId={dragOverElementId}
-              handleDragStart={handleDragStart}
-              handleDragOver={handleDragOver}
-              handleDrop={handleDrop}
-              handleDragEnd={handleDragEnd}
-              getElementIcon={getElementIcon}
-              generateId={generateId}
-            />
+            <FormBuilderSidebar getElementIcon={getElementIcon} />
           </div>
         </div>
 

@@ -1,30 +1,21 @@
 import { Button } from '@/components/ui/button';
 import { Eye, Layout, Plus, Save } from 'lucide-react';
 import React from 'react';
+import { useFormBuilder } from '../context/FormBuilderContext';
 
-interface MobileNavigationProps {
-  isMobile: boolean;
-  previewMode: boolean;
-  showMobileNav: boolean;
-  activeTab: string;
-  changesSaved: boolean;
-  setShowMobileNav: (show: boolean) => void;
-  setActiveTab: (tab: string) => void;
-  setPreviewMode: (mode: boolean) => void;
-  saveChanges: () => void;
-}
+const MobileNavigation: React.FC = () => {
+  const {
+    isMobile,
+    previewMode,
+    showMobileNav,
+    activeTab,
+    changesSaved,
+    setShowMobileNav,
+    setActiveTab,
+    setPreviewMode,
+    saveChanges,
+  } = useFormBuilder();
 
-const MobileNavigation: React.FC<MobileNavigationProps> = ({
-  isMobile,
-  previewMode,
-  showMobileNav,
-  activeTab,
-  changesSaved,
-  setShowMobileNav,
-  setActiveTab,
-  setPreviewMode,
-  saveChanges,
-}) => {
   if (!isMobile || previewMode) return null;
 
   return (

@@ -8,25 +8,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { Building2, ChevronDown, Mail, MapPin, Phone, Plus, User2, X } from 'lucide-react';
 import React from 'react';
-import { FormElement } from '../types';
+import { useFormBuilder } from '../context/FormBuilderContext';
 
-interface ElementEditorProps {
-  editingElement: FormElement | null;
-  setEditingElement: (element: FormElement | null) => void;
-  showValidationSettings: boolean;
-  setShowValidationSettings: (show: boolean) => void;
-  saveElementChanges: (updatedElement: FormElement) => void;
-  isMobile: boolean;
-}
+const ElementEditor: React.FC = () => {
+  const {
+    editingElement,
+    setEditingElement,
+    showValidationSettings,
+    setShowValidationSettings,
+    saveElementChanges,
+    isMobile,
+  } = useFormBuilder();
 
-const ElementEditor: React.FC<ElementEditorProps> = ({
-  editingElement,
-  setEditingElement,
-  showValidationSettings,
-  setShowValidationSettings,
-  saveElementChanges,
-  isMobile,
-}) => {
   if (!editingElement) return null;
 
   const handleSave = () => {
@@ -344,187 +337,105 @@ const ElementEditor: React.FC<ElementEditorProps> = ({
             </div>
           )}
 
-          {/* Client Fields Settings */}
-          {editingElement && editingElement.type === 'Client Details' && (
-            <div className='grid gap-4 pt-2 pb-2'>
-              <div className='col-span-4 mb-2'>
-                <h4 className='font-medium text-sm'>Client Information Fields</h4>
-                <p className='text-xs text-gray-500 mt-1'>
-                  Select which client information fields to include
-                </p>
-              </div>
-
-              <div className='space-y-3 border rounded-md p-4 bg-gray-50'>
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <Mail className='h-4 w-4 text-blue-600' />
-                    <Label htmlFor='client-email' className='font-medium'>
-                      Email
-                    </Label>
-                    <Badge className='text-xs bg-blue-100 text-blue-700 border-blue-200'>
-                      Required
-                    </Badge>
-                  </div>
-                  <Switch id='client-email' checked={true} disabled={true} />
+          {/* Client Fields for Client Details element */}
+          {editingElement.type === 'Client Details' && (
+            <div className='grid grid-cols-4 items-start gap-4'>
+              <Label className='text-right mt-2'>Client Fields</Label>
+              <div className='col-span-3 space-y-3'>
+                <div className='flex items-center gap-3 p-2 border rounded-md bg-gray-50'>
+                  <Mail className='h-4 w-4 text-blue-500' />
+                  <span className='font-medium text-sm'>Email</span>
+                  <Badge className='ml-auto' variant='outline'>
+                    Required
+                  </Badge>
                 </div>
 
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <User2 className='h-4 w-4 text-gray-600' />
-                    <Label htmlFor='client-name'>Full Name</Label>
+                <div className='flex items-center gap-3 p-2 border rounded-md'>
+                  <User2 className='h-4 w-4 text-gray-500' />
+                  <span className='text-sm'>Full Name</span>
+                  <div className='ml-auto flex items-center gap-2'>
+                    <Switch
+                      id='name-field'
+                      checked={editingElement.clientFields?.name || false}
+                      onCheckedChange={(checked) => {
+                        return setEditingElement({
+                          ...editingElement,
+                          clientFields: {
+                            ...editingElement.clientFields,
+                            name: checked,
+                          },
+                        });
+                      }}
+                    />
                   </div>
-                  <Switch
-                    id='client-name'
-                    checked={editingElement.clientFields?.name || false}
-                    onCheckedChange={(checked) => {
-                      return setEditingElement({
-                        ...editingElement,
-                        clientFields: {
-                          ...editingElement.clientFields,
-                          name: checked,
-                        },
-                      });
-                    }}
-                  />
                 </div>
 
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <Phone className='h-4 w-4 text-gray-600' />
-                    <Label htmlFor='client-phone'>Phone Number</Label>
+                <div className='flex items-center gap-3 p-2 border rounded-md'>
+                  <Phone className='h-4 w-4 text-gray-500' />
+                  <span className='text-sm'>Phone Number</span>
+                  <div className='ml-auto flex items-center gap-2'>
+                    <Switch
+                      id='phone-field'
+                      checked={editingElement.clientFields?.phone || false}
+                      onCheckedChange={(checked) => {
+                        return setEditingElement({
+                          ...editingElement,
+                          clientFields: {
+                            ...editingElement.clientFields,
+                            phone: checked,
+                          },
+                        });
+                      }}
+                    />
                   </div>
-                  <Switch
-                    id='client-phone'
-                    checked={editingElement.clientFields?.phone || false}
-                    onCheckedChange={(checked) => {
-                      return setEditingElement({
-                        ...editingElement,
-                        clientFields: {
-                          ...editingElement.clientFields,
-                          phone: checked,
-                        },
-                      });
-                    }}
-                  />
                 </div>
 
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <Building2 className='h-4 w-4 text-gray-600' />
-                    <Label htmlFor='client-company'>Company</Label>
+                <div className='flex items-center gap-3 p-2 border rounded-md'>
+                  <MapPin className='h-4 w-4 text-gray-500' />
+                  <span className='text-sm'>Address</span>
+                  <div className='ml-auto flex items-center gap-2'>
+                    <Switch
+                      id='address-field'
+                      checked={editingElement.clientFields?.address || false}
+                      onCheckedChange={(checked) => {
+                        return setEditingElement({
+                          ...editingElement,
+                          clientFields: {
+                            ...editingElement.clientFields,
+                            address: checked,
+                          },
+                        });
+                      }}
+                    />
                   </div>
-                  <Switch
-                    id='client-company'
-                    checked={editingElement.clientFields?.company || false}
-                    onCheckedChange={(checked) => {
-                      return setEditingElement({
-                        ...editingElement,
-                        clientFields: {
-                          ...editingElement.clientFields,
-                          company: checked,
-                        },
-                      });
-                    }}
-                  />
                 </div>
 
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <MapPin className='h-4 w-4 text-gray-600' />
-                    <Label htmlFor='client-address'>Address</Label>
+                <div className='flex items-center gap-3 p-2 border rounded-md'>
+                  <Building2 className='h-4 w-4 text-gray-500' />
+                  <span className='text-sm'>Company</span>
+                  <div className='ml-auto flex items-center gap-2'>
+                    <Switch
+                      id='company-field'
+                      checked={editingElement.clientFields?.company || false}
+                      onCheckedChange={(checked) => {
+                        return setEditingElement({
+                          ...editingElement,
+                          clientFields: {
+                            ...editingElement.clientFields,
+                            company: checked,
+                          },
+                        });
+                      }}
+                    />
                   </div>
-                  <Switch
-                    id='client-address'
-                    checked={editingElement.clientFields?.address || false}
-                    onCheckedChange={(checked) => {
-                      return setEditingElement({
-                        ...editingElement,
-                        clientFields: {
-                          ...editingElement.clientFields,
-                          address: checked,
-                        },
-                      });
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Custom Fields */}
-              <div className='mt-4'>
-                <h4 className='font-medium text-sm mb-2'>Custom Fields</h4>
-                <div className='space-y-2'>
-                  {editingElement.clientFields?.custom?.map((field, index) => {
-                    return (
-                      <div key={index} className='flex items-center gap-2'>
-                        <Input
-                          value={field}
-                          onChange={(e) => {
-                            const newCustomFields = [
-                              ...(editingElement.clientFields?.custom || []),
-                            ];
-                            newCustomFields[index] = e.target.value;
-                            setEditingElement({
-                              ...editingElement,
-                              clientFields: {
-                                ...editingElement.clientFields,
-                                custom: newCustomFields,
-                              },
-                            });
-                          }}
-                          placeholder='Field name'
-                        />
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          onClick={() => {
-                            const newCustomFields = [
-                              ...(editingElement.clientFields?.custom || []),
-                            ];
-                            newCustomFields.splice(index, 1);
-                            setEditingElement({
-                              ...editingElement,
-                              clientFields: {
-                                ...editingElement.clientFields,
-                                custom: newCustomFields,
-                              },
-                            });
-                          }}
-                        >
-                          <X className='h-4 w-4' />
-                        </Button>
-                      </div>
-                    );
-                  })}
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    className='mt-2'
-                    onClick={() => {
-                      const newCustomFields = [
-                        ...(editingElement.clientFields?.custom || []),
-                        `Custom Field ${(editingElement.clientFields?.custom?.length || 0) + 1}`,
-                      ];
-                      setEditingElement({
-                        ...editingElement,
-                        clientFields: {
-                          ...editingElement.clientFields,
-                          custom: newCustomFields,
-                        },
-                      });
-                    }}
-                  >
-                    <Plus className='h-4 w-4 mr-2' />
-                    Add Custom Field
-                  </Button>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        <div className='flex justify-end gap-2'>
+        <div className='flex justify-end gap-2 mt-4'>
           <Button
-            type='button'
             variant='outline'
             onClick={() => {
               return setEditingElement(null);
@@ -532,9 +443,7 @@ const ElementEditor: React.FC<ElementEditorProps> = ({
           >
             Cancel
           </Button>
-          <Button type='button' onClick={handleSave}>
-            Save Changes
-          </Button>
+          <Button onClick={handleSave}>Save Changes</Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -1,52 +1,31 @@
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Eye } from 'lucide-react';
 import React from 'react';
-import { FormElement as FormElementType, FormValues } from '../types';
+import { useFormBuilder } from '../context/FormBuilderContext';
 import { getOperatorText, getValidationErrorMessage, shouldShowElement } from '../utils';
 import EmptyFormState from './EmptyFormState';
 import FormElement from './FormElement';
 
-interface FormCanvasContentProps {
-  formElements: FormElementType[];
-  previewMode: boolean;
-  formValues: FormValues;
-  selectedElementId: string | null;
-  openElementEditor: (element: FormElementType) => void;
-  selectElement: (id: string) => void;
-  duplicateElement: (id: string) => void;
-  deleteElement: (id: string) => void;
-  removeCondition: (elementId: string, conditionId: string) => void;
-  handleFormValueChange: (elementId: string, value: string | string[] | boolean | number) => void;
-  addElement: (elementType: string) => void;
-  addClientDetailsSection: () => void;
-  handleDragStart: (e: React.DragEvent, elementId: string) => void;
-  handleDragOver: (e: React.DragEvent, elementId: string) => void;
-  handleDrop: (e: React.DragEvent, targetElementId: string) => void;
-  showElementMenu: (e: React.MouseEvent) => void;
-  isMobile: boolean;
-  setPreviewMode: (mode: boolean) => void;
-}
+const FormCanvasContent: React.FC = () => {
+  const {
+    formElements,
+    previewMode,
+    formValues,
+    selectedElementId,
+    openElementEditor,
+    selectElement,
+    duplicateElement,
+    deleteElement,
+    removeCondition,
+    handleFormValueChange,
+    addElement,
+    addClientDetailsSection,
+    handleDragStart,
+    handleDragOver,
+    handleDrop,
+    setPreviewMode,
+  } = useFormBuilder();
 
-const FormCanvasContent: React.FC<FormCanvasContentProps> = ({
-  formElements,
-  previewMode,
-  formValues,
-  selectedElementId,
-  openElementEditor,
-  selectElement,
-  duplicateElement,
-  deleteElement,
-  removeCondition,
-  handleFormValueChange,
-  addElement,
-  addClientDetailsSection,
-  handleDragStart,
-  handleDragOver,
-  handleDrop,
-  showElementMenu,
-  isMobile,
-  setPreviewMode,
-}) => {
   const hasClientDetails = formElements.some((el) => {
     return el.type === 'Client Details';
   });

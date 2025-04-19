@@ -1,28 +1,19 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ArrowLeft, Edit2, Eye, HelpCircle, Menu, Save, Settings } from 'lucide-react';
-import React, { useState } from 'react';
+import React from 'react';
+import { useFormBuilder } from '../context/FormBuilderContext';
 
-interface FormBuilderHeaderProps {
-  previewMode: boolean;
-  setPreviewMode: (mode: boolean) => void;
-  isMobile: boolean;
-  showMobileMenu: boolean;
-  setShowMobileMenu: (show: boolean) => void;
-}
-
-const FormBuilderHeader: React.FC<FormBuilderHeaderProps> = ({
-  previewMode,
-  setPreviewMode,
-  isMobile,
-  showMobileMenu,
-  setShowMobileMenu,
-}) => {
-  const [changesSaved, setChangesSaved] = useState(false);
-
-  const saveChanges = () => {
-    setChangesSaved(true);
-  };
+const FormBuilderHeader: React.FC = () => {
+  const {
+    previewMode,
+    setPreviewMode,
+    isMobile,
+    showMobileMenu,
+    setShowMobileMenu,
+    changesSaved,
+    saveChanges,
+  } = useFormBuilder();
 
   return (
     <header className='border-b bg-white/80 backdrop-blur-sm  z-20 shadow-sm w-full'>
