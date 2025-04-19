@@ -276,7 +276,7 @@ export default function ProjectHome() {
 
   return (
     <motion.div
-      className='space-y-6 overflow-y-auto h-full'
+      className='space-y-6 h-full'
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}

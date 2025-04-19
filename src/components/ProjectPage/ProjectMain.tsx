@@ -103,8 +103,8 @@ export default function ProjectMain() {
           <ScrollBar orientation='horizontal' />
         </ScrollArea>
 
-        <div className='flex flex-col gap-6 py-2 md:flex-row flex-1 overflow-y-auto'>
-          <div className='w-full lg:flex-1 md:px-2 overflow-y-auto'>
+        <div className='flex flex-col gap-6 py-2 md:flex-row flex-1 '>
+          <div className='w-full lg:flex-1 md:px-2 '>
             <AnimatePresence mode='wait'>
               <motion.div
                 key={activeTab}
