@@ -7,7 +7,6 @@ import { Mona_Sans as FontSans } from 'next/font/google';
 import { useEffect, useState } from 'react';
 import ElementEditor from './components/ElementEditor';
 import ElementTypeMenu from './components/ElementTypeMenu';
-import FormBuilderFooter from './components/FormBuilderFooter';
 import FormBuilderHeader from './components/FormBuilderHeader';
 import FormBuilderSidebar from './components/FormBuilderSidebar';
 import FormCanvasContent from './components/FormCanvasContent';
@@ -371,7 +370,7 @@ export default function FormBuilder() {
       />
 
       {/* Main Content */}
-      <div className='flex mt-[7.5rem] h-[calc(100vh-7.5rem)]'>
+      <div className='flex'>
         {/* Sidebar */}
         <FormBuilderSidebar
           formElements={formElements}
@@ -443,15 +442,6 @@ export default function FormBuilder() {
         setActiveTab={setActiveTab}
         setPreviewMode={setPreviewMode}
         saveChanges={saveChanges}
-      />
-
-      {/* Footer (desktop only) */}
-      <FormBuilderFooter
-        changesSaved={changesSaved}
-        saveChanges={saveChanges}
-        previewMode={previewMode}
-        setPreviewMode={setPreviewMode}
-        isMobile={isMobile}
       />
 
       {/* Element Editor Dialog */}
