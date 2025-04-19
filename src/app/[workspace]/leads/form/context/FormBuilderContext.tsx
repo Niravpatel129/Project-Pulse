@@ -1,6 +1,7 @@
 'use client';
 
 import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { FormElement, FormValues } from '../types';
@@ -99,6 +100,7 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [formTitle, setFormTitle] = useState('Untitled form');
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   // Initialize form values for preview mode
   useEffect(() => {
@@ -130,6 +132,19 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
       return window.removeEventListener('resize', checkIfMobile);
     };
   }, []);
+
+  const createFormMutation = useMutation({
+    mutationFn: (formData: any) => {
+      return newRequest.post('/lead-forms', formData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lead-forms'] });
+      router.push('/leads');
+    },
+    onError: (error) => {
+      console.error('Error submitting form:', error);
+    },
+  });
 
   const addElement = (elementType: string) => {
     const newElement: FormElement = {
@@ -243,20 +258,13 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
 
     // We no longer automatically validate here - validation should happen explicitly
     // in handleCreateForm
-    try {
-      const res = await newRequest.post('/lead-forms', {
-        title: formTitle,
-        ...formValues,
-        formElements,
-      });
-      console.log(res);
-      router.push(`/leads`);
-    } catch (error) {
-      console.error('Error submitting form:', error);
-    }
+    createFormMutation.mutate({
+      title: formTitle,
+      ...formValues,
+      formElements,
+    });
 
     setChangesSaved(true);
-    // Actual save logic would go here
   };
 
   const selectElement = (id: string) => {
