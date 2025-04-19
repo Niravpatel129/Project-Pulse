@@ -160,9 +160,18 @@ const FormElement: React.FC<FormElementProps> = ({
 
       {/* Render different form elements based on type */}
       {element.type === 'Text Block' && (
-        <div className='text-gray-600'>
-          This is a text block. You can add instructions or information here.
-        </div>
+        <Textarea
+          className='w-full mt-2 min-h-[100px]'
+          placeholder='Enter text block content'
+          value={
+            previewMode
+              ? (formValues[element.id] as string) || element.content || ''
+              : element.content || ''
+          }
+          onChange={(e) => {
+            return previewMode && handleFormValueChange(element.id, e.target.value);
+          }}
+        />
       )}
 
       {element.type === 'Single Response' && (

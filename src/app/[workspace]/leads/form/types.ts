@@ -25,6 +25,7 @@ export type FormElement = {
   required: boolean;
   order: number;
   section?: string;
+  content?: string; // For Text Block content
   options?: string[]; // For radio buttons, checkboxes, dropdowns
   placeholder?: string;
   defaultValue?: string;
