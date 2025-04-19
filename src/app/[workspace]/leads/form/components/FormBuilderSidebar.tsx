@@ -230,11 +230,11 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
                 variant='outline'
                 className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
                 onClick={() => {
-                  return addElement('Phone');
+                  return addElement('Phone Number');
                 }}
               >
                 <div className='w-6 h-6 flex items-center justify-center'>
-                  {getElementIcon('Phone')}
+                  {getElementIcon('Phone Number')}
                 </div>
                 <span className='text-xs'>Phone</span>
               </Button>

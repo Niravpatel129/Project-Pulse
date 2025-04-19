@@ -5,7 +5,9 @@ import {
   CheckCircle,
   CheckSquare,
   FileUp,
+  Link,
   List,
+  Mail,
   MessageSquare,
   Phone,
   Radio,
@@ -88,6 +90,26 @@ const ElementTypeMenu: React.FC = () => {
         >
           <Phone className='h-4 w-4' />
           <span>Phone Number</span>
+        </Button>
+        <Button
+          variant='ghost'
+          className='w-full justify-start gap-3'
+          onClick={() => {
+            return addElement('Email');
+          }}
+        >
+          <Mail className='h-4 w-4' />
+          <span>Email</span>
+        </Button>
+        <Button
+          variant='ghost'
+          className='w-full justify-start gap-3'
+          onClick={() => {
+            return addElement('URL');
+          }}
+        >
+          <Link className='h-4 w-4' />
+          <span>URL</span>
         </Button>
         <Button
           variant='ghost'

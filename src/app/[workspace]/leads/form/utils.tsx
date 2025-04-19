@@ -4,7 +4,9 @@ import {
   CheckCircle,
   CheckSquare,
   FileUp,
+  Link,
   List,
+  Mail,
   MessageSquare,
   Phone,
   Radio,
@@ -34,6 +36,10 @@ export const getElementIcon = (type: string): React.ReactNode => {
       return <List className='h-4 w-4' />;
     case 'Phone Number':
       return <Phone className='h-4 w-4' />;
+    case 'Email':
+      return <Mail className='h-4 w-4' />;
+    case 'URL':
+      return <Link className='h-4 w-4' />;
     case 'Rating':
       return <Star className='h-4 w-4' />;
     case 'File Upload':

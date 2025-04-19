@@ -92,6 +92,8 @@ const ElementEditor: React.FC = () => {
             editingElement.type === 'Short Answer' ||
             editingElement.type === 'Long Answer' ||
             editingElement.type === 'Phone Number' ||
+            editingElement.type === 'Email' ||
+            editingElement.type === 'URL' ||
             editingElement.type === 'Number') && (
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='placeholder' className='text-right'>
@@ -165,6 +167,8 @@ const ElementEditor: React.FC = () => {
             editingElement.type === 'Short Answer' ||
             editingElement.type === 'Long Answer' ||
             editingElement.type === 'Phone Number' ||
+            editingElement.type === 'Email' ||
+            editingElement.type === 'URL' ||
             editingElement.type === 'Number') && (
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label className='text-right'>Validation</Label>
@@ -291,7 +295,9 @@ const ElementEditor: React.FC = () => {
 
               {(editingElement.type === 'Single Response' ||
                 editingElement.type === 'Short Answer' ||
-                editingElement.type === 'Phone Number') && (
+                editingElement.type === 'Phone Number' ||
+                editingElement.type === 'Email' ||
+                editingElement.type === 'URL') && (
                 <>
                   <Label htmlFor='pattern' className='text-right col-span-1'>
                     Pattern
@@ -322,12 +328,50 @@ const ElementEditor: React.FC = () => {
                               ...editingElement,
                               validation: {
                                 ...editingElement.validation,
-                                pattern: '^[+]?[(]?[0-9]{3}[)]?[-\\s.]?[0-9]{3}[-\\s.]?[0-9]{4,6}$',
+                                pattern:
+                                  '^(\\+\\d{1,2}\\s?)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$',
                               },
                             });
                           }}
                         >
-                          Use Phone Number Pattern
+                          Use phone number pattern
+                        </Button>
+                      )}
+                      {editingElement.type === 'Email' && (
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='text-xs h-6 px-2'
+                          onClick={() => {
+                            return setEditingElement({
+                              ...editingElement,
+                              validation: {
+                                ...editingElement.validation,
+                                pattern: '^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$',
+                              },
+                            });
+                          }}
+                        >
+                          Use email pattern
+                        </Button>
+                      )}
+                      {editingElement.type === 'URL' && (
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='text-xs h-6 px-2'
+                          onClick={() => {
+                            return setEditingElement({
+                              ...editingElement,
+                              validation: {
+                                ...editingElement.validation,
+                                pattern:
+                                  '^https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)$',
+                              },
+                            });
+                          }}
+                        >
+                          Use URL pattern
                         </Button>
                       )}
                     </div>

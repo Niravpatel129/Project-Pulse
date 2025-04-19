@@ -215,6 +215,31 @@ const FormElement: React.FC<FormElementProps> = ({
           onChange={(e) => {
             return previewMode && handleFormValueChange(element.id, e.target.value);
           }}
+          type='tel'
+        />
+      )}
+
+      {element.type === 'Email' && (
+        <Input
+          type='email'
+          placeholder={element.placeholder || 'Enter email address'}
+          className='mt-2'
+          value={previewMode ? (formValues[element.id] as string) || '' : ''}
+          onChange={(e) => {
+            return previewMode && handleFormValueChange(element.id, e.target.value);
+          }}
+        />
+      )}
+
+      {element.type === 'URL' && (
+        <Input
+          type='url'
+          placeholder={element.placeholder || 'Enter URL (https://example.com)'}
+          className='mt-2'
+          value={previewMode ? (formValues[element.id] as string) || '' : ''}
+          onChange={(e) => {
+            return previewMode && handleFormValueChange(element.id, e.target.value);
+          }}
         />
       )}
 

@@ -92,4 +92,6 @@ export type ElementType =
   | 'Radio Buttons'
   | 'Checkboxes'
   | 'File Upload'
-  | 'Client Details';
+  | 'Client Details'
+  | 'Email'
+  | 'URL';
