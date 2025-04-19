@@ -1,7 +1,18 @@
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, Edit2, Eye, HelpCircle, Menu, Save, Settings } from 'lucide-react';
-import React from 'react';
+import {
+  ArrowLeft,
+  CheckIcon,
+  Edit2,
+  Eye,
+  HelpCircle,
+  Menu,
+  PencilIcon,
+  Save,
+  Settings,
+} from 'lucide-react';
+import React, { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { useFormBuilder } from '../context/FormBuilderContext';
 
@@ -21,7 +32,11 @@ const FormBuilderHeader: React.FC = () => {
     setValidationErrors,
     formValues,
     setActiveTab,
+    formTitle,
+    setFormTitle,
   } = useFormBuilder();
+
+  const [editingFormTitle, setEditingFormTitle] = useState(false);
 
   // Initialize react-hook-form
   const methods = useForm();
@@ -96,7 +111,39 @@ const FormBuilderHeader: React.FC = () => {
                 Form Builder
               </span>
               <span className='text-gray-400 hidden sm:inline'>/</span>
-              <span className='text-gray-600 text-sm hidden sm:inline'>College Intake Form</span>
+              <span className='text-gray-600 text-sm hidden sm:inline'>
+                <div className='flex items-center gap-2'>
+                  {editingFormTitle ? (
+                    <Input
+                      value={formTitle}
+                      onChange={(e) => {
+                        return setFormTitle(e.target.value);
+                      }}
+                    />
+                  ) : (
+                    formTitle
+                  )}
+                  {!editingFormTitle ? (
+                    <div
+                      className='flex items-center gap-1 cursor-pointer'
+                      onClick={() => {
+                        return setEditingFormTitle(true);
+                      }}
+                    >
+                      <PencilIcon className='w-3 h-3' />
+                    </div>
+                  ) : (
+                    <div
+                      className='flex items-center gap-1 cursor-pointer'
+                      onClick={() => {
+                        return setEditingFormTitle(false);
+                      }}
+                    >
+                      <CheckIcon className='w-3 h-3' />
+                    </div>
+                  )}
+                </div>
+              </span>
             </div>
           </div>
           <div className='ml-auto items-center gap-2 md:gap-3 hidden md:flex'>

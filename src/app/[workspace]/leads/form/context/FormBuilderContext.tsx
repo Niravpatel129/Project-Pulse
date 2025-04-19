@@ -63,6 +63,8 @@ type FormBuilderContextType = {
   duplicateElement: (elementId: string) => void;
   generateId: () => string;
   validateForm: () => boolean;
+  setFormTitle: (title: string) => void;
+  formTitle: string;
 };
 
 const FormBuilderContext = createContext<FormBuilderContextType | undefined>(undefined);
@@ -511,6 +513,8 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
     duplicateElement,
     generateId,
     validateForm,
+    formTitle,
+    setFormTitle,
   };
 
   return <FormBuilderContext.Provider value={value}>{children}</FormBuilderContext.Provider>;
