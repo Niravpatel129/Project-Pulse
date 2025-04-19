@@ -216,6 +216,8 @@ const FormElement: React.FC<FormElementProps> = ({
             return previewMode && handleFormValueChange(element.id, e.target.value);
           }}
           type='tel'
+          required={previewMode && element.required}
+          aria-required={element.required}
         />
       )}
 
@@ -228,6 +230,8 @@ const FormElement: React.FC<FormElementProps> = ({
           onChange={(e) => {
             return previewMode && handleFormValueChange(element.id, e.target.value);
           }}
+          required={previewMode && element.required}
+          aria-required={element.required}
         />
       )}
 
@@ -240,6 +244,8 @@ const FormElement: React.FC<FormElementProps> = ({
           onChange={(e) => {
             return previewMode && handleFormValueChange(element.id, e.target.value);
           }}
+          required={previewMode && element.required}
+          aria-required={element.required}
         />
       )}
 

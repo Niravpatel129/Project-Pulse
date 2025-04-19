@@ -182,25 +182,25 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
                 variant='outline'
                 className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
                 onClick={() => {
-                  return addElement('Short Text');
+                  return addElement('Short Answer');
                 }}
               >
                 <div className='w-6 h-6 flex items-center justify-center'>
-                  {getElementIcon('Short Text')}
+                  {getElementIcon('Short Answer')}
                 </div>
-                <span className='text-xs'>Short Text</span>
+                <span className='text-xs'>Short Answer</span>
               </Button>
               <Button
                 variant='outline'
                 className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
                 onClick={() => {
-                  return addElement('Long Text');
+                  return addElement('Long Answer');
                 }}
               >
                 <div className='w-6 h-6 flex items-center justify-center'>
-                  {getElementIcon('Long Text')}
+                  {getElementIcon('Long Answer')}
                 </div>
-                <span className='text-xs'>Long Text</span>
+                <span className='text-xs'>Long Answer</span>
               </Button>
               <Button
                 variant='outline'
