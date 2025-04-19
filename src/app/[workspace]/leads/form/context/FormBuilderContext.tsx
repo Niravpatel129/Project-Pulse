@@ -23,6 +23,7 @@ type FormBuilderContextType = {
   showMobileNav: boolean;
   showMobileMenu: boolean;
   isMobile: boolean;
+  validationErrors: string[];
 
   // Functions
   setFormElements: React.Dispatch<React.SetStateAction<FormElement[]>>;
@@ -41,6 +42,7 @@ type FormBuilderContextType = {
   setShowValidationSettings: React.Dispatch<React.SetStateAction<boolean>>;
   setShowMobileNav: React.Dispatch<React.SetStateAction<boolean>>;
   setShowMobileMenu: React.Dispatch<React.SetStateAction<boolean>>;
+  setValidationErrors: React.Dispatch<React.SetStateAction<string[]>>;
 
   // Helper functions
   addElement: (elementType: string) => void;
@@ -59,6 +61,7 @@ type FormBuilderContextType = {
   showElementMenu: (e: React.MouseEvent) => void;
   duplicateElement: (elementId: string) => void;
   generateId: () => string;
+  validateForm: () => boolean;
 };
 
 const FormBuilderContext = createContext<FormBuilderContextType | undefined>(undefined);
@@ -89,6 +92,7 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   // Initialize form values for preview mode
   useEffect(() => {
@@ -176,8 +180,36 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
     setShowElementTypeMenu(false);
   };
 
+  const validateForm = () => {
+    const errors: string[] = [];
+
+    // Check if client details section exists
+    const hasClientDetails = formElements.some((el) => {
+      return el.type === 'Client Details';
+    });
+    if (!hasClientDetails) {
+      errors.push(
+        'Missing Client Details: Add a Client Details section to collect required client information',
+      );
+    }
+
+    // Set the validation errors
+    setValidationErrors(errors);
+
+    // Return true if no errors, false otherwise
+    return errors.length === 0;
+  };
+
   const saveChanges = () => {
+    // Validate the form before saving
+    if (!validateForm()) {
+      // If validation fails, switch to the myform tab to show the errors
+      setActiveTab('myform');
+      return;
+    }
+
     setChangesSaved(true);
+    // Actual save logic would go here
   };
 
   const selectElement = (id: string) => {
@@ -398,6 +430,7 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
     showMobileNav,
     showMobileMenu,
     isMobile,
+    validationErrors,
 
     // Setters
     setFormElements,
@@ -416,8 +449,9 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
     setShowValidationSettings,
     setShowMobileNav,
     setShowMobileMenu,
+    setValidationErrors,
 
-    // Functions
+    // Helper functions
     addElement,
     addClientDetailsSection,
     saveChanges,
@@ -434,6 +468,7 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
     showElementMenu,
     duplicateElement,
     generateId,
+    validateForm,
   };
 
   return <FormBuilderContext.Provider value={value}>{children}</FormBuilderContext.Provider>;

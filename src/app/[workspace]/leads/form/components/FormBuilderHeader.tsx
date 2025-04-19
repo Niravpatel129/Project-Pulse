@@ -13,7 +13,14 @@ const FormBuilderHeader: React.FC = () => {
     setShowMobileMenu,
     changesSaved,
     saveChanges,
+    validateForm,
   } = useFormBuilder();
+
+  const handleCreateForm = () => {
+    // Validate the form before saving
+    validateForm();
+    saveChanges();
+  };
 
   return (
     <header className='border-b bg-white/80 backdrop-blur-sm  z-20 shadow-sm w-full'>
@@ -73,8 +80,7 @@ const FormBuilderHeader: React.FC = () => {
                 ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                 : 'bg-green-600 hover:bg-green-700 text-white',
             )}
-            onClick={saveChanges}
-            disabled={changesSaved}
+            onClick={handleCreateForm}
           >
             <Save className='h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2' />
             <span className='hidden sm:inline'>Create Form</span>

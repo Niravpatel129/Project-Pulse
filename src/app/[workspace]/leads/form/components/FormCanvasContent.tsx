@@ -24,11 +24,8 @@ const FormCanvasContent: React.FC = () => {
     handleDragOver,
     handleDrop,
     setPreviewMode,
+    validationErrors,
   } = useFormBuilder();
-
-  const hasClientDetails = formElements.some((el) => {
-    return el.type === 'Client Details';
-  });
 
   return (
     <div className='w-full'>
@@ -53,25 +50,24 @@ const FormCanvasContent: React.FC = () => {
         </div>
       )}
 
-      {!previewMode && formElements.length > 0 && !hasClientDetails && (
+      {!previewMode && validationErrors.length > 0 && (
         <div className='mb-6 p-4 bg-amber-50/70 text-amber-700 rounded-xl flex items-center justify-between shadow-sm'>
           <div className='flex items-center gap-2'>
             <AlertCircle className='h-5 w-5' />
-            <span className='font-medium'>
-              Missing Client Details: Add a Client Details section to collect required client
-              information
-            </span>
+            <span className='font-medium'>{validationErrors[0]}</span>
           </div>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={() => {
-              return addClientDetailsSection();
-            }}
-            className='rounded-full'
-          >
-            Add Client Details
-          </Button>
+          {validationErrors[0].includes('Client Details') && (
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => {
+                return addClientDetailsSection();
+              }}
+              className='rounded-full'
+            >
+              Add Client Details
+            </Button>
+          )}
         </div>
       )}
 

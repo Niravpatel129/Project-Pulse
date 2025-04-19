@@ -14,6 +14,7 @@ import {
   User2,
 } from 'lucide-react';
 import { FC, ReactNode } from 'react';
+import { useFormBuilder } from '../../context/FormBuilderContext';
 import { FormElement, FormValues } from '../../types/formTypes';
 
 interface FormCanvasProps {
@@ -52,9 +53,7 @@ export const FormCanvas: FC<FormCanvasProps> = ({
   showElementMenu,
   renderFormElement,
 }) => {
-  const hasClientDetails = formElements.some((el) => {
-    return el.type === 'Client Details';
-  });
+  const { validationErrors } = useFormBuilder();
 
   return (
     <div
@@ -85,25 +84,24 @@ export const FormCanvas: FC<FormCanvasProps> = ({
         </div>
       )}
 
-      {!previewMode && formElements.length > 0 && !hasClientDetails && (
+      {!previewMode && validationErrors.length > 0 && (
         <div className='mb-6 p-4 bg-amber-50/70 text-amber-700 rounded-xl flex items-center justify-between shadow-sm'>
           <div className='flex items-center gap-2'>
             <AlertCircle className='h-5 w-5' />
-            <span className='font-medium'>
-              Missing Client Details: Add a Client Details section to collect required client
-              information
-            </span>
+            <span className='font-medium'>{validationErrors[0]}</span>
           </div>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={() => {
-              return addClientDetailsSection();
-            }}
-            className='rounded-full'
-          >
-            Add Client Details
-          </Button>
+          {validationErrors[0].includes('Client Details') && (
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => {
+                return addClientDetailsSection();
+              }}
+              className='rounded-full'
+            >
+              Add Client Details
+            </Button>
+          )}
         </div>
       )}
 
