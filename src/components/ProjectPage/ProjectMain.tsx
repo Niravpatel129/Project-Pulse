@@ -83,7 +83,7 @@ export default function ProjectMain() {
   };
 
   return (
-    <div className='w-full h-full overflow-y-auto bg-white/30 backdrop-blur-sm'>
+    <div className='w-full h-full bg-white/30 backdrop-blur-sm'>
       {/* <div className='lg:hidden flex justify-end py-3'>
         <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
           <SheetTrigger asChild>
@@ -116,7 +116,7 @@ export default function ProjectMain() {
                   stiffness: 300,
                   damping: 30,
                 }}
-                className='h-full overflow-y-auto'
+                className='h-full'
               >
                 <Suspense
                   fallback={<div className='w-full h-32 animate-pulse bg-accent/20 rounded-lg' />}
