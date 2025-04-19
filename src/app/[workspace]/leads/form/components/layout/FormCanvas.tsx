@@ -102,6 +102,20 @@ export const FormCanvas: FC<FormCanvasProps> = ({
               Add Client Details
             </Button>
           )}
+          {validationErrors[0].includes('Empty Form') && (
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => {
+                // This is a bit different as we don't have direct access to setActiveTab here
+                // We can use addElement instead to guide the user
+                return addElement('Short Answer');
+              }}
+              className='rounded-full'
+            >
+              Add Element
+            </Button>
+          )}
         </div>
       )}
 

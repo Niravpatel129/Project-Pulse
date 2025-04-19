@@ -149,6 +149,11 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
     setSelectedElementId(newElement.id);
     // Hide the element type menu if it's open
     setShowElementTypeMenu(false);
+
+    // Validate the form to clear any "Empty Form" error
+    setTimeout(() => {
+      return validateForm();
+    }, 0);
   };
 
   const addClientDetailsSection = () => {
@@ -170,18 +175,39 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
       },
     };
 
-    setFormElements([...formElements, newElement]);
+    // First update the form elements
+    const updatedElements = [...formElements, newElement];
+    setFormElements(updatedElements);
     setChangesSaved(false);
+
     // Switch to My Form tab after adding an element
     setActiveTab('myform');
+
     // Select the new element
     setSelectedElementId(newElement.id);
+
     // Hide the element type menu if it's open
     setShowElementTypeMenu(false);
+
+    // Immediately validate with the updated elements to clear errors
+    // instead of using setTimeout which can cause race conditions
+    const errors: string[] = [];
+    // No need to check for empty form since we just added an element
+
+    // We know there is a Client Details section now, so no need to check
+    // Just clear the validation errors
+    setValidationErrors([]);
+
+    return newElement.id;
   };
 
   const validateForm = () => {
     const errors: string[] = [];
+
+    // Check if form has at least one element
+    if (formElements.length === 0) {
+      errors.push('Empty Form: Add at least one element to your form');
+    }
 
     // Check if client details section exists
     const hasClientDetails = formElements.some((el) => {
@@ -201,6 +227,17 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
   };
 
   const saveChanges = () => {
+    // Check if we have a Client Details section
+    const hasClientDetails = formElements.some((el) => {
+      return el.type === 'Client Details';
+    });
+
+    // If we have a Client Details section, clear any related validation errors
+    if (hasClientDetails) {
+      const updatedErrors = validationErrors.filter((error) => !error.includes('Client Details'));
+      setValidationErrors(updatedErrors);
+    }
+
     // Validate the form before saving
     if (!validateForm()) {
       // If validation fails, switch to the myform tab to show the errors

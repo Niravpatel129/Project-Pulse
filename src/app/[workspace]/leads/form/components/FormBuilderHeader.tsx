@@ -14,12 +14,37 @@ const FormBuilderHeader: React.FC = () => {
     changesSaved,
     saveChanges,
     validateForm,
+    formElements,
+    validationErrors,
+    addClientDetailsSection,
+    setValidationErrors,
   } = useFormBuilder();
 
   const handleCreateForm = () => {
-    // Validate the form before saving
-    validateForm();
-    saveChanges();
+    // Validate the form
+    const isValid = validateForm();
+
+    // If form validation fails and specifically needs client details, add it automatically
+    if (
+      !isValid &&
+      validationErrors.some((error) => {
+        return error.includes('Client Details');
+      })
+    ) {
+      addClientDetailsSection();
+      // Clear validation errors after adding client details
+      setValidationErrors([]);
+    }
+
+    // Save changes if validation passes
+    if (
+      isValid ||
+      formElements.some((el) => {
+        return el.type === 'Client Details';
+      })
+    ) {
+      saveChanges();
+    }
   };
 
   return (

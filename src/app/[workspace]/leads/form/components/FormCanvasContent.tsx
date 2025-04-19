@@ -25,6 +25,8 @@ const FormCanvasContent: React.FC = () => {
     handleDrop,
     setPreviewMode,
     validationErrors,
+    setActiveTab,
+    setValidationErrors,
   } = useFormBuilder();
 
   return (
@@ -61,11 +63,24 @@ const FormCanvasContent: React.FC = () => {
               variant='outline'
               size='sm'
               onClick={() => {
-                return addClientDetailsSection();
+                addClientDetailsSection();
+                setValidationErrors([]);
               }}
               className='rounded-full'
             >
               Add Client Details
+            </Button>
+          )}
+          {validationErrors[0].includes('Empty Form') && (
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => {
+                return setActiveTab('elements');
+              }}
+              className='rounded-full'
+            >
+              Add Elements
             </Button>
           )}
         </div>
