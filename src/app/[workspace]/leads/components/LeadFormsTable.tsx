@@ -211,7 +211,7 @@ export default function LeadFormsTable() {
       <div className='flex justify-between items-center'>
         <h2 className='text-xl font-semibold'>Lead Forms</h2>
         <Button asChild>
-          <Link href='/leads/form/new'>
+          <Link href='/leads/form'>
             <FilePlus className='h-4 w-4 mr-2' />
             Create New Form
           </Link>
@@ -232,7 +232,7 @@ export default function LeadFormsTable() {
           <div className='py-8 text-center'>
             <p className='text-muted-foreground'>No lead forms found</p>
             <Button variant='outline' className='mt-4' asChild>
-              <Link href='/leads/form/new'>Create your first form</Link>
+              <Link href='/leads/form'>Create your first form</Link>
             </Button>
           </div>
         }
