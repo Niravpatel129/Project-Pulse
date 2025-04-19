@@ -1,5 +1,6 @@
 'use client';
 
+import { newRequest } from '@/utils/newRequest';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { FormElement, FormValues } from '../types';
 import { generateId } from '../utils';
@@ -93,6 +94,7 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [formTitle, setFormTitle] = useState('College Intake Form');
 
   // Initialize form values for preview mode
   useEffect(() => {
@@ -221,7 +223,7 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
     return errors.length === 0;
   };
 
-  const saveChanges = () => {
+  const saveChanges = async () => {
     // Check if we have a Client Details section
     const hasClientDetails = formElements.some((el) => {
       return el.type === 'Client Details';
@@ -229,12 +231,24 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
 
     // If we have a Client Details section, clear any related validation errors
     if (hasClientDetails) {
-      const updatedErrors = validationErrors.filter((error) => !error.includes('Client Details'));
+      const updatedErrors = validationErrors.filter((error) => {
+        return !error.includes('Client Details');
+      });
       setValidationErrors(updatedErrors);
     }
 
     // We no longer automatically validate here - validation should happen explicitly
     // in handleCreateForm
+    try {
+      const res = await newRequest.post('/lead-forms', {
+        title: formTitle,
+        ...formValues,
+        formElements,
+      });
+      console.log(res);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
 
     setChangesSaved(true);
     // Actual save logic would go here
