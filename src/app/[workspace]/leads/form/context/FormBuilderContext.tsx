@@ -1,6 +1,7 @@
 'use client';
 
 import { newRequest } from '@/utils/newRequest';
+import { useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { FormElement, FormValues } from '../types';
 import { generateId } from '../utils';
@@ -97,6 +98,7 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [isMobile, setIsMobile] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [formTitle, setFormTitle] = useState('Untitled form');
+  const router = useRouter();
 
   // Initialize form values for preview mode
   useEffect(() => {
@@ -248,6 +250,7 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
         formElements,
       });
       console.log(res);
+      router.push(`/leads`);
     } catch (error) {
       console.error('Error submitting form:', error);
     }
