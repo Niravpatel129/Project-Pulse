@@ -47,8 +47,12 @@ const FormCanvasContent: React.FC<FormCanvasContentProps> = ({
   isMobile,
   setPreviewMode,
 }) => {
+  const hasClientDetails = formElements.some((el) => {
+    return el.type === 'Client Details';
+  });
+
   return (
-    <>
+    <div className='w-full'>
       {previewMode && (
         <div className='mb-6 p-4 bg-blue-50/70 text-blue-700 rounded-xl flex items-center justify-between shadow-sm'>
           <div className='flex items-center gap-2'>
@@ -70,45 +74,39 @@ const FormCanvasContent: React.FC<FormCanvasContentProps> = ({
         </div>
       )}
 
-      {!previewMode &&
-        formElements.length > 0 &&
-        !formElements.some((el) => {
-          return el.type === 'Client Details';
-        }) && (
-          <div className='mb-6 p-4 bg-amber-50/70 text-amber-700 rounded-xl flex items-center justify-between shadow-sm'>
-            <div className='flex items-center gap-2'>
-              <AlertCircle className='h-5 w-5' />
-              <span className='font-medium'>
-                Missing Client Details: Add a Client Details section to collect required client
-                information
-              </span>
-            </div>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => {
-                return addClientDetailsSection();
-              }}
-              className='rounded-full'
-            >
-              Add Client Details
-            </Button>
+      {!previewMode && formElements.length > 0 && !hasClientDetails && (
+        <div className='mb-6 p-4 bg-amber-50/70 text-amber-700 rounded-xl flex items-center justify-between shadow-sm'>
+          <div className='flex items-center gap-2'>
+            <AlertCircle className='h-5 w-5' />
+            <span className='font-medium'>
+              Missing Client Details: Add a Client Details section to collect required client
+              information
+            </span>
           </div>
-        )}
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={() => {
+              return addClientDetailsSection();
+            }}
+            className='rounded-full'
+          >
+            Add Client Details
+          </Button>
+        </div>
+      )}
 
       {formElements.length === 0 ? (
         <EmptyFormState addElement={addElement} addClientDetailsSection={addClientDetailsSection} />
       ) : (
-        <div className='space-y-4'>
+        <div className='space-y-6 mb-6 pb-6'>
           {formElements.map((element) => {
-            // Check if element should be shown based on conditions
-            if (!shouldShowElement(element, formElements, formValues, previewMode)) return null;
+            // In preview mode, check if element should be shown based on conditions
+            const isVisible = previewMode
+              ? shouldShowElement(element, formElements, formValues, previewMode)
+              : true;
 
-            // Get validation error if any
-            const validationError =
-              previewMode && formValues[element.id]
-                ? getValidationErrorMessage(element, formValues[element.id])
-                : null;
+            if (!isVisible) return null;
 
             return (
               <FormElement
@@ -117,7 +115,6 @@ const FormCanvasContent: React.FC<FormCanvasContentProps> = ({
                 selectedElementId={selectedElementId}
                 previewMode={previewMode}
                 formValues={formValues}
-                validationError={validationError}
                 openElementEditor={openElementEditor}
                 selectElement={selectElement}
                 duplicateElement={duplicateElement}
@@ -129,12 +126,17 @@ const FormCanvasContent: React.FC<FormCanvasContentProps> = ({
                 handleDragStart={handleDragStart}
                 handleDragOver={handleDragOver}
                 handleDrop={handleDrop}
+                validationError={
+                  previewMode && element.required && !formValues[element.id]
+                    ? getValidationErrorMessage(element, formValues[element.id])
+                    : null
+                }
               />
             );
           })}
         </div>
       )}
-    </>
+    </div>
   );
 };
 

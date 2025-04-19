@@ -85,19 +85,8 @@ export default function FormBuilder() {
     };
     checkIfMobile();
     window.addEventListener('resize', checkIfMobile);
-
-    // Set the navigation width CSS variable for the footer
-    const navigation = document.querySelector('.navigation') as HTMLElement;
-    if (navigation) {
-      const navWidth = navigation.offsetWidth;
-      document.documentElement.style.setProperty('--navigation-width', `${navWidth}px`);
-    } else {
-      document.documentElement.style.setProperty('--navigation-width', '0px');
-    }
-
     return () => {
-      window.removeEventListener('resize', checkIfMobile);
-      document.documentElement.style.removeProperty('--navigation-width');
+      return window.removeEventListener('resize', checkIfMobile);
     };
   }, []);
 
@@ -361,7 +350,7 @@ export default function FormBuilder() {
 
   return (
     <div
-      className={`flex flex-col h-screen ${fontSans.variable} font-sans bg-gradient-to-b from-gray-50 to-white overflow-hidden`}
+      className={`flex flex-col ${fontSans.variable} font-sans bg-gradient-to-b from-gray-50 to-white h-screen overflow-hidden`}
     >
       {/* Header */}
       <FormBuilderHeader
@@ -382,7 +371,7 @@ export default function FormBuilder() {
       />
 
       {/* Main Content */}
-      <div className='flex flex-1 overflow-hidden'>
+      <div className='flex mt-[7.5rem] h-[calc(100vh-7.5rem)]'>
         {/* Sidebar */}
         <FormBuilderSidebar
           formElements={formElements}
@@ -411,9 +400,9 @@ export default function FormBuilder() {
         {/* Form Canvas */}
         <div
           className={cn(
-            'flex-1 overflow-y-auto p-4 md:p-8 bg-white pb-32',
+            'flex-1 overflow-y-auto p-4 md:p-8 bg-white',
             previewMode ? 'w-full' : '',
-            isMobile && !previewMode ? 'pb-24' : '', // Add padding at bottom for mobile nav
+            isMobile && !previewMode ? 'pb-20' : '',
           )}
           onContextMenu={!previewMode && !isMobile ? showElementMenu : undefined}
           onClick={() => {

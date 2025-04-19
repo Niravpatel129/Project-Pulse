@@ -23,15 +23,9 @@ const FormBuilderFooter: React.FC<FormBuilderFooterProps> = ({
     // Add the CSS variable to document root
     document.documentElement.style.setProperty('--footer-height', isMobile ? '0px' : '56px');
 
-    // Add padding to the bottom of the body or main content container
-    const mainContent = document.querySelector('main') || document.body;
-    mainContent.style.paddingBottom = isMobile ? '0' : '56px';
-
     return () => {
       // Clean up when component unmounts
       document.documentElement.style.removeProperty('--footer-height');
-      const mainContent = document.querySelector('main') || document.body;
-      mainContent.style.paddingBottom = '';
     };
   }, [isMobile]);
 
@@ -43,12 +37,7 @@ const FormBuilderFooter: React.FC<FormBuilderFooterProps> = ({
         'border-t p-2 md:p-4 flex items-center justify-between fixed bottom-0 z-50 backdrop-blur-sm w-full bg-white shadow-md left-0',
         changesSaved ? 'bg-gray-50/90' : 'bg-white/90',
       )}
-      style={{
-        // Apply max-width to match the parent container and avoid extending beyond it
-        maxWidth: 'calc(100% - var(--navigation-width, 0px))',
-        // Add right margin to account for the navigation sidebar if present
-        marginLeft: 'var(--navigation-width, 0px)',
-      }}
+      style={{ height: '56px', maxHeight: '56px', overflow: 'hidden' }}
     >
       <div className='flex items-center gap-2'>
         {changesSaved ? (

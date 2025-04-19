@@ -157,7 +157,7 @@ export function Navigation() {
   });
 
   return (
-    <header className='top-0 z-30 flex h-16 items-center bg-background px-4 md:px-6'>
+    <header className='fixed top-0 z-30 flex h-16 items-center bg-background px-4 md:px-6 w-full'>
       <div className='w-full mx-auto flex items-center justify-between'>
         {/* Logo */}
         <div className='flex items-center'>
