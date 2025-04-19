@@ -16,7 +16,6 @@ import {
   CheckSquare,
   ChevronDown,
   Copy,
-  Download,
   Edit2,
   Grip,
   List,
@@ -402,14 +401,6 @@ export default function FormBuilderSidebar({
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className='space-y-1 px-1'>
-                <Button variant='ghost' className='w-full justify-start gap-3 pl-8'>
-                  <ArrowLeft className='h-4 w-4' />
-                  <span>Next Page</span>
-                </Button>
-                <Button variant='ghost' className='w-full justify-start gap-3 pl-8'>
-                  <Download className='h-4 w-4' />
-                  <span>File Download</span>
-                </Button>
                 <Button
                   variant='ghost'
                   className='w-full justify-start gap-3 pl-8'
