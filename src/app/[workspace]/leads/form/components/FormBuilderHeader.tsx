@@ -34,6 +34,7 @@ const FormBuilderHeader: React.FC = () => {
     setActiveTab,
     formTitle,
     setFormTitle,
+    isEditMode,
   } = useFormBuilder();
 
   const [editingFormTitle, setEditingFormTitle] = useState(false);
@@ -108,7 +109,7 @@ const FormBuilderHeader: React.FC = () => {
           <div className='flex flex-col'>
             <div className='flex items-center gap-2'>
               <span className='font-medium text-gray-800 text-base md:text-lg tracking-tight'>
-                Form Builder
+                {isEditMode ? 'Edit Form' : 'Create Form'}
               </span>
               <span className='text-gray-400 hidden sm:inline'>/</span>
               <span className='text-gray-600 text-sm hidden sm:inline'>
@@ -185,8 +186,8 @@ const FormBuilderHeader: React.FC = () => {
               onClick={handleCreateForm}
             >
               <Save className='h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2' />
-              <span className='hidden sm:inline'>Create Form</span>
-              <span className='sm:hidden'>Create</span>
+              <span className='hidden sm:inline'>{isEditMode ? 'Save Form' : 'Create Form'}</span>
+              <span className='sm:hidden'>{isEditMode ? 'Save' : 'Create'}</span>
             </Button>
           </div>
         </div>

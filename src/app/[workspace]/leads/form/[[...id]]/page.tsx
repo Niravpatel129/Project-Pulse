@@ -2,15 +2,17 @@
 
 import { cn } from '@/lib/utils';
 import { Mona_Sans as FontSans } from 'next/font/google';
-import ElementEditor from './components/ElementEditor';
-import ElementTypeMenu from './components/ElementTypeMenu';
-import FormBuilderLayout from './components/FormBuilderLayout';
-import FormCanvasContent from './components/FormCanvasContent';
-import MobileNavigation from './components/MobileNavigation';
-import { FormBuilderProvider, useFormBuilder } from './context/FormBuilderContext';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import ElementEditor from '../components/ElementEditor';
+import ElementTypeMenu from '../components/ElementTypeMenu';
+import FormBuilderLayout from '../components/FormBuilderLayout';
+import FormCanvasContent from '../components/FormCanvasContent';
+import MobileNavigation from '../components/MobileNavigation';
+import { FormBuilderProvider, useFormBuilder } from '../context/FormBuilderContext';
 
 // Import getElementIcon from utils
-import { getElementIcon } from './utils';
+import { getElementIcon } from '../utils';
 
 const fontSans = FontSans({
   subsets: ['latin'],
@@ -53,8 +55,25 @@ const FormBuilderContent = () => {
 };
 
 export default function FormBuilder() {
+  const params = useParams();
+  const router = useRouter();
+
+  // Only redirect if we're at exactly /leads/form with no ID params at all
+  // This avoids redirect loops when the ID is already present
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path === '/leads/form' || path.endsWith('/leads/form/')) {
+      router.replace('/leads/form/new');
+    }
+  }, [router]);
+
+  // If id has a value and is not 'new', we're in edit mode
+  const rawId = params?.id?.[0];
+  const formId = rawId && rawId !== 'new' ? rawId : undefined;
+  const isEditMode = !!formId;
+
   return (
-    <FormBuilderProvider>
+    <FormBuilderProvider formId={formId} isEditMode={isEditMode}>
       <FormBuilderContent />
     </FormBuilderProvider>
   );

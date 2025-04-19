@@ -1,7 +1,7 @@
 'use client';
 
 import { newRequest } from '@/utils/newRequest';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { FormElement, FormValues } from '../types';
@@ -27,6 +27,8 @@ type FormBuilderContextType = {
   showMobileMenu: boolean;
   isMobile: boolean;
   validationErrors: string[];
+  isEditMode: boolean;
+  formId: string | undefined;
 
   // Functions
   setFormElements: React.Dispatch<React.SetStateAction<FormElement[]>>;
@@ -79,7 +81,11 @@ export const useFormBuilder = () => {
   return context;
 };
 
-export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const FormBuilderProvider: React.FC<{
+  children: ReactNode;
+  formId?: string;
+  isEditMode?: boolean;
+}> = ({ children, formId, isEditMode = false }) => {
   const [formElements, setFormElements] = useState<FormElement[]>([]);
   const [changesSaved, setChangesSaved] = useState(true);
   const [activeTab, setActiveTab] = useState('elements');
@@ -101,6 +107,28 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [formTitle, setFormTitle] = useState('Untitled form');
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  // Fetch existing form data if in edit mode
+  const { data: formData, isLoading: isLoadingForm } = useQuery({
+    queryKey: ['lead-form', formId],
+    queryFn: async () => {
+      if (!formId) return null;
+      const { data } = await newRequest.get(`/lead-forms/${formId}`);
+      return data;
+    },
+    enabled: isEditMode && !!formId,
+  });
+
+  // Initialize form with existing data if in edit mode
+  useEffect(() => {
+    if (isEditMode && formData && !isLoadingForm) {
+      setFormTitle(formData.title || 'Untitled form');
+      if (formData.elements && Array.isArray(formData.elements)) {
+        setFormElements(formData.elements);
+      }
+      setChangesSaved(true);
+    }
+  }, [isEditMode, formData, isLoadingForm]);
 
   // Initialize form values for preview mode
   useEffect(() => {
@@ -143,6 +171,20 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
     },
     onError: (error) => {
       console.error('Error submitting form:', error);
+    },
+  });
+
+  const updateFormMutation = useMutation({
+    mutationFn: (formData: any) => {
+      return newRequest.put(`/lead-forms/${formId}`, formData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lead-forms'] });
+      queryClient.invalidateQueries({ queryKey: ['lead-form', formId] });
+      router.push('/leads');
+    },
+    onError: (error) => {
+      console.error('Error updating form:', error);
     },
   });
 
@@ -248,23 +290,41 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
       return el.type === 'Client Details';
     });
 
-    // If we have a Client Details section, clear any related validation errors
-    if (hasClientDetails) {
-      const updatedErrors = validationErrors.filter((error) => {
-        return !error.includes('Client Details');
-      });
-      setValidationErrors(updatedErrors);
+    // If no client details section, show an error
+    if (!hasClientDetails) {
+      setValidationErrors([
+        'Missing Client Details: Add a Client Details section to collect required client information',
+      ]);
+      return;
     }
 
-    // We no longer automatically validate here - validation should happen explicitly
-    // in handleCreateForm
-    createFormMutation.mutate({
-      title: formTitle,
-      ...formValues,
-      formElements,
-    });
+    // Check if form is empty
+    if (formElements.length === 0) {
+      setValidationErrors(['Empty Form: Add at least one element to your form']);
+      return;
+    }
 
-    setChangesSaved(true);
+    // Clear validation errors
+    setValidationErrors([]);
+
+    // Prepare the form data to be saved
+    const formData = {
+      title: formTitle,
+      elements: formElements,
+      status: 'draft',
+    };
+
+    // Save the form
+    try {
+      if (isEditMode) {
+        await updateFormMutation.mutateAsync(formData);
+      } else {
+        await createFormMutation.mutateAsync(formData);
+      }
+      setChangesSaved(true);
+    } catch (error) {
+      console.error('Error saving form:', error);
+    }
   };
 
   const selectElement = (id: string) => {
@@ -486,6 +546,8 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
     showMobileMenu,
     isMobile,
     validationErrors,
+    isEditMode,
+    formId,
 
     // Setters
     setFormElements,
