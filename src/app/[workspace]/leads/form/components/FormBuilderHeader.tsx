@@ -18,7 +18,7 @@ const FormBuilderHeader: React.FC<FormBuilderHeaderProps> = ({
   setShowMobileMenu,
 }) => {
   return (
-    <header className='border-b bg-white/80 backdrop-blur-sm fixed top-16 z-20 shadow-sm w-full'>
+    <header className='border-b bg-white/80 backdrop-blur-sm  z-20 shadow-sm w-full'>
       <div className='flex items-center px-4 md:px-6 h-14 md:h-16'>
         <Button
           variant='ghost'

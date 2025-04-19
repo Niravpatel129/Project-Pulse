@@ -7,10 +7,8 @@ import { Mona_Sans as FontSans } from 'next/font/google';
 import { useEffect, useState } from 'react';
 import ElementEditor from './components/ElementEditor';
 import ElementTypeMenu from './components/ElementTypeMenu';
-import FormBuilderHeader from './components/FormBuilderHeader';
-import FormBuilderSidebar from './components/FormBuilderSidebar';
+import FormBuilderLayout from './components/FormBuilderLayout';
 import FormCanvasContent from './components/FormCanvasContent';
-import MobileMenu from './components/MobileMenu';
 import MobileNavigation from './components/MobileNavigation';
 import { FormElement, FormValues } from './types';
 import { generateId } from './utils';
@@ -111,6 +109,8 @@ export default function FormBuilder() {
     setActiveTab('myform');
     // Select the new element
     setSelectedElementId(newElement.id);
+    // Hide the element type menu if it's open
+    setShowElementTypeMenu(false);
   };
 
   const addClientDetailsSection = () => {
@@ -138,6 +138,8 @@ export default function FormBuilder() {
     setActiveTab('myform');
     // Select the new element
     setSelectedElementId(newElement.id);
+    // Hide the element type menu if it's open
+    setShowElementTypeMenu(false);
   };
 
   const saveChanges = () => {
@@ -184,16 +186,13 @@ export default function FormBuilder() {
     setEditingElement({ ...element });
   };
 
-  const saveElementChanges = () => {
-    if (!editingElement) return;
-
-    const updatedElements = formElements.map((element) => {
-      return element.id === editingElement.id ? editingElement : element;
+  const saveElementChanges = (updatedElement: FormElement) => {
+    const newElements = formElements.map((el) => {
+      return el.id === updatedElement.id ? updatedElement : el;
     });
-    setFormElements(updatedElements);
+    setFormElements(newElements);
     setEditingElement(null);
     setChangesSaved(false);
-    setShowValidationSettings(false);
   };
 
   const removeCondition = (elementId: string, conditionId: string) => {
@@ -348,54 +347,33 @@ export default function FormBuilder() {
   };
 
   return (
-    <div
-      className={`flex flex-col ${fontSans.variable} font-sans bg-gradient-to-b from-gray-50 to-white h-screen overflow-hidden`}
-    >
-      {/* Header */}
-      <FormBuilderHeader
+    <div className={cn('min-h-screen font-sans antialiased', fontSans.variable)}>
+      <FormBuilderLayout
+        formElements={formElements}
+        setFormElements={setFormElements}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        selectedElementId={selectedElementId}
+        setSelectedElementId={setSelectedElementId}
+        setEditingElement={setEditingElement}
+        setChangesSaved={setChangesSaved}
         previewMode={previewMode}
         setPreviewMode={setPreviewMode}
         isMobile={isMobile}
+        showMobileNav={showMobileNav}
+        setShowMobileNav={setShowMobileNav}
         showMobileMenu={showMobileMenu}
         setShowMobileMenu={setShowMobileMenu}
-      />
-
-      {/* Mobile Menu Overlay */}
-      <MobileMenu
-        showMobileMenu={showMobileMenu}
-        isMobile={isMobile}
-        previewMode={previewMode}
-        setShowMobileMenu={setShowMobileMenu}
-        setPreviewMode={setPreviewMode}
-      />
-
-      {/* Main Content */}
-      <div className='flex'>
-        {/* Sidebar */}
-        <FormBuilderSidebar
-          formElements={formElements}
-          setFormElements={setFormElements}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          selectedElementId={selectedElementId}
-          setSelectedElementId={setSelectedElementId}
-          setEditingElement={setEditingElement}
-          setChangesSaved={setChangesSaved}
-          previewMode={previewMode}
-          isMobile={isMobile}
-          showMobileNav={showMobileNav}
-          setShowMobileNav={setShowMobileNav}
-          isDragging={isDragging}
-          draggedElementId={draggedElementId}
-          dragOverElementId={dragOverElementId}
-          handleDragStart={handleDragStart}
-          handleDragOver={handleDragOver}
-          handleDrop={handleDrop}
-          handleDragEnd={handleDragEnd}
-          getElementIcon={getElementIcon}
-          generateId={generateId}
-        />
-
+        isDragging={isDragging}
+        draggedElementId={draggedElementId}
+        dragOverElementId={dragOverElementId}
+        handleDragStart={handleDragStart}
+        handleDragOver={handleDragOver}
+        handleDrop={handleDrop}
+        handleDragEnd={handleDragEnd}
+        getElementIcon={getElementIcon}
+        generateId={generateId}
+      >
         {/* Form Canvas */}
         <div
           className={cn(
@@ -429,9 +407,9 @@ export default function FormBuilder() {
             setPreviewMode={setPreviewMode}
           />
         </div>
-      </div>
+      </FormBuilderLayout>
 
-      {/* Mobile Navigation */}
+      {/* Mobile Navigation - This is now only for bottom navigation */}
       <MobileNavigation
         isMobile={isMobile}
         previewMode={previewMode}

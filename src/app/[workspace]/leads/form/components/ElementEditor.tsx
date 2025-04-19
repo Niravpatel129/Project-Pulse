@@ -15,7 +15,7 @@ interface ElementEditorProps {
   setEditingElement: (element: FormElement | null) => void;
   showValidationSettings: boolean;
   setShowValidationSettings: (show: boolean) => void;
-  saveElementChanges: () => void;
+  saveElementChanges: (updatedElement: FormElement) => void;
   isMobile: boolean;
 }
 
@@ -28,6 +28,12 @@ const ElementEditor: React.FC<ElementEditorProps> = ({
   isMobile,
 }) => {
   if (!editingElement) return null;
+
+  const handleSave = () => {
+    if (editingElement) {
+      saveElementChanges(editingElement);
+    }
+  };
 
   return (
     <Dialog
@@ -65,44 +71,11 @@ const ElementEditor: React.FC<ElementEditorProps> = ({
             />
           </div>
 
-          <div className={cn('grid items-start gap-3', isMobile ? 'grid-cols-1' : 'grid-cols-4')}>
-            <Label htmlFor='description' className={isMobile ? '' : 'text-right mt-2'}>
-              Description
-            </Label>
-            <Textarea
-              id='description'
-              value={editingElement.description || ''}
-              onChange={(e) => {
-                return setEditingElement({ ...editingElement, description: e.target.value });
-              }}
-              className={isMobile ? 'col-span-1' : 'col-span-3'}
-              placeholder='Optional description or instructions'
-            />
-          </div>
-
-          <div className={cn('grid items-center gap-3', isMobile ? 'grid-cols-1' : 'grid-cols-4')}>
-            <Label htmlFor='required' className={isMobile ? '' : 'text-right'}>
-              Required
-            </Label>
-            <div className={isMobile ? 'col-span-1' : 'col-span-3'}>
-              <div className='flex items-center space-x-2'>
-                <Switch
-                  id='required'
-                  checked={editingElement.required}
-                  onCheckedChange={(checked) => {
-                    return setEditingElement({ ...editingElement, required: checked });
-                  }}
-                />
-                <Label htmlFor='required'>Make this field required</Label>
-              </div>
-            </div>
-          </div>
-
+          {/* Element specific settings */}
           {(editingElement.type === 'Single Response' ||
-            editingElement.type === 'Short Answer' ||
             editingElement.type === 'Long Answer' ||
-            editingElement.type === 'Phone Number' ||
-            editingElement.type === 'Number') && (
+            editingElement.type === 'Number' ||
+            editingElement.type === 'Phone Number') && (
             <div
               className={cn('grid items-center gap-3', isMobile ? 'grid-cols-1' : 'grid-cols-4')}
             >
@@ -116,203 +89,431 @@ const ElementEditor: React.FC<ElementEditorProps> = ({
                   return setEditingElement({ ...editingElement, placeholder: e.target.value });
                 }}
                 className={isMobile ? 'col-span-1' : 'col-span-3'}
-                placeholder='Enter placeholder text'
+                placeholder='Add a placeholder text...'
               />
             </div>
           )}
 
-          {(editingElement.type === 'Radio Buttons' ||
-            editingElement.type === 'Checkboxes' ||
-            editingElement.type === 'Dropdown') && (
-            <div className={cn('grid items-start gap-3', isMobile ? 'grid-cols-1' : 'grid-cols-4')}>
-              <Label className={isMobile ? '' : 'text-right mt-2'}>Options</Label>
-              <div className={isMobile ? 'col-span-1' : 'col-span-3'}>
-                <div className='space-y-2 max-h-[200px] overflow-y-auto pr-1'>
-                  {editingElement.options?.map((option, index) => {
-                    return (
-                      <div key={index} className='flex items-center gap-2'>
-                        <Input
-                          value={option}
-                          onChange={(e) => {
-                            const newOptions = [...(editingElement.options || [])];
-                            newOptions[index] = e.target.value;
-                            setEditingElement({ ...editingElement, options: newOptions });
-                          }}
-                        />
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          onClick={() => {
-                            const newOptions = [...(editingElement.options || [])];
-                            newOptions.splice(index, 1);
-                            setEditingElement({ ...editingElement, options: newOptions });
-                          }}
-                          disabled={editingElement.options?.length === 1}
-                        >
-                          <X className='h-4 w-4' />
-                        </Button>
-                      </div>
-                    );
-                  })}
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    className='mt-2'
-                    onClick={() => {
-                      const newOptions = [
-                        ...(editingElement.options || []),
-                        `Option ${(editingElement.options?.length || 0) + 1}`,
-                      ];
-                      setEditingElement({ ...editingElement, options: newOptions });
-                    }}
-                  >
-                    <Plus className='h-4 w-4 mr-2' />
-                    Add Option
-                  </Button>
+          {editingElement.type !== 'Client Details' && (
+            <div
+              className={cn('grid items-center gap-3', isMobile ? 'grid-cols-1' : 'grid-cols-4')}
+            >
+              <Label htmlFor='description' className={isMobile ? '' : 'text-right'}>
+                Description
+              </Label>
+              <Textarea
+                id='description'
+                value={editingElement.description || ''}
+                onChange={(e) => {
+                  return setEditingElement({ ...editingElement, description: e.target.value });
+                }}
+                className={isMobile ? 'col-span-1' : 'col-span-3'}
+                placeholder='Add a descriptive text...'
+              />
+            </div>
+          )}
+
+          {/* Client Details specific fields */}
+          {editingElement.type === 'Client Details' && (
+            <div className='grid gap-5'>
+              <div className='flex flex-col gap-3'>
+                <Label>Fields to include</Label>
+                <div className='space-y-2 ml-1'>
+                  <div className='flex items-center space-x-2'>
+                    <Switch
+                      id='nameField'
+                      checked={editingElement.clientFields?.name || false}
+                      onCheckedChange={(checked) => {
+                        return setEditingElement({
+                          ...editingElement,
+                          clientFields: {
+                            ...(editingElement.clientFields || {
+                              email: true,
+                              name: false,
+                              phone: false,
+                              address: false,
+                              company: false,
+                              custom: [],
+                            }),
+                            name: checked,
+                          },
+                        });
+                      }}
+                    />
+                    <Label htmlFor='nameField' className='flex items-center gap-2 cursor-pointer'>
+                      <User2 className='h-4 w-4 text-gray-500' />
+                      <span>Name</span>
+                    </Label>
+                  </div>
+
+                  <div className='flex items-center space-x-2'>
+                    <Switch
+                      id='emailField'
+                      checked={editingElement.clientFields?.email || false}
+                      disabled={true} // Email is required
+                      onCheckedChange={(checked) => {
+                        return setEditingElement({
+                          ...editingElement,
+                          clientFields: {
+                            ...(editingElement.clientFields || {
+                              email: true,
+                              name: false,
+                              phone: false,
+                              address: false,
+                              company: false,
+                              custom: [],
+                            }),
+                            email: checked,
+                          },
+                        });
+                      }}
+                    />
+                    <Label htmlFor='emailField' className='flex items-center gap-2 cursor-pointer'>
+                      <Mail className='h-4 w-4 text-gray-500' />
+                      <span>Email</span>
+                      <Badge className='text-xs bg-blue-100 text-blue-700 border-blue-200'>
+                        Required
+                      </Badge>
+                    </Label>
+                  </div>
+
+                  <div className='flex items-center space-x-2'>
+                    <Switch
+                      id='phoneField'
+                      checked={editingElement.clientFields?.phone || false}
+                      onCheckedChange={(checked) => {
+                        return setEditingElement({
+                          ...editingElement,
+                          clientFields: {
+                            ...(editingElement.clientFields || {
+                              email: true,
+                              name: false,
+                              phone: false,
+                              address: false,
+                              company: false,
+                              custom: [],
+                            }),
+                            phone: checked,
+                          },
+                        });
+                      }}
+                    />
+                    <Label htmlFor='phoneField' className='flex items-center gap-2 cursor-pointer'>
+                      <Phone className='h-4 w-4 text-gray-500' />
+                      <span>Phone</span>
+                    </Label>
+                  </div>
+
+                  <div className='flex items-center space-x-2'>
+                    <Switch
+                      id='addressField'
+                      checked={editingElement.clientFields?.address || false}
+                      onCheckedChange={(checked) => {
+                        return setEditingElement({
+                          ...editingElement,
+                          clientFields: {
+                            ...(editingElement.clientFields || {
+                              email: true,
+                              name: false,
+                              phone: false,
+                              address: false,
+                              company: false,
+                              custom: [],
+                            }),
+                            address: checked,
+                          },
+                        });
+                      }}
+                    />
+                    <Label
+                      htmlFor='addressField'
+                      className='flex items-center gap-2 cursor-pointer'
+                    >
+                      <MapPin className='h-4 w-4 text-gray-500' />
+                      <span>Address</span>
+                    </Label>
+                  </div>
+
+                  <div className='flex items-center space-x-2'>
+                    <Switch
+                      id='companyField'
+                      checked={editingElement.clientFields?.company || false}
+                      onCheckedChange={(checked) => {
+                        return setEditingElement({
+                          ...editingElement,
+                          clientFields: {
+                            ...(editingElement.clientFields || {
+                              email: true,
+                              name: false,
+                              phone: false,
+                              address: false,
+                              company: false,
+                              custom: [],
+                            }),
+                            company: checked,
+                          },
+                        });
+                      }}
+                    />
+                    <Label
+                      htmlFor='companyField'
+                      className='flex items-center gap-2 cursor-pointer'
+                    >
+                      <Building2 className='h-4 w-4 text-gray-500' />
+                      <span>Company</span>
+                    </Label>
+                  </div>
+
+                  {/* Custom client fields 
+                  <div className='flex flex-col gap-2 mt-4'>
+                    <Label>Custom Fields</Label>
+                    <div className='flex flex-col gap-2'>
+                      {editingElement.clientFields?.custom?.map((field, index) => (
+                        <div key={index} className='flex items-center gap-2'>
+                          <Input
+                            value={field}
+                            onChange={(e) => {
+                              const newCustomFields = [...(editingElement.clientFields?.custom || [])];
+                              newCustomFields[index] = e.target.value;
+                              setEditingElement({
+                                ...editingElement,
+                                clientFields: {
+                                  ...(editingElement.clientFields || {
+                                    email: true,
+                                    name: false,
+                                    phone: false,
+                                    address: false,
+                                    company: false,
+                                    custom: [],
+                                  }),
+                                  custom: newCustomFields,
+                                },
+                              });
+                            }}
+                            placeholder='Custom field name'
+                          />
+                          <Button
+                            variant='ghost'
+                            size='icon'
+                            onClick={() => {
+                              const newCustomFields = [...(editingElement.clientFields?.custom || [])];
+                              newCustomFields.splice(index, 1);
+                              setEditingElement({
+                                ...editingElement,
+                                clientFields: {
+                                  ...(editingElement.clientFields || {
+                                    email: true,
+                                    name: false,
+                                    phone: false,
+                                    address: false,
+                                    company: false,
+                                    custom: [],
+                                  }),
+                                  custom: newCustomFields,
+                                },
+                              });
+                            }}
+                          >
+                            <X className='h-4 w-4' />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        className='mt-2'
+                        onClick={() => {
+                          setEditingElement({
+                            ...editingElement,
+                            clientFields: {
+                              ...(editingElement.clientFields || {
+                                email: true,
+                                name: false,
+                                phone: false,
+                                address: false,
+                                company: false,
+                                custom: [],
+                              }),
+                              custom: [...(editingElement.clientFields?.custom || []), ''],
+                            },
+                          });
+                        }}
+                      >
+                        <Plus className='h-4 w-4 mr-2' />
+                        Add Custom Field
+                      </Button>
+                    </div>
+                  </div>
+                  */}
                 </div>
               </div>
             </div>
           )}
 
-          {/* Validation Settings Button */}
-          {(editingElement.type === 'Single Response' ||
-            editingElement.type === 'Short Answer' ||
-            editingElement.type === 'Long Answer' ||
-            editingElement.type === 'Phone Number' ||
-            editingElement.type === 'Number') && (
-            <div
-              className={cn('grid items-center gap-3', isMobile ? 'grid-cols-1' : 'grid-cols-4')}
-            >
-              <Label className={isMobile ? '' : 'text-right'}>Validation</Label>
-              <div className={isMobile ? 'col-span-1' : 'col-span-3'}>
+          {/* Options for multiple choice questions */}
+          {(editingElement.type === 'Radio Buttons' ||
+            editingElement.type === 'Checkboxes' ||
+            editingElement.type === 'Dropdown') && (
+            <div className='space-y-4'>
+              <div className='flex items-center justify-between'>
+                <Label>Options</Label>
+              </div>
+              <div className='space-y-2'>
+                {editingElement.options?.map((option, index) => {
+                  return (
+                    <div key={index} className='flex items-center gap-2'>
+                      <Input
+                        value={option}
+                        onChange={(e) => {
+                          const newOptions = [...(editingElement.options || [])];
+                          newOptions[index] = e.target.value;
+                          setEditingElement({
+                            ...editingElement,
+                            options: newOptions,
+                          });
+                        }}
+                        placeholder={`Option ${index + 1}`}
+                      />
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        onClick={() => {
+                          const newOptions = [...(editingElement.options || [])];
+                          newOptions.splice(index, 1);
+                          setEditingElement({
+                            ...editingElement,
+                            options: newOptions,
+                          });
+                        }}
+                      >
+                        <X className='h-4 w-4' />
+                      </Button>
+                    </div>
+                  );
+                })}
                 <Button
                   variant='outline'
                   size='sm'
+                  className='mt-2'
                   onClick={() => {
-                    return setShowValidationSettings(!showValidationSettings);
+                    setEditingElement({
+                      ...editingElement,
+                      options: [
+                        ...(editingElement.options || []),
+                        `Option ${(editingElement.options?.length || 0) + 1}`,
+                      ],
+                    });
                   }}
-                  className='flex items-center gap-2'
                 >
-                  {showValidationSettings ? 'Hide Validation Settings' : 'Show Validation Settings'}
-                  <ChevronDown
-                    className={cn(
-                      'h-4 w-4 transition-transform',
-                      showValidationSettings ? 'rotate-180' : '',
-                    )}
-                  />
+                  <Plus className='h-4 w-4 mr-2' />
+                  Add Option
                 </Button>
               </div>
             </div>
           )}
 
-          {/* Validation Settings Panel */}
-          {showValidationSettings && editingElement && (
-            <div className='grid grid-cols-4 items-start gap-4 pl-4 pt-2 pb-2 bg-gray-50 rounded-md border border-gray-200 max-h-[300px] overflow-y-auto'>
-              <div className='col-span-4 mb-2'>
-                <h4 className='font-medium text-sm'>Validation Rules</h4>
-                <p className='text-xs text-gray-500 mt-1'>Set rules to validate user input</p>
-              </div>
+          {/* Validation rules */}
+          {showValidationSettings &&
+            ['Single Response', 'Long Answer', 'Number', 'Phone Number'].includes(
+              editingElement.type,
+            ) && (
+              <div className='grid grid-cols-4 gap-3'>
+                {(editingElement.type === 'Single Response' ||
+                  editingElement.type === 'Long Answer') && (
+                  <>
+                    <Label htmlFor='minLength' className='text-right col-span-1'>
+                      Min Length
+                    </Label>
+                    <Input
+                      id='minLength'
+                      type='number'
+                      min='0'
+                      value={editingElement.validation?.minLength || ''}
+                      onChange={(e) => {
+                        return setEditingElement({
+                          ...editingElement,
+                          validation: {
+                            ...editingElement.validation,
+                            minLength: e.target.value ? Number.parseInt(e.target.value) : undefined,
+                          },
+                        });
+                      }}
+                      className='col-span-3'
+                      placeholder='Minimum characters'
+                    />
 
-              {(editingElement.type === 'Single Response' ||
-                editingElement.type === 'Short Answer' ||
-                editingElement.type === 'Long Answer') && (
-                <>
-                  <Label htmlFor='minLength' className='text-right col-span-1'>
-                    Min Length
-                  </Label>
-                  <Input
-                    id='minLength'
-                    type='number'
-                    min='0'
-                    value={editingElement.validation?.minLength || ''}
-                    onChange={(e) => {
-                      return setEditingElement({
-                        ...editingElement,
-                        validation: {
-                          ...editingElement.validation,
-                          minLength: e.target.value ? Number.parseInt(e.target.value) : undefined,
-                        },
-                      });
-                    }}
-                    className='col-span-3'
-                    placeholder='Minimum characters'
-                  />
+                    <Label htmlFor='maxLength' className='text-right col-span-1'>
+                      Max Length
+                    </Label>
+                    <Input
+                      id='maxLength'
+                      type='number'
+                      min='0'
+                      value={editingElement.validation?.maxLength || ''}
+                      onChange={(e) => {
+                        return setEditingElement({
+                          ...editingElement,
+                          validation: {
+                            ...editingElement.validation,
+                            maxLength: e.target.value ? Number.parseInt(e.target.value) : undefined,
+                          },
+                        });
+                      }}
+                      className='col-span-3'
+                      placeholder='Maximum characters'
+                    />
+                  </>
+                )}
 
-                  <Label htmlFor='maxLength' className='text-right col-span-1'>
-                    Max Length
-                  </Label>
-                  <Input
-                    id='maxLength'
-                    type='number'
-                    min='0'
-                    value={editingElement.validation?.maxLength || ''}
-                    onChange={(e) => {
-                      return setEditingElement({
-                        ...editingElement,
-                        validation: {
-                          ...editingElement.validation,
-                          maxLength: e.target.value ? Number.parseInt(e.target.value) : undefined,
-                        },
-                      });
-                    }}
-                    className='col-span-3'
-                    placeholder='Maximum characters'
-                  />
-                </>
-              )}
+                {editingElement.type === 'Number' && (
+                  <>
+                    <Label htmlFor='min' className='text-right col-span-1'>
+                      Min Value
+                    </Label>
+                    <Input
+                      id='min'
+                      type='number'
+                      value={editingElement.validation?.min || ''}
+                      onChange={(e) => {
+                        return setEditingElement({
+                          ...editingElement,
+                          validation: {
+                            ...editingElement.validation,
+                            min: e.target.value ? Number.parseInt(e.target.value) : undefined,
+                          },
+                        });
+                      }}
+                      className='col-span-3'
+                      placeholder='Minimum value'
+                    />
 
-              {editingElement.type === 'Number' && (
-                <>
-                  <Label htmlFor='min' className='text-right col-span-1'>
-                    Min Value
-                  </Label>
-                  <Input
-                    id='min'
-                    type='number'
-                    value={editingElement.validation?.min || ''}
-                    onChange={(e) => {
-                      return setEditingElement({
-                        ...editingElement,
-                        validation: {
-                          ...editingElement.validation,
-                          min: e.target.value ? Number.parseInt(e.target.value) : undefined,
-                        },
-                      });
-                    }}
-                    className='col-span-3'
-                    placeholder='Minimum value'
-                  />
+                    <Label htmlFor='max' className='text-right col-span-1'>
+                      Max Value
+                    </Label>
+                    <Input
+                      id='max'
+                      type='number'
+                      value={editingElement.validation?.max || ''}
+                      onChange={(e) => {
+                        return setEditingElement({
+                          ...editingElement,
+                          validation: {
+                            ...editingElement.validation,
+                            max: e.target.value ? Number.parseInt(e.target.value) : undefined,
+                          },
+                        });
+                      }}
+                      className='col-span-3'
+                      placeholder='Maximum value'
+                    />
+                  </>
+                )}
 
-                  <Label htmlFor='max' className='text-right col-span-1'>
-                    Max Value
-                  </Label>
-                  <Input
-                    id='max'
-                    type='number'
-                    value={editingElement.validation?.max || ''}
-                    onChange={(e) => {
-                      return setEditingElement({
-                        ...editingElement,
-                        validation: {
-                          ...editingElement.validation,
-                          max: e.target.value ? Number.parseInt(e.target.value) : undefined,
-                        },
-                      });
-                    }}
-                    className='col-span-3'
-                    placeholder='Maximum value'
-                  />
-                </>
-              )}
-
-              {(editingElement.type === 'Single Response' ||
-                editingElement.type === 'Short Answer' ||
-                editingElement.type === 'Phone Number') && (
-                <>
-                  <Label htmlFor='pattern' className='text-right col-span-1'>
-                    Pattern
-                  </Label>
-                  <div className='col-span-3 space-y-2'>
+                {editingElement.type === 'Phone Number' && (
+                  <>
+                    <Label htmlFor='pattern' className='text-right col-span-1'>
+                      Pattern
+                    </Label>
                     <Input
                       id='pattern'
                       value={editingElement.validation?.pattern || ''}
@@ -321,230 +522,79 @@ const ElementEditor: React.FC<ElementEditorProps> = ({
                           ...editingElement,
                           validation: {
                             ...editingElement.validation,
-                            pattern: e.target.value || undefined,
+                            pattern: e.target.value,
                           },
                         });
                       }}
-                      placeholder='Regular expression pattern'
+                      className='col-span-3'
+                      placeholder='Regex pattern (e.g. [0-9]{10})'
                     />
-                    <div className='text-xs text-gray-500'>
-                      {editingElement.type === 'Phone Number' && (
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='text-xs h-6 px-2'
-                          onClick={() => {
-                            return setEditingElement({
-                              ...editingElement,
-                              validation: {
-                                ...editingElement.validation,
-                                pattern: '^[+]?[(]?[0-9]{3}[)]?[-\\s.]?[0-9]{3}[-\\s.]?[0-9]{4,6}$',
-                              },
-                            });
-                          }}
-                        >
-                          Use Phone Number Pattern
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
+                  </>
+                )}
+              </div>
+            )}
+
+          {/* Required toggle */}
+          {editingElement.type !== 'Client Details' && (
+            <div className='flex items-center justify-between'>
+              <Label htmlFor='required'>Required Field</Label>
+              <Switch
+                id='required'
+                checked={editingElement.required}
+                onCheckedChange={(checked) => {
+                  return setEditingElement({ ...editingElement, required: checked });
+                }}
+              />
             </div>
           )}
 
-          {/* Client Fields Settings */}
-          {editingElement.type === 'Client Details' && (
-            <div className='grid gap-4 pt-2 pb-2'>
-              <div className='col-span-4 mb-2'>
-                <h4 className='font-medium text-sm'>Client Information Fields</h4>
-                <p className='text-xs text-gray-500 mt-1'>
-                  Select which client information fields to include
-                </p>
-              </div>
+          {/* Add validation rules button */}
+          {!showValidationSettings &&
+            ['Single Response', 'Long Answer', 'Number', 'Phone Number'].includes(
+              editingElement.type,
+            ) && (
+              <Button
+                variant='outline'
+                size='sm'
+                className='mt-2 w-full'
+                onClick={() => {
+                  return setShowValidationSettings(true);
+                }}
+              >
+                <Plus className='h-4 w-4 mr-2' />
+                Add Validation Rules
+              </Button>
+            )}
 
-              <div className='space-y-3 border rounded-md p-4 bg-gray-50'>
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <Mail className='h-4 w-4 text-blue-600' />
-                    <Label htmlFor='client-email' className='font-medium'>
-                      Email
-                    </Label>
-                    <Badge className='text-xs bg-blue-100 text-blue-700 border-blue-200'>
-                      Required
-                    </Badge>
-                  </div>
-                  <Switch id='client-email' checked={true} disabled={true} />
-                </div>
-
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <User2 className='h-4 w-4 text-gray-600' />
-                    <Label htmlFor='client-name'>Full Name</Label>
-                  </div>
-                  <Switch
-                    id='client-name'
-                    checked={editingElement.clientFields?.name || false}
-                    onCheckedChange={(checked) => {
-                      return setEditingElement({
-                        ...editingElement,
-                        clientFields: {
-                          ...editingElement.clientFields,
-                          name: checked,
-                        },
-                      });
-                    }}
-                  />
-                </div>
-
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <Phone className='h-4 w-4 text-gray-600' />
-                    <Label htmlFor='client-phone'>Phone Number</Label>
-                  </div>
-                  <Switch
-                    id='client-phone'
-                    checked={editingElement.clientFields?.phone || false}
-                    onCheckedChange={(checked) => {
-                      return setEditingElement({
-                        ...editingElement,
-                        clientFields: {
-                          ...editingElement.clientFields,
-                          phone: checked,
-                        },
-                      });
-                    }}
-                  />
-                </div>
-
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <Building2 className='h-4 w-4 text-gray-600' />
-                    <Label htmlFor='client-company'>Company</Label>
-                  </div>
-                  <Switch
-                    id='client-company'
-                    checked={editingElement.clientFields?.company || false}
-                    onCheckedChange={(checked) => {
-                      return setEditingElement({
-                        ...editingElement,
-                        clientFields: {
-                          ...editingElement.clientFields,
-                          company: checked,
-                        },
-                      });
-                    }}
-                  />
-                </div>
-
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <MapPin className='h-4 w-4 text-gray-600' />
-                    <Label htmlFor='client-address'>Address</Label>
-                  </div>
-                  <Switch
-                    id='client-address'
-                    checked={editingElement.clientFields?.address || false}
-                    onCheckedChange={(checked) => {
-                      return setEditingElement({
-                        ...editingElement,
-                        clientFields: {
-                          ...editingElement.clientFields,
-                          address: checked,
-                        },
-                      });
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Custom Fields */}
-              <div className='mt-4'>
-                <h4 className='font-medium text-sm mb-2'>Custom Fields</h4>
-                <div className='space-y-2'>
-                  {editingElement.clientFields?.custom?.map((field, index) => {
-                    return (
-                      <div key={index} className='flex items-center gap-2'>
-                        <Input
-                          value={field}
-                          onChange={(e) => {
-                            const newCustomFields = [
-                              ...(editingElement.clientFields?.custom || []),
-                            ];
-                            newCustomFields[index] = e.target.value;
-                            setEditingElement({
-                              ...editingElement,
-                              clientFields: {
-                                ...editingElement.clientFields,
-                                custom: newCustomFields,
-                              },
-                            });
-                          }}
-                          placeholder='Field name'
-                        />
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          onClick={() => {
-                            const newCustomFields = [
-                              ...(editingElement.clientFields?.custom || []),
-                            ];
-                            newCustomFields.splice(index, 1);
-                            setEditingElement({
-                              ...editingElement,
-                              clientFields: {
-                                ...editingElement.clientFields,
-                                custom: newCustomFields,
-                              },
-                            });
-                          }}
-                        >
-                          <X className='h-4 w-4' />
-                        </Button>
-                      </div>
-                    );
-                  })}
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    className='mt-2'
-                    onClick={() => {
-                      const newCustomFields = [
-                        ...(editingElement.clientFields?.custom || []),
-                        `Custom Field ${(editingElement.clientFields?.custom?.length || 0) + 1}`,
-                      ];
-                      setEditingElement({
-                        ...editingElement,
-                        clientFields: {
-                          ...editingElement.clientFields,
-                          custom: newCustomFields,
-                        },
-                      });
-                    }}
-                  >
-                    <Plus className='h-4 w-4 mr-2' />
-                    Add Custom Field
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Hide validation button */}
+          {showValidationSettings &&
+            ['Single Response', 'Long Answer', 'Number', 'Phone Number'].includes(
+              editingElement.type,
+            ) && (
+              <Button
+                variant='outline'
+                size='sm'
+                className='mt-2 w-full'
+                onClick={() => {
+                  return setShowValidationSettings(false);
+                }}
+              >
+                <ChevronDown className='h-4 w-4 mr-2' />
+                Hide Validation Rules
+              </Button>
+            )}
         </div>
 
-        <div className={cn('flex gap-2', isMobile ? 'flex-col mt-6' : 'justify-end')}>
+        <div className='mt-4 flex justify-end gap-2'>
           <Button
-            type='button'
             variant='outline'
             onClick={() => {
               return setEditingElement(null);
             }}
-            className={isMobile ? 'w-full' : ''}
           >
             Cancel
           </Button>
-          <Button type='button' onClick={saveElementChanges} className={isMobile ? 'w-full' : ''}>
-            Save Changes
-          </Button>
+          <Button onClick={handleSave}>Save Changes</Button>
         </div>
       </DialogContent>
     </Dialog>
