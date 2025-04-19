@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Column, DataTable } from '@/components/ui/data-table';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatDate } from '@/lib/utils';
-import { Archive, Copy, Eye, FileEdit, FilePlus, Trash2 } from 'lucide-react';
+import { Archive, Eye, FileEdit, FilePlus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { LeadForm, useLeadForms } from '../hooks/useLeadForms';
@@ -105,18 +105,7 @@ export default function LeadFormsTable() {
                   <Eye className='h-4 w-4' />
                 </Link>
               </Button>
-              {form.status === 'draft' && (
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  title='Publish form'
-                  onClick={() => {
-                    return publishLeadForm.mutate(form._id);
-                  }}
-                >
-                  <Copy className='h-4 w-4' />
-                </Button>
-              )}
+
               {form.status !== 'archived' && (
                 <Button
                   variant='ghost'
