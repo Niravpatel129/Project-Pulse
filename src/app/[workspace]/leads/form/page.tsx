@@ -347,7 +347,7 @@ export default function FormBuilder() {
   };
 
   return (
-    <div className={cn('min-h-screen font-sans antialiased', fontSans.variable)}>
+    <div className={cn('font-sans antialiased', fontSans.variable)}>
       <FormBuilderLayout
         formElements={formElements}
         setFormElements={setFormElements}
@@ -377,7 +377,7 @@ export default function FormBuilder() {
         {/* Form Canvas */}
         <div
           className={cn(
-            'flex-1 overflow-y-auto p-4 md:p-8 bg-white',
+            'flex-1 overflow-y-auto p-4 md:p-8 bg-white md:pb-0',
             previewMode ? 'w-full' : '',
             isMobile && !previewMode ? 'pb-20' : '',
           )}

@@ -99,7 +99,7 @@ const FormCanvasContent: React.FC<FormCanvasContentProps> = ({
       {formElements.length === 0 ? (
         <EmptyFormState addElement={addElement} addClientDetailsSection={addClientDetailsSection} />
       ) : (
-        <div className='space-y-6 mb-6 pb-6'>
+        <div className='space-y-6 mb-6'>
           {formElements.map((element) => {
             // In preview mode, check if element should be shown based on conditions
             const isVisible = previewMode

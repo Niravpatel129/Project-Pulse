@@ -271,7 +271,7 @@ export default function FormBuilderSidebar({
   return (
     <div
       className={cn(
-        'w-full h-full bg-white overflow-y-auto shadow-sm pb-20 pt-2',
+        'w-full h-full bg-white overflow-y-auto shadow-sm pt-2',
         previewMode ? 'hidden' : '',
         !previewMode && isMobile && !showMobileNav ? 'hidden' : '',
         !previewMode && isMobile && showMobileNav ? 'fixed inset-0 z-40' : '',
