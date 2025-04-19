@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatDate } from '@/lib/utils';
-import { Archive, Eye, FileEdit, FilePlus, Trash2 } from 'lucide-react';
+import { Archive, Eye, FileEdit, FilePlus, MoreHorizontal, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { LeadForm, useLeadForms } from '../hooks/useLeadForms';
@@ -150,43 +150,48 @@ export default function LeadFormsTable() {
         header: 'Actions',
         cell: (form) => {
           return (
-            <div className='flex space-x-2'>
-              <Button variant='ghost' size='icon' asChild title='Edit form'>
-                <Link href={`/leads/form/${form._id}`}>
-                  <FileEdit className='h-4 w-4' />
-                </Link>
-              </Button>
-              <Button variant='ghost' size='icon' asChild title='View submissions'>
-                <Link href={`/leads/form/${form._id}/submissions`}>
-                  <Eye className='h-4 w-4' />
-                </Link>
-              </Button>
-
-              {form.status !== 'archived' && (
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  title='Archive form'
-                  onClick={() => {
-                    return archiveLeadForm.mutate(form._id);
-                  }}
-                >
-                  <Archive className='h-4 w-4' />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant='ghost' size='icon'>
+                  <MoreHorizontal className='h-4 w-4' />
                 </Button>
-              )}
-              <Button
-                variant='ghost'
-                size='icon'
-                title='Delete form'
-                onClick={() => {
-                  if (window.confirm('Are you sure you want to delete this form?')) {
-                    deleteLeadForm.mutate(form._id);
-                  }
-                }}
-              >
-                <Trash2 className='h-4 w-4 text-destructive' />
-              </Button>
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align='end'>
+                <DropdownMenuItem asChild>
+                  <Link href={`/leads/form/${form._id}`} className='flex items-center'>
+                    <FileEdit className='h-4 w-4 mr-2' />
+                    Edit form
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={`/leads/form/${form._id}/submissions`} className='flex items-center'>
+                    <Eye className='h-4 w-4 mr-2' />
+                    View submissions
+                  </Link>
+                </DropdownMenuItem>
+                {form.status !== 'archived' && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      return archiveLeadForm.mutate(form._id);
+                    }}
+                  >
+                    <Archive className='h-4 w-4 mr-2' />
+                    Archive form
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to delete this form?')) {
+                      deleteLeadForm.mutate(form._id);
+                    }
+                  }}
+                  className='text-destructive'
+                >
+                  <Trash2 className='h-4 w-4 mr-2' />
+                  Delete form
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           );
         },
       },
