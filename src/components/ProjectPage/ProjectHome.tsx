@@ -276,10 +276,11 @@ export default function ProjectHome() {
 
   return (
     <motion.div
-      className='space-y-6'
+      className='space-y-6 overflow-y-auto h-full'
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
+      style={{ maxHeight: 'calc(100vh - 180px)' }}
     >
       {/* Message Input */}
       <motion.div layout transition={{ duration: 0.3 }}>

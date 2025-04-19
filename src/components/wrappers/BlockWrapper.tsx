@@ -9,7 +9,7 @@ export default function BlockWrapper({
 }) {
   return (
     <div
-      className={`bg-white rounded-lg p-4 overflow-hidden shadow shadow-blue-500/30 py-8 ${className}`}
+      className={`bg-white rounded-lg p-4 overflow-auto shadow shadow-blue-500/30 py-8 ${className}`}
     >
       {children}
     </div>

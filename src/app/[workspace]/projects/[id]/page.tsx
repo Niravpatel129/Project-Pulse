@@ -14,10 +14,10 @@ export default function ProjectPage() {
   return (
     <ProjectProvider projectId={id as string}>
       <ProjectWrapper>
-        <div className='flex-1'>
+        <div className='flex-1 flex flex-col h-full'>
           <ProjectHeader />
-          <BlockWrapper>
-            <div className='container mx-auto flex items-center justify-between px-0 py-3'>
+          <BlockWrapper className='flex-1 overflow-auto min-h-0'>
+            <div className='container mx-auto flex items-center justify-between px-0 py-3 h-full overflow-auto'>
               <Suspense
                 fallback={
                   <div className='w-full h-32 animate-pulse bg-gray-100 rounded-lg mb-10' />

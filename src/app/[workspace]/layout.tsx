@@ -48,16 +48,17 @@ export default function DashboardLayout({
   const isFullPage = true;
 
   return (
-    <div className='flex min-h-screen flex-col'>
+    <div className='flex flex-col h-screen overflow-hidden'>
       {showNavigation && <Navigation />}
 
       {/* Main Content */}
       <main
         className={cn(
-          'border-t flex-1 bg-[#eff6fd] p-3 pt-1 px-6 sm:p-4 sm:pt-2 md:px-10 md:py-1 lg:p-8 lg:pt-4 lg:px-12 xl:px-16',
+          'border-t flex-1 bg-[#eff6fd] p-3 pt-1 px-6 sm:p-4 sm:pt-2 md:px-10 md:py-1 lg:p-8 lg:pt-4 lg:px-12 xl:px-16 overflow-auto',
           isFullPage && '!p-0',
           isLeadsPage && 'bg-white',
         )}
+        style={{ height: 'calc(100vh - 64px)' }}
       >
         {children}
       </main>

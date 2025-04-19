@@ -157,117 +157,124 @@ export function Navigation() {
   });
 
   return (
-    <header className='fixed top-0 z-30 flex h-16 items-center bg-background px-4 md:px-6 w-full'>
-      <div className='w-full mx-auto flex items-center justify-between'>
-        {/* Logo */}
-        <div className='flex items-center'>
-          <Link href='/' className='flex items-center gap-2 text-[#000000]'>
-            <span className='font-medium font-sans '>{workspace?.name}</span>
-          </Link>
-        </div>
+    <>
+      {/* Wrapper div that includes both the navigation and spacer */}
+      <div>
+        {/* Spacer div with the same height as the navigation */}
+        <div className='h-16 w-full'></div>
+        <header className='fixed top-0 z-30 flex h-16 items-center bg-background px-4 md:px-6 w-full'>
+          <div className='w-full mx-auto flex items-center justify-between'>
+            {/* Logo */}
+            <div className='flex items-center'>
+              <Link href='/' className='flex items-center gap-2 text-[#000000]'>
+                <span className='font-medium font-sans '>{workspace?.name}</span>
+              </Link>
+            </div>
 
-        {/* Mobile Navigation */}
-        <div className='lg:hidden'>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant='ghost' size='icon' className='h-9 w-9'>
-                <CiMenuBurger className='h-5 w-5 text-[#484848]' />
-                <span className='sr-only'>Toggle navigation menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side='left' className='w-[85%] max-w-[300px] p-0'>
-              <VisuallyHidden>
-                <SheetTitle>Navigation Menu</SheetTitle>
-              </VisuallyHidden>
-              <div className='flex h-14 items-center border-b px-4'>
-                <Link href='/' className='flex items-center gap-2 font-semibold text-[#484848]'>
-                  <CiBoxList className='h-6 w-6' />
-                  <span className='text-base'>Pulse</span>
-                </Link>
-              </div>
-              <div className='overflow-y-auto max-h-[calc(100vh-3.5rem)]'>
-                <nav className='grid gap-1 p-2'>
-                  {[...visibleNavigation, ...userNavigation].map((item) => {
-                    return (
-                      <MobileNavItem
-                        key={item.href}
-                        href={item.href}
-                        label={item.label}
-                        icon={item.icon}
-                        isActive={isNavItemActive(item.href)}
-                      />
-                    );
-                  })}
-                </nav>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
+            {/* Mobile Navigation */}
+            <div className='lg:hidden'>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant='ghost' size='icon' className='h-9 w-9'>
+                    <CiMenuBurger className='h-5 w-5 text-[#484848]' />
+                    <span className='sr-only'>Toggle navigation menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side='left' className='w-[85%] max-w-[300px] p-0'>
+                  <VisuallyHidden>
+                    <SheetTitle>Navigation Menu</SheetTitle>
+                  </VisuallyHidden>
+                  <div className='flex h-14 items-center border-b px-4'>
+                    <Link href='/' className='flex items-center gap-2 font-semibold text-[#484848]'>
+                      <CiBoxList className='h-6 w-6' />
+                      <span className='text-base'>Pulse</span>
+                    </Link>
+                  </div>
+                  <div className='overflow-y-auto max-h-[calc(100vh-3.5rem)]'>
+                    <nav className='grid gap-1 p-2'>
+                      {[...visibleNavigation, ...userNavigation].map((item) => {
+                        return (
+                          <MobileNavItem
+                            key={item.href}
+                            href={item.href}
+                            label={item.label}
+                            icon={item.icon}
+                            isActive={isNavItemActive(item.href)}
+                          />
+                        );
+                      })}
+                    </nav>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
 
-        {/* Desktop Navigation */}
-        <nav className='hidden lg:flex items-center justify-center space-x-3 mx-auto'>
-          {visibleNavigation.map((item) => {
-            return (
-              <DesktopNavItem
-                key={item.href}
-                href={item.href}
-                label={item.label}
-                icon={item.icon}
-                isActive={isNavItemActive(item.href)}
-              />
-            );
-          })}
-        </nav>
+            {/* Desktop Navigation */}
+            <nav className='hidden lg:flex items-center justify-center space-x-3 mx-auto'>
+              {visibleNavigation.map((item) => {
+                return (
+                  <DesktopNavItem
+                    key={item.href}
+                    href={item.href}
+                    label={item.label}
+                    icon={item.icon}
+                    isActive={isNavItemActive(item.href)}
+                  />
+                );
+              })}
+            </nav>
 
-        {/* User Profile */}
-        <div className='flex items-center'>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant='ghost'
-                size='icon'
-                className='relative h-10 w-10 p-0 overflow-visible focus:bg-transparent focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0'
-              >
-                <Avatar className='h-8 w-8'>
-                  <AvatarImage src={user?.avatar || ''} alt={user?.name || 'User'} />
-                  <AvatarFallback className='bg-white text-xs text-[#484848]'>
-                    <CiUser className='h-4 w-4' />
-                    <VscChevronDown className='h-4 w-4' />
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end' className='w-56'>
-              <DropdownMenuLabel className='font-normal'>
-                <div className='flex flex-col space-y-1'>
-                  <p className='text-sm font-medium text-[#484848]'>{user?.name || 'User'}</p>
-                  <p className='text-xs text-muted-foreground'>
-                    {user?.email || 'user@example.com'}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                {userNavigation.map((item) => {
-                  return (
-                    <DropdownMenuItem key={item.href} asChild className='text-sm'>
-                      <Link href={item.href} className='text-[#484848]'>
-                        {item.icon}
-                        <span className='ml-2'>{item.label}</span>
-                      </Link>
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className='text-sm text-[#484848]'>
-                <CiLogout className='mr-2 h-4 w-4' />
-                <span>Log out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+            {/* User Profile */}
+            <div className='flex items-center'>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='relative h-10 w-10 p-0 overflow-visible focus:bg-transparent focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0'
+                  >
+                    <Avatar className='h-8 w-8'>
+                      <AvatarImage src={user?.avatar || ''} alt={user?.name || 'User'} />
+                      <AvatarFallback className='bg-white text-xs text-[#484848]'>
+                        <CiUser className='h-4 w-4' />
+                        <VscChevronDown className='h-4 w-4' />
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end' className='w-56'>
+                  <DropdownMenuLabel className='font-normal'>
+                    <div className='flex flex-col space-y-1'>
+                      <p className='text-sm font-medium text-[#484848]'>{user?.name || 'User'}</p>
+                      <p className='text-xs text-muted-foreground'>
+                        {user?.email || 'user@example.com'}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    {userNavigation.map((item) => {
+                      return (
+                        <DropdownMenuItem key={item.href} asChild className='text-sm'>
+                          <Link href={item.href} className='text-[#484848]'>
+                            {item.icon}
+                            <span className='ml-2'>{item.label}</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className='text-sm text-[#484848]'>
+                    <CiLogout className='mr-2 h-4 w-4' />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </header>
       </div>
-    </header>
+    </>
   );
 }

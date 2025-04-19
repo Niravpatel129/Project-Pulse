@@ -83,7 +83,7 @@ export default function ProjectMain() {
   };
 
   return (
-    <div className='min-h-screen w-full bg-white/30 backdrop-blur-sm'>
+    <div className='w-full h-full overflow-y-auto bg-white/30 backdrop-blur-sm'>
       {/* <div className='lg:hidden flex justify-end py-3'>
         <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
           <SheetTrigger asChild>
@@ -97,14 +97,14 @@ export default function ProjectMain() {
         </Sheet>
       </div> */}
 
-      <div className='w-full'>
+      <div className='w-full h-full flex flex-col'>
         <ScrollArea className='pb-2'>
           <div className='flex gap-2 py-1'>{navigationLinks.map(renderNavigationLink)}</div>
           <ScrollBar orientation='horizontal' />
         </ScrollArea>
 
-        <div className='flex flex-col gap-6 py-2 md:flex-row'>
-          <div className='w-full lg:flex-1 md:px-2'>
+        <div className='flex flex-col gap-6 py-2 md:flex-row flex-1 overflow-y-auto'>
+          <div className='w-full lg:flex-1 md:px-2 overflow-y-auto'>
             <AnimatePresence mode='wait'>
               <motion.div
                 key={activeTab}
@@ -116,6 +116,7 @@ export default function ProjectMain() {
                   stiffness: 300,
                   damping: 30,
                 }}
+                className='h-full overflow-y-auto'
               >
                 <Suspense
                   fallback={<div className='w-full h-32 animate-pulse bg-accent/20 rounded-lg' />}
