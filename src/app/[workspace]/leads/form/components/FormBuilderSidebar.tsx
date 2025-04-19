@@ -3,7 +3,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -272,7 +271,7 @@ export default function FormBuilderSidebar({
   return (
     <div
       className={cn(
-        'w-full md:w-80 border-r bg-white overflow-y-auto shadow-sm',
+        'w-full md:w-80 border-r bg-white overflow-y-auto shadow-sm pb-20 pt-2',
         previewMode ? 'hidden' : '',
         !previewMode && isMobile && !showMobileNav ? 'hidden' : '',
         !previewMode && isMobile && showMobileNav ? 'fixed inset-0 z-40' : '',
@@ -313,10 +312,6 @@ export default function FormBuilderSidebar({
           </TabsTrigger>
         </TabsList>
         <TabsContent value='elements' className='p-0'>
-          <div className='p-4'>
-            <Input placeholder='Search input types' className='bg-gray-50' />
-          </div>
-
           <Collapsible defaultOpen>
             <CollapsibleTrigger className='flex w-full items-center justify-between p-4 hover:bg-gray-50'>
               <span className='font-medium text-sm'>Recent</span>
