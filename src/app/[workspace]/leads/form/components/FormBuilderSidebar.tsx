@@ -311,6 +311,9 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
             <h3 className='font-medium text-sm mb-2 text-gray-700'>Advanced Fields</h3>
             <div className='grid grid-cols-2 gap-2'>
               <Button
+                disabled={formElements.some((element) => {
+                  return element.type === 'Client Details';
+                })}
                 data-tooltip-id='my-tooltip'
                 data-tooltip-content='This section is required for lead capture'
                 variant='outline'

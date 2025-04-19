@@ -383,98 +383,118 @@ const ElementEditor: React.FC = () => {
 
           {/* Client Fields for Client Details element */}
           {editingElement.type === 'Client Details' && (
-            <div className='grid grid-cols-4 items-start gap-4'>
-              <Label className='text-right mt-2'>Client Fields</Label>
-              <div className='col-span-3 space-y-3'>
-                <div className='flex items-center gap-3 p-2 border rounded-md bg-gray-50'>
-                  <Mail className='h-4 w-4 text-blue-500' />
-                  <span className='font-medium text-sm'>Email</span>
-                  <Badge className='ml-auto' variant='outline'>
-                    Required
-                  </Badge>
-                </div>
+            <>
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='client-title' className='text-right'>
+                  Section Title
+                </Label>
+                <Input
+                  id='client-title'
+                  value={editingElement.clientTitle || 'Client Information'}
+                  onChange={(e) => {
+                    return setEditingElement({
+                      ...editingElement,
+                      clientTitle: e.target.value,
+                    });
+                  }}
+                  placeholder='Client Information'
+                  className='col-span-3'
+                />
+              </div>
 
-                <div className='flex items-center gap-3 p-2 border rounded-md'>
-                  <User2 className='h-4 w-4 text-gray-500' />
-                  <span className='text-sm'>Full Name</span>
-                  <div className='ml-auto flex items-center gap-2'>
-                    <Switch
-                      id='name-field'
-                      checked={editingElement.clientFields?.name || false}
-                      onCheckedChange={(checked) => {
-                        return setEditingElement({
-                          ...editingElement,
-                          clientFields: {
-                            ...editingElement.clientFields,
-                            name: checked,
-                          },
-                        });
-                      }}
-                    />
+              <div className='grid grid-cols-4 items-start gap-4'>
+                <Label className='text-right mt-2'>Client Fields</Label>
+                <div className='col-span-3 space-y-3'>
+                  <div className='flex items-center gap-3 p-2 border rounded-md bg-gray-50'>
+                    <Mail className='h-4 w-4 text-blue-500' />
+                    <span className='font-medium text-sm'>Email</span>
+                    <Badge className='ml-auto' variant='outline'>
+                      Required
+                    </Badge>
                   </div>
-                </div>
 
-                <div className='flex items-center gap-3 p-2 border rounded-md'>
-                  <Phone className='h-4 w-4 text-gray-500' />
-                  <span className='text-sm'>Phone Number</span>
-                  <div className='ml-auto flex items-center gap-2'>
-                    <Switch
-                      id='phone-field'
-                      checked={editingElement.clientFields?.phone || false}
-                      onCheckedChange={(checked) => {
-                        return setEditingElement({
-                          ...editingElement,
-                          clientFields: {
-                            ...editingElement.clientFields,
-                            phone: checked,
-                          },
-                        });
-                      }}
-                    />
+                  <div className='flex items-center gap-3 p-2 border rounded-md'>
+                    <User2 className='h-4 w-4 text-gray-500' />
+                    <span className='text-sm'>Full Name</span>
+                    <div className='ml-auto flex items-center gap-2'>
+                      <Switch
+                        id='name-field'
+                        checked={editingElement.clientFields?.name || false}
+                        onCheckedChange={(checked) => {
+                          return setEditingElement({
+                            ...editingElement,
+                            clientFields: {
+                              ...editingElement.clientFields,
+                              name: checked,
+                            },
+                          });
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div className='flex items-center gap-3 p-2 border rounded-md'>
-                  <MapPin className='h-4 w-4 text-gray-500' />
-                  <span className='text-sm'>Address</span>
-                  <div className='ml-auto flex items-center gap-2'>
-                    <Switch
-                      id='address-field'
-                      checked={editingElement.clientFields?.address || false}
-                      onCheckedChange={(checked) => {
-                        return setEditingElement({
-                          ...editingElement,
-                          clientFields: {
-                            ...editingElement.clientFields,
-                            address: checked,
-                          },
-                        });
-                      }}
-                    />
+                  <div className='flex items-center gap-3 p-2 border rounded-md'>
+                    <Phone className='h-4 w-4 text-gray-500' />
+                    <span className='text-sm'>Phone Number</span>
+                    <div className='ml-auto flex items-center gap-2'>
+                      <Switch
+                        id='phone-field'
+                        checked={editingElement.clientFields?.phone || false}
+                        onCheckedChange={(checked) => {
+                          return setEditingElement({
+                            ...editingElement,
+                            clientFields: {
+                              ...editingElement.clientFields,
+                              phone: checked,
+                            },
+                          });
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div className='flex items-center gap-3 p-2 border rounded-md'>
-                  <Building2 className='h-4 w-4 text-gray-500' />
-                  <span className='text-sm'>Company</span>
-                  <div className='ml-auto flex items-center gap-2'>
-                    <Switch
-                      id='company-field'
-                      checked={editingElement.clientFields?.company || false}
-                      onCheckedChange={(checked) => {
-                        return setEditingElement({
-                          ...editingElement,
-                          clientFields: {
-                            ...editingElement.clientFields,
-                            company: checked,
-                          },
-                        });
-                      }}
-                    />
+                  <div className='flex items-center gap-3 p-2 border rounded-md'>
+                    <MapPin className='h-4 w-4 text-gray-500' />
+                    <span className='text-sm'>Address</span>
+                    <div className='ml-auto flex items-center gap-2'>
+                      <Switch
+                        id='address-field'
+                        checked={editingElement.clientFields?.address || false}
+                        onCheckedChange={(checked) => {
+                          return setEditingElement({
+                            ...editingElement,
+                            clientFields: {
+                              ...editingElement.clientFields,
+                              address: checked,
+                            },
+                          });
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className='flex items-center gap-3 p-2 border rounded-md'>
+                    <Building2 className='h-4 w-4 text-gray-500' />
+                    <span className='text-sm'>Company</span>
+                    <div className='ml-auto flex items-center gap-2'>
+                      <Switch
+                        id='company-field'
+                        checked={editingElement.clientFields?.company || false}
+                        onCheckedChange={(checked) => {
+                          return setEditingElement({
+                            ...editingElement,
+                            clientFields: {
+                              ...editingElement.clientFields,
+                              company: checked,
+                            },
+                          });
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
         </div>
 

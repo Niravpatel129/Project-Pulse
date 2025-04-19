@@ -45,6 +45,7 @@ export type FormElement = {
     company: boolean;
     custom: string[];
   };
+  clientTitle?: string; // Title for the Client Details section
 };
 
 // Define the form values type for preview mode

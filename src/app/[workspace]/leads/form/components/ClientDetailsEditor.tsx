@@ -20,6 +20,26 @@ const ClientDetailsEditor: React.FC<ClientDetailsEditorProps> = ({
 
   return (
     <div className='grid gap-4 pt-2 pb-2'>
+      {/* Client Title Field */}
+      <div className='grid grid-cols-4 gap-2 items-center'>
+        <Label htmlFor='client-title' className='text-right'>
+          Section Title
+        </Label>
+        <div className='col-span-3'>
+          <Input
+            id='client-title'
+            value={editingElement.clientTitle || 'Client Information'}
+            onChange={(e) => {
+              setEditingElement({
+                ...editingElement,
+                clientTitle: e.target.value,
+              });
+            }}
+            placeholder='Client Information'
+          />
+        </div>
+      </div>
+
       <div className='col-span-4 mb-2'>
         <h4 className='font-medium text-sm'>Client Information Fields</h4>
         <p className='text-xs text-gray-500 mt-1'>

@@ -84,6 +84,7 @@ export const useFormElements = () => {
       required: true, // Client details section is required
       order: formElements.length,
       showWhen: 'all',
+      clientTitle: 'Client Information', // Default title for the client information section
       clientFields: {
         email: true, // Email is required by default
         name: false,

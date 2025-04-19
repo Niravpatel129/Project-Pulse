@@ -396,7 +396,9 @@ const FormElement: React.FC<FormElementProps> = ({
       {element.type === 'Client Details' && (
         <div className='mt-2 space-y-4 border rounded-lg p-4 bg-gray-50/50'>
           <div className='flex items-center justify-between border-b pb-2'>
-            <span className='font-medium text-gray-700'>Client Information</span>
+            <span className='font-medium text-gray-700'>
+              {element.clientTitle || 'Client Information'}
+            </span>
             {!previewMode && (
               <Button
                 variant='outline'
