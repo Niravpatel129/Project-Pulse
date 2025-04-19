@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { FormControl, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -208,45 +209,63 @@ const FormElement: React.FC<FormElementProps> = ({
       )}
 
       {element.type === 'Phone Number' && (
-        <Input
-          placeholder={element.placeholder || 'Enter phone number'}
-          className='mt-2'
-          value={previewMode ? (formValues[element.id] as string) || '' : ''}
-          onChange={(e) => {
-            return previewMode && handleFormValueChange(element.id, e.target.value);
-          }}
-          type='tel'
-          required={previewMode && element.required}
-          aria-required={element.required}
-        />
+        <div className='mt-2'>
+          <FormItem>
+            <FormControl>
+              <Input
+                placeholder={element.placeholder || 'Enter phone number'}
+                value={previewMode ? (formValues[element.id] as string) || '' : ''}
+                onChange={(e) => {
+                  return previewMode && handleFormValueChange(element.id, e.target.value);
+                }}
+                type='tel'
+                required={previewMode && element.required}
+                aria-required={element.required}
+              />
+            </FormControl>
+            {validationError && <FormMessage>{validationError}</FormMessage>}
+          </FormItem>
+        </div>
       )}
 
       {element.type === 'Email' && (
-        <Input
-          type='email'
-          placeholder={element.placeholder || 'Enter email address'}
-          className='mt-2'
-          value={previewMode ? (formValues[element.id] as string) || '' : ''}
-          onChange={(e) => {
-            return previewMode && handleFormValueChange(element.id, e.target.value);
-          }}
-          required={previewMode && element.required}
-          aria-required={element.required}
-        />
+        <div className='mt-2'>
+          <FormItem>
+            <FormControl>
+              <Input
+                type='email'
+                placeholder={element.placeholder || 'Enter email address'}
+                value={previewMode ? (formValues[element.id] as string) || '' : ''}
+                onChange={(e) => {
+                  return previewMode && handleFormValueChange(element.id, e.target.value);
+                }}
+                required={previewMode && element.required}
+                aria-required={element.required}
+              />
+            </FormControl>
+            {validationError && <FormMessage>{validationError}</FormMessage>}
+          </FormItem>
+        </div>
       )}
 
       {element.type === 'URL' && (
-        <Input
-          type='url'
-          placeholder={element.placeholder || 'Enter URL (https://example.com)'}
-          className='mt-2'
-          value={previewMode ? (formValues[element.id] as string) || '' : ''}
-          onChange={(e) => {
-            return previewMode && handleFormValueChange(element.id, e.target.value);
-          }}
-          required={previewMode && element.required}
-          aria-required={element.required}
-        />
+        <div className='mt-2'>
+          <FormItem>
+            <FormControl>
+              <Input
+                type='url'
+                placeholder={element.placeholder || 'Enter URL (https://example.com)'}
+                value={previewMode ? (formValues[element.id] as string) || '' : ''}
+                onChange={(e) => {
+                  return previewMode && handleFormValueChange(element.id, e.target.value);
+                }}
+                required={previewMode && element.required}
+                aria-required={element.required}
+              />
+            </FormControl>
+            {validationError && <FormMessage>{validationError}</FormMessage>}
+          </FormItem>
+        </div>
       )}
 
       {element.type === 'Number' && (
@@ -511,7 +530,7 @@ const FormElement: React.FC<FormElementProps> = ({
       )}
 
       {/* Validation error message */}
-      {validationError && (
+      {validationError && !element.type.match(/Phone Number|Email|URL/) && (
         <div className='mt-2 text-sm text-red-500 flex items-center gap-1'>
           <AlertCircle className='h-4 w-4' />
           {validationError}
