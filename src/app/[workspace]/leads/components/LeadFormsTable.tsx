@@ -3,6 +3,12 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Column, DataTable } from '@/components/ui/data-table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatDate } from '@/lib/utils';
 import { Archive, Eye, FileEdit, FilePlus, Trash2 } from 'lucide-react';
@@ -58,10 +64,60 @@ export default function LeadFormsTable() {
         key: 'status',
         header: 'Status',
         cell: (form) => {
+          const handleStatusChange = (newStatus: string) => {
+            if (newStatus === 'published') {
+              publishLeadForm.mutate(form._id);
+            } else if (newStatus === 'archived') {
+              archiveLeadForm.mutate(form._id);
+            }
+            // Note: If there's a specific function to change to draft status, it should be added here
+          };
+
           return (
-            <Badge variant={statusBadgeVariant(form.status)} className='capitalize'>
-              {form.status}
-            </Badge>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant='ghost' className='h-8 p-0'>
+                  <Badge variant={statusBadgeVariant(form.status)} className='capitalize'>
+                    {form.status}
+                  </Badge>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align='end'>
+                <DropdownMenuItem
+                  onClick={() => {
+                    return handleStatusChange('published');
+                  }}
+                  disabled={form.status === 'published'}
+                >
+                  <Badge variant={statusBadgeVariant('published')} className='mr-2'>
+                    Published
+                  </Badge>
+                  Make Published
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    return handleStatusChange('draft');
+                  }}
+                  disabled={form.status === 'draft'}
+                >
+                  <Badge variant={statusBadgeVariant('draft')} className='mr-2'>
+                    Draft
+                  </Badge>
+                  Set as Draft
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    return handleStatusChange('archived');
+                  }}
+                  disabled={form.status === 'archived'}
+                >
+                  <Badge variant={statusBadgeVariant('archived')} className='mr-2'>
+                    Archived
+                  </Badge>
+                  Archive Form
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           );
         },
         sortable: true,
