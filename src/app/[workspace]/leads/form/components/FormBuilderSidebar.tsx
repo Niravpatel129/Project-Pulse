@@ -311,6 +311,22 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
             <h3 className='font-medium text-sm mb-2 text-gray-700'>Advanced Fields</h3>
             <div className='grid grid-cols-2 gap-2'>
               <Button
+                data-tooltip-id='my-tooltip'
+                data-tooltip-content='This section is required for lead capture'
+                variant='outline'
+                className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
+                onClick={() => {
+                  return addClientDetailsSection();
+                }}
+              >
+                <div className='w-6 h-6 flex items-center justify-center'>
+                  <User2 className='h-4 w-4' />
+                </div>
+                <span className='text-xs'>
+                  Client Details <span className='text-red-500'>*</span>
+                </span>
+              </Button>
+              <Button
                 variant='outline'
                 className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
                 onClick={() => {
@@ -333,30 +349,6 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
                   <Upload className='h-4 w-4' />
                 </div>
                 <span className='text-xs'>File Upload</span>
-              </Button>
-              <Button
-                variant='outline'
-                className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
-                onClick={() => {
-                  return addClientDetailsSection();
-                }}
-              >
-                <div className='w-6 h-6 flex items-center justify-center'>
-                  <User2 className='h-4 w-4' />
-                </div>
-                <span className='text-xs'>Client Details</span>
-              </Button>
-              <Button
-                variant='outline'
-                className='h-auto p-2 flex flex-col items-center justify-center gap-1 hover:border-blue-400'
-                onClick={() => {
-                  return addElement('Signature');
-                }}
-              >
-                <div className='w-6 h-6 flex items-center justify-center'>
-                  {getElementIcon('Signature')}
-                </div>
-                <span className='text-xs'>Signature</span>
               </Button>
             </div>
           </div>

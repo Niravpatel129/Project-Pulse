@@ -6,6 +6,8 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppProvider } from '@/contexts';
 import { LoadingProvider } from '@/contexts/LoadingContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Tooltip as ReactTooltip } from 'react-tooltip';
+import 'react-tooltip/dist/react-tooltip.css';
 
 const queryClient = new QueryClient();
 
@@ -20,6 +22,8 @@ export default function ClientLayout({
         <AppProvider>
           <LoadingProvider>
             <TooltipProvider delayDuration={0}>
+              <ReactTooltip id='my-tooltip' />
+
               <div className='flex flex-col min-h-screen'>
                 <main className='flex-1'>{children}</main>
               </div>
