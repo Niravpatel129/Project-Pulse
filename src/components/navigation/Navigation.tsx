@@ -9,18 +9,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { cn } from '@/lib/utils';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { VscChevronDown } from 'react-icons/vsc';
 
 import {
   CiBoxes,
-  CiBoxList,
   CiCalendar,
   CiFolderOn,
   CiHome,
@@ -64,8 +62,26 @@ function DesktopNavItem({ href, label, icon, isActive }: NavItemProps) {
   );
 }
 
-// Mobile navigation item
-function MobileNavItem({ href, label, icon, isActive }: NavItemProps) {
+// Mobile navigation item for bottom bar
+function MobileBottomNavItem({ href, label, icon, isActive }: NavItemProps) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        'flex flex-col items-center justify-center py-2 px-1 text-xs transition-all',
+        isActive ? 'text-[#484848] font-semibold' : 'text-muted-foreground',
+      )}
+    >
+      <div className={cn('mb-1', isActive ? 'text-[#484848]' : 'text-muted-foreground')}>
+        {icon}
+      </div>
+      <span>{label}</span>
+    </Link>
+  );
+}
+
+// Mobile navigation item for side menu (user settings)
+function MobileMenuNavItem({ href, label, icon, isActive }: NavItemProps) {
   return (
     <Link
       href={href}
@@ -160,53 +176,17 @@ export function Navigation() {
     <>
       {/* Wrapper div that includes both the navigation and spacer */}
       <div>
-        {/* Spacer div with the same height as the navigation */}
+        {/* Spacers for fixed elements */}
         <div className='h-16 w-full'></div>
-        <header className='fixed top-0 z-30 flex h-16 items-center bg-background px-4 md:px-6 w-full'>
+
+        {/* Top header - fixed for all devices */}
+        <header className='fixed top-0 z-30 flex h-16 items-center bg-background px-4 md:px-6 w-full border-b'>
           <div className='w-full mx-auto flex items-center justify-between'>
             {/* Logo */}
             <div className='flex items-center'>
               <Link href='/' className='flex items-center gap-2 text-[#000000]'>
-                <span className='font-medium font-sans '>{workspace?.name}</span>
+                <span className='font-medium font-sans'>{workspace?.name}</span>
               </Link>
-            </div>
-
-            {/* Mobile Navigation */}
-            <div className='lg:hidden'>
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant='ghost' size='icon' className='h-9 w-9'>
-                    <CiMenuBurger className='h-5 w-5 text-[#484848]' />
-                    <span className='sr-only'>Toggle navigation menu</span>
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side='left' className='w-[85%] max-w-[300px] p-0'>
-                  <VisuallyHidden>
-                    <SheetTitle>Navigation Menu</SheetTitle>
-                  </VisuallyHidden>
-                  <div className='flex h-14 items-center border-b px-4'>
-                    <Link href='/' className='flex items-center gap-2 font-semibold text-[#484848]'>
-                      <CiBoxList className='h-6 w-6' />
-                      <span className='text-base'>Pulse</span>
-                    </Link>
-                  </div>
-                  <div className='overflow-y-auto max-h-[calc(100vh-3.5rem)]'>
-                    <nav className='grid gap-1 p-2'>
-                      {[...visibleNavigation, ...userNavigation].map((item) => {
-                        return (
-                          <MobileNavItem
-                            key={item.href}
-                            href={item.href}
-                            label={item.label}
-                            icon={item.icon}
-                            isActive={isNavItemActive(item.href)}
-                          />
-                        );
-                      })}
-                    </nav>
-                  </div>
-                </SheetContent>
-              </Sheet>
             </div>
 
             {/* Desktop Navigation */}
@@ -224,7 +204,7 @@ export function Navigation() {
               })}
             </nav>
 
-            {/* User Profile */}
+            {/* User Profile (visible on all devices) */}
             <div className='flex items-center'>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -274,6 +254,71 @@ export function Navigation() {
             </div>
           </div>
         </header>
+
+        {/* Mobile Bottom Navigation Bar */}
+        <div className='lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-background border-t'>
+          <nav className='flex justify-around items-center h-16'>
+            {visibleNavigation.slice(0, 5).map((item) => {
+              return (
+                <MobileBottomNavItem
+                  key={item.href}
+                  href={item.href}
+                  label={item.label}
+                  icon={item.icon}
+                  isActive={isNavItemActive(item.href)}
+                />
+              );
+            })}
+
+            {/* More menu for additional items */}
+            {visibleNavigation.length > 5 && (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <button className='flex flex-col items-center justify-center py-2 px-1 text-xs text-muted-foreground'>
+                    <CiMenuBurger className='h-5 w-5 mb-1' />
+                    <span>More</span>
+                  </button>
+                </SheetTrigger>
+                <SheetContent side='bottom' className='h-auto max-h-[40vh] pb-safe'>
+                  <div className='pt-6 pb-2'>
+                    <div className='flex justify-center pb-4 border-b'>
+                      <div className='h-1 w-12 bg-muted-foreground/30 rounded-full'></div>
+                    </div>
+                    <div className='grid grid-cols-4 gap-4 pt-4'>
+                      {visibleNavigation.slice(5).map((item) => {
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            className='flex flex-col items-center space-y-1 text-xs'
+                          >
+                            <div className='bg-muted rounded-full p-3'>{item.icon}</div>
+                            <span>{item.label}</span>
+                          </Link>
+                        );
+                      })}
+                      {userNavigation.map((item) => {
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            className='flex flex-col items-center space-y-1 text-xs'
+                          >
+                            <div className='bg-muted rounded-full p-3'>{item.icon}</div>
+                            <span>{item.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
+          </nav>
+        </div>
+
+        {/* Bottom spacer for mobile */}
+        <div className='h-16 w-full lg:hidden'></div>
       </div>
     </>
   );
