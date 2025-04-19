@@ -121,7 +121,7 @@ const ElementEditor: React.FC<ElementEditorProps> = ({
             editingElement.type === 'Dropdown') && (
             <div className='grid grid-cols-4 items-start gap-4'>
               <Label className='text-right mt-2'>Options</Label>
-              <div className='col-span-3 space-y-2 max-h-[200px] overflow-y-auto pr-1'>
+              <div className='col-span-3 space-y-2 max-h-[200px] overflow-y-auto p-1'>
                 {editingElement.options?.map((option, index) => {
                   return (
                     <div key={index} className='flex items-center gap-2'>
