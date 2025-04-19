@@ -273,40 +273,6 @@ export default function FormBuilder() {
     }
   };
 
-  const moveElementUp = (index: number) => {
-    if (index === 0) return;
-
-    const newElements = [...formElements];
-    const temp = newElements[index];
-    newElements[index] = newElements[index - 1];
-    newElements[index - 1] = temp;
-
-    // Update order property
-    newElements.forEach((element, idx) => {
-      element.order = idx;
-    });
-
-    setFormElements(newElements);
-    setChangesSaved(false);
-  };
-
-  const moveElementDown = (index: number) => {
-    if (index === formElements.length - 1) return;
-
-    const newElements = [...formElements];
-    const temp = newElements[index];
-    newElements[index] = newElements[index + 1];
-    newElements[index + 1] = temp;
-
-    // Update order property
-    newElements.forEach((element, idx) => {
-      element.order = idx;
-    });
-
-    setFormElements(newElements);
-    setChangesSaved(false);
-  };
-
   const openElementEditor = (element: FormElement) => {
     setEditingElement({ ...element });
   };
@@ -321,58 +287,6 @@ export default function FormBuilder() {
     setEditingElement(null);
     setChangesSaved(false);
     setShowValidationSettings(false);
-  };
-
-  const addCondition = (elementId: string) => {
-    const element = formElements.find((el) => {
-      return el.id === elementId;
-    });
-    if (!element) return;
-
-    // Find elements that can be used as condition sources (those that come before this element)
-    const availableSources = formElements.filter((el) => {
-      return (
-        el.order < element.order &&
-        (el.type === 'Radio Buttons' ||
-          el.type === 'Dropdown' ||
-          el.type === 'Checkboxes' ||
-          el.type === 'Single Response' ||
-          el.type === 'Short Answer' ||
-          el.type === 'Long Answer' ||
-          el.type === 'Phone Number')
-      );
-    });
-
-    if (availableSources.length === 0) {
-      alert(
-        'You need to add elements that can be used as condition sources before adding conditions.',
-      );
-      return;
-    }
-
-    // Create a new condition
-    const newCondition: Condition = {
-      id: generateId(),
-      sourceElementId: availableSources[0].id,
-      operator: 'equals',
-      value: '',
-    };
-
-    // Add the condition to the element
-    const updatedElement = {
-      ...element,
-      conditions: element.conditions ? [...element.conditions, newCondition] : [newCondition],
-    };
-
-    // Update the element in the form
-    const updatedElements = formElements.map((el) => {
-      return el.id === elementId ? updatedElement : el;
-    });
-
-    setFormElements(updatedElements);
-    setChangesSaved(false);
-    setEditingElement(updatedElement);
-    setShowConditionBuilder(true);
   };
 
   const removeCondition = (elementId: string, conditionId: string) => {
@@ -395,33 +309,6 @@ export default function FormBuilder() {
         ...editingElement,
         conditions: editingElement.conditions?.filter((condition) => {
           return condition.id !== conditionId;
-        }),
-      });
-    }
-
-    setChangesSaved(false);
-  };
-
-  const updateCondition = (elementId: string, conditionId: string, updates: Partial<Condition>) => {
-    const updatedElements = formElements.map((element) => {
-      if (element.id === elementId && element.conditions) {
-        return {
-          ...element,
-          conditions: element.conditions.map((condition) => {
-            return condition.id === conditionId ? { ...condition, ...updates } : condition;
-          }),
-        };
-      }
-      return element;
-    });
-
-    setFormElements(updatedElements);
-
-    if (editingElement && editingElement.id === elementId) {
-      setEditingElement({
-        ...editingElement,
-        conditions: editingElement.conditions?.map((condition) => {
-          return condition.id === conditionId ? { ...condition, ...updates } : condition;
         }),
       });
     }
@@ -1090,7 +977,7 @@ export default function FormBuilder() {
                                   variant='ghost'
                                   className='justify-start text-sm'
                                   onClick={() => {
-                                    return addCondition(element.id);
+                                    console.log('add condition');
                                   }}
                                 >
                                   <Eye className='h-4 w-4 mr-2' />
