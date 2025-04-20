@@ -574,7 +574,7 @@ export const FormBuilderProvider: React.FC<{
         enabled: true,
         config: {
           projectNameTemplate: 'Form Submission - {{submission_date}}',
-          description: 'Project created from form submission by {{client_name}}',
+          description: 'Project created',
         },
       },
       {
@@ -603,33 +603,91 @@ export const FormBuilderProvider: React.FC<{
 
   // Automation functions
   const addAutomation = (automation?: Automation) => {
-    const newAutomation: Automation = automation || {
-      id: generateId(),
-      name: 'New Automation',
-      type: 'send_email',
-      enabled: true,
-      config: {},
+    console.log('Adding automation to context:', automation);
+
+    if (!automation) {
+      console.log('No automation provided, skipping');
+      return;
+    }
+
+    // Check if automation with this ID already exists
+    const exists = automations.some((a) => {
+      return a.id === automation.id;
+    });
+    if (exists) {
+      console.log('Automation with this ID already exists, updating instead of adding');
+      editAutomation(automation);
+      return;
+    }
+
+    const newAutomation: Automation = {
+      id: automation.id || generateId(),
+      name: automation.name || 'New Automation',
+      type: automation.type || 'send_email',
+      enabled: automation.enabled ?? true,
+      config: automation.config || {},
     };
 
-    setAutomations([...automations, newAutomation]);
+    console.log('Adding new automation to state:', newAutomation);
+    console.log('Current automations before adding:', automations);
+
+    // Use functional update to ensure we get the latest state
+    setAutomations((prevAutomations) => {
+      const newState = [...prevAutomations, newAutomation];
+      console.log('New automations state after adding:', newState);
+      return newState;
+    });
+
     setChangesSaved(false);
   };
 
   const editAutomation = (automation: Automation) => {
-    setAutomations(
-      automations.map((item) => {
+    console.log('Editing automation in context:', automation);
+
+    if (!automation || !automation.id) {
+      console.log('Invalid automation for editing, missing ID');
+      return;
+    }
+
+    // Check if automation exists
+    const exists = automations.some((a) => {
+      return a.id === automation.id;
+    });
+    if (!exists) {
+      console.log('Automation not found for editing, adding instead');
+      addAutomation(automation);
+      return;
+    }
+
+    // Use functional update to ensure we get the latest state
+    setAutomations((prevAutomations) => {
+      const newState = prevAutomations.map((item) => {
         return item.id === automation.id ? automation : item;
-      }),
-    );
+      });
+      console.log('New automations state after editing:', newState);
+      return newState;
+    });
+
     setChangesSaved(false);
   };
 
   const deleteAutomation = (id: string) => {
-    setAutomations(
-      automations.filter((item) => {
+    console.log('Deleting automation with ID:', id);
+
+    if (!id) {
+      console.log('Invalid ID for deletion');
+      return;
+    }
+
+    // Use functional update to ensure we get the latest state
+    setAutomations((prevAutomations) => {
+      const newState = prevAutomations.filter((item) => {
         return item.id !== id;
-      }),
-    );
+      });
+      console.log('New automations state after deletion:', newState);
+      return newState;
+    });
+
     setChangesSaved(false);
   };
 

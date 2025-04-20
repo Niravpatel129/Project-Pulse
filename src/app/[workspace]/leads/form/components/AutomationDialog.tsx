@@ -114,23 +114,37 @@ export function AutomationDialog({
   const [fieldMappings, setFieldMappings] = useState<Record<string, string>>({});
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
 
-  // Set initial values when editing an existing automation
+  // Debug log when automation prop changes
   useEffect(() => {
-    if (automation) {
-      setName(automation.name);
-      setType(automation.type);
-      setConfig(automation.config || {});
-      // When editing an existing automation, set the active tab to configuration
-      setActiveTab('config');
-    } else {
-      // Default values for new automation
-      setName('New Automation');
-      setType('send_email');
-      setConfig({});
-      // When creating a new automation, start with general tab
-      setActiveTab('general');
+    console.log('AutomationDialog received automation prop:', automation);
+  }, [automation]);
+
+  // Set initial values when dialog opens or automation changes
+  useEffect(() => {
+    // Only update state when dialog is open to prevent unnecessary state updates
+    if (open) {
+      console.log('Dialog open, initializing with automation:', automation);
+
+      if (automation) {
+        console.log('Setting fields from automation:', {
+          name: automation.name,
+          type: automation.type,
+          config: automation.config || {},
+        });
+
+        setName(automation.name);
+        setType(automation.type);
+        setConfig(automation.config || {});
+        setActiveTab('config'); // Start with config tab for existing automations
+      } else {
+        console.log('No automation provided, using defaults');
+        setName('New Automation');
+        setType('send_email');
+        setConfig({});
+        setActiveTab('general');
+      }
     }
-  }, [automation, open]);
+  }, [open, automation]);
 
   // Generate variables list based on available form elements
   useEffect(() => {
@@ -275,21 +289,28 @@ export function AutomationDialog({
     setFieldMappings(mappings);
   }, [formElements]);
 
+  // Handle save and ensure we use the values from state
   const handleSave = () => {
+    console.log('Preparing to save automation with current state:', { name, type, config });
+
+    // Use the ID from the provided automation if available, otherwise generate new ID
+    const id = automation?.id || generateId();
+
     const newAutomation: Automation = {
-      id: automation?.id || generateId(),
+      id,
       name,
       type,
       enabled: automation?.enabled ?? true,
       config: {
         ...config,
-        // Store the field mappings in the config so we can find the actual fields later
         fieldMappings,
       },
     };
 
+    console.log('Final automation object to save:', newAutomation);
+
+    // Pass to parent component
     onSave(newAutomation);
-    onOpenChange(false);
   };
 
   // Function to insert variable into a field
@@ -622,7 +643,17 @@ export function AutomationDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(newOpen) => {
+        console.log('Dialog open state changing to:', newOpen);
+        if (!newOpen) {
+          // If we're closing the dialog, call onOpenChange to notify parent
+          console.log('Closing dialog');
+        }
+        onOpenChange(newOpen);
+      }}
+    >
       <DialogContent className='sm:max-w-[600px]'>
         <DialogHeader>
           <DialogTitle>{automation ? 'Edit Automation' : 'Add Automation'}</DialogTitle>
@@ -687,12 +718,21 @@ export function AutomationDialog({
           <Button
             variant='outline'
             onClick={() => {
-              return onOpenChange(false);
+              console.log('Cancel button clicked');
+              onOpenChange(false);
             }}
           >
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save Automation</Button>
+          <Button
+            onClick={() => {
+              console.log('Save button clicked');
+              handleSave();
+              onOpenChange(false); // Close dialog after saving
+            }}
+          >
+            Save Automation
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

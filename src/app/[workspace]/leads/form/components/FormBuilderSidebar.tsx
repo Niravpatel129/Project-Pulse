@@ -129,22 +129,39 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
 
   // Add state for automation dialog
   const [automationDialogOpen, setAutomationDialogOpen] = useState(false);
-  const [currentAutomation, setCurrentAutomation] = useState<Automation | undefined>(undefined);
+  const [currentAutomation, setCurrentAutomation] = useState<Automation | null>(null);
 
   // Function to handle adding new automation
   const handleAddAutomation = (type?: AutomationType) => {
+    console.log('Starting to add new automation of type:', type);
+
+    // First set currentAutomation to null (not undefined) to ensure React detects the state change
+    setCurrentAutomation(null);
+
     if (type) {
-      setCurrentAutomation({
+      // Create the automation template first before opening dialog
+      const newAutomationTemplate = {
         id: generateId(),
         name: getDefaultNameForType(type),
         type,
         enabled: true,
         config: getDefaultConfigForType(type),
-      });
+      };
+
+      console.log('Created template, setting currentAutomation:', newAutomationTemplate);
+
+      // Set the current automation and then wait for the state to update before opening dialog
+      setCurrentAutomation(newAutomationTemplate);
+
+      // Wait a moment for the state to update
+      setTimeout(() => {
+        console.log('Opening dialog with currentAutomation:', newAutomationTemplate);
+        setAutomationDialogOpen(true);
+      }, 50);
     } else {
-      setCurrentAutomation(undefined);
+      // For generic automation with no type, open dialog immediately
+      setAutomationDialogOpen(true);
     }
-    setAutomationDialogOpen(true);
   };
 
   // Get default name based on automation type
@@ -167,7 +184,7 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
       case 'create_project':
         return {
           projectNameTemplate: 'Form Submission - {{submission_date}}',
-          description: 'Project created from form submission by {{client_name}}',
+          description: 'Project created',
         };
       case 'assign_project_manager':
         return {
@@ -193,11 +210,36 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
 
   // Function to save automation
   const handleSaveAutomation = (automation: Automation) => {
-    if (currentAutomation) {
-      editAutomation(automation);
-    } else {
+    console.log('Saving automation:', automation);
+    console.log('Current automation before save:', currentAutomation);
+    console.log('Current automations before save:', automations);
+
+    // Always use addAutomation for new automations
+    if (
+      !automation.id ||
+      !automations.some((a) => {
+        return a.id === automation.id;
+      })
+    ) {
+      console.log('Adding new automation');
       addAutomation(automation);
+    } else {
+      console.log('Editing existing automation');
+      editAutomation(automation);
     }
+
+    // Force a re-render by setting current automation to null
+    setCurrentAutomation(null);
+
+    // Close the dialog
+    setAutomationDialogOpen(false);
+
+    // Switch to the automations tab after a delay to ensure state updates have propagated
+    setTimeout(() => {
+      console.log('Switching to automations tab');
+      console.log('Current automations after save:', automations);
+      setActiveTab('automations');
+    }, 100);
   };
 
   const openElementEditor = (element: any) => {
