@@ -111,6 +111,7 @@ export function FormBuilder({
   className = '',
 }: FormBuilderProps) {
   const [values, setValues] = useState<Record<string, any>>({});
+  const [files, setFiles] = useState<Record<string, File>>({});
   const [submitting, setSubmitting] = useState(false);
 
   // Sort elements by order if available
@@ -119,12 +120,64 @@ export function FormBuilder({
   });
 
   const handleFieldChange = (elementId: string, value: any) => {
+    // Handle file uploads separately
+    if (value instanceof File) {
+      setFiles((prev) => {
+        return {
+          ...prev,
+          [elementId]: value,
+        };
+      });
+    }
+
     setValues((prev) => {
       return {
         ...prev,
         [elementId]: value,
       };
     });
+  };
+
+  // Transform collected form data to the desired format
+  const transformFormData = () => {
+    const formId = formData.id;
+    const formFields = [];
+
+    // Process form values
+    for (const elementId in values) {
+      // Find the element that corresponds to this value
+      const element = formData.elements.find((el) => {
+        return el.id === elementId;
+      });
+
+      if (element) {
+        formFields.push({
+          id: elementId,
+          label: element.title || '',
+          value: values[elementId],
+          type: element.type,
+        });
+      } else if (
+        elementId === 'email' ||
+        elementId === 'name' ||
+        elementId === 'phone' ||
+        elementId === 'company' ||
+        elementId === 'address'
+      ) {
+        // Handle client detail fields that might not have a direct element
+        formFields.push({
+          id: elementId,
+          label: elementId.charAt(0).toUpperCase() + elementId.slice(1),
+          value: values[elementId],
+        });
+      }
+    }
+
+    return {
+      formId,
+      fields: formFields,
+      files,
+    };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -134,10 +187,15 @@ export function FormBuilder({
 
     try {
       setSubmitting(true);
-      await onSubmit(values);
+
+      // Transform to the desired format before submission
+      const formattedData = transformFormData();
+
+      await onSubmit(formattedData);
 
       // Reset form after successful submission
       setValues({});
+      setFiles({});
 
       toast.success('Form submitted successfully');
     } catch (error) {

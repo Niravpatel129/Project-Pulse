@@ -256,7 +256,16 @@ export default function FormDemo() {
   const demoForm = createDemoForm();
   const conditionalForm = createConditionalForm();
 
-  const handleSubmit = async (formData: any) => {
+  const handleSubmit = async (formData: {
+    formId: string;
+    fields: Array<{
+      id: string;
+      label: string;
+      value: any;
+      type?: string;
+    }>;
+    files: Record<string, File>;
+  }) => {
     setIsSubmitting(true);
 
     // Simulate submission delay
@@ -265,6 +274,12 @@ export default function FormDemo() {
     });
 
     console.log('Form data submitted:', formData);
+
+    // Log files separately if any
+    if (Object.keys(formData.files).length > 0) {
+      console.log('Files to be uploaded:', formData.files);
+    }
+
     toast.success('Form submitted successfully (demo only)');
 
     setIsSubmitting(false);

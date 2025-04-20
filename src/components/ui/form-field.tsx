@@ -423,7 +423,8 @@ export function FormField({
           required={required}
           disabled={disabled}
           onChange={(e) => {
-            return onChange?.(e.target.files?.[0] || null);
+            const file = e.target.files?.[0] || null;
+            return onChange?.(file);
           }}
           className='w-full'
         />

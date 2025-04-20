@@ -30,14 +30,44 @@ export default function LeadPage() {
     },
   });
 
-  const handleSubmit = async (formData: FormData) => {
+  const handleSubmit = async (formData: {
+    formId: string;
+    fields: Array<{
+      id: string;
+      label: string;
+      value: any;
+      type?: string;
+    }>;
+    files: Record<string, File>;
+  }) => {
     setIsSubmitting(true);
 
     try {
+      // Create FormData object for submitting files
+      const submitFormData = new FormData();
+
+      // Add form ID
+      submitFormData.append('formId', formData.formId);
+
+      // Add serialized form fields data
+      const fieldsData = {};
+
+      formData.fields.forEach((field) => {
+        fieldsData[field.id] = field.value;
+      });
+
+      submitFormData.append('data', JSON.stringify(fieldsData));
+
+      // Add files if any
+      Object.entries(formData.files).forEach(([fieldId, file]) => {
+        submitFormData.append(`file_${fieldId}`, file);
+      });
+
       // Submit form data to your API
-      const response = await newRequest.post(`/lead-forms/${id}/submit`, {
-        formId: id,
-        data: formData,
+      const response = await newRequest.post(`/lead-forms/${id}/submit`, submitFormData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
       // Get the submissionId from the response
