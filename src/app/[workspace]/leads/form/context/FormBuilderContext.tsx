@@ -573,8 +573,10 @@ export const FormBuilderProvider: React.FC<{
         type: 'create_project',
         enabled: true,
         config: {
-          projectNameTemplate: 'Form Submission - {submission_date}',
-          description: 'Project created from lead form submission',
+          projectNameTemplate: 'Form Submission - {{submission_date}}',
+          description: 'Project created from form submission by {{client_name}}',
+          projectTemplate:
+            'Task 1: Initial consultation\nTask 2: Gather requirements\nTask 3: Project planning\nMilestone: Project kickoff',
         },
       },
       {
@@ -594,7 +596,7 @@ export const FormBuilderProvider: React.FC<{
         enabled: true,
         config: {
           subject: 'Welcome to our project!',
-          template: 'welcome',
+          body: 'Dear {{client_name}},\n\nThank you for submitting your request. We have created a new project: {{project_name}}.\n\nYou can view your project status at any time using this link: {{project_link}}\n\nBest regards,\nYour Project Team',
           ccTeam: false,
         },
       },

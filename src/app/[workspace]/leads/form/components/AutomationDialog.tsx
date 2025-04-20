@@ -108,42 +108,79 @@ export function AutomationDialog({
             </div>
 
             <div className='space-y-2'>
-              <Label htmlFor='email-template'>Email Template</Label>
-              <Select
-                value={config.template || 'welcome'}
-                onValueChange={(value) => {
-                  return setConfig({ ...config, template: value });
+              <Label htmlFor='email-body'>Email Content</Label>
+              <Textarea
+                id='email-body'
+                value={config.body || ''}
+                onChange={(e) => {
+                  return setConfig({ ...config, body: e.target.value });
                 }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder='Select template' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='welcome'>Welcome Email</SelectItem>
-                  <SelectItem value='onboarding'>Project Onboarding</SelectItem>
-                  <SelectItem value='custom'>Custom Template</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {config.template === 'custom' && (
-              <div className='space-y-2'>
-                <Label htmlFor='email-body'>Email Body</Label>
-                <Textarea
-                  id='email-body'
-                  value={config.body || ''}
-                  onChange={(e) => {
-                    return setConfig({ ...config, body: e.target.value });
+                placeholder='Enter email content'
+                rows={6}
+              />
+              <div className='flex flex-wrap gap-2 mt-2'>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  type='button'
+                  onClick={() => {
+                    const textarea = document.getElementById('email-body') as HTMLTextAreaElement;
+                    const cursorPos = textarea.selectionStart;
+                    const textBefore = config.body?.substring(0, cursorPos) || '';
+                    const textAfter = config.body?.substring(cursorPos) || '';
+                    const newText = textBefore + '{{client_name}}' + textAfter;
+                    setConfig({ ...config, body: newText });
                   }}
-                  placeholder='Enter email content'
-                  rows={6}
-                />
-                <p className='text-xs text-gray-500'>
-                  You can use {'{client_name}'}, {'{project_name}'}, and {'{project_link}'} as
-                  variables
-                </p>
+                >
+                  Client Name
+                </Button>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  type='button'
+                  onClick={() => {
+                    const textarea = document.getElementById('email-body') as HTMLTextAreaElement;
+                    const cursorPos = textarea.selectionStart;
+                    const textBefore = config.body?.substring(0, cursorPos) || '';
+                    const textAfter = config.body?.substring(cursorPos) || '';
+                    const newText = textBefore + '{{project_name}}' + textAfter;
+                    setConfig({ ...config, body: newText });
+                  }}
+                >
+                  Project Name
+                </Button>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  type='button'
+                  onClick={() => {
+                    const textarea = document.getElementById('email-body') as HTMLTextAreaElement;
+                    const cursorPos = textarea.selectionStart;
+                    const textBefore = config.body?.substring(0, cursorPos) || '';
+                    const textAfter = config.body?.substring(cursorPos) || '';
+                    const newText = textBefore + '{{project_link}}' + textAfter;
+                    setConfig({ ...config, body: newText });
+                  }}
+                >
+                  Project Link
+                </Button>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  type='button'
+                  onClick={() => {
+                    const textarea = document.getElementById('email-body') as HTMLTextAreaElement;
+                    const cursorPos = textarea.selectionStart;
+                    const textBefore = config.body?.substring(0, cursorPos) || '';
+                    const textAfter = config.body?.substring(cursorPos) || '';
+                    const newText = textBefore + '{{submission_date}}' + textAfter;
+                    setConfig({ ...config, body: newText });
+                  }}
+                >
+                  Submission Date
+                </Button>
               </div>
-            )}
+            </div>
 
             <div className='flex items-center space-x-2 pt-2'>
               <Checkbox
@@ -188,27 +225,127 @@ export function AutomationDialog({
                 placeholder='Enter project description'
                 rows={4}
               />
+              <div className='flex flex-wrap gap-2 mt-2'>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  type='button'
+                  onClick={() => {
+                    const textarea = document.getElementById(
+                      'project-description',
+                    ) as HTMLTextAreaElement;
+                    const cursorPos = textarea.selectionStart;
+                    const textBefore = config.description?.substring(0, cursorPos) || '';
+                    const textAfter = config.description?.substring(cursorPos) || '';
+                    const newText = textBefore + '{{client_name}}' + textAfter;
+                    setConfig({ ...config, description: newText });
+                  }}
+                >
+                  Client Name
+                </Button>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  type='button'
+                  onClick={() => {
+                    const textarea = document.getElementById(
+                      'project-description',
+                    ) as HTMLTextAreaElement;
+                    const cursorPos = textarea.selectionStart;
+                    const textBefore = config.description?.substring(0, cursorPos) || '';
+                    const textAfter = config.description?.substring(cursorPos) || '';
+                    const newText = textBefore + '{{form_title}}' + textAfter;
+                    setConfig({ ...config, description: newText });
+                  }}
+                >
+                  Form Title
+                </Button>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  type='button'
+                  onClick={() => {
+                    const textarea = document.getElementById(
+                      'project-description',
+                    ) as HTMLTextAreaElement;
+                    const cursorPos = textarea.selectionStart;
+                    const textBefore = config.description?.substring(0, cursorPos) || '';
+                    const textAfter = config.description?.substring(cursorPos) || '';
+                    const newText = textBefore + '{{submission_date}}' + textAfter;
+                    setConfig({ ...config, description: newText });
+                  }}
+                >
+                  Submission Date
+                </Button>
+              </div>
             </div>
 
             <div className='space-y-2'>
-              <Label htmlFor='project-template'>Project Template (Optional)</Label>
-              <Select
-                value={config.projectTemplate || 'none'}
-                onValueChange={(value) => {
-                  return setConfig({ ...config, projectTemplate: value });
+              <Label htmlFor='project-template'>Project Template Content</Label>
+              <Textarea
+                id='project-template'
+                value={config.projectTemplate || ''}
+                onChange={(e) => {
+                  return setConfig({ ...config, projectTemplate: e.target.value });
                 }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder='Select template' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='none'>No Template</SelectItem>
-                  <SelectItem value='basic'>Basic Project</SelectItem>
-                  <SelectItem value='advanced'>Advanced Project</SelectItem>
-                </SelectContent>
-              </Select>
+                placeholder='Enter project template content (tasks, milestones, etc.)'
+                rows={6}
+              />
+              <div className='flex flex-wrap gap-2 mt-2'>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  type='button'
+                  onClick={() => {
+                    const textarea = document.getElementById(
+                      'project-template',
+                    ) as HTMLTextAreaElement;
+                    const cursorPos = textarea.selectionStart;
+                    const textBefore = config.projectTemplate?.substring(0, cursorPos) || '';
+                    const textAfter = config.projectTemplate?.substring(cursorPos) || '';
+                    const newText = textBefore + '{{client_name}}' + textAfter;
+                    setConfig({ ...config, projectTemplate: newText });
+                  }}
+                >
+                  Client Name
+                </Button>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  type='button'
+                  onClick={() => {
+                    const textarea = document.getElementById(
+                      'project-template',
+                    ) as HTMLTextAreaElement;
+                    const cursorPos = textarea.selectionStart;
+                    const textBefore = config.projectTemplate?.substring(0, cursorPos) || '';
+                    const textAfter = config.projectTemplate?.substring(cursorPos) || '';
+                    const newText = textBefore + '{{form_title}}' + textAfter;
+                    setConfig({ ...config, projectTemplate: newText });
+                  }}
+                >
+                  Form Title
+                </Button>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  type='button'
+                  onClick={() => {
+                    const textarea = document.getElementById(
+                      'project-template',
+                    ) as HTMLTextAreaElement;
+                    const cursorPos = textarea.selectionStart;
+                    const textBefore = config.projectTemplate?.substring(0, cursorPos) || '';
+                    const textAfter = config.projectTemplate?.substring(cursorPos) || '';
+                    const newText = textBefore + '{{submission_date}}' + textAfter;
+                    setConfig({ ...config, projectTemplate: newText });
+                  }}
+                >
+                  Submission Date
+                </Button>
+              </div>
               <p className='text-xs text-gray-500'>
-                Templates include predefined tasks and milestones
+                Specify tasks, milestones, and other project structure
               </p>
             </div>
           </div>

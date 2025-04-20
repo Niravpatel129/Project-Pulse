@@ -108,7 +108,7 @@ const FormBuilderHeader: React.FC = () => {
           </Button>
           <div className='flex flex-col'>
             <div className='flex items-center gap-2'>
-              <span className='font-medium text-gray-800 text-base md:text-lg tracking-tight'>
+              <span className='font-medium text-gray-800 text-base tracking-tight'>
                 {isEditMode ? 'Edit Form' : 'Create Form'}
               </span>
               <span className='text-gray-400 hidden sm:inline'>/</span>
