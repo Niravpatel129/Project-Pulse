@@ -80,7 +80,7 @@ export const useFormElements = () => {
       id: generateId(),
       type: 'Client Details',
       title: 'Client Details',
-      description: 'Collect client information',
+      description: 'Contact Information',
       required: true, // Client details section is required
       order: formElements.length,
       showWhen: 'all',

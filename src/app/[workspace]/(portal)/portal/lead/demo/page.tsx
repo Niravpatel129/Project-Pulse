@@ -273,7 +273,18 @@ export default function FormDemo() {
       return setTimeout(resolve, 1500);
     });
 
-    console.log('Form data submitted:', formData);
+    // Transform data to use labels as keys
+    const transformedData = {
+      formId: formData.formId,
+      data: {},
+    };
+
+    formData.fields.forEach((field) => {
+      const key = field.label && field.label.trim() !== '' ? field.label : field.id;
+      transformedData.data[key] = field.value;
+    });
+
+    console.log('Form data submitted:', transformedData);
 
     // Log files separately if any
     if (Object.keys(formData.files).length > 0) {

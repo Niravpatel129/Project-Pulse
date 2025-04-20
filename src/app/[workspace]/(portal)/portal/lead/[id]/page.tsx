@@ -49,11 +49,13 @@ export default function LeadPage() {
       // Add form ID
       submitFormData.append('formId', formData.formId);
 
-      // Add serialized form fields data
+      // Add serialized form fields data using labels as keys instead of IDs
       const fieldsData = {};
 
       formData.fields.forEach((field) => {
-        fieldsData[field.id] = field.value;
+        // Use field label as key if available, otherwise fall back to ID
+        const key = field.label && field.label.trim() !== '' ? field.label : field.id;
+        fieldsData[key] = field.value;
       });
 
       submitFormData.append('data', JSON.stringify(fieldsData));

@@ -255,8 +255,8 @@ export const FormBuilderProvider: React.FC<{
     const newElement: FormElement = {
       id: generateId(),
       type: 'Client Details',
-      title: 'Client Details',
-      description: 'Collect client information',
+      title: 'Contact Details',
+      description: 'Contact Information',
       required: true, // Client details section is required
       order: formElements.length,
       showWhen: 'all',

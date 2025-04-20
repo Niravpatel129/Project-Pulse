@@ -153,7 +153,7 @@ export function FormBuilder({
       if (element) {
         formFields.push({
           id: elementId,
-          label: element.title || '',
+          label: element.title || elementId, // Use title as label or fall back to ID
           value: values[elementId],
           type: element.type,
         });
