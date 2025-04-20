@@ -8,7 +8,7 @@ import { FormElement, FormValues } from '../types';
 import { generateId } from '../utils';
 
 // Define the automation types
-type AutomationType = 'send_email' | 'create_task' | 'custom_workflow';
+type AutomationType = 'send_email' | 'create_project' | 'assign_project_manager';
 
 // Define the automation interface
 interface Automation {
@@ -88,6 +88,7 @@ type FormBuilderContextType = {
   editAutomation: (automation: Automation) => void;
   deleteAutomation: (id: string) => void;
   toggleAutomation: (id: string) => void;
+  getDefaultAutomations: () => Automation[];
 };
 
 const FormBuilderContext = createContext<FormBuilderContextType | undefined>(undefined);
@@ -125,6 +126,7 @@ export const FormBuilderProvider: React.FC<{
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [formTitle, setFormTitle] = useState('Untitled form');
   const [automations, setAutomations] = useState<Automation[]>([]);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -139,6 +141,14 @@ export const FormBuilderProvider: React.FC<{
     enabled: isEditMode && !!formId,
   });
 
+  // Create default automations only on initial load for new forms
+  useEffect(() => {
+    if (!isEditMode && !initialLoadComplete) {
+      setAutomations(getDefaultAutomations());
+      setInitialLoadComplete(true);
+    }
+  }, [isEditMode, initialLoadComplete]);
+
   // Initialize form with existing data if in edit mode
   useEffect(() => {
     if (isEditMode && formData && !isLoadingForm) {
@@ -148,10 +158,14 @@ export const FormBuilderProvider: React.FC<{
       }
       if (formData.automations && Array.isArray(formData.automations)) {
         setAutomations(formData.automations);
+      } else if (!initialLoadComplete) {
+        // Only set default automations if this is the first load
+        setAutomations(getDefaultAutomations());
       }
+      setInitialLoadComplete(true);
       setChangesSaved(true);
     }
-  }, [isEditMode, formData, isLoadingForm]);
+  }, [isEditMode, formData, isLoadingForm, initialLoadComplete]);
 
   // Initialize form values for preview mode
   useEffect(() => {
@@ -550,6 +564,43 @@ export const FormBuilderProvider: React.FC<{
     setChangesSaved(false);
   };
 
+  // Get default automations
+  const getDefaultAutomations = (): Automation[] => {
+    return [
+      {
+        id: generateId(),
+        name: 'Create Project Automatically',
+        type: 'create_project',
+        enabled: true,
+        config: {
+          projectNameTemplate: 'Form Submission - {submission_date}',
+          description: 'Project created from lead form submission',
+        },
+      },
+      {
+        id: generateId(),
+        name: 'Assign Project Manager',
+        type: 'assign_project_manager',
+        enabled: true,
+        config: {
+          assigneeType: 'auto',
+          notifyAssignee: true,
+        },
+      },
+      {
+        id: generateId(),
+        name: 'Send Welcome Email',
+        type: 'send_email',
+        enabled: true,
+        config: {
+          subject: 'Welcome to our project!',
+          template: 'welcome',
+          ccTeam: false,
+        },
+      },
+    ];
+  };
+
   // Automation functions
   const addAutomation = (automation?: Automation) => {
     const newAutomation: Automation = automation || {
@@ -663,6 +714,7 @@ export const FormBuilderProvider: React.FC<{
     editAutomation,
     deleteAutomation,
     toggleAutomation,
+    getDefaultAutomations,
   };
 
   return <FormBuilderContext.Provider value={value}>{children}</FormBuilderContext.Provider>;

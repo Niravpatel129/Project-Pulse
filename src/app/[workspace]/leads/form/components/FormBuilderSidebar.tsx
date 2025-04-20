@@ -84,7 +84,7 @@ type FormBuilderSidebarProps = {
 };
 
 // Define the automation types
-type AutomationType = 'send_email' | 'create_task' | 'custom_workflow';
+type AutomationType = 'send_email' | 'create_project' | 'assign_project_manager';
 
 // Define the automation interface
 interface Automation {
@@ -133,9 +133,57 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
   const [currentAutomation, setCurrentAutomation] = useState<Automation | undefined>(undefined);
 
   // Function to handle adding new automation
-  const handleAddAutomation = () => {
-    setCurrentAutomation(undefined);
+  const handleAddAutomation = (type?: AutomationType) => {
+    if (type) {
+      setCurrentAutomation({
+        id: generateId(),
+        name: getDefaultNameForType(type),
+        type,
+        enabled: true,
+        config: getDefaultConfigForType(type),
+      });
+    } else {
+      setCurrentAutomation(undefined);
+    }
     setAutomationDialogOpen(true);
+  };
+
+  // Get default name based on automation type
+  const getDefaultNameForType = (type: AutomationType): string => {
+    switch (type) {
+      case 'create_project':
+        return 'Create Project Automatically';
+      case 'assign_project_manager':
+        return 'Assign Project Manager';
+      case 'send_email':
+        return 'Send Welcome Email';
+      default:
+        return 'New Automation';
+    }
+  };
+
+  // Get default config based on automation type
+  const getDefaultConfigForType = (type: AutomationType): Record<string, any> => {
+    switch (type) {
+      case 'create_project':
+        return {
+          projectNameTemplate: 'Form Submission - {submission_date}',
+          description: 'Project created from lead form submission',
+        };
+      case 'assign_project_manager':
+        return {
+          assigneeType: 'auto',
+          notifyAssignee: true,
+        };
+      case 'send_email':
+        return {
+          subject: 'Welcome to our project!',
+          template: 'welcome',
+          ccTeam: false,
+        };
+      default:
+        return {};
+    }
   };
 
   // Function to handle editing automation
@@ -196,10 +244,10 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
     switch (type) {
       case 'send_email':
         return <MessageSquare className='h-4 w-4' />;
-      case 'create_task':
-        return <CheckSquare className='h-4 w-4' />;
-      case 'custom_workflow':
-        return <Zap className='h-4 w-4' />;
+      case 'create_project':
+        return <Plus className='h-4 w-4' />;
+      case 'assign_project_manager':
+        return <User2 className='h-4 w-4' />;
       default:
         return <Zap className='h-4 w-4' />;
     }
@@ -210,10 +258,10 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
     switch (type) {
       case 'send_email':
         return 'Send Email';
-      case 'create_task':
-        return 'Create Task';
-      case 'custom_workflow':
-        return 'Custom Workflow';
+      case 'create_project':
+        return 'Create Project';
+      case 'assign_project_manager':
+        return 'Assign Project Manager';
       default:
         return 'Automation';
     }
@@ -687,10 +735,57 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
               <p className='text-gray-500 mb-4'>
                 Automations help you save time by automating project onboarding tasks
               </p>
-              <Button onClick={handleAddAutomation} className='gap-2'>
-                <Plus className='h-4 w-4' />
-                Add project automation
-              </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button className='gap-2'>
+                    <Plus className='h-4 w-4' />
+                    Add project automation
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className='w-64 p-1' side='top' align='center'>
+                  <div className='space-y-1'>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      className='w-full justify-start h-10'
+                      onClick={() => {
+                        return handleAddAutomation('create_project');
+                      }}
+                    >
+                      <div className='h-7 w-7 rounded-full bg-purple-50 flex items-center justify-center mr-2'>
+                        <Plus className='h-4 w-4 text-purple-600' />
+                      </div>
+                      Create Project
+                    </Button>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      className='w-full justify-start h-10'
+                      onClick={() => {
+                        return handleAddAutomation('assign_project_manager');
+                      }}
+                    >
+                      <div className='h-7 w-7 rounded-full bg-green-50 flex items-center justify-center mr-2'>
+                        <User2 className='h-4 w-4 text-green-600' />
+                      </div>
+                      Assign Project Manager
+                    </Button>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      className='w-full justify-start h-10'
+                      onClick={() => {
+                        return handleAddAutomation('send_email');
+                      }}
+                    >
+                      <div className='h-7 w-7 rounded-full bg-blue-50 flex items-center justify-center mr-2'>
+                        <MessageSquare className='h-4 w-4 text-blue-600' />
+                      </div>
+                      Send Welcome Email
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           ) : (
             <div className='space-y-3'>
@@ -777,14 +872,60 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
 
               <div className='relative'>
                 <div className='absolute left-[7px] top-0 w-[2px] h-[20px] bg-gray-200'></div>
-                <Button
-                  variant='outline'
-                  className='ml-6 w-[calc(100%-24px)] h-12 gap-2 border-dashed border-gray-300 rounded-lg'
-                  onClick={handleAddAutomation}
-                >
-                  <Plus className='h-4 w-4' />
-                  Add automation step
-                </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant='outline'
+                      className='ml-6 w-[calc(100%-24px)] h-12 gap-2 border-dashed border-gray-300 rounded-lg'
+                    >
+                      <Plus className='h-4 w-4' />
+                      Add automation step
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className='w-64 p-1' side='top' align='center'>
+                    <div className='space-y-1'>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        className='w-full justify-start h-10'
+                        onClick={() => {
+                          return handleAddAutomation('create_project');
+                        }}
+                      >
+                        <div className='h-7 w-7 rounded-full bg-purple-50 flex items-center justify-center mr-2'>
+                          <Plus className='h-4 w-4 text-purple-600' />
+                        </div>
+                        Create Project
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        className='w-full justify-start h-10'
+                        onClick={() => {
+                          return handleAddAutomation('assign_project_manager');
+                        }}
+                      >
+                        <div className='h-7 w-7 rounded-full bg-green-50 flex items-center justify-center mr-2'>
+                          <User2 className='h-4 w-4 text-green-600' />
+                        </div>
+                        Assign Project Manager
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        className='w-full justify-start h-10'
+                        onClick={() => {
+                          return handleAddAutomation('send_email');
+                        }}
+                      >
+                        <div className='h-7 w-7 rounded-full bg-blue-50 flex items-center justify-center mr-2'>
+                          <MessageSquare className='h-4 w-4 text-blue-600' />
+                        </div>
+                        Send Welcome Email
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className='flex items-center gap-2 px-3 py-2'>

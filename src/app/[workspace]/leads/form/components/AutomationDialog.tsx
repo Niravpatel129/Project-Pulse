@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -19,10 +20,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { useEffect, useState } from 'react';
 
 // Define the automation types
-type AutomationType = 'send_email' | 'create_task' | 'custom_workflow';
+type AutomationType = 'send_email' | 'create_project' | 'assign_project_manager';
 
 // Define the automation interface
 interface Automation {
@@ -59,11 +61,15 @@ export function AutomationDialog({
       setName(automation.name);
       setType(automation.type);
       setConfig(automation.config || {});
+      // When editing an existing automation, set the active tab to configuration
+      setActiveTab('config');
     } else {
       // Default values for new automation
       setName('New Automation');
       setType('send_email');
       setConfig({});
+      // When creating a new automation, start with general tab
+      setActiveTab('general');
     }
   }, [automation, open]);
 
@@ -96,11 +102,15 @@ export function AutomationDialog({
                 }}
                 placeholder='Enter email subject'
               />
+              <p className='text-xs text-gray-500'>
+                You can use {'{client_name}'} and {'{project_name}'} as variables
+              </p>
             </div>
+
             <div className='space-y-2'>
               <Label htmlFor='email-template'>Email Template</Label>
               <Select
-                value={config.template || 'default'}
+                value={config.template || 'welcome'}
                 onValueChange={(value) => {
                   return setConfig({ ...config, template: value });
                 }}
@@ -109,74 +119,153 @@ export function AutomationDialog({
                   <SelectValue placeholder='Select template' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value='default'>Default Template</SelectItem>
                   <SelectItem value='welcome'>Welcome Email</SelectItem>
-                  <SelectItem value='onboarding'>Onboarding Email</SelectItem>
+                  <SelectItem value='onboarding'>Project Onboarding</SelectItem>
+                  <SelectItem value='custom'>Custom Template</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {config.template === 'custom' && (
+              <div className='space-y-2'>
+                <Label htmlFor='email-body'>Email Body</Label>
+                <Textarea
+                  id='email-body'
+                  value={config.body || ''}
+                  onChange={(e) => {
+                    return setConfig({ ...config, body: e.target.value });
+                  }}
+                  placeholder='Enter email content'
+                  rows={6}
+                />
+                <p className='text-xs text-gray-500'>
+                  You can use {'{client_name}'}, {'{project_name}'}, and {'{project_link}'} as
+                  variables
+                </p>
+              </div>
+            )}
+
+            <div className='flex items-center space-x-2 pt-2'>
+              <Checkbox
+                id='cc-team'
+                checked={config.ccTeam || false}
+                onCheckedChange={(checked) => {
+                  return setConfig({ ...config, ccTeam: checked === true });
+                }}
+              />
+              <Label htmlFor='cc-team'>CC team members on this email</Label>
             </div>
           </div>
         );
 
-      case 'create_task':
+      case 'create_project':
         return (
           <div className='space-y-4'>
             <div className='space-y-2'>
-              <Label htmlFor='task-title'>Task Title</Label>
+              <Label htmlFor='project-name-template'>Project Name Template</Label>
               <Input
-                id='task-title'
-                value={config.title || ''}
+                id='project-name-template'
+                value={config.projectNameTemplate || 'Form Submission - {submission_date}'}
                 onChange={(e) => {
-                  return setConfig({ ...config, title: e.target.value });
+                  return setConfig({ ...config, projectNameTemplate: e.target.value });
                 }}
-                placeholder='Enter task title'
+                placeholder='Enter project name template'
               />
+              <p className='text-xs text-gray-500'>
+                You can use {'{client_name}'}, {'{submission_date}'}, and {'{form_title}'} as
+                variables
+              </p>
             </div>
-            <div className='space-y-2'>
-              <Label htmlFor='task-assignee'>Assignee</Label>
-              <Select
-                value={config.assignee || 'auto'}
-                onValueChange={(value) => {
-                  return setConfig({ ...config, assignee: value });
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder='Select assignee' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='auto'>Auto-assign</SelectItem>
-                  <SelectItem value='current-user'>Current User</SelectItem>
-                  <SelectItem value='team-lead'>Team Lead</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        );
 
-      case 'custom_workflow':
-        return (
-          <div className='space-y-4'>
             <div className='space-y-2'>
-              <Label htmlFor='workflow-name'>Workflow Name</Label>
-              <Input
-                id='workflow-name'
-                value={config.workflowName || ''}
-                onChange={(e) => {
-                  return setConfig({ ...config, workflowName: e.target.value });
-                }}
-                placeholder='Enter workflow name'
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='workflow-description'>Description</Label>
-              <Input
-                id='workflow-description'
+              <Label htmlFor='project-description'>Project Description</Label>
+              <Textarea
+                id='project-description'
                 value={config.description || ''}
                 onChange={(e) => {
                   return setConfig({ ...config, description: e.target.value });
                 }}
-                placeholder='Enter description'
+                placeholder='Enter project description'
+                rows={4}
               />
+            </div>
+
+            <div className='space-y-2'>
+              <Label htmlFor='project-template'>Project Template (Optional)</Label>
+              <Select
+                value={config.projectTemplate || 'none'}
+                onValueChange={(value) => {
+                  return setConfig({ ...config, projectTemplate: value });
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder='Select template' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='none'>No Template</SelectItem>
+                  <SelectItem value='basic'>Basic Project</SelectItem>
+                  <SelectItem value='advanced'>Advanced Project</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className='text-xs text-gray-500'>
+                Templates include predefined tasks and milestones
+              </p>
+            </div>
+          </div>
+        );
+
+      case 'assign_project_manager':
+        return (
+          <div className='space-y-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='assignee-type'>Assignment Method</Label>
+              <Select
+                value={config.assigneeType || 'auto'}
+                onValueChange={(value) => {
+                  return setConfig({ ...config, assigneeType: value });
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder='Select assignment method' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='auto'>Auto-assign (Round-robin)</SelectItem>
+                  <SelectItem value='current-user'>Current User</SelectItem>
+                  <SelectItem value='specific'>Specific Team Member</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {config.assigneeType === 'specific' && (
+              <div className='space-y-2'>
+                <Label htmlFor='specific-assignee'>Team Member</Label>
+                <Select
+                  value={config.specificAssignee || ''}
+                  onValueChange={(value) => {
+                    return setConfig({ ...config, specificAssignee: value });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select team member' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='user1'>John Doe</SelectItem>
+                    <SelectItem value='user2'>Jane Smith</SelectItem>
+                    <SelectItem value='user3'>Sam Johnson</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className='flex items-center space-x-2 pt-2'>
+              <Checkbox
+                id='notify-assignee'
+                checked={config.notifyAssignee !== false}
+                onCheckedChange={(checked) => {
+                  return setConfig({ ...config, notifyAssignee: checked === true });
+                }}
+              />
+              <Label htmlFor='notify-assignee'>Send notification to assignee</Label>
             </div>
           </div>
         );
@@ -227,9 +316,9 @@ export function AutomationDialog({
                   <SelectValue placeholder='Select type' />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value='create_project'>Create Project</SelectItem>
+                  <SelectItem value='assign_project_manager'>Assign Project Manager</SelectItem>
                   <SelectItem value='send_email'>Send Email</SelectItem>
-                  <SelectItem value='create_task'>Create Task</SelectItem>
-                  <SelectItem value='custom_workflow'>Custom Workflow</SelectItem>
                 </SelectContent>
               </Select>
             </div>
