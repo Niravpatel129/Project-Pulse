@@ -787,206 +787,202 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
               </Popover>
             </div>
           ) : (
-            <div className='space-y-3'>
-              <div className='flex items-center gap-2 px-3 py-2'>
-                <div className='w-2 h-2 rounded-full bg-gray-400'></div>
-                <span className='text-sm text-gray-500'>Form Submission</span>
-              </div>
+            <div className='relative'>
+              {/* Minimal vertical timeline line */}
+              <div className='absolute left-2 top-0 bottom-0 w-[1px] bg-gray-200'></div>
 
-              {automations.map((automation, index) => {
-                return (
-                  <div key={automation.id} className='relative'>
-                    <div className='absolute left-[7px] top-0 w-[2px] h-full bg-gray-200'></div>
+              <div className='space-y-6'>
+                {/* Start point - minimal dot */}
+                <div className='flex items-center relative pl-6'>
+                  <div className='absolute left-2 w-2 h-2 rounded-full bg-gray-400 transform -translate-x-1/2'></div>
+                  <span className='text-xs text-gray-500'>Form Submission</span>
+                </div>
 
-                    <div
-                      className={cn(
-                        'ml-6 border rounded-lg relative overflow-hidden transition-all duration-200 group',
-                        automation.enabled
-                          ? automation.type === 'send_email'
-                            ? 'border-blue-200 shadow-sm'
-                            : automation.type === 'create_project'
-                            ? 'border-purple-200 shadow-sm'
-                            : 'border-green-200 shadow-sm'
-                          : 'border-gray-200 bg-gray-50/80',
-                      )}
-                    >
-                      {/* Status indicator bar */}
+                {/* Automation steps */}
+                {automations.map((automation, index) => {
+                  return (
+                    <div key={automation.id} className='pl-6 relative'>
+                      {/* Minimal dot for the automation */}
+                      <div className='absolute left-2 top-4 w-2 h-2 rounded-full bg-gray-300 transform -translate-x-1/2'></div>
+
                       <div
                         className={cn(
-                          'h-1 w-full',
+                          'border rounded-lg overflow-hidden transition-all duration-200',
                           automation.enabled
                             ? automation.type === 'send_email'
-                              ? 'bg-blue-400'
+                              ? 'border-blue-100'
                               : automation.type === 'create_project'
-                              ? 'bg-purple-400'
-                              : 'bg-green-400'
-                            : 'bg-gray-200',
+                              ? 'border-purple-100'
+                              : 'border-green-100'
+                            : 'border-gray-200',
                         )}
-                      />
-
-                      <div className='p-3.5'>
-                        <div className='flex items-center gap-3'>
-                          <div
-                            className={cn(
-                              'h-8 w-8 rounded-full flex items-center justify-center shrink-0',
-                              automation.enabled
-                                ? automation.type === 'send_email'
-                                  ? 'bg-blue-50 text-blue-600'
-                                  : automation.type === 'create_project'
-                                  ? 'bg-purple-50 text-purple-600'
-                                  : 'bg-green-50 text-green-600'
-                                : 'bg-gray-100 text-gray-500',
-                            )}
-                          >
-                            {getAutomationIcon(automation.type)}
-                          </div>
-
-                          <div className='flex-1 min-w-0'>
-                            <div className='flex items-center justify-between mb-1'>
-                              <span className='font-medium truncate block'>{automation.name}</span>
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant='ghost'
-                                    size='icon'
-                                    className='h-6 w-6 rounded-full -mr-1'
-                                  >
-                                    <MoreHorizontal className='h-3.5 w-3.5 text-gray-500' />
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className='w-40 p-1' side='right'>
-                                  <div className='space-y-0.5'>
-                                    <Button
-                                      variant='ghost'
-                                      size='sm'
-                                      className='w-full justify-start text-xs h-7'
-                                      onClick={() => {
-                                        return handleEditAutomation(automation);
-                                      }}
-                                    >
-                                      <Edit2 className='h-3 w-3 mr-2' />
-                                      Edit
-                                    </Button>
-                                    <Button
-                                      variant='ghost'
-                                      size='sm'
-                                      className='w-full justify-start text-xs h-7 text-red-600 hover:text-red-700 hover:bg-red-50'
-                                      onClick={() => {
-                                        return deleteAutomation(automation.id);
-                                      }}
-                                    >
-                                      <Trash2 className='h-3 w-3 mr-2' />
-                                      Delete
-                                    </Button>
-                                  </div>
-                                </PopoverContent>
-                              </Popover>
+                      >
+                        <div className='p-3'>
+                          <div className='flex items-center gap-3'>
+                            <div
+                              className={cn(
+                                'h-8 w-8 rounded-full flex items-center justify-center shrink-0',
+                                automation.enabled
+                                  ? automation.type === 'send_email'
+                                    ? 'bg-blue-50 text-blue-600'
+                                    : automation.type === 'create_project'
+                                    ? 'bg-purple-50 text-purple-600'
+                                    : 'bg-green-50 text-green-600'
+                                  : 'bg-gray-50 text-gray-400',
+                              )}
+                            >
+                              {getAutomationIcon(automation.type)}
                             </div>
 
-                            <div className='flex items-center text-xs text-gray-500'>
-                              <span className='mr-2'>
-                                {getAutomationDisplayName(automation.type)}
-                              </span>
-                              <button
-                                type='button'
-                                className={cn(
-                                  'flex items-center gap-1.5 rounded-full px-2 py-0.5 transition-colors',
-                                  automation.enabled
-                                    ? 'bg-emerald-50 hover:bg-emerald-100'
-                                    : 'bg-gray-100 hover:bg-gray-200',
-                                )}
-                                onClick={() => {
-                                  return toggleAutomation(automation.id);
-                                }}
-                                aria-label={
-                                  automation.enabled ? 'Disable automation' : 'Enable automation'
-                                }
-                              >
-                                <div
-                                  className={cn(
-                                    'w-2 h-2 rounded-full transition-colors',
-                                    automation.enabled ? 'bg-emerald-500' : 'bg-gray-400',
-                                  )}
-                                />
-                                <span
-                                  className={cn(
-                                    'text-[10px] font-medium',
-                                    automation.enabled ? 'text-emerald-600' : 'text-gray-500',
-                                  )}
-                                >
-                                  {automation.enabled ? 'Active' : 'Disabled'}
+                            <div className='flex-1 min-w-0'>
+                              <div className='flex items-center justify-between mb-1'>
+                                <span className='font-medium truncate block text-sm'>
+                                  {automation.name}
                                 </span>
-                              </button>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant='ghost'
+                                      size='icon'
+                                      className='h-6 w-6 text-gray-400 hover:text-gray-600 -mr-1'
+                                    >
+                                      <MoreHorizontal className='h-3.5 w-3.5' />
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className='w-40 p-1' side='right'>
+                                    <div className='space-y-0.5'>
+                                      <Button
+                                        variant='ghost'
+                                        size='sm'
+                                        className='w-full justify-start text-xs h-7'
+                                        onClick={() => {
+                                          return handleEditAutomation(automation);
+                                        }}
+                                      >
+                                        <Edit2 className='h-3 w-3 mr-2' />
+                                        Edit
+                                      </Button>
+                                      <Button
+                                        variant='ghost'
+                                        size='sm'
+                                        className='w-full justify-start text-xs h-7 text-red-600 hover:text-red-700 hover:bg-red-50'
+                                        onClick={() => {
+                                          return deleteAutomation(automation.id);
+                                        }}
+                                      >
+                                        <Trash2 className='h-3 w-3 mr-2' />
+                                        Delete
+                                      </Button>
+                                    </div>
+                                  </PopoverContent>
+                                </Popover>
+                              </div>
+
+                              <div className='flex items-center text-xs text-gray-500'>
+                                <span className='mr-2'>
+                                  {getAutomationDisplayName(automation.type)}
+                                </span>
+                                <button
+                                  type='button'
+                                  className={cn(
+                                    'flex items-center gap-1.5 rounded-full px-2 py-0.5 transition-colors',
+                                    automation.enabled ? 'bg-emerald-50' : 'bg-gray-100',
+                                  )}
+                                  onClick={() => {
+                                    return toggleAutomation(automation.id);
+                                  }}
+                                  aria-label={
+                                    automation.enabled ? 'Disable automation' : 'Enable automation'
+                                  }
+                                >
+                                  <div
+                                    className={cn(
+                                      'w-1.5 h-1.5 rounded-full transition-colors',
+                                      automation.enabled ? 'bg-emerald-500' : 'bg-gray-400',
+                                    )}
+                                  />
+                                  <span
+                                    className={cn(
+                                      'text-[10px] font-medium',
+                                      automation.enabled ? 'text-emerald-600' : 'text-gray-500',
+                                    )}
+                                  >
+                                    {automation.enabled ? 'Active' : 'Disabled'}
+                                  </span>
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
 
-              <div className='relative'>
-                <div className='absolute left-[7px] top-0 w-[2px] h-[20px] bg-gray-200'></div>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant='outline'
-                      className='ml-6 w-[calc(100%-24px)] h-12 gap-2 border-dashed border-gray-300 rounded-lg'
-                    >
-                      <Plus className='h-4 w-4' />
-                      Add automation step
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className='w-64 p-1' side='top' align='center'>
-                    <div className='space-y-1'>
+                {/* Add automation button - minimal */}
+                <div className='pl-6 relative'>
+                  <div className='absolute left-2 top-6 w-2 h-2 rounded-full bg-gray-300 transform -translate-x-1/2'></div>
+                  <Popover>
+                    <PopoverTrigger asChild>
                       <Button
-                        variant='ghost'
-                        size='sm'
-                        className='w-full justify-start h-10'
-                        onClick={() => {
-                          return handleAddAutomation('create_project');
-                        }}
+                        variant='outline'
+                        className='w-full h-10 gap-2 border-dashed border-gray-200 text-gray-500 text-sm'
                       >
-                        <div className='h-7 w-7 rounded-full bg-purple-50 flex items-center justify-center mr-2'>
-                          <Plus className='h-4 w-4 text-purple-600' />
-                        </div>
-                        Create Project
+                        <Plus className='h-3.5 w-3.5' />
+                        Add automation step
                       </Button>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        className='w-full justify-start h-10'
-                        onClick={() => {
-                          return handleAddAutomation('assign_project_manager');
-                        }}
-                      >
-                        <div className='h-7 w-7 rounded-full bg-green-50 flex items-center justify-center mr-2'>
-                          <User2 className='h-4 w-4 text-green-600' />
-                        </div>
-                        Assign Project Manager
-                      </Button>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        className='w-full justify-start h-10'
-                        onClick={() => {
-                          return handleAddAutomation('send_email');
-                        }}
-                      >
-                        <div className='h-7 w-7 rounded-full bg-blue-50 flex items-center justify-center mr-2'>
-                          <MessageSquare className='h-4 w-4 text-blue-600' />
-                        </div>
-                        Send Welcome Email
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
+                    </PopoverTrigger>
+                    <PopoverContent className='w-64 p-1' side='top' align='center'>
+                      <div className='space-y-1'>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='w-full justify-start h-10'
+                          onClick={() => {
+                            return handleAddAutomation('create_project');
+                          }}
+                        >
+                          <div className='h-7 w-7 rounded-full bg-purple-50 flex items-center justify-center mr-2'>
+                            <Plus className='h-4 w-4 text-purple-600' />
+                          </div>
+                          Create Project
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='w-full justify-start h-10'
+                          onClick={() => {
+                            return handleAddAutomation('assign_project_manager');
+                          }}
+                        >
+                          <div className='h-7 w-7 rounded-full bg-green-50 flex items-center justify-center mr-2'>
+                            <User2 className='h-4 w-4 text-green-600' />
+                          </div>
+                          Assign Project Manager
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='w-full justify-start h-10'
+                          onClick={() => {
+                            return handleAddAutomation('send_email');
+                          }}
+                        >
+                          <div className='h-7 w-7 rounded-full bg-blue-50 flex items-center justify-center mr-2'>
+                            <MessageSquare className='h-4 w-4 text-blue-600' />
+                          </div>
+                          Send Welcome Email
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
 
-              <div className='flex items-center gap-2 px-3 py-2'>
-                <div className='w-2 h-2 rounded-full bg-gray-400'></div>
-                <span className='text-sm text-gray-500'>Complete</span>
+                {/* End point - minimal */}
+                <div className='flex items-center relative pl-6'>
+                  <div className='absolute left-2 w-2 h-2 rounded-full bg-gray-400 transform -translate-x-1/2'></div>
+                  <span className='text-xs text-gray-500'>Complete</span>
+                </div>
               </div>
             </div>
           )}
