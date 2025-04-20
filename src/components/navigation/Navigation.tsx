@@ -120,7 +120,6 @@ export function Navigation() {
       href: '/leads',
       label: 'Leads',
       icon: <CiFolderOn className='h-5 w-5' />,
-      hidden: isProd,
     },
     // {
     //   href: '/invoices',
