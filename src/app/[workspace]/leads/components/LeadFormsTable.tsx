@@ -11,9 +11,19 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatDate } from '@/lib/utils';
-import { Archive, Eye, FileEdit, FilePlus, MoreHorizontal, Trash2 } from 'lucide-react';
+import {
+  Archive,
+  Copy,
+  ExternalLink,
+  Eye,
+  FileEdit,
+  FilePlus,
+  MoreHorizontal,
+  Trash2,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
+import { toast } from 'sonner';
 import { LeadForm, useLeadForms } from '../hooks/useLeadForms';
 
 export default function LeadFormsTable() {
@@ -143,6 +153,41 @@ export default function LeadFormsTable() {
         header: 'Created By',
         cell: (form) => {
           return <div className='text-sm'>{form.createdBy?.name || 'Unknown'}</div>;
+        },
+      },
+      {
+        key: 'share',
+        header: 'Share',
+        cell: (form) => {
+          const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/form/${
+            form._id
+          }`;
+
+          return (
+            <div className='flex items-center gap-1'>
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={() => {
+                  navigator.clipboard.writeText(shareUrl);
+                  toast.success('Share link copied to clipboard');
+                }}
+                title='Copy share link'
+              >
+                <Copy className='h-4 w-4' />
+              </Button>
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={() => {
+                  return window.open(shareUrl, '_blank');
+                }}
+                title='Open in new tab'
+              >
+                <ExternalLink className='h-4 w-4' />
+              </Button>
+            </div>
+          );
         },
       },
       {
