@@ -2,23 +2,36 @@
 
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatDate } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
-import { Eye, FileClock } from 'lucide-react';
-import Link from 'next/link';
-import { useMemo } from 'react';
+import { Eye, FileClock, X } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
-interface Submission {
+interface FormSubmission {
   _id: string;
+  submittedBy: string;
+  clientEmail: string;
+  clientName: string | null;
+  clientPhone: string | null;
+  clientCompany: string | null;
+  clientAddress: string | null;
+  submittedAt: string;
+  formValues: Record<string, any>;
+}
+
+// Extended type used for displaying in the table after flattening
+interface EnhancedFormSubmission extends FormSubmission {
   formId: string;
   formTitle: string;
-  submittedAt: string;
-  clientEmail?: string;
-  clientName?: string;
-  clientPhone?: string;
-  formValues: Record<string, any>;
+}
+
+interface FormWithSubmissions {
+  _id: string;
+  formTitle?: string;
+  submissions: FormSubmission[];
 }
 
 type Column<T> = {
@@ -29,19 +42,38 @@ type Column<T> = {
 };
 
 export default function SubmissionsTable() {
+  const [selectedSubmission, setSelectedSubmission] = useState<EnhancedFormSubmission | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   const {
-    data: submissions,
+    data: formsWithSubmissions,
     isLoading,
     error,
   } = useQuery({
     queryKey: ['lead-submissions'],
     queryFn: async () => {
       const res = await newRequest.get('/lead-forms/workspace/submissions');
-      return res.data.data || [];
+      console.log('🚀 res:', res);
+      return res.data || [];
     },
   });
 
-  const columns: Column<Submission>[] = useMemo(() => {
+  // Flatten the submissions for the table
+  const submissions = useMemo(() => {
+    if (!formsWithSubmissions) return [];
+
+    return formsWithSubmissions.flatMap((form: FormWithSubmissions) => {
+      return form.submissions.map((submission: FormSubmission) => {
+        return {
+          ...submission,
+          formId: form._id,
+          formTitle: form.formTitle || 'Untitled Form',
+        };
+      });
+    });
+  }, [formsWithSubmissions]);
+
+  const columns: Column<EnhancedFormSubmission>[] = useMemo(() => {
     return [
       {
         key: 'formTitle',
@@ -80,17 +112,56 @@ export default function SubmissionsTable() {
         header: 'Actions',
         cell: (submission) => {
           return (
-            <Button variant='ghost' size='sm' asChild>
-              <Link href={`/leads/submissions/${submission._id}`}>
-                <Eye className='h-4 w-4 mr-2' />
-                View Details
-              </Link>
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={() => {
+                setSelectedSubmission(submission);
+                setDialogOpen(true);
+              }}
+            >
+              <Eye className='h-4 w-4 mr-2' />
+              View Details
             </Button>
           );
         },
       },
     ];
   }, []);
+
+  const renderFormValue = (key: string, value: any) => {
+    if (!value) return 'N/A';
+
+    // Handle nested objects with label/value structure
+    if (value.id && value.label && value.value !== undefined) {
+      value = value.value;
+    }
+
+    if (typeof value === 'boolean') {
+      return value ? 'Yes' : 'No';
+    }
+
+    if (value.fileUrl) {
+      return (
+        <div>
+          <a
+            href={value.fileUrl}
+            target='_blank'
+            rel='noopener noreferrer'
+            className='text-primary hover:underline'
+          >
+            {value.fileName} ({Math.round(value.fileSize / 1024)}KB)
+          </a>
+        </div>
+      );
+    }
+
+    if (typeof value === 'string' && value.includes('T04:00:00.000Z')) {
+      return formatDate(value);
+    }
+
+    return String(value);
+  };
 
   if (isLoading) {
     return <LoadingSpinner size='lg' fullPage />;
@@ -126,6 +197,72 @@ export default function SubmissionsTable() {
           </div>
         }
       />
+
+      {/* Full Screen Dialog for Submission Details */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className='max-w-4xl w-full max-h-[90vh] overflow-y-auto'>
+          <DialogHeader>
+            <DialogTitle className='flex justify-between items-center'>
+              <span>Submission Details</span>
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={() => {
+                  return setDialogOpen(false);
+                }}
+              >
+                <X className='h-4 w-4' />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedSubmission && (
+            <div className='space-y-6'>
+              <div className='grid grid-cols-2 gap-4'>
+                <div>
+                  <h3 className='text-sm font-medium text-muted-foreground'>Form</h3>
+                  <p>{selectedSubmission.formTitle}</p>
+                </div>
+                <div>
+                  <h3 className='text-sm font-medium text-muted-foreground'>Submitted</h3>
+                  <p>{formatDate(selectedSubmission.submittedAt)}</p>
+                </div>
+                <div>
+                  <h3 className='text-sm font-medium text-muted-foreground'>Email</h3>
+                  <p>{selectedSubmission.clientEmail || 'N/A'}</p>
+                </div>
+                <div>
+                  <h3 className='text-sm font-medium text-muted-foreground'>Name</h3>
+                  <p>{selectedSubmission.clientName || 'N/A'}</p>
+                </div>
+                <div>
+                  <h3 className='text-sm font-medium text-muted-foreground'>Phone</h3>
+                  <p>{selectedSubmission.clientPhone || 'N/A'}</p>
+                </div>
+                <div>
+                  <h3 className='text-sm font-medium text-muted-foreground'>Company</h3>
+                  <p>{selectedSubmission.clientCompany || 'N/A'}</p>
+                </div>
+              </div>
+
+              <div className='border-t pt-4'>
+                <h3 className='text-lg font-medium mb-4'>Form Values</h3>
+                <div className='grid grid-cols-1 gap-4'>
+                  {Object.entries(selectedSubmission.formValues).map(([key, value]) => {
+                    const label = value?.label || key.replace('element-', '');
+                    return (
+                      <div key={key} className='border p-3 rounded-md'>
+                        <h4 className='text-sm font-medium text-muted-foreground'>{label}</h4>
+                        <div className='mt-1'>{renderFormValue(key, value)}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
