@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { toast } from '@/components/ui/use-toast';
 import { formatDate } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
-import { Eye, FileClock, X } from 'lucide-react';
+import { Eye, FileClock, MoreHorizontal, Trash, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 interface FormSubmission {
@@ -49,6 +51,7 @@ export default function SubmissionsTable() {
     data: formsWithSubmissions,
     isLoading,
     error,
+    refetch,
   } = useQuery({
     queryKey: ['lead-submissions'],
     queryFn: async () => {
@@ -57,6 +60,25 @@ export default function SubmissionsTable() {
       return res.data || [];
     },
   });
+
+  // Delete submission function
+  const deleteSubmission = async (submissionId: string) => {
+    try {
+      await newRequest.delete(`/lead-forms/submissions/${submissionId}`);
+      toast({
+        title: 'Submission deleted',
+        description: 'The submission has been successfully deleted.',
+      });
+      refetch(); // Refresh data after deletion
+    } catch (error) {
+      console.error('Error deleting submission:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete submission. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   // Flatten the submissions for the table
   const submissions = useMemo(() => {
@@ -112,17 +134,40 @@ export default function SubmissionsTable() {
         header: 'Actions',
         cell: (submission) => {
           return (
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={() => {
-                setSelectedSubmission(submission);
-                setDialogOpen(true);
-              }}
-            >
-              <Eye className='h-4 w-4 mr-2' />
-              View Details
-            </Button>
+            <div className='flex items-center gap-2'>
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={() => {
+                  setSelectedSubmission(submission);
+                  setDialogOpen(true);
+                }}
+              >
+                <Eye className='h-4 w-4 mr-2' />
+                View Details
+              </Button>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant='ghost' size='icon' className='h-8 w-8'>
+                    <MoreHorizontal className='h-4 w-4' />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align='end' className='w-48'>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    className='flex w-full justify-start text-destructive'
+                    onClick={() => {
+                      return deleteSubmission(submission._id);
+                    }}
+                  >
+                    <Trash className='h-4 w-4 mr-2' />
+                    Delete
+                  </Button>
+                </PopoverContent>
+              </Popover>
+            </div>
           );
         },
       },
