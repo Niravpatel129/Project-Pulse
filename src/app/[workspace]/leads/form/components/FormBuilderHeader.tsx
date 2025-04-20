@@ -12,6 +12,7 @@ import {
   Save,
   Settings,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { useFormBuilder } from '../context/FormBuilderContext';
@@ -38,7 +39,7 @@ const FormBuilderHeader: React.FC = () => {
   } = useFormBuilder();
 
   const [editingFormTitle, setEditingFormTitle] = useState(false);
-
+  const router = useRouter();
   // Initialize react-hook-form
   const methods = useForm();
 
@@ -101,7 +102,7 @@ const FormBuilderHeader: React.FC = () => {
             size='icon'
             className='mr-2 md:mr-3 text-gray-500 hover:text-gray-700'
             onClick={() => {
-              return isMobile ? setShowMobileMenu(!showMobileMenu) : null;
+              return isMobile ? setShowMobileMenu(!showMobileMenu) : router.back();
             }}
           >
             {isMobile ? <Menu className='h-5 w-5' /> : <ArrowLeft className='h-5 w-5' />}
