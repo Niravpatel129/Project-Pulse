@@ -23,10 +23,10 @@ export default function FormBuilderLayout({ children, getElementIcon }: FormBuil
       {/* Main content area with sidebar and children */}
       <div className='flex flex-1 overflow-hidden'>
         {/* Sidebar - fixed only within this layout */}
-        <div className={`${previewMode ? 'hidden' : 'w-0 md:w-80 flex-shrink-0'}`}>
+        <div className={`${previewMode ? 'hidden' : 'w-0 md:w-96 flex-shrink-0'}`}>
           <div
             className={`
-            w-full md:w-80 border-r bg-white h-full overflow-y-auto shadow-sm pt-2
+            w-full md:w-96 border-r bg-white h-full overflow-y-auto shadow-sm pt-2
             ${!previewMode && isMobile && !showMobileNav ? 'hidden' : ''}
             ${!previewMode && isMobile && showMobileNav ? 'fixed inset-0 z-40' : ''}
           `}
