@@ -5,6 +5,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { SelectSeparator } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 import { formatDate } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
@@ -328,15 +329,18 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
 
               <div className='border-t pt-4'>
                 <h3 className='text-lg font-medium mb-4'>Form Values</h3>
-                <div className='grid grid-cols-1 gap-4'>
+                <div className='flex flex-col gap-2'>
                   {selectedSubmission.formValues &&
                     Object.entries(selectedSubmission.formValues).map(([key, value]) => {
                       const label = value?.label || key.replace('element-', '');
                       return (
-                        <div key={key} className='border p-3 rounded-md'>
-                          <h4 className='text-sm font-medium text-muted-foreground'>{label}</h4>
-                          <div className='mt-1'>{renderFormValue(key, value)}</div>
-                        </div>
+                        <>
+                          <div key={key} className=' p-3 rounded-md'>
+                            <h4 className='text-sm font-medium text-muted-foreground'>{label}</h4>
+                            <div className='font-medium mt-1'>{renderFormValue(key, value)}</div>
+                          </div>
+                          <SelectSeparator className='' />
+                        </>
                       );
                     })}
                   {(!selectedSubmission.formValues ||
