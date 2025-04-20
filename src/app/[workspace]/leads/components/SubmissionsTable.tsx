@@ -15,6 +15,7 @@ import { useMemo, useState } from 'react';
 
 interface FormSubmission {
   _id: string;
+  formId: string;
   submittedBy: string;
   clientEmail: string;
   clientName: string | null;
@@ -23,6 +24,7 @@ interface FormSubmission {
   clientAddress: string | null;
   submittedAt: string;
   formValues: Record<string, any>;
+  formTitle: string;
 }
 
 // Extended type used for displaying in the table after flattening
@@ -61,7 +63,6 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
     queryKey: ['lead-submissions', formIdFilter],
     queryFn: async () => {
       const res = await newRequest.get('/lead-forms/workspace/submissions');
-      console.log('🚀 res:', res);
       return res.data || [];
     },
   });
@@ -91,10 +92,11 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
 
     let allSubmissions = formsWithSubmissions.flatMap((form: FormWithSubmissions) => {
       return form.submissions.map((submission: FormSubmission) => {
+        console.log('🚀 submission:', submission.formTitle);
         return {
           ...submission,
-          formId: form._id,
-          formTitle: form.formTitle || 'Untitled Form',
+          formId: submission.formId,
+          formTitle: submission.formTitle || 'Untitled Form',
         };
       });
     });
