@@ -8,10 +8,12 @@ export default function LeadsLayout({ children }: { children: React.ReactNode })
 
   // Function to determine if a path is active
   const isActive = (path: string) => {
-    if (path === 'leads' && pathname.endsWith('/leads')) {
-      return true;
+    if (path === 'leads') {
+      // For the main leads route, it should be active only when directly on the leads page
+      return pathname.endsWith('/leads') || pathname === `${basePath}/leads`;
     }
-    return pathname.includes(`/${path}`);
+    // For other routes, check if the pathname includes the path segment
+    return pathname.includes(`/leads/${path}`);
   };
 
   // Extract the base workspace path
@@ -27,7 +29,7 @@ export default function LeadsLayout({ children }: { children: React.ReactNode })
             <Link
               href={`${basePath}/leads`}
               className={`py-4 font-medium ${
-                isActive('leads') && !isActive('submissions') && !isActive('settings')
+                isActive('leads')
                   ? 'border-b-2 border-primary text-primary'
                   : 'text-muted-foreground'
               }`}

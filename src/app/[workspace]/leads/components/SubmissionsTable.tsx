@@ -191,7 +191,13 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
     if (!value) return 'N/A';
 
     // Handle nested objects with label/value structure
-    if (value.id && value.label && value.value !== undefined) {
+    if (
+      value &&
+      typeof value === 'object' &&
+      value.id &&
+      value.label &&
+      value.value !== undefined
+    ) {
       value = value.value;
     }
 
@@ -199,7 +205,7 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
       return value ? 'Yes' : 'No';
     }
 
-    if (value.fileUrl) {
+    if (value && typeof value === 'object' && value.fileUrl) {
       return (
         <div>
           <a
@@ -208,7 +214,7 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
             rel='noopener noreferrer'
             className='text-primary hover:underline'
           >
-            {value.fileName} ({Math.round(value.fileSize / 1024)}KB)
+            {value.fileName || 'File'} ({Math.round((value.fileSize || 0) / 1024)}KB)
           </a>
         </div>
       );
@@ -323,15 +329,22 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
               <div className='border-t pt-4'>
                 <h3 className='text-lg font-medium mb-4'>Form Values</h3>
                 <div className='grid grid-cols-1 gap-4'>
-                  {Object.entries(selectedSubmission.formValues).map(([key, value]) => {
-                    const label = value?.label || key.replace('element-', '');
-                    return (
-                      <div key={key} className='border p-3 rounded-md'>
-                        <h4 className='text-sm font-medium text-muted-foreground'>{label}</h4>
-                        <div className='mt-1'>{renderFormValue(key, value)}</div>
-                      </div>
-                    );
-                  })}
+                  {selectedSubmission.formValues &&
+                    Object.entries(selectedSubmission.formValues).map(([key, value]) => {
+                      const label = value?.label || key.replace('element-', '');
+                      return (
+                        <div key={key} className='border p-3 rounded-md'>
+                          <h4 className='text-sm font-medium text-muted-foreground'>{label}</h4>
+                          <div className='mt-1'>{renderFormValue(key, value)}</div>
+                        </div>
+                      );
+                    })}
+                  {(!selectedSubmission.formValues ||
+                    Object.keys(selectedSubmission.formValues).length === 0) && (
+                    <div className='text-center text-muted-foreground py-4'>
+                      No form values submitted
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
