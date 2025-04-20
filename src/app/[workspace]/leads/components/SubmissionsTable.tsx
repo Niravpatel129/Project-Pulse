@@ -336,13 +336,13 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
                     Object.entries(selectedSubmission.formValues).map(([key, value]) => {
                       const label = value?.label || key.replace('element-', '');
                       return (
-                        <>
-                          <div key={key} className=' p-3 rounded-md'>
+                        <div key={key}>
+                          <div className=' p-3 rounded-md'>
                             <h4 className='text-sm font-medium text-muted-foreground'>{label}</h4>
                             <div className='font-medium mt-1'>{renderFormValue(key, value)}</div>
                           </div>
                           <SelectSeparator className='' />
-                        </>
+                        </div>
                       );
                     })}
                   {(!selectedSubmission.formValues ||
