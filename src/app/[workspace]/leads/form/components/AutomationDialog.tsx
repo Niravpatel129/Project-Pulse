@@ -217,6 +217,19 @@ export function AutomationDialog({
           description: 'Address of the client',
         });
       }
+
+      // Add custom client fields to variables list
+      if (clientFields.custom && clientFields.custom.length > 0) {
+        clientFields.custom.forEach((field) => {
+          const varName = slugifyForVariable(field);
+          variablesList.push({
+            label: field,
+            value: varName,
+            group: 'Client',
+            description: `Custom client field: ${field}`,
+          });
+        });
+      }
     }
 
     // Create a mapping of variable names to field IDs
@@ -434,6 +447,55 @@ export function AutomationDialog({
     );
   };
 
+  // Function to generate a default project description using all form fields
+  const generateDefaultProjectDescription = () => {
+    let description = 'Form submission details:\n\n';
+
+    // Add client details if available
+    const clientDetailsElement = formElements.find((element) => {
+      return element.type === 'Client Details';
+    });
+    if (clientDetailsElement && clientDetailsElement.clientFields) {
+      const clientFields = clientDetailsElement.clientFields;
+      description += '## Client Information\n';
+      if (clientFields.name) description += '- Name: {{client_name}}\n';
+      if (clientFields.email) description += '- Email: {{client_email}}\n';
+      if (clientFields.phone) description += '- Phone: {{client_phone}}\n';
+      if (clientFields.company) description += '- Company: {{client_company}}\n';
+      if (clientFields.address) description += '- Address: {{client_address}}\n';
+
+      if (clientFields.custom && clientFields.custom.length > 0) {
+        clientFields.custom.forEach((field) => {
+          const varName = slugifyForVariable(field);
+          description += `- ${field}: {{${varName}}}\n`;
+        });
+      }
+      description += '\n';
+    }
+
+    // Add all other form fields
+    description += '## Form Responses\n';
+    formElements
+      .filter((element) => {
+        return element.type !== 'Client Details';
+      })
+      .sort((a, b) => {
+        return a.order - b.order;
+      })
+      .forEach((element) => {
+        const variableName = Object.keys(fieldMappings).find((key) => {
+          return fieldMappings[key] === element.id;
+        });
+        if (variableName) {
+          description += `- ${element.title}: {{${variableName}}}\n`;
+        }
+      });
+
+    description += '\nSubmission Date: {{submission_date}}';
+
+    return description;
+  };
+
   // Different config forms based on automation type
   const renderConfigFields = () => {
     switch (type) {
@@ -487,7 +549,7 @@ export function AutomationDialog({
 
             {createVariableTextarea({
               id: 'project-description',
-              value: config.description || '',
+              value: config.description || generateDefaultProjectDescription(),
               onChange: (value) => {
                 return setConfig({ ...config, description: value });
               },
