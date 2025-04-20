@@ -22,6 +22,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
 import { LeadForm, useLeadForms } from '../hooks/useLeadForms';
@@ -29,6 +30,7 @@ import { LeadForm, useLeadForms } from '../hooks/useLeadForms';
 export default function LeadFormsTable() {
   const { leadForms, isLoading, error, deleteLeadForm, archiveLeadForm, publishLeadForm } =
     useLeadForms();
+  const pathname = usePathname();
 
   const statusBadgeVariant = (status: string) => {
     switch (status) {
@@ -136,7 +138,14 @@ export default function LeadFormsTable() {
         key: 'submissions',
         header: 'Submissions',
         cell: (form) => {
-          return <div className='text-center'>{form.submissions?.length || 0}</div>;
+          return (
+            <Link
+              href={`${pathname}/submissions?form=${form._id}`}
+              className='flex justify-center hover:underline'
+            >
+              {form.submissions?.length || 0}
+            </Link>
+          );
         },
         sortable: true,
       },
@@ -209,7 +218,10 @@ export default function LeadFormsTable() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href={`/leads/form/${form._id}/submissions`} className='flex items-center'>
+                  <Link
+                    href={`${pathname}/submissions?form=${form._id}`}
+                    className='flex items-center'
+                  >
                     <Eye className='h-4 w-4 mr-2' />
                     View submissions
                   </Link>
@@ -241,7 +253,7 @@ export default function LeadFormsTable() {
         },
       },
     ];
-  }, [publishLeadForm, archiveLeadForm, deleteLeadForm]);
+  }, [publishLeadForm, archiveLeadForm, deleteLeadForm, pathname]);
 
   if (isLoading) {
     return <LoadingSpinner size='lg' fullPage />;

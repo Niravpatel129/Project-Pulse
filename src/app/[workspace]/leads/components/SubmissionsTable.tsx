@@ -43,7 +43,11 @@ type Column<T> = {
   sortable?: boolean;
 };
 
-export default function SubmissionsTable() {
+interface SubmissionsTableProps {
+  formIdFilter?: string | null;
+}
+
+export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps) {
   const [selectedSubmission, setSelectedSubmission] = useState<EnhancedFormSubmission | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -53,7 +57,7 @@ export default function SubmissionsTable() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['lead-submissions'],
+    queryKey: ['lead-submissions', formIdFilter],
     queryFn: async () => {
       const res = await newRequest.get('/lead-forms/workspace/submissions');
       console.log('🚀 res:', res);
@@ -84,7 +88,7 @@ export default function SubmissionsTable() {
   const submissions = useMemo(() => {
     if (!formsWithSubmissions) return [];
 
-    return formsWithSubmissions.flatMap((form: FormWithSubmissions) => {
+    let allSubmissions = formsWithSubmissions.flatMap((form: FormWithSubmissions) => {
       return form.submissions.map((submission: FormSubmission) => {
         return {
           ...submission,
@@ -93,7 +97,16 @@ export default function SubmissionsTable() {
         };
       });
     });
-  }, [formsWithSubmissions]);
+
+    // Apply form ID filter if provided
+    if (formIdFilter) {
+      allSubmissions = allSubmissions.filter((submission) => {
+        return submission.formId === formIdFilter;
+      });
+    }
+
+    return allSubmissions;
+  }, [formsWithSubmissions, formIdFilter]);
 
   const columns: Column<EnhancedFormSubmission>[] = useMemo(() => {
     return [
@@ -219,7 +232,13 @@ export default function SubmissionsTable() {
   return (
     <div className='space-y-4'>
       <div className='flex justify-between items-center'>
-        <h2 className='text-xl font-semibold'>Form Submissions</h2>
+        <div>
+          <h2 className='text-xl font-semibold'>Form Submissions</h2>
+          <p className='text-sm text-muted-foreground'>
+            {submissions.length} {submissions.length === 1 ? 'submission' : 'submissions'}
+            {formIdFilter ? ' matching filters' : ' total'}
+          </p>
+        </div>
       </div>
       <DataTable
         data={submissions || []}
@@ -235,10 +254,21 @@ export default function SubmissionsTable() {
         emptyState={
           <div className='py-8 text-center'>
             <FileClock className='mx-auto h-12 w-12 text-muted-foreground mb-4' />
-            <p className='text-muted-foreground'>No submissions found</p>
-            <p className='text-sm text-muted-foreground mt-1'>
-              When users submit your forms, they will appear here.
-            </p>
+            {formIdFilter ? (
+              <>
+                <p className='text-muted-foreground'>No submissions found for this form</p>
+                <p className='text-sm text-muted-foreground mt-1'>
+                  Try removing filters or check back later when the form receives submissions.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className='text-muted-foreground'>No submissions found</p>
+                <p className='text-sm text-muted-foreground mt-1'>
+                  When users submit your forms, they will appear here.
+                </p>
+              </>
+            )}
           </div>
         }
       />
