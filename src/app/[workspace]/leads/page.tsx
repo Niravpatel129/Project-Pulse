@@ -1,5 +1,6 @@
 'use client';
 
+import SubmissionsTable from '@/app/[workspace]/leads/components/SubmissionsTable';
 import { FormSettings } from '@/components/leads/FormSettings';
 import { useState } from 'react';
 import LeadFormsTable from './components/LeadFormsTable';
@@ -27,6 +28,18 @@ export default function LeadsInterface() {
             </button>
             <button
               onClick={() => {
+                return setActiveTab('submissions');
+              }}
+              className={`py-4 font-medium ${
+                activeTab === 'submissions'
+                  ? 'border-b-2 border-primary text-primary'
+                  : 'text-muted-foreground'
+              }`}
+            >
+              Submissions
+            </button>
+            <button
+              onClick={() => {
                 return setActiveTab('settings');
               }}
               className={`py-4 font-medium ${
@@ -43,7 +56,13 @@ export default function LeadsInterface() {
 
       {/* Main Content */}
       <div className='container mx-auto px-4 py-6'>
-        {activeTab === 'forms' ? <LeadFormsTable /> : <FormSettings />}
+        {activeTab === 'forms' ? (
+          <LeadFormsTable />
+        ) : activeTab === 'submissions' ? (
+          <SubmissionsTable />
+        ) : (
+          <FormSettings />
+        )}
       </div>
     </div>
   );
