@@ -336,6 +336,7 @@ export function AutomationDialog({
     return (
       <div className='flex items-center'>
         <Popover
+          modal
           open={variablePopoverOpen && currentTextareaId === fieldId}
           onOpenChange={(open) => {
             setVariablePopoverOpen(open);
