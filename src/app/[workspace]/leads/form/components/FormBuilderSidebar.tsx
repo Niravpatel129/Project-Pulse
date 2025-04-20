@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -801,69 +800,126 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
 
                     <div
                       className={cn(
-                        'ml-6 border rounded-lg p-4 relative bg-white',
+                        'ml-6 border rounded-lg relative overflow-hidden transition-all duration-200 group',
                         automation.enabled
                           ? automation.type === 'send_email'
-                            ? 'border-blue-200'
-                            : 'border-gray-200'
-                          : 'border-gray-200 bg-gray-50 opacity-80',
+                            ? 'border-blue-200 shadow-sm'
+                            : automation.type === 'create_project'
+                            ? 'border-purple-200 shadow-sm'
+                            : 'border-green-200 shadow-sm'
+                          : 'border-gray-200 bg-gray-50/80',
                       )}
                     >
-                      <div className='flex items-center gap-3'>
-                        <div
-                          className={cn(
-                            'h-8 w-8 rounded-full flex items-center justify-center shrink-0',
-                            automation.enabled
-                              ? automation.type === 'send_email'
-                                ? 'bg-blue-50 text-blue-600'
-                                : 'bg-purple-50 text-purple-600'
-                              : 'bg-gray-100 text-gray-500',
-                          )}
-                        >
-                          {getAutomationIcon(automation.type)}
-                        </div>
+                      {/* Status indicator bar */}
+                      <div
+                        className={cn(
+                          'h-1 w-full',
+                          automation.enabled
+                            ? automation.type === 'send_email'
+                              ? 'bg-blue-400'
+                              : automation.type === 'create_project'
+                              ? 'bg-purple-400'
+                              : 'bg-green-400'
+                            : 'bg-gray-200',
+                        )}
+                      />
 
-                        <div className='flex-1 min-w-0'>
-                          <div className='flex items-center justify-between'>
-                            <span className='font-medium truncate'>{automation.name}</span>
-                            <Switch
-                              checked={automation.enabled}
-                              onCheckedChange={() => {
-                                return toggleAutomation(automation.id);
-                              }}
-                              className='ml-2'
-                            />
+                      <div className='p-3.5'>
+                        <div className='flex items-center gap-3'>
+                          <div
+                            className={cn(
+                              'h-8 w-8 rounded-full flex items-center justify-center shrink-0',
+                              automation.enabled
+                                ? automation.type === 'send_email'
+                                  ? 'bg-blue-50 text-blue-600'
+                                  : automation.type === 'create_project'
+                                  ? 'bg-purple-50 text-purple-600'
+                                  : 'bg-green-50 text-green-600'
+                                : 'bg-gray-100 text-gray-500',
+                            )}
+                          >
+                            {getAutomationIcon(automation.type)}
                           </div>
 
-                          <div className='text-sm text-gray-500 mt-1 truncate'>
-                            {getAutomationDisplayName(automation.type)}
+                          <div className='flex-1 min-w-0'>
+                            <div className='flex items-center justify-between mb-1'>
+                              <span className='font-medium truncate block'>{automation.name}</span>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant='ghost'
+                                    size='icon'
+                                    className='h-6 w-6 rounded-full -mr-1'
+                                  >
+                                    <MoreHorizontal className='h-3.5 w-3.5 text-gray-500' />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className='w-40 p-1' side='right'>
+                                  <div className='space-y-0.5'>
+                                    <Button
+                                      variant='ghost'
+                                      size='sm'
+                                      className='w-full justify-start text-xs h-7'
+                                      onClick={() => {
+                                        return handleEditAutomation(automation);
+                                      }}
+                                    >
+                                      <Edit2 className='h-3 w-3 mr-2' />
+                                      Edit
+                                    </Button>
+                                    <Button
+                                      variant='ghost'
+                                      size='sm'
+                                      className='w-full justify-start text-xs h-7 text-red-600 hover:text-red-700 hover:bg-red-50'
+                                      onClick={() => {
+                                        return deleteAutomation(automation.id);
+                                      }}
+                                    >
+                                      <Trash2 className='h-3 w-3 mr-2' />
+                                      Delete
+                                    </Button>
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+
+                            <div className='flex items-center text-xs text-gray-500'>
+                              <span className='mr-2'>
+                                {getAutomationDisplayName(automation.type)}
+                              </span>
+                              <button
+                                type='button'
+                                className={cn(
+                                  'flex items-center gap-1.5 rounded-full px-2 py-0.5 transition-colors',
+                                  automation.enabled
+                                    ? 'bg-emerald-50 hover:bg-emerald-100'
+                                    : 'bg-gray-100 hover:bg-gray-200',
+                                )}
+                                onClick={() => {
+                                  return toggleAutomation(automation.id);
+                                }}
+                                aria-label={
+                                  automation.enabled ? 'Disable automation' : 'Enable automation'
+                                }
+                              >
+                                <div
+                                  className={cn(
+                                    'w-2 h-2 rounded-full transition-colors',
+                                    automation.enabled ? 'bg-emerald-500' : 'bg-gray-400',
+                                  )}
+                                />
+                                <span
+                                  className={cn(
+                                    'text-[10px] font-medium',
+                                    automation.enabled ? 'text-emerald-600' : 'text-gray-500',
+                                  )}
+                                >
+                                  {automation.enabled ? 'Active' : 'Disabled'}
+                                </span>
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-
-                      <div className='flex justify-end gap-2 mt-3'>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='text-xs'
-                          onClick={() => {
-                            return handleEditAutomation(automation);
-                          }}
-                        >
-                          <Edit2 className='h-3.5 w-3.5 mr-1' />
-                          Edit
-                        </Button>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='text-xs text-red-500 hover:text-red-600 hover:bg-red-50'
-                          onClick={() => {
-                            return deleteAutomation(automation.id);
-                          }}
-                        >
-                          <Trash2 className='h-3.5 w-3.5 mr-1' />
-                          Delete
-                        </Button>
                       </div>
                     </div>
                   </div>
