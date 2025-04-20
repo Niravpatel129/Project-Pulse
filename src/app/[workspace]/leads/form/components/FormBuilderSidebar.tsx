@@ -168,8 +168,6 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
         return {
           projectNameTemplate: 'Form Submission - {{submission_date}}',
           description: 'Project created from form submission by {{client_name}}',
-          projectTemplate:
-            'Task 1: Initial consultation\nTask 2: Gather requirements\nTask 3: Project planning\nMilestone: Project kickoff',
         };
       case 'assign_project_manager':
         return {
@@ -1002,6 +1000,7 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
         automation={currentAutomation}
         onSave={handleSaveAutomation}
         generateId={generateId}
+        formElements={formElements}
       />
     </div>
   );

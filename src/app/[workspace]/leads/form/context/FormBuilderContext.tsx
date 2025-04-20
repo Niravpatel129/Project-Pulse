@@ -575,8 +575,6 @@ export const FormBuilderProvider: React.FC<{
         config: {
           projectNameTemplate: 'Form Submission - {{submission_date}}',
           description: 'Project created from form submission by {{client_name}}',
-          projectTemplate:
-            'Task 1: Initial consultation\nTask 2: Gather requirements\nTask 3: Project planning\nMilestone: Project kickoff',
         },
       },
       {
