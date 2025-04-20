@@ -159,9 +159,9 @@ export default function LeadFormsTable() {
         key: 'share',
         header: 'Share',
         cell: (form) => {
-          const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/form/${
-            form._id
-          }`;
+          const shareUrl = `${
+            process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+          }/portal/lead/${form._id}`;
 
           return (
             <div className='flex items-center gap-1'>

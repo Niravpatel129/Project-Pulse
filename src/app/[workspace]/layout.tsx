@@ -33,6 +33,7 @@ export default function DashboardLayout({
   const isInvoiceNewPage = pathname.includes('/invoices/new');
   const isInvoiceViewPage = pathname.includes('/invoice/');
   const isPaymentSuccessPage = pathname.includes('/payment-success');
+
   const showNavigation =
     !isAuthPage &&
     !isPortalPage &&
@@ -41,6 +42,7 @@ export default function DashboardLayout({
     !isInvoiceNewPage &&
     !isInvoiceViewPage &&
     !isPaymentSuccessPage;
+
   const isInvoicesPage = pathname.includes('/invoices');
   const isProjectPage = pathname.includes('/');
   const isLeadsPage = pathname.includes('/leads');
