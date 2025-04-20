@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -18,13 +19,17 @@ import {
   Grip,
   MessageSquare,
   MoreHorizontal,
+  Plus,
   Radio,
   Trash2,
   Upload,
   User2,
   X,
+  Zap,
 } from 'lucide-react';
+import { useState } from 'react';
 import { useFormBuilder } from '../context/FormBuilderContext';
+import { AutomationDialog } from './AutomationDialog';
 
 // Import needed types
 type Condition = {
@@ -78,6 +83,18 @@ type FormBuilderSidebarProps = {
   getElementIcon: (type: string) => React.ReactNode;
 };
 
+// Define the automation types
+type AutomationType = 'send_email' | 'create_task' | 'custom_workflow';
+
+// Define the automation interface
+interface Automation {
+  id: string;
+  name: string;
+  type: AutomationType;
+  enabled: boolean;
+  config?: Record<string, any>;
+}
+
 export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSidebarProps) {
   const {
     formElements,
@@ -104,7 +121,37 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
     deleteElement,
     duplicateElement,
     generateId,
+    automations,
+    addAutomation,
+    deleteAutomation,
+    toggleAutomation,
+    editAutomation,
   } = useFormBuilder();
+
+  // Add state for automation dialog
+  const [automationDialogOpen, setAutomationDialogOpen] = useState(false);
+  const [currentAutomation, setCurrentAutomation] = useState<Automation | undefined>(undefined);
+
+  // Function to handle adding new automation
+  const handleAddAutomation = () => {
+    setCurrentAutomation(undefined);
+    setAutomationDialogOpen(true);
+  };
+
+  // Function to handle editing automation
+  const handleEditAutomation = (automation: Automation) => {
+    setCurrentAutomation(automation);
+    setAutomationDialogOpen(true);
+  };
+
+  // Function to save automation
+  const handleSaveAutomation = (automation: Automation) => {
+    if (currentAutomation) {
+      editAutomation(automation);
+    } else {
+      addAutomation(automation);
+    }
+  };
 
   const openElementEditor = (element: any) => {
     setEditingElement({ ...element });
@@ -144,6 +191,34 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
     setChangesSaved(false);
   };
 
+  // Function to get automation icon based on type
+  const getAutomationIcon = (type: AutomationType) => {
+    switch (type) {
+      case 'send_email':
+        return <MessageSquare className='h-4 w-4' />;
+      case 'create_task':
+        return <CheckSquare className='h-4 w-4' />;
+      case 'custom_workflow':
+        return <Zap className='h-4 w-4' />;
+      default:
+        return <Zap className='h-4 w-4' />;
+    }
+  };
+
+  // Function to get display name for automation type
+  const getAutomationDisplayName = (type: AutomationType) => {
+    switch (type) {
+      case 'send_email':
+        return 'Send Email';
+      case 'create_task':
+        return 'Create Task';
+      case 'custom_workflow':
+        return 'Custom Workflow';
+      default:
+        return 'Automation';
+    }
+  };
+
   return (
     <div className='h-full flex flex-col'>
       <div className='p-2 flex items-center justify-between'>
@@ -170,6 +245,9 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
             </TabsTrigger>
             <TabsTrigger value='myform' className='flex-1'>
               My Form
+            </TabsTrigger>
+            <TabsTrigger value='automations' className='flex-1'>
+              Automations
             </TabsTrigger>
           </TabsList>
         </div>
@@ -591,7 +669,141 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
             </div>
           )}
         </TabsContent>
+
+        <TabsContent value='automations' className='flex-1 overflow-auto p-4 mt-0'>
+          <div className='bg-gray-50 p-4 rounded-md mb-4'>
+            <h3 className='font-medium text-sm mb-1'>Project Onboarding Automations</h3>
+            <p className='text-xs text-gray-500'>
+              Configure the automation flow that happens when a form is submitted
+            </p>
+          </div>
+
+          {automations.length === 0 ? (
+            <div className='text-center p-8'>
+              <div className='rounded-full bg-purple-100 p-3 inline-flex mb-3'>
+                <Zap className='h-6 w-6 text-purple-600' />
+              </div>
+              <h3 className='text-lg font-medium mb-2'>No project automations yet</h3>
+              <p className='text-gray-500 mb-4'>
+                Automations help you save time by automating project onboarding tasks
+              </p>
+              <Button onClick={handleAddAutomation} className='gap-2'>
+                <Plus className='h-4 w-4' />
+                Add project automation
+              </Button>
+            </div>
+          ) : (
+            <div className='space-y-3'>
+              <div className='flex items-center gap-2 px-3 py-2'>
+                <div className='w-2 h-2 rounded-full bg-gray-400'></div>
+                <span className='text-sm text-gray-500'>Form Submission</span>
+              </div>
+
+              {automations.map((automation, index) => {
+                return (
+                  <div key={automation.id} className='relative'>
+                    <div className='absolute left-[7px] top-0 w-[2px] h-full bg-gray-200'></div>
+
+                    <div
+                      className={cn(
+                        'ml-6 border rounded-lg p-4 relative bg-white',
+                        automation.enabled
+                          ? automation.type === 'send_email'
+                            ? 'border-blue-200'
+                            : 'border-gray-200'
+                          : 'border-gray-200 bg-gray-50 opacity-80',
+                      )}
+                    >
+                      <div className='flex items-center gap-3'>
+                        <div
+                          className={cn(
+                            'h-8 w-8 rounded-full flex items-center justify-center shrink-0',
+                            automation.enabled
+                              ? automation.type === 'send_email'
+                                ? 'bg-blue-50 text-blue-600'
+                                : 'bg-purple-50 text-purple-600'
+                              : 'bg-gray-100 text-gray-500',
+                          )}
+                        >
+                          {getAutomationIcon(automation.type)}
+                        </div>
+
+                        <div className='flex-1 min-w-0'>
+                          <div className='flex items-center justify-between'>
+                            <span className='font-medium truncate'>{automation.name}</span>
+                            <Switch
+                              checked={automation.enabled}
+                              onCheckedChange={() => {
+                                return toggleAutomation(automation.id);
+                              }}
+                              className='ml-2'
+                            />
+                          </div>
+
+                          <div className='text-sm text-gray-500 mt-1 truncate'>
+                            {getAutomationDisplayName(automation.type)}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className='flex justify-end gap-2 mt-3'>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='text-xs'
+                          onClick={() => {
+                            return handleEditAutomation(automation);
+                          }}
+                        >
+                          <Edit2 className='h-3.5 w-3.5 mr-1' />
+                          Edit
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='text-xs text-red-500 hover:text-red-600 hover:bg-red-50'
+                          onClick={() => {
+                            return deleteAutomation(automation.id);
+                          }}
+                        >
+                          <Trash2 className='h-3.5 w-3.5 mr-1' />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div className='relative'>
+                <div className='absolute left-[7px] top-0 w-[2px] h-[20px] bg-gray-200'></div>
+                <Button
+                  variant='outline'
+                  className='ml-6 w-[calc(100%-24px)] h-12 gap-2 border-dashed border-gray-300 rounded-lg'
+                  onClick={handleAddAutomation}
+                >
+                  <Plus className='h-4 w-4' />
+                  Add automation step
+                </Button>
+              </div>
+
+              <div className='flex items-center gap-2 px-3 py-2'>
+                <div className='w-2 h-2 rounded-full bg-gray-400'></div>
+                <span className='text-sm text-gray-500'>Complete</span>
+              </div>
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
+
+      {/* Automation Dialog */}
+      <AutomationDialog
+        open={automationDialogOpen}
+        onOpenChange={setAutomationDialogOpen}
+        automation={currentAutomation}
+        onSave={handleSaveAutomation}
+        generateId={generateId}
+      />
     </div>
   );
 }

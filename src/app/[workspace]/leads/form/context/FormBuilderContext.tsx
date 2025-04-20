@@ -7,6 +7,18 @@ import React, { createContext, ReactNode, useContext, useEffect, useState } from
 import { FormElement, FormValues } from '../types';
 import { generateId } from '../utils';
 
+// Define the automation types
+type AutomationType = 'send_email' | 'create_task' | 'custom_workflow';
+
+// Define the automation interface
+interface Automation {
+  id: string;
+  name: string;
+  type: AutomationType;
+  enabled: boolean;
+  config?: Record<string, any>;
+}
+
 type FormBuilderContextType = {
   // State
   formElements: FormElement[];
@@ -29,6 +41,7 @@ type FormBuilderContextType = {
   validationErrors: string[];
   isEditMode: boolean;
   formId: string | undefined;
+  automations: Automation[];
 
   // Functions
   setFormElements: React.Dispatch<React.SetStateAction<FormElement[]>>;
@@ -69,6 +82,12 @@ type FormBuilderContextType = {
   validateForm: () => boolean;
   setFormTitle: (title: string) => void;
   formTitle: string;
+
+  // Automation functions
+  addAutomation: (automation?: Automation) => void;
+  editAutomation: (automation: Automation) => void;
+  deleteAutomation: (id: string) => void;
+  toggleAutomation: (id: string) => void;
 };
 
 const FormBuilderContext = createContext<FormBuilderContextType | undefined>(undefined);
@@ -105,6 +124,7 @@ export const FormBuilderProvider: React.FC<{
   const [isMobile, setIsMobile] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [formTitle, setFormTitle] = useState('Untitled form');
+  const [automations, setAutomations] = useState<Automation[]>([]);
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -125,6 +145,9 @@ export const FormBuilderProvider: React.FC<{
       setFormTitle(formData.title || 'Untitled form');
       if (formData.elements && Array.isArray(formData.elements)) {
         setFormElements(formData.elements);
+      }
+      if (formData.automations && Array.isArray(formData.automations)) {
+        setAutomations(formData.automations);
       }
       setChangesSaved(true);
     }
@@ -311,6 +334,7 @@ export const FormBuilderProvider: React.FC<{
     const formData = {
       title: formTitle,
       elements: formElements,
+      automations: automations,
       status: 'draft',
     };
 
@@ -526,6 +550,50 @@ export const FormBuilderProvider: React.FC<{
     setChangesSaved(false);
   };
 
+  // Automation functions
+  const addAutomation = (automation?: Automation) => {
+    const newAutomation: Automation = automation || {
+      id: generateId(),
+      name: 'New Automation',
+      type: 'send_email',
+      enabled: true,
+      config: {},
+    };
+
+    setAutomations([...automations, newAutomation]);
+    setChangesSaved(false);
+  };
+
+  const editAutomation = (automation: Automation) => {
+    setAutomations(
+      automations.map((item) => {
+        return item.id === automation.id ? automation : item;
+      }),
+    );
+    setChangesSaved(false);
+  };
+
+  const deleteAutomation = (id: string) => {
+    setAutomations(
+      automations.filter((item) => {
+        return item.id !== id;
+      }),
+    );
+    setChangesSaved(false);
+  };
+
+  const toggleAutomation = (id: string) => {
+    setAutomations(
+      automations.map((item) => {
+        if (item.id === id) {
+          return { ...item, enabled: !item.enabled };
+        }
+        return item;
+      }),
+    );
+    setChangesSaved(false);
+  };
+
   const value = {
     // State
     formElements,
@@ -548,6 +616,7 @@ export const FormBuilderProvider: React.FC<{
     validationErrors,
     isEditMode,
     formId,
+    automations,
 
     // Setters
     setFormElements,
@@ -588,6 +657,12 @@ export const FormBuilderProvider: React.FC<{
     validateForm,
     formTitle,
     setFormTitle,
+
+    // Automation functions
+    addAutomation,
+    editAutomation,
+    deleteAutomation,
+    toggleAutomation,
   };
 
   return <FormBuilderContext.Provider value={value}>{children}</FormBuilderContext.Provider>;
