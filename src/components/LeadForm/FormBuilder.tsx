@@ -63,9 +63,44 @@ const mapFieldType = (apiType: string): FormFieldType => {
     Checkbox: 'checkbox',
     'File Upload': 'file',
     Switch: 'switch',
+    'Radio Buttons': 'radio',
+    Checkboxes: 'checkbox',
+    Rating: 'rating',
   };
 
   return typeMap[apiType] || 'text';
+};
+
+// Transform string options to required { label, value } format
+const transformOptions = (options: any[] | undefined) => {
+  if (!options) return [];
+
+  // If options are already in the correct format, return them
+  if (
+    options.length > 0 &&
+    typeof options[0] === 'object' &&
+    'label' in options[0] &&
+    'value' in options[0]
+  ) {
+    return options;
+  }
+
+  // Transform string options to the required format
+  return options.map((option) => {
+    // If option is already an object but doesn't have label/value format
+    if (typeof option === 'object' && option !== null) {
+      return {
+        label: option.text || option.name || option.label || String(option),
+        value: option.id || option.value || String(option),
+      };
+    }
+
+    // If option is a string or number
+    return {
+      label: String(option),
+      value: String(option),
+    };
+  });
 };
 
 export function FormBuilder({
@@ -180,7 +215,7 @@ export function FormBuilder({
                           return handleFieldChange(element.id, value);
                         }
                   }
-                  options={element.options}
+                  options={transformOptions(element.options)}
                   clientFields={element.clientFields}
                 />
                 {element !== sortedElements[sortedElements.length - 1] && (

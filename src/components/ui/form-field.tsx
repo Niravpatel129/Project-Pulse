@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CalendarIcon, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from './button';
 import { Calendar } from './calendar';
 import { Checkbox } from './checkbox';
@@ -26,7 +27,8 @@ export type FormFieldType =
   | 'address'
   | 'file'
   | 'textBlock'
-  | 'clientDetails';
+  | 'clientDetails'
+  | 'rating';
 
 export interface SelectOption {
   label: string;
@@ -84,6 +86,8 @@ export function FormField({
   clientFields,
   className,
 }: FormFieldProps) {
+  const [datePopoverOpen, setDatePopoverOpen] = useState(false);
+
   // Handle client details - collects various client information fields
   if (type === 'clientDetails') {
     return (
@@ -321,7 +325,7 @@ export function FormField({
       )}
 
       {type === 'date' && (
-        <Popover>
+        <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
           <PopoverTrigger asChild>
             <Button
               variant='outline'
@@ -334,8 +338,18 @@ export function FormField({
               {value ? format(value, 'PPP') : placeholder || 'Select a date'}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className='w-auto p-0'>
-            <Calendar mode='single' selected={value} onSelect={onChange} initialFocus />
+          <PopoverContent className='w-auto p-0 min-w-[400px]'>
+            <Calendar
+              mode='single'
+              selected={value}
+              onSelect={(date) => {
+                onChange?.(date);
+                if (date) {
+                  setDatePopoverOpen(false);
+                }
+              }}
+              initialFocus
+            />
           </PopoverContent>
         </Popover>
       )}
@@ -413,6 +427,28 @@ export function FormField({
           }}
           className='w-full'
         />
+      )}
+
+      {type === 'rating' && (
+        <div className='flex gap-2 mt-2'>
+          {[1, 2, 3, 4, 5].map((rating) => {
+            return (
+              <Button
+                key={rating}
+                type='button'
+                variant={value === rating ? 'default' : 'outline'}
+                size='icon'
+                className='h-10 w-10'
+                onClick={() => {
+                  return onChange?.(rating);
+                }}
+                disabled={disabled}
+              >
+                {rating}
+              </Button>
+            );
+          })}
+        </div>
       )}
     </div>
   );
