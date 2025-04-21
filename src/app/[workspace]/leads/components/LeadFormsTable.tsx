@@ -53,7 +53,7 @@ export default function LeadFormsTable() {
         cell: (form) => {
           return (
             <div className='font-medium'>
-              <Link href={`/form/${form._id}`} className='hover:underline'>
+              <Link href={`/leads/form/${form._id}`} className='hover:underline'>
                 {form.title}
               </Link>
             </div>

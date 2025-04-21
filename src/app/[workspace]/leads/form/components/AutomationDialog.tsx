@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { usePipelineSettings } from '@/hooks/usePipelineSettings';
 import { CaretSortIcon, PlusCircledIcon } from '@radix-ui/react-icons';
 import { useEffect, useRef, useState } from 'react';
 
@@ -75,7 +76,7 @@ interface Automation {
   name: string;
   type: AutomationType;
   enabled: boolean;
-  config?: Record<string, any>;
+  config?: Record<string, any>; // Using Record<string, any> to allow for flexible config options
 }
 
 interface AutomationDialogProps {
@@ -113,6 +114,9 @@ export function AutomationDialog({
   const [variables, setVariables] = useState<VariableItem[]>([]);
   const [fieldMappings, setFieldMappings] = useState<Record<string, string>>({});
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
+
+  // Get pipeline settings to populate stage and status dropdowns
+  const { stages, statuses } = usePipelineSettings();
 
   // Debug log when automation prop changes
   useEffect(() => {
@@ -296,15 +300,24 @@ export function AutomationDialog({
     // Use the ID from the provided automation if available, otherwise generate new ID
     const id = automation?.id || generateId();
 
+    // Ensure stage and status are included for create_project type
+    let finalConfig = { ...config, fieldMappings };
+
+    // For create_project type, explicitly set initialStage and initialStatus if available
+    if (type === 'create_project') {
+      finalConfig = {
+        ...finalConfig,
+        initialStage: config.initialStage || (stages.length > 0 ? stages[0]._id : ''),
+        initialStatus: config.initialStatus || (statuses.length > 0 ? statuses[0]._id : ''),
+      };
+    }
+
     const newAutomation: Automation = {
       id,
       name,
       type,
       enabled: automation?.enabled ?? true,
-      config: {
-        ...config,
-        fieldMappings,
-      },
+      config: finalConfig,
     };
 
     console.log('Final automation object to save:', newAutomation);
@@ -578,6 +591,66 @@ export function AutomationDialog({
               placeholder: 'Enter project description',
               rows: 6,
             })}
+
+            <div className='space-y-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='initial-stage'>Initial Project Stage</Label>
+                <Select
+                  value={config.initialStage || (stages.length > 0 ? stages[0]._id : '')}
+                  onValueChange={(value) => {
+                    return setConfig({ ...config, initialStage: value });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select initial stage' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {stages.map((stage) => {
+                      return (
+                        <SelectItem key={stage._id} value={stage._id}>
+                          <div className='flex items-center'>
+                            <div
+                              className='h-2 w-2 rounded-full mr-2'
+                              style={{ backgroundColor: stage.color }}
+                            ></div>
+                            {stage.name}
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className='space-y-2'>
+                <Label htmlFor='initial-status'>Initial Project Status</Label>
+                <Select
+                  value={config.initialStatus || (statuses.length > 0 ? statuses[0]._id : '')}
+                  onValueChange={(value) => {
+                    return setConfig({ ...config, initialStatus: value });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select initial status' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statuses.map((status) => {
+                      return (
+                        <SelectItem key={status._id} value={status._id}>
+                          <div className='flex items-center'>
+                            <div
+                              className='h-2 w-2 rounded-full mr-2'
+                              style={{ backgroundColor: status.color }}
+                            ></div>
+                            {status.name}
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
         );
 
