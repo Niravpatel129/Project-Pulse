@@ -46,16 +46,18 @@ export default function LeadsLayout({ children }: { children: React.ReactNode })
             >
               Submissions
             </Link>
-            <Link
-              href={`${basePath}/leads/settings`}
-              className={`py-4 font-medium ${
-                isActive('settings')
-                  ? 'border-b-2 border-primary text-primary'
-                  : 'text-muted-foreground'
-              }`}
-            >
-              Settings
-            </Link>
+            {process.env.NODE_ENV !== 'production' && (
+              <Link
+                href={`${basePath}/leads/settings`}
+                className={`py-4 font-medium ${
+                  isActive('settings')
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                Settings
+              </Link>
+            )}
           </nav>
         </div>
       </div>
