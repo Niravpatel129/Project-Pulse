@@ -6,7 +6,14 @@ import { NotesProvider } from '@/contexts/NotesContext';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
-import { format, isThisWeek, isThisYear, isToday, isYesterday } from 'date-fns';
+import {
+  format,
+  formatDistanceToNow,
+  isThisWeek,
+  isThisYear,
+  isToday,
+  isYesterday,
+} from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ClipboardList, FileText, Mail, User } from 'lucide-react';
 import { useState } from 'react';
@@ -385,23 +392,42 @@ export default function ProjectHome() {
                               transition={{ duration: 0.2 }}
                             >
                               <Card
-                                className='p-3 cursor-pointer hover:bg-gray-50'
+                                className='p-4 cursor-pointer hover:bg-gray-50 transition-all duration-200'
                                 onClick={() => {
                                   return handleOpenSubmission(note.submission!);
                                 }}
                               >
-                                <div className='flex items-center gap-3'>
-                                  <div className='flex-shrink-0 bg-gray-100 p-2 rounded-full'>
-                                    <ClipboardList className='h-4 w-4 text-gray-500' />
+                                <div className='flex items-start gap-3'>
+                                  <div className='flex-shrink-0 bg-blue-50 p-2 rounded-full'>
+                                    <ClipboardList className='h-4 w-4 text-blue-500' />
                                   </div>
                                   <div className='flex-1'>
-                                    <p className='text-sm font-medium'>{note.content}</p>
-                                    <p className='text-xs text-gray-500'>
-                                      {note.submission.clientName} submitted a form
-                                    </p>
-                                    <p className='text-xs text-gray-500'>
-                                      {new Date(note.createdAt).toLocaleString()}
-                                    </p>
+                                    <div className='flex justify-between items-start'>
+                                      <div>
+                                        <p className='text-sm font-medium'>{note.content}</p>
+                                        <p className='text-xs text-gray-500 mt-1'>
+                                          Form submission by{' '}
+                                          {note.submission.clientName ||
+                                            note.submission.clientEmail}
+                                        </p>
+                                      </div>
+                                      <div className='text-xs text-gray-500'>
+                                        {formatDistanceToNow(new Date(note.createdAt), {
+                                          addSuffix: true,
+                                        })}
+                                      </div>
+                                    </div>
+                                    {note.submission.formValues &&
+                                      Object.keys(note.submission.formValues).length > 0 && (
+                                        <div className='mt-2 flex gap-2'>
+                                          <span className='text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded'>
+                                            {Object.keys(note.submission.formValues).length} field
+                                            {Object.keys(note.submission.formValues).length !== 1
+                                              ? 's'
+                                              : ''}
+                                          </span>
+                                        </div>
+                                      )}
                                   </div>
                                 </div>
                               </Card>

@@ -238,18 +238,18 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
   };
 
   return (
-    <Card className='p-5 space-y-5 transition-all duration-200 hover:shadow-sm group'>
-      <div className='flex items-start gap-4'>
+    <Card className='p-4 space-y-4 transition-all duration-200 hover:shadow-sm hover:bg-gray-50 group'>
+      <div className='flex items-start gap-3'>
         <div className='flex-shrink-0'>
           {localNote.createdBy ? (
-            <Avatar className='h-8 w-8 shrink-0 mt-1'>
+            <Avatar className='h-8 w-8 shrink-0'>
               <AvatarImage src={localNote.createdBy.avatar} alt='User' />
               <AvatarFallback className='bg-green-600 text-white font-bold text-sm uppercase'>
                 {localNote.createdBy.name?.substring(0, 2)}
               </AvatarFallback>
             </Avatar>
           ) : (
-            <Avatar className='h-8 w-8 shrink-0 mt-1'>
+            <Avatar className='h-8 w-8 shrink-0'>
               <AvatarFallback className='bg-blue-600 text-white font-bold text-sm uppercase'>
                 SYS
               </AvatarFallback>
@@ -257,26 +257,21 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
           )}
         </div>
         <div className='flex-1 min-w-0'>
-          <div className='flex items-center justify-between mb-3'>
-            <div className='space-y-1'>
-              <div className='text-sm font-medium text-gray-900 tracking-tight'>
+          <div className='flex items-center justify-between'>
+            <div>
+              <div className='text-sm font-medium text-gray-900'>
                 {localNote.createdBy?.name || 'System'}
               </div>
               {localNote.createdBy?.email && (
-                <div className='text-xs text-gray-500 tracking-tight'>
-                  {localNote.createdBy.email}
-                </div>
+                <div className='text-xs text-gray-500'>{localNote.createdBy.email}</div>
               )}
             </div>
-            <div className='flex items-center gap-3'>
-              <div className='text-xs text-gray-500 tracking-tight'>
-                {formatDistanceToNow(new Date(localNote?.createdAt), { addSuffix: true })}
-              </div>
+            <div className='flex items-center gap-2'>
               {!isEditing && !localNote.isSystem && (
                 <Button
                   variant='ghost'
                   size='icon'
-                  className='h-8 w-8 hover:bg-gray-50 transition-colors opacity-0 group-hover:opacity-100'
+                  className='h-7 w-7 hover:bg-gray-100 transition-colors opacity-0 group-hover:opacity-100'
                   onClick={() => {
                     return setIsEditing(true);
                   }}
@@ -284,11 +279,14 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
                   <Pencil className='h-3.5 w-3.5 text-gray-500' />
                 </Button>
               )}
+              <div className='text-xs text-gray-500'>
+                {formatDistanceToNow(new Date(localNote?.createdAt), { addSuffix: true })}
+              </div>
             </div>
           </div>
-          <div className='mt-3'>
+          <div className='mt-2'>
             {isEditing ? (
-              <div className='space-y-4'>
+              <div className='space-y-3'>
                 <EnhancedMessageEditor
                   ref={editorRef}
                   content={localNote.content}
@@ -298,12 +296,12 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
                   onAttachmentsChange={setAttachments}
                   buttons={
                     <>
-                      <div className='flex justify-end gap-3'>
+                      <div className='flex justify-end gap-2 mt-3'>
                         <Button
                           variant='outline'
                           size='sm'
                           onClick={handleCancel}
-                          className='h-8 px-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors'
+                          className='h-8 px-3 text-sm font-medium'
                         >
                           <X className='h-3.5 w-3.5 mr-1.5' />
                           Cancel
@@ -311,7 +309,7 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
                         <Button
                           size='sm'
                           onClick={handleSave}
-                          className='h-8 px-3 text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition-colors'
+                          className='h-8 px-3 text-sm font-medium'
                         >
                           <Save className='h-3.5 w-3.5 mr-1.5' />
                           Save
@@ -328,7 +326,7 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
             )}
           </div>
           {!isEditing && localNote.attachments && localNote.attachments.length > 0 && (
-            <div className='mt-4 flex flex-wrap gap-2'>
+            <div className='mt-3 flex flex-wrap gap-2'>
               {localNote.attachments.map((attachment) => {
                 return (
                   <a
@@ -336,7 +334,7 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
                     href={attachment.downloadURL}
                     target='_blank'
                     rel='noopener noreferrer'
-                    className='inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-all duration-200'
+                    className='inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs bg-gray-50 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-all duration-200'
                   >
                     <FileText className='h-3.5 w-3.5' />
                     <span className='truncate max-w-[200px]'>{attachment.originalName}</span>
