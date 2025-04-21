@@ -579,16 +579,6 @@ export const FormBuilderProvider: React.FC<{
       },
       {
         id: generateId(),
-        name: 'Assign Project Manager',
-        type: 'assign_project_manager',
-        enabled: true,
-        config: {
-          assigneeType: 'auto',
-          notifyAssignee: true,
-        },
-      },
-      {
-        id: generateId(),
         name: 'Send Welcome Email',
         type: 'send_email',
         enabled: true,

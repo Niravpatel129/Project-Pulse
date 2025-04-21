@@ -169,8 +169,6 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
     switch (type) {
       case 'create_project':
         return 'Create Project Automatically';
-      case 'assign_project_manager':
-        return 'Assign Project Manager';
       case 'send_email':
         return 'Send Welcome Email';
       default:
@@ -301,8 +299,7 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
         return 'Send Email';
       case 'create_project':
         return 'Create Project';
-      case 'assign_project_manager':
-        return 'Assign Project Manager';
+
       default:
         return 'Automation';
     }
@@ -798,19 +795,7 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
                       </div>
                       Create Project
                     </Button>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      className='w-full justify-start h-10'
-                      onClick={() => {
-                        return handleAddAutomation('assign_project_manager');
-                      }}
-                    >
-                      <div className='h-7 w-7 rounded-full bg-green-50 flex items-center justify-center mr-2'>
-                        <User2 className='h-4 w-4 text-green-600' />
-                      </div>
-                      Assign Project Manager
-                    </Button>
+
                     <Button
                       variant='ghost'
                       size='sm'
@@ -989,19 +974,7 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
                           </div>
                           Create Project
                         </Button>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='w-full justify-start h-10'
-                          onClick={() => {
-                            return handleAddAutomation('assign_project_manager');
-                          }}
-                        >
-                          <div className='h-7 w-7 rounded-full bg-green-50 flex items-center justify-center mr-2'>
-                            <User2 className='h-4 w-4 text-green-600' />
-                          </div>
-                          Assign Project Manager
-                        </Button>
+
                         <Button
                           variant='ghost'
                           size='sm'

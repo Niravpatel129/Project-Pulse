@@ -20,6 +20,14 @@ export default function LeadsLayout({ children }: { children: React.ReactNode })
   const basePathArray = pathname.split('/leads');
   const basePath = basePathArray[0];
 
+  // Check if we're on a form page
+  const isFormPage = pathname.includes('/leads/form');
+
+  // Don't show navigation on form pages
+  if (isFormPage) {
+    return <div className='bg-background'>{children}</div>;
+  }
+
   return (
     <div className='bg-background'>
       {/* Navigation */}

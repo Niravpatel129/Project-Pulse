@@ -808,7 +808,6 @@ export function AutomationDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value='create_project'>Create Project</SelectItem>
-                  <SelectItem value='assign_project_manager'>Assign Project Manager</SelectItem>
                   <SelectItem value='send_email'>Send Email</SelectItem>
                 </SelectContent>
               </Select>

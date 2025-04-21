@@ -14,30 +14,36 @@ import { useQuery } from '@tanstack/react-query';
 import { FileClock, MoreHorizontal, Trash, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+interface LeadForm {
+  _id: string;
+  title: string;
+  description: string;
+  elements: any[];
+  automations: any[];
+  status: string;
+  notifyOnSubmission: boolean;
+  notificationEmails: string[];
+  submissions: string[];
+}
+
 interface FormSubmission {
   _id: string;
-  formId: string;
-  submittedBy: string;
+  workspace: string;
+  leadForm: LeadForm;
   clientEmail: string;
   clientName: string | null;
   clientPhone: string | null;
   clientCompany: string | null;
   clientAddress: string | null;
   submittedAt: string;
-  formValues: Record<string, any>;
-  formTitle: string;
+  submittedBy: string;
+  formValues?: Record<string, any>;
 }
 
 // Extended type used for displaying in the table after flattening
 interface EnhancedFormSubmission extends FormSubmission {
   formId: string;
   formTitle: string;
-}
-
-interface FormWithSubmissions {
-  _id: string;
-  formTitle?: string;
-  submissions: FormSubmission[];
 }
 
 interface SubmissionsTableProps {
@@ -51,7 +57,7 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
   const [selectAll, setSelectAll] = useState(false);
 
   const {
-    data: formsWithSubmissions,
+    data: submissionsData,
     isLoading,
     error,
     refetch,
@@ -155,30 +161,27 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
     }
   };
 
-  // Flatten the submissions for the table
+  // Process the submissions for the table
   const submissions = useMemo(() => {
-    if (!formsWithSubmissions) return [];
+    if (!submissionsData) return [];
 
-    let allSubmissions = formsWithSubmissions.flatMap((form: FormWithSubmissions) => {
-      return form.submissions.map((submission: FormSubmission) => {
-        console.log('🚀 submission:', submission.formTitle);
-        return {
-          ...submission,
-          formId: submission.formId,
-          formTitle: submission.formTitle || 'Untitled Form',
-        };
-      });
+    const enhancedSubmissions = submissionsData.map((submission: FormSubmission) => {
+      return {
+        ...submission,
+        formId: submission.leadForm._id,
+        formTitle: submission.leadForm.title || 'Untitled Form',
+      };
     });
 
     // Apply form ID filter if provided
     if (formIdFilter) {
-      allSubmissions = allSubmissions.filter((submission) => {
+      return enhancedSubmissions.filter((submission) => {
         return submission.formId === formIdFilter;
       });
     }
 
-    return allSubmissions;
-  }, [formsWithSubmissions, formIdFilter]);
+    return enhancedSubmissions;
+  }, [submissionsData, formIdFilter]);
 
   const columns: Column<EnhancedFormSubmission>[] = useMemo(() => {
     return [

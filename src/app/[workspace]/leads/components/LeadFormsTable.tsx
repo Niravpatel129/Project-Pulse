@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatDate } from '@/lib/utils';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Archive,
   Copy,
@@ -89,9 +90,11 @@ export default function LeadFormsTable() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant='ghost' className='h-8 p-0'>
-                  <Badge variant={statusBadgeVariant(form.status)} className='capitalize'>
-                    {form.status}
-                  </Badge>
+                  <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <Badge variant={statusBadgeVariant(form.status)} className='capitalize'>
+                      {form.status}
+                    </Badge>
+                  </motion.div>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align='end'>
@@ -143,7 +146,9 @@ export default function LeadFormsTable() {
               href={`${pathname}/submissions?form=${form._id}`}
               className='flex justify-center hover:underline'
             >
-              {form.submissions?.length || 0}
+              <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                {form.submissions?.length || 0}
+              </motion.div>
             </Link>
           );
         },
@@ -153,7 +158,16 @@ export default function LeadFormsTable() {
         key: 'createdAt',
         header: 'Created',
         cell: (form) => {
-          return <div className='text-sm'>{formatDate(form.createdAt)}</div>;
+          return (
+            <motion.div
+              layout
+              className='text-sm'
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              {formatDate(form.createdAt)}
+            </motion.div>
+          );
         },
         sortable: true,
       },
@@ -161,7 +175,16 @@ export default function LeadFormsTable() {
         key: 'createdBy',
         header: 'Created By',
         cell: (form) => {
-          return <div className='text-sm'>{form.createdBy?.name || 'Unknown'}</div>;
+          return (
+            <motion.div
+              layout
+              className='text-sm'
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              {form.createdBy?.name || 'Unknown'}
+            </motion.div>
+          );
         },
       },
       {
@@ -173,7 +196,12 @@ export default function LeadFormsTable() {
           }/portal/lead/${form._id}`;
 
           return (
-            <div className='flex items-center gap-1'>
+            <motion.div
+              layout
+              className='flex items-center gap-1'
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
               <Button
                 variant='ghost'
                 size='icon'
@@ -195,7 +223,7 @@ export default function LeadFormsTable() {
               >
                 <ExternalLink className='h-4 w-4' />
               </Button>
-            </div>
+            </motion.div>
           );
         },
       },
@@ -264,36 +292,61 @@ export default function LeadFormsTable() {
   }
 
   return (
-    <div className='space-y-4'>
+    <motion.div
+      className='space-y-4'
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      layout
+    >
       <div className='flex justify-between items-center'>
-        <h2 className='text-xl font-semibold'>Lead Forms</h2>
-        <Button asChild>
-          <Link href='/leads/form/new'>
-            <FilePlus className='h-4 w-4 mr-2' />
-            Create New Form
-          </Link>
-        </Button>
+        <motion.h2 layout className='text-xl font-semibold'>
+          Lead Forms
+        </motion.h2>
+        <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <Button asChild>
+            <Link href='/leads/form/new'>
+              <FilePlus className='h-4 w-4 mr-2' />
+              Create New Form
+            </Link>
+          </Button>
+        </motion.div>
       </div>
-      <DataTable
-        data={leadForms}
-        columns={columns}
-        keyExtractor={(row) => {
-          return row._id;
-        }}
-        searchable
-        searchPlaceholder='Search forms...'
-        searchKeys={['title', 'description']}
-        pagination
-        pageSize={10}
-        emptyState={
-          <div className='py-8 text-center'>
-            <p className='text-muted-foreground'>No lead forms found</p>
-            <Button variant='outline' className='mt-4' asChild>
-              <Link href='/form/new'>Create your first form</Link>
-            </Button>
-          </div>
-        }
-      />
-    </div>
+      <AnimatePresence mode='wait'>
+        <motion.div
+          key='table'
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          layout
+        >
+          <DataTable
+            data={leadForms}
+            columns={columns}
+            keyExtractor={(row) => {
+              return row._id;
+            }}
+            searchable
+            searchPlaceholder='Search forms...'
+            searchKeys={['title', 'description']}
+            pagination
+            pageSize={10}
+            emptyState={
+              <motion.div
+                className='py-8 text-center'
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <p className='text-muted-foreground'>No lead forms found</p>
+                <Button variant='outline' className='mt-4' asChild>
+                  <Link href='/leads/form/new'>Create your first form</Link>
+                </Button>
+              </motion.div>
+            }
+          />
+        </motion.div>
+      </AnimatePresence>
+    </motion.div>
   );
 }
