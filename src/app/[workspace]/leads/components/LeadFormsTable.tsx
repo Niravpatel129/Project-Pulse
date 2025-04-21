@@ -62,17 +62,7 @@ export default function LeadFormsTable() {
         },
         sortable: true,
       },
-      {
-        key: 'description',
-        header: 'Description',
-        cell: (form) => {
-          return (
-            <div className='line-clamp-2 text-sm text-muted-foreground'>
-              {form.description || 'No description'}
-            </div>
-          );
-        },
-      },
+
       {
         key: 'status',
         header: 'Status',
