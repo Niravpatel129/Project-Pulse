@@ -270,6 +270,27 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
       );
     }
 
+    // Handle multiple file uploads
+    if (value && Array.isArray(value) && value.length > 0 && value[0].fileUrl) {
+      return (
+        <div className='flex flex-col gap-2'>
+          {value.map((file, index) => {
+            return (
+              <a
+                key={file.fileId || index}
+                href={file.fileUrl}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='text-primary hover:underline'
+              >
+                {file.fileName || `File ${index + 1}`} ({Math.round((file.fileSize || 0) / 1024)}KB)
+              </a>
+            );
+          })}
+        </div>
+      );
+    }
+
     if (typeof value === 'string' && value.includes('T04:00:00.000Z')) {
       return formatDate(value);
     }
