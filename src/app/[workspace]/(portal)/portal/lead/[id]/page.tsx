@@ -21,6 +21,7 @@ export default function LeadPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [submissionId, setSubmissionId] = useState<string | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<Array<{ name: string; url: string }>>([]);
 
   const { data: lead, isLoading } = useQuery({
     queryKey: ['lead', id],
@@ -38,7 +39,7 @@ export default function LeadPage() {
       value: any;
       type?: string;
     }>;
-    files: Record<string, File>;
+    files: Record<string, File[]>;
   }) => {
     setIsSubmitting(true);
 
@@ -61,8 +62,15 @@ export default function LeadPage() {
       submitFormData.append('data', JSON.stringify(fieldsData));
 
       // Add files if any
-      Object.entries(formData.files).forEach(([fieldId, file]) => {
-        submitFormData.append(`file_${fieldId}`, file);
+      Object.entries(formData.files).forEach(([fieldId, files]) => {
+        // If multiple files for a field, append with index
+        if (files.length > 0) {
+          files.forEach((file, index) => {
+            submitFormData.append(`file_${fieldId}_${index}`, file);
+          });
+          // Also add the count of files for this field
+          submitFormData.append(`file_${fieldId}_count`, String(files.length));
+        }
       });
 
       // Submit form data to your API
@@ -74,6 +82,10 @@ export default function LeadPage() {
 
       // Get the submissionId from the response
       const { submissionId } = response.data;
+
+      // Get uploaded files data (if returned by the API)
+      const uploadedFilesData = response.data.files || [];
+      setUploadedFiles(uploadedFilesData);
 
       // Set success state and store submissionId
       setSubmissionId(submissionId);
@@ -102,6 +114,7 @@ export default function LeadPage() {
   const handleStartOver = () => {
     setSubmissionSuccess(false);
     setSubmissionId(null);
+    setUploadedFiles([]);
   };
 
   if (isLoading) {
@@ -154,6 +167,46 @@ export default function LeadPage() {
             <p className='text-sm text-gray-500 mb-1'>Submission ID</p>
             <p className='font-mono text-sm'>{submissionId}</p>
           </div>
+
+          {uploadedFiles.length > 0 && (
+            <div className='bg-gray-50 p-4 rounded-md mb-6 text-left'>
+              <p className='text-sm text-gray-500 mb-3 text-center'>Files</p>
+              <div className='space-y-2'>
+                {uploadedFiles.map((file, index) => {
+                  return (
+                    <div
+                      key={index}
+                      className='flex items-center justify-between bg-white p-2 rounded border'
+                    >
+                      <span className='text-sm truncate max-w-[200px]'>{file.name}</span>
+                      <a
+                        href={file.url}
+                        download
+                        className='flex items-center text-primary hover:text-primary/80 text-xs px-2 py-1'
+                      >
+                        <svg
+                          xmlns='http://www.w3.org/2000/svg'
+                          className='h-4 w-4 mr-1'
+                          fill='none'
+                          viewBox='0 0 24 24'
+                          stroke='currentColor'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth={2}
+                            d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4'
+                          />
+                        </svg>
+                        Download
+                      </a>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <button
             onClick={handleStartOver}
             className='px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors'

@@ -417,17 +417,81 @@ export function FormField({
       )}
 
       {type === 'file' && (
-        <Input
-          id={id}
-          type='file'
-          required={required}
-          disabled={disabled}
-          onChange={(e) => {
-            const file = e.target.files?.[0] || null;
-            return onChange?.(file);
-          }}
-          className='w-full'
-        />
+        <div className='space-y-3'>
+          <Input
+            id={id}
+            type='file'
+            required={required}
+            disabled={disabled}
+            multiple={true}
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                // Create an array of files from the FileList
+                const filesArray = Array.from(e.target.files);
+                return onChange?.(filesArray);
+              }
+              return onChange?.(null);
+            }}
+            className='w-full'
+          />
+
+          {Array.isArray(value) && value.length > 0 && (
+            <div className='mt-2 space-y-2'>
+              <div className='flex items-center justify-between'>
+                <p className='text-sm text-gray-500'>Selected files: {value.length}</p>
+                {value.length > 1 && (
+                  <button
+                    type='button'
+                    className='text-xs text-red-500 hover:text-red-700'
+                    onClick={() => {
+                      return onChange?.(null);
+                    }}
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
+              <div className='space-y-1'>
+                {value.map((file: File, index: number) => {
+                  return (
+                    <div
+                      key={index}
+                      className='flex items-center justify-between bg-gray-50 p-2 rounded text-sm'
+                    >
+                      <span className='truncate max-w-[250px]'>{file.name}</span>
+                      <button
+                        type='button'
+                        className='text-gray-500 hover:text-red-500'
+                        onClick={() => {
+                          // Remove this file from the array
+                          const newFiles = [...value];
+                          newFiles.splice(index, 1);
+                          // If we removed all files, return null or empty array based on your preference
+                          onChange?.(newFiles.length > 0 ? newFiles : null);
+                        }}
+                      >
+                        <svg
+                          xmlns='http://www.w3.org/2000/svg'
+                          className='h-4 w-4'
+                          fill='none'
+                          viewBox='0 0 24 24'
+                          stroke='currentColor'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth={2}
+                            d='M6 18L18 6M6 6l12 12'
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {type === 'rating' && (

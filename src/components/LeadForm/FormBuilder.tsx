@@ -111,7 +111,7 @@ export function FormBuilder({
   className = '',
 }: FormBuilderProps) {
   const [values, setValues] = useState<Record<string, any>>({});
-  const [files, setFiles] = useState<Record<string, File>>({});
+  const [files, setFiles] = useState<Record<string, File[]>>({});
   const [submitting, setSubmitting] = useState(false);
 
   // Sort elements by order if available
@@ -121,11 +121,18 @@ export function FormBuilder({
 
   const handleFieldChange = (elementId: string, value: any) => {
     // Handle file uploads separately
-    if (value instanceof File) {
+    if (Array.isArray(value) && value.length > 0 && value[0] instanceof File) {
       setFiles((prev) => {
         return {
           ...prev,
           [elementId]: value,
+        };
+      });
+    } else if (value instanceof File) {
+      setFiles((prev) => {
+        return {
+          ...prev,
+          [elementId]: [value],
         };
       });
     }
