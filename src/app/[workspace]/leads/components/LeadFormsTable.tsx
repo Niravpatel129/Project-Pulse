@@ -80,7 +80,7 @@ export default function LeadFormsTable() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant='ghost' className='h-8 p-0'>
-                  <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                     <Badge variant={statusBadgeVariant(form.status)} className='capitalize'>
                       {form.status}
                     </Badge>
@@ -136,7 +136,7 @@ export default function LeadFormsTable() {
               href={`${pathname}/submissions?form=${form._id}`}
               className='flex justify-center hover:underline'
             >
-              <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 {form.submissions?.length || 0}
               </motion.div>
             </Link>
@@ -149,12 +149,7 @@ export default function LeadFormsTable() {
         header: 'Created',
         cell: (form) => {
           return (
-            <motion.div
-              layout
-              className='text-sm'
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
+            <motion.div className='text-sm' initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               {formatDate(form.createdAt)}
             </motion.div>
           );
@@ -166,12 +161,7 @@ export default function LeadFormsTable() {
         header: 'Created By',
         cell: (form) => {
           return (
-            <motion.div
-              layout
-              className='text-sm'
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
+            <motion.div className='text-sm' initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               {form.createdBy?.name || 'Unknown'}
             </motion.div>
           );
@@ -187,7 +177,6 @@ export default function LeadFormsTable() {
 
           return (
             <motion.div
-              layout
               className='flex items-center gap-1'
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -287,13 +276,10 @@ export default function LeadFormsTable() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      layout
     >
       <div className='flex justify-between items-center'>
-        <motion.h2 layout className='text-xl font-semibold'>
-          Lead Forms
-        </motion.h2>
-        <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <motion.h2 className='text-xl font-semibold'>Lead Forms</motion.h2>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <Button asChild>
             <Link href='/leads/form/new'>
               <FilePlus className='h-4 w-4 mr-2' />
@@ -308,7 +294,6 @@ export default function LeadFormsTable() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          layout
         >
           <DataTable
             data={leadForms}
