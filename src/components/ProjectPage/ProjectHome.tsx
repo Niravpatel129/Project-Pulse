@@ -8,10 +8,12 @@ import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
 import { format, isThisWeek, isThisYear, isToday, isYesterday } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
-import { FileText, Mail, User } from 'lucide-react';
+import { ClipboardList, FileText, Mail, User } from 'lucide-react';
+import { useState } from 'react';
 import { EmailCard } from './EmailCard';
 import { NoteCard } from './NoteCard';
 import ProjectMessageInput from './ProjectMessageInput';
+import { SubmissionDetailsDialog } from './SubmissionDetailsDialog';
 
 interface ActivityUser {
   _id: string;
@@ -114,7 +116,21 @@ interface EmailsResponse {
 
 interface Note {
   _id: string;
+  type?: string;
   content: string;
+  submission?: {
+    _id: string;
+    workspace: string;
+    leadForm: string;
+    clientEmail: string;
+    clientName: string | null;
+    clientPhone: string | null;
+    clientCompany: string | null;
+    clientAddress: string | null;
+    submittedAt: string;
+    formValues?: Record<string, any>;
+    submittedBy: string;
+  };
   attachments: {
     _id: string;
     name: string;
@@ -183,6 +199,8 @@ const getDateGroupLabel = (date: Date): string => {
 
 export default function ProjectHome() {
   const { project } = useProject();
+  const [selectedSubmission, setSelectedSubmission] = useState<Note['submission'] | null>(null);
+  const [submissionDialogOpen, setSubmissionDialogOpen] = useState(false);
 
   const { data: emailsData, isLoading: isLoadingEmails } = useQuery({
     queryKey: ['emailHistory', project?._id],
@@ -221,6 +239,11 @@ export default function ProjectHome() {
   const recentActivities = activitiesData?.data || [];
   const emailThreads = emailsData?.threads || [];
   const notes = notesData?.data || [];
+
+  const handleOpenSubmission = (submission: Note['submission']) => {
+    setSelectedSubmission(submission);
+    setSubmissionDialogOpen(true);
+  };
 
   // Combine activities, email threads, and notes into a single timeline
   const timelineItems: TimelineItem[] = [
@@ -350,20 +373,56 @@ export default function ProjectHome() {
                         );
                       } else if (item.type === 'note') {
                         const note = item.data as Note;
-                        return (
-                          <motion.div
-                            key={`note-${note._id}`}
-                            layout
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <NotesProvider projectId={project._id}>
-                              <NoteCard note={note} />
-                            </NotesProvider>
-                          </motion.div>
-                        );
+
+                        if (note.type === 'project_submission' && note.submission) {
+                          return (
+                            <motion.div
+                              key={`note-submission-${note._id}`}
+                              layout
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: 20 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <Card
+                                className='p-3 cursor-pointer hover:bg-gray-50'
+                                onClick={() => {
+                                  return handleOpenSubmission(note.submission!);
+                                }}
+                              >
+                                <div className='flex items-center gap-3'>
+                                  <div className='flex-shrink-0 bg-gray-100 p-2 rounded-full'>
+                                    <ClipboardList className='h-4 w-4 text-gray-500' />
+                                  </div>
+                                  <div className='flex-1'>
+                                    <p className='text-sm font-medium'>{note.content}</p>
+                                    <p className='text-xs text-gray-500'>
+                                      {note.submission.clientName} submitted a form
+                                    </p>
+                                    <p className='text-xs text-gray-500'>
+                                      {new Date(note.createdAt).toLocaleString()}
+                                    </p>
+                                  </div>
+                                </div>
+                              </Card>
+                            </motion.div>
+                          );
+                        } else {
+                          return (
+                            <motion.div
+                              key={`note-${note._id}`}
+                              layout
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: 20 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <NotesProvider projectId={project._id}>
+                                <NoteCard note={note} />
+                              </NotesProvider>
+                            </motion.div>
+                          );
+                        }
                       } else {
                         const thread = item.data as EmailThread & {
                           latestMessage: EmailMessage;
@@ -429,6 +488,13 @@ export default function ProjectHome() {
           )}
         </div>
       </motion.div>
+
+      {/* Submission Details Dialog */}
+      <SubmissionDetailsDialog
+        submission={selectedSubmission}
+        open={submissionDialogOpen}
+        onOpenChange={setSubmissionDialogOpen}
+      />
     </motion.div>
   );
 }
