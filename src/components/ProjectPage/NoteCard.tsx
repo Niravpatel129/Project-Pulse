@@ -48,7 +48,6 @@ interface UserDetails {
 }
 
 export function NoteCard({ note, participants = [] }: NoteCardProps) {
-  console.log('🚀 note:', note);
   const [isEditing, setIsEditing] = useState(false);
   const editorRef = useRef<EnhancedMessageEditorRef>(null);
   const [localNote, setLocalNote] = useState(note);
