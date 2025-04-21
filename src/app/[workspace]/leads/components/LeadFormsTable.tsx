@@ -212,7 +212,7 @@ export default function LeadFormsTable() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align='end'>
                 <DropdownMenuItem asChild>
-                  <Link href={`/form/${form._id}`} className='flex items-center'>
+                  <Link href={`/leads/form/${form._id}`} className='flex items-center'>
                     <FileEdit className='h-4 w-4 mr-2' />
                     Edit form
                   </Link>
@@ -268,7 +268,7 @@ export default function LeadFormsTable() {
       <div className='flex justify-between items-center'>
         <h2 className='text-xl font-semibold'>Lead Forms</h2>
         <Button asChild>
-          <Link href='/form/new'>
+          <Link href='/leads/form/new'>
             <FilePlus className='h-4 w-4 mr-2' />
             Create New Form
           </Link>
