@@ -194,7 +194,7 @@ export default function FormBuilderSidebar({ getElementIcon }: FormBuilderSideba
       case 'send_email':
         return {
           subject: 'Welcome to our project!',
-          body: 'Dear {{client_name}},\n\nThank you for submitting your request. We have created a new project: {{project_name}}.\n\nYou can view your project status at any time using this link: {{project_link}}\n\nBest regards,\nYour Project Team',
+          body: 'Dear {{client_name}},\n\nThank you for submitting your request. \n\nBest regards,\nYour Project Team',
           ccTeam: false,
         };
       default:
