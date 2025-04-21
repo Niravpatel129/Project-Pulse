@@ -22,7 +22,7 @@ interface NoteCardProps {
       contentType: string;
       size: number;
     }[];
-    createdBy: {
+    createdBy?: {
       _id: string;
       name: string;
       email: string;
@@ -30,6 +30,7 @@ interface NoteCardProps {
     };
     createdAt: string;
     updatedAt: string;
+    isSystem?: boolean;
   };
   participants?: {
     _id: string;
@@ -47,6 +48,7 @@ interface UserDetails {
 }
 
 export function NoteCard({ note, participants = [] }: NoteCardProps) {
+  console.log('🚀 note:', note);
   const [isEditing, setIsEditing] = useState(false);
   const editorRef = useRef<EnhancedMessageEditorRef>(null);
   const [localNote, setLocalNote] = useState(note);
@@ -240,28 +242,38 @@ export function NoteCard({ note, participants = [] }: NoteCardProps) {
     <Card className='p-5 space-y-5 transition-all duration-200 hover:shadow-sm group'>
       <div className='flex items-start gap-4'>
         <div className='flex-shrink-0'>
-          <Avatar className='h-8 w-8 shrink-0 mt-1'>
-            <AvatarImage src={localNote.createdBy.avatar} alt='User' />
-            <AvatarFallback className='bg-green-600 text-white font-bold text-sm uppercase'>
-              {localNote.createdBy.name.substring(0, 2)}
-            </AvatarFallback>
-          </Avatar>
+          {localNote.createdBy ? (
+            <Avatar className='h-8 w-8 shrink-0 mt-1'>
+              <AvatarImage src={localNote.createdBy.avatar} alt='User' />
+              <AvatarFallback className='bg-green-600 text-white font-bold text-sm uppercase'>
+                {localNote.createdBy.name?.substring(0, 2)}
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <Avatar className='h-8 w-8 shrink-0 mt-1'>
+              <AvatarFallback className='bg-blue-600 text-white font-bold text-sm uppercase'>
+                SYS
+              </AvatarFallback>
+            </Avatar>
+          )}
         </div>
         <div className='flex-1 min-w-0'>
           <div className='flex items-center justify-between mb-3'>
             <div className='space-y-1'>
               <div className='text-sm font-medium text-gray-900 tracking-tight'>
-                {localNote.createdBy.name}
+                {localNote.createdBy?.name || 'System'}
               </div>
-              <div className='text-xs text-gray-500 tracking-tight'>
-                {localNote.createdBy.email}
-              </div>
+              {localNote.createdBy?.email && (
+                <div className='text-xs text-gray-500 tracking-tight'>
+                  {localNote.createdBy.email}
+                </div>
+              )}
             </div>
             <div className='flex items-center gap-3'>
               <div className='text-xs text-gray-500 tracking-tight'>
-                {formatDistanceToNow(new Date(localNote.createdAt), { addSuffix: true })}
+                {formatDistanceToNow(new Date(localNote?.createdAt), { addSuffix: true })}
               </div>
-              {!isEditing && (
+              {!isEditing && !localNote.isSystem && (
                 <Button
                   variant='ghost'
                   size='icon'

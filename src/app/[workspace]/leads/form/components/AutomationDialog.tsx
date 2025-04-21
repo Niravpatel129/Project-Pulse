@@ -38,6 +38,34 @@ import { useEffect, useRef, useState } from 'react';
 // Define the automation types
 type AutomationType = 'send_email' | 'create_project' | 'assign_project_manager';
 
+// Define project config type
+interface ProjectConfig {
+  projectNameTemplate?: string;
+  description?: string;
+  initialStage?: string;
+  initialStatus?: string;
+  fieldMappings?: Record<string, string>;
+  [key: string]: any; // Allow for additional properties
+}
+
+// Define email config type
+interface EmailConfig {
+  subject?: string;
+  body?: string;
+  ccTeam?: boolean;
+  fieldMappings?: Record<string, string>;
+  [key: string]: any;
+}
+
+// Define assignee config type
+interface AssigneeConfig {
+  assigneeType?: 'auto' | 'current-user' | 'specific';
+  specificAssignee?: string;
+  notifyAssignee?: boolean;
+  fieldMappings?: Record<string, string>;
+  [key: string]: any;
+}
+
 // Helper function to convert field names to variable slugs
 const slugifyForVariable = (text: string): string => {
   return text
@@ -300,16 +328,29 @@ export function AutomationDialog({
     // Use the ID from the provided automation if available, otherwise generate new ID
     const id = automation?.id || generateId();
 
-    // Ensure stage and status are included for create_project type
-    let finalConfig = { ...config, fieldMappings };
+    // Create type-safe config based on automation type
+    let finalConfig: EmailConfig | ProjectConfig | AssigneeConfig;
 
-    // For create_project type, explicitly set initialStage and initialStatus if available
     if (type === 'create_project') {
-      finalConfig = {
-        ...finalConfig,
+      const projectConfig: ProjectConfig = {
+        ...config,
+        fieldMappings,
         initialStage: config.initialStage || (stages.length > 0 ? stages[0]._id : ''),
         initialStatus: config.initialStatus || (statuses.length > 0 ? statuses[0]._id : ''),
       };
+      finalConfig = projectConfig;
+    } else if (type === 'send_email') {
+      const emailConfig: EmailConfig = {
+        ...config,
+        fieldMappings,
+      };
+      finalConfig = emailConfig;
+    } else {
+      const assigneeConfig: AssigneeConfig = {
+        ...config,
+        fieldMappings,
+      };
+      finalConfig = assigneeConfig;
     }
 
     const newAutomation: Automation = {
