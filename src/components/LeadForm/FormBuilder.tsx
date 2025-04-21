@@ -64,7 +64,7 @@ const mapFieldType = (apiType: string): FormFieldType => {
     'File Upload': 'file',
     Switch: 'switch',
     'Radio Buttons': 'radio',
-    Checkboxes: 'checkbox',
+    Checkboxes: 'checkboxGroup',
     Rating: 'rating',
   };
 
@@ -75,6 +75,8 @@ const mapFieldType = (apiType: string): FormFieldType => {
 const transformOptions = (options: any[] | undefined) => {
   if (!options) return [];
 
+  console.log('Original options:', options);
+
   // If options are already in the correct format, return them
   if (
     options.length > 0 &&
@@ -82,11 +84,12 @@ const transformOptions = (options: any[] | undefined) => {
     'label' in options[0] &&
     'value' in options[0]
   ) {
+    console.log('Options already in correct format');
     return options;
   }
 
   // Transform string options to the required format
-  return options.map((option) => {
+  const transformedOptions = options.map((option) => {
     // If option is already an object but doesn't have label/value format
     if (typeof option === 'object' && option !== null) {
       return {
@@ -101,6 +104,9 @@ const transformOptions = (options: any[] | undefined) => {
       value: String(option),
     };
   });
+
+  console.log('Transformed options:', transformedOptions);
+  return transformedOptions;
 };
 
 export function FormBuilder({
@@ -257,6 +263,15 @@ export function FormBuilder({
 
             // Map API type to component type
             const fieldType = mapFieldType(element.type);
+
+            // Debug log
+            if (element.type === 'Checkboxes') {
+              console.log('Rendering checkboxes element:', {
+                element,
+                fieldType,
+                options: transformOptions(element.options),
+              });
+            }
 
             return (
               <div key={element.id} className='space-y-4'>

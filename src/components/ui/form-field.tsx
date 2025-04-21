@@ -28,7 +28,8 @@ export type FormFieldType =
   | 'file'
   | 'textBlock'
   | 'clientDetails'
-  | 'rating';
+  | 'rating'
+  | 'checkboxGroup';
 
 export interface SelectOption {
   label: string;
@@ -379,6 +380,47 @@ export function FormField({
               {label}
             </label>
           )}
+        </div>
+      )}
+
+      {type === 'checkboxGroup' && (
+        <div className='space-y-3'>
+          <div className='space-y-2'>
+            {options.map((option) => {
+              // Initialize value as an array if it's not already
+              const selectedValues = Array.isArray(value) ? value : value ? [value] : [];
+              const isChecked = selectedValues.includes(option.value);
+
+              return (
+                <div key={option.value} className='flex items-center space-x-2'>
+                  <Checkbox
+                    id={`${id}-${option.value}`}
+                    checked={isChecked}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        // Add to selected values
+                        onChange?.([...selectedValues, option.value]);
+                      } else {
+                        // Remove from selected values
+                        onChange?.(
+                          selectedValues.filter((v) => {
+                            return v !== option.value;
+                          }),
+                        );
+                      }
+                    }}
+                    disabled={disabled}
+                  />
+                  <label
+                    htmlFor={`${id}-${option.value}`}
+                    className='text-sm font-medium leading-none cursor-pointer'
+                  >
+                    {option.label}
+                  </label>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
