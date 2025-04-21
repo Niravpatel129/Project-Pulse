@@ -51,6 +51,7 @@
     "@tiptap/react": "^2.11.7",
     "@tiptap/starter-kit": "^2.11.7",
     "@tiptap/suggestion": "^2.11.7",
+    "@types/uuid": "^10.0.0",
     "ag-grid-community": "^33.2.3",
     "ag-grid-enterprise": "^33.2.3",
     "ag-grid-react": "^33.2.3",
@@ -92,6 +93,8 @@
     "tailwind-scrollbar-hide": "^2.0.0",
     "tailwindcss-animate": "^1.0.7",
     "tippy.js": "^6.3.7",
+    "uuid": "^11.1.0",
+    "xlsx": "^0.18.5",
     "zod": "^3.24.2"
   },
   "devDependencies": {

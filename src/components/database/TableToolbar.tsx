@@ -8,8 +8,18 @@ import {
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ChevronDown, ColumnsIcon, Filter, RowsIcon, Search, Trash2 } from 'lucide-react';
-import React from 'react';
+import {
+  ChevronDown,
+  ColumnsIcon,
+  FileSpreadsheet,
+  Filter,
+  RowsIcon,
+  Search,
+  Trash2,
+} from 'lucide-react';
+import React, { useState } from 'react';
+import { toast } from 'sonner';
+import { XlsxImportDialog } from './XlsxImportDialog';
 
 interface TableToolbarProps {
   viewMode: 'table' | 'card';
@@ -22,6 +32,7 @@ interface TableToolbarProps {
   addNewRow: () => void;
   handleAddColumn: () => void;
   handleDeleteSelected: () => void;
+  handleImportData?: (data: { columns: string[]; rows: any[] }) => void;
 }
 
 export function TableToolbar({
@@ -35,7 +46,28 @@ export function TableToolbar({
   addNewRow,
   handleAddColumn,
   handleDeleteSelected,
+  handleImportData,
 }: TableToolbarProps) {
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+
+  const handleOpenImportDialog = () => {
+    setIsImportDialogOpen(true);
+  };
+
+  const handleCloseImportDialog = () => {
+    setIsImportDialogOpen(false);
+  };
+
+  const handleImport = (data: { columns: string[]; rows: any[] }) => {
+    if (handleImportData) {
+      handleImportData(data);
+      toast.success(`Imported ${data.columns.length} columns and ${data.rows.length} rows`);
+    } else {
+      toast.error('Import handler not configured');
+    }
+    setIsImportDialogOpen(false);
+  };
+
   return (
     <div className='flex justify-between items-center mb-4'>
       <div className='flex items-center gap-2'>
@@ -86,6 +118,10 @@ export function TableToolbar({
               <ColumnsIcon className='mr-2 h-4 w-4' />
               Add New Column
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleOpenImportDialog}>
+              <FileSpreadsheet className='mr-2 h-4 w-4 text-green-600' />
+              Import from XLSX file
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleDeleteSelected}>
               <Trash2 className='mr-2 h-4 w-4 text-destructive' />
               Delete Selected
@@ -103,6 +139,13 @@ export function TableToolbar({
           />
         </div>
       </div>
+
+      {/* XLSX Import Dialog */}
+      <XlsxImportDialog
+        isOpen={isImportDialogOpen}
+        onClose={handleCloseImportDialog}
+        onImport={handleImport}
+      />
     </div>
   );
 }

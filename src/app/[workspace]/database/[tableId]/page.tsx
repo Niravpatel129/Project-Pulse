@@ -5,10 +5,13 @@ import { PropertySheet } from '@/components/database/property-sheet';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useDatabase } from '@/hooks/useDatabase';
+import { newRequest } from '@/utils/newRequest';
 import { useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useCallback, useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
 
 // AG Grid imports
 import {
@@ -190,6 +193,79 @@ export default function TablePage() {
     [records, params.tableId, setRecords, setRowOrder],
   );
 
+  // Handle importing data from XLSX
+  const handleImportData = useCallback(
+    async (data: { columns: string[]; rows: any[] }) => {
+      try {
+        if (!data.columns.length || !data.rows.length) {
+          toast.error('No data to import');
+          return;
+        }
+
+        // First, create columns for the imported data
+        const columnCreationPromises = data.columns.map(async (columnName, index) => {
+          // Generate a unique ID for the column
+          const columnId = `col-${uuidv4().slice(0, 8)}`;
+
+          // Set default column type to text
+          const columnType = 'text';
+
+          // Create the column in the backend
+          const response = await newRequest.post(`/tables/${params.tableId}/columns`, {
+            name: columnName || `Column ${index + 1}`,
+            type: columnType,
+            icon: 'LuText',
+            isRequired: false,
+            isPrimaryKey: index === 0, // Make the first column primary
+            isUnique: false,
+            description: `Imported from XLSX file`,
+            order: index,
+          });
+
+          return {
+            id: response.data.data._id || columnId,
+            name: columnName || `Column ${index + 1}`,
+            type: columnType,
+            icon: 'LuText',
+          };
+        });
+
+        const createdColumns = await Promise.all(columnCreationPromises);
+
+        // Now create rows with the data
+        const rowCreationPromises = data.rows.map(async (row, rowIndex) => {
+          // Generate values object for the row
+          const values: Record<string, any> = {};
+
+          // Map column values
+          createdColumns.forEach((column, colIndex) => {
+            values[column.id] = row[colIndex] !== undefined ? row[colIndex] : '';
+          });
+
+          // Create the row in the backend
+          const rowResponse = await newRequest.post(`/tables/${params.tableId}/records`, {
+            values,
+            position: rowIndex,
+          });
+
+          return rowResponse.data;
+        });
+
+        await Promise.all(rowCreationPromises);
+
+        // Refresh the table data
+        queryClient.invalidateQueries({ queryKey: ['table', params.tableId] });
+        queryClient.invalidateQueries({ queryKey: ['table-records', params.tableId] });
+
+        toast.success('Data imported successfully');
+      } catch (error) {
+        console.error('Error importing data:', error);
+        toast.error('Failed to import data');
+      }
+    },
+    [params.tableId, queryClient],
+  );
+
   return (
     <div>
       <TableToolbar
@@ -203,6 +279,7 @@ export default function TablePage() {
         addNewRow={addNewRow}
         handleAddColumn={handleAddColumn}
         handleDeleteSelected={handleDeleteSelectedCallback}
+        handleImportData={handleImportData}
       />
 
       <FilterPanel
