@@ -11,6 +11,7 @@ import { toast } from '@/components/ui/use-toast';
 import { formatDate } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
+import { formatDistanceToNow } from 'date-fns';
 import { FileClock, MoreHorizontal, Trash, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -180,7 +181,10 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
       });
     }
 
-    return enhancedSubmissions;
+    // Sort submissions by date, newest first
+    return enhancedSubmissions.sort((a, b) => {
+      return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime();
+    });
   }, [submissionsData, formIdFilter]);
 
   const columns: Column<EnhancedFormSubmission>[] = useMemo(() => {
@@ -233,7 +237,9 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
         key: 'submittedAt',
         header: 'Submitted',
         cell: (submission) => {
-          return <div>{formatDate(submission.submittedAt)}</div>;
+          return (
+            <div>{formatDistanceToNow(new Date(submission.submittedAt), { addSuffix: true })}</div>
+          );
         },
         sortable: true,
       },
