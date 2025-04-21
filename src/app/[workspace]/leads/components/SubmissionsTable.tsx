@@ -1,7 +1,8 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/ui/data-table';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Column, DataTable } from '@/components/ui/data-table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -10,7 +11,7 @@ import { toast } from '@/components/ui/use-toast';
 import { formatDate } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
-import { Eye, FileClock, MoreHorizontal, Trash, X } from 'lucide-react';
+import { FileClock, MoreHorizontal, Trash, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 interface FormSubmission {
@@ -39,13 +40,6 @@ interface FormWithSubmissions {
   submissions: FormSubmission[];
 }
 
-type Column<T> = {
-  key: string;
-  header: string;
-  cell: (item: T) => React.ReactNode;
-  sortable?: boolean;
-};
-
 interface SubmissionsTableProps {
   formIdFilter?: string | null;
 }
@@ -53,6 +47,8 @@ interface SubmissionsTableProps {
 export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps) {
   const [selectedSubmission, setSelectedSubmission] = useState<EnhancedFormSubmission | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedSubmissions, setSelectedSubmissions] = useState<Record<string, boolean>>({});
+  const [selectAll, setSelectAll] = useState(false);
 
   const {
     data: formsWithSubmissions,
@@ -86,6 +82,79 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
     }
   };
 
+  // Mass delete function
+  const deleteSelectedSubmissions = async () => {
+    const submissionIds = Object.entries(selectedSubmissions)
+      .filter(([_, isSelected]) => {
+        return isSelected;
+      })
+      .map(([id]) => {
+        return id;
+      });
+
+    if (submissionIds.length === 0) {
+      toast({
+        title: 'No submissions selected',
+        description: 'Please select at least one submission to delete.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      // Delete each submission sequentially
+      for (const id of submissionIds) {
+        await deleteSubmission(id);
+      }
+
+      // Reset selection state
+      setSelectedSubmissions({});
+      setSelectAll(false);
+
+      toast({
+        title: 'Submissions deleted',
+        description: `Successfully deleted ${submissionIds.length} submissions.`,
+      });
+
+      refetch();
+    } catch (error) {
+      console.error('Error deleting submissions:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete some submissions. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Handle checkbox change
+  const toggleSubmission = (id: string, checked: boolean) => {
+    setSelectedSubmissions((prev) => {
+      return {
+        ...prev,
+        [id]: checked,
+      };
+    });
+  };
+
+  // Handle select all
+  const handleSelectAll = (checked: boolean) => {
+    setSelectAll(checked);
+
+    if (checked) {
+      // Select all submissions
+      const allSelected = submissions.reduce((acc, submission) => {
+        acc[submission._id] = true;
+        return acc;
+      }, {} as Record<string, boolean>);
+
+      setSelectedSubmissions(allSelected);
+    } else {
+      // Deselect all
+      setSelectedSubmissions({});
+    }
+  };
+
   // Flatten the submissions for the table
   const submissions = useMemo(() => {
     if (!formsWithSubmissions) return [];
@@ -113,6 +182,26 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
 
   const columns: Column<EnhancedFormSubmission>[] = useMemo(() => {
     return [
+      {
+        key: 'selection',
+        header: (
+          <Checkbox checked={selectAll} onCheckedChange={handleSelectAll} aria-label='Select all' />
+        ),
+        cell: (submission) => {
+          return (
+            <Checkbox
+              checked={selectedSubmissions[submission._id] || false}
+              onCheckedChange={(checked) => {
+                toggleSubmission(submission._id, !!checked);
+              }}
+              onClick={(e) => {
+                return e.stopPropagation();
+              }}
+              aria-label='Select row'
+            />
+          );
+        },
+      },
       {
         key: 'formTitle',
         header: 'Form',
@@ -145,50 +234,8 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
         },
         sortable: true,
       },
-      {
-        key: 'actions',
-        header: 'Actions',
-        cell: (submission) => {
-          return (
-            <div className='flex items-center gap-2'>
-              <Button
-                variant='ghost'
-                size='sm'
-                onClick={() => {
-                  setSelectedSubmission(submission);
-                  setDialogOpen(true);
-                }}
-              >
-                <Eye className='h-4 w-4 mr-2' />
-                View Details
-              </Button>
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant='ghost' size='icon' className='h-8 w-8'>
-                    <MoreHorizontal className='h-4 w-4' />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align='end' className='w-48'>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    className='flex w-full justify-start text-destructive'
-                    onClick={() => {
-                      return deleteSubmission(submission._id);
-                    }}
-                  >
-                    <Trash className='h-4 w-4 mr-2' />
-                    Delete
-                  </Button>
-                </PopoverContent>
-              </Popover>
-            </div>
-          );
-        },
-      },
     ];
-  }, []);
+  }, [selectAll, selectedSubmissions]);
 
   const renderFormValue = (key: string, value: any) => {
     if (!value) return 'N/A';
@@ -248,6 +295,27 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
             {formIdFilter ? ' matching filters' : ' total'}
           </p>
         </div>
+
+        {submissions.length > 0 && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant='ghost' size='icon' className='h-8 w-8'>
+                <MoreHorizontal className='h-4 w-4' />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align='end' className='w-48'>
+              <Button
+                variant='ghost'
+                size='sm'
+                className='flex w-full justify-start text-destructive'
+                onClick={deleteSelectedSubmissions}
+              >
+                <Trash className='h-4 w-4 mr-2' />
+                Delete Selected
+              </Button>
+            </PopoverContent>
+          </Popover>
+        )}
       </div>
       <DataTable
         data={submissions || []}
@@ -260,6 +328,10 @@ export default function SubmissionsTable({ formIdFilter }: SubmissionsTableProps
         searchKeys={['formTitle', 'clientName', 'clientEmail']}
         pagination
         pageSize={10}
+        onRowClick={(row) => {
+          setSelectedSubmission(row);
+          setDialogOpen(true);
+        }}
         emptyState={
           <div className='py-8 text-center'>
             <FileClock className='mx-auto h-12 w-12 text-muted-foreground mb-4' />
