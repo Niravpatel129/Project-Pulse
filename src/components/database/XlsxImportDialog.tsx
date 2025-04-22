@@ -40,7 +40,7 @@ import * as XLSX from 'xlsx';
 interface XlsxImportDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onImport: (data: { columns: string[]; rows: any[] }) => void;
+  onImport: (data: { columns: string[]; rows: any[]; sheetName: string }) => void;
 }
 
 // Color palette for data values
@@ -423,24 +423,25 @@ export function XlsxImportDialog({ isOpen, onClose, onImport }: XlsxImportDialog
       // Rest are data rows
       const rows = jsonData.slice(1);
 
-      // Start import with global tracking - FORCE UI update immediately
-      importProgress.updateProgress(1, 'Starting import...');
-      console.log('Import started - progress tracking initiated');
+      onImport({
+        columns,
+        rows,
+        sheetName: selectedSheet,
+      });
 
-      // Force the component to render immediately by using setTimeout
-      setTimeout(() => {
-        // Call the actual import function after a brief delay to ensure UI updates
-        onImport({
-          columns,
-          rows,
-        });
-      }, 100);
-
-      // Reset state is handled by the effect monitoring progress
+      // Reset state
+      setFile(null);
+      setWorkbook(null);
+      setAvailableSheets([]);
+      setSelectedSheet('');
+      setPreviewData(null);
+      setColumnAnalysis([]);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } catch (error) {
       console.error('Error during import:', error);
       toast.error('Failed to import data');
-      importProgress.updateProgress(0, '');
     }
   };
 

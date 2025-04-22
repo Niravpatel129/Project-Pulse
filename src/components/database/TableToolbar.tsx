@@ -32,7 +32,7 @@ interface TableToolbarProps {
   addNewRow: () => void;
   handleAddColumn: () => void;
   handleDeleteSelected: () => void;
-  handleImportData?: (data: { columns: string[]; rows: any[] }) => void;
+  handleImportData?: (data: { columns: string[]; rows: any[]; sheetName?: string }) => void;
 }
 
 export function TableToolbar({

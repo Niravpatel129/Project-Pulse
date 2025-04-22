@@ -236,7 +236,7 @@ export default function TablePage() {
 
   // Handle importing data from XLSX
   const handleImportData = useCallback(
-    async (data: { columns: string[]; rows: any[] }) => {
+    async (data: { columns: string[]; rows: any[]; sheetName?: string }) => {
       // Explicitly force the import dialog to stay visible
       importProgress.isImporting = true;
       importProgress.updateProgress(1, 'Starting import...');
@@ -259,8 +259,12 @@ export default function TablePage() {
         // Reset and start import progress tracking - force value to ensure UI shows
         importProgress.updateProgress(5, 'Creating new table...');
 
-        // Generate a table name based on the current date/time
-        const tableName = `Imported Table ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`;
+        // Generate a table name based on the sheet name if available, otherwise use date/time
+        const defaultSheetNames = ['Sheet1', 'Sheet 1', 'sheet1', 'sheet 1'];
+        const useSheetName = data.sheetName && !defaultSheetNames.includes(data.sheetName);
+        const tableName = useSheetName
+          ? `${data.sheetName} Table`
+          : `Imported Table ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`;
 
         // Step 1: Create a new table
         console.log('Creating new table:', tableName);
