@@ -82,6 +82,7 @@ export function PipelineSettings() {
     setEditingStageIndex,
     setEditingStatusIndex,
     setIsAddingStage,
+    handleUpdatePipeline,
   } = usePipelineSettings();
 
   return (
@@ -296,14 +297,6 @@ export function PipelineSettings() {
                 })}
               </div>
             </div>
-          </div>
-          <div className='flex justify-end space-x-2 mt-3 pt-3 border-t sticky bottom-0 bg-background'>
-            <Button variant='outline' size='sm' className='text-xs h-8'>
-              Cancel
-            </Button>
-            <Button size='sm' className='text-xs h-8'>
-              Save Changes
-            </Button>
           </div>
         </SheetContent>
       </Sheet>
