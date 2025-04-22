@@ -1,6 +1,7 @@
+import { importProgress } from '@/app/[workspace]/database/[tableId]/page';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -78,7 +79,63 @@ export function XlsxImportDialog({ isOpen, onClose, onImport }: XlsxImportDialog
   const [columnAnalysis, setColumnAnalysis] = useState<ColumnAnalysis[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(true);
+  const [progressData, setProgressData] = useState({
+    progress: 0,
+    status: '',
+    isImporting: false,
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Monitor import progress
+  useEffect(() => {
+    const handleProgressUpdate = () => {
+      console.log(
+        'Progress update detected:',
+        importProgress.progress,
+        importProgress.status,
+        importProgress.isImporting,
+        'Closing dialog?',
+        !importProgress.isImporting,
+      );
+
+      // Force isImporting to true if progress is any value other than 0
+      const forceImporting = importProgress.progress > 0;
+
+      setProgressData({
+        progress: importProgress.progress,
+        status: importProgress.status,
+        isImporting: forceImporting, // Override with our own logic
+      });
+
+      console.log('Dialog state updated:', forceImporting ? 'SHOWING' : 'HIDDEN');
+    };
+
+    // Listen for progress updates from the import process
+    window.addEventListener('import-progress-update', handleProgressUpdate);
+
+    // Initial sync with global state
+    handleProgressUpdate();
+
+    return () => {
+      window.removeEventListener('import-progress-update', handleProgressUpdate);
+    };
+  }, []);
+
+  // Reset progress when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      // Reset progress data if dialog was closed
+      setFile(null);
+      setWorkbook(null);
+      setAvailableSheets([]);
+      setSelectedSheet('');
+      setPreviewData(null);
+      setColumnAnalysis([]);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  }, [isOpen]);
 
   // Number of rows to display in preview
   const MAX_PREVIEW_ROWS = 50;
@@ -366,24 +423,24 @@ export function XlsxImportDialog({ isOpen, onClose, onImport }: XlsxImportDialog
       // Rest are data rows
       const rows = jsonData.slice(1);
 
-      onImport({
-        columns,
-        rows,
-      });
+      // Start import with global tracking - FORCE UI update immediately
+      importProgress.updateProgress(1, 'Starting import...');
+      console.log('Import started - progress tracking initiated');
 
-      // Reset state
-      setFile(null);
-      setWorkbook(null);
-      setAvailableSheets([]);
-      setSelectedSheet('');
-      setPreviewData(null);
-      setColumnAnalysis([]);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      // Force the component to render immediately by using setTimeout
+      setTimeout(() => {
+        // Call the actual import function after a brief delay to ensure UI updates
+        onImport({
+          columns,
+          rows,
+        });
+      }, 100);
+
+      // Reset state is handled by the effect monitoring progress
     } catch (error) {
       console.error('Error during import:', error);
       toast.error('Failed to import data');
+      importProgress.updateProgress(0, '');
     }
   };
 
@@ -442,8 +499,53 @@ export function XlsxImportDialog({ isOpen, onClose, onImport }: XlsxImportDialog
     return '400px'; // Normal mode
   };
 
+  // Update the completion UI in the dialog
+  const CompletionScreen = ({ status }) => {
+    return (
+      <div className='py-4 flex flex-col items-center justify-center'>
+        <div className='text-center'>
+          <div className='w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-green-100 text-green-600'>
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              className='h-10 w-10'
+              fill='none'
+              viewBox='0 0 24 24'
+              stroke='currentColor'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M5 13l4 4L19 7'
+              />
+            </svg>
+          </div>
+          <p className='text-lg font-medium text-gray-800'>Import Complete!</p>
+          <p className='text-sm text-gray-600 mt-1'>{status}</p>
+          <p className='text-xs text-gray-500 mt-3'>Click below to view your new table:</p>
+          <Button
+            className='mt-4 bg-blue-600 hover:bg-blue-700 text-white'
+            onClick={() => {
+              return importProgress.navigateToTable();
+            }}
+          >
+            Go to New Table
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        // Only allow closing when not importing
+        if (!progressData.isImporting && !open) {
+          onClose();
+        }
+      }}
+    >
       <DialogContent
         className={`${
           isFullScreen
@@ -455,7 +557,7 @@ export function XlsxImportDialog({ isOpen, onClose, onImport }: XlsxImportDialog
         <div className='p-6 border-b shrink-0'>
           <div className='flex flex-row items-center justify-between'>
             <div>
-              <h2 className='text-lg font-semibold'>Import Table from Excel</h2>
+              <DialogTitle className='text-lg font-semibold'>Import Table from Excel</DialogTitle>
               <p className='text-sm text-gray-500'>
                 Upload an Excel file (.xlsx, .xls) or CSV file to create a new table.
               </p>
@@ -465,6 +567,7 @@ export function XlsxImportDialog({ isOpen, onClose, onImport }: XlsxImportDialog
               size='icon'
               onClick={toggleFullScreen}
               className='h-8 w-8 rounded-full'
+              disabled={progressData.isImporting}
             >
               {isFullScreen ? <Minimize2 className='h-4 w-4' /> : <Maximize2 className='h-4 w-4' />}
             </Button>
@@ -473,7 +576,43 @@ export function XlsxImportDialog({ isOpen, onClose, onImport }: XlsxImportDialog
 
         {/* Main content area - scrollable */}
         <div className='flex-grow overflow-auto p-6'>
-          {!file ? (
+          {progressData.isImporting ? (
+            <div className='flex flex-col items-center justify-center h-full space-y-6'>
+              <div className='w-full max-w-md bg-white p-8 rounded-lg shadow-md border'>
+                <h3 className='text-xl font-bold mb-4 text-center text-blue-600'>
+                  Importing Table...
+                </h3>
+                <div className='h-4 w-full bg-gray-100 rounded-full mb-4 overflow-hidden border'>
+                  <div
+                    className='h-full bg-blue-600 rounded-full transition-all duration-300 ease-in-out'
+                    style={{ width: `${progressData.progress}%` }}
+                  ></div>
+                </div>
+                <div className='flex justify-between mb-6 text-sm font-medium'>
+                  <span className='text-gray-700'>{progressData.progress}% complete</span>
+                  <span className='text-blue-600'>{progressData.status || 'Processing...'}</span>
+                </div>
+                {progressData.progress >= 100 ? (
+                  <CompletionScreen status={progressData.status} />
+                ) : (
+                  <div className='py-4 flex justify-center'>
+                    <div className='text-center'>
+                      <div className='flex items-center justify-center space-x-2 mb-4'>
+                        <div className='w-3 h-3 rounded-full bg-blue-600 animate-pulse'></div>
+                        <div className='w-3 h-3 rounded-full bg-blue-600 animate-pulse delay-100'></div>
+                        <div className='w-3 h-3 rounded-full bg-blue-600 animate-pulse delay-200'></div>
+                      </div>
+                      <FileSpreadsheet className='h-10 w-10 mx-auto mb-3 text-blue-600' />
+                      <p className='text-sm font-medium text-gray-800'>
+                        Please don&apos;t close this window
+                      </p>
+                      <p className='text-xs text-gray-500 mt-1'>Import process is running...</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : !file ? (
             <div
               className='border-2 border-dashed border-gray-300 rounded-lg p-12 text-center cursor-pointer hover:bg-gray-50 transition-colors flex flex-col items-center justify-center'
               style={{ minHeight: isFullScreen ? '400px' : '300px' }}
@@ -684,16 +823,18 @@ export function XlsxImportDialog({ isOpen, onClose, onImport }: XlsxImportDialog
         <div className='border-t p-6 bg-gray-50 shrink-0'>
           <div className='flex justify-between items-center'>
             <div className='text-sm text-gray-500'>
-              {previewData &&
+              {!progressData.isImporting &&
+                previewData &&
                 `Found ${previewData.columns.length} columns and ${previewData.totalRows} rows in "${selectedSheet}"`}
+              {progressData.isImporting && 'Import in progress...'}
             </div>
             <div className='space-x-2'>
-              <Button variant='outline' onClick={onClose}>
+              <Button variant='outline' onClick={onClose} disabled={progressData.isImporting}>
                 Cancel
               </Button>
               <Button
                 onClick={handleImport}
-                disabled={!previewData || isLoading}
+                disabled={!previewData || isLoading || progressData.isImporting}
                 className='bg-blue-600 hover:bg-blue-700 text-white'
               >
                 <Upload className='mr-2 h-4 w-4' />
