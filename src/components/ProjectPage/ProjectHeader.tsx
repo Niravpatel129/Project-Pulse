@@ -3,7 +3,13 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +20,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProject, type Project } from '@/contexts/ProjectContext';
-import { useBreakpoints, useMediaQuery } from '@/hooks/useMediaQuery';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -31,6 +37,7 @@ import {
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { Input } from '../ui/input';
 import BlockWrapper from '../wrappers/BlockWrapper';
 import AddParticipantDialog from './AddParticipantDialog';
 import AddTeamDialog from './AddTeamDialog';
@@ -98,12 +105,24 @@ export default function ProjectHeader() {
   const bannerRef = useRef<HTMLDivElement>(null);
   const [showParticipantsDialog, setShowParticipantsDialog] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { isSm, isMd, isLg } = useBreakpoints();
+  const [isEditNameModalOpen, setIsEditNameModalOpen] = useState(false);
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const [newProjectName, setNewProjectName] = useState(project?.name || '');
 
   const handleUpdateProject = async (data: Partial<Project>) => {
     await updateProject(data);
   };
+
+  const updateProjectNameMutation = useMutation({
+    mutationFn: async (name: string) => {
+      return updateProject({ name });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project', project?._id] });
+      toast.success('Project name updated successfully');
+      setIsEditNameModalOpen(false);
+    },
+  });
 
   // Use React Query to manage collaborators state
   const { data: collaborators = [], isLoading: isLoadingCollaborators } = useQuery<Collaborator[]>({
@@ -762,7 +781,14 @@ export default function ProjectHeader() {
               <div className='container mx-auto px-4 py-1 sm:py-1'>
                 <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4'>
                   <div>
-                    <h1 className='text-xl sm:text-2xl font-medium capitalize'>{project?.name}</h1>
+                    <h1
+                      className='text-xl sm:text-2xl font-medium capitalize cursor-pointer hover:underline underline-offset-4  hover:border-primary transition-colors'
+                      onClick={() => {
+                        return setIsEditNameModalOpen(true);
+                      }}
+                    >
+                      {project?.name}
+                    </h1>
                     <p className='text-xs sm:text-sm text-muted-foreground'>
                       Created on{' '}
                       {project?.createdAt &&
@@ -779,7 +805,42 @@ export default function ProjectHeader() {
           </div>
         )}
 
-        {/* Sticky Banner that appears when scrolling */}
+        <Dialog open={isEditNameModalOpen} onOpenChange={setIsEditNameModalOpen}>
+          <DialogContent className='sm:max-w-[425px]'>
+            <DialogHeader>
+              <DialogTitle>Edit Project Name</DialogTitle>
+            </DialogHeader>
+            <div className='grid gap-4 py-4'>
+              <Input
+                id='projectName'
+                value={newProjectName}
+                onChange={(e) => {
+                  return setNewProjectName(e.target.value);
+                }}
+                placeholder='Enter project name'
+                autoFocus
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                variant='outline'
+                onClick={() => {
+                  return setIsEditNameModalOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  updateProjectNameMutation.mutate(newProjectName);
+                }}
+                disabled={updateProjectNameMutation.isPending}
+              >
+                {updateProjectNameMutation.isPending ? 'Saving...' : 'Save'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Participants Section */}
         <div id='participants-section' className='container mx-auto px-4 py-3 sm:py-4'>
