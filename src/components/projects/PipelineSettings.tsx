@@ -82,7 +82,6 @@ export function PipelineSettings() {
     setEditingStageIndex,
     setEditingStatusIndex,
     setIsAddingStage,
-    handleUpdatePipeline,
   } = usePipelineSettings();
 
   return (
