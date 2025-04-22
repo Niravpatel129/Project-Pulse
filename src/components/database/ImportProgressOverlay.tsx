@@ -1,4 +1,4 @@
-import { importProgress } from '@/app/[workspace]/database/[tableId]/page';
+import { importProgress } from '@/app/[workspace]/database/[tableId]/importProgress';
 import { Button } from '@/components/ui/button';
 import { FileSpreadsheet } from 'lucide-react';
 import { useEffect, useState } from 'react';

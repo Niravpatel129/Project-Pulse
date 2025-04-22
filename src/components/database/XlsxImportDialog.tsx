@@ -1,4 +1,4 @@
-import { importProgress } from '@/app/[workspace]/database/[tableId]/page';
+import { importProgress } from '@/app/[workspace]/database/[tableId]/importProgress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
