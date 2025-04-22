@@ -17,7 +17,7 @@ export default function StripeReturnPage() {
         }
       } catch (error) {
         console.error('Error checking account status:', error);
-        router.push('/projects');
+        // router.push('/projects');
       }
     };
 
