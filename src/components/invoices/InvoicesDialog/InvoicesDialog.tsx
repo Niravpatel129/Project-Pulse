@@ -706,14 +706,24 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                       <tbody>
                         {selectedItems.length > 0 ? (
                           selectedItems.map((item) => {
+                            const itemDiscount = item.discount || 0;
+                            const discountAmount =
+                              (item.unitPrice * item.quantity * itemDiscount) / 100;
+                            const finalAmount = item.unitPrice * item.quantity - discountAmount;
+
                             return (
                               <tr key={item.id} className='border-b border-gray-100'>
-                                <td className='py-3'>{item.description}</td>
+                                <td className='py-3'>
+                                  {item.description}
+                                  {itemDiscount > 0 && (
+                                    <span className='text-xs ml-2 text-emerald-600 font-medium'>
+                                      ({itemDiscount}% off)
+                                    </span>
+                                  )}
+                                </td>
                                 <td className='py-3 text-right'>{item.quantity}</td>
                                 <td className='py-3 text-right'>${item.unitPrice}</td>
-                                <td className='py-3 text-right'>
-                                  ${item.unitPrice * item.quantity}
-                                </td>
+                                <td className='py-3 text-right'>${finalAmount.toFixed(2)}</td>
                               </tr>
                             );
                           })
@@ -732,15 +742,60 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                       <div className='w-1/3 text-xs'>
                         <div className='flex justify-between mb-1 text-gray-500'>
                           <span>Subtotal</span>
-                          <span>C$0.00</span>
+                          <span>
+                            C$
+                            {selectedItems
+                              .reduce((sum, item) => {
+                                return sum + item.unitPrice * item.quantity;
+                              }, 0)
+                              .toFixed(2)}
+                          </span>
                         </div>
+
+                        {selectedItems.some((item) => {
+                          return (item.discount || 0) > 0;
+                        }) && (
+                          <div className='flex justify-between mb-1 text-emerald-600'>
+                            <span>Discount</span>
+                            <span>
+                              -C$
+                              {selectedItems
+                                .reduce((sum, item) => {
+                                  const discount = item.discount || 0;
+                                  return sum + (item.unitPrice * item.quantity * discount) / 100;
+                                }, 0)
+                                .toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+
                         <div className='flex justify-between mb-1 font-medium text-gray-900'>
                           <span>Total</span>
-                          <span>C$0.00</span>
+                          <span>
+                            C$
+                            {selectedItems
+                              .reduce((sum, item) => {
+                                const discount = item.discount || 0;
+                                const discountAmount =
+                                  (item.unitPrice * item.quantity * discount) / 100;
+                                return sum + (item.unitPrice * item.quantity - discountAmount);
+                              }, 0)
+                              .toFixed(2)}
+                          </span>
                         </div>
                         <div className='flex justify-between font-medium text-gray-900'>
                           <span>Amount due</span>
-                          <span>C$0.00</span>
+                          <span>
+                            C$
+                            {selectedItems
+                              .reduce((sum, item) => {
+                                const discount = item.discount || 0;
+                                const discountAmount =
+                                  (item.unitPrice * item.quantity * discount) / 100;
+                                return sum + (item.unitPrice * item.quantity - discountAmount);
+                              }, 0)
+                              .toFixed(2)}
+                          </span>
                         </div>
                       </div>
                     </div>

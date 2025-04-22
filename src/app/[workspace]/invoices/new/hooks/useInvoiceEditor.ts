@@ -25,6 +25,7 @@ interface Item {
   options: Record<string, any>;
   currency: string;
   total?: number;
+  discount?: number; // Discount percentage
 }
 
 export function useInvoiceEditor() {
@@ -51,6 +52,7 @@ export function useInvoiceEditor() {
     moduleIds: [],
     options: {},
     currency: 'usd',
+    discount: 0,
   });
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [newCustomer, setNewCustomer] = useState<Customer>({
@@ -239,7 +241,10 @@ export function useInvoiceEditor() {
 
   const handleSaveItem = (item: Item) => {
     // Calculate total and prepare item data
-    const total = item.quantity * item.unitPrice;
+    const discount = item.discount || 0;
+    const discountAmount = (item.quantity * item.unitPrice * discount) / 100;
+    const total = item.quantity * item.unitPrice - discountAmount;
+
     const itemToSave = {
       ...item,
       total,
@@ -258,6 +263,7 @@ export function useInvoiceEditor() {
           name: item.description,
           quantity: item.quantity,
           price: item.unitPrice,
+          discount: item.discount || 0,
           projects: item.projectIds || [project?._id],
           modules: item.moduleIds || [],
           currency: item.currency || 'usd',
@@ -269,6 +275,7 @@ export function useInvoiceEditor() {
           name: item.description,
           quantity: item.quantity,
           price: item.unitPrice,
+          discount: item.discount || 0,
           projects: item.projectIds || [project?._id],
           modules: item.moduleIds || [],
           currency: item.currency || 'usd',
@@ -287,8 +294,9 @@ export function useInvoiceEditor() {
                   description: data.name,
                   quantity: data.quantity,
                   unitPrice: data.price,
+                  discount: data.discount || 0,
                   currency: data.currency,
-                  total: data.quantity * data.price,
+                  total: data.quantity * data.price * (1 - (data.discount || 0) / 100),
                   projectIds: data.projects || [],
                   moduleIds: data.modules || [],
                   options: {},
@@ -304,8 +312,9 @@ export function useInvoiceEditor() {
                   description: data.name,
                   quantity: data.quantity,
                   unitPrice: data.price,
+                  discount: data.discount || 0,
                   currency: data.currency,
-                  total: data.quantity * data.price,
+                  total: data.quantity * data.price * (1 - (data.discount || 0) / 100),
                   projectIds: data.projects || [],
                   moduleIds: data.modules || [],
                   options: {},
@@ -321,8 +330,9 @@ export function useInvoiceEditor() {
           description: data.name,
           quantity: data.quantity,
           unitPrice: data.price,
+          discount: data.discount || 0,
           currency: data.currency,
-          total: data.quantity * data.price,
+          total: data.quantity * data.price * (1 - (data.discount || 0) / 100),
           projectIds: data.projects || [],
           moduleIds: data.modules || [],
           options: {},

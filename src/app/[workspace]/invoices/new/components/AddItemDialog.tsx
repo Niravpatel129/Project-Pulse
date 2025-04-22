@@ -2,6 +2,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { X } from 'lucide-react';
@@ -20,6 +27,7 @@ interface AddItemDialogProps {
     moduleIds: string[];
     options: Record<string, any>;
     currency: string;
+    discount?: number;
   };
   onSave: (item: {
     id: string;
@@ -30,6 +38,7 @@ interface AddItemDialogProps {
     moduleIds: string[];
     options: Record<string, any>;
     currency: string;
+    discount?: number;
   }) => void;
   projectOptions: { label: string; value: string }[];
   modules: any[];
@@ -54,6 +63,7 @@ export default function AddItemDialog({
     moduleIds: [] as string[],
     options: {} as Record<string, any>,
     currency: currency || 'usd',
+    discount: 0,
   });
 
   const currencySymbol =
@@ -78,6 +88,7 @@ export default function AddItemDialog({
           moduleIds: item.moduleIds || [],
           options: item.options || {},
           currency: item.currency || currency || 'usd',
+          discount: item.discount || 0,
         });
       } else {
         // Create mode
@@ -90,6 +101,7 @@ export default function AddItemDialog({
           moduleIds: [],
           options: {},
           currency: currency || 'usd',
+          discount: 0,
         });
       }
     }
@@ -123,8 +135,13 @@ export default function AddItemDialog({
           {item ? 'Edit Item' : 'Add New Item'}
           <div className='text-sm text-gray-500 font-normal'>
             {currencySymbol}
-            {formData.unitPrice.toFixed(2)} x {formData.quantity} = {currencySymbol}
-            {(formData.unitPrice * formData.quantity).toFixed(2)}
+            {formData.unitPrice.toFixed(2)} x {formData.quantity}
+            {formData.discount > 0 && ` - ${formData.discount}% discount`} = {currencySymbol}
+            {(
+              formData.unitPrice *
+              formData.quantity *
+              (1 - (formData.discount || 0) / 100)
+            ).toFixed(2)}
           </div>
         </DialogTitle>
         <form onSubmit={handleSubmit} className='space-y-4'>
@@ -185,6 +202,92 @@ export default function AddItemDialog({
                 />
               </div>
             </div>
+          </div>
+
+          <div className='space-y-2'>
+            <div className='flex justify-between items-center'>
+              <Label htmlFor='discount'>Discount</Label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant='outline' size='sm' className='text-xs'>
+                    {formData.discount > 0 ? `${formData.discount}% off` : 'Add discount'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end'>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      return setFormData({ ...formData, discount: 0 });
+                    }}
+                  >
+                    No discount
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      return setFormData({ ...formData, discount: 5 });
+                    }}
+                  >
+                    5% off
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      return setFormData({ ...formData, discount: 10 });
+                    }}
+                  >
+                    10% off
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      return setFormData({ ...formData, discount: 15 });
+                    }}
+                  >
+                    15% off
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      return setFormData({ ...formData, discount: 20 });
+                    }}
+                  >
+                    20% off
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      return setFormData({ ...formData, discount: 25 });
+                    }}
+                  >
+                    25% off
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <div className='px-2 py-1.5'>
+                    <div className='flex items-center gap-2'>
+                      <Input
+                        id='custom-discount'
+                        type='number'
+                        min='0'
+                        max='100'
+                        value={formData.discount || ''}
+                        placeholder='Custom %'
+                        className='w-20 h-8'
+                        onChange={(e) => {
+                          const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                          if (value >= 0 && value <= 100) {
+                            setFormData({ ...formData, discount: value });
+                          }
+                        }}
+                      />
+                      <span className='text-sm'>%</span>
+                    </div>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            {formData.discount > 0 && (
+              <div className='text-xs text-gray-500 mt-1'>
+                {`Discounted amount: ${currencySymbol}${(
+                  (formData.unitPrice * formData.quantity * formData.discount) /
+                  100
+                ).toFixed(2)}`}
+              </div>
+            )}
           </div>
 
           <div className='space-y-2'>
