@@ -13,11 +13,11 @@ export default function StripeReturnPage() {
         const res = await newRequest.get('/stripe/connect/account-status');
         if (res.data.success) {
           // Redirect to invoices page with success message
-          router.push('/invoices?status=success');
+          router.push('/projects');
         }
       } catch (error) {
         console.error('Error checking account status:', error);
-        router.push('/invoices?status=error');
+        router.push('/projects');
       }
     };
 
