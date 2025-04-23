@@ -50,7 +50,7 @@ function PaymentForm({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const mapCurrency = (currency: string) => {
-    switch (currency) {
+    switch (currency.toUpperCase()) {
       case 'USD':
         return '$';
       case 'EUR':
