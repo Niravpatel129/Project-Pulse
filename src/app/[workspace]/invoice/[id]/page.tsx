@@ -49,7 +49,7 @@ const mapCurrency = (currency: string) => {
     case 'USD':
       return '$';
     case 'CAD':
-      return 'CAD$';
+      return '$';
     case 'EUR':
       return '€';
     case 'GBP':
