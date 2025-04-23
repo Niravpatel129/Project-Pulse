@@ -48,6 +48,8 @@ const mapCurrency = (currency: string) => {
   switch (currency.toUpperCase()) {
     case 'USD':
       return '$';
+    case 'CAD':
+      return 'CAD$';
     case 'EUR':
       return '€';
     case 'GBP':
@@ -297,7 +299,7 @@ export default function InvoicePage() {
               <div className='flex justify-between'>
                 <span className='text-gray-500'>Amount:</span>
                 <span className='font-medium'>
-                  {invoice.currency || 'USD'} {invoice.total.toFixed(2)}
+                  {mapCurrency(invoice.currency) || 'USD'} {invoice.total.toFixed(2)}
                 </span>
               </div>
             </div>
