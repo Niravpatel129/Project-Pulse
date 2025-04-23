@@ -1,10 +1,18 @@
 'use client';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { toast } from '@/components/ui/use-toast';
 import { newRequest } from '@/utils/newRequest';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { CheckCircle, Lock } from 'lucide-react';
+import { CheckCircle, Lock, X } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -113,6 +121,7 @@ export default function InvoicePage() {
   const params = useParams();
   const invoiceId = params.id as string;
   const workspace = params.workspace as string;
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   const { data: invoice, isLoading } = useQuery<Invoice>({
     queryKey: ['invoice', workspace, invoiceId],
@@ -260,7 +269,12 @@ export default function InvoicePage() {
           )}
         </div>
 
-        <button className='w-full text-[13px] text-gray-500 text-left hover:text-gray-900 transition-colors'>
+        <button
+          onClick={() => {
+            return setIsDetailsModalOpen(true);
+          }}
+          className='w-full text-[13px] text-gray-500 text-left hover:text-gray-900 transition-colors'
+        >
           View invoice and payment details →
         </button>
       </div>
@@ -302,6 +316,118 @@ export default function InvoicePage() {
           <span className='hover:text-gray-600 transition-colors cursor-pointer'>Privacy</span>
         </div>
       </div>
+
+      {/* Invoice Details Modal */}
+      <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
+        <DialogContent className='max-w-4xl w-[90vw] h-[90vh] p-0 flex flex-col'>
+          <DialogHeader className='p-6 border-b'>
+            <div className='flex justify-between items-center'>
+              <DialogTitle className='text-xl font-semibold'>
+                Invoice #{invoice.invoiceNumber}
+              </DialogTitle>
+              <DialogClose asChild>
+                <button className='rounded-full p-1.5 hover:bg-gray-100'>
+                  <X className='h-5 w-5' />
+                  <span className='sr-only'>Close</span>
+                </button>
+              </DialogClose>
+            </div>
+            <DialogDescription>
+              Created on {new Date(invoice.createdAt).toLocaleDateString()}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className='flex-1 overflow-auto p-6'>
+            {/* Invoice Header */}
+            <div className='flex justify-between mb-8'>
+              <div>
+                <h3 className='font-semibold mb-2'>From</h3>
+                <p>{invoice.createdBy.name}</p>
+              </div>
+              <div className='text-right'>
+                <h3 className='font-semibold mb-2'>To</h3>
+                <p>{invoice.client.name}</p>
+                <p>{invoice.client.email}</p>
+              </div>
+            </div>
+
+            {/* Invoice Info */}
+            <div className='grid grid-cols-2 gap-6 mb-8'>
+              <div>
+                <h3 className='font-semibold mb-2'>Invoice Number</h3>
+                <p className='font-mono'>{invoice.invoiceNumber}</p>
+              </div>
+              <div>
+                <h3 className='font-semibold mb-2'>Due Date</h3>
+                <p>{new Date(invoice.dueDate).toLocaleDateString()}</p>
+              </div>
+              <div>
+                <h3 className='font-semibold mb-2'>Status</h3>
+                <p className={invoice.status === 'paid' ? 'text-green-600 font-medium' : ''}>
+                  {invoice.status === 'paid' ? (
+                    <span className='flex items-center gap-1.5'>
+                      <CheckCircle className='w-4 h-4' /> Paid
+                    </span>
+                  ) : (
+                    'Unpaid'
+                  )}
+                </p>
+              </div>
+              <div>
+                <h3 className='font-semibold mb-2'>Delivery Method</h3>
+                <p className='capitalize'>{invoice.deliveryMethod}</p>
+              </div>
+            </div>
+
+            {/* Invoice Summary */}
+            <div className='border rounded-lg overflow-hidden mb-6'>
+              <div className='bg-gray-50 p-4 border-b'>
+                <h3 className='font-semibold'>Invoice Summary</h3>
+              </div>
+              <div className='p-4 space-y-4'>
+                <div className='flex justify-between'>
+                  <span>Subtotal</span>
+                  <span>
+                    {mapCurrency(invoice.currency)}
+                    {invoice.subtotal.toFixed(2)}
+                  </span>
+                </div>
+                <div className='flex justify-between'>
+                  <span>Tax</span>
+                  <span>
+                    {mapCurrency(invoice.currency)}
+                    {invoice.tax.toFixed(2)}
+                  </span>
+                </div>
+                <div className='border-t pt-4 flex justify-between font-semibold'>
+                  <span>Total</span>
+                  <span>
+                    {mapCurrency(invoice.currency)}
+                    {invoice.total.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Info (if paid) */}
+            {invoice.status === 'paid' && (
+              <div className='bg-gray-50 p-4 rounded-lg'>
+                <h3 className='font-semibold mb-3'>Payment Information</h3>
+                <div className='space-y-2'>
+                  <div className='flex justify-between'>
+                    <span className='text-gray-600'>Payment ID</span>
+                    <span className='font-mono text-sm'>{invoice.paymentIntentId}</span>
+                  </div>
+                  <div className='flex justify-between'>
+                    <span className='text-gray-600'>Payment Date</span>
+                    <span>{new Date(invoice.paidAt || '').toLocaleDateString()}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
