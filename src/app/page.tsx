@@ -14,6 +14,7 @@ import {
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { AnimatePresence, motion } from 'framer-motion';
 import { inSphere } from 'maath/random';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 
@@ -418,6 +419,7 @@ export default function ComingSoonPage() {
   const [error, setError] = useState('');
   const [showInputField, setShowInputField] = useState(false);
   const [easterEggAnimation, setEasterEggAnimation] = useState<string | null>(null);
+  const router = useRouter();
 
   // Password configuration
   const correctPassword = 'flyff';
@@ -434,7 +436,7 @@ export default function ComingSoonPage() {
     // Check for correct password
     if (password === correctPassword) {
       // Redirect to bolo.hourblock.com
-      window.location.href = 'https://bolo.hourblock.com';
+      router.push('https://bolo.hourblock.com/login');
       return;
     }
 
