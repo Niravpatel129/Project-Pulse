@@ -122,11 +122,7 @@ export function ProjectSidebar({
 
   // Load open accordion items from localStorage
   const [openAccordionItems, setOpenAccordionItems] = useState<string[]>(() => {
-    if (typeof window !== 'undefined' && project?._id) {
-      const savedItems = localStorage.getItem(`project_${project._id}_accordion`);
-      return savedItems ? JSON.parse(savedItems) : [];
-    }
-    return [];
+    return ['properties'];
   });
 
   // Save open accordion items to localStorage
