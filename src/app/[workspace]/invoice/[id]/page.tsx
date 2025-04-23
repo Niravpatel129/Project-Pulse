@@ -27,6 +27,7 @@ interface Invoice {
   items: string[];
   subtotal: number;
   tax: number;
+  discount: number;
   total: number;
   status: string;
   dueDate: string;
@@ -392,6 +393,15 @@ export default function InvoicePage() {
                     {invoice.subtotal.toFixed(2)}
                   </span>
                 </div>
+                {invoice.discount > 0 && (
+                  <div className='flex justify-between text-green-600'>
+                    <span>Discount</span>
+                    <span>
+                      -{mapCurrency(invoice.currency)}
+                      {invoice.discount.toFixed(2)}
+                    </span>
+                  </div>
+                )}
                 <div className='flex justify-between'>
                   <span>Tax</span>
                   <span>
