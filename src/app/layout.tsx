@@ -1,5 +1,6 @@
 import { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono, IBM_Plex_Sans } from 'next/font/google';
+import Script from 'next/script';
 import ClientLayout from './ClientLayout';
 import './globals.css';
 
@@ -115,6 +116,52 @@ export default function RootLayout({
         <meta name='format-detection' content='telephone=no' />
         <meta name='mobile-web-app-capable' content='yes' />
         <meta name='theme-color' content='#0066FF' />
+
+        {/* Dynamic manifest for workspace subdomains */}
+        <Script id='dynamic-manifest' strategy='beforeInteractive'>
+          {`
+            (function() {
+              // Get hostname and extract subdomain
+              var hostname = window.location.hostname;
+              var subdomain = hostname.split('.')[0];
+              
+              // If it's a subdomain (not localhost, www or main domain)
+              if (hostname !== 'localhost' && subdomain !== 'www' && subdomain !== 'pulse-app') {
+                // Create a link element for the manifest
+                var link = document.createElement('link');
+                link.rel = 'manifest';
+                link.href = '/api/manifest/' + subdomain;
+                
+                // Remove any existing manifest link
+                var existingManifest = document.querySelector('link[rel="manifest"]');
+                if (existingManifest) {
+                  existingManifest.remove();
+                }
+                
+                // Add the new manifest link
+                document.head.appendChild(link);
+              }
+            })();
+          `}
+        </Script>
+
+        {/* Service Worker Registration */}
+        <Script id='register-service-worker' strategy='afterInteractive'>
+          {`
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(
+                  function(registration) {
+                    console.log('Service Worker registration successful with scope: ', registration.scope);
+                  },
+                  function(err) {
+                    console.log('Service Worker registration failed: ', err);
+                  }
+                );
+              });
+            }
+          `}
+        </Script>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexSans.className} antialiased`}

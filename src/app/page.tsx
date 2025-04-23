@@ -90,11 +90,11 @@ function GalaxyAnimation() {
   useFrame((state) => {
     if (pointsRef.current) {
       // Dynamic rotation based on time
-      pointsRef.current.rotation.y = clock.getElapsedTime() * 0.05;
+      pointsRef.current.rotation.y = state.clock.getElapsedTime() * 0.05;
 
       // Interactive rotation based on mouse position
-      const x = (mouse.x * viewport.width) / 100;
-      const y = (mouse.y * viewport.height) / 100;
+      const x = (state.mouse.x * state.viewport.width) / 100;
+      const y = (state.mouse.y * state.viewport.height) / 100;
 
       pointsRef.current.rotation.x = THREE.MathUtils.lerp(
         pointsRef.current.rotation.x,
@@ -419,6 +419,9 @@ export default function ComingSoonPage() {
   const [error, setError] = useState('');
   const [showInputField, setShowInputField] = useState(false);
   const [easterEggAnimation, setEasterEggAnimation] = useState<string | null>(null);
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [isWorkspaceSubdomain, setIsWorkspaceSubdomain] = useState(false);
+  const [workspaceName, setWorkspaceName] = useState<string>('');
   const router = useRouter();
 
   // Password configuration
@@ -428,6 +431,31 @@ export default function ComingSoonPage() {
     vortex: 'spiral',
     explosion: 'boom',
   };
+
+  // Check if we're on a workspace subdomain
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      const subdomain = hostname.split('.')[0];
+
+      // If this is a workspace subdomain (not localhost, www, or main domain)
+      if (hostname !== 'localhost' && subdomain !== 'www' && subdomain !== 'pulse-app') {
+        setIsWorkspaceSubdomain(true);
+        setWorkspaceName(subdomain);
+
+        // If on a workspace subdomain, go directly to that workspace
+        router.push(`/${subdomain}`);
+      }
+
+      // Listen for PWA install event
+      window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent the mini-infobar from appearing on mobile
+        e.preventDefault();
+        // Stash the event so it can be triggered later
+        setInstallPrompt(e);
+      });
+    }
+  }, [router]);
 
   // Handle password submission
   const handleSubmit = (e: React.FormEvent) => {
@@ -467,6 +495,20 @@ export default function ComingSoonPage() {
     }
   };
 
+  // Handle PWA installation
+  const handleInstallClick = async () => {
+    if (!installPrompt) return;
+
+    // Show the install prompt
+    installPrompt.prompt();
+
+    // Wait for the user to respond to the prompt
+    const { outcome } = await installPrompt.userChoice;
+
+    // We've used the prompt, and can't use it again, so clear it
+    setInstallPrompt(null);
+  };
+
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => {
@@ -487,6 +529,15 @@ export default function ComingSoonPage() {
       return <GalaxyAnimation />;
     }
   };
+
+  // If we're on a workspace subdomain, show nothing as we're redirecting
+  if (isWorkspaceSubdomain) {
+    return (
+      <div className='h-screen w-screen flex items-center justify-center bg-black'>
+        <div className='animate-pulse text-white text-lg'>Loading {workspaceName} workspace...</div>
+      </div>
+    );
+  }
 
   return (
     <div className='h-screen w-screen relative overflow-hidden bg-black'>
@@ -594,6 +645,36 @@ export default function ComingSoonPage() {
                 className='mt-8 text-sm text-white/50'
               >
                 <p>You discovered a secret animation!</p>
+              </motion.div>
+            )}
+
+            {/* PWA Install Button */}
+            {installPrompt && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className='mt-8'
+              >
+                <button
+                  onClick={handleInstallClick}
+                  className='bg-blue-600/80 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg shadow-lg flex items-center'
+                >
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    className='h-5 w-5 mr-2'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    stroke='currentColor'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4'
+                    />
+                  </svg>
+                  Install App
+                </button>
               </motion.div>
             )}
           </motion.div>
