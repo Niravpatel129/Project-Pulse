@@ -111,7 +111,8 @@ export default function InvoicePage() {
 
   const [stripePromise] = useState(() => {
     try {
-      const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+      const stripeKey =
+        'pk_live_51RC3v3AShnUAruhwfThWbkHXdQmj1Swuf2W6pNrvLanujLClvv2upNwZYR1Yr0MspTeadOXa5rxKa8VtORdNgIgi00Etd76FLo';
       if (!stripeKey) {
         throw new Error('Stripe publishable key is not defined');
       }
