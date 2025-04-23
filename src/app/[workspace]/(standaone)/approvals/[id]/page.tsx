@@ -197,31 +197,6 @@ function renderRelationValue(value: any) {
   return <span className='text-sm'>{String(value)}</span>;
 }
 
-function renderFieldValue(value: any) {
-  if (value === null || value === undefined) {
-    return 'None';
-  }
-
-  if (Array.isArray(value)) {
-    if (value.length === 0) return 'Empty list';
-
-    return value
-      .map((item) => {
-        if (typeof item === 'object' && item !== null) {
-          return item.originalName || item.name || '[Complex object]';
-        }
-        return String(item);
-      })
-      .join(', ');
-  }
-
-  if (typeof value === 'object' && value !== null) {
-    return '[Complex object]';
-  }
-
-  return String(value);
-}
-
 export default function ApprovalRequestPage() {
   const { id } = useParams();
   const searchParams = useSearchParams();
