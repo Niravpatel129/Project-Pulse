@@ -124,6 +124,104 @@ interface ApprovalRequest {
   createdAt: string;
 }
 
+// RelationFieldDisplay component for showing relation data in read-only mode
+function RelationFieldDisplay({ field }: { field: any }) {
+  if (
+    !field.fieldValue ||
+    typeof field.fieldValue !== 'object' ||
+    !('displayValues' in field.fieldValue) ||
+    !field.fieldValue.displayValues
+  ) {
+    return <span className='text-xs text-muted-foreground'>No relation data</span>;
+  }
+
+  return (
+    <div className='space-y-2'>
+      {Object.entries(field.fieldValue.displayValues).map(([key, value]) => {
+        return (
+          <div key={key} className='flex items-start gap-2'>
+            <span className='font-medium text-gray-500 min-w-[100px]'>{key}</span>
+            <span className='text-gray-700 flex-1'>{renderRelationValue(value)}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Helper function specifically for rendering relation values
+function renderRelationValue(value: any) {
+  if (value === null || value === undefined) {
+    return <span className='text-xs text-muted-foreground'>None</span>;
+  }
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return <span className='text-xs text-muted-foreground'>Empty list</span>;
+    }
+
+    return (
+      <div className='flex flex-col gap-1'>
+        {value.map((item, idx) => {
+          return (
+            <div key={idx} className='text-sm'>
+              {typeof item === 'object' && item !== null
+                ? item.originalName || item.name || JSON.stringify(item)
+                : String(item)}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  if (typeof value === 'object' && value !== null) {
+    if (value.contentType?.startsWith('image/') && value.downloadURL) {
+      return (
+        <div className='h-12 w-12 relative rounded overflow-hidden border'>
+          <Image
+            src={value.downloadURL}
+            alt={value.originalName || 'Image'}
+            fill
+            className='object-cover'
+          />
+        </div>
+      );
+    }
+
+    return (
+      <span className='text-sm'>{value.originalName || value.name || JSON.stringify(value)}</span>
+    );
+  }
+
+  return <span className='text-sm'>{String(value)}</span>;
+}
+
+function renderFieldValue(value: any) {
+  if (value === null || value === undefined) {
+    return 'None';
+  }
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) return 'Empty list';
+
+    return value
+      .map((item) => {
+        if (typeof item === 'object' && item !== null) {
+          return item.originalName || item.name || '[Complex object]';
+        }
+        return String(item);
+      })
+      .join(', ');
+  }
+
+  if (typeof value === 'object' && value !== null) {
+    return '[Complex object]';
+  }
+
+  return String(value);
+}
+
 export default function ApprovalRequestPage() {
   const { id } = useParams();
   const searchParams = useSearchParams();
@@ -475,12 +573,22 @@ export default function ApprovalRequestPage() {
                                           </div>
                                           {field.fieldType === 'text' && (
                                             <div className='text-sm text-gray-600 bg-white rounded-md p-3 border border-gray-200'>
-                                              {field.fieldValue as string}
+                                              {typeof field.fieldValue === 'string'
+                                                ? field.fieldValue
+                                                : typeof field.fieldValue === 'object'
+                                                ? JSON.stringify(field.fieldValue)
+                                                : field.fieldValue || 'No response'}
                                             </div>
                                           )}
-                                          {field.fieldType === 'files' && (
+                                          {(field.fieldType === 'files' ||
+                                            field.fieldType === 'attachment') && (
                                             <div className='text-sm text-gray-600 bg-white rounded-md p-3 border border-gray-200'>
-                                              {field.fieldValue ? (
+                                              {field.fieldValue &&
+                                              typeof field.fieldValue === 'object' &&
+                                              field.fieldValue._id &&
+                                              field.fieldValue.downloadURL &&
+                                              field.fieldValue.originalName &&
+                                              field.fieldValue.contentType ? (
                                                 <FilePreview
                                                   file={{
                                                     _id: field.fieldValue._id,
@@ -496,32 +604,39 @@ export default function ApprovalRequestPage() {
                                               )}
                                             </div>
                                           )}
-                                          {field.fieldType === 'relation' &&
-                                            field.fieldValue &&
-                                            typeof field.fieldValue === 'object' &&
-                                            'displayValues' in field.fieldValue && (
-                                              <div className='text-sm text-gray-600 bg-white rounded-md p-3 border border-gray-200'>
-                                                <div className='grid gap-2'>
-                                                  {Object.entries(
-                                                    field.fieldValue.displayValues,
-                                                  ).map(([key, value]) => {
-                                                    return (
-                                                      <div
-                                                        key={key}
-                                                        className='flex items-center gap-2'
-                                                      >
-                                                        <span className='font-medium text-gray-500 min-w-[100px]'>
-                                                          {key}
-                                                        </span>
-                                                        <span className='text-gray-700'>
-                                                          {value as string}
-                                                        </span>
-                                                      </div>
-                                                    );
-                                                  })}
-                                                </div>
-                                              </div>
-                                            )}
+                                          {field.fieldType === 'longtext' && (
+                                            <div className='text-sm text-gray-600 bg-white rounded-md p-3 border border-gray-200 max-h-32 overflow-y-auto'>
+                                              <span className='whitespace-pre-wrap'>
+                                                {typeof field.fieldValue === 'string'
+                                                  ? field.fieldValue
+                                                  : ''}
+                                              </span>
+                                            </div>
+                                          )}
+                                          {Array.isArray(field.fieldValue) && (
+                                            <div className='text-sm text-gray-600 bg-white rounded-md p-3 border border-gray-200'>
+                                              {field.fieldValue.length > 0 ? (
+                                                field.fieldValue.map((value, idx) => {
+                                                  return (
+                                                    <div key={idx} className='mb-1 last:mb-0'>
+                                                      {typeof value === 'string'
+                                                        ? value
+                                                        : JSON.stringify(value)}
+                                                    </div>
+                                                  );
+                                                })
+                                              ) : (
+                                                <span className='text-xs text-muted-foreground'>
+                                                  No values selected
+                                                </span>
+                                              )}
+                                            </div>
+                                          )}
+                                          {field.fieldType === 'relation' && (
+                                            <div className='text-sm text-gray-600 bg-white rounded-md p-3 border border-gray-200'>
+                                              <RelationFieldDisplay field={field} />
+                                            </div>
+                                          )}
                                           {field.description && (
                                             <div className='mt-2 text-xs text-gray-500'>
                                               {field.description}
