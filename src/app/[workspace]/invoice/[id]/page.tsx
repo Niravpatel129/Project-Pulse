@@ -49,6 +49,19 @@ function PaymentForm({
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const mapCurrency = (currency: string) => {
+    switch (currency) {
+      case 'USD':
+        return '$';
+      case 'EUR':
+        return '€';
+      case 'GBP':
+        return '£';
+      default:
+        return currency;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -85,11 +98,11 @@ function PaymentForm({
       <button
         type='submit'
         disabled={!stripe || isProcessing}
-        className='w-full bg-[#0066FF] text-white rounded-lg h-10 font-medium flex items-center justify-center gap-2 hover:bg-[#0052CC] transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+        className='w-full bg-[#0066FF] text-white rounded-lg h-10 font-medium flex items-center justify-center gap-2 hover:bg-[#0052CC] transition-colors disabled:opacity-50 disabled:cursor-not-allowed capitalize'
       >
         {isProcessing
           ? 'Processing...'
-          : `Pay ${invoice.currency || 'USD'}${invoice.total.toFixed(2)}`}
+          : `Pay ${mapCurrency(invoice.currency || 'USD')}${invoice.total.toFixed(2)}`}
         <Lock className='w-3.5 h-3.5' />
       </button>
     </form>
