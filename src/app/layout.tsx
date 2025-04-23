@@ -135,11 +135,30 @@ export default function RootLayout({
                 // Remove any existing manifest link
                 var existingManifest = document.querySelector('link[rel="manifest"]');
                 if (existingManifest) {
-                  existingManifest.remove();
+                  existingManifest.parentNode.removeChild(existingManifest);
                 }
                 
-                // Add the new manifest link
+                // Add the new manifest link to the head
                 document.head.appendChild(link);
+                
+                // Set workspace-specific meta tags
+                document.querySelector('meta[name="application-name"]').content = subdomain + ' - Pulse App';
+                document.querySelector('meta[name="apple-mobile-web-app-title"]').content = subdomain;
+                
+                // Update theme color to make each workspace visually distinct
+                var colors = {
+                  // Add some predefined colors for common workspace names
+                  projects: '#0066FF', 
+                  sales: '#00C484',
+                  marketing: '#FF6B35',
+                  hr: '#8A4FFF',
+                  finance: '#00A3E0',
+                  // Default color if workspace name doesn't match
+                  default: '#0066FF'
+                };
+                
+                var themeColor = colors[subdomain] || colors.default;
+                document.querySelector('meta[name="theme-color"]').content = themeColor;
               }
             })();
           `}
