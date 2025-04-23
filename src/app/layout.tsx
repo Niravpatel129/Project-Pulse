@@ -38,6 +38,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/',
   },
+  manifest: '/manifest.json',
   openGraph: {
     title: 'Pulse',
     description:
@@ -106,6 +107,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en'>
+      <head>
+        <meta name='application-name' content='Pulse App' />
+        <meta name='apple-mobile-web-app-capable' content='yes' />
+        <meta name='apple-mobile-web-app-status-bar-style' content='default' />
+        <meta name='apple-mobile-web-app-title' content='Pulse' />
+        <meta name='format-detection' content='telephone=no' />
+        <meta name='mobile-web-app-capable' content='yes' />
+        <meta name='theme-color' content='#0066FF' />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexSans.className} antialiased`}
       >
