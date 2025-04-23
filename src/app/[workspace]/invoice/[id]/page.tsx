@@ -35,6 +35,19 @@ interface Invoice {
   paidAt?: string;
 }
 
+const mapCurrency = (currency: string) => {
+  switch (currency.toUpperCase()) {
+    case 'USD':
+      return '$';
+    case 'EUR':
+      return '€';
+    case 'GBP':
+      return '£';
+    default:
+      return currency;
+  }
+};
+
 function PaymentForm({
   clientSecret,
   invoice,
@@ -48,19 +61,6 @@ function PaymentForm({
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-
-  const mapCurrency = (currency: string) => {
-    switch (currency.toUpperCase()) {
-      case 'USD':
-        return '$';
-      case 'EUR':
-        return '€';
-      case 'GBP':
-        return '£';
-      default:
-        return currency;
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -215,7 +215,8 @@ export default function InvoicePage() {
         <div className='flex justify-between items-start mb-10'>
           <div>
             <h1 className='text-[32px] font-semibold text-gray-900 mb-1 tracking-tight'>
-              {invoice.currency || 'USD'}${invoice.total.toFixed(2)}
+              {mapCurrency(invoice.currency) || 'USD'}
+              {invoice.total.toFixed(2)}
             </h1>
             <p className='text-[13px] text-gray-500'>
               {invoice.status === 'paid'
