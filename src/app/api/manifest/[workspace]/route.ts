@@ -1,16 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-
-interface RouteParams {
-  params: {
-    workspace: string;
-  };
-}
+import { NextResponse } from 'next/server';
 
 /**
  * Dynamic manifest.json generator for workspace subdomains
  */
-export async function GET(request: NextRequest, context: RouteParams) {
-  const { workspace } = context.params;
+export function GET(request, { params }) {
+  const workspace = params.workspace;
 
   // Generate a dynamic manifest for this specific workspace
   const manifest = {
