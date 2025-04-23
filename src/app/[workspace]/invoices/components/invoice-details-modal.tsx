@@ -27,6 +27,18 @@ function formatDate(dateString: string | undefined): string {
 export function InvoiceDetailsModal({ invoice, onClose }: InvoiceDetailsModalProps) {
   if (!invoice) return null;
 
+  // Calculate if there are any discounts
+  const hasDiscounts = invoice.items?.some((item) => {
+    return item.discount && item.discount > 0;
+  });
+  // Calculate total discount amount
+  const totalDiscountAmount =
+    invoice.items?.reduce((sum, item) => {
+      const discount = item.discount || 0;
+      const itemTotal = item.price * (item.quantity || 1);
+      return sum + (itemTotal * discount) / 100;
+    }, 0) || 0;
+
   return (
     <Dialog open={!!invoice} onOpenChange={onClose}>
       <DialogContent className='sm:max-w-[600px] p-0 h-[90vh] flex flex-col'>
@@ -119,13 +131,25 @@ export function InvoiceDetailsModal({ invoice, onClose }: InvoiceDetailsModalPro
                       }).format(invoice.subtotal)}
                     </div>
                   </div>
+                  {hasDiscounts && (
+                    <div className='flex justify-between'>
+                      <div className='text-xs text-emerald-600'>Discount</div>
+                      <div className='text-sm font-medium tracking-tight text-emerald-600'>
+                        -
+                        {new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: invoice.currency.toUpperCase(),
+                        }).format(totalDiscountAmount)}
+                      </div>
+                    </div>
+                  )}
                   <div className='flex justify-between'>
                     <div className='text-xs text-muted-foreground'>Tax</div>
                     <div className='text-sm font-medium tracking-tight'>
                       {new Intl.NumberFormat('en-US', {
                         style: 'currency',
                         currency: invoice.currency.toUpperCase(),
-                      }).format(invoice.tax)}
+                      }).format(invoice.tax || 0)}
                     </div>
                   </div>
                   <div className='flex justify-between pt-1'>
@@ -147,15 +171,35 @@ export function InvoiceDetailsModal({ invoice, onClose }: InvoiceDetailsModalPro
                 <h3 className='text-xs font-medium text-muted-foreground'>Items</h3>
                 <div className='rounded-lg border bg-card divide-y'>
                   {invoice.items.map((item) => {
+                    const itemDiscount = item.discount || 0;
+                    const quantity = item.quantity || 1;
+                    const itemTotal = item.price * quantity;
+                    const discountAmount = (itemTotal * itemDiscount) / 100;
+                    const finalAmount = itemTotal - discountAmount;
+
                     return (
                       <div key={item._id} className='p-3'>
-                        <div className='flex justify-between items-center'>
-                          <div className='text-sm font-medium tracking-tight'>{item.name}</div>
+                        <div className='flex justify-between items-start'>
+                          <div>
+                            <div className='text-sm font-medium tracking-tight'>{item.name}</div>
+                            {itemDiscount > 0 && (
+                              <div className='text-xs text-emerald-600'>
+                                {itemDiscount}% discount applied
+                              </div>
+                            )}
+                            <div className='text-xs text-muted-foreground mt-1'>
+                              {quantity} ×{' '}
+                              {new Intl.NumberFormat('en-US', {
+                                style: 'currency',
+                                currency: invoice.currency.toUpperCase(),
+                              }).format(item.price)}
+                            </div>
+                          </div>
                           <div className='text-sm font-medium tracking-tight'>
                             {new Intl.NumberFormat('en-US', {
                               style: 'currency',
                               currency: invoice.currency.toUpperCase(),
-                            }).format(item.price)}
+                            }).format(finalAmount)}
                           </div>
                         </div>
                       </div>

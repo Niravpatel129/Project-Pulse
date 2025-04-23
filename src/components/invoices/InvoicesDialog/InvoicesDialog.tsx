@@ -313,9 +313,15 @@ export default function InvoicesDialog({ open, onOpenChange }: InvoicesDialogPro
                 <h2 className='text-sm font-medium text-gray-900 mb-3'>Items</h2>
                 <p className='text-sm text-gray-600 mb-4'>
                   Add single, one-time items or products from your{' '}
-                  <span className='text-gray-900 font-medium cursor-pointer hover:text-gray-700'>
+                  <Button
+                    variant='link'
+                    className='p-0 h-auto text-gray-900 font-medium hover:text-gray-700'
+                    onClick={() => {
+                      return window.open('/inventory/products', '_blank');
+                    }}
+                  >
                     product catalogue
-                  </span>{' '}
+                  </Button>{' '}
                   to this invoice.
                 </p>
                 <div className='space-y-4'>
