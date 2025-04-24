@@ -392,7 +392,6 @@ export default function SettingsPage() {
                               <SelectContent>
                                 <SelectItem value='admin'>Admin</SelectItem>
                                 <SelectItem value='moderator'>Moderator</SelectItem>
-                                <SelectItem value='member'>Member</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -528,7 +527,6 @@ export default function SettingsPage() {
                       <SelectContent>
                         <SelectItem value='admin'>Admin</SelectItem>
                         <SelectItem value='moderator'>Moderator</SelectItem>
-                        <SelectItem value='member'>Member</SelectItem>
                       </SelectContent>
                     </Select>
                     <p className='text-xs text-muted-foreground mt-2'>
