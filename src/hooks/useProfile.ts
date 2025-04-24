@@ -52,6 +52,7 @@ export interface NotificationPreference {
 export function useProfile() {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState<UserProfile>({
@@ -156,6 +157,71 @@ export function useProfile() {
     });
   };
 
+  // Handle avatar file upload
+  const handleAvatarUpload = async (file: File) => {
+    if (!file) return;
+
+    // Validate file type
+    const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validImageTypes.includes(file.type)) {
+      toast({
+        title: 'Invalid file type',
+        description: 'Please upload a JPG, PNG, GIF, or WebP image.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate file size (5MB max)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      toast({
+        title: 'File too large',
+        description: 'Please upload an image smaller than 5MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setIsUploadingAvatar(true);
+
+      // Create form data for upload
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      // Upload avatar
+      const response = await newRequest.post('/users/avatar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      // Update avatar in state
+      const { avatarUrl } = response.data.data;
+      setFormData((prev) => {
+        return {
+          ...prev,
+          avatar: avatarUrl,
+        };
+      });
+
+      toast({
+        title: 'Avatar updated',
+        description: 'Your profile picture has been updated successfully.',
+      });
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast({
+        title: 'Upload failed',
+        description: 'There was an error uploading your avatar. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   // Handle notification preference changes
   const handleNotificationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, checked } = e.target;
@@ -229,8 +295,10 @@ export function useProfile() {
     formData,
     notificationPreferences,
     isLoading,
+    isUploadingAvatar,
     handleInputChange,
     handleNotificationChange,
+    handleAvatarUpload,
     saveProfile,
     getInitials,
   };

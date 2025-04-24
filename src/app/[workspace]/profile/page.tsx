@@ -10,20 +10,36 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useProfile } from '@/hooks/useProfile';
 import { BellRing, Camera, CreditCard, Lock, Mail, Phone, User } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 export default function ProfilePage() {
   const {
     formData,
     notificationPreferences,
     isLoading,
+    isUploadingAvatar,
     handleInputChange,
     handleNotificationChange,
+    handleAvatarUpload,
     saveProfile,
     getInitials,
   } = useProfile();
 
   const [activeTab, setActiveTab] = useState('general');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Handle camera button click
+  const handleCameraClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleAvatarUpload(file);
+    }
+  };
 
   return (
     <div className='bg-white'>
@@ -52,12 +68,26 @@ export default function ProfilePage() {
                       {getInitials(formData.name)}
                     </AvatarFallback>
                   </Avatar>
+                  {/* Hidden file input */}
+                  <input
+                    type='file'
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept='image/jpeg,image/png,image/gif,image/webp'
+                    className='hidden'
+                  />
                   <Button
                     size='icon'
                     variant='outline'
                     className='absolute bottom-0 right-0 rounded-full h-8 w-8'
+                    onClick={handleCameraClick}
+                    disabled={isUploadingAvatar}
                   >
-                    <Camera className='h-4 w-4' />
+                    {isUploadingAvatar ? (
+                      <span className='h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent' />
+                    ) : (
+                      <Camera className='h-4 w-4' />
+                    )}
                     <span className='sr-only'>Change avatar</span>
                   </Button>
                 </div>
