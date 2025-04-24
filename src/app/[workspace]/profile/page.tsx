@@ -18,9 +18,14 @@ export default function ProfilePage() {
     notificationPreferences,
     isLoading,
     isUploadingAvatar,
+    isUpdatingPassword,
+    passwordError,
+    passwordForm,
     handleInputChange,
     handleNotificationChange,
     handleAvatarUpload,
+    handlePasswordChange,
+    updatePassword,
     saveProfile,
     getInitials,
   } = useProfile();
@@ -257,18 +262,36 @@ export default function ProfilePage() {
                     <h3 className='text-lg font-medium'>Change Password</h3>
                     <div className='space-y-4'>
                       <div className='space-y-2'>
-                        <Label htmlFor='current-password'>Current Password</Label>
-                        <Input id='current-password' type='password' />
+                        <Label htmlFor='currentPassword'>Current Password</Label>
+                        <Input
+                          id='currentPassword'
+                          type='password'
+                          value={passwordForm.currentPassword}
+                          onChange={handlePasswordChange}
+                        />
                       </div>
                       <div className='space-y-2'>
-                        <Label htmlFor='new-password'>New Password</Label>
-                        <Input id='new-password' type='password' />
+                        <Label htmlFor='newPassword'>New Password</Label>
+                        <Input
+                          id='newPassword'
+                          type='password'
+                          value={passwordForm.newPassword}
+                          onChange={handlePasswordChange}
+                        />
                       </div>
                       <div className='space-y-2'>
-                        <Label htmlFor='confirm-password'>Confirm New Password</Label>
-                        <Input id='confirm-password' type='password' />
+                        <Label htmlFor='confirmPassword'>Confirm New Password</Label>
+                        <Input
+                          id='confirmPassword'
+                          type='password'
+                          value={passwordForm.confirmPassword}
+                          onChange={handlePasswordChange}
+                        />
                       </div>
-                      <Button>Update Password</Button>
+                      {passwordError && <p className='text-sm text-destructive'>{passwordError}</p>}
+                      <Button onClick={updatePassword} disabled={isUpdatingPassword}>
+                        {isUpdatingPassword ? 'Updating...' : 'Update Password'}
+                      </Button>
                     </div>
                   </div>
                 </TabsContent>

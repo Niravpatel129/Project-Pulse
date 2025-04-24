@@ -49,10 +49,19 @@ export interface NotificationPreference {
   enabled: boolean;
 }
 
+// Password form interface
+export interface PasswordForm {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 export function useProfile() {
   const { user, reloadAuth } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<UserProfile>({
@@ -68,6 +77,13 @@ export function useProfile() {
   const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreference[]>(
     DEFAULT_NOTIFICATION_PREFERENCES,
   );
+
+  // Password form state
+  const [passwordForm, setPasswordForm] = useState<PasswordForm>({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
 
   // Fetch user profile data
   const fetchUserProfile = async () => {
@@ -237,6 +253,94 @@ export function useProfile() {
     });
   };
 
+  // Handle password form input changes
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setPasswordForm((prev) => {
+      return {
+        ...prev,
+        [id]: value,
+      };
+    });
+
+    // Clear errors when user starts typing
+    if (passwordError) {
+      setPasswordError(null);
+    }
+  };
+
+  // Validate password form
+  const validatePasswordForm = (): boolean => {
+    if (!passwordForm.currentPassword) {
+      setPasswordError('Current password is required');
+      return false;
+    }
+
+    if (!passwordForm.newPassword) {
+      setPasswordError('New password is required');
+      return false;
+    }
+
+    if (passwordForm.newPassword.length < 8) {
+      setPasswordError('New password must be at least 8 characters long');
+      return false;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return false;
+    }
+
+    return true;
+  };
+
+  // Update password
+  const updatePassword = async () => {
+    // Validate form first
+    if (!validatePasswordForm()) {
+      return;
+    }
+
+    try {
+      setIsUpdatingPassword(true);
+
+      // Call API to update password
+      await newRequest.put('/auth/update-password', {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
+
+      // Reset form
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+
+      toast({
+        title: 'Password updated',
+        description: 'Your password has been updated successfully.',
+      });
+    } catch (error: any) {
+      console.error('Error updating password:', error);
+
+      // Handle different types of errors
+      if (error.response?.status === 401) {
+        setPasswordError('Current password is incorrect');
+      } else {
+        setPasswordError('Failed to update password. Please try again.');
+      }
+
+      toast({
+        title: 'Password update failed',
+        description: error.response?.data?.message || 'There was an error updating your password.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
   // Handle form submission
   const saveProfile = async () => {
     try {
@@ -304,9 +408,14 @@ export function useProfile() {
     notificationPreferences,
     isLoading,
     isUploadingAvatar,
+    isUpdatingPassword,
+    passwordError,
+    passwordForm,
     handleInputChange,
     handleNotificationChange,
     handleAvatarUpload,
+    handlePasswordChange,
+    updatePassword,
     saveProfile,
     getInitials,
   };
