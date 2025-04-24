@@ -1,176 +1,455 @@
 'use client';
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Copy, Edit, ImageIcon, Mail, Settings, Users } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
-export default function DashboardSettingsPage() {
+// Extend the Workspace interface
+interface ExtendedWorkspace {
+  name: string;
+  slug: string;
+  description?: string;
+}
+
+export default function SettingsPage() {
+  const { workspace } = useWorkspace();
+  const params = useParams();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState('general');
+  const [workspaceName, setWorkspaceName] = useState('');
+  const [workspaceSlug, setWorkspaceSlug] = useState('');
+  const [workspaceDescription, setWorkspaceDescription] = useState('');
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('moderator');
+
+  const { teamMembers, isLoading: isLoadingTeam } = useTeamMembers();
+
+  // Initialize form with current workspace data
+  useEffect(() => {
+    if (workspace) {
+      setWorkspaceName(workspace.name);
+      setWorkspaceSlug(workspace.slug);
+      setWorkspaceDescription((workspace as ExtendedWorkspace).description || '');
+    }
+  }, [workspace]);
+
+  // Update workspace mutation
+  const updateWorkspaceMutation = useMutation({
+    mutationFn: (data: { name?: string; slug?: string; description?: string }) => {
+      return newRequest.put(`/workspaces/${params.workspace}`, data);
+    },
+    onSuccess: () => {
+      toast.success('Workspace updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['workspace'] });
+    },
+    onError: (error) => {
+      console.error('Failed to update workspace:', error);
+      toast.error('Failed to update workspace');
+    },
+  });
+
+  // Invite user mutation
+  const inviteUserMutation = useMutation({
+    mutationFn: (data: { email: string; role: string }) => {
+      return newRequest.post('/workspaces/invite', data);
+    },
+    onSuccess: () => {
+      toast.success('Invitation sent successfully');
+      setInviteEmail('');
+      setInviteDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['teamMembers'] });
+    },
+    onError: (error) => {
+      console.error('Failed to send invitation:', error);
+      toast.error('Failed to send invitation');
+    },
+  });
+
+  // Remove team member mutation
+  const removeTeamMemberMutation = useMutation({
+    mutationFn: (memberId: string) => {
+      return newRequest.delete(`/workspaces/members/${memberId}`);
+    },
+    onSuccess: () => {
+      toast.success('Team member removed successfully');
+      queryClient.invalidateQueries({ queryKey: ['teamMembers'] });
+    },
+    onError: (error) => {
+      console.error('Failed to remove team member:', error);
+      toast.error('Failed to remove team member');
+    },
+  });
+
+  const handleSaveBasicSettings = () => {
+    updateWorkspaceMutation.mutate({
+      name: workspaceName,
+      slug: workspaceSlug,
+      description: workspaceDescription,
+    });
+  };
+
+  const handleInviteUser = () => {
+    if (!inviteEmail.trim()) return;
+
+    inviteUserMutation.mutate({
+      email: inviteEmail,
+      role: inviteRole,
+    });
+  };
+
+  const handleRemoveTeamMember = (memberId: string) => {
+    if (confirm('Are you sure you want to remove this team member?')) {
+      removeTeamMemberMutation.mutate(memberId);
+    }
+  };
+
+  const copyInviteLink = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/invite/${params.workspace}`);
+    toast.success('Invite link copied to clipboard');
+  };
+
+  const getRoleColor = (role: string) => {
+    switch (role.toLowerCase()) {
+      case 'admin':
+        return 'bg-blue-100 text-blue-800';
+      case 'moderator':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((part) => {
+        return part[0];
+      })
+      .join('')
+      .toUpperCase();
+  };
+
   return (
-    <div className='container mx-auto py-8'>
-      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-8'>
+    <div className='container mx-auto py-8 px-4 max-w-6xl'>
+      <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8'>
         <div>
-          <h1 className='text-3xl font-bold'>Settings</h1>
-          <p className='text-muted-foreground mt-1'>
-            Manage your account and application preferences
-          </p>
+          <h1 className='text-3xl font-bold tracking-tight'>Workspace Settings</h1>
+          <p className='text-muted-foreground mt-1'>Manage your workspace settings and team</p>
         </div>
-        <Button>Save Changes</Button>
       </div>
 
-      <Tabs defaultValue='account' className='space-y-4'>
-        <TabsList className='grid w-full grid-cols-3 md:w-auto md:inline-flex'>
-          <TabsTrigger value='account'>Account</TabsTrigger>
-          <TabsTrigger value='notifications'>Notifications</TabsTrigger>
-          <TabsTrigger value='appearance'>Appearance</TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-6'>
+        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
+          <TabsList className='bg-muted/50'>
+            <TabsTrigger value='general' className='data-[state=active]:bg-white'>
+              <Settings className='mr-2 h-4 w-4' />
+              General
+            </TabsTrigger>
+            <TabsTrigger value='team' className='data-[state=active]:bg-white'>
+              <Users className='mr-2 h-4 w-4' />
+              Team
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-        <TabsContent value='account' className='space-y-4'>
+        {/* General Settings Tab */}
+        <TabsContent value='general' className='space-y-6'>
           <Card>
             <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>Update your profile information and email address.</CardDescription>
+              <CardTitle>Basic Settings</CardTitle>
+              <CardDescription>
+                Configure your workspace name, slug, and other details
+              </CardDescription>
             </CardHeader>
-            <CardContent className='space-y-4'>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+            <CardContent className='space-y-6'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                 <div className='space-y-2'>
-                  <Label htmlFor='name'>Name</Label>
-                  <Input id='name' placeholder='John Doe' />
+                  <Label htmlFor='workspaceName'>Workspace Name</Label>
+                  <Input
+                    id='workspaceName'
+                    value={workspaceName}
+                    onChange={(e) => {
+                      return setWorkspaceName(e.target.value);
+                    }}
+                    placeholder='My Workspace'
+                  />
                 </div>
                 <div className='space-y-2'>
-                  <Label htmlFor='email'>Email</Label>
-                  <Input id='email' type='email' placeholder='john@example.com' />
+                  <Label htmlFor='workspaceSlug'>Workspace Slug</Label>
+                  <Input
+                    id='workspaceSlug'
+                    value={workspaceSlug}
+                    onChange={(e) => {
+                      return setWorkspaceSlug(e.target.value.toLowerCase().replace(/\s+/g, '-'));
+                    }}
+                    placeholder='my-workspace'
+                    className='lowercase'
+                  />
+                  <p className='text-sm text-muted-foreground'>
+                    This will be used in your workspace URL: {window.location.origin}/
+                    {workspaceSlug || 'workspace-slug'}
+                  </p>
+                </div>
+                <div className='space-y-2 md:col-span-2'>
+                  <Label htmlFor='workspaceDescription'>Description</Label>
+                  <Textarea
+                    id='workspaceDescription'
+                    value={workspaceDescription}
+                    onChange={(e) => {
+                      return setWorkspaceDescription(e.target.value);
+                    }}
+                    placeholder="Describe your workspace's purpose"
+                    className='min-h-[100px]'
+                  />
                 </div>
               </div>
-              <div className='space-y-2'>
-                <Label htmlFor='company'>Company</Label>
-                <Input id='company' placeholder='Your Company Name' />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button>Save Profile</Button>
-            </CardFooter>
-          </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Password</CardTitle>
-              <CardDescription>Update your password to maintain security.</CardDescription>
-            </CardHeader>
-            <CardContent className='space-y-4'>
-              <div className='space-y-2'>
-                <Label htmlFor='current_password'>Current Password</Label>
-                <Input id='current_password' type='password' />
-              </div>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                <div className='space-y-2'>
-                  <Label htmlFor='new_password'>New Password</Label>
-                  <Input id='new_password' type='password' />
+              <Separator className='my-6' />
+
+              <div className='space-y-4'>
+                <div className='flex items-center justify-between'>
+                  <div>
+                    <h3 className='font-medium'>Workspace Logo</h3>
+                    <p className='text-sm text-muted-foreground'>
+                      Upload a logo for your workspace
+                    </p>
+                  </div>
+                  <div className='flex items-center gap-4'>
+                    <Avatar className='h-16 w-16'>
+                      <AvatarImage src='/placeholder-logo.png' alt='Workspace Logo' />
+                      <AvatarFallback className='bg-primary/10'>
+                        <ImageIcon className='h-8 w-8 text-primary' />
+                      </AvatarFallback>
+                    </Avatar>
+                    <Button variant='outline' size='sm'>
+                      Upload
+                    </Button>
+                  </div>
                 </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='confirm_password'>Confirm Password</Label>
-                  <Input id='confirm_password' type='password' />
+              </div>
+
+              <Separator className='my-6' />
+
+              <div className='space-y-4'>
+                <div className='flex items-center justify-between'>
+                  <div>
+                    <h3 className='font-medium'>Workspace Visibility</h3>
+                    <p className='text-sm text-muted-foreground'>
+                      Control who can discover your workspace
+                    </p>
+                  </div>
+                  <Switch id='visibility' defaultChecked />
                 </div>
               </div>
             </CardContent>
-            <CardFooter>
-              <Button>Update Password</Button>
-            </CardFooter>
+            <div className='flex items-center justify-end p-6 pt-0'>
+              <Button
+                onClick={handleSaveBasicSettings}
+                disabled={updateWorkspaceMutation.isPending}
+              >
+                {updateWorkspaceMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
           </Card>
         </TabsContent>
 
-        <TabsContent value='notifications' className='space-y-4'>
+        {/* Team Tab */}
+        <TabsContent value='team' className='space-y-6'>
           <Card>
             <CardHeader>
-              <CardTitle>Notification Preferences</CardTitle>
-              <CardDescription>Configure how and when you receive notifications.</CardDescription>
+              <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center'>
+                <div>
+                  <CardTitle>Team Members</CardTitle>
+                  <CardDescription>
+                    Manage your workspace team members and their roles
+                  </CardDescription>
+                </div>
+                <div className='flex flex-col sm:flex-row gap-2 mt-4 sm:mt-0'>
+                  <Button variant='outline' onClick={copyInviteLink}>
+                    <Copy className='mr-2 h-4 w-4' />
+                    Copy Invite Link
+                  </Button>
+                  <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Mail className='mr-2 h-4 w-4' />
+                        Invite User
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className='sm:max-w-md'>
+                      <DialogHeader>
+                        <DialogTitle className='flex items-center'>
+                          Invite to Workspace
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge
+                                variant='outline'
+                                className='ml-2 h-5 w-5 rounded-full bg-muted p-0 text-xs cursor-help'
+                              >
+                                ?
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              This invitation grants access to your entire workspace
+                            </TooltipContent>
+                          </Tooltip>
+                        </DialogTitle>
+                        <DialogDescription>
+                          Send an invitation to join your workspace
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className='space-y-4 py-4'>
+                        <div className='space-y-2'>
+                          <Label htmlFor='invite-email'>Email Address</Label>
+                          <Input
+                            id='invite-email'
+                            type='email'
+                            value={inviteEmail}
+                            onChange={(e) => {
+                              return setInviteEmail(e.target.value);
+                            }}
+                            placeholder='colleague@example.com'
+                          />
+                        </div>
+                        <div className='space-y-2'>
+                          <Label htmlFor='invite-role'>Role</Label>
+                          <Select value={inviteRole} onValueChange={setInviteRole}>
+                            <SelectTrigger>
+                              <SelectValue placeholder='Select a role' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value='admin'>Admin</SelectItem>
+                              <SelectItem value='moderator'>Moderator</SelectItem>
+                              <SelectItem value='member'>Member</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <Button
+                        className='w-full'
+                        onClick={handleInviteUser}
+                        disabled={!inviteEmail.trim() || inviteUserMutation.isPending}
+                      >
+                        {inviteUserMutation.isPending ? 'Sending...' : 'Send Invitation'}
+                      </Button>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className='space-y-4'>
-              <div className='flex items-center justify-between space-y-0'>
-                <div className='space-y-0.5'>
-                  <Label htmlFor='email_notifications'>Email Notifications</Label>
-                  <p className='text-sm text-muted-foreground'>
-                    Receive email notifications for important updates
-                  </p>
-                </div>
-                <Switch id='email_notifications' checked={true} />
-              </div>
-
-              <div className='flex items-center justify-between space-y-0'>
-                <div className='space-y-0.5'>
-                  <Label htmlFor='project_updates'>Project Updates</Label>
-                  <p className='text-sm text-muted-foreground'>
-                    Get notified when changes are made to your projects
-                  </p>
-                </div>
-                <Switch id='project_updates' checked={true} />
-              </div>
-
-              <div className='flex items-center justify-between space-y-0'>
-                <div className='space-y-0.5'>
-                  <Label htmlFor='payment_notifications'>Payment Updates</Label>
-                  <p className='text-sm text-muted-foreground'>
-                    Receive notifications about invoice status changes
-                  </p>
-                </div>
-                <Switch id='payment_notifications' checked={true} />
-              </div>
-
-              <div className='flex items-center justify-between space-y-0'>
-                <div className='space-y-0.5'>
-                  <Label htmlFor='marketing_emails'>Marketing Emails</Label>
-                  <p className='text-sm text-muted-foreground'>
-                    Receive updates about new features and promotions
-                  </p>
-                </div>
-                <Switch id='marketing_emails' checked={false} />
+            <CardContent>
+              <div className='space-y-6'>
+                {isLoadingTeam ? (
+                  <div className='text-center py-6'>Loading team members...</div>
+                ) : teamMembers.length === 0 ? (
+                  <div className='text-center py-6 text-muted-foreground'>
+                    No team members yet. Invite someone to get started!
+                  </div>
+                ) : (
+                  <div className='space-y-4'>
+                    {teamMembers.map((member) => {
+                      return (
+                        <div
+                          key={member._id}
+                          className='flex items-center justify-between p-4 border rounded-lg hover:bg-muted/10 transition-colors'
+                        >
+                          <div className='flex items-center gap-4'>
+                            <Avatar>
+                              <AvatarImage src={`https://avatar.vercel.sh/${member.email}`} />
+                              <AvatarFallback>
+                                {getInitials(member.name || member.email)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className='font-medium'>{member.name || member.email}</p>
+                              <p className='text-sm text-muted-foreground'>{member.email}</p>
+                            </div>
+                          </div>
+                          <div className='flex items-center gap-2'>
+                            <Badge className={`${getRoleColor(member.role)} capitalize`}>
+                              {member.role}
+                            </Badge>
+                            <div className='flex items-center'>
+                              <Button variant='ghost' size='icon'>
+                                <Edit className='h-4 w-4' />
+                              </Button>
+                              <Button
+                                variant='ghost'
+                                size='icon'
+                                onClick={() => {
+                                  return handleRemoveTeamMember(member._id);
+                                }}
+                                disabled={removeTeamMemberMutation.isPending}
+                              >
+                                <svg
+                                  xmlns='http://www.w3.org/2000/svg'
+                                  width='16'
+                                  height='16'
+                                  viewBox='0 0 24 24'
+                                  fill='none'
+                                  stroke='currentColor'
+                                  strokeWidth='2'
+                                  strokeLinecap='round'
+                                  strokeLinejoin='round'
+                                  className='text-destructive'
+                                >
+                                  <path d='M3 6h18'></path>
+                                  <path d='M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6'></path>
+                                  <path d='M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2'></path>
+                                </svg>
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </CardContent>
-            <CardFooter>
-              <Button>Save Preferences</Button>
-            </CardFooter>
           </Card>
-        </TabsContent>
 
-        <TabsContent value='appearance' className='space-y-4'>
           <Card>
             <CardHeader>
-              <CardTitle>Theme Preferences</CardTitle>
-              <CardDescription>Customize the appearance of your dashboard.</CardDescription>
+              <CardTitle>Pending Invitations</CardTitle>
+              <CardDescription>Manage your pending workspace invitations</CardDescription>
             </CardHeader>
-            <CardContent className='space-y-4'>
-              <div className='flex items-center justify-between space-y-0'>
-                <div className='space-y-0.5'>
-                  <Label htmlFor='dark_mode'>Dark Mode</Label>
-                  <p className='text-sm text-muted-foreground'>
-                    Switch between light and dark theme
-                  </p>
-                </div>
-                <Switch id='dark_mode' checked={false} />
-              </div>
-
-              <div className='flex items-center justify-between space-y-0'>
-                <div className='space-y-0.5'>
-                  <Label htmlFor='compact_view'>Compact View</Label>
-                  <p className='text-sm text-muted-foreground'>
-                    Display more content with reduced spacing
-                  </p>
-                </div>
-                <Switch id='compact_view' checked={false} />
-              </div>
+            <CardContent>
+              <div className='text-center py-6 text-muted-foreground'>No pending invitations</div>
             </CardContent>
-            <CardFooter>
-              <Button>Save Appearance</Button>
-            </CardFooter>
           </Card>
         </TabsContent>
       </Tabs>
