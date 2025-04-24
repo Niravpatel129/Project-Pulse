@@ -601,7 +601,7 @@ export default function SettingsPage() {
                             <div className='flex items-center gap-4'>
                               <Avatar>
                                 <AvatarImage
-                                  src={`https://avatar.vercel.sh/${member.user.email}`}
+                                  src={member?.user?.avatar ||`https://avatar.vercel.sh/${member.user.email}`}
                                 />
                                 <AvatarFallback>
                                   {getInitials(member.user.name || member.user.email)}

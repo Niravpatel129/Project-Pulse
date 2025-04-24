@@ -8,6 +8,7 @@ export interface TeamMember {
     email: string;
     role: string;
     needsPasswordChange: boolean;
+    avatar: string;
   };
   role: string;
   _id: string;
