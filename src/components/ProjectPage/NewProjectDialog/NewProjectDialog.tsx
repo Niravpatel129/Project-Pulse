@@ -39,7 +39,11 @@ interface Status {
 
 interface TeamMember {
   _id: string;
-  name: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  [key: string]: any; // Allow additional properties from the hook
 }
 
 export default function NewProjectDialog({ open = true, onClose = () => {} }) {
@@ -354,7 +358,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                   disabled={isLoadingTeamMembers}
                 >
                   <Users className='h-3 w-3 mr-1 text-gray-400' />
-                  {manager ? manager.name : 'Manager'}
+                  {manager ? manager.name || '' : 'Manager'}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align='start' className={dropdownContentClasses}>
@@ -364,8 +368,8 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                     placeholder='Search managers...'
                     onChange={(e) => {
                       const searchTerm = e.target.value.toLowerCase();
-                      const filtered = teamMembers.filter((member) => {
-                        return member.name.toLowerCase().includes(searchTerm);
+                      const filtered = teamMembers.filter((member: any) => {
+                        return member?.name?.toLowerCase().includes(searchTerm) || '';
                       });
                       setFilteredTeamMembers(filtered);
                     }}
@@ -384,10 +388,10 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                         <div className='flex items-center'>
                           <Avatar className='h-4 w-4 mr-1.5'>
                             <AvatarFallback className='text-[10px]'>
-                              {user.name.charAt(0)}
+                              {user.name?.charAt(0) || ''}
                             </AvatarFallback>
                           </Avatar>
-                          <span>{user.name}</span>
+                          <span>{user.name || ''}</span>
                         </div>
                         {manager?._id === user._id && <Check className='h-3 w-3 text-gray-500' />}
                       </DropdownMenuItem>
@@ -414,7 +418,7 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                       const searchTerm = e.target.value.toLowerCase();
                       const filtered =
                         participants?.filter((participant) => {
-                          return participant.name.toLowerCase().includes(searchTerm);
+                          return participant.name?.toLowerCase().includes(searchTerm) || '';
                         }) || [];
                       setFilteredParticipants(filtered);
                     }}
@@ -445,10 +449,10 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                         <div className='flex items-center'>
                           <Avatar className='h-4 w-4 mr-1.5'>
                             <AvatarFallback className='text-[10px]'>
-                              {user.name.charAt(0)}
+                              {user.name?.charAt(0) || ''}
                             </AvatarFallback>
                           </Avatar>
-                          <span>{user.name}</span>
+                          <span>{user.name || ''}</span>
                         </div>
                         {client.some((m) => {
                           return m._id === user._id;
