@@ -250,6 +250,7 @@ export default function SettingsPage() {
                   <div className='space-y-2'>
                     <Label htmlFor='workspaceName'>Workspace Name</Label>
                     <Input
+                      disabled={true}
                       id='workspaceName'
                       value={workspaceName}
                       onChange={(e) => {
@@ -261,6 +262,7 @@ export default function SettingsPage() {
                   <div className='space-y-2'>
                     <Label htmlFor='workspaceSlug'>Workspace Slug</Label>
                     <Input
+                      disabled={true}
                       id='workspaceSlug'
                       value={workspaceSlug}
                       onChange={(e) => {
