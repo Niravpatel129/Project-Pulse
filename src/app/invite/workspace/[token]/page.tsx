@@ -12,8 +12,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/contexts/AuthContext';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation } from '@tanstack/react-query';
+import { setCookie } from 'cookies-next';
 import { MailIcon, ShieldCheck } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -22,6 +24,7 @@ import { toast } from 'sonner';
 export default function WorkspaceInvitePage() {
   const params = useParams();
   const router = useRouter();
+  const { login } = useAuth();
   const [invitationDetails, setInvitationDetails] = useState<{
     email?: string;
     role?: string;
@@ -46,7 +49,6 @@ export default function WorkspaceInvitePage() {
       try {
         setIsLoading(true);
         const response = await newRequest.get(`/workspaces/invite/verify/${token}`);
-        console.log('🚀 response:', response);
         setInvitationDetails({
           email: response.data.data.invitation.email,
           role: response.data.data.invitation.role,
@@ -78,14 +80,58 @@ export default function WorkspaceInvitePage() {
         userId: invitationDetails?.userId,
       });
     },
-    onSuccess: (response) => {
+    onSuccess: async (response) => {
       toast.success('Invitation accepted successfully');
 
-      // Redirect to the workspace
+      // Extract auth token and user data
+      const { token: authToken, user } = response.data.data;
+
+      // Store authentication token
+      if (authToken) {
+        localStorage.setItem('authToken', authToken);
+      }
+
+      // Store user data in cookie if available
+      if (user) {
+        setCookie('user', JSON.stringify(user));
+      } else {
+        // If no user data/token provided, try to log in the user
+        try {
+          await login(invitationDetails?.email || '', password, { noRedirect: true });
+        } catch (err) {
+          console.error('Auto-login failed:', err);
+          // Continue with redirection even if auto-login fails
+        }
+      }
+
+      // Get the workspace slug for redirection
       const workspaceSlug =
         response.data.data.workspace?.slug ||
         invitationDetails?.workspaceName?.toLowerCase().replace(/\s+/g, '-');
-      router.push(`/${workspaceSlug}`);
+
+      // Redirect to workspace using subdomain
+      const hostname = window.location.hostname;
+
+      // Check if we're on localhost (development)
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        // For local development, continue using path-based routing
+        router.push(`/${workspaceSlug}`);
+      } else {
+        // For production, use subdomain-based routing
+        // Extract the base domain (e.g., hourblock.com from app.hourblock.com)
+        const domainParts = hostname.split('.');
+        const baseDomain =
+          domainParts.length > 2
+            ? domainParts.slice(1).join('.') // For subdomains like app.hourblock.com
+            : hostname; // For apex domain
+
+        // Construct the subdomain URL
+        const protocol = window.location.protocol;
+        const subdomainUrl = `${protocol}//${workspaceSlug}.${baseDomain}`;
+
+        // Navigate to the subdomain
+        window.location.href = subdomainUrl;
+      }
     },
     onError: (error) => {
       console.error('Failed to accept invitation:', error);
