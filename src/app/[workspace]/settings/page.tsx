@@ -42,6 +42,14 @@ interface ExtendedWorkspace {
   description?: string;
 }
 
+// Team member interface
+interface TeamMember {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
 export default function SettingsPage() {
   const { workspace } = useWorkspace();
   const params = useParams();
@@ -54,6 +62,11 @@ export default function SettingsPage() {
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('moderator');
+
+  // Edit member state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  const [editRole, setEditRole] = useState('');
 
   const { teamMembers, isLoading: isLoadingTeam } = useTeamMembers();
 
@@ -113,6 +126,23 @@ export default function SettingsPage() {
     },
   });
 
+  // Update team member mutation
+  const updateTeamMemberMutation = useMutation({
+    mutationFn: (data: { memberId: string; role: string }) => {
+      return newRequest.put(`/workspaces/members/${data.memberId}`, { role: data.role });
+    },
+    onSuccess: () => {
+      toast.success('Team member updated successfully');
+      setEditDialogOpen(false);
+      setSelectedMember(null);
+      queryClient.invalidateQueries({ queryKey: ['teamMembers'] });
+    },
+    onError: (error) => {
+      console.error('Failed to update team member:', error);
+      toast.error('Failed to update team member');
+    },
+  });
+
   const handleSaveBasicSettings = () => {
     updateWorkspaceMutation.mutate({
       name: workspaceName,
@@ -134,6 +164,21 @@ export default function SettingsPage() {
     if (confirm('Are you sure you want to remove this team member?')) {
       removeTeamMemberMutation.mutate(memberId);
     }
+  };
+
+  const handleEditMember = (member: TeamMember) => {
+    setSelectedMember(member);
+    setEditRole(member.role);
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateMember = () => {
+    if (!selectedMember || !editRole) return;
+
+    updateTeamMemberMutation.mutate({
+      memberId: selectedMember._id,
+      role: editRole,
+    });
   };
 
   const copyInviteLink = () => {
@@ -403,7 +448,13 @@ export default function SettingsPage() {
                               {member.role}
                             </Badge>
                             <div className='flex items-center'>
-                              <Button variant='ghost' size='icon'>
+                              <Button
+                                variant='ghost'
+                                size='icon'
+                                onClick={() => {
+                                  return handleEditMember(member);
+                                }}
+                              >
                                 <Edit className='h-4 w-4' />
                               </Button>
                               <Button
@@ -441,6 +492,79 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Edit User Dialog */}
+          <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+            <DialogContent className='sm:max-w-md'>
+              <DialogHeader>
+                <DialogTitle>Edit Team Member</DialogTitle>
+                <DialogDescription>
+                  Update role and permissions for {selectedMember?.name || selectedMember?.email}
+                </DialogDescription>
+              </DialogHeader>
+              <div className='space-y-4 py-4'>
+                <div className='flex items-center gap-4 mb-4'>
+                  <Avatar>
+                    <AvatarImage
+                      src={selectedMember ? `https://avatar.vercel.sh/${selectedMember.email}` : ''}
+                      alt={selectedMember?.name || 'Team member'}
+                    />
+                    <AvatarFallback>
+                      {selectedMember?.name
+                        ? getInitials(selectedMember.name)
+                        : selectedMember?.email
+                        ? getInitials(selectedMember.email.split('@')[0])
+                        : '??'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className='font-medium'>{selectedMember?.name || selectedMember?.email}</p>
+                    <p className='text-sm text-muted-foreground'>{selectedMember?.email}</p>
+                  </div>
+                </div>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='edit-role'>Role</Label>
+                  <Select value={editRole} onValueChange={setEditRole}>
+                    <SelectTrigger>
+                      <SelectValue placeholder='Select a role' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='admin'>Admin</SelectItem>
+                      <SelectItem value='moderator'>Moderator</SelectItem>
+                      <SelectItem value='member'>Member</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className='text-xs text-muted-foreground mt-2'>
+                    {editRole === 'admin' && 'Full access to all settings and resources'}
+                    {editRole === 'moderator' &&
+                      'Can manage projects, but has limited access to workspace settings'}
+                    {editRole === 'member' && 'Can view and edit assigned projects only'}
+                  </p>
+                </div>
+              </div>
+              <div className='flex justify-end gap-2'>
+                <Button
+                  variant='outline'
+                  onClick={() => {
+                    return setEditDialogOpen(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleUpdateMember}
+                  disabled={
+                    !editRole ||
+                    editRole === selectedMember?.role ||
+                    updateTeamMemberMutation.isPending
+                  }
+                >
+                  {updateTeamMemberMutation.isPending ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           <Card>
             <CardHeader>
