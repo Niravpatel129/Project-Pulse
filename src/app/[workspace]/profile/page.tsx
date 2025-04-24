@@ -8,163 +8,22 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from '@/components/ui/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/hooks/useProfile';
 import { BellRing, Camera, CreditCard, Lock, Mail, Phone, User } from 'lucide-react';
-import { useEffect, useState } from 'react';
-
-// Extended user profile data
-interface UserProfile {
-  name: string;
-  role: string;
-  email: string;
-  phone?: string;
-  bio?: string;
-  avatar: string;
-  notificationPreferences?: Record<string, boolean>;
-}
+import { useState } from 'react';
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const {
+    formData,
+    notificationPreferences,
+    isLoading,
+    handleInputChange,
+    handleNotificationChange,
+    saveProfile,
+    getInitials,
+  } = useProfile();
+
   const [activeTab, setActiveTab] = useState('general');
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Form state
-  const [formData, setFormData] = useState<UserProfile>({
-    name: '',
-    role: '',
-    email: '',
-    phone: '',
-    bio: '',
-    avatar: '',
-  });
-
-  // Notification preferences state
-  const [notificationPreferences, setNotificationPreferences] = useState([
-    {
-      id: 'email-projects',
-      label: 'Project updates',
-      description: 'Get notified about new milestones and project changes',
-      enabled: true,
-    },
-    {
-      id: 'email-tasks',
-      label: 'Task assignments',
-      description: 'Receive emails when you&apos;re assigned to a task',
-      enabled: true,
-    },
-    {
-      id: 'email-calendar',
-      label: 'Calendar events',
-      description: 'Daily summary of upcoming events and meetings',
-      enabled: false,
-    },
-    {
-      id: 'email-billing',
-      label: 'Billing updates',
-      description: 'Get invoices and payment notifications',
-      enabled: true,
-    },
-  ]);
-
-  // Update form data when user data changes
-  useEffect(() => {
-    if (user) {
-      setFormData({
-        name: user.name || '',
-        role: user.role || '',
-        email: user.email || '',
-        phone: '',
-        bio: '',
-        avatar: user.avatar || '',
-      });
-
-      // If user has notification preferences in localStorage, load them
-      const savedPrefs = localStorage.getItem('notificationPreferences');
-      if (savedPrefs) {
-        try {
-          const parsedPrefs = JSON.parse(savedPrefs);
-          setNotificationPreferences((prev) => {
-            return prev.map((pref) => {
-              return {
-                ...pref,
-                enabled: parsedPrefs[pref.id] ?? pref.enabled,
-              };
-            });
-          });
-        } catch (e) {
-          console.error('Failed to parse notification preferences:', e);
-        }
-      }
-    }
-  }, [user]);
-
-  // Handle input changes
-  const handleInputChange = (e) => {
-    const { id, value } = e.target;
-    setFormData((prev) => {
-      return {
-        ...prev,
-        [id]: value,
-      };
-    });
-  };
-
-  // Handle notification preference changes
-  const handleNotificationChange = (e) => {
-    const { id, checked } = e.target;
-    setNotificationPreferences((prev) => {
-      return prev.map((pref) => {
-        return pref.id === id ? { ...pref, enabled: checked } : pref;
-      });
-    });
-  };
-
-  // Handle form submission
-  const handleSubmit = async () => {
-    try {
-      setIsLoading(true);
-
-      // Convert notification preferences to object format
-      const notificationPrefsObj = notificationPreferences.reduce((obj, pref) => {
-        obj[pref.id] = pref.enabled;
-        return obj;
-      }, {} as Record<string, boolean>);
-
-      // Save notification preferences in localStorage
-      localStorage.setItem('notificationPreferences', JSON.stringify(notificationPrefsObj));
-
-      // TODO: In a real application, we would call an API to update the user profile
-      // For now, we'll just simulate a successful update
-      await new Promise((resolve) => {
-        return setTimeout(resolve, 1000);
-      });
-
-      toast({
-        title: 'Profile updated',
-        description: 'Your profile has been successfully updated.',
-      });
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      toast({
-        title: 'Update failed',
-        description: 'There was an error updating your profile. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Calculate initials for avatar fallback
-  const getInitials = (name) => {
-    return name
-      .split(' ')
-      .map((n) => {
-        return n[0];
-      })
-      .join('');
-  };
 
   return (
     <div className='bg-white'>
@@ -176,7 +35,7 @@ export default function ProfilePage() {
               Manage your account settings and preferences
             </p>
           </div>
-          <Button onClick={handleSubmit} disabled={isLoading}>
+          <Button onClick={saveProfile} disabled={isLoading}>
             {isLoading ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
@@ -203,7 +62,7 @@ export default function ProfilePage() {
                   </Button>
                 </div>
                 <h2 className='text-xl font-semibold'>{formData.name}</h2>
-                <p className='text-sm text-muted-foreground'>{formData.role}</p>
+                <p className='text-sm text-muted-foreground'>{formData.jobTitle}</p>
 
                 <div className='w-full mt-6 space-y-2'>
                   <Button
@@ -284,8 +143,12 @@ export default function ProfilePage() {
                         <Input id='name' value={formData.name} onChange={handleInputChange} />
                       </div>
                       <div className='space-y-2'>
-                        <Label htmlFor='role'>Job Title</Label>
-                        <Input id='role' value={formData.role} onChange={handleInputChange} />
+                        <Label htmlFor='jobTitle'>Job Title</Label>
+                        <Input
+                          id='jobTitle'
+                          value={formData.jobTitle}
+                          onChange={handleInputChange}
+                        />
                       </div>
                       <div className='space-y-2'>
                         <Label htmlFor='email'>Email</Label>
