@@ -102,7 +102,7 @@ export default function SettingsPage() {
   // Invite user mutation
   const inviteUserMutation = useMutation({
     mutationFn: (data: { email: string; role: string }) => {
-      return newRequest.post('/workspaces/invite', data);
+      return newRequest.post(`/workspaces/invite`, data);
     },
     onSuccess: () => {
       toast.success('Invitation sent successfully');
@@ -392,6 +392,7 @@ export default function SettingsPage() {
                               <SelectContent>
                                 <SelectItem value='admin'>Admin</SelectItem>
                                 <SelectItem value='moderator'>Moderator</SelectItem>
+                                <SelectItem value='client'>Client</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -527,6 +528,7 @@ export default function SettingsPage() {
                       <SelectContent>
                         <SelectItem value='admin'>Admin</SelectItem>
                         <SelectItem value='moderator'>Moderator</SelectItem>
+                        <SelectItem value='client'>Client</SelectItem>
                       </SelectContent>
                     </Select>
                     <p className='text-xs text-muted-foreground mt-2'>
@@ -534,6 +536,7 @@ export default function SettingsPage() {
                       {editRole === 'moderator' &&
                         'Can manage projects, but has limited access to workspace settings'}
                       {editRole === 'member' && 'Can view and edit assigned projects only'}
+                      {editRole === 'client' && 'Can only view and comment on assigned projects'}
                     </p>
                   </div>
                 </div>
