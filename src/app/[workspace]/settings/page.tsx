@@ -30,7 +30,7 @@ import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Edit, ImageIcon, Mail, Settings, Users, XCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 // Extend the Workspace interface
@@ -38,6 +38,7 @@ interface ExtendedWorkspace {
   name: string;
   slug: string;
   description?: string;
+  logoUrl?: string;
 }
 
 // Team member interface
@@ -75,6 +76,11 @@ export default function SettingsPage() {
   const [workspaceName, setWorkspaceName] = useState('');
   const [workspaceSlug, setWorkspaceSlug] = useState('');
   const [workspaceDescription, setWorkspaceDescription] = useState('');
+  const [workspaceLogo, setWorkspaceLogo] = useState<string | null>(null);
+  const [tempLogoUrl, setTempLogoUrl] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('moderator');
@@ -105,6 +111,9 @@ export default function SettingsPage() {
       setWorkspaceName(workspace.name);
       setWorkspaceSlug(workspace.slug);
       setWorkspaceDescription((workspace as ExtendedWorkspace).description || '');
+      setWorkspaceLogo((workspace as ExtendedWorkspace).logoUrl || null);
+      setTempLogoUrl(null); // Reset temp logo when workspace data changes
+      setLogoFile(null); // Reset logo file when workspace data changes
     }
   }, [workspace]);
 
@@ -113,14 +122,63 @@ export default function SettingsPage() {
     setOrigin(window.location.origin);
   }, []);
 
-  // Update workspace mutation
+  // Cleanup object URLs when component unmounts or when they change
+  useEffect(() => {
+    return () => {
+      if (tempLogoUrl && tempLogoUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(tempLogoUrl);
+      }
+    };
+  }, [tempLogoUrl]);
+
+  // Update workspace mutation with logo upload
   const updateWorkspaceMutation = useMutation({
-    mutationFn: (data: { name?: string; slug?: string; description?: string }) => {
-      return newRequest.put(`/workspaces/${params.workspace}`, data);
+    mutationFn: async (data: {
+      name?: string;
+      slug?: string;
+      description?: string;
+      logoFile?: File | null;
+      removeLogo?: boolean;
+    }) => {
+      const { logoFile, removeLogo, ...restData } = data;
+
+      // Create form data for the request
+      const formData = new FormData();
+
+      // Add all regular fields
+      Object.entries(restData).forEach(([key, value]) => {
+        if (value !== undefined) {
+          formData.append(key, value as string);
+        }
+      });
+
+      // Add logo if it exists
+      if (logoFile) {
+        formData.append('logo', logoFile);
+      }
+
+      // Add logo removal flag if needed
+      if (removeLogo) {
+        formData.append('removeLogo', 'true');
+      }
+
+      // Single API call to update the workspace with all changes
+      return newRequest.put(`/workspaces/${params.workspace}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
     },
     onSuccess: () => {
       toast.success('Workspace updated successfully');
       queryClient.invalidateQueries({ queryKey: ['workspace'] });
+
+      // Clean up
+      if (tempLogoUrl && tempLogoUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(tempLogoUrl);
+      }
+      setTempLogoUrl(null);
+      setLogoFile(null);
     },
     onError: (error) => {
       console.error('Failed to update workspace:', error);
@@ -193,11 +251,22 @@ export default function SettingsPage() {
   });
 
   const handleSaveBasicSettings = () => {
-    updateWorkspaceMutation.mutate({
+    // Prepare update data with all form fields
+    const updateData: any = {
       name: workspaceName,
       slug: workspaceSlug,
       description: workspaceDescription,
-    });
+    };
+
+    // Include logo if changed
+    if (logoFile) {
+      updateData.logoFile = logoFile;
+    } else if (tempLogoUrl === '') {
+      // Empty string indicates logo removal
+      updateData.removeLogo = true;
+    }
+
+    updateWorkspaceMutation.mutate(updateData);
   };
 
   const handleInviteUser = () => {
@@ -264,6 +333,51 @@ export default function SettingsPage() {
       })
       .join('')
       .toUpperCase();
+  };
+
+  const handleLogoUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.match(/image\/(jpeg|jpg|png|gif|webp)/i)) {
+      toast.error('Please select a valid image file (JPEG, PNG, GIF, WebP)');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image size should be less than 2MB');
+      return;
+    }
+
+    // If there was a previous blob URL, revoke it to prevent memory leaks
+    if (tempLogoUrl && tempLogoUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(tempLogoUrl);
+    }
+
+    // Create a local preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setTempLogoUrl(previewUrl);
+    setLogoFile(file);
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleCancelLogoChange = () => {
+    // Revoke URL if it's a blob URL to prevent memory leaks
+    if (tempLogoUrl && tempLogoUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(tempLogoUrl);
+    }
+    setTempLogoUrl(null);
+    setLogoFile(null);
   };
 
   return (
@@ -344,14 +458,55 @@ export default function SettingsPage() {
                     </div>
                     <div className='flex items-center gap-4'>
                       <Avatar className='h-16 w-16'>
-                        <AvatarImage src='/placeholder-logo.png' alt='Workspace Logo' />
-                        <AvatarFallback className='bg-primary/10'>
-                          <ImageIcon className='h-8 w-8 text-primary' />
-                        </AvatarFallback>
+                        {tempLogoUrl && tempLogoUrl !== '' ? (
+                          <AvatarImage src={tempLogoUrl} alt='Workspace Logo (pending)' />
+                        ) : workspaceLogo ? (
+                          <AvatarImage src={workspaceLogo} alt='Workspace Logo' />
+                        ) : (
+                          <AvatarFallback className='bg-primary/10'>
+                            <ImageIcon className='h-8 w-8 text-primary' />
+                          </AvatarFallback>
+                        )}
                       </Avatar>
-                      <Button variant='outline' size='sm'>
-                        Upload
-                      </Button>
+                      <div>
+                        <input
+                          type='file'
+                          ref={fileInputRef}
+                          accept='image/jpeg,image/png,image/gif,image/webp'
+                          onChange={handleFileChange}
+                          className='hidden'
+                        />
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={handleLogoUpload}
+                          disabled={updateWorkspaceMutation.isPending || isUploadingLogo}
+                        >
+                          {isUploadingLogo ? 'Uploading...' : 'Upload'}
+                        </Button>
+                        {(tempLogoUrl || workspaceLogo) && (
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            className='ml-2 text-destructive'
+                            onClick={() => {
+                              if (tempLogoUrl) {
+                                // Just cancel the pending change
+                                handleCancelLogoChange();
+                              } else if (confirm('Are you sure you want to remove the logo?')) {
+                                // Set tempLogoUrl to empty string to indicate removal
+                                setTempLogoUrl('');
+                                toast.success(
+                                  'Logo removal pending. Click "Save Changes" to apply.',
+                                );
+                              }
+                            }}
+                            disabled={updateWorkspaceMutation.isPending}
+                          >
+                            {tempLogoUrl ? 'Cancel' : 'Remove'}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
