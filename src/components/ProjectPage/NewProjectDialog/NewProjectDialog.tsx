@@ -76,12 +76,21 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
   const [filteredTeamMembers, setFilteredTeamMembers] = useState<TeamMember[]>([]);
   const [filteredParticipants, setFilteredParticipants] = useState<TeamMember[]>([]);
 
+  // Add a ref to track initialization
+  const initializedRef = useRef(false);
+
   // Initialize filtered items when data loads
   useEffect(() => {
-    if (stages) setFilteredStages(stages);
-    if (statuses) setFilteredStatuses(statuses);
-    if (teamMembers) setFilteredTeamMembers(teamMembers);
-    if (participants) setFilteredParticipants(participants);
+    if (!initializedRef.current) {
+      if (stages?.length) setFilteredStages(stages);
+      if (statuses?.length) setFilteredStatuses(statuses);
+      if (teamMembers?.length) setFilteredTeamMembers(teamMembers);
+      if (participants?.length) setFilteredParticipants(participants);
+
+      if (stages?.length || statuses?.length || teamMembers?.length || participants?.length) {
+        initializedRef.current = true;
+      }
+    }
   }, [stages, statuses, teamMembers, participants]);
 
   // Function to render status badge with appropriate color
@@ -271,9 +280,10 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                     placeholder='Search stages...'
                     onChange={(e) => {
                       const searchTerm = e.target.value.toLowerCase();
-                      const filtered = stages.filter((stage) => {
-                        return stage.name.toLowerCase().includes(searchTerm);
-                      });
+                      const filtered =
+                        stages?.filter((stage) => {
+                          return stage.name.toLowerCase().includes(searchTerm);
+                        }) || [];
                       setFilteredStages(filtered);
                     }}
                   />
@@ -322,9 +332,10 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                     placeholder='Search statuses...'
                     onChange={(e) => {
                       const searchTerm = e.target.value.toLowerCase();
-                      const filtered = statuses.filter((status) => {
-                        return status.name.toLowerCase().includes(searchTerm);
-                      });
+                      const filtered =
+                        statuses?.filter((status) => {
+                          return status.name.toLowerCase().includes(searchTerm);
+                        }) || [];
                       setFilteredStatuses(filtered);
                     }}
                   />
@@ -368,9 +379,10 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                     placeholder='Search managers...'
                     onChange={(e) => {
                       const searchTerm = e.target.value.toLowerCase();
-                      const filtered = teamMembers.filter((member: any) => {
-                        return member?.name?.toLowerCase().includes(searchTerm) || '';
-                      });
+                      const filtered =
+                        teamMembers?.filter((member: any) => {
+                          return member?.name?.toLowerCase().includes(searchTerm) || '';
+                        }) || [];
                       setFilteredTeamMembers(filtered);
                     }}
                   />
