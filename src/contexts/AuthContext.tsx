@@ -12,6 +12,7 @@ export interface User {
   name: string;
   role: 'admin' | 'user';
   avatar: string;
+  createdAt: string;
 }
 
 // Define Auth context types

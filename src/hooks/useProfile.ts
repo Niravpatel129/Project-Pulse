@@ -12,6 +12,7 @@ export interface UserProfile {
   bio?: string;
   avatar: string;
   notificationPreferences?: Record<string, boolean>;
+  createdAt: string;
 }
 
 // Default notification preferences
@@ -71,6 +72,7 @@ export function useProfile() {
     phone: '',
     bio: '',
     avatar: '',
+    createdAt: '',
   });
 
   // Notification preferences state
@@ -103,6 +105,7 @@ export function useProfile() {
         phone: profileData.phone || '',
         bio: profileData.bio || '',
         avatar: profileData.avatar || user.avatar || '',
+        createdAt: profileData.createdAt || user.createdAt || '',
       });
 
       // Update notification preferences if available
@@ -126,6 +129,7 @@ export function useProfile() {
         phone: '',
         bio: '',
         avatar: user.avatar || '',
+        createdAt: user.createdAt || '',
       });
 
       // Try to load preferences from localStorage as fallback

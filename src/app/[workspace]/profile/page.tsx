@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useProfile } from '@/hooks/useProfile';
-import { BellRing, Camera, CreditCard, Lock, User } from 'lucide-react';
+import { BellRing, Camera, Lock, User } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 export default function ProfilePage() {
@@ -135,23 +135,16 @@ export default function ProfilePage() {
                     <Lock className='mr-2 h-4 w-4' />
                     Security
                   </Button>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    className='w-full justify-start'
-                    onClick={() => {
-                      return setActiveTab('billing');
-                    }}
-                  >
-                    <CreditCard className='mr-2 h-4 w-4' />
-                    Billing
-                  </Button>
                 </div>
 
                 <div className='w-full mt-6 pt-6 border-t'>
                   <p className='text-xs text-muted-foreground mb-2'>
                     Member since{' '}
-                    {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    {new Date(formData.createdAt).toLocaleDateString('en-US', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
                   </p>
                 </div>
               </div>
@@ -166,7 +159,6 @@ export default function ProfilePage() {
                   <TabsTrigger value='general'>General</TabsTrigger>
                   <TabsTrigger value='notifications'>Notifications</TabsTrigger>
                   <TabsTrigger value='security'>Security</TabsTrigger>
-                  <TabsTrigger value='billing'>Billing</TabsTrigger>
                 </TabsList>
               </CardHeader>
 
@@ -292,56 +284,6 @@ export default function ProfilePage() {
                       <Button onClick={updatePassword} disabled={isUpdatingPassword}>
                         {isUpdatingPassword ? 'Updating...' : 'Update Password'}
                       </Button>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value='billing' className='space-y-6'>
-                  <div className='space-y-4'>
-                    <h3 className='text-lg font-medium'>Payment Methods</h3>
-                    <div className='rounded-md border p-4'>
-                      <div className='flex justify-between items-center'>
-                        <div className='flex items-center gap-3'>
-                          <CreditCard className='h-8 w-8 text-primary' />
-                          <div>
-                            <p className='font-medium'>Visa ending in 4242</p>
-                            <p className='text-sm text-muted-foreground'>Expires 12/2025</p>
-                          </div>
-                        </div>
-                        <Button variant='ghost' size='sm'>
-                          Edit
-                        </Button>
-                      </div>
-                    </div>
-                    <Button variant='outline'>Add Payment Method</Button>
-
-                    <Separator className='my-6' />
-
-                    <h3 className='text-lg font-medium'>Billing Information</h3>
-                    <div className='space-y-4'>
-                      <div className='space-y-2'>
-                        <Label htmlFor='company'>Company Name</Label>
-                        <Input id='company' defaultValue='Acme Inc.' />
-                      </div>
-                      <div className='space-y-2'>
-                        <Label htmlFor='address'>Billing Address</Label>
-                        <Textarea
-                          id='address'
-                          className='min-h-20'
-                          defaultValue='123 Business St.&#10;Suite 200&#10;New York, NY 10001&#10;United States'
-                        />
-                      </div>
-                      <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                        <div className='space-y-2'>
-                          <Label htmlFor='tax-id'>Tax ID</Label>
-                          <Input id='tax-id' defaultValue='US123456789' />
-                        </div>
-                        <div className='space-y-2'>
-                          <Label htmlFor='billing-email'>Billing Email</Label>
-                          <Input id='billing-email' type='email' defaultValue='billing@acme.com' />
-                        </div>
-                      </div>
-                      <Button>Update Billing Info</Button>
                     </div>
                   </div>
                 </TabsContent>
