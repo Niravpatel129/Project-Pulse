@@ -2,27 +2,34 @@ import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
 
 export interface TeamMember {
-  _id: string;
-  name: string;
-  email: string;
-  role: string;
-  avatar?: string;
-}
-
-interface WorkspaceMember {
   user: {
     _id: string;
     name: string;
     email: string;
+    role: string;
+    needsPasswordChange: boolean;
   };
   role: string;
   _id: string;
 }
 
+export interface Invitation {
+  email: string;
+  role: string;
+  invitedBy: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  expiresAt: string;
+  token: string;
+}
+
 interface WorkspaceResponse {
   statusCode: number;
   data: {
-    members: WorkspaceMember[];
+    members: TeamMember[];
+    invitations: Invitation[];
   };
   message: string;
   success: boolean;
@@ -37,20 +44,16 @@ export function useTeamMembers() {
         throw new Error(response.data.message);
       }
 
-      // Transform the response to match our TeamMember interface
-      return response.data.data.members.map((member) => {
-        return {
-          _id: member.user._id,
-          name: member.user.name,
-          email: member.user.email,
-          role: member.role,
-        };
-      });
+      return {
+        members: response.data.data.members,
+        invitations: response.data.data.invitations || [],
+      };
     },
   });
 
   return {
-    teamMembers: data || [],
+    teamMembers: data?.members || [],
+    invitations: data?.invitations || [],
     isLoading,
     error: error ? (error as Error).message : null,
   };

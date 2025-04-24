@@ -43,10 +43,28 @@ interface ExtendedWorkspace {
 
 // Team member interface
 interface TeamMember {
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+    role: string;
+    needsPasswordChange: boolean;
+  };
+  role: string;
   _id: string;
-  name: string;
+}
+
+// Invitation interface
+interface Invitation {
   email: string;
   role: string;
+  invitedBy: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  expiresAt: string;
+  token: string;
 }
 
 export default function SettingsPage() {
@@ -68,7 +86,7 @@ export default function SettingsPage() {
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [editRole, setEditRole] = useState('');
 
-  const { teamMembers, isLoading: isLoadingTeam } = useTeamMembers();
+  const { teamMembers, isLoading: isLoadingTeam, invitations } = useTeamMembers();
 
   // Initialize form with current workspace data
   useEffect(() => {
@@ -193,10 +211,14 @@ export default function SettingsPage() {
 
   const getRoleColor = (role: string) => {
     switch (role.toLowerCase()) {
+      case 'owner':
+        return 'bg-purple-100 text-purple-800';
       case 'admin':
         return 'bg-blue-100 text-blue-800';
       case 'moderator':
         return 'bg-green-100 text-green-800';
+      case 'client':
+        return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -210,6 +232,31 @@ export default function SettingsPage() {
       })
       .join('')
       .toUpperCase();
+  };
+
+  // Combine actual members and pending invitations for display
+  const combinedTeamList = () => {
+    if (!teamMembers || !invitations) return [];
+
+    // Convert invitations to a format compatible with team members display
+    const pendingMembers = invitations.map((invitation) => {
+      return {
+        _id: invitation.token,
+        role: invitation.role,
+        isPending: true,
+        user: {
+          _id: invitation.token,
+          name: invitation.email,
+          email: invitation.email,
+          role: 'user',
+          needsPasswordChange: false,
+        },
+        invitedBy: invitation.invitedBy,
+        expiresAt: invitation.expiresAt,
+      };
+    });
+
+    return [...teamMembers, ...pendingMembers];
   };
 
   return (
@@ -415,13 +462,13 @@ export default function SettingsPage() {
                 <div className='space-y-6'>
                   {isLoadingTeam ? (
                     <div className='text-center py-6'>Loading team members...</div>
-                  ) : teamMembers.length === 0 ? (
+                  ) : combinedTeamList().length === 0 ? (
                     <div className='text-center py-6 text-muted-foreground'>
                       No team members yet. Invite someone to get started!
                     </div>
                   ) : (
                     <div className='space-y-4'>
-                      {teamMembers.map((member) => {
+                      {combinedTeamList().map((member) => {
                         return (
                           <div
                             key={member._id}
@@ -429,14 +476,34 @@ export default function SettingsPage() {
                           >
                             <div className='flex items-center gap-4'>
                               <Avatar>
-                                <AvatarImage src={`https://avatar.vercel.sh/${member.email}`} />
+                                <AvatarImage
+                                  src={`https://avatar.vercel.sh/${member.user.email}`}
+                                />
                                 <AvatarFallback>
-                                  {getInitials(member.name || member.email)}
+                                  {getInitials(member.user.name || member.user.email)}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
-                                <p className='font-medium'>{member.name || member.email}</p>
-                                <p className='text-sm text-muted-foreground'>{member.email}</p>
+                                <div className='flex items-center gap-2'>
+                                  <p className='font-medium'>
+                                    {member.user.name || member.user.email}
+                                  </p>
+                                  {member.isPending && (
+                                    <Badge
+                                      variant='outline'
+                                      className='bg-yellow-50 text-yellow-700 border-yellow-200'
+                                    >
+                                      Pending
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className='text-sm text-muted-foreground'>{member.user.email}</p>
+                                {member.isPending && (
+                                  <p className='text-xs text-muted-foreground mt-1'>
+                                    Invited by {member.invitedBy?.name || member.invitedBy?.email} •
+                                    Expires {new Date(member.expiresAt).toLocaleDateString()}
+                                  </p>
+                                )}
                               </div>
                             </div>
                             <div className='flex items-center gap-2'>
@@ -444,40 +511,71 @@ export default function SettingsPage() {
                                 {member.role}
                               </Badge>
                               <div className='flex items-center'>
-                                <Button
-                                  variant='ghost'
-                                  size='icon'
-                                  onClick={() => {
-                                    return handleEditMember(member);
-                                  }}
-                                >
-                                  <Edit className='h-4 w-4' />
-                                </Button>
-                                <Button
-                                  variant='ghost'
-                                  size='icon'
-                                  onClick={() => {
-                                    return handleRemoveTeamMember(member._id);
-                                  }}
-                                  disabled={removeTeamMemberMutation.isPending}
-                                >
-                                  <svg
-                                    xmlns='http://www.w3.org/2000/svg'
-                                    width='16'
-                                    height='16'
-                                    viewBox='0 0 24 24'
-                                    fill='none'
-                                    stroke='currentColor'
-                                    strokeWidth='2'
-                                    strokeLinecap='round'
-                                    strokeLinejoin='round'
-                                    className='text-destructive'
+                                {!member.isPending && member.role !== 'owner' && (
+                                  <>
+                                    <Button
+                                      variant='ghost'
+                                      size='icon'
+                                      onClick={() => {
+                                        return handleEditMember(member);
+                                      }}
+                                    >
+                                      <Edit className='h-4 w-4' />
+                                    </Button>
+                                    <Button
+                                      variant='ghost'
+                                      size='icon'
+                                      onClick={() => {
+                                        return handleRemoveTeamMember(member._id);
+                                      }}
+                                      disabled={removeTeamMemberMutation.isPending}
+                                    >
+                                      <svg
+                                        xmlns='http://www.w3.org/2000/svg'
+                                        width='16'
+                                        height='16'
+                                        viewBox='0 0 24 24'
+                                        fill='none'
+                                        stroke='currentColor'
+                                        strokeWidth='2'
+                                        strokeLinecap='round'
+                                        strokeLinejoin='round'
+                                        className='text-destructive'
+                                      >
+                                        <path d='M3 6h18'></path>
+                                        <path d='M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6'></path>
+                                        <path d='M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2'></path>
+                                      </svg>
+                                    </Button>
+                                  </>
+                                )}
+                                {member.isPending && (
+                                  <Button
+                                    variant='ghost'
+                                    size='icon'
+                                    onClick={() => {
+                                      // Future: implement a function to revoke invitation
+                                      toast.info('Revoking invitations is not implemented yet');
+                                    }}
                                   >
-                                    <path d='M3 6h18'></path>
-                                    <path d='M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6'></path>
-                                    <path d='M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2'></path>
-                                  </svg>
-                                </Button>
+                                    <svg
+                                      xmlns='http://www.w3.org/2000/svg'
+                                      width='16'
+                                      height='16'
+                                      viewBox='0 0 24 24'
+                                      fill='none'
+                                      stroke='currentColor'
+                                      strokeWidth='2'
+                                      strokeLinecap='round'
+                                      strokeLinejoin='round'
+                                      className='text-destructive'
+                                    >
+                                      <path d='M3 6h18'></path>
+                                      <path d='M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6'></path>
+                                      <path d='M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2'></path>
+                                    </svg>
+                                  </Button>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -495,7 +593,8 @@ export default function SettingsPage() {
                 <DialogHeader>
                   <DialogTitle>Edit Team Member</DialogTitle>
                   <DialogDescription>
-                    Update role and permissions for {selectedMember?.name || selectedMember?.email}
+                    Update role and permissions for{' '}
+                    {selectedMember?.user?.name || selectedMember?.user?.email}
                   </DialogDescription>
                 </DialogHeader>
                 <div className='space-y-4 py-4'>
@@ -503,21 +602,25 @@ export default function SettingsPage() {
                     <Avatar>
                       <AvatarImage
                         src={
-                          selectedMember ? `https://avatar.vercel.sh/${selectedMember.email}` : ''
+                          selectedMember
+                            ? `https://avatar.vercel.sh/${selectedMember.user.email}`
+                            : ''
                         }
-                        alt={selectedMember?.name || 'Team member'}
+                        alt={selectedMember?.user?.name || 'Team member'}
                       />
                       <AvatarFallback>
-                        {selectedMember?.name
-                          ? getInitials(selectedMember.name)
-                          : selectedMember?.email
-                          ? getInitials(selectedMember.email.split('@')[0])
+                        {selectedMember?.user?.name
+                          ? getInitials(selectedMember.user.name)
+                          : selectedMember?.user?.email
+                          ? getInitials(selectedMember.user.email.split('@')[0])
                           : '??'}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className='font-medium'>{selectedMember?.name || selectedMember?.email}</p>
-                      <p className='text-sm text-muted-foreground'>{selectedMember?.email}</p>
+                      <p className='font-medium'>
+                        {selectedMember?.user?.name || selectedMember?.user?.email}
+                      </p>
+                      <p className='text-sm text-muted-foreground'>{selectedMember?.user?.email}</p>
                     </div>
                   </div>
 
@@ -564,16 +667,6 @@ export default function SettingsPage() {
                 </div>
               </DialogContent>
             </Dialog>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Pending Invitations</CardTitle>
-                <CardDescription>Manage your pending workspace invitations</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className='text-center py-6 text-muted-foreground'>No pending invitations</div>
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
       </div>
