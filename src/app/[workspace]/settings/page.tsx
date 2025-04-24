@@ -23,13 +23,12 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Copy, Edit, ImageIcon, Mail, Settings, Users } from 'lucide-react';
+import { Edit, ImageIcon, Mail, Settings, Users, XCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -87,6 +86,18 @@ export default function SettingsPage() {
   const [editRole, setEditRole] = useState('');
 
   const { teamMembers, isLoading: isLoadingTeam, invitations } = useTeamMembers();
+
+  // Filter out members who have pending invitations
+  const activeTeamMembers = teamMembers.filter((member) => {
+    // If there are no invitations or if the member is an owner, always show them
+    if (!invitations || invitations.length === 0 || member.role === 'owner') return true;
+
+    // Check if a member's email exists in the pending invitations
+    const isPending = invitations.some((invitation) => {
+      return invitation.email === member.user.email;
+    });
+    return !isPending;
+  });
 
   // Initialize form with current workspace data
   useEffect(() => {
@@ -149,6 +160,21 @@ export default function SettingsPage() {
     },
   });
 
+  // Revoke invitation mutation
+  const revokeInvitationMutation = useMutation({
+    mutationFn: (token: string) => {
+      return newRequest.delete(`/workspaces/invite/${token}`);
+    },
+    onSuccess: () => {
+      toast.success('Invitation revoked successfully');
+      queryClient.invalidateQueries({ queryKey: ['teamMembers'] });
+    },
+    onError: (error) => {
+      console.error('Failed to revoke invitation:', error);
+      toast.error('Failed to revoke invitation');
+    },
+  });
+
   // Update team member mutation
   const updateTeamMemberMutation = useMutation({
     mutationFn: (data: { memberId: string; role: string }) => {
@@ -189,6 +215,12 @@ export default function SettingsPage() {
     }
   };
 
+  const handleRevokeInvitation = (token: string) => {
+    if (confirm('Are you sure you want to revoke this invitation?')) {
+      revokeInvitationMutation.mutate(token);
+    }
+  };
+
   const handleEditMember = (member: TeamMember) => {
     setSelectedMember(member);
     setEditRole(member.role);
@@ -199,7 +231,7 @@ export default function SettingsPage() {
     if (!selectedMember || !editRole) return;
 
     updateTeamMemberMutation.mutate({
-      memberId: selectedMember._id,
+      memberId: selectedMember.user._id,
       role: editRole,
     });
   };
@@ -232,31 +264,6 @@ export default function SettingsPage() {
       })
       .join('')
       .toUpperCase();
-  };
-
-  // Combine actual members and pending invitations for display
-  const combinedTeamList = () => {
-    if (!teamMembers || !invitations) return [];
-
-    // Convert invitations to a format compatible with team members display
-    const pendingMembers = invitations.map((invitation) => {
-      return {
-        _id: invitation.token,
-        role: invitation.role,
-        isPending: true,
-        user: {
-          _id: invitation.token,
-          name: invitation.email,
-          email: invitation.email,
-          role: 'user',
-          needsPasswordChange: false,
-        },
-        invitedBy: invitation.invitedBy,
-        expiresAt: invitation.expiresAt,
-      };
-    });
-
-    return [...teamMembers, ...pendingMembers];
   };
 
   return (
@@ -318,22 +325,10 @@ export default function SettingsPage() {
                       placeholder='my-workspace'
                       className='lowercase'
                     />
-                    <p className='text-sm text-muted-foreground'>
-                      This will be used in your workspace URL: {origin}
-                      {workspaceSlug || 'workspace-slug'}
-                    </p>
-                  </div>
-                  <div className='space-y-2 md:col-span-2'>
-                    <Label htmlFor='workspaceDescription'>Description</Label>
-                    <Textarea
-                      id='workspaceDescription'
-                      value={workspaceDescription}
-                      onChange={(e) => {
-                        return setWorkspaceDescription(e.target.value);
-                      }}
-                      placeholder="Describe your workspace's purpose"
-                      className='min-h-[100px]'
-                    />
+                    <div className='text-sm text-muted-foreground'>
+                      This will be used in your workspace URL:
+                      <div className=''>{`${workspaceSlug.toLowerCase()}.${'hourblock.com'}`}</div>
+                    </div>
                   </div>
                 </div>
 
@@ -386,10 +381,6 @@ export default function SettingsPage() {
                     </CardDescription>
                   </div>
                   <div className='flex flex-col sm:flex-row gap-2 mt-4 sm:mt-0'>
-                    <Button variant='outline' onClick={copyInviteLink}>
-                      <Copy className='mr-2 h-4 w-4' />
-                      Copy Invite Link
-                    </Button>
                     <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
                       <DialogTrigger asChild>
                         <Button>
@@ -462,13 +453,13 @@ export default function SettingsPage() {
                 <div className='space-y-6'>
                   {isLoadingTeam ? (
                     <div className='text-center py-6'>Loading team members...</div>
-                  ) : combinedTeamList().length === 0 ? (
+                  ) : activeTeamMembers.length === 0 ? (
                     <div className='text-center py-6 text-muted-foreground'>
                       No team members yet. Invite someone to get started!
                     </div>
                   ) : (
                     <div className='space-y-4'>
-                      {combinedTeamList().map((member) => {
+                      {activeTeamMembers.map((member) => {
                         return (
                           <div
                             key={member._id}
@@ -484,26 +475,10 @@ export default function SettingsPage() {
                                 </AvatarFallback>
                               </Avatar>
                               <div>
-                                <div className='flex items-center gap-2'>
-                                  <p className='font-medium'>
-                                    {member.user.name || member.user.email}
-                                  </p>
-                                  {member.isPending && (
-                                    <Badge
-                                      variant='outline'
-                                      className='bg-yellow-50 text-yellow-700 border-yellow-200'
-                                    >
-                                      Pending
-                                    </Badge>
-                                  )}
-                                </div>
+                                <p className='font-medium'>
+                                  {member.user.name || member.user.email}
+                                </p>
                                 <p className='text-sm text-muted-foreground'>{member.user.email}</p>
-                                {member.isPending && (
-                                  <p className='text-xs text-muted-foreground mt-1'>
-                                    Invited by {member.invitedBy?.name || member.invitedBy?.email} •
-                                    Expires {new Date(member.expiresAt).toLocaleDateString()}
-                                  </p>
-                                )}
                               </div>
                             </div>
                             <div className='flex items-center gap-2'>
@@ -511,7 +486,7 @@ export default function SettingsPage() {
                                 {member.role}
                               </Badge>
                               <div className='flex items-center'>
-                                {!member.isPending && member.role !== 'owner' && (
+                                {member.role !== 'owner' && (
                                   <>
                                     <Button
                                       variant='ghost'
@@ -526,7 +501,8 @@ export default function SettingsPage() {
                                       variant='ghost'
                                       size='icon'
                                       onClick={() => {
-                                        return handleRemoveTeamMember(member._id);
+                                        console.log('🚀 member:', member);
+                                        return handleRemoveTeamMember(member.user._id);
                                       }}
                                       disabled={removeTeamMemberMutation.isPending}
                                     >
@@ -548,33 +524,6 @@ export default function SettingsPage() {
                                       </svg>
                                     </Button>
                                   </>
-                                )}
-                                {member.isPending && (
-                                  <Button
-                                    variant='ghost'
-                                    size='icon'
-                                    onClick={() => {
-                                      // Future: implement a function to revoke invitation
-                                      toast.info('Revoking invitations is not implemented yet');
-                                    }}
-                                  >
-                                    <svg
-                                      xmlns='http://www.w3.org/2000/svg'
-                                      width='16'
-                                      height='16'
-                                      viewBox='0 0 24 24'
-                                      fill='none'
-                                      stroke='currentColor'
-                                      strokeWidth='2'
-                                      strokeLinecap='round'
-                                      strokeLinejoin='round'
-                                      className='text-destructive'
-                                    >
-                                      <path d='M3 6h18'></path>
-                                      <path d='M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6'></path>
-                                      <path d='M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2'></path>
-                                    </svg>
-                                  </Button>
                                 )}
                               </div>
                             </div>
@@ -633,7 +582,6 @@ export default function SettingsPage() {
                       <SelectContent>
                         <SelectItem value='admin'>Admin</SelectItem>
                         <SelectItem value='moderator'>Moderator</SelectItem>
-                        <SelectItem value='client'>Client</SelectItem>
                       </SelectContent>
                     </Select>
                     <p className='text-xs text-muted-foreground mt-2'>
@@ -641,7 +589,6 @@ export default function SettingsPage() {
                       {editRole === 'moderator' &&
                         'Can manage projects, but has limited access to workspace settings'}
                       {editRole === 'member' && 'Can view and edit assigned projects only'}
-                      {editRole === 'client' && 'Can only view and comment on assigned projects'}
                     </p>
                   </div>
                 </div>
@@ -667,6 +614,56 @@ export default function SettingsPage() {
                 </div>
               </DialogContent>
             </Dialog>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Pending Invitations</CardTitle>
+                <CardDescription>Manage your pending workspace invitations</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {!invitations || invitations.length === 0 ? (
+                  <div className='text-center py-6 text-muted-foreground'>
+                    No pending invitations
+                  </div>
+                ) : (
+                  <div className='space-y-4'>
+                    {invitations.map((invitation, index) => {
+                      return (
+                        <div
+                          key={index}
+                          className='flex items-center justify-between p-4 border rounded-lg'
+                        >
+                          <div className='flex-1'>
+                            <p className='font-medium'>{invitation.email}</p>
+                            <div className='flex items-center gap-2 mt-1'>
+                              <Badge className={`${getRoleColor(invitation.role)} capitalize`}>
+                                {invitation.role}
+                              </Badge>
+                              <span className='text-sm text-muted-foreground'>
+                                Invited by {invitation.invitedBy.name || invitation.invitedBy.email}
+                              </span>
+                            </div>
+                            <p className='text-xs text-muted-foreground mt-1'>
+                              Expires {new Date(invitation.expiresAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <Button
+                            variant='ghost'
+                            size='icon'
+                            onClick={() => {
+                              return handleRevokeInvitation(invitation.token);
+                            }}
+                            disabled={revokeInvitationMutation.isPending}
+                          >
+                            <XCircle className='h-4 w-4 text-destructive' />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
