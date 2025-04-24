@@ -8,29 +8,39 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { BellRing, Camera, CreditCard, Lock, Mail, Phone, User } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+// Extended user profile data
+interface UserProfile {
+  name: string;
+  role: string;
+  email: string;
+  phone?: string;
+  bio?: string;
+  avatar: string;
+  notificationPreferences?: Record<string, boolean>;
+}
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('general');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Mock user data
-  const userData = {
-    id: 1,
-    name: 'Sarah Johnson',
-    role: 'Senior Project Manager',
-    email: 'sarah.johnson@example.com',
-    phone: '+1 (555) 123-4567',
-    bio: 'Experienced project manager with 8+ years in software development and client management. Specialized in enterprise solutions and team leadership.',
+  // Form state
+  const [formData, setFormData] = useState<UserProfile>({
+    name: '',
+    role: '',
+    email: '',
+    phone: '',
+    bio: '',
     avatar: '',
-    joinDate: 'January 2022',
-    recentProjects: ['Enterprise CRM Implementation', 'Data Warehouse Migration'],
-  };
+  });
 
-  // Mock notifications settings
-  const notificationPreferences = [
+  // Notification preferences state
+  const [notificationPreferences, setNotificationPreferences] = useState([
     {
       id: 'email-projects',
       label: 'Project updates',
@@ -55,7 +65,106 @@ export default function ProfilePage() {
       description: 'Get invoices and payment notifications',
       enabled: true,
     },
-  ];
+  ]);
+
+  // Update form data when user data changes
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        role: user.role || '',
+        email: user.email || '',
+        phone: '',
+        bio: '',
+        avatar: user.avatar || '',
+      });
+
+      // If user has notification preferences in localStorage, load them
+      const savedPrefs = localStorage.getItem('notificationPreferences');
+      if (savedPrefs) {
+        try {
+          const parsedPrefs = JSON.parse(savedPrefs);
+          setNotificationPreferences((prev) => {
+            return prev.map((pref) => {
+              return {
+                ...pref,
+                enabled: parsedPrefs[pref.id] ?? pref.enabled,
+              };
+            });
+          });
+        } catch (e) {
+          console.error('Failed to parse notification preferences:', e);
+        }
+      }
+    }
+  }, [user]);
+
+  // Handle input changes
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => {
+      return {
+        ...prev,
+        [id]: value,
+      };
+    });
+  };
+
+  // Handle notification preference changes
+  const handleNotificationChange = (e) => {
+    const { id, checked } = e.target;
+    setNotificationPreferences((prev) => {
+      return prev.map((pref) => {
+        return pref.id === id ? { ...pref, enabled: checked } : pref;
+      });
+    });
+  };
+
+  // Handle form submission
+  const handleSubmit = async () => {
+    try {
+      setIsLoading(true);
+
+      // Convert notification preferences to object format
+      const notificationPrefsObj = notificationPreferences.reduce((obj, pref) => {
+        obj[pref.id] = pref.enabled;
+        return obj;
+      }, {} as Record<string, boolean>);
+
+      // Save notification preferences in localStorage
+      localStorage.setItem('notificationPreferences', JSON.stringify(notificationPrefsObj));
+
+      // TODO: In a real application, we would call an API to update the user profile
+      // For now, we'll just simulate a successful update
+      await new Promise((resolve) => {
+        return setTimeout(resolve, 1000);
+      });
+
+      toast({
+        title: 'Profile updated',
+        description: 'Your profile has been successfully updated.',
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: 'Update failed',
+        description: 'There was an error updating your profile. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Calculate initials for avatar fallback
+  const getInitials = (name) => {
+    return name
+      .split(' ')
+      .map((n) => {
+        return n[0];
+      })
+      .join('');
+  };
 
   return (
     <div className='bg-white'>
@@ -67,7 +176,9 @@ export default function ProfilePage() {
               Manage your account settings and preferences
             </p>
           </div>
-          <Button>Save Changes</Button>
+          <Button onClick={handleSubmit} disabled={isLoading}>
+            {isLoading ? 'Saving...' : 'Save Changes'}
+          </Button>
         </div>
 
         <div className='grid grid-cols-1 lg:grid-cols-4 gap-8'>
@@ -77,14 +188,9 @@ export default function ProfilePage() {
               <div className='flex flex-col items-center'>
                 <div className='relative mb-4'>
                   <Avatar className='h-24 w-24'>
-                    <AvatarImage src={userData.avatar} alt={userData.name} />
+                    <AvatarImage src={formData.avatar} alt={formData.name} />
                     <AvatarFallback className='text-2xl'>
-                      {userData.name
-                        .split(' ')
-                        .map((n) => {
-                          return n[0];
-                        })
-                        .join('')}
+                      {getInitials(formData.name)}
                     </AvatarFallback>
                   </Avatar>
                   <Button
@@ -96,8 +202,8 @@ export default function ProfilePage() {
                     <span className='sr-only'>Change avatar</span>
                   </Button>
                 </div>
-                <h2 className='text-xl font-semibold'>{userData.name}</h2>
-                <p className='text-sm text-muted-foreground'>{userData.role}</p>
+                <h2 className='text-xl font-semibold'>{formData.name}</h2>
+                <p className='text-sm text-muted-foreground'>{formData.role}</p>
 
                 <div className='w-full mt-6 space-y-2'>
                   <Button
@@ -148,7 +254,8 @@ export default function ProfilePage() {
 
                 <div className='w-full mt-6 pt-6 border-t'>
                   <p className='text-xs text-muted-foreground mb-2'>
-                    Member since {userData.joinDate}
+                    Member since{' '}
+                    {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   </p>
                 </div>
               </div>
@@ -174,25 +281,40 @@ export default function ProfilePage() {
                     <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                       <div className='space-y-2'>
                         <Label htmlFor='name'>Full Name</Label>
-                        <Input id='name' defaultValue={userData.name} />
+                        <Input id='name' value={formData.name} onChange={handleInputChange} />
                       </div>
                       <div className='space-y-2'>
                         <Label htmlFor='role'>Job Title</Label>
-                        <Input id='role' defaultValue={userData.role} />
+                        <Input id='role' value={formData.role} onChange={handleInputChange} />
                       </div>
                       <div className='space-y-2'>
                         <Label htmlFor='email'>Email</Label>
-                        <Input id='email' type='email' defaultValue={userData.email} />
+                        <Input
+                          id='email'
+                          type='email'
+                          value={formData.email}
+                          onChange={handleInputChange}
+                        />
                       </div>
                       <div className='space-y-2'>
                         <Label htmlFor='phone'>Phone</Label>
-                        <Input id='phone' type='tel' defaultValue={userData.phone} />
+                        <Input
+                          id='phone'
+                          type='tel'
+                          value={formData.phone || ''}
+                          onChange={handleInputChange}
+                        />
                       </div>
                     </div>
 
                     <div className='space-y-2'>
                       <Label htmlFor='bio'>Bio</Label>
-                      <Textarea id='bio' className='min-h-24' defaultValue={userData.bio} />
+                      <Textarea
+                        id='bio'
+                        className='min-h-24'
+                        value={formData.bio || ''}
+                        onChange={handleInputChange}
+                      />
                       <p className='text-xs text-muted-foreground'>
                         Brief description for your profile. This will be displayed publicly.
                       </p>
@@ -217,7 +339,8 @@ export default function ProfilePage() {
                               <input
                                 type='checkbox'
                                 id={pref.id}
-                                defaultChecked={pref.enabled}
+                                checked={pref.enabled}
+                                onChange={handleNotificationChange}
                                 className='h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary'
                               />
                             </div>
