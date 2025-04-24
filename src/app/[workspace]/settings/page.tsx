@@ -24,12 +24,11 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { newRequest } from '@/utils/newRequest';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit, ImageIcon, Mail, Settings, Users, XCircle } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -38,7 +37,7 @@ interface ExtendedWorkspace {
   name: string;
   slug: string;
   description?: string;
-  logoUrl?: string;
+  logo?: string;
 }
 
 // Team member interface
@@ -54,23 +53,8 @@ interface TeamMember {
   _id: string;
 }
 
-// Invitation interface
-interface Invitation {
-  email: string;
-  role: string;
-  invitedBy: {
-    _id: string;
-    name: string;
-    email: string;
-  };
-  expiresAt: string;
-  token: string;
-}
-
 export default function SettingsPage() {
-  const { workspace } = useWorkspace();
   const params = useParams();
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('general');
   const [workspaceName, setWorkspaceName] = useState('');
@@ -105,17 +89,28 @@ export default function SettingsPage() {
     return !isPending;
   });
 
+  const { data: workspaceData } = useQuery({
+    queryKey: ['workspace'],
+    queryFn: async () => {
+      const response = await newRequest.get(`/workspaces/current-workspace`);
+      return response.data;
+    },
+    enabled: !!params.workspace,
+  });
+  console.log('🚀 workspaceData:', workspaceData);
+
   // Initialize form with current workspace data
   useEffect(() => {
-    if (workspace) {
-      setWorkspaceName(workspace.name);
-      setWorkspaceSlug(workspace.slug);
-      setWorkspaceDescription((workspace as ExtendedWorkspace).description || '');
-      setWorkspaceLogo((workspace as ExtendedWorkspace).logoUrl || null);
+    if (workspaceData && workspaceData.data) {
+      setWorkspaceName(workspaceData.data.name);
+      setWorkspaceSlug(workspaceData.data.slug);
+      setWorkspaceDescription((workspaceData.data as ExtendedWorkspace).description || '');
+      setWorkspaceLogo((workspaceData.data as ExtendedWorkspace).logo || null);
       setTempLogoUrl(null); // Reset temp logo when workspace data changes
       setLogoFile(null); // Reset logo file when workspace data changes
     }
-  }, [workspace]);
+    console.log('🚀 workspace:', workspaceData);
+  }, [workspaceData]);
 
   // Set origin in client-side only
   useEffect(() => {
@@ -133,7 +128,7 @@ export default function SettingsPage() {
 
   // Update workspace mutation with logo upload
   const updateWorkspaceMutation = useMutation({
-    mutationFn: async (data: {
+    mutationFn: (data: {
       name?: string;
       slug?: string;
       description?: string;
@@ -168,21 +163,6 @@ export default function SettingsPage() {
           'Content-Type': 'multipart/form-data',
         },
       });
-    },
-    onSuccess: () => {
-      toast.success('Workspace updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['workspace'] });
-
-      // Clean up
-      if (tempLogoUrl && tempLogoUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(tempLogoUrl);
-      }
-      setTempLogoUrl(null);
-      setLogoFile(null);
-    },
-    onError: (error) => {
-      console.error('Failed to update workspace:', error);
-      toast.error('Failed to update workspace');
     },
   });
 
@@ -266,7 +246,30 @@ export default function SettingsPage() {
       updateData.removeLogo = true;
     }
 
-    updateWorkspaceMutation.mutate(updateData);
+    // Set uploading state if we're including a logo
+    if (logoFile) {
+      setIsUploadingLogo(true);
+    }
+
+    updateWorkspaceMutation.mutate(updateData, {
+      onSuccess: () => {
+        toast.success('Workspace updated successfully');
+        queryClient.invalidateQueries({ queryKey: ['workspace'] });
+
+        // Clean up
+        if (tempLogoUrl && tempLogoUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(tempLogoUrl);
+        }
+        setTempLogoUrl(null);
+        setLogoFile(null);
+        setIsUploadingLogo(false);
+      },
+      onError: (error) => {
+        console.error('Failed to update workspace:', error);
+        toast.error('Failed to update workspace');
+        setIsUploadingLogo(false);
+      },
+    });
   };
 
   const handleInviteUser = () => {
@@ -303,11 +306,6 @@ export default function SettingsPage() {
       memberId: selectedMember.user._id,
       role: editRole,
     });
-  };
-
-  const copyInviteLink = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/invite/${params.workspace}`);
-    toast.success('Invite link copied to clipboard');
   };
 
   const getRoleColor = (role: string) => {
@@ -441,7 +439,9 @@ export default function SettingsPage() {
                     />
                     <div className='text-sm text-muted-foreground'>
                       This will be used in your workspace URL:
-                      <div className=''>{`${workspaceSlug.toLowerCase()}.${'hourblock.com'}`}</div>
+                      <div className=''>{`${
+                        workspaceSlug ? workspaceSlug.toLowerCase() : ''
+                      }.${'hourblock.com'}`}</div>
                     </div>
                   </div>
                 </div>
@@ -484,28 +484,6 @@ export default function SettingsPage() {
                         >
                           {isUploadingLogo ? 'Uploading...' : 'Upload'}
                         </Button>
-                        {(tempLogoUrl || workspaceLogo) && (
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            className='ml-2 text-destructive'
-                            onClick={() => {
-                              if (tempLogoUrl) {
-                                // Just cancel the pending change
-                                handleCancelLogoChange();
-                              } else if (confirm('Are you sure you want to remove the logo?')) {
-                                // Set tempLogoUrl to empty string to indicate removal
-                                setTempLogoUrl('');
-                                toast.success(
-                                  'Logo removal pending. Click "Save Changes" to apply.',
-                                );
-                              }
-                            }}
-                            disabled={updateWorkspaceMutation.isPending}
-                          >
-                            {tempLogoUrl ? 'Cancel' : 'Remove'}
-                          </Button>
-                        )}
                       </div>
                     </div>
                   </div>
