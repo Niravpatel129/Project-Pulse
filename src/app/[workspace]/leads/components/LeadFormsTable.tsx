@@ -1,6 +1,5 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Column, DataTable } from '@/components/ui/data-table';
 import {
@@ -12,16 +11,7 @@ import {
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatDate } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  Archive,
-  Copy,
-  ExternalLink,
-  Eye,
-  FileEdit,
-  FilePlus,
-  MoreHorizontal,
-  Trash2,
-} from 'lucide-react';
+import { Copy, ExternalLink, Eye, FileEdit, FilePlus, MoreHorizontal, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
@@ -29,22 +19,8 @@ import { toast } from 'sonner';
 import { LeadForm, useLeadForms } from '../hooks/useLeadForms';
 
 export default function LeadFormsTable() {
-  const { leadForms, isLoading, error, deleteLeadForm, archiveLeadForm, publishLeadForm } =
-    useLeadForms();
+  const { leadForms, isLoading, error, deleteLeadForm } = useLeadForms();
   const pathname = usePathname();
-
-  const statusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'published':
-        return 'default';
-      case 'draft':
-        return 'secondary';
-      case 'archived':
-        return 'outline';
-      default:
-        return 'outline';
-    }
-  };
 
   const columns: Column<LeadForm>[] = useMemo(() => {
     return [
@@ -63,70 +39,6 @@ export default function LeadFormsTable() {
         sortable: true,
       },
 
-      {
-        key: 'status',
-        header: 'Status',
-        cell: (form) => {
-          const handleStatusChange = (newStatus: string) => {
-            if (newStatus === 'published') {
-              publishLeadForm.mutate(form._id);
-            } else if (newStatus === 'archived') {
-              archiveLeadForm.mutate(form._id);
-            }
-            // Note: If there's a specific function to change to draft status, it should be added here
-          };
-
-          return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant='ghost' className='h-8 p-0'>
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <Badge variant={statusBadgeVariant(form.status)} className='capitalize'>
-                      {form.status}
-                    </Badge>
-                  </motion.div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='end'>
-                <DropdownMenuItem
-                  onClick={() => {
-                    return handleStatusChange('published');
-                  }}
-                  disabled={form.status === 'published'}
-                >
-                  <Badge variant={statusBadgeVariant('published')} className='mr-2'>
-                    Published
-                  </Badge>
-                  Make Published
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    return handleStatusChange('draft');
-                  }}
-                  disabled={form.status === 'draft'}
-                >
-                  <Badge variant={statusBadgeVariant('draft')} className='mr-2'>
-                    Draft
-                  </Badge>
-                  Set as Draft
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    return handleStatusChange('archived');
-                  }}
-                  disabled={form.status === 'archived'}
-                >
-                  <Badge variant={statusBadgeVariant('archived')} className='mr-2'>
-                    Archived
-                  </Badge>
-                  Archive Form
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          );
-        },
-        sortable: true,
-      },
       {
         key: 'submissions',
         header: 'Submissions',
@@ -233,16 +145,6 @@ export default function LeadFormsTable() {
                     View submissions
                   </Link>
                 </DropdownMenuItem>
-                {form.status !== 'archived' && (
-                  <DropdownMenuItem
-                    onClick={() => {
-                      return archiveLeadForm.mutate(form._id);
-                    }}
-                  >
-                    <Archive className='h-4 w-4 mr-2' />
-                    Archive form
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuItem
                   onClick={() => {
                     if (window.confirm('Are you sure you want to delete this form?')) {
@@ -260,7 +162,7 @@ export default function LeadFormsTable() {
         },
       },
     ];
-  }, [publishLeadForm, archiveLeadForm, deleteLeadForm, pathname]);
+  }, [deleteLeadForm, pathname]);
 
   if (isLoading) {
     return <LoadingSpinner size='lg' fullPage />;
