@@ -50,7 +50,7 @@ export interface NotificationPreference {
 }
 
 export function useProfile() {
-  const { user } = useAuth();
+  const { user, reloadAuth } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
@@ -199,12 +199,17 @@ export function useProfile() {
 
       // Update avatar in state
       const { avatarUrl } = response.data.data;
+
+      // Update local form state
       setFormData((prev) => {
         return {
           ...prev,
           avatar: avatarUrl,
         };
       });
+
+      // Reload user data from the server to update AuthContext
+      await reloadAuth();
 
       toast({
         title: 'Avatar updated',
@@ -253,6 +258,9 @@ export function useProfile() {
 
         // Save notification preferences in localStorage as backup
         localStorage.setItem('notificationPreferences', JSON.stringify(notificationPrefsObj));
+
+        // Reload user data after successful update
+        await reloadAuth();
 
         toast({
           title: 'Profile updated',

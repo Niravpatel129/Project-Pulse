@@ -63,7 +63,9 @@ export default function ProfilePage() {
               <div className='flex flex-col items-center'>
                 <div className='relative mb-4'>
                   <Avatar className='h-24 w-24'>
-                    <AvatarImage src={formData.avatar} alt={formData.name} />
+                    {formData.avatar ? (
+                      <AvatarImage src={formData.avatar} alt={formData.name} />
+                    ) : null}
                     <AvatarFallback className='text-2xl'>
                       {getInitials(formData.name)}
                     </AvatarFallback>
