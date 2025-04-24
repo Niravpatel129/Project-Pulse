@@ -27,6 +27,9 @@ export default function WorkspaceInvitePage() {
     role?: string;
     workspaceName?: string;
     username?: string;
+    needsPasswordChange?: boolean;
+    userId?: string;
+    workspaceId?: string;
   } | null>(null);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -43,7 +46,16 @@ export default function WorkspaceInvitePage() {
       try {
         setIsLoading(true);
         const response = await newRequest.get(`/workspaces/invite/verify/${token}`);
-        setInvitationDetails(response.data.data);
+        console.log('🚀 response:', response);
+        setInvitationDetails({
+          email: response.data.data.invitation.email,
+          role: response.data.data.invitation.role,
+          workspaceName: response.data.data.invitation.workspace.name,
+          username: response.data.data.invitation.email.split('@')[0],
+          needsPasswordChange: response.data.data.invitation.needsPasswordChange,
+          userId: response.data.data.invitation.userId,
+          workspaceId: response.data.data.invitation.workspace.id,
+        });
         setError('');
       } catch (err) {
         console.error('Error fetching invitation details:', err);
@@ -61,13 +73,18 @@ export default function WorkspaceInvitePage() {
   // Accept invitation mutation
   const acceptInvitationMutation = useMutation({
     mutationFn: (data: { name: string; password: string; confirmPassword: string }) => {
-      return newRequest.post(`/workspaces/invite/accept/${token}`, data);
+      return newRequest.post(`/workspaces/invite/accept/${token}`, {
+        ...data,
+        userId: invitationDetails?.userId,
+      });
     },
     onSuccess: (response) => {
       toast.success('Invitation accepted successfully');
 
       // Redirect to the workspace
-      const workspaceSlug = response.data.data.workspace.slug;
+      const workspaceSlug =
+        response.data.data.workspace?.slug ||
+        invitationDetails?.workspaceName?.toLowerCase().replace(/\s+/g, '-');
       router.push(`/${workspaceSlug}`);
     },
     onError: (error) => {
@@ -83,14 +100,16 @@ export default function WorkspaceInvitePage() {
       return;
     }
 
-    if (password.length < 8) {
-      toast.error('Password must be at least 8 characters long');
-      return;
-    }
+    if (invitationDetails?.needsPasswordChange) {
+      if (password.length < 8) {
+        toast.error('Password must be at least 8 characters long');
+        return;
+      }
 
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
+      if (password !== confirmPassword) {
+        toast.error('Passwords do not match');
+        return;
+      }
     }
 
     // Submit the form
@@ -170,34 +189,38 @@ export default function WorkspaceInvitePage() {
 
           <Separator className='my-4' />
 
-          <div className='space-y-1.5'>
-            <div className='flex items-center justify-between'>
-              <Label htmlFor='password'>Set Password</Label>
-              <ShieldCheck className='h-4 w-4 text-muted-foreground' />
-            </div>
-            <Input
-              id='password'
-              type='password'
-              value={password}
-              onChange={(e) => {
-                return setPassword(e.target.value);
-              }}
-              placeholder='Create a password'
-            />
-          </div>
+          {invitationDetails.needsPasswordChange ? (
+            <>
+              <div className='space-y-1.5'>
+                <div className='flex items-center justify-between'>
+                  <Label htmlFor='password'>Set Password</Label>
+                  <ShieldCheck className='h-4 w-4 text-muted-foreground' />
+                </div>
+                <Input
+                  id='password'
+                  type='password'
+                  value={password}
+                  onChange={(e) => {
+                    return setPassword(e.target.value);
+                  }}
+                  placeholder='Create a password'
+                />
+              </div>
 
-          <div className='space-y-1.5'>
-            <Label htmlFor='confirmPassword'>Confirm Password</Label>
-            <Input
-              id='confirmPassword'
-              type='password'
-              value={confirmPassword}
-              onChange={(e) => {
-                return setConfirmPassword(e.target.value);
-              }}
-              placeholder='Confirm your password'
-            />
-          </div>
+              <div className='space-y-1.5'>
+                <Label htmlFor='confirmPassword'>Confirm Password</Label>
+                <Input
+                  id='confirmPassword'
+                  type='password'
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    return setConfirmPassword(e.target.value);
+                  }}
+                  placeholder='Confirm your password'
+                />
+              </div>
+            </>
+          ) : null}
         </CardContent>
         <CardFooter className='flex flex-col gap-4'>
           <Button
