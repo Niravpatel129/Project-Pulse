@@ -439,9 +439,9 @@ export function ProjectSidebar({
               <div className='pt-2 space-y-4'>
                 <Dialog open={isClientPortalDialogOpen} onOpenChange={setIsClientPortalDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant='outline' className='w-full h-8 text-xs'>
+                    <Button variant='outline' className='w-full h-8 text-xs' disabled={true}>
                       <Share2 className='mr-2 h-3.5 w-3.5' />
-                      Configure Sharing
+                      Configure Sharing [Coming Soon]
                     </Button>
                   </DialogTrigger>
                   <ShareDialog
