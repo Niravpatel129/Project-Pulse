@@ -376,7 +376,8 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
                   />
                 </div>
                 <div className='overflow-y-auto'>
-                  {filteredTeamMembers.map((user) => {
+                  {filteredTeamMembers.map(({ user }) => {
+                    console.log('🚀 filteredTeamMembers:', filteredTeamMembers);
                     return (
                       <DropdownMenuItem
                         key={user._id}
