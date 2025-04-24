@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useProfile } from '@/hooks/useProfile';
-import { BellRing, Camera, CreditCard, Lock, Mail, Phone, User } from 'lucide-react';
+import { BellRing, Camera, CreditCard, Lock, User } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 export default function ProfilePage() {
@@ -249,41 +249,6 @@ export default function ProfilePage() {
                         );
                       })}
                     </div>
-
-                    <Separator className='my-6' />
-
-                    <h3 className='text-lg font-medium'>Notification Delivery</h3>
-                    <div className='space-y-4'>
-                      <div className='flex items-center gap-4'>
-                        <div className='rounded-full p-2 bg-primary/10'>
-                          <Mail className='h-5 w-5 text-primary' />
-                        </div>
-                        <div className='flex-1'>
-                          <div className='font-medium'>Email Notifications</div>
-                          <div className='text-sm text-muted-foreground'>
-                            Receive daily summary emails
-                          </div>
-                        </div>
-                        <Button variant='outline' size='sm'>
-                          Configure
-                        </Button>
-                      </div>
-
-                      <div className='flex items-center gap-4'>
-                        <div className='rounded-full p-2 bg-primary/10'>
-                          <Phone className='h-5 w-5 text-primary' />
-                        </div>
-                        <div className='flex-1'>
-                          <div className='font-medium'>SMS Notifications</div>
-                          <div className='text-sm text-muted-foreground'>
-                            Get urgent alerts via text message
-                          </div>
-                        </div>
-                        <Button variant='outline' size='sm'>
-                          Configure
-                        </Button>
-                      </div>
-                    </div>
                   </div>
                 </TabsContent>
 
@@ -304,32 +269,6 @@ export default function ProfilePage() {
                         <Input id='confirm-password' type='password' />
                       </div>
                       <Button>Update Password</Button>
-                    </div>
-
-                    <Separator className='my-6' />
-
-                    <h3 className='text-lg font-medium'>Two-Factor Authentication</h3>
-                    <p className='text-sm text-muted-foreground'>
-                      Add an extra layer of security to your account
-                    </p>
-                    <Button variant='outline'>Enable Two-Factor Auth</Button>
-
-                    <Separator className='my-6' />
-
-                    <h3 className='text-lg font-medium'>Sessions</h3>
-                    <div className='rounded-md border p-4'>
-                      <div className='flex justify-between items-start'>
-                        <div>
-                          <p className='font-medium'>Current Session</p>
-                          <p className='text-sm text-muted-foreground mt-1'>
-                            MacOS • Chrome • New York, USA
-                          </p>
-                          <p className='text-xs text-muted-foreground mt-1'>Started 2 hours ago</p>
-                        </div>
-                        <div className='rounded-full px-2 py-1 bg-green-100 text-green-800 text-xs font-medium'>
-                          Active Now
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </TabsContent>
