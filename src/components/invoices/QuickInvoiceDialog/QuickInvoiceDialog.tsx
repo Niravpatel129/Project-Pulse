@@ -3,7 +3,9 @@
 import { useInvoiceEditor } from '@/app/[workspace]/invoices/new/hooks/useInvoiceEditor';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ColorPicker } from '@/components/ui/color-picker';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { ImageUpload } from '@/components/ui/image-upload';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -14,11 +16,23 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { useProject } from '@/contexts/ProjectContext';
+import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { useProjectModules } from '@/hooks/useProjectModules';
+import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
 import { newRequest } from '@/utils/newRequest';
-import { ChevronDownIcon, EyeIcon, Loader2, MinusIcon, PlusIcon } from 'lucide-react';
+import {
+  ArrowLeft,
+  ChevronRightIcon,
+  CreditCardIcon,
+  Loader2,
+  MinusIcon,
+  PenIcon,
+  PlusIcon,
+  Settings2Icon,
+} from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface QuickInvoiceDialogProps {
@@ -29,8 +43,9 @@ interface QuickInvoiceDialogProps {
 interface SuggestedLineItem {
   id: string;
   moduleId: string;
+  moduleType?: string;
   moduleName: string;
-  description: string;
+  name: string;
   price: string;
   quantity: number;
   discount?: number;
@@ -48,16 +63,34 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
     sendInvoiceMutation,
     currentCustomer,
     currency,
+    setCurrency,
   } = useInvoiceEditor();
 
-  // Use a ref to track if we've already selected a client
-  const hasSelectedClientRef = useRef(false);
+  const { data: invoiceSettings } = useInvoiceSettings();
+  const updateInvoiceSettings = useUpdateInvoiceSettings();
 
-  // Track module-based line items
+  // State for wizard UI
+  const [currentView, setCurrentView] = useState<'items' | 'settings'>('items');
+
+  // State for settings
+  const [showSettingsSidebar, setShowSettingsSidebar] = useState(false);
+  const [activeSettingTab, setActiveSettingTab] = useState('general');
+
+  // Line items and basic settings
+  const hasSelectedClientRef = useRef(false);
   const [lineItems, setLineItems] = useState<SuggestedLineItem[]>([]);
   const [autoApplyDiscount, setAutoApplyDiscount] = useState(false);
   const [memo, setMemo] = useState('');
+  const [footer, setFooter] = useState(invoiceSettings?.footer || '');
   const [isLoading, setIsLoading] = useState(false);
+  const [localCurrency, setLocalCurrency] = useState(invoiceSettings?.currency || 'usd');
+  const [icon, setIcon] = useState(invoiceSettings?.icon || '');
+  const [logo, setLogo] = useState(invoiceSettings?.logo || '');
+  const [showTaxId, setShowTaxId] = useState(invoiceSettings?.showTaxId || false);
+  const [taxId, setTaxId] = useState(invoiceSettings?.taxId || '');
+  const [dueDate, setDueDate] = useState<string>(
+    new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  );
 
   // Fetch suggested line items from backend
   const fetchSuggestedLineItems = useCallback(
@@ -83,12 +116,25 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
     [toast],
   );
 
-  // Fetch suggested items when dialog opens and client is selected
+  // Fetch suggested items when dialog opens
   useEffect(() => {
     if (open && project?._id) {
       fetchSuggestedLineItems(project._id).then((suggestedItems) => {
-        if (suggestedItems.length > 0) {
-          setLineItems(suggestedItems);
+        if (suggestedItems && suggestedItems.length > 0) {
+          // Convert API response to our format
+          const formattedItems = suggestedItems.map((item: any, index: number) => {
+            return {
+              id: `api-item-${index}-${Date.now()}`,
+              moduleId: item.moduleId || '',
+              moduleType: item.moduleType || '',
+              moduleName: item.moduleType || 'Module',
+              name: item.name || 'Service',
+              price: item.price?.toString() || '',
+              quantity: 1,
+              discount: 0,
+            };
+          });
+          setLineItems(formattedItems);
         } else {
           // Fallback to module-based generation if API returns empty
           createLineItemsFromModules();
@@ -104,6 +150,8 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
       setLineItems([]);
       setMemo('');
       setAutoApplyDiscount(false);
+      setCurrentView('items');
+      setShowSettingsSidebar(false);
     }
   }, [open]);
 
@@ -111,16 +159,15 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
   const createLineItemsFromModules = () => {
     if (!modules?.length) return;
 
-    console.log('Creating line items from modules:', modules);
-
     const defaultItems = modules.map((module) => {
       const price = inferPriceFromModule(module);
 
       return {
         id: `module-item-${module._id}`,
         moduleId: module._id,
-        moduleName: module.name,
-        description: module.name,
+        moduleType: 'module',
+        moduleName: module.name || '',
+        name: module.name || '',
         price: price || '',
         quantity: 1,
         discount: 0,
@@ -130,9 +177,20 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
     setLineItems(defaultItems);
   };
 
+  // Update invoice settings
+  const handleSettingsUpdate = (updates: any) => {
+    if (!invoiceSettings) return;
+
+    updateInvoiceSettings.mutate({
+      settings: {
+        ...invoiceSettings,
+        ...updates,
+      },
+    });
+  };
+
   // Select first client when dialog opens, only once
   useEffect(() => {
-    // Only do this when dialog opens and we haven't selected a client yet
     if (open && !hasSelectedClientRef.current && project?.participants?.length > 0) {
       const firstParticipant = project.participants[0];
       if (firstParticipant && firstParticipant._id) {
@@ -195,8 +253,9 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
         {
           id: `custom-item-${Date.now()}`,
           moduleId: '',
+          moduleType: 'custom',
           moduleName: 'Custom',
-          description: 'Custom Service',
+          name: 'Custom Service',
           price: '',
           quantity: 1,
           discount: autoApplyDiscount ? 10 : 0,
@@ -233,17 +292,17 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
     // First create items for each line item
     if (currentCustomer) {
       lineItems.forEach((item) => {
-        // Only create items with both description and price
-        if (item.description && item.price) {
+        // Only create items with both name and price
+        if (item.name && item.price) {
           const customItem = {
             id: `${item.id}-${Date.now()}`,
-            description: item.description,
+            description: item.name,
             quantity: item.quantity || 1,
             unitPrice: parseFloat(item.price) || 0,
             projectIds: [project?._id || ''],
             moduleIds: item.moduleId ? [item.moduleId] : [],
             options: {},
-            currency: currency || 'usd',
+            currency: localCurrency || 'usd',
             discount: item.discount || 0,
             memo: memo,
           };
@@ -287,249 +346,497 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='p-5 max-w-xl'>
-        <DialogTitle className='text-xl font-semibold mb-4'>Quick Invoice</DialogTitle>
-
-        <div className='space-y-4'>
-          {/* Client selection */}
-          <div>
-            <Label htmlFor='client'>Client</Label>
-            <Select value={selectedCustomer} onValueChange={handleCustomerSelect}>
-              <SelectTrigger id='client' className='w-full'>
-                <SelectValue placeholder='Select client' />
-              </SelectTrigger>
-              <SelectContent>
-                {project?.participants?.map((participant) => {
-                  return (
-                    <SelectItem key={participant._id} value={participant._id}>
-                      {participant.name}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Module Data Inspector - for debugging */}
-          <Collapsible className='w-full border rounded-md'>
-            <CollapsibleTrigger className='flex w-full items-center justify-between p-2 text-sm font-medium'>
-              <div className='flex items-center'>
-                <EyeIcon className='mr-2 h-4 w-4' />
-                Module Data Inspector
-              </div>
-              <ChevronDownIcon className='h-4 w-4' />
-            </CollapsibleTrigger>
-            <CollapsibleContent className='p-2'>
-              <div className='text-xs font-mono bg-gray-50 p-2 rounded max-h-40 overflow-auto'>
-                <p className='font-semibold'>Modules ({modules?.length || 0}):</p>
-                {modules?.map((module, index) => {
-                  return (
-                    <div key={module._id} className='mt-1'>
-                      <p className='font-medium'>
-                        {index + 1}. {module.name}
-                      </p>
-                      <p>Fields: {Object.keys(module).join(', ')}</p>
-                      {typeof module.data === 'object' && (
-                        <p>Nested data fields: {Object.keys(module.data || {}).join(', ')}</p>
-                      )}
-                    </div>
-                  );
-                })}
-
-                <p className='font-semibold mt-3'>Current Line Items:</p>
-                {lineItems.map((item, index) => {
-                  return (
-                    <div key={item.id} className='mt-1'>
-                      <p>
-                        {index + 1}. {item.description}: ${item.price || '0'} (From:{' '}
-                        {item.moduleName})
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-
-          {/* Line Items */}
-          <div className='space-y-3'>
-            <div className='flex justify-between items-center'>
-              <h3 className='font-medium'>Line Items</h3>
+      <DialogContent className='p-0 max-w-5xl h-[90vh] overflow-hidden'>
+        <DialogTitle className='sr-only'>Quick Invoice Creator</DialogTitle>
+        <div className='flex flex-col h-full'>
+          {/* Header */}
+          <div className='border-b border-gray-200 p-4 flex justify-between items-center'>
+            <div className='flex items-center gap-2'>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='rounded-full'
+                onClick={() => {
+                  return onOpenChange(false);
+                }}
+              >
+                <ArrowLeft className='h-4 w-4' />
+              </Button>
+              <h2 className='text-lg font-medium'>Quick Invoice</h2>
+            </div>
+            <div className='flex items-center gap-2'>
               <Button
                 variant='outline'
                 size='sm'
-                onClick={addCustomLineItem}
-                className='flex items-center gap-1'
-              >
-                <PlusIcon className='h-3.5 w-3.5' />
-                Add Custom Item
-              </Button>
-            </div>
-
-            {isLoading ? (
-              <div className='flex justify-center items-center py-8'>
-                <Loader2 className='h-8 w-8 animate-spin text-gray-400' />
-                <span className='ml-2 text-gray-500'>Loading suggested items...</span>
-              </div>
-            ) : (
-              <>
-                {lineItems.map((item) => {
-                  return (
-                    <div
-                      key={item.id}
-                      className='flex gap-2 items-start border p-3 rounded-md bg-gray-50'
-                    >
-                      <div className='flex-1 space-y-2'>
-                        <Input
-                          placeholder='Description'
-                          value={item.description}
-                          onChange={(e) => {
-                            return handleLineItemChange(item.id, 'description', e.target.value);
-                          }}
-                        />
-                        <div className='flex gap-2'>
-                          <div className='w-24'>
-                            <Input
-                              placeholder='Qty'
-                              value={item.quantity}
-                              onChange={(e) => {
-                                return handleLineItemChange(
-                                  item.id,
-                                  'quantity',
-                                  parseInt(e.target.value) || 1,
-                                );
-                              }}
-                              type='number'
-                              min='1'
-                            />
-                          </div>
-                          <div className='w-24'>
-                            <Input
-                              placeholder='Price'
-                              value={item.price}
-                              onChange={(e) => {
-                                return handleLineItemChange(item.id, 'price', e.target.value);
-                              }}
-                              type='number'
-                              min='0'
-                              step='0.01'
-                            />
-                          </div>
-                          <div className='w-24'>
-                            <Input
-                              placeholder='Discount %'
-                              value={item.discount || 0}
-                              onChange={(e) => {
-                                return handleLineItemChange(
-                                  item.id,
-                                  'discount',
-                                  parseInt(e.target.value) || 0,
-                                );
-                              }}
-                              type='number'
-                              min='0'
-                              max='100'
-                            />
-                          </div>
-                        </div>
-                        {item.moduleName && item.moduleName !== 'Custom' && (
-                          <div className='text-xs text-gray-500'>
-                            From module: {item.moduleName}
-                          </div>
-                        )}
-                      </div>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='w-8 h-8 mt-1'
-                        onClick={() => {
-                          return removeLineItem(item.id);
-                        }}
-                      >
-                        <MinusIcon className='h-4 w-4 text-gray-500' />
-                      </Button>
-                    </div>
-                  );
-                })}
-
-                {lineItems.length === 0 && !isLoading && (
-                  <div className='text-sm text-gray-500 py-4 text-center'>
-                    No items added. Add a custom item or select a client with associated modules.
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Apply Discount Option */}
-            <div className='flex items-center justify-between border-t pt-3'>
-              <div className='flex items-center space-x-2'>
-                <Switch
-                  id='auto-discount'
-                  checked={autoApplyDiscount}
-                  onCheckedChange={toggleDiscount}
-                />
-                <Label htmlFor='auto-discount'>Apply 10% discount to all items</Label>
-              </div>
-            </div>
-
-            {/* Memo Field */}
-            <div>
-              <Label htmlFor='memo'>Memo</Label>
-              <Input
-                id='memo'
-                placeholder='Add a memo to your invoice'
-                value={memo}
-                onChange={(e) => {
-                  return setMemo(e.target.value);
+                className={`${showSettingsSidebar ? 'bg-gray-100' : ''}`}
+                onClick={() => {
+                  return setShowSettingsSidebar(!showSettingsSidebar);
                 }}
-              />
-              <p className='text-xs text-gray-500 mt-1'>This note will appear on the invoice</p>
-            </div>
-
-            {/* Invoice Summary */}
-            <div className='border rounded-md p-3 bg-gray-50'>
-              <h4 className='font-medium mb-2'>Invoice Summary</h4>
-              <div className='space-y-1 text-sm'>
-                <div className='flex justify-between'>
-                  <span>Subtotal:</span>
-                  <span>${subtotal.toFixed(2)}</span>
-                </div>
-                {discountTotal > 0 && (
-                  <div className='flex justify-between text-green-600'>
-                    <span>Discount:</span>
-                    <span>-${discountTotal.toFixed(2)}</span>
-                  </div>
-                )}
-                <div className='flex justify-between font-medium border-t pt-1 mt-1'>
-                  <span>Total:</span>
-                  <span>${total.toFixed(2)}</span>
-                </div>
-              </div>
+              >
+                <Settings2Icon className='h-4 w-4 mr-2' />
+                Settings
+              </Button>
+              <Button
+                size='sm'
+                onClick={handleSendInvoice}
+                disabled={
+                  sendInvoiceMutation.isPending ||
+                  !currentCustomer ||
+                  lineItems.length === 0 ||
+                  !lineItems.some((item) => {
+                    return item.name && item.price;
+                  })
+                }
+              >
+                {sendInvoiceMutation.isPending ? 'Sending...' : 'Send Invoice'}
+              </Button>
             </div>
           </div>
 
-          <div className='flex gap-2 justify-end pt-2 border-t'>
-            <Button
-              variant='outline'
-              onClick={() => {
-                return onOpenChange(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSendInvoice}
-              disabled={
-                sendInvoiceMutation.isPending ||
-                !currentCustomer ||
-                lineItems.length === 0 ||
-                !lineItems.some((item) => {
-                  return item.description && item.price;
-                })
-              }
-            >
-              {sendInvoiceMutation.isPending ? 'Sending...' : 'Send Invoice'}
-            </Button>
+          {/* Main content */}
+          <div className='flex flex-1 overflow-hidden'>
+            {/* Main panel */}
+            <div className={`${showSettingsSidebar ? 'w-3/5' : 'w-full'} overflow-auto p-6`}>
+              {/* Client selection */}
+              <div className='mb-6'>
+                <Label htmlFor='client' className='text-sm font-medium'>
+                  Client
+                </Label>
+                <Select value={selectedCustomer} onValueChange={handleCustomerSelect}>
+                  <SelectTrigger id='client' className='w-full mt-1'>
+                    <SelectValue placeholder='Select client' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {project?.participants?.map((participant) => {
+                      return (
+                        <SelectItem key={participant._id} value={participant._id}>
+                          {participant.name}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Line Items */}
+              <div className='space-y-4'>
+                <div className='flex justify-between items-center'>
+                  <h3 className='text-sm font-medium'>Line Items</h3>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={addCustomLineItem}
+                    className='flex items-center gap-1'
+                  >
+                    <PlusIcon className='h-3.5 w-3.5' />
+                    Add Item
+                  </Button>
+                </div>
+
+                {isLoading ? (
+                  <div className='flex justify-center items-center py-8'>
+                    <Loader2 className='h-8 w-8 animate-spin text-gray-400' />
+                    <span className='ml-2 text-gray-500'>Loading suggested items...</span>
+                  </div>
+                ) : (
+                  <>
+                    {lineItems.map((item) => {
+                      return (
+                        <div
+                          key={item.id}
+                          className='flex gap-2 items-start border p-3 rounded-md bg-gray-50'
+                        >
+                          <div className='flex-1 space-y-2'>
+                            <Input
+                              placeholder='Name'
+                              value={item.name}
+                              onChange={(e) => {
+                                return handleLineItemChange(item.id, 'name', e.target.value);
+                              }}
+                            />
+                            <div className='flex gap-2'>
+                              <div className='w-24'>
+                                <Input
+                                  placeholder='Qty'
+                                  value={item.quantity}
+                                  onChange={(e) => {
+                                    return handleLineItemChange(
+                                      item.id,
+                                      'quantity',
+                                      parseInt(e.target.value) || 1,
+                                    );
+                                  }}
+                                  type='number'
+                                  min='1'
+                                />
+                              </div>
+                              <div className='w-24'>
+                                <Input
+                                  placeholder='Price'
+                                  value={item.price}
+                                  onChange={(e) => {
+                                    return handleLineItemChange(item.id, 'price', e.target.value);
+                                  }}
+                                  type='number'
+                                  min='0'
+                                  step='0.01'
+                                />
+                              </div>
+                              <div className='w-24'>
+                                <Input
+                                  placeholder='Discount %'
+                                  value={item.discount || 0}
+                                  onChange={(e) => {
+                                    return handleLineItemChange(
+                                      item.id,
+                                      'discount',
+                                      parseInt(e.target.value) || 0,
+                                    );
+                                  }}
+                                  type='number'
+                                  min='0'
+                                  max='100'
+                                />
+                              </div>
+                            </div>
+                            {item.moduleName && item.moduleType !== 'custom' && (
+                              <div className='text-xs text-gray-500'>
+                                From {item.moduleType}: {item.moduleName}
+                              </div>
+                            )}
+                          </div>
+                          <Button
+                            variant='ghost'
+                            size='icon'
+                            className='w-8 h-8 mt-1'
+                            onClick={() => {
+                              return removeLineItem(item.id);
+                            }}
+                          >
+                            <MinusIcon className='h-4 w-4 text-gray-500' />
+                          </Button>
+                        </div>
+                      );
+                    })}
+
+                    {lineItems.length === 0 && !isLoading && (
+                      <div className='text-sm text-gray-500 py-10 text-center border rounded-md'>
+                        No items added. Add a custom item or select a client with associated
+                        modules.
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Quick Settings */}
+                <div className='space-y-3 pt-4 border-t mt-4'>
+                  {/* Discount Toggle */}
+                  <div className='flex items-center justify-between'>
+                    <div className='flex items-center space-x-2'>
+                      <Switch
+                        id='auto-discount'
+                        checked={autoApplyDiscount}
+                        onCheckedChange={toggleDiscount}
+                      />
+                      <Label htmlFor='auto-discount'>Apply 10% discount to all items</Label>
+                    </div>
+                  </div>
+
+                  {/* Quick Memo */}
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button variant='ghost' className='flex w-full justify-between p-0 h-8'>
+                        <span className='flex items-center text-sm font-medium'>
+                          <PenIcon className='h-4 w-4 mr-2' />
+                          Add Memo
+                        </span>
+                        <ChevronRightIcon className='h-4 w-4' />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className='pt-2'>
+                      <Input
+                        id='memo'
+                        placeholder='Add a memo to your invoice'
+                        value={memo}
+                        onChange={(e) => {
+                          return setMemo(e.target.value);
+                        }}
+                      />
+                      <p className='text-xs text-gray-500 mt-1'>
+                        This note will appear on the invoice
+                      </p>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* Due Date */}
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button variant='ghost' className='flex w-full justify-between p-0 h-8'>
+                        <span className='flex items-center text-sm font-medium'>
+                          <CreditCardIcon className='h-4 w-4 mr-2' />
+                          Due Date
+                        </span>
+                        <ChevronRightIcon className='h-4 w-4' />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className='pt-2'>
+                      <Input
+                        id='dueDate'
+                        type='date'
+                        value={dueDate}
+                        onChange={(e) => {
+                          return setDueDate(e.target.value);
+                        }}
+                      />
+                      <p className='text-xs text-gray-500 mt-1'>When payment is due</p>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+
+                {/* Invoice Summary */}
+                <div className='border rounded-md p-3 bg-gray-50 mt-4'>
+                  <h4 className='font-medium mb-2'>Invoice Summary</h4>
+                  <div className='space-y-1 text-sm'>
+                    <div className='flex justify-between'>
+                      <span>Subtotal:</span>
+                      <span>${subtotal.toFixed(2)}</span>
+                    </div>
+                    {discountTotal > 0 && (
+                      <div className='flex justify-between text-green-600'>
+                        <span>Discount:</span>
+                        <span>-${discountTotal.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className='flex justify-between font-medium border-t pt-1 mt-1'>
+                      <span>Total:</span>
+                      <span>${total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Settings Sidebar */}
+            {showSettingsSidebar && (
+              <div className='w-2/5 border-l border-gray-200 overflow-auto'>
+                <Tabs
+                  value={activeSettingTab}
+                  onValueChange={setActiveSettingTab}
+                  className='w-full'
+                >
+                  <div className='border-b border-gray-200'>
+                    <TabsList className='h-12 w-full justify-start bg-transparent border-b rounded-none'>
+                      <TabsTrigger
+                        value='general'
+                        className='data-[state=active]:border-b-2 data-[state=active]:border-gray-900 data-[state=active]:shadow-none rounded-none'
+                      >
+                        General
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value='branding'
+                        className='data-[state=active]:border-b-2 data-[state=active]:border-gray-900 data-[state=active]:shadow-none rounded-none'
+                      >
+                        Branding
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value='payment'
+                        className='data-[state=active]:border-b-2 data-[state=active]:border-gray-900 data-[state=active]:shadow-none rounded-none'
+                      >
+                        Payment
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
+
+                  <div className='p-4'>
+                    <TabsContent value='general' className='mt-0 pt-2 border-0'>
+                      {/* Currency */}
+                      <div className='mb-4'>
+                        <Label htmlFor='currency' className='text-sm font-medium'>
+                          Currency
+                        </Label>
+                        <Select
+                          value={localCurrency}
+                          onValueChange={(value) => {
+                            setLocalCurrency(value);
+                            setCurrency(value);
+                            handleSettingsUpdate({ currency: value });
+                          }}
+                        >
+                          <SelectTrigger id='currency' className='w-full mt-1'>
+                            <SelectValue placeholder='Select currency' />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value='usd'>USD - US Dollar</SelectItem>
+                            <SelectItem value='eur'>EUR - Euro</SelectItem>
+                            <SelectItem value='gbp'>GBP - British Pound</SelectItem>
+                            <SelectItem value='cad'>CAD - Canadian Dollar</SelectItem>
+                            <SelectItem value='aud'>AUD - Australian Dollar</SelectItem>
+                            <SelectItem value='jpy'>JPY - Japanese Yen</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Footer */}
+                      <div className='mb-4'>
+                        <Label htmlFor='footer' className='text-sm font-medium'>
+                          Footer
+                        </Label>
+                        <Input
+                          id='footer'
+                          placeholder='Add a footer to your invoice'
+                          value={footer}
+                          onChange={(e) => {
+                            setFooter(e.target.value);
+                          }}
+                          className='mt-1'
+                        />
+                        <p className='text-xs text-gray-500 mt-1'>
+                          This will appear at the bottom of the invoice
+                        </p>
+                      </div>
+
+                      {/* Tax ID */}
+                      <div className='mb-4'>
+                        <div className='flex items-center justify-between mb-1'>
+                          <Label htmlFor='taxId' className='text-sm font-medium'>
+                            Tax ID
+                          </Label>
+                          <div className='flex items-center'>
+                            <Label htmlFor='showTaxId' className='text-xs text-gray-600 mr-2'>
+                              Show on invoice
+                            </Label>
+                            <Switch
+                              id='showTaxId'
+                              checked={showTaxId}
+                              onCheckedChange={(checked) => {
+                                setShowTaxId(checked);
+                                handleSettingsUpdate({ showTaxId: checked });
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <Input
+                          id='taxId'
+                          placeholder='Enter your tax ID'
+                          value={taxId}
+                          onChange={(e) => {
+                            setTaxId(e.target.value);
+                          }}
+                          onBlur={(e) => {
+                            handleSettingsUpdate({ taxId: e.target.value });
+                          }}
+                          className='mt-1'
+                        />
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value='branding' className='mt-0 pt-2 border-0'>
+                      {/* Branding */}
+                      <div className='space-y-4'>
+                        {/* Icons */}
+                        <div className='grid grid-cols-2 gap-4'>
+                          <div>
+                            <Label className='text-sm font-medium'>Icon</Label>
+                            <div className='mt-1'>
+                              <ImageUpload
+                                label='Company Icon'
+                                value={icon}
+                                onChange={(newIcon) => {
+                                  setIcon(newIcon);
+                                  handleSettingsUpdate({ icon: newIcon });
+                                }}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <Label className='text-sm font-medium'>Logo</Label>
+                            <div className='mt-1'>
+                              <ImageUpload
+                                label='Company Logo'
+                                value={logo}
+                                onChange={(newLogo) => {
+                                  setLogo(newLogo);
+                                  handleSettingsUpdate({ logo: newLogo });
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Colors */}
+                        <div className='grid grid-cols-2 gap-4'>
+                          <div>
+                            <Label className='text-sm font-medium'>Brand Color</Label>
+                            <div className='mt-1'>
+                              <ColorPicker
+                                label='Brand Color'
+                                value={invoiceSettings?.brandColor || ''}
+                                onChange={(value) => {
+                                  handleSettingsUpdate({ brandColor: value });
+                                }}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <Label className='text-sm font-medium'>Accent Color</Label>
+                            <div className='mt-1'>
+                              <ColorPicker
+                                label='Accent Color'
+                                value={invoiceSettings?.accentColor || ''}
+                                onChange={(value) => {
+                                  handleSettingsUpdate({ accentColor: value });
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value='payment' className='mt-0 pt-2 border-0'>
+                      {/* Payment Settings */}
+                      <div className='space-y-4'>
+                        {/* Payment Methods */}
+                        <div>
+                          <Label className='text-sm font-medium'>Payment Methods</Label>
+                          <div className='space-y-2 mt-2'>
+                            <div className='flex items-center space-x-2 py-2 px-3 border rounded-md'>
+                              <Switch id='accept-credit-cards' />
+                              <Label htmlFor='accept-credit-cards'>Accept Credit Cards</Label>
+                            </div>
+                            <div className='flex items-center space-x-2 py-2 px-3 border rounded-md'>
+                              <Switch id='accept-bank-transfer' />
+                              <Label htmlFor='accept-bank-transfer'>Accept Bank Transfer</Label>
+                            </div>
+                            <div className='flex items-center space-x-2 py-2 px-3 border rounded-md'>
+                              <Switch id='accept-paypal' />
+                              <Label htmlFor='accept-paypal'>Accept PayPal</Label>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Payment Terms */}
+                        <div>
+                          <Label className='text-sm font-medium'>Payment Terms</Label>
+                          <Select defaultValue='net30'>
+                            <SelectTrigger className='w-full mt-1'>
+                              <SelectValue placeholder='Select payment terms' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value='due-on-receipt'>Due on Receipt</SelectItem>
+                              <SelectItem value='net15'>Net 15</SelectItem>
+                              <SelectItem value='net30'>Net 30</SelectItem>
+                              <SelectItem value='net60'>Net 60</SelectItem>
+                              <SelectItem value='custom'>Custom</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </div>
+                </Tabs>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>
