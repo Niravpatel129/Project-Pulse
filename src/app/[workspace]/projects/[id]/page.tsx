@@ -20,13 +20,7 @@ export default function ProjectPage() {
           <BlockWrapper className='flex-1 overflow-auto min-h-0'>
             <div className='container mx-auto flex flex-col px-0 py-3 h-full overflow-auto'>
               {/* Debug alert placement */}
-              <DesktopProjectAlertBanner
-                projectName={'Project Name'}
-                daysInactive={14}
-                onMute={() => {}}
-                onRemind={() => {}}
-                onAddUpdate={() => {}}
-              />
+              <DesktopProjectAlertBanner />
               {/* <div className='bg-gray-50 p-4 mb-4 rounded-lg border border-gray-200 flex justify-between items-center'>
                 <div>
                   <h3 className='font-medium'>Project Alerts</h3>
