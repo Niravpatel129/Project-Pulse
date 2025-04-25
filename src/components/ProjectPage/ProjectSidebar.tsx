@@ -91,6 +91,7 @@ export function ProjectSidebar({
   const { stages, statuses } = usePipelineSettings();
   const [isClientPortalDialogOpen, setIsClientPortalDialogOpen] = useState(false);
   const [isSendEmailDialogOpen, setIsSendEmailDialogOpen] = useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [sharingSettings, setSharingSettings] = useState<SharingSettings>({
     accessType:
       (project?.sharing?.accessType as 'email_restricted' | 'public') || 'email_restricted',
@@ -425,28 +426,46 @@ export function ProjectSidebar({
 
                 <div className='pt-2 space-y-2'>
                   <Button
-                    variant={project?.isClosed ? 'outline' : 'secondary'}
+                    variant={project?.isClosed ? 'outline' : 'destructive'}
                     className='w-full h-8 text-xs'
                     onClick={() => {
-                      return project?.isClosed
-                        ? updateProjectStatus('open')
-                        : updateProjectStatus('closed');
+                      return setIsConfirmDialogOpen(true);
                     }}
                   >
                     {project?.isClosed ? 'Reopen Project' : 'Close Project'}
                   </Button>
 
-                  <Button
-                    variant={project?.isArchived ? 'outline' : 'destructive'}
-                    className='w-full h-8 text-xs'
-                    onClick={() => {
-                      return project?.isArchived
-                        ? updateProjectStatus('open')
-                        : updateProjectStatus('archived');
-                    }}
-                  >
-                    {project?.isArchived ? 'Unarchive Project' : 'Archive Project'}
-                  </Button>
+                  <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
+                    <DialogContent className='sm:max-w-[425px]'>
+                      <DialogHeader>
+                        <DialogTitle>Confirm</DialogTitle>
+                        <DialogDescription>
+                          Are you sure you want to {project?.isClosed ? 'reopen' : 'close'} this
+                          project?
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter>
+                        <Button
+                          variant='outline'
+                          onClick={() => {
+                            return setIsConfirmDialogOpen(false);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant={project?.isClosed ? 'default' : 'destructive'}
+                          onClick={() => {
+                            const updateStatus = project?.isClosed ? 'open' : 'closed';
+                            updateProjectStatus(updateStatus);
+                            setIsConfirmDialogOpen(false);
+                          }}
+                        >
+                          {project?.isClosed ? 'Reopen' : 'Close'}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             </AccordionContent>
