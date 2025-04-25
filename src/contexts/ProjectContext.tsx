@@ -20,7 +20,8 @@ export interface Project {
   modulesCount?: number;
   attachments: string[];
   isActive: boolean;
-  archived?: boolean;
+  isClosed?: boolean;
+  isArchived?: boolean;
   createdBy: string;
   sharing: {
     accessType: string;
@@ -82,6 +83,7 @@ interface ProjectContextType {
   loading: boolean;
   error: string | null;
   updateProject: (data: Partial<Project>) => Promise<void>;
+  updateProjectStatus: (status: 'open' | 'closed' | 'archived') => Promise<void>;
   participants: Participant[];
   fetchParticipants: () => Promise<void>;
 }
@@ -148,9 +150,40 @@ export function ProjectProvider({
     }
   };
 
+  const updateProjectStatus = async (status: 'open' | 'closed' | 'archived') => {
+    try {
+      const response = await newRequest.patch(`/projects/${projectId}/status`, { status });
+      if (response.data.success) {
+        // Update the react-query cache
+        queryClient.setQueryData(['project', projectId], (oldData: Project | undefined) => {
+          if (!oldData) return response.data.data;
+
+          return {
+            ...oldData,
+            isClosed: status === 'closed',
+            isArchived: status === 'archived',
+          };
+        });
+      } else {
+        throw new Error(response.data.message || 'Failed to update project status');
+      }
+    } catch (err) {
+      console.error('Error updating project status:', err);
+      throw new Error('Failed to update project status');
+    }
+  };
+
   return (
     <ProjectContext.Provider
-      value={{ project, loading, error, updateProject, participants, fetchParticipants }}
+      value={{
+        project,
+        loading,
+        error,
+        updateProject,
+        updateProjectStatus,
+        participants,
+        fetchParticipants,
+      }}
     >
       {children}
     </ProjectContext.Provider>

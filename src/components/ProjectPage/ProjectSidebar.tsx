@@ -87,7 +87,7 @@ export function ProjectSidebar({
 }: {
   onUpdateProject: (data: Partial<Project>) => Promise<void>;
 }) {
-  const { project } = useProject();
+  const { project, updateProjectStatus } = useProject();
   const { stages, statuses } = usePipelineSettings();
   const [isClientPortalDialogOpen, setIsClientPortalDialogOpen] = useState(false);
   const [isSendEmailDialogOpen, setIsSendEmailDialogOpen] = useState(false);
@@ -423,17 +423,29 @@ export function ProjectSidebar({
                   />
                 </div>
 
-                <div className='pt-2'>
+                <div className='pt-2 space-y-2'>
                   <Button
-                    variant={project?.archived ? 'outline' : 'secondary'}
+                    variant={project?.isClosed ? 'outline' : 'secondary'}
                     className='w-full h-8 text-xs'
                     onClick={() => {
-                      return onUpdateProject?.({
-                        archived: project?.archived ? false : true,
-                      });
+                      return project?.isClosed
+                        ? updateProjectStatus('open')
+                        : updateProjectStatus('closed');
                     }}
                   >
-                    {project?.archived ? 'Reopen Project' : 'Close Project'}
+                    {project?.isClosed ? 'Reopen Project' : 'Close Project'}
+                  </Button>
+
+                  <Button
+                    variant={project?.isArchived ? 'outline' : 'destructive'}
+                    className='w-full h-8 text-xs'
+                    onClick={() => {
+                      return project?.isArchived
+                        ? updateProjectStatus('open')
+                        : updateProjectStatus('archived');
+                    }}
+                  >
+                    {project?.isArchived ? 'Unarchive Project' : 'Archive Project'}
                   </Button>
                 </div>
               </div>
