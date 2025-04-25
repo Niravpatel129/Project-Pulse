@@ -52,7 +52,7 @@ const useProjectAlert = () => {
 
   const remindLaterMutation = useMutation({
     mutationFn: async (alertId: string) => {
-      return await newRequest.patch(`/alerts/${alertId}/remind`, { days: 3 });
+      return await newRequest.post(`/alerts/project/${alertId}/remind`, { days: 3 });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projectAlert', projectId] });

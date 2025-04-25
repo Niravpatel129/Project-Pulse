@@ -113,6 +113,7 @@ export default function ProjectAlertBanner({ isOpen, onClose }: ProjectAlertBann
   return (
     <>
       {/* Debug visibility indicator */}
+
       <div className='hidden'>Alert Banner isOpen: {isOpen ? 'true' : 'false'}</div>
       <AnimatePresence>
         {isOpen && (
@@ -128,6 +129,7 @@ export default function ProjectAlertBanner({ isOpen, onClose }: ProjectAlertBann
             >
               <div className='p-4 flex flex-col md:flex-row gap-3 md:items-center'>
                 {/* Alert Icon and Message */}
+
                 <div className='flex flex-1 items-center gap-3'>
                   <div className='flex-shrink-0'>
                     <AlertTriangle className={`h-5 w-5 ${getAlertIconColor(activeAlert.type)}`} />
@@ -147,7 +149,6 @@ export default function ProjectAlertBanner({ isOpen, onClose }: ProjectAlertBann
                     <p className='text-xs text-gray-500 mt-1'>{alertTime}</p>
                   </div>
                 </div>
-
                 {/* Actions - Desktop layout */}
                 <div className='hidden md:flex items-center gap-2 flex-wrap md:flex-nowrap'>
                   <Select onValueChange={updateProjectStatus}>
@@ -192,7 +193,6 @@ export default function ProjectAlertBanner({ isOpen, onClose }: ProjectAlertBann
                     <span className='sr-only'>Dismiss</span>
                   </Button>
                 </div>
-
                 {/* Actions - Mobile layout */}
                 <div className='flex md:hidden flex-wrap gap-2'>
                   <Select onValueChange={updateProjectStatus}>

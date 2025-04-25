@@ -143,7 +143,7 @@ const ProjectMessageInput = () => {
       <Card className='border border-gray-200 bg-white shadow-sm'>
         {!isExpanded ? (
           <div
-            className='flex items-center p-3 cursor-pointer hover:bg-gray-50 transition-colors rounded-t-lg'
+            className='flex items-center p-3 cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors rounded-t-lg'
             onClick={toggleExpand}
           >
             <Avatar className='h-8 w-8 mr-4'>

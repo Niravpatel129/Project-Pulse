@@ -38,7 +38,7 @@ export default function ProjectMain() {
   const navigationLinks = [
     { href: baseUrl, label: 'Home', icon: Home, tab: 'home' },
     { href: `${baseUrl}/schedule`, label: 'Schedule', icon: CalendarDays, tab: 'schedule' },
-    { href: `${baseUrl}/modules`, label: 'Modules', icon: PanelsTopLeft, tab: 'modules', badge: 5 },
+    { href: `${baseUrl}/modules`, label: 'Storage', icon: PanelsTopLeft, tab: 'modules', badge: 5 },
     { href: `${baseUrl}/payments`, label: 'Payments', icon: CreditCard, tab: 'payments' },
   ];
 
