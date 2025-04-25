@@ -96,7 +96,7 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
   const [discountValue, setDiscountValue] = useState(10);
   const [memo, setMemo] = useState('');
-  const [footer, setFooter] = useState(invoiceSettings?.footer || '');
+  const [footer, setFooter] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [localCurrency, setLocalCurrency] = useState(invoiceSettings?.currency || 'usd');
   const [icon, setIcon] = useState(invoiceSettings?.icon || '');
@@ -107,6 +107,9 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
   const [dueDate, setDueDate] = useState<string>(
     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
   );
+
+  // Add a new state for tracking invoice submission
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch suggested line items from backend
   const fetchSuggestedLineItems = useCallback(
@@ -335,42 +338,131 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
     }
   };
 
-  const handleSendInvoice = () => {
-    // First create items for each line item
-    if (currentCustomer) {
-      lineItems.forEach((item) => {
-        // Only create items with both name and price
-        if (item.name && item.price) {
-          const customItem = {
-            id: `${item.id}-${Date.now()}`,
-            description: item.name,
-            quantity: item.quantity || 1,
-            unitPrice: parseFloat(item.price) || 0,
-            projectIds: [project?._id || ''],
-            moduleIds: item.moduleId ? [item.moduleId] : [],
-            options: {},
-            currency: localCurrency || 'usd',
-            discount: item.discount || 0,
-            memo: memo,
-          };
-
-          handleSaveItem(customItem);
-        }
+  const handleSendInvoice = async () => {
+    // Only proceed if we have a customer and project
+    if (!currentCustomer || !project?._id) {
+      console.log('Missing information');
+      toast({
+        title: 'Missing information',
+        description: 'Customer and project are required',
+        variant: 'destructive',
       });
+      return;
     }
 
-    // Then send the invoice
-    setTimeout(() => {
-      sendInvoiceMutation.mutate(undefined, {
-        onSuccess: () => {
-          onOpenChange(false);
-          toast({
-            title: 'Invoice sent successfully',
-            description: `Invoice sent to ${currentCustomer?.name}`,
-          });
-        },
+    // Set submitting state to true to show loading indicator
+    setIsSubmitting(true);
+
+    try {
+      const itemsToCreate = lineItems.filter((item) => {
+        return item.name && item.price;
       });
-    }, 100);
+
+      if (itemsToCreate.length === 0) {
+        toast({
+          title: 'No valid items',
+          description: 'Please add at least one item with name and price',
+          variant: 'destructive',
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Create all product items one by one
+      const createdItemIds: string[] = [];
+
+      // Create items sequentially to ensure all are created before sending invoice
+      for (const item of itemsToCreate) {
+        const productItem = {
+          name: item.name,
+          description: item.name,
+          quantity: item.quantity || 1,
+          price: parseFloat(item.price) || 0,
+          discount: item.discount || 0,
+          projects: [project._id],
+          modules: item.moduleId ? [item.moduleId] : [],
+          currency: localCurrency || 'usd',
+          memo: memo,
+        };
+
+        try {
+          console.log('Creating product item:', productItem);
+          const response = await newRequest.post('/product-catalog', productItem);
+          console.log('Product item created:', response.data.data.product._id);
+
+          if (response.data?.data?.product?._id) {
+            createdItemIds.push(response.data.data.product._id);
+          }
+        } catch (error) {
+          console.error('Error creating product item:', error);
+          // Continue with other items even if one fails
+        }
+      }
+
+      // Check if we have any successfully created items
+      if (createdItemIds.length === 0) {
+        console.log('No items could be created. Please try again.');
+        toast({
+          title: 'Failed to create invoice',
+          description: 'No items could be created. Please try again.',
+          variant: 'destructive',
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Create invoice payload
+      const invoiceData = {
+        clientId: currentCustomer.id,
+        items: createdItemIds,
+        deliveryMethod,
+        memo,
+        footer,
+        tax:
+          selectedTax && selectedTax !== 'no-tax'
+            ? {
+                id: selectedTax,
+                name:
+                  invoiceSettings?.taxes?.find((tax) => {
+                    return tax.id === selectedTax;
+                  })?.name || '',
+                rate: selectedTaxRate,
+              }
+            : null,
+      };
+
+      console.log('Sending invoice with data:', invoiceData);
+
+      // Explicitly call the project invoice endpoint
+      const invoiceResponse = await newRequest.post(
+        `/projects/${project._id}/invoices`,
+        invoiceData,
+      );
+      console.log('Invoice created successfully:', invoiceResponse.data);
+
+      // Close dialog and show success message
+      onOpenChange(false);
+      toast({
+        title: 'Invoice sent successfully',
+        description: `Invoice sent to ${currentCustomer.name}`,
+      });
+
+      // Refresh invoice list if needed
+      if (sendInvoiceMutation && typeof sendInvoiceMutation.mutate === 'function') {
+        sendInvoiceMutation.mutate();
+      }
+    } catch (error: any) {
+      console.error('Error creating invoice:', error);
+      toast({
+        title: 'Failed to create invoice',
+        description:
+          error.response?.data?.message || 'An error occurred while creating the invoice',
+        variant: 'destructive',
+      });
+    } finally {
+      // Always reset submitting state
+      setIsSubmitting(false);
+    }
   };
 
   // Calculate subtotal
@@ -438,6 +530,7 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                 size='sm'
                 onClick={handleSendInvoice}
                 disabled={
+                  isSubmitting ||
                   sendInvoiceMutation.isPending ||
                   !currentCustomer ||
                   lineItems.length === 0 ||
@@ -446,7 +539,16 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                   })
                 }
               >
-                {sendInvoiceMutation.isPending ? 'Sending...' : 'Send Invoice'}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    Sending...
+                  </>
+                ) : sendInvoiceMutation.isPending ? (
+                  'Sending...'
+                ) : (
+                  'Send Invoice'
+                )}
               </Button>
             </div>
           </div>
