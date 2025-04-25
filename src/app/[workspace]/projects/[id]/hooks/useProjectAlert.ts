@@ -71,7 +71,7 @@ const useProjectAlert = () => {
 
   const markProjectFinishedMutation = useMutation({
     mutationFn: async () => {
-      return await newRequest.patch(`/projects/${projectId}/complete`);
+      return await newRequest.patch(`/projects/${projectId}/status`, { status: 'closed' });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projectAlert', projectId] });
