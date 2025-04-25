@@ -5,6 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ColorPicker } from '@/components/ui/color-picker';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,9 +35,11 @@ import {
   CreditCardIcon,
   Loader2,
   MinusIcon,
+  MoreHorizontal,
   PenIcon,
   PlusIcon,
   Settings2Icon,
+  TruckIcon,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -64,6 +72,10 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
     currentCustomer,
     currency,
     setCurrency,
+    deliveryMethod,
+    setDeliveryMethod,
+    selectedTax,
+    setSelectedTax,
   } = useInvoiceEditor();
 
   const { data: invoiceSettings } = useInvoiceSettings();
@@ -80,6 +92,8 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
   const hasSelectedClientRef = useRef(false);
   const [lineItems, setLineItems] = useState<SuggestedLineItem[]>([]);
   const [autoApplyDiscount, setAutoApplyDiscount] = useState(false);
+  const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
+  const [discountValue, setDiscountValue] = useState(10);
   const [memo, setMemo] = useState('');
   const [footer, setFooter] = useState(invoiceSettings?.footer || '');
   const [isLoading, setIsLoading] = useState(false);
@@ -88,6 +102,7 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
   const [logo, setLogo] = useState(invoiceSettings?.logo || '');
   const [showTaxId, setShowTaxId] = useState(invoiceSettings?.showTaxId || false);
   const [taxId, setTaxId] = useState(invoiceSettings?.taxId || '');
+  const [isCustomerPicked, setIsCustomerPicked] = useState(false);
   const [dueDate, setDueDate] = useState<string>(
     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
   );
@@ -277,15 +292,46 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
   const toggleDiscount = (enabled: boolean) => {
     setAutoApplyDiscount(enabled);
 
-    // Apply/remove 10% discount to all items
+    // Apply/remove discount to all items
     setLineItems((prevItems) => {
       return prevItems.map((item) => {
         return {
           ...item,
-          discount: enabled ? 10 : 0,
+          discount: enabled ? discountValue : 0,
         };
       });
     });
+  };
+
+  const handleDiscountTypeChange = (type: 'percentage' | 'fixed') => {
+    setDiscountType(type);
+    if (autoApplyDiscount) {
+      // Apply new discount type to all items
+      setLineItems((prevItems) => {
+        return prevItems.map((item) => {
+          return {
+            ...item,
+            discountType: type,
+            discount: discountValue,
+          };
+        });
+      });
+    }
+  };
+
+  const handleDiscountValueChange = (value: number) => {
+    setDiscountValue(value);
+    if (autoApplyDiscount) {
+      // Apply new discount value to all items
+      setLineItems((prevItems) => {
+        return prevItems.map((item) => {
+          return {
+            ...item,
+            discount: value,
+          };
+        });
+      });
+    }
   };
 
   const handleSendInvoice = () => {
@@ -341,8 +387,19 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
     return sum + (price * quantity * discount) / 100;
   }, 0);
 
+  // Get selected tax rate
+  const selectedTaxRate =
+    invoiceSettings?.taxes?.find((tax) => {
+      return tax.id === selectedTax;
+    })?.rate || 0;
+
+  // Calculate tax amount (if applicable)
+  const taxableAmount = subtotal - discountTotal;
+  const taxAmount =
+    selectedTax && selectedTax !== 'no-tax' ? (taxableAmount * selectedTaxRate) / 100 : 0;
+
   // Calculate final total
-  const total = subtotal - discountTotal;
+  const total = subtotal - discountTotal + taxAmount;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -399,23 +456,63 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
             <div className={`${showSettingsSidebar ? 'w-3/5' : 'w-full'} overflow-auto p-6`}>
               {/* Client selection */}
               <div className='mb-6'>
-                <Label htmlFor='client' className='text-sm font-medium'>
-                  Client
-                </Label>
-                <Select value={selectedCustomer} onValueChange={handleCustomerSelect}>
-                  <SelectTrigger id='client' className='w-full mt-1'>
-                    <SelectValue placeholder='Select client' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {project?.participants?.map((participant) => {
-                      return (
-                        <SelectItem key={participant._id} value={participant._id}>
-                          {participant.name}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
+                <h2 className='text-sm font-medium text-gray-900 mb-3'>Customer</h2>
+                {isCustomerPicked ? (
+                  <div className='mb-4'>
+                    <div className='flex items-start justify-between p-4 bg-gray-50 rounded-lg'>
+                      <div>
+                        <p className='text-sm font-medium text-gray-900'>{currentCustomer.name}</p>
+                        <p className='text-sm text-gray-500'>{currentCustomer.email}</p>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant='ghost' size='icon' className='h-8 w-8 hover:bg-gray-100'>
+                            <MoreHorizontal className='h-4 w-4 text-gray-500' />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className='w-56' align='end'>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setIsCustomerPicked(false);
+                              handleCustomerSelect('');
+                            }}
+                          >
+                            Switch customer
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                ) : (
+                  <Select
+                    value={selectedCustomer}
+                    onValueChange={(value) => {
+                      handleCustomerSelect(value);
+                      if (value && value !== 'new') {
+                        setIsCustomerPicked(true);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className='w-full bg-white border-gray-200'>
+                      <SelectValue placeholder='Select customer' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {project?.participants?.length > 0 &&
+                        project.participants.map((participant) => {
+                          return (
+                            <SelectItem key={participant._id} value={participant._id}>
+                              <div className='flex items-center gap-2'>
+                                <div className='text-sm font-medium text-gray-900'>
+                                  {participant.name}
+                                </div>
+                                <div className='text-xs text-gray-500'>{participant.email}</div>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               {/* Line Items */}
@@ -531,16 +628,117 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                 {/* Quick Settings */}
                 <div className='space-y-3 pt-4 border-t mt-4'>
                   {/* Discount Toggle */}
-                  <div className='flex items-center justify-between'>
-                    <div className='flex items-center space-x-2'>
-                      <Switch
-                        id='auto-discount'
-                        checked={autoApplyDiscount}
-                        onCheckedChange={toggleDiscount}
-                      />
-                      <Label htmlFor='auto-discount'>Apply 10% discount to all items</Label>
+                  <div className='flex flex-col gap-2'>
+                    <div className='flex items-center justify-between'>
+                      <div className='flex items-center space-x-2'>
+                        <Switch
+                          id='auto-discount'
+                          checked={autoApplyDiscount}
+                          onCheckedChange={toggleDiscount}
+                        />
+                        <Label htmlFor='auto-discount'>Apply discount to all items</Label>
+                      </div>
                     </div>
+
+                    {autoApplyDiscount && (
+                      <div className='flex gap-2 items-end pl-8'>
+                        <div className='w-24'>
+                          <Label htmlFor='discount-value' className='text-xs text-gray-500'>
+                            Value
+                          </Label>
+                          <Input
+                            id='discount-value'
+                            type='number'
+                            min='0'
+                            max={discountType === 'percentage' ? '100' : undefined}
+                            value={discountValue}
+                            onChange={(e) => {
+                              return handleDiscountValueChange(parseFloat(e.target.value) || 0);
+                            }}
+                          />
+                        </div>
+                        <div className='w-28'>
+                          <Label htmlFor='discount-type' className='text-xs text-gray-500'>
+                            Type
+                          </Label>
+                          <Select
+                            value={discountType}
+                            onValueChange={(v) => {
+                              return handleDiscountTypeChange(v as 'percentage' | 'fixed');
+                            }}
+                          >
+                            <SelectTrigger id='discount-type'>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value='percentage'>Percentage</SelectItem>
+                              <SelectItem value='fixed'>Fixed Amount</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Tax Selection */}
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button variant='ghost' className='flex w-full justify-between p-0 h-8'>
+                        <span className='flex items-center text-sm font-medium'>
+                          <PenIcon className='h-4 w-4 mr-2' />
+                          Tax Settings
+                        </span>
+                        <ChevronRightIcon className='h-4 w-4' />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className='pt-2'>
+                      <Select value={selectedTax} onValueChange={setSelectedTax}>
+                        <SelectTrigger className='w-full bg-white border-gray-200'>
+                          <SelectValue placeholder='Select tax rate' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value='no-tax'>No Tax</SelectItem>
+                          {invoiceSettings?.taxes?.map((tax) => {
+                            return (
+                              <SelectItem key={tax.id} value={tax.id}>
+                                {tax.name} ({tax.rate}%)
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* Delivery Method */}
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button variant='ghost' className='flex w-full justify-between p-0 h-8'>
+                        <span className='flex items-center text-sm font-medium'>
+                          <TruckIcon className='h-4 w-4 mr-2' />
+                          Delivery Method
+                        </span>
+                        <ChevronRightIcon className='h-4 w-4' />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className='pt-2'>
+                      <Select
+                        value={deliveryMethod}
+                        onValueChange={(value) => {
+                          setDeliveryMethod(value);
+                        }}
+                      >
+                        <SelectTrigger className='w-full bg-white border-gray-200'>
+                          <SelectValue placeholder='Select delivery method' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value='email'>Email</SelectItem>
+                          <SelectItem value='sms'>SMS</SelectItem>
+                          <SelectItem value='both'>Both</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </CollapsibleContent>
+                  </Collapsible>
 
                   {/* Quick Memo */}
                   <Collapsible>
@@ -605,6 +803,12 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                       <div className='flex justify-between text-green-600'>
                         <span>Discount:</span>
                         <span>-${discountTotal.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {taxAmount > 0 && (
+                      <div className='flex justify-between'>
+                        <span>Tax ({selectedTaxRate}%):</span>
+                        <span>${taxAmount.toFixed(2)}</span>
                       </div>
                     )}
                     <div className='flex justify-between font-medium border-t pt-1 mt-1'>
