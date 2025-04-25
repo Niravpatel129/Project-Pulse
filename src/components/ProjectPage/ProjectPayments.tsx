@@ -3,12 +3,14 @@
 import { InvoicesTable } from '@/app/[workspace]/invoices/components/invoices-table';
 import { useInvoices } from '@/app/[workspace]/invoices/hooks/useInvoices';
 import { Button } from '@/components/ui/button';
-import { LucidePiggyBank, PlusIcon } from 'lucide-react';
+import { LucidePiggyBank, PlusIcon, ZapIcon } from 'lucide-react';
 import { useState } from 'react';
 import InvoicesDialog from '../invoices/InvoicesDialog/InvoicesDialog';
+import QuickInvoiceDialog from '../invoices/QuickInvoiceDialog/QuickInvoiceDialog';
 
 export default function ProjectPayments() {
   const [isInvoicesDialogOpen, setIsInvoicesDialogOpen] = useState(false);
+  const [isQuickInvoiceDialogOpen, setIsQuickInvoiceDialogOpen] = useState(false);
   const {
     accountStatus,
     isAccountStatusLoading,
@@ -33,18 +35,33 @@ export default function ProjectPayments() {
       <>
         <div className='flex justify-between items-center mb-4'>
           <h1 className='text-3xl font-semibold'>Invoices</h1>
-          <Button
-            variant='outline'
-            onClick={() => {
-              return setIsInvoicesDialogOpen(true);
-            }}
-          >
-            <PlusIcon className='w-4 h-2' />
-            Create Invoice
-          </Button>
+          <div className='flex gap-2'>
+            <Button
+              variant='outline'
+              onClick={() => {
+                return setIsQuickInvoiceDialogOpen(true);
+              }}
+            >
+              <ZapIcon className='w-4 h-4 mr-2' />
+              Quick Invoice
+            </Button>
+            <Button
+              variant='outline'
+              onClick={() => {
+                return setIsInvoicesDialogOpen(true);
+              }}
+            >
+              <PlusIcon className='w-4 h-4 mr-2' />
+              Create Invoice
+            </Button>
+          </div>
         </div>
         <InvoicesTable invoices={invoices} />
         <InvoicesDialog open={isInvoicesDialogOpen} onOpenChange={setIsInvoicesDialogOpen} />
+        <QuickInvoiceDialog
+          open={isQuickInvoiceDialogOpen}
+          onOpenChange={setIsQuickInvoiceDialogOpen}
+        />
       </>
     );
   }
@@ -52,6 +69,10 @@ export default function ProjectPayments() {
   return (
     <>
       <InvoicesDialog open={isInvoicesDialogOpen} onOpenChange={setIsInvoicesDialogOpen} />
+      <QuickInvoiceDialog
+        open={isQuickInvoiceDialogOpen}
+        onOpenChange={setIsQuickInvoiceDialogOpen}
+      />
       {isAccountStatusLoading ? (
         <div className='flex justify-center items-center h-[300px]'>
           <div className='animate-pulse space-y-4'>
@@ -78,7 +99,7 @@ export default function ProjectPayments() {
                 Bonsai will automatically send client reminders for payment.
               </p>
 
-              <div className='mb-8 flex justify-center'>
+              <div className='mb-8 flex justify-center gap-2'>
                 {!accountStatus?.chargesEnabled ? (
                   <Button
                     className='bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md'
@@ -88,14 +109,26 @@ export default function ProjectPayments() {
                     {isCreatingAccount ? 'Setting up...' : 'Connect Stripe Account'}
                   </Button>
                 ) : (
-                  <Button
-                    className='bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md'
-                    onClick={() => {
-                      setIsInvoicesDialogOpen(true);
-                    }}
-                  >
-                    Create Invoice
-                  </Button>
+                  <div className='flex gap-2'>
+                    <Button
+                      className='bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md'
+                      onClick={() => {
+                        return setIsQuickInvoiceDialogOpen(true);
+                      }}
+                    >
+                      <ZapIcon className='w-4 h-4 mr-2' />
+                      Quick Invoice
+                    </Button>
+                    <Button
+                      className='bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md'
+                      onClick={() => {
+                        return setIsInvoicesDialogOpen(true);
+                      }}
+                    >
+                      <PlusIcon className='w-4 h-4 mr-2' />
+                      Create Invoice
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
