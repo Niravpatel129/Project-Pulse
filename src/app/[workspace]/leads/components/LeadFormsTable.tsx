@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Copy, ExternalLink, Eye, FileEdit, FilePlus, MoreHorizontal, Trash2 } from 'lucide-react';
@@ -17,6 +17,40 @@ import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
 import { LeadForm, useLeadForms } from '../hooks/useLeadForms';
+
+// Skeleton component for the table when loading
+function TableSkeleton() {
+  return (
+    <div className='space-y-4'>
+      <div className='flex justify-between items-center'>
+        <Skeleton className='h-8 w-40' />
+        <Skeleton className='h-10 w-36' />
+      </div>
+      <div className='border rounded-md'>
+        <div className='grid grid-cols-6 gap-4 p-4 border-b bg-muted/40'>
+          {Array(6)
+            .fill(0)
+            .map((_, i) => {
+              return <Skeleton key={i} className='h-6 w-full' />;
+            })}
+        </div>
+        {Array(5)
+          .fill(0)
+          .map((_, i) => {
+            return (
+              <div key={i} className='grid grid-cols-6 gap-4 p-4 border-b'>
+                {Array(6)
+                  .fill(0)
+                  .map((_, j) => {
+                    return <Skeleton key={j} className='h-6 w-full' />;
+                  })}
+              </div>
+            );
+          })}
+      </div>
+    </div>
+  );
+}
 
 export default function LeadFormsTable() {
   const { leadForms, isLoading, error, deleteLeadForm } = useLeadForms();
@@ -165,7 +199,7 @@ export default function LeadFormsTable() {
   }, [deleteLeadForm, pathname]);
 
   if (isLoading) {
-    return <LoadingSpinner size='lg' fullPage />;
+    return <TableSkeleton />;
   }
 
   if (error) {
