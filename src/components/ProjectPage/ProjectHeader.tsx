@@ -21,6 +21,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProject, type Project } from '@/contexts/ProjectContext';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { cn } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -412,6 +413,9 @@ export default function ProjectHeader() {
                   />
                 </div>
                 <h2 className='text-lg font-medium capitalize'>{project?.name}</h2>
+                <Badge variant='outline' className='text-xs'>
+                  {project?.isClosed ? 'Closed' : 'Open'}
+                </Badge>
 
                 <div className='flex flex-wrap items-center gap-0'>
                   {/* Participants */}
@@ -785,12 +789,20 @@ export default function ProjectHeader() {
                 <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4'>
                   <div>
                     <h1
-                      className='text-xl sm:text-2xl font-medium capitalize cursor-pointer hover:underline underline-offset-4  hover:border-primary transition-colors'
+                      className={cn(
+                        'flex items-center gap-2 text-xl sm:text-2xl font-medium capitalize cursor-pointer  hover:border-primary transition-colors',
+                        project?.isClosed && 'text-gray-500',
+                      )}
                       onClick={() => {
                         return setIsEditNameModalOpen(true);
                       }}
                     >
-                      {project?.name}
+                      <div className='font-extrabold hover:underline underline-offset-4'>
+                        {project?.name}
+                      </div>
+                      <Badge variant='outline' className='text-xs'>
+                        {project?.isClosed ? 'Closed' : 'Active'}
+                      </Badge>
                     </h1>
                     <p className='text-xs sm:text-sm text-muted-foreground'>
                       Created on{' '}
