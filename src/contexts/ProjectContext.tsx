@@ -20,6 +20,7 @@ export interface Project {
   modulesCount?: number;
   attachments: string[];
   isActive: boolean;
+  archived?: boolean;
   createdBy: string;
   sharing: {
     accessType: string;

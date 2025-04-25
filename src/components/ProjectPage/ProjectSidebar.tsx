@@ -422,6 +422,20 @@ export function ProjectSidebar({
                     className='h-8 text-xs'
                   />
                 </div>
+
+                <div className='pt-2'>
+                  <Button
+                    variant={project?.archived ? 'outline' : 'secondary'}
+                    className='w-full h-8 text-xs'
+                    onClick={() => {
+                      return onUpdateProject?.({
+                        archived: project?.archived ? false : true,
+                      });
+                    }}
+                  >
+                    {project?.archived ? 'Reopen Project' : 'Close Project'}
+                  </Button>
+                </div>
               </div>
             </AccordionContent>
           </AccordionItem>
