@@ -109,6 +109,8 @@ export default function ProjectHeader() {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [newProjectName, setNewProjectName] = useState(project?.name || '');
 
+  console.log('ProjectHeader rendering', { project });
+
   const handleUpdateProject = async (data: Partial<Project>) => {
     await updateProject(data);
   };
@@ -410,6 +412,7 @@ export default function ProjectHeader() {
                   />
                 </div>
                 <h2 className='text-lg font-medium capitalize'>{project?.name}</h2>
+
                 <div className='flex flex-wrap items-center gap-0'>
                   {/* Participants */}
                   {isLoadingProject ? (
