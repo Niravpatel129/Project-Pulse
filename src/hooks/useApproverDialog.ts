@@ -22,10 +22,16 @@ interface UseApproverDialogProps {
 }
 
 export function useApproverDialog({ moduleId, moduleDetails }: UseApproverDialogProps) {
+  console.log('🚀 moduleDetails:', moduleDetails);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedApprovers, setSelectedApprovers] = useState<Approver[]>([]);
   const [manualEmail, setManualEmail] = useState('');
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(
+    `Hi there, I have completed the latest version of ${moduleDetails?.name}. Please review it at your convenience and let me know if you'd like any changes.
+
+Best regards,
+Your Name`,
+  );
   const [sendReminder, setSendReminder] = useState(true);
   const [allowComments, setAllowComments] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);

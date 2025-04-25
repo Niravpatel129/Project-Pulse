@@ -4,7 +4,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
-import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useApproverDialog } from '@/hooks/useApproverDialog';
@@ -13,7 +12,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Ban,
-  Bell,
   CheckCircle,
   ChevronDown,
   Clock,
@@ -388,50 +386,6 @@ export function ApproverDialog({
                   }}
                   disabled={isPreview}
                 />
-              </motion.div>
-
-              {/* Options (Toggles) */}
-              <motion.div
-                className='space-y-4'
-                initial={{ y: -10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.4, duration: 0.3 }}
-              >
-                <div className='flex items-start gap-3'>
-                  <Switch
-                    checked={sendReminder}
-                    onCheckedChange={setSendReminder}
-                    className='mt-0.5'
-                    disabled={isPreview}
-                  />
-                  <div>
-                    <label className='flex items-center gap-2 text-sm font-medium'>
-                      <Bell className='h-4 w-4 text-gray-500' />
-                      Send a reminder email if no response in 2 days
-                    </label>
-                    <p className='text-xs text-gray-500 mt-1'>
-                      Helps nudge the client to respond if they miss your initial request
-                    </p>
-                  </div>
-                </div>
-
-                <div className='flex items-start gap-3'>
-                  <Switch
-                    checked={allowComments}
-                    onCheckedChange={setAllowComments}
-                    className='mt-0.5'
-                    disabled={isPreview}
-                  />
-                  <div>
-                    <label className='flex items-center gap-2 text-sm font-medium'>
-                      <MessageSquare className='h-4 w-4 text-gray-500' />
-                      Allow comments
-                    </label>
-                    <p className='text-xs text-gray-500 mt-1'>
-                      Enables client to leave notes directly on the review page
-                    </p>
-                  </div>
-                </div>
               </motion.div>
             </motion.div>
 
