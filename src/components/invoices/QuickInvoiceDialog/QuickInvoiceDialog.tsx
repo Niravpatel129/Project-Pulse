@@ -30,6 +30,7 @@ import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { useProjectModules } from '@/hooks/useProjectModules';
 import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
 import { newRequest } from '@/utils/newRequest';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
   ChevronRightIcon,
@@ -107,6 +108,8 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
   const [dueDate, setDueDate] = useState<string>(
     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
   );
+
+  const queryClient = useQueryClient();
 
   // Add a new state for tracking invoice submission
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -438,6 +441,8 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
         `/projects/${project._id}/invoices`,
         invoiceData,
       );
+
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
       console.log('Invoice created successfully:', invoiceResponse.data);
 
       // Close dialog and show success message
@@ -446,11 +451,6 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
         title: 'Invoice sent successfully',
         description: `Invoice sent to ${currentCustomer.name}`,
       });
-
-      // Refresh invoice list if needed
-      if (sendInvoiceMutation && typeof sendInvoiceMutation.mutate === 'function') {
-        sendInvoiceMutation.mutate();
-      }
     } catch (error: any) {
       console.error('Error creating invoice:', error);
       toast({
@@ -652,19 +652,35 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                           return (
                             <div
                               key={item.id}
-                              className='flex gap-2 items-start border p-3 rounded-md bg-gray-50'
+                              className='flex gap-2 items-start border p-4 rounded-md bg-gray-50'
                             >
-                              <div className='flex-1 space-y-2'>
-                                <Input
-                                  placeholder='Name'
-                                  value={item.name}
-                                  onChange={(e) => {
-                                    return handleLineItemChange(item.id, 'name', e.target.value);
-                                  }}
-                                />
-                                <div className='flex gap-2'>
-                                  <div className='w-24'>
+                              <div className='flex-1 space-y-3'>
+                                <div>
+                                  <Label
+                                    htmlFor={`name-${item.id}`}
+                                    className='text-xs text-gray-500 mb-1 block'
+                                  >
+                                    Item Name
+                                  </Label>
+                                  <Input
+                                    id={`name-${item.id}`}
+                                    placeholder='Name'
+                                    value={item.name}
+                                    onChange={(e) => {
+                                      return handleLineItemChange(item.id, 'name', e.target.value);
+                                    }}
+                                  />
+                                </div>
+                                <div className='grid grid-cols-3 gap-3'>
+                                  <div>
+                                    <Label
+                                      htmlFor={`qty-${item.id}`}
+                                      className='text-xs text-gray-500 mb-1 block'
+                                    >
+                                      Quantity
+                                    </Label>
                                     <Input
+                                      id={`qty-${item.id}`}
                                       placeholder='Qty'
                                       value={item.quantity}
                                       onChange={(e) => {
@@ -678,8 +694,15 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                                       min='1'
                                     />
                                   </div>
-                                  <div className='w-24'>
+                                  <div>
+                                    <Label
+                                      htmlFor={`price-${item.id}`}
+                                      className='text-xs text-gray-500 mb-1 block'
+                                    >
+                                      Price ($)
+                                    </Label>
                                     <Input
+                                      id={`price-${item.id}`}
                                       placeholder='Price'
                                       value={item.price}
                                       onChange={(e) => {
@@ -694,8 +717,15 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                                       step='0.01'
                                     />
                                   </div>
-                                  <div className='w-24'>
+                                  <div>
+                                    <Label
+                                      htmlFor={`discount-${item.id}`}
+                                      className='text-xs text-gray-500 mb-1 block'
+                                    >
+                                      Discount (%)
+                                    </Label>
                                     <Input
+                                      id={`discount-${item.id}`}
                                       placeholder='Discount %'
                                       value={item.discount || 0}
                                       onChange={(e) => {
@@ -720,7 +750,7 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                               <Button
                                 variant='ghost'
                                 size='icon'
-                                className='w-8 h-8 mt-1'
+                                className='w-8 h-8 mt-6'
                                 onClick={() => {
                                   return removeLineItem(item.id);
                                 }}
