@@ -11,7 +11,13 @@ const pwaConfig = {
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    domains: ['picsum.photos', 'images.unsplash.com', 'firebasestorage.googleapis.com', 'i.ibb.co'],
+    domains: [
+      'picsum.photos',
+      'images.unsplash.com',
+      'firebasestorage.googleapis.com',
+      'i.ibb.co',
+      'cdn.sanity.io',
+    ],
   },
 };
 

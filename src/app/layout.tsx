@@ -183,7 +183,7 @@ export default function RootLayout({
         </Script>
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexSans.className} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexSans.className} antialiased scrollbar-hide`}
       >
         <ClientLayout>{children}</ClientLayout>
       </body>
