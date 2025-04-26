@@ -326,8 +326,6 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                                         );
                                       }}
                                       type='number'
-                                      min='0'
-                                      step='0.01'
                                     />
                                   </div>
                                   <div>
@@ -340,16 +338,19 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                                     <Input
                                       id={`discount-${item.id}`}
                                       placeholder='Discount %'
-                                      value={item.discount || 0}
+                                      value={
+                                        item.discount === undefined || isNaN(item.discount)
+                                          ? ''
+                                          : item.discount
+                                      }
                                       onChange={(e) => {
-                                        return handleLineItemChange(
-                                          item.id,
-                                          'discount',
-                                          parseInt(e.target.value) || 0,
-                                        );
+                                        const value =
+                                          e.target.value === ''
+                                            ? undefined
+                                            : parseInt(e.target.value);
+                                        return handleLineItemChange(item.id, 'discount', value);
                                       }}
                                       type='number'
-                                      min='0'
                                       max='100'
                                     />
                                   </div>
@@ -407,11 +408,10 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                               <Input
                                 id='discount-value'
                                 type='number'
-                                min='0'
                                 max={discountType === 'percentage' ? '100' : undefined}
                                 value={discountValue}
                                 onChange={(e) => {
-                                  return handleDiscountValueChange(parseFloat(e.target.value) || 0);
+                                  return handleDiscountValueChange(parseFloat(e.target.value));
                                 }}
                               />
                             </div>
