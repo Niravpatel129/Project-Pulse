@@ -96,7 +96,7 @@ export default function ProjectPayments() {
               <h2 className='text-3xl font-bold text-gray-800 mb-6'>Easy Invoicing & Payments</h2>
               <p className='text-gray-600 mb-8'>
                 Send invoices and accept online payments. Schedule them to send in the future, and
-                Bonsai will automatically send client reminders for payment.
+                HourBlock will automatically send client reminders for payment.
               </p>
 
               <div className='mb-8 flex justify-center gap-2'>
