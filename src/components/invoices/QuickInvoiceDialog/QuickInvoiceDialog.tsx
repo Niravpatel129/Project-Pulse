@@ -149,7 +149,8 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                   lineItems.length === 0 ||
                   !lineItems.some((item) => {
                     return item.name && item.price;
-                  })
+                  }) ||
+                  total < 0.5
                 }
               >
                 {isSubmitting ? (
@@ -159,6 +160,8 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                   </>
                 ) : sendInvoiceMutation.isPending ? (
                   'Sending...'
+                ) : total < 0.5 ? (
+                  'Invoice total must be at least $0.50'
                 ) : (
                   'Send Invoice'
                 )}
@@ -348,7 +351,10 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                                           e.target.value === ''
                                             ? undefined
                                             : parseInt(e.target.value);
-                                        return handleLineItemChange(item.id, 'discount', value);
+                                        // Ensure discount doesn't exceed 100%
+                                        const safeValue =
+                                          value !== undefined ? Math.min(value, 99) : undefined;
+                                        return handleLineItemChange(item.id, 'discount', safeValue);
                                       }}
                                       type='number'
                                       max='100'
@@ -408,10 +414,15 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                               <Input
                                 id='discount-value'
                                 type='number'
-                                max={discountType === 'percentage' ? '100' : undefined}
+                                max={discountType === 'percentage' ? '99' : undefined}
                                 value={discountValue}
                                 onChange={(e) => {
-                                  return handleDiscountValueChange(parseFloat(e.target.value));
+                                  let value = parseFloat(e.target.value);
+                                  // Ensure percentage discount doesn't exceed 99%
+                                  if (discountType === 'percentage' && value > 99) {
+                                    value = 99;
+                                  }
+                                  return handleDiscountValueChange(value);
                                 }}
                               />
                             </div>
