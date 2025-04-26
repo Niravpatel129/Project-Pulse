@@ -85,6 +85,8 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
   const [showSettingsSidebar, setShowSettingsSidebar] = useState(false);
   const [activeSettingTab, setActiveSettingTab] = useState('general');
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
+  const [isCreatingTax, setIsCreatingTax] = useState(false);
+  const [newTax, setNewTax] = useState({ name: '', rate: 0 });
 
   const {
     // State
@@ -143,6 +145,20 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
     invoiceSettings,
     sendInvoiceMutation,
   } = useQuickInvoice(open, onOpenChange);
+
+  const handleAddTax = () => {
+    if (!newTax.name || newTax.rate <= 0) return;
+
+    const newTaxId = `tax-${Date.now()}`;
+    const updatedTaxes = [
+      ...(invoiceSettings?.taxes || []),
+      { id: newTaxId, name: newTax.name, rate: newTax.rate },
+    ];
+
+    handleSettingsUpdate({ taxes: updatedTaxes });
+    setNewTax({ name: '', rate: 0 });
+    setIsCreatingTax(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -623,6 +639,95 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                               exit={{ opacity: 0, height: 0 }}
                               transition={{ duration: 0.2 }}
                             >
+                              <div className='flex justify-between mb-2'>
+                                <div className='text-xs text-gray-600'>
+                                  Select a tax rate or create a new one
+                                </div>
+                                <Button
+                                  variant='outline'
+                                  size='sm'
+                                  onClick={() => {
+                                    return setIsCreatingTax(true);
+                                  }}
+                                  className='h-6 px-2 text-xs flex items-center gap-1'
+                                >
+                                  <PlusIcon className='h-3 w-3' />
+                                  New Tax
+                                </Button>
+                              </div>
+
+                              {isCreatingTax && (
+                                <motion.div
+                                  className='mb-3 p-3 bg-gray-100 rounded-md'
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                >
+                                  <div className='grid grid-cols-2 gap-3 mb-3'>
+                                    <div>
+                                      <Label
+                                        htmlFor='tax-name'
+                                        className='text-xs text-gray-500 mb-1 block'
+                                      >
+                                        Tax Name
+                                      </Label>
+                                      <Input
+                                        id='tax-name'
+                                        placeholder='e.g. GST, VAT'
+                                        className='h-8 text-sm border-gray-200'
+                                        value={newTax.name}
+                                        onChange={(e) => {
+                                          return setNewTax({ ...newTax, name: e.target.value });
+                                        }}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label
+                                        htmlFor='tax-rate'
+                                        className='text-xs text-gray-500 mb-1 block'
+                                      >
+                                        Rate (%)
+                                      </Label>
+                                      <Input
+                                        id='tax-rate'
+                                        type='number'
+                                        min='0'
+                                        step='0.1'
+                                        className='h-8 text-sm border-gray-200'
+                                        value={newTax.rate}
+                                        onChange={(e) => {
+                                          return setNewTax({
+                                            ...newTax,
+                                            rate: Number(e.target.value),
+                                          });
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className='flex justify-end gap-2'>
+                                    <Button
+                                      variant='outline'
+                                      size='sm'
+                                      className='h-7 px-2 text-xs'
+                                      onClick={() => {
+                                        setIsCreatingTax(false);
+                                        setNewTax({ name: '', rate: 0 });
+                                      }}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      size='sm'
+                                      className='h-7 px-2 text-xs'
+                                      onClick={handleAddTax}
+                                      disabled={!newTax.name || newTax.rate <= 0}
+                                    >
+                                      Add Tax
+                                    </Button>
+                                  </div>
+                                </motion.div>
+                              )}
+
                               <Select value={selectedTax} onValueChange={setSelectedTax}>
                                 <SelectTrigger className='w-full bg-white border-gray-200'>
                                   <SelectValue placeholder='Select tax rate' />
