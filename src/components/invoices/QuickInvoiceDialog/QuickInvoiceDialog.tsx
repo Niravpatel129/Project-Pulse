@@ -112,35 +112,36 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
       <DialogContent className='p-0 max-w-5xl max-h-[90vh] overflow-hidden'>
         <DialogTitle className='sr-only'>Quick Invoice Creator</DialogTitle>
         <div className='flex flex-col h-full'>
-          {/* Header */}
-          <div className='border-b border-gray-200 p-4 flex justify-between items-center'>
-            <div className='flex items-center gap-2'>
+          {/* Header - Simplified with more whitespace and cleaner layout */}
+          <div className='border-b border-gray-100 px-6 py-4 flex justify-between items-center'>
+            <div className='flex items-center gap-3'>
               <Button
                 variant='ghost'
                 size='icon'
-                className='rounded-full'
+                className='rounded-full h-8 w-8'
                 onClick={() => {
                   return onOpenChange(false);
                 }}
               >
-                <ArrowLeft className='h-4 w-4' />
+                <ArrowLeft className='h-4 w-4 text-gray-500' />
               </Button>
-              <h2 className='text-lg font-medium'>Quick Invoice</h2>
+              <h2 className='text-base font-medium text-gray-900'>Quick Invoice</h2>
             </div>
-            <div className='flex items-center gap-2'>
+            <div className='flex items-center gap-3'>
               <Button
                 variant='outline'
                 size='sm'
-                className={`${showSettingsSidebar ? 'bg-gray-100' : ''}`}
+                className={`${showSettingsSidebar ? 'bg-gray-50' : ''} h-8 px-3`}
                 onClick={() => {
                   return setShowSettingsSidebar(!showSettingsSidebar);
                 }}
               >
-                <Settings2Icon className='h-4 w-4 mr-2' />
-                Settings
+                <Settings2Icon className='h-4 w-4 mr-2 text-gray-500' />
+                <span className='text-gray-700'>Settings</span>
               </Button>
               <Button
                 size='sm'
+                className='h-8 px-4'
                 onClick={handleSendInvoice}
                 disabled={
                   isSubmitting ||
@@ -169,20 +170,20 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
             </div>
           </div>
 
-          {/* Main content */}
+          {/* Main content - More consistent spacing and cleaner layout */}
           <div className='flex flex-1 overflow-hidden'>
             {/* Main panel */}
             <div className={`${showSettingsSidebar ? 'w-3/5' : 'w-full'}`}>
               <ScrollArea className='h-[calc(90vh-68px)]'>
-                <div className='p-6'>
-                  {/* Client selection */}
-                  <div className='mb-6'>
-                    <h2 className='text-sm font-medium text-gray-900 mb-3'>Customer</h2>
+                <div className='p-6 space-y-6'>
+                  {/* Client selection - More whitespace and cleaner layout */}
+                  <div>
+                    <h2 className='text-sm font-medium text-gray-800 mb-3'>Customer</h2>
                     {isCustomerPicked ? (
-                      <div className='mb-4'>
-                        <div className='flex items-start justify-between p-4 bg-gray-50 rounded-lg'>
+                      <div>
+                        <div className='flex items-start justify-between p-4 bg-gray-50 rounded-lg border border-gray-100'>
                           <div>
-                            <p className='text-sm font-medium text-gray-900'>
+                            <p className='text-sm font-medium text-gray-800'>
                               {currentCustomer.name}
                             </p>
                             <p className='text-sm text-gray-500'>{currentCustomer.email}</p>
@@ -194,7 +195,7 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                                 size='icon'
                                 className='h-8 w-8 hover:bg-gray-100'
                               >
-                                <MoreHorizontal className='h-4 w-4 text-gray-500' />
+                                <MoreHorizontal className='h-4 w-4 text-gray-400' />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className='w-56' align='end'>
@@ -229,7 +230,7 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                               return (
                                 <SelectItem key={participant._id} value={participant._id}>
                                   <div className='flex items-center gap-2'>
-                                    <div className='text-sm font-medium text-gray-900'>
+                                    <div className='text-sm font-medium text-gray-800'>
                                       {participant.name}
                                     </div>
                                     <div className='text-xs text-gray-500'>{participant.email}</div>
@@ -242,147 +243,163 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                     )}
                   </div>
 
-                  {/* Line Items */}
+                  {/* Line Items - More consistent spacing */}
                   <div className='space-y-4'>
                     <div className='flex justify-between items-center'>
-                      <h3 className='text-sm font-medium'>Line Items</h3>
+                      <h3 className='text-sm font-medium text-gray-800'>Line Items</h3>
                       <Button
                         variant='outline'
                         size='sm'
                         onClick={addCustomLineItem}
-                        className='flex items-center gap-1'
+                        className='flex items-center gap-1 h-8 px-3'
                       >
                         <PlusIcon className='h-3.5 w-3.5' />
-                        Add Item
+                        <span className='text-xs'>Add Item</span>
                       </Button>
                     </div>
 
                     {isLoading ? (
-                      <div className='flex justify-center items-center py-8'>
-                        <Loader2 className='h-8 w-8 animate-spin text-gray-400' />
-                        <span className='ml-2 text-gray-500'>Loading suggested items...</span>
+                      <div className='flex justify-center items-center py-12 border border-gray-100 rounded-md bg-gray-50'>
+                        <Loader2 className='h-5 w-5 animate-spin text-gray-400' />
+                        <span className='ml-2 text-sm text-gray-500'>
+                          Loading suggested items...
+                        </span>
                       </div>
                     ) : (
                       <>
-                        {lineItems.map((item) => {
-                          return (
-                            <div
-                              key={item.id}
-                              className='flex gap-2 items-start border p-4 rounded-md bg-gray-50'
-                            >
-                              <div className='flex-1 space-y-3'>
-                                <div>
-                                  <Label
-                                    htmlFor={`name-${item.id}`}
-                                    className='text-xs text-gray-500 mb-1 block'
-                                  >
-                                    Item Name
-                                  </Label>
-                                  <Input
-                                    id={`name-${item.id}`}
-                                    placeholder='Name'
-                                    value={item.name}
-                                    onChange={(e) => {
-                                      return handleLineItemChange(item.id, 'name', e.target.value);
+                        {lineItems.length > 0 ? (
+                          <div className='space-y-3'>
+                            {lineItems.map((item) => {
+                              return (
+                                <div
+                                  key={item.id}
+                                  className='flex gap-3 items-start border border-gray-100 p-4 rounded-md bg-gray-50'
+                                >
+                                  <div className='flex-1 space-y-3'>
+                                    <div>
+                                      <Label
+                                        htmlFor={`name-${item.id}`}
+                                        className='text-xs text-gray-500 mb-1 block'
+                                      >
+                                        Item Name
+                                      </Label>
+                                      <Input
+                                        id={`name-${item.id}`}
+                                        placeholder='Name'
+                                        value={item.name}
+                                        onChange={(e) => {
+                                          return handleLineItemChange(
+                                            item.id,
+                                            'name',
+                                            e.target.value,
+                                          );
+                                        }}
+                                        className='border-gray-200'
+                                      />
+                                    </div>
+                                    <div className='grid grid-cols-3 gap-3'>
+                                      <div>
+                                        <Label
+                                          htmlFor={`qty-${item.id}`}
+                                          className='text-xs text-gray-500 mb-1 block'
+                                        >
+                                          Quantity
+                                        </Label>
+                                        <Input
+                                          id={`qty-${item.id}`}
+                                          placeholder='Qty'
+                                          value={item.quantity}
+                                          onChange={(e) => {
+                                            return handleLineItemChange(
+                                              item.id,
+                                              'quantity',
+                                              parseInt(e.target.value) || 1,
+                                            );
+                                          }}
+                                          type='number'
+                                          min='1'
+                                          className='border-gray-200'
+                                        />
+                                      </div>
+                                      <div>
+                                        <Label
+                                          htmlFor={`price-${item.id}`}
+                                          className='text-xs text-gray-500 mb-1 block'
+                                        >
+                                          Price ($)
+                                        </Label>
+                                        <Input
+                                          id={`price-${item.id}`}
+                                          placeholder='Price'
+                                          value={item.price}
+                                          onChange={(e) => {
+                                            return handleLineItemChange(
+                                              item.id,
+                                              'price',
+                                              e.target.value,
+                                            );
+                                          }}
+                                          type='number'
+                                          className='border-gray-200'
+                                        />
+                                      </div>
+                                      <div>
+                                        <Label
+                                          htmlFor={`discount-${item.id}`}
+                                          className='text-xs text-gray-500 mb-1 block'
+                                        >
+                                          Discount (%)
+                                        </Label>
+                                        <Input
+                                          id={`discount-${item.id}`}
+                                          placeholder='Discount %'
+                                          value={
+                                            item.discount === undefined || isNaN(item.discount)
+                                              ? ''
+                                              : item.discount
+                                          }
+                                          onChange={(e) => {
+                                            const value =
+                                              e.target.value === ''
+                                                ? undefined
+                                                : parseInt(e.target.value);
+                                            // Ensure discount doesn't exceed 100%
+                                            const safeValue =
+                                              value !== undefined ? Math.min(value, 99) : undefined;
+                                            return handleLineItemChange(
+                                              item.id,
+                                              'discount',
+                                              safeValue,
+                                            );
+                                          }}
+                                          type='number'
+                                          max='100'
+                                          className='border-gray-200'
+                                        />
+                                      </div>
+                                    </div>
+                                    {item.moduleName && item.moduleType !== 'custom' && (
+                                      <div className='text-xs text-gray-400'>
+                                        From {item.moduleType}: {item.moduleName}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <Button
+                                    variant='ghost'
+                                    size='icon'
+                                    className='w-8 h-8 mt-6 text-gray-400 hover:text-gray-500 hover:bg-gray-100'
+                                    onClick={() => {
+                                      return removeLineItem(item.id);
                                     }}
-                                  />
+                                  >
+                                    <MinusIcon className='h-4 w-4' />
+                                  </Button>
                                 </div>
-                                <div className='grid grid-cols-3 gap-3'>
-                                  <div>
-                                    <Label
-                                      htmlFor={`qty-${item.id}`}
-                                      className='text-xs text-gray-500 mb-1 block'
-                                    >
-                                      Quantity
-                                    </Label>
-                                    <Input
-                                      id={`qty-${item.id}`}
-                                      placeholder='Qty'
-                                      value={item.quantity}
-                                      onChange={(e) => {
-                                        return handleLineItemChange(
-                                          item.id,
-                                          'quantity',
-                                          parseInt(e.target.value) || 1,
-                                        );
-                                      }}
-                                      type='number'
-                                      min='1'
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label
-                                      htmlFor={`price-${item.id}`}
-                                      className='text-xs text-gray-500 mb-1 block'
-                                    >
-                                      Price ($)
-                                    </Label>
-                                    <Input
-                                      id={`price-${item.id}`}
-                                      placeholder='Price'
-                                      value={item.price}
-                                      onChange={(e) => {
-                                        return handleLineItemChange(
-                                          item.id,
-                                          'price',
-                                          e.target.value,
-                                        );
-                                      }}
-                                      type='number'
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label
-                                      htmlFor={`discount-${item.id}`}
-                                      className='text-xs text-gray-500 mb-1 block'
-                                    >
-                                      Discount (%)
-                                    </Label>
-                                    <Input
-                                      id={`discount-${item.id}`}
-                                      placeholder='Discount %'
-                                      value={
-                                        item.discount === undefined || isNaN(item.discount)
-                                          ? ''
-                                          : item.discount
-                                      }
-                                      onChange={(e) => {
-                                        const value =
-                                          e.target.value === ''
-                                            ? undefined
-                                            : parseInt(e.target.value);
-                                        // Ensure discount doesn't exceed 100%
-                                        const safeValue =
-                                          value !== undefined ? Math.min(value, 99) : undefined;
-                                        return handleLineItemChange(item.id, 'discount', safeValue);
-                                      }}
-                                      type='number'
-                                      max='100'
-                                    />
-                                  </div>
-                                </div>
-                                {item.moduleName && item.moduleType !== 'custom' && (
-                                  <div className='text-xs text-gray-500'>
-                                    From {item.moduleType}: {item.moduleName}
-                                  </div>
-                                )}
-                              </div>
-                              <Button
-                                variant='ghost'
-                                size='icon'
-                                className='w-8 h-8 mt-6'
-                                onClick={() => {
-                                  return removeLineItem(item.id);
-                                }}
-                              >
-                                <MinusIcon className='h-4 w-4 text-gray-500' />
-                              </Button>
-                            </div>
-                          );
-                        })}
-
-                        {lineItems.length === 0 && !isLoading && (
-                          <div className='text-sm text-gray-500 py-10 text-center border rounded-md'>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className='text-sm text-gray-500 py-12 text-center border border-gray-100 rounded-md bg-gray-50'>
                             No items added. Add a custom item or select a client with associated
                             modules.
                           </div>
@@ -390,8 +407,8 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                       </>
                     )}
 
-                    {/* Quick Settings */}
-                    <div className='space-y-3 pt-4 border-t mt-4'>
+                    {/* Quick Settings - More consistent spacing and cleaner separator */}
+                    <div className='space-y-4 pt-4 border-t border-gray-100 mt-6'>
                       {/* Discount Toggle */}
                       <div className='flex flex-col gap-2'>
                         <div className='flex items-center justify-between'>
@@ -401,14 +418,19 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                               checked={autoApplyDiscount}
                               onCheckedChange={toggleDiscount}
                             />
-                            <Label htmlFor='auto-discount'>Apply discount to all items</Label>
+                            <Label htmlFor='auto-discount' className='text-sm text-gray-700'>
+                              Apply discount to all items
+                            </Label>
                           </div>
                         </div>
 
                         {autoApplyDiscount && (
-                          <div className='flex gap-2 items-end pl-8'>
+                          <div className='flex gap-3 items-end pl-8'>
                             <div className='w-24'>
-                              <Label htmlFor='discount-value' className='text-xs text-gray-500'>
+                              <Label
+                                htmlFor='discount-value'
+                                className='text-xs text-gray-500 mb-1 block'
+                              >
                                 Value
                               </Label>
                               <Input
@@ -424,10 +446,14 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                                   }
                                   return handleDiscountValueChange(value);
                                 }}
+                                className='border-gray-200'
                               />
                             </div>
                             <div className='w-28'>
-                              <Label htmlFor='discount-type' className='text-xs text-gray-500'>
+                              <Label
+                                htmlFor='discount-type'
+                                className='text-xs text-gray-500 mb-1 block'
+                              >
                                 Type
                               </Label>
                               <Select
@@ -436,7 +462,7 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                                   return handleDiscountTypeChange(v as 'percentage' | 'fixed');
                                 }}
                               >
-                                <SelectTrigger id='discount-type'>
+                                <SelectTrigger id='discount-type' className='border-gray-200'>
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -449,124 +475,137 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                         )}
                       </div>
 
-                      {/* Tax Selection */}
-                      <Collapsible>
-                        <CollapsibleTrigger asChild>
-                          <Button variant='ghost' className='flex w-full justify-between p-0 h-8'>
-                            <span className='flex items-center text-sm font-medium'>
-                              <PenIcon className='h-4 w-4 mr-2' />
-                              Tax Settings
-                            </span>
-                            <ChevronRightIcon className='h-4 w-4' />
-                          </Button>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className='pt-2'>
-                          <Select value={selectedTax} onValueChange={setSelectedTax}>
-                            <SelectTrigger className='w-full bg-white border-gray-200'>
-                              <SelectValue placeholder='Select tax rate' />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value='no-tax'>No Tax</SelectItem>
-                              {invoiceSettings?.taxes?.map((tax) => {
-                                return (
-                                  <SelectItem key={tax.id} value={tax.id}>
-                                    {tax.name} ({tax.rate}%)
-                                  </SelectItem>
-                                );
-                              })}
-                            </SelectContent>
-                          </Select>
-                        </CollapsibleContent>
-                      </Collapsible>
+                      {/* Collapsible sections - More consistent styling */}
+                      <div className='space-y-2'>
+                        <Collapsible>
+                          <CollapsibleTrigger asChild>
+                            <Button
+                              variant='ghost'
+                              className='flex w-full justify-between p-2 h-9 text-gray-700 hover:bg-gray-50 rounded-md'
+                            >
+                              <span className='flex items-center text-sm'>
+                                <PenIcon className='h-4 w-4 mr-2 text-gray-500' />
+                                Tax Settings
+                              </span>
+                              <ChevronRightIcon className='h-4 w-4 text-gray-400' />
+                            </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className='pt-2 pl-8 pr-2'>
+                            <Select value={selectedTax} onValueChange={setSelectedTax}>
+                              <SelectTrigger className='w-full bg-white border-gray-200'>
+                                <SelectValue placeholder='Select tax rate' />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value='no-tax'>No Tax</SelectItem>
+                                {invoiceSettings?.taxes?.map((tax) => {
+                                  return (
+                                    <SelectItem key={tax.id} value={tax.id}>
+                                      {tax.name} ({tax.rate}%)
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </CollapsibleContent>
+                        </Collapsible>
 
-                      {/* Delivery Method */}
-                      <Collapsible>
-                        <CollapsibleTrigger asChild>
-                          <Button variant='ghost' className='flex w-full justify-between p-0 h-8'>
-                            <span className='flex items-center text-sm font-medium'>
-                              <TruckIcon className='h-4 w-4 mr-2' />
-                              Delivery Method
-                            </span>
-                            <ChevronRightIcon className='h-4 w-4' />
-                          </Button>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className='pt-2'>
-                          <Select
-                            value={deliveryMethod}
-                            onValueChange={(value) => {
-                              setDeliveryMethod(value);
-                            }}
-                          >
-                            <SelectTrigger className='w-full bg-white border-gray-200'>
-                              <SelectValue placeholder='Select delivery method' />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value='email'>Email</SelectItem>
-                              <SelectItem value='sms'>SMS</SelectItem>
-                              <SelectItem value='both'>Both</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </CollapsibleContent>
-                      </Collapsible>
+                        <Collapsible>
+                          <CollapsibleTrigger asChild>
+                            <Button
+                              variant='ghost'
+                              className='flex w-full justify-between p-2 h-9 text-gray-700 hover:bg-gray-50 rounded-md'
+                            >
+                              <span className='flex items-center text-sm'>
+                                <TruckIcon className='h-4 w-4 mr-2 text-gray-500' />
+                                Delivery Method
+                              </span>
+                              <ChevronRightIcon className='h-4 w-4 text-gray-400' />
+                            </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className='pt-2 pl-8 pr-2'>
+                            <Select
+                              value={deliveryMethod}
+                              onValueChange={(value) => {
+                                return setDeliveryMethod(value);
+                              }}
+                            >
+                              <SelectTrigger className='w-full bg-white border-gray-200'>
+                                <SelectValue placeholder='Select delivery method' />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value='email'>Email</SelectItem>
+                                <SelectItem value='sms'>SMS</SelectItem>
+                                <SelectItem value='both'>Both</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </CollapsibleContent>
+                        </Collapsible>
 
-                      {/* Quick Memo */}
-                      <Collapsible>
-                        <CollapsibleTrigger asChild>
-                          <Button variant='ghost' className='flex w-full justify-between p-0 h-8'>
-                            <span className='flex items-center text-sm font-medium'>
-                              <PenIcon className='h-4 w-4 mr-2' />
-                              Add Memo
-                            </span>
-                            <ChevronRightIcon className='h-4 w-4' />
-                          </Button>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className='pt-2'>
-                          <Input
-                            id='memo'
-                            placeholder='Add a memo to your invoice'
-                            value={memo}
-                            onChange={(e) => {
-                              return setMemo(e.target.value);
-                            }}
-                          />
-                          <p className='text-xs text-gray-500 mt-1'>
-                            This note will appear on the invoice
-                          </p>
-                        </CollapsibleContent>
-                      </Collapsible>
+                        <Collapsible>
+                          <CollapsibleTrigger asChild>
+                            <Button
+                              variant='ghost'
+                              className='flex w-full justify-between p-2 h-9 text-gray-700 hover:bg-gray-50 rounded-md'
+                            >
+                              <span className='flex items-center text-sm'>
+                                <PenIcon className='h-4 w-4 mr-2 text-gray-500' />
+                                Add Memo
+                              </span>
+                              <ChevronRightIcon className='h-4 w-4 text-gray-400' />
+                            </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className='pt-2 pl-8 pr-2'>
+                            <Input
+                              id='memo'
+                              placeholder='Add a memo to your invoice'
+                              value={memo}
+                              onChange={(e) => {
+                                return setMemo(e.target.value);
+                              }}
+                              className='border-gray-200'
+                            />
+                            <p className='text-xs text-gray-400 mt-1'>
+                              This note will appear on the invoice
+                            </p>
+                          </CollapsibleContent>
+                        </Collapsible>
 
-                      {/* Due Date */}
-                      <Collapsible>
-                        <CollapsibleTrigger asChild>
-                          <Button variant='ghost' className='flex w-full justify-between p-0 h-8'>
-                            <span className='flex items-center text-sm font-medium'>
-                              <CreditCardIcon className='h-4 w-4 mr-2' />
-                              Due Date
-                            </span>
-                            <ChevronRightIcon className='h-4 w-4' />
-                          </Button>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className='pt-2'>
-                          <Input
-                            id='dueDate'
-                            type='date'
-                            value={dueDate}
-                            onChange={(e) => {
-                              return setDueDate(e.target.value);
-                            }}
-                          />
-                          <p className='text-xs text-gray-500 mt-1'>When payment is due</p>
-                        </CollapsibleContent>
-                      </Collapsible>
+                        <Collapsible>
+                          <CollapsibleTrigger asChild>
+                            <Button
+                              variant='ghost'
+                              className='flex w-full justify-between p-2 h-9 text-gray-700 hover:bg-gray-50 rounded-md'
+                            >
+                              <span className='flex items-center text-sm'>
+                                <CreditCardIcon className='h-4 w-4 mr-2 text-gray-500' />
+                                Due Date
+                              </span>
+                              <ChevronRightIcon className='h-4 w-4 text-gray-400' />
+                            </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className='pt-2 pl-8 pr-2'>
+                            <Input
+                              id='dueDate'
+                              type='date'
+                              value={dueDate}
+                              onChange={(e) => {
+                                return setDueDate(e.target.value);
+                              }}
+                              className='border-gray-200'
+                            />
+                            <p className='text-xs text-gray-400 mt-1'>When payment is due</p>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      </div>
                     </div>
 
-                    {/* Invoice Summary */}
-                    <div className='border rounded-md p-3 bg-gray-50 mt-4'>
-                      <h4 className='font-medium mb-2'>Invoice Summary</h4>
-                      <div className='space-y-1 text-sm'>
+                    {/* Invoice Summary - Cleaner layout with more whitespace */}
+                    <div className='border border-gray-100 rounded-md p-4 bg-gray-50 mt-6'>
+                      <h4 className='text-sm font-medium text-gray-800 mb-3'>Invoice Summary</h4>
+                      <div className='space-y-2 text-sm'>
                         <div className='flex justify-between'>
-                          <span>Subtotal:</span>
-                          <span>${subtotal.toFixed(2)}</span>
+                          <span className='text-gray-600'>Subtotal:</span>
+                          <span className='text-gray-800'>${subtotal.toFixed(2)}</span>
                         </div>
                         {discountTotal > 0 && (
                           <div className='flex justify-between text-green-600'>
@@ -576,13 +615,13 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                         )}
                         {taxAmount > 0 && (
                           <div className='flex justify-between'>
-                            <span>Tax ({selectedTaxRate}%):</span>
-                            <span>${taxAmount.toFixed(2)}</span>
+                            <span className='text-gray-600'>Tax ({selectedTaxRate}%):</span>
+                            <span className='text-gray-800'>${taxAmount.toFixed(2)}</span>
                           </div>
                         )}
-                        <div className='flex justify-between font-medium border-t pt-1 mt-1'>
-                          <span>Total:</span>
-                          <span>${total.toFixed(2)}</span>
+                        <div className='flex justify-between font-medium border-t border-gray-200 pt-2 mt-2'>
+                          <span className='text-gray-800'>Total:</span>
+                          <span className='text-gray-900'>${total.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
@@ -591,37 +630,40 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
               </ScrollArea>
             </div>
 
-            {/* Settings Sidebar */}
+            {/* Settings Sidebar - Refined with consistent spacing and subtle hierarchy */}
             {showSettingsSidebar && (
-              <div className='w-2/5 border-l border-gray-200'>
+              <div className='w-2/5 border-l border-gray-100'>
                 <ScrollArea className='h-[calc(90vh-68px)]'>
                   <Tabs
                     value={activeSettingTab}
                     onValueChange={setActiveSettingTab}
                     className='w-full'
                   >
-                    <div className='border-b border-gray-200'>
-                      <TabsList className='h-12 w-full justify-start bg-transparent border-b rounded-none'>
+                    <div className='border-b border-gray-100'>
+                      <TabsList className='h-12 w-full justify-start bg-transparent px-4 rounded-none'>
                         <TabsTrigger
                           value='general'
-                          className='data-[state=active]:border-b-2 data-[state=active]:border-gray-900 data-[state=active]:shadow-none rounded-none'
+                          className='data-[state=active]:border-b-2 data-[state=active]:border-gray-800 data-[state=active]:shadow-none rounded-none text-sm text-gray-600 data-[state=active]:text-gray-900'
                         >
                           General
                         </TabsTrigger>
                         <TabsTrigger
                           value='branding'
-                          className='data-[state=active]:border-b-2 data-[state=active]:border-gray-900 data-[state=active]:shadow-none rounded-none'
+                          className='data-[state=active]:border-b-2 data-[state=active]:border-gray-800 data-[state=active]:shadow-none rounded-none text-sm text-gray-600 data-[state=active]:text-gray-900'
                         >
                           Branding
                         </TabsTrigger>
                       </TabsList>
                     </div>
 
-                    <div className='p-4'>
-                      <TabsContent value='general' className='mt-0 pt-2 border-0'>
+                    <div className='p-6'>
+                      <TabsContent value='general' className='mt-0 pt-0 border-0 space-y-6'>
                         {/* Currency */}
-                        <div className='mb-4'>
-                          <Label htmlFor='currency' className='text-sm font-medium'>
+                        <div>
+                          <Label
+                            htmlFor='currency'
+                            className='text-sm font-medium text-gray-800 mb-2 block'
+                          >
                             Currency
                           </Label>
                           <Select
@@ -632,7 +674,7 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                               handleSettingsUpdate({ currency: value });
                             }}
                           >
-                            <SelectTrigger id='currency' className='w-full mt-1'>
+                            <SelectTrigger id='currency' className='w-full border-gray-200'>
                               <SelectValue placeholder='Select currency' />
                             </SelectTrigger>
                             <SelectContent>
@@ -647,8 +689,11 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                         </div>
 
                         {/* Footer */}
-                        <div className='mb-4'>
-                          <Label htmlFor='footer' className='text-sm font-medium'>
+                        <div>
+                          <Label
+                            htmlFor='footer'
+                            className='text-sm font-medium text-gray-800 mb-2 block'
+                          >
                             Footer
                           </Label>
                           <Input
@@ -656,23 +701,23 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                             placeholder='Add a footer to your invoice'
                             value={footer}
                             onChange={(e) => {
-                              setFooter(e.target.value);
+                              return setFooter(e.target.value);
                             }}
-                            className='mt-1'
+                            className='border-gray-200'
                           />
-                          <p className='text-xs text-gray-500 mt-1'>
+                          <p className='text-xs text-gray-400 mt-1'>
                             This will appear at the bottom of the invoice
                           </p>
                         </div>
 
                         {/* Tax ID */}
-                        <div className='mb-4'>
-                          <div className='flex items-center justify-between mb-1'>
-                            <Label htmlFor='taxId' className='text-sm font-medium'>
+                        <div>
+                          <div className='flex items-center justify-between mb-2'>
+                            <Label htmlFor='taxId' className='text-sm font-medium text-gray-800'>
                               Tax ID
                             </Label>
                             <div className='flex items-center'>
-                              <Label htmlFor='showTaxId' className='text-xs text-gray-600 mr-2'>
+                              <Label htmlFor='showTaxId' className='text-xs text-gray-500 mr-2'>
                                 Show on invoice
                               </Label>
                               <Switch
@@ -690,74 +735,74 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                             placeholder='Enter your tax ID'
                             value={taxId}
                             onChange={(e) => {
-                              setTaxId(e.target.value);
+                              return setTaxId(e.target.value);
                             }}
                             onBlur={(e) => {
-                              handleSettingsUpdate({ taxId: e.target.value });
+                              return handleSettingsUpdate({ taxId: e.target.value });
                             }}
-                            className='mt-1'
+                            className='border-gray-200'
                           />
                         </div>
                       </TabsContent>
 
-                      <TabsContent value='branding' className='mt-0 pt-2 border-0'>
+                      <TabsContent value='branding' className='mt-0 pt-0 border-0 space-y-6'>
                         {/* Branding */}
-                        <div className='space-y-4'>
+                        <div className='space-y-6'>
                           {/* Icons */}
                           <div className='grid grid-cols-2 gap-4'>
                             <div>
-                              <Label className='text-sm font-medium'>Icon</Label>
-                              <div className='mt-1'>
-                                <ImageUpload
-                                  label='Company Icon'
-                                  value={icon}
-                                  onChange={(newIcon) => {
-                                    setIcon(newIcon);
-                                    handleSettingsUpdate({ icon: newIcon });
-                                  }}
-                                />
-                              </div>
+                              <Label className='text-sm font-medium text-gray-800 mb-2 block'>
+                                Icon
+                              </Label>
+                              <ImageUpload
+                                label='Company Icon'
+                                value={icon}
+                                onChange={(newIcon) => {
+                                  setIcon(newIcon);
+                                  handleSettingsUpdate({ icon: newIcon });
+                                }}
+                              />
                             </div>
                             <div>
-                              <Label className='text-sm font-medium'>Logo</Label>
-                              <div className='mt-1'>
-                                <ImageUpload
-                                  label='Company Logo'
-                                  value={logo}
-                                  onChange={(newLogo) => {
-                                    setLogo(newLogo);
-                                    handleSettingsUpdate({ logo: newLogo });
-                                  }}
-                                />
-                              </div>
+                              <Label className='text-sm font-medium text-gray-800 mb-2 block'>
+                                Logo
+                              </Label>
+                              <ImageUpload
+                                label='Company Logo'
+                                value={logo}
+                                onChange={(newLogo) => {
+                                  setLogo(newLogo);
+                                  handleSettingsUpdate({ logo: newLogo });
+                                }}
+                              />
                             </div>
                           </div>
 
                           {/* Colors */}
                           <div className='grid grid-cols-2 gap-4'>
                             <div>
-                              <Label className='text-sm font-medium'>Brand Color</Label>
-                              <div className='mt-1'>
-                                <ColorPicker
-                                  label='Brand Color'
-                                  value={invoiceSettings?.brandColor || ''}
-                                  onChange={(value) => {
-                                    handleSettingsUpdate({ brandColor: value });
-                                  }}
-                                />
-                              </div>
+                              <Label className='text-sm font-medium text-gray-800 mb-2 block'>
+                                Brand Color
+                              </Label>
+                              <ColorPicker
+                                label='Brand Color'
+                                value={invoiceSettings?.brandColor || ''}
+                                onChange={(value) => {
+                                  return handleSettingsUpdate({ brandColor: value });
+                                }}
+                              />
                             </div>
                             <div>
-                              <Label className='text-sm font-medium'>Accent Color</Label>
-                              <div className='mt-1'>
-                                <ColorPicker
-                                  label='Accent Color'
-                                  value={invoiceSettings?.accentColor || ''}
-                                  onChange={(value) => {
-                                    handleSettingsUpdate({ accentColor: value });
-                                  }}
-                                />
-                              </div>
+                              <Label className='text-sm font-medium text-gray-800 mb-2 block'>
+                                Accent Color
+                              </Label>
+                              <ColorPicker
+                                label='Accent Color'
+                                value={invoiceSettings?.accentColor || ''}
+                                onChange={(value) => {
+                                  return handleSettingsUpdate({ accentColor: value });
+                                }}
+                              />
                             </div>
                           </div>
                         </div>
