@@ -1,7 +1,7 @@
-import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { newRequest } from '@/utils/newRequest';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 // Profile data interface
 export interface UserProfile {
@@ -184,10 +184,8 @@ export function useProfile() {
     // Validate file type
     const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!validImageTypes.includes(file.type)) {
-      toast({
-        title: 'Invalid file type',
+      toast.error('Invalid file type', {
         description: 'Please upload a JPG, PNG, GIF, or WebP image.',
-        variant: 'destructive',
       });
       return;
     }
@@ -195,10 +193,8 @@ export function useProfile() {
     // Validate file size (5MB max)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
-      toast({
-        title: 'File too large',
+      toast.error('File too large', {
         description: 'Please upload an image smaller than 5MB.',
-        variant: 'destructive',
       });
       return;
     }
@@ -231,16 +227,13 @@ export function useProfile() {
       // Reload user data from the server to update AuthContext
       await reloadAuth();
 
-      toast({
-        title: 'Avatar updated',
+      toast.success('Avatar updated', {
         description: 'Your profile picture has been updated successfully.',
       });
     } catch (error) {
       console.error('Error uploading avatar:', error);
-      toast({
-        title: 'Upload failed',
+      toast.error('Upload failed', {
         description: 'There was an error uploading your avatar. Please try again.',
-        variant: 'destructive',
       });
     } finally {
       setIsUploadingAvatar(false);
@@ -321,8 +314,7 @@ export function useProfile() {
         confirmPassword: '',
       });
 
-      toast({
-        title: 'Password updated',
+      toast.success('Password updated', {
         description: 'Your password has been updated successfully.',
       });
     } catch (error: any) {
@@ -335,10 +327,8 @@ export function useProfile() {
         setPasswordError('Failed to update password. Please try again.');
       }
 
-      toast({
-        title: 'Password update failed',
+      toast.error('Password update failed', {
         description: error.response?.data?.message || 'There was an error updating your password.',
-        variant: 'destructive',
       });
     } finally {
       setIsUpdatingPassword(false);
@@ -370,8 +360,7 @@ export function useProfile() {
         // Reload user data after successful update
         await reloadAuth();
 
-        toast({
-          title: 'Profile updated',
+        toast.success('Profile updated', {
           description: 'Your profile has been successfully updated.',
         });
       } catch (error) {
@@ -379,18 +368,14 @@ export function useProfile() {
         // Fallback to localStorage only if API fails
         localStorage.setItem('notificationPreferences', JSON.stringify(notificationPrefsObj));
 
-        toast({
-          title: 'Profile partially updated',
+        toast.error('Profile partially updated', {
           description: 'Your preferences were saved locally, but server update failed.',
-          variant: 'destructive',
         });
       }
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast({
-        title: 'Update failed',
+      toast.error('Update failed', {
         description: 'There was an error updating your profile. Please try again.',
-        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
