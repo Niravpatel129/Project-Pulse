@@ -614,12 +614,6 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                         >
                           Branding
                         </TabsTrigger>
-                        <TabsTrigger
-                          value='payment'
-                          className='data-[state=active]:border-b-2 data-[state=active]:border-gray-900 data-[state=active]:shadow-none rounded-none'
-                        >
-                          Payment
-                        </TabsTrigger>
                       </TabsList>
                     </div>
 
@@ -765,47 +759,6 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                                 />
                               </div>
                             </div>
-                          </div>
-                        </div>
-                      </TabsContent>
-
-                      <TabsContent value='payment' className='mt-0 pt-2 border-0'>
-                        {/* Payment Settings */}
-                        <div className='space-y-4'>
-                          {/* Payment Methods */}
-                          <div>
-                            <Label className='text-sm font-medium'>Payment Methods</Label>
-                            <div className='space-y-2 mt-2'>
-                              <div className='flex items-center space-x-2 py-2 px-3 border rounded-md'>
-                                <Switch id='accept-credit-cards' />
-                                <Label htmlFor='accept-credit-cards'>Accept Credit Cards</Label>
-                              </div>
-                              <div className='flex items-center space-x-2 py-2 px-3 border rounded-md'>
-                                <Switch id='accept-bank-transfer' />
-                                <Label htmlFor='accept-bank-transfer'>Accept Bank Transfer</Label>
-                              </div>
-                              <div className='flex items-center space-x-2 py-2 px-3 border rounded-md'>
-                                <Switch id='accept-paypal' />
-                                <Label htmlFor='accept-paypal'>Accept PayPal</Label>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Payment Terms */}
-                          <div>
-                            <Label className='text-sm font-medium'>Payment Terms</Label>
-                            <Select defaultValue='net30'>
-                              <SelectTrigger className='w-full mt-1'>
-                                <SelectValue placeholder='Select payment terms' />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value='due-on-receipt'>Due on Receipt</SelectItem>
-                                <SelectItem value='net15'>Net 15</SelectItem>
-                                <SelectItem value='net30'>Net 30</SelectItem>
-                                <SelectItem value='net60'>Net 60</SelectItem>
-                                <SelectItem value='custom'>Custom</SelectItem>
-                              </SelectContent>
-                            </Select>
                           </div>
                         </div>
                       </TabsContent>
