@@ -18,6 +18,7 @@ const DEV_CREDENTIALS = {
 
 // Local storage keys
 const STORAGE_KEY = 'pulse_login_email';
+const PASSWORD_STORAGE_KEY = 'pulse_login_password';
 
 export default function LoginPage() {
   const isDev = process.env.NODE_ENV === 'development';
@@ -36,6 +37,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedEmail = localStorage.getItem(STORAGE_KEY);
+      const savedPassword = localStorage.getItem(PASSWORD_STORAGE_KEY);
 
       if (savedEmail) {
         setEmail(savedEmail);
@@ -43,6 +45,10 @@ export default function LoginPage() {
         // Fall back to dev credentials if no saved email
         setEmail(DEV_CREDENTIALS.email);
         setPassword(DEV_CREDENTIALS.password);
+      }
+
+      if (savedPassword) {
+        setPassword(savedPassword);
       }
     }
   }, [isDev]);
@@ -70,8 +76,10 @@ export default function LoginPage() {
       // Save email to localStorage if remember me is checked
       if (rememberMe && typeof window !== 'undefined') {
         localStorage.setItem(STORAGE_KEY, email);
+        localStorage.setItem(PASSWORD_STORAGE_KEY, password);
       } else if (typeof window !== 'undefined') {
         localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(PASSWORD_STORAGE_KEY);
       }
 
       // Set success message
