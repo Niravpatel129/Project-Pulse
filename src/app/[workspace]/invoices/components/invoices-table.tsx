@@ -172,9 +172,6 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
               <TableHead className='h-12 px-4 text-sm font-medium text-muted-foreground'>
                 Created
               </TableHead>
-              <TableHead className='h-12 px-4 text-sm font-medium text-muted-foreground'>
-                Discount
-              </TableHead>
               <TableHead className='h-12 px-4'></TableHead>
             </TableRow>
           </TableHeader>
@@ -219,39 +216,57 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                               <ChevronDownIcon className='h-4 w-4 text-muted-foreground' />
                             )}
                           </button>
-                          <motion.span className='font-medium text-foreground' layout>
-                            {new Intl.NumberFormat('en-US', {
-                              style: 'currency',
-                              currency: invoice.currency.toUpperCase(),
-                            }).format(invoice.subtotal)}
-                          </motion.span>
-                          <motion.span className='uppercase text-muted-foreground' layout>
-                            {invoice.currency}
-                          </motion.span>
-                          <motion.div layout>
-                            <Badge
-                              variant={
-                                invoice.status === 'paid'
-                                  ? 'default'
-                                  : invoice.status === 'draft'
-                                  ? 'secondary'
-                                  : 'destructive'
-                              }
-                              className={cn(
-                                'transition-colors w-fit rounded-sm',
-                                invoice.status === 'paid' &&
-                                  'bg-green-100 text-green-800 hover:bg-green-200',
-                                invoice.status === 'draft' &&
-                                  'bg-gray-100 text-gray-800 hover:bg-gray-200',
-                                invoice.status === 'overdue' &&
-                                  'bg-red-100 text-red-800 hover:bg-red-200',
-                                invoice.status === 'open' &&
-                                  'bg-blue-100 text-blue-800 hover:bg-blue-200',
-                              )}
-                            >
-                              {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
-                            </Badge>
-                          </motion.div>
+                          <div className='flex flex-col'>
+                            <div className='flex items-center gap-2'>
+                              <motion.span className='font-medium text-foreground' layout>
+                                {new Intl.NumberFormat('en-US', {
+                                  style: 'currency',
+                                  currency: invoice.currency.toUpperCase(),
+                                }).format(invoice.subtotal)}
+                              </motion.span>
+                              <motion.span className='uppercase text-muted-foreground' layout>
+                                {invoice.currency}
+                              </motion.span>
+                              <motion.div layout>
+                                <Badge
+                                  variant={
+                                    invoice.status === 'paid'
+                                      ? 'default'
+                                      : invoice.status === 'draft'
+                                      ? 'secondary'
+                                      : 'destructive'
+                                  }
+                                  className={cn(
+                                    'transition-colors w-fit rounded-sm',
+                                    invoice.status === 'paid' &&
+                                      'bg-green-100 text-green-800 hover:bg-green-200',
+                                    invoice.status === 'draft' &&
+                                      'bg-gray-100 text-gray-800 hover:bg-gray-200',
+                                    invoice.status === 'overdue' &&
+                                      'bg-red-100 text-red-800 hover:bg-red-200',
+                                    invoice.status === 'open' &&
+                                      'bg-blue-100 text-blue-800 hover:bg-blue-200',
+                                  )}
+                                >
+                                  {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                                </Badge>
+                              </motion.div>
+                            </div>
+                            {hasDiscount && (
+                              <motion.div
+                                className='flex items-center mt-1 text-xs text-emerald-600'
+                                layout
+                              >
+                                <span>Discount:</span>
+                                <span className='ml-1 font-medium'>
+                                  {new Intl.NumberFormat('en-US', {
+                                    style: 'currency',
+                                    currency: invoice.currency.toUpperCase(),
+                                  }).format(totalDiscount)}
+                                </span>
+                              </motion.div>
+                            )}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell className='px-4 py-3'>
@@ -280,23 +295,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                           })}
                         </motion.span>
                       </TableCell>
-                      <TableCell className='px-4 py-3'>
-                        {hasDiscount ? (
-                          <motion.div className='flex items-center' layout>
-                            <Badge className='bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'>
-                              {new Intl.NumberFormat('en-US', {
-                                style: 'currency',
-                                currency: invoice.currency.toUpperCase(),
-                              }).format(totalDiscount)}
-                            </Badge>
-                          </motion.div>
-                        ) : (
-                          <motion.span className='text-sm text-muted-foreground' layout>
-                            —
-                          </motion.span>
-                        )}
-                      </TableCell>
-                      <TableCell className='px-4 py-3 flex items-center justify-end'>
+                      <TableCell className='align-middle text-center px-4 py-3'>
                         <DropdownMenu>
                           <DropdownMenuTrigger
                             asChild
@@ -386,7 +385,12 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                                 e.stopPropagation();
                               }}
                             >
-                              <Link href={`/invoice/${invoice._id}`} className='flex gap-1 w-full'>
+                              <Link
+                                href={`/invoice/${invoice._id}`}
+                                className='flex gap-1 w-full'
+                                target='_blank'
+                                rel='noopener noreferrer'
+                              >
                                 <Link2Icon className='w-4 h-4 mr-2' />
                                 Payment link
                               </Link>
