@@ -58,6 +58,7 @@ export default function LoginPage() {
           ? err.message
           : 'Login failed. Please check your credentials and try again.';
       setErrorMsg(message);
+      setSuccessMsg('');
       toast.error(message);
     } finally {
       setIsLoading(false);
@@ -108,15 +109,15 @@ export default function LoginPage() {
 
             <Button
               type='submit'
-              disabled={isLoading || loading || !!successMsg}
+              disabled={isLoading || (loading && !errorMsg && !error)}
               className='w-full'
             >
               {(isLoading || loading) && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
               {isLoading
                 ? 'Signing in...'
-                : loading
+                : loading && !errorMsg && !error
                 ? 'Authenticating...'
-                : successMsg
+                : successMsg && !errorMsg && !error
                 ? 'Redirecting...'
                 : 'Sign in'}
             </Button>
