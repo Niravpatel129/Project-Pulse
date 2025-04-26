@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
@@ -15,10 +16,14 @@ const DEV_CREDENTIALS = {
   password: 'admin@example.com',
 };
 
+// Local storage keys
+const STORAGE_KEY = 'pulse_login_email';
+
 export default function LoginPage() {
   const isDev = process.env.NODE_ENV === 'development';
-  const [email, setEmail] = useState(isDev ? DEV_CREDENTIALS.email : '');
-  const [password, setPassword] = useState(isDev ? DEV_CREDENTIALS.password : '');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -26,6 +31,21 @@ export default function LoginPage() {
   // Use auth hook
   const { login, isAuthenticated, error, loading, reloadAuth } = useAuth();
   const router = useRouter();
+
+  // Load saved email from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedEmail = localStorage.getItem(STORAGE_KEY);
+
+      if (savedEmail) {
+        setEmail(savedEmail);
+      } else if (isDev) {
+        // Fall back to dev credentials if no saved email
+        setEmail(DEV_CREDENTIALS.email);
+        setPassword(DEV_CREDENTIALS.password);
+      }
+    }
+  }, [isDev]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -47,6 +67,13 @@ export default function LoginPage() {
       await login(email, password);
       console.log('Login successful');
 
+      // Save email to localStorage if remember me is checked
+      if (rememberMe && typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY, email);
+      } else if (typeof window !== 'undefined') {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+
       // Set success message
       setSuccessMsg('Login successful! Redirecting...');
 
@@ -66,7 +93,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className='flex min-h-screen scrollbar-hide overflow-hidden h-screen w-screen'>
+    <div className='flex min-h-screen scrollbar-hide overflow-hidden h-screen w-screen bg-white'>
       {/* Left side - Login form */}
       <div className='w-full md:w-2/5 flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4'>
         <div className='w-full max-w-sm space-y-6'>
@@ -103,6 +130,22 @@ export default function LoginPage() {
                 }}
                 className='w-full'
               />
+
+              <div className='flex items-center space-x-2'>
+                <Checkbox
+                  id='remember-me'
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => {
+                    return setRememberMe(checked as boolean);
+                  }}
+                />
+                <label
+                  htmlFor='remember-me'
+                  className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+                >
+                  Remember email
+                </label>
+              </div>
             </div>
 
             {(errorMsg || error) && <div className='text-red-500 text-sm'>{errorMsg || error}</div>}
@@ -159,10 +202,7 @@ export default function LoginPage() {
           priority
           className='object-cover'
         />
-        <div className='absolute bottom-0 left-0 right-0 p-8 text-white z-50'>
-          <h1 className='text-4xl font-bold mb-2'>Pulse</h1>
-          <p className='text-xl opacity-90'>Organize your workflows effortlessly</p>
-        </div>
+        <div className='absolute bottom-0 left-0 right-0 p-8 text-white z-50'></div>
       </div>
     </div>
   );
