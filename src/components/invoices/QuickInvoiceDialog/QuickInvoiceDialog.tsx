@@ -28,7 +28,6 @@ import {
   ArrowLeft,
   ChevronRightIcon,
   CreditCardIcon,
-  FileIcon,
   Loader2,
   MinusIcon,
   MoreHorizontal,
@@ -478,9 +477,8 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                                                 e.stopPropagation();
                                                 setActiveModuleId(item.moduleId);
                                               }}
-                                              className='text-xs flex items-center gap-1 text-blue-600 hover:text-blue-700'
+                                              className='text-xs flex items-center gap-1 text-gray-600 hover:text-gray-700'
                                             >
-                                              <FileIcon className='h-3 w-3' />
                                               View Module
                                             </Button>
                                           )}
@@ -619,7 +617,7 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                           </CollapsibleTrigger>
                           <CollapsibleContent className='overflow-hidden'>
                             <motion.div
-                              className='pt-2 pl-8 pr-2'
+                              className='py-2 pl-8 pr-2'
                               initial={{ opacity: 0, height: 0 }}
                               animate={{ opacity: 1, height: 'auto' }}
                               exit={{ opacity: 0, height: 0 }}
@@ -640,6 +638,9 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                                   })}
                                 </SelectContent>
                               </Select>
+                              <p className='text-xs text-gray-400 mt-1'>
+                                This will be applied to all items on the invoice
+                              </p>
                             </motion.div>
                           </CollapsibleContent>
                         </Collapsible>
@@ -661,7 +662,7 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                           </CollapsibleTrigger>
                           <CollapsibleContent className='overflow-hidden'>
                             <motion.div
-                              className='pt-2 pl-8 pr-2'
+                              className='py-2 pl-8 pr-2'
                               initial={{ opacity: 0, height: 0 }}
                               animate={{ opacity: 1, height: 'auto' }}
                               exit={{ opacity: 0, height: 0 }}
@@ -682,6 +683,9 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                                   <SelectItem value='both'>Both</SelectItem>
                                 </SelectContent>
                               </Select>
+                              <p className='text-xs text-gray-400 mt-1'>
+                                This will be used to deliver the invoice to the client
+                              </p>
                             </motion.div>
                           </CollapsibleContent>
                         </Collapsible>
