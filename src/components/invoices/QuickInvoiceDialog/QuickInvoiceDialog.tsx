@@ -28,6 +28,7 @@ import {
   ArrowLeft,
   ChevronRightIcon,
   CreditCardIcon,
+  FileIcon,
   Loader2,
   MinusIcon,
   MoreHorizontal,
@@ -37,6 +38,7 @@ import {
   TruckIcon,
 } from 'lucide-react';
 import { useState } from 'react';
+import ModuleDialog from '../../ProjectPage/ProjectModules/ModuleDialog';
 import { useQuickInvoice } from './hooks/useQuickInvoice';
 
 // Animation variants for various components
@@ -83,6 +85,7 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
   const [currentView, setCurrentView] = useState<'items' | 'settings'>('items');
   const [showSettingsSidebar, setShowSettingsSidebar] = useState(false);
   const [activeSettingTab, setActiveSettingTab] = useState('general');
+  const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
 
   const {
     // State
@@ -463,8 +466,24 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
                                         </div>
                                       </div>
                                       {item.moduleName && item.moduleType !== 'custom' && (
-                                        <div className='text-xs text-gray-400'>
-                                          From {item.moduleType}: {item.moduleName}
+                                        <div className='flex items-center justify-between'>
+                                          <div className='text-xs text-gray-400'>
+                                            From {item.moduleType}: {item.moduleName}
+                                          </div>
+                                          {item.moduleId && (
+                                            <Button
+                                              variant='ghost'
+                                              size='sm'
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveModuleId(item.moduleId);
+                                              }}
+                                              className='text-xs flex items-center gap-1 text-blue-600 hover:text-blue-700'
+                                            >
+                                              <FileIcon className='h-3 w-3' />
+                                              View Module
+                                            </Button>
+                                          )}
                                         </div>
                                       )}
                                     </div>
@@ -1045,6 +1064,16 @@ export default function QuickInvoiceDialog({ open, onOpenChange }: QuickInvoiceD
           </motion.div>
         </motion.div>
       </DialogContent>
+
+      {/* Module Dialog */}
+      {activeModuleId && (
+        <ModuleDialog
+          moduleId={activeModuleId}
+          onOpenChange={(open) => {
+            if (!open) setActiveModuleId(null);
+          }}
+        />
+      )}
     </Dialog>
   );
 }
