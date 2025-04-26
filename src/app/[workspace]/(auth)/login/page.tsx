@@ -93,7 +93,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className='flex min-h-screen scrollbar-hide overflow-hidden h-screen w-screen bg-white'>
+    <div className='flex scrollbar-hide overflow-hidden h-screen w-screen bg-white'>
       {/* Left side - Login form */}
       <div className='w-full md:w-2/5 flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4'>
         <div className='w-full max-w-sm space-y-6'>
