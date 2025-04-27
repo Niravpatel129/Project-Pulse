@@ -3,12 +3,13 @@
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { useProject, type Project } from '@/contexts/ProjectContext';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CalendarDays, CreditCard, Home, PanelsTopLeft } from 'lucide-react';
+import { CalendarDays, ChartBar, CreditCard, Home, PanelsTopLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
 import { Suspense } from 'react';
 import ProjectActivity from './ProjectActivity';
 import ProjectHome from './ProjectHome';
+import ProjectKanban from './ProjectKanban/ProjectKanban';
 import ProjectModules from './ProjectModules/ProjectModules';
 import ProjectPayments from './ProjectPayments';
 import ProjectSchedule from './ProjectSchedule';
@@ -37,6 +38,7 @@ export default function ProjectMain() {
 
   const navigationLinks = [
     { href: baseUrl, label: 'Home', icon: Home, tab: 'home' },
+    { href: `${baseUrl}/kanban`, label: 'Kanban', icon: ChartBar, tab: 'kanban' },
     { href: `${baseUrl}/schedule`, label: 'Schedule', icon: CalendarDays, tab: 'schedule' },
     { href: `${baseUrl}/modules`, label: 'Storage', icon: PanelsTopLeft, tab: 'modules', badge: 5 },
     { href: `${baseUrl}/payments`, label: 'Payments', icon: CreditCard, tab: 'payments' },
@@ -123,6 +125,7 @@ export default function ProjectMain() {
                 >
                   {activeTab === 'activity' && <ProjectActivity />}
                   {activeTab === 'home' && <ProjectHome />}
+                  {activeTab === 'kanban' && <ProjectKanban />}
                   {activeTab === 'timeline' && <TimelineExample />}
                   {activeTab === 'schedule' && <ProjectSchedule />}
                   {activeTab === 'modules' && <ProjectModules />}
