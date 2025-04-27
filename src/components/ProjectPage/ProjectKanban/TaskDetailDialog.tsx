@@ -366,7 +366,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className='max-w-5xl h-[90vh] p-0 gap-0'>
-          {/* Header */}
+          {/* Header - Fix story points badge placement */}
           <div className='px-6 py-3 border-b flex items-center justify-between'>
             <div className='flex items-center gap-3'>
               <span className='text-sm font-medium text-blue-500'>{ticketId}</span>
@@ -711,6 +711,97 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
             <div className='w-[320px] border-l overflow-auto'>
               <div className='p-6 space-y-6'>
                 <div>
+                  <h3 className='text-sm text-muted-foreground mb-2'>STORY POINTS</h3>
+                  {editingStoryPoints ? (
+                    <div className='space-y-2'>
+                      <div className='flex gap-1 flex-nowrap'>
+                        {/* Fibonacci sequence with better visual styling */}
+                        {[1, 2, 3, 5, 8, 13].map((point) => {
+                          return (
+                            <Button
+                              key={point}
+                              variant={storyPoints === point ? 'default' : 'outline'}
+                              size='sm'
+                              className={`h-8 w-full p-0 ${
+                                storyPoints === point ? 'bg-blue-600' : ''
+                              }`}
+                              onClick={() => {
+                                return saveStoryPoints(point);
+                              }}
+                            >
+                              {point}
+                            </Button>
+                          );
+                        })}
+                        {/* Question mark for unknown/unclear */}
+                        <Button
+                          variant={storyPoints === 0 ? 'default' : 'outline'}
+                          size='sm'
+                          className={`h-8 w-full p-0 ${storyPoints === 0 ? 'bg-blue-600' : ''}`}
+                          onClick={() => {
+                            return saveStoryPoints(0);
+                          }}
+                        >
+                          ?
+                        </Button>
+                      </div>
+                      <div className='flex justify-between'>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => {
+                            return setEditingStoryPoints(false);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => {
+                            return saveStoryPoints(undefined);
+                          }}
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className='flex items-center gap-2 p-3 rounded-md text-sm cursor-pointer hover:bg-muted/40 transition-colors border border-dashed'
+                      onClick={() => {
+                        return setEditingStoryPoints(true);
+                      }}
+                    >
+                      {storyPoints !== undefined ? (
+                        <div className='flex items-center justify-between w-full'>
+                          <div className='flex items-center gap-2'>
+                            <Badge
+                              variant='outline'
+                              className='h-7 w-7 rounded-full flex items-center justify-center bg-blue-50 border-blue-200'
+                            >
+                              {storyPoints === 0 ? '?' : storyPoints}
+                            </Badge>
+                            <span>
+                              {storyPoints === 0
+                                ? 'Unknown'
+                                : `${storyPoints} ${storyPoints === 1 ? 'point' : 'points'}`}
+                            </span>
+                          </div>
+                          <Button variant='ghost' size='sm' className='h-6 w-6 p-0'>
+                            <MoreHorizontal size={14} />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className='w-full text-center text-muted-foreground'>
+                          <span>Click to add estimate</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div>
                   <h3 className='text-sm text-muted-foreground mb-2'>STATUS</h3>
                   {editingStatus ? (
                     <DropdownMenu
@@ -1041,61 +1132,6 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                       </Badge>
                     )}
                   </div>
-                </div>
-
-                <div>
-                  <h3 className='text-sm text-muted-foreground mb-2'>STORY POINTS</h3>
-                  {editingStoryPoints ? (
-                    <DropdownMenu
-                      open={true}
-                      onOpenChange={(open) => {
-                        return !open && setEditingStoryPoints(false);
-                      }}
-                    >
-                      <DropdownMenuTrigger asChild>
-                        <Button variant='outline' className='w-full justify-start gap-2'>
-                          <div className='flex items-center gap-2'>
-                            <span className='text-sm font-medium'>
-                              {storyPoints !== undefined ? storyPoints : 'None'}
-                            </span>
-                          </div>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align='start' className='min-w-[200px]'>
-                        {/* Common Fibonacci-based story point values */}
-                        {[1, 2, 3, 5, 8, 13, 21].map((point) => {
-                          return (
-                            <DropdownMenuItem
-                              key={point}
-                              onClick={() => {
-                                return saveStoryPoints(point);
-                              }}
-                            >
-                              {point}
-                            </DropdownMenuItem>
-                          );
-                        })}
-                        <DropdownMenuItem
-                          onClick={() => {
-                            return saveStoryPoints(undefined);
-                          }}
-                        >
-                          Clear
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  ) : (
-                    <div
-                      className='flex items-center gap-2 p-3 rounded-md text-sm cursor-pointer hover:bg-muted/40 transition-colors'
-                      onClick={() => {
-                        return setEditingStoryPoints(true);
-                      }}
-                    >
-                      <span className='font-medium'>
-                        {storyPoints !== undefined ? storyPoints : 'No estimate'}
-                      </span>
-                    </div>
-                  )}
                 </div>
 
                 <Separator />
