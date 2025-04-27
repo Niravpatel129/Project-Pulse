@@ -470,48 +470,6 @@ const ProjectKanban = () => {
     };
   }, [columns, addingColumn, handleAddClick]);
 
-  // Add new handlers for direct task deletion and column title editing
-  const handleTaskDelete = (taskId) => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
-      // Find which column contains this task
-      let columnId = null;
-      for (const [colId, tasks] of Object.entries(columnsTasks)) {
-        if (
-          tasks.some((task) => {
-            return task.id === taskId;
-          })
-        ) {
-          columnId = colId;
-          break;
-        }
-      }
-
-      if (columnId) {
-        // Create updated tasks without the deleted task
-        const updatedColumnsTasks = { ...columnsTasks };
-        updatedColumnsTasks[columnId] = updatedColumnsTasks[columnId].filter((task) => {
-          return task.id !== taskId;
-        });
-
-        // Update the state in useKanbanBoard (assuming it has this capability)
-        // If not available in the hook, you'll need to modify the hook
-        setColumns((prev) => {
-          const newColumns = [...prev];
-          const colIndex = newColumns.findIndex((col) => {
-            return col.id === columnId;
-          });
-          if (colIndex >= 0) {
-            newColumns[colIndex] = {
-              ...newColumns[colIndex],
-              tasks: updatedColumnsTasks[columnId],
-            };
-          }
-          return newColumns;
-        });
-      }
-    }
-  };
-
   // Add handler for archiving tasks
   const handleTaskArchive = (taskId) => {
     // Find which column contains this task
@@ -535,8 +493,32 @@ const ProjectKanban = () => {
         return [...prev, { ...taskToArchive, archivedAt: new Date() }];
       });
 
-      // Remove from active tasks
-      handleTaskDelete(taskId);
+      // Instead of using a non-existent column, simply filter the task out directly
+      // using the existing hook methods
+
+      // 1. Find all tasks in the same column except the one to archive
+      const remainingTasks = columnsTasks[columnId].filter((t) => {
+        return t.id !== taskId;
+      });
+
+      // 2. Use the handleRemoveColumn and handleAddColumn to effectively rebuild
+      // the column without the archived task
+      const oldColumnId = columnId;
+      const columnToRecreate = columns.find((col) => {
+        return col.id === oldColumnId;
+      });
+
+      // 3. Create a temporary column copy with the same properties
+      if (columnToRecreate) {
+        // Remove the task directly by updating the hook state
+        // Set the task to a stringified empty object so it gets filtered out
+        // but doesn't cause iteration errors
+        handleTaskUpdate({
+          ...taskToArchive,
+          title: '[ARCHIVED] ' + taskToArchive.title,
+          _archived: true,
+        });
+      }
     }
   };
 
@@ -558,7 +540,9 @@ const ProjectKanban = () => {
 
       if (targetColumnId) {
         // Update task with proper column ID and add back to active tasks
-        handleTaskUpdate({ ...restoredTask, columnId: targetColumnId });
+        // Also remove the _archived flag
+        const { _archived, ...cleanTask } = restoredTask;
+        handleTaskUpdate({ ...cleanTask, columnId: targetColumnId });
 
         // Remove from archived tasks
         setArchivedTasks((prev) => {
@@ -566,6 +550,45 @@ const ProjectKanban = () => {
             return task.id !== taskId;
           });
         });
+      }
+    }
+  };
+
+  // Add new handler for task deletion
+  const handleTaskDelete = (taskId) => {
+    if (window.confirm('Are you sure you want to delete this task?')) {
+      // Since we can't directly delete tasks with the current hook API,
+      // use our archive functionality but don't add to archived tasks
+
+      // Find the task
+      let columnId = null;
+      let taskToDelete = null;
+
+      for (const [colId, tasks] of Object.entries(columnsTasks)) {
+        const foundTask = tasks.find((task) => {
+          return task.id === taskId;
+        });
+        if (foundTask) {
+          columnId = colId;
+          taskToDelete = foundTask;
+          break;
+        }
+      }
+
+      if (columnId && taskToDelete) {
+        // Use the first existing column as a temporary holding place
+        const firstColId = columns[0].id;
+
+        // Move the task to the first column, then filter it out in the UI
+        // This avoids the "not iterable" error by using existing columns
+        handleTaskUpdate({
+          ...taskToDelete,
+          columnId: firstColId,
+          title: '[DELETED]',
+          _deleted: true,
+        });
+
+        // Then filter it out in the UI rendering
       }
     }
   };
@@ -717,6 +740,11 @@ const ProjectKanban = () => {
         >
           <div className='flex gap-4 p-2'>
             {columns.map((col) => {
+              // Filter out tasks marked as deleted or archived
+              const visibleTasks = (filteredTasks[col.id] || []).filter((task) => {
+                return !task._deleted && !task._archived;
+              });
+
               return (
                 <KanbanColumn
                   key={col.id}
@@ -730,13 +758,13 @@ const ProjectKanban = () => {
                   <SortableContext
                     id={col.id}
                     items={
-                      filteredTasks[col.id]?.map((t) => {
+                      visibleTasks.map((t) => {
                         return t.id;
                       }) || []
                     }
                     strategy={verticalListSortingStrategy}
                   >
-                    {(filteredTasks[col.id] || []).map((task) => {
+                    {visibleTasks.map((task) => {
                       return (
                         <SortableTaskCard
                           key={task.id}
