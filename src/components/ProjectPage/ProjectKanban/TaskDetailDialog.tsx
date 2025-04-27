@@ -3,13 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,9 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -37,7 +29,6 @@ import {
   MoreHorizontal,
   Paperclip,
   Plus,
-  Timer,
   User,
   X,
 } from 'lucide-react';
@@ -62,6 +53,7 @@ type Task = {
   };
   dueDate?: Date;
   labels?: string[];
+  storyPoints?: number;
 };
 
 type Column = {
@@ -98,20 +90,6 @@ type Comment = {
   avatar: string;
 };
 
-type TimeTracking = {
-  originalEstimate: string;
-  timeSpent: string;
-  remainingEstimate: string;
-};
-
-// Add new interfaces for time tracking and labels
-type TimeEntry = {
-  id: string;
-  timeSpent: string;
-  description: string;
-  date: Date;
-};
-
 // TaskDetailDialog component to display and edit task details
 const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   task,
@@ -126,6 +104,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   const [editingAssignee, setEditingAssignee] = useState(false);
   const [editingPriority, setEditingPriority] = useState(false);
   const [editingStatus, setEditingStatus] = useState(false);
+  const [editingStoryPoints, setEditingStoryPoints] = useState(false);
   const [editedTitle, setEditedTitle] = useState('');
   const [editedDescription, setEditedDescription] = useState('');
   const [editedColumnId, setEditedColumnId] = useState('');
@@ -170,21 +149,12 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
     },
   ]);
 
-  const [timeTracking, setTimeTracking] = useState<TimeTracking>({
-    originalEstimate: '4h',
-    timeSpent: '2h 30m',
-    remainingEstimate: '1h 30m',
-  });
-
-  // Add states for time logging and labels
-  const [showTimeLoggingDialog, setShowTimeLoggingDialog] = useState(false);
-  const [timeEntryDescription, setTimeEntryDescription] = useState('');
-  const [timeSpentInput, setTimeSpentInput] = useState('');
-  const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
-
   const [showLabelInput, setShowLabelInput] = useState(false);
   const [newLabelText, setNewLabelText] = useState('');
   const [labels, setLabels] = useState<string[]>(['frontend', 'design']);
+
+  // Add state for story points
+  const [storyPoints, setStoryPoints] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     if (task) {
@@ -193,9 +163,11 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
       setEditedColumnId(task.columnId);
       setDueDate(task.dueDate || null);
 
-      // Reset time tracking and labels when task changes
-      setTimeEntries([]); // In a real app, you would load time entries for this task
+      // Reset labels when task changes
       setLabels(task.labels || ['frontend', 'design']); // Assuming task has labels property
+
+      // Set story points when task changes
+      setStoryPoints(task.storyPoints);
     }
   }, [task]);
 
@@ -234,6 +206,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
       columnId,
     });
 
+    // Close the dropdown
     setEditingStatus(false);
   };
 
@@ -332,64 +305,6 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
     setAttachments([...attachments, ...newAttachments]);
   };
 
-  const handleLogTime = () => {
-    setTimeEntryDescription('');
-    setTimeSpentInput('');
-    setShowTimeLoggingDialog(true);
-  };
-
-  const submitTimeEntry = () => {
-    if (!timeSpentInput.trim()) return;
-
-    const newEntry: TimeEntry = {
-      id: `time-${Date.now()}`,
-      timeSpent: timeSpentInput,
-      description: timeEntryDescription,
-      date: new Date(),
-    };
-
-    const updatedEntries = [...timeEntries, newEntry];
-    setTimeEntries(updatedEntries);
-
-    // Calculate total time spent
-    let totalMinutes = 0;
-    updatedEntries.forEach((entry) => {
-      const hours = parseInt(entry.timeSpent.match(/(\d+)h/)?.[1] || '0');
-      const minutes = parseInt(entry.timeSpent.match(/(\d+)m/)?.[1] || '0');
-      totalMinutes += hours * 60 + minutes;
-    });
-
-    // Convert back to hours and minutes format
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    const newTimeSpent = `${hours}h${minutes > 0 ? ` ${minutes}m` : ''}`;
-
-    // Calculate remaining time
-    const originalEstimateHours = parseInt(
-      timeTracking.originalEstimate.match(/(\d+)h/)?.[1] || '0',
-    );
-    const originalEstimateMinutes = parseInt(
-      timeTracking.originalEstimate.match(/(\d+)m/)?.[1] || '0',
-    );
-    const originalTotalMinutes = originalEstimateHours * 60 + originalEstimateMinutes;
-
-    const remainingMinutes = Math.max(0, originalTotalMinutes - totalMinutes);
-    const remainingHours = Math.floor(remainingMinutes / 60);
-    const remainingMins = remainingMinutes % 60;
-    const newRemainingEstimate = `${remainingHours}h${
-      remainingMins > 0 ? ` ${remainingMins}m` : ''
-    }`;
-
-    // Update time tracking
-    setTimeTracking({
-      ...timeTracking,
-      timeSpent: newTimeSpent,
-      remainingEstimate: newRemainingEstimate,
-    });
-
-    setShowTimeLoggingDialog(false);
-  };
-
   const handleAddLabel = () => {
     if (!newLabelText.trim()) return;
 
@@ -423,28 +338,26 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
     }
   };
 
+  // Add function to save story points
+  const saveStoryPoints = (points: number | undefined) => {
+    if (!task) return;
+
+    setStoryPoints(points);
+    onTaskUpdate({
+      ...task,
+      storyPoints: points,
+    });
+    setEditingStoryPoints(false);
+  };
+
   if (!task) return null;
 
+  // Use editedColumnId instead of task.columnId to ensure UI updates immediately
   const currentColumn =
     columns.find((col) => {
-      return col.id === task.columnId;
+      // Use editedColumnId for local state representation
+      return col.id === editedColumnId;
     }) || columns[0];
-
-  // Calculate progress percentage for time tracking
-  const originalEstimateHours = parseInt(timeTracking.originalEstimate.match(/(\d+)h/)?.[1] || '0');
-  const originalEstimateMinutes = parseInt(
-    timeTracking.originalEstimate.match(/(\d+)m/)?.[1] || '0',
-  );
-  const originalTotalMinutes = originalEstimateHours * 60 + originalEstimateMinutes;
-
-  const timeSpentHours = parseInt(timeTracking.timeSpent.match(/(\d+)h/)?.[1] || '0');
-  const timeSpentMinutes = parseInt(timeTracking.timeSpent.match(/(\d+)m/)?.[1] || '0');
-  const timeSpentTotalMinutes = timeSpentHours * 60 + timeSpentMinutes;
-
-  const progressPercentage =
-    originalTotalMinutes > 0
-      ? Math.min(100, (timeSpentTotalMinutes / originalTotalMinutes) * 100)
-      : 0;
 
   // Create a JIRA-like ID from the task id
   const ticketId = `PULSE-${task.id}`;
@@ -457,6 +370,11 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
           <div className='px-6 py-3 border-b flex items-center justify-between'>
             <div className='flex items-center gap-3'>
               <span className='text-sm font-medium text-blue-500'>{ticketId}</span>
+              {storyPoints !== undefined && (
+                <Badge variant='outline' className='bg-blue-100 text-blue-800'>
+                  {storyPoints} {storyPoints === 1 ? 'point' : 'points'}
+                </Badge>
+              )}
               <Button variant='ghost' size='sm' className='h-7'>
                 <ArrowUpRight size={14} className='mr-1' />
                 Open
@@ -608,7 +526,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                   <Input
                     value={editedTitle}
                     onChange={(e) => {
-                      setEditedTitle(e.target.value);
+                      return setEditedTitle(e.target.value);
                     }}
                     className='text-xl font-medium'
                     autoFocus
@@ -647,7 +565,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                     <Textarea
                       value={editedDescription}
                       onChange={(e) => {
-                        setEditedDescription(e.target.value);
+                        return setEditedDescription(e.target.value);
                       }}
                       placeholder='Add a description...'
                       className='min-h-[200px]'
@@ -705,7 +623,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                           className='resize-none'
                           value={commentText}
                           onChange={(e) => {
-                            setCommentText(e.target.value);
+                            return setCommentText(e.target.value);
                           }}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && e.metaKey) {
@@ -794,49 +712,70 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
               <div className='p-6 space-y-6'>
                 <div>
                   <h3 className='text-sm text-muted-foreground mb-2'>STATUS</h3>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <div
-                        className='flex items-center gap-2 p-3 rounded-md font-medium text-sm cursor-pointer hover:bg-muted/40 transition-colors'
-                        style={{
-                          backgroundColor: `${currentColumn?.color}15`,
-                          color: currentColumn?.color,
-                          borderLeft: `3px solid ${currentColumn?.color}`,
-                        }}
-                      >
+                  {editingStatus ? (
+                    <DropdownMenu
+                      open={true}
+                      onOpenChange={(open) => {
+                        return !open && setEditingStatus(false);
+                      }}
+                    >
+                      <DropdownMenuTrigger asChild>
                         <div
-                          className='w-2 h-2 rounded-full'
-                          style={{ backgroundColor: currentColumn?.color }}
-                        ></div>
-                        {currentColumn?.title}
-                      </div>
-                    </PopoverTrigger>
-                    <PopoverContent align='start' className='p-1'>
-                      <div className='space-y-1'>
+                          className='flex items-center gap-2 p-3 rounded-md font-medium text-sm cursor-pointer hover:bg-muted/40 transition-colors'
+                          style={{
+                            backgroundColor: `${currentColumn?.color}15`,
+                            color: currentColumn?.color,
+                            borderLeft: `3px solid ${currentColumn?.color}`,
+                          }}
+                        >
+                          <div
+                            className='w-2 h-2 rounded-full'
+                            style={{ backgroundColor: currentColumn?.color }}
+                          ></div>
+                          {currentColumn?.title}
+                        </div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align='start' className='min-w-[200px]'>
                         {columns.map((column) => {
                           return (
-                            <Button
+                            <DropdownMenuItem
                               key={column.id}
-                              variant='ghost'
-                              className='w-full justify-start'
                               disabled={column.id === task.columnId}
                               onClick={() => {
                                 return saveColumnId(column.id);
                               }}
                             >
-                              <div className='flex items-center gap-2'>
+                              <div className='flex items-center gap-2 w-full'>
                                 <div
                                   className='w-2 h-2 rounded-full'
                                   style={{ backgroundColor: column.color }}
                                 ></div>
-                                {column.title}
+                                <span style={{ color: column.color }}>{column.title}</span>
                               </div>
-                            </Button>
+                            </DropdownMenuItem>
                           );
                         })}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    <div
+                      className='flex items-center gap-2 p-3 rounded-md font-medium text-sm cursor-pointer hover:bg-muted/40 transition-colors'
+                      style={{
+                        backgroundColor: `${currentColumn?.color}15`,
+                        color: currentColumn?.color,
+                        borderLeft: `3px solid ${currentColumn?.color}`,
+                      }}
+                      onClick={() => {
+                        return setEditingStatus(true);
+                      }}
+                    >
+                      <div
+                        className='w-2 h-2 rounded-full'
+                        style={{ backgroundColor: currentColumn?.color }}
+                      ></div>
+                      {currentColumn?.title}
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -1037,31 +976,6 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 </div>
 
                 <div>
-                  <h3 className='text-sm text-muted-foreground mb-2'>TIME TRACKING</h3>
-                  <div className='space-y-3'>
-                    <div className='flex items-center gap-2'>
-                      <Timer size={14} className='text-muted-foreground' />
-                      <div className='flex-1'>
-                        <Progress value={progressPercentage} className='h-2' />
-                      </div>
-                      <span className='text-xs'>{timeTracking.remainingEstimate}</span>
-                    </div>
-                    <div className='flex justify-between text-xs text-muted-foreground'>
-                      <span>Logged: {timeTracking.timeSpent}</span>
-                      <span>Estimated: {timeTracking.originalEstimate}</span>
-                    </div>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      className='w-full text-xs justify-center'
-                      onClick={handleLogTime}
-                    >
-                      Log time
-                    </Button>
-                  </div>
-                </div>
-
-                <div>
                   <h3 className='text-sm text-muted-foreground mb-2'>LABELS</h3>
                   <div className='flex flex-wrap gap-2'>
                     {labels.map((label) => {
@@ -1129,6 +1043,61 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                   </div>
                 </div>
 
+                <div>
+                  <h3 className='text-sm text-muted-foreground mb-2'>STORY POINTS</h3>
+                  {editingStoryPoints ? (
+                    <DropdownMenu
+                      open={true}
+                      onOpenChange={(open) => {
+                        return !open && setEditingStoryPoints(false);
+                      }}
+                    >
+                      <DropdownMenuTrigger asChild>
+                        <Button variant='outline' className='w-full justify-start gap-2'>
+                          <div className='flex items-center gap-2'>
+                            <span className='text-sm font-medium'>
+                              {storyPoints !== undefined ? storyPoints : 'None'}
+                            </span>
+                          </div>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align='start' className='min-w-[200px]'>
+                        {/* Common Fibonacci-based story point values */}
+                        {[1, 2, 3, 5, 8, 13, 21].map((point) => {
+                          return (
+                            <DropdownMenuItem
+                              key={point}
+                              onClick={() => {
+                                return saveStoryPoints(point);
+                              }}
+                            >
+                              {point}
+                            </DropdownMenuItem>
+                          );
+                        })}
+                        <DropdownMenuItem
+                          onClick={() => {
+                            return saveStoryPoints(undefined);
+                          }}
+                        >
+                          Clear
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    <div
+                      className='flex items-center gap-2 p-3 rounded-md text-sm cursor-pointer hover:bg-muted/40 transition-colors'
+                      onClick={() => {
+                        return setEditingStoryPoints(true);
+                      }}
+                    >
+                      <span className='font-medium'>
+                        {storyPoints !== undefined ? storyPoints : 'No estimate'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
                 <Separator />
 
                 <div>
@@ -1153,51 +1122,6 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
               </div>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Time Logging Dialog */}
-      <Dialog open={showTimeLoggingDialog} onOpenChange={setShowTimeLoggingDialog}>
-        <DialogContent className='sm:max-w-md'>
-          <DialogHeader>
-            <DialogTitle>Log time</DialogTitle>
-          </DialogHeader>
-          <div className='space-y-4 py-4'>
-            <div className='space-y-2'>
-              <Label htmlFor='time-spent'>Time spent</Label>
-              <Input
-                id='time-spent'
-                placeholder='e.g. 2h 30m'
-                value={timeSpentInput}
-                onChange={(e) => {
-                  return setTimeSpentInput(e.target.value);
-                }}
-              />
-              <p className='text-xs text-muted-foreground'>Format: 1h 30m, 45m, 3h, etc.</p>
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='time-description'>Description (optional)</Label>
-              <Textarea
-                id='time-description'
-                placeholder='What did you work on?'
-                value={timeEntryDescription}
-                onChange={(e) => {
-                  return setTimeEntryDescription(e.target.value);
-                }}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant='outline'
-              onClick={() => {
-                return setShowTimeLoggingDialog(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button onClick={submitTimeEntry}>Log time</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
