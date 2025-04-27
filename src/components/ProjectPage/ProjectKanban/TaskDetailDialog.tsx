@@ -36,6 +36,42 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
+// Define task and column types for type safety
+type Task = {
+  id: string;
+  title: string;
+  description?: string;
+  columnId: string;
+  priority?: 'low' | 'medium' | 'high';
+  assignee?: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
+  reporter?: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
+  dueDate?: Date;
+};
+
+type Column = {
+  id: string;
+  title: string;
+  color: string;
+  taskIds?: string[];
+};
+
+// Define props interface
+interface TaskDetailDialogProps {
+  task: Task | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onTaskUpdate: (updatedTask: Task) => void;
+  columns: Column[];
+}
+
 // Define the attachment type for type safety
 type Attachment = {
   id: string;
@@ -46,35 +82,40 @@ type Attachment = {
   size?: number;
 };
 
+type Comment = {
+  id: number;
+  author: string;
+  content: string;
+  time: string;
+  avatar: string;
+};
+
+type TimeTracking = {
+  originalEstimate: string;
+  timeSpent: string;
+  remainingEstimate: string;
+};
+
 // TaskDetailDialog component to display and edit task details
-const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) => {
+const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
+  task,
+  open,
+  onOpenChange,
+  onTaskUpdate,
+  columns,
+}) => {
   // Individual edit states for each field rather than a global edit mode
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingDescription, setEditingDescription] = useState(false);
   const [editingAssignee, setEditingAssignee] = useState(false);
   const [editingPriority, setEditingPriority] = useState(false);
   const [editingStatus, setEditingStatus] = useState(false);
-  const [editedTitle, setEditedTitle] = useState(task?.title || '');
-  const [editedDescription, setEditedDescription] = useState(task?.description || '');
-  const [editedColumnId, setEditedColumnId] = useState(task?.columnId || '');
+  const [editedTitle, setEditedTitle] = useState('');
+  const [editedDescription, setEditedDescription] = useState('');
+  const [editedColumnId, setEditedColumnId] = useState('');
   const [commentText, setCommentText] = useState('');
-  const [comments, setComments] = useState([
-    {
-      id: 1,
-      author: 'John Doe',
-      content: "Let's prioritize this for the next sprint.",
-      time: '2 days ago',
-      avatar: '/avatars/01.png',
-    },
-    {
-      id: 2,
-      author: 'Sarah Smith',
-      content: "I've started working on this.",
-      time: '1 day ago',
-      avatar: '/avatars/02.png',
-    },
-  ]);
   const [activeTab, setActiveTab] = useState('attachments');
+  const [dueDate, setDueDate] = useState<Date | null>(null);
 
   // Attachment states
   const [showLinkInput, setShowLinkInput] = useState(false);
@@ -96,8 +137,24 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
     },
   ]);
 
-  const [dueDate, setDueDate] = useState(null);
-  const [timeTracking, setTimeTracking] = useState({
+  const [comments, setComments] = useState<Comment[]>([
+    {
+      id: 1,
+      author: 'John Doe',
+      content: "Let's prioritize this for the next sprint.",
+      time: '2 days ago',
+      avatar: '/avatars/01.png',
+    },
+    {
+      id: 2,
+      author: 'Sarah Smith',
+      content: "I've started working on this.",
+      time: '1 day ago',
+      avatar: '/avatars/02.png',
+    },
+  ]);
+
+  const [timeTracking, setTimeTracking] = useState<TimeTracking>({
     originalEstimate: '4h',
     timeSpent: '2h 30m',
     remainingEstimate: '1h 30m',
@@ -108,12 +165,13 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
       setEditedTitle(task.title);
       setEditedDescription(task.description || '');
       setEditedColumnId(task.columnId);
+      setDueDate(task.dueDate || null);
     }
   }, [task]);
 
   // Save individual field changes
   const saveTitle = () => {
-    if (!task) return;
+    if (!task || !editedTitle.trim()) return;
 
     onTaskUpdate({
       ...task,
@@ -134,7 +192,7 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
     setEditingDescription(false);
   };
 
-  const saveColumnId = (columnId) => {
+  const saveColumnId = (columnId: string) => {
     if (!task) return;
 
     onTaskUpdate({
@@ -143,6 +201,38 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
     });
 
     setEditingStatus(false);
+    setEditedColumnId(columnId);
+  };
+
+  const saveDueDate = (date: Date | null) => {
+    if (!task) return;
+
+    onTaskUpdate({
+      ...task,
+      dueDate: date || undefined,
+    });
+  };
+
+  const savePriority = (priority: 'low' | 'medium' | 'high') => {
+    if (!task) return;
+
+    onTaskUpdate({
+      ...task,
+      priority,
+    });
+
+    setEditingPriority(false);
+  };
+
+  const saveAssignee = (assignee: { id: string; name: string; avatar: string }) => {
+    if (!task) return;
+
+    onTaskUpdate({
+      ...task,
+      assignee,
+    });
+
+    setEditingAssignee(false);
   };
 
   const handleAddComment = () => {
@@ -181,6 +271,14 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
     setShowLinkInput(false);
   };
 
+  const handleDeleteAttachment = (id: string) => {
+    setAttachments(
+      attachments.filter((attachment) => {
+        return attachment.id !== id;
+      }),
+    );
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     // In a real app, this would handle actual file uploads
     const files = e.target.files;
@@ -201,15 +299,17 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
     setAttachments([...attachments, ...newAttachments]);
   };
 
-  const handleTransition = (columnId) => {
-    saveColumnId(columnId);
+  const handleLogTime = () => {
+    // In a real app, this would open a time logging dialog
+    console.log('Log time clicked');
   };
 
   if (!task) return null;
 
-  const currentColumn = columns.find((col) => {
-    return col.id === task.columnId;
-  });
+  const currentColumn =
+    columns.find((col) => {
+      return col.id === task.columnId;
+    }) || columns[0];
   // Create a JIRA-like ID from the task id
   const ticketId = `PULSE-${task.id}`;
 
@@ -352,6 +452,9 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
                           variant='ghost'
                           size='sm'
                           className='h-4 w-4 p-0 ml-1 text-muted-foreground'
+                          onClick={() => {
+                            return handleDeleteAttachment(attachment.id);
+                          }}
                         >
                           <X size={10} />
                         </Button>
@@ -463,9 +566,18 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
                   <p className='text-sm text-muted-foreground mb-4'>
                     or select files from your computer
                   </p>
-                  <Button size='sm' variant='outline'>
-                    Upload files
-                  </Button>
+                  <label htmlFor='file-upload-2'>
+                    <Button size='sm' variant='outline' asChild>
+                      <span>Upload files</span>
+                    </Button>
+                  </label>
+                  <input
+                    id='file-upload-2'
+                    type='file'
+                    className='sr-only'
+                    multiple
+                    onChange={handleFileUpload}
+                  />
                 </div>
               </TabsContent>
 
@@ -638,7 +750,11 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
                     <DropdownMenuContent align='start'>
                       <DropdownMenuItem
                         onClick={() => {
-                          return setEditingAssignee(false);
+                          return saveAssignee({
+                            id: '1',
+                            name: 'John Doe',
+                            avatar: '/avatars/01.png',
+                          });
                         }}
                       >
                         <div className='flex items-center gap-2'>
@@ -651,7 +767,11 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
-                          return setEditingAssignee(false);
+                          return saveAssignee({
+                            id: '2',
+                            name: 'Sarah Smith',
+                            avatar: '/avatars/02.png',
+                          });
                         }}
                       >
                         <div className='flex items-center gap-2'>
@@ -664,7 +784,11 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
-                          return setEditingAssignee(false);
+                          return saveAssignee({
+                            id: '3',
+                            name: 'You',
+                            avatar: '/avatars/03.png',
+                          });
                         }}
                       >
                         <div className='flex items-center gap-2'>
@@ -685,10 +809,13 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
                     }}
                   >
                     <Avatar className='h-6 w-6'>
-                      <AvatarImage src='/avatars/01.png' alt='John Doe' />
-                      <AvatarFallback>JD</AvatarFallback>
+                      <AvatarImage
+                        src={task.assignee?.avatar || '/avatars/01.png'}
+                        alt={task.assignee?.name || 'John Doe'}
+                      />
+                      <AvatarFallback>{(task.assignee?.name || 'John Doe')[0]}</AvatarFallback>
                     </Avatar>
-                    <span className='text-sm'>John Doe</span>
+                    <span className='text-sm'>{task.assignee?.name || 'John Doe'}</span>
                   </div>
                 )}
               </div>
@@ -697,10 +824,13 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
                 <h3 className='text-sm text-muted-foreground mb-2'>REPORTER</h3>
                 <div className='flex items-center gap-2 p-3'>
                   <Avatar className='h-6 w-6'>
-                    <AvatarImage src='/avatars/02.png' alt='Sarah Smith' />
-                    <AvatarFallback>SS</AvatarFallback>
+                    <AvatarImage
+                      src={task.reporter?.avatar || '/avatars/02.png'}
+                      alt={task.reporter?.name || 'Sarah Smith'}
+                    />
+                    <AvatarFallback>{(task.reporter?.name || 'Sarah Smith')[0]}</AvatarFallback>
                   </Avatar>
-                  <span className='text-sm'>Sarah Smith</span>
+                  <span className='text-sm'>{task.reporter?.name || 'Sarah Smith'}</span>
                 </div>
               </div>
 
@@ -715,28 +845,30 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
                   >
                     <DropdownMenuTrigger asChild>
                       <Button variant='outline' className='w-full justify-start gap-2'>
-                        <Badge className='bg-yellow-500 hover:bg-yellow-600'>Medium</Badge>
+                        <Badge className='bg-yellow-500 hover:bg-yellow-600'>
+                          {task.priority || 'Medium'}
+                        </Badge>
                         <span className='text-sm'>Priority</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align='start'>
                       <DropdownMenuItem
                         onClick={() => {
-                          return setEditingPriority(false);
+                          return savePriority('high');
                         }}
                       >
                         <Badge className='bg-red-500 hover:bg-red-600 mr-2'>High</Badge>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
-                          return setEditingPriority(false);
+                          return savePriority('medium');
                         }}
                       >
                         <Badge className='bg-yellow-500 hover:bg-yellow-600 mr-2'>Medium</Badge>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
-                          return setEditingPriority(false);
+                          return savePriority('low');
                         }}
                       >
                         <Badge className='bg-green-500 hover:bg-green-600 mr-2'>Low</Badge>
@@ -750,7 +882,17 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
                       return setEditingPriority(true);
                     }}
                   >
-                    <Badge className='bg-yellow-500 hover:bg-yellow-600'>Medium</Badge>
+                    <Badge
+                      className={
+                        task.priority === 'high'
+                          ? 'bg-red-500 hover:bg-red-600'
+                          : task.priority === 'low'
+                          ? 'bg-green-500 hover:bg-green-600'
+                          : 'bg-yellow-500 hover:bg-yellow-600'
+                      }
+                    >
+                      {task.priority || 'Medium'}
+                    </Badge>
                     <span className='text-sm'>Priority</span>
                   </div>
                 )}
@@ -772,7 +914,10 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
                     <CalendarComponent
                       mode='single'
                       selected={dueDate}
-                      onSelect={setDueDate}
+                      onSelect={(date) => {
+                        setDueDate(date);
+                        saveDueDate(date);
+                      }}
                       initialFocus
                     />
                   </PopoverContent>
@@ -793,7 +938,12 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
                     <span>Logged: {timeTracking.timeSpent}</span>
                     <span>Estimated: {timeTracking.originalEstimate}</span>
                   </div>
-                  <Button variant='outline' size='sm' className='w-full text-xs justify-center'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    className='w-full text-xs justify-center'
+                    onClick={handleLogTime}
+                  >
                     Log time
                   </Button>
                 </div>
