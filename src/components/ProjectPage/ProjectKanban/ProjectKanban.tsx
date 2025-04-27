@@ -26,7 +26,7 @@ import KanbanHeader from './KanbanHeader';
 const KanbanColumn = ({ title, children, id, onAddClick, isAdding }) => {
   const { setNodeRef: setDroppableNodeRef } = useDroppable({ id });
   return (
-    <div className='group flex flex-col min-w-[250px]'>
+    <div className='group flex flex-col w-full min-w-[247px]'>
       <div className='px-3 py-2 bg-muted/40 rounded-t-lg border border-border'>
         <h3 className='font-medium text-sm'>{title}</h3>
       </div>
@@ -40,7 +40,7 @@ const KanbanColumn = ({ title, children, id, onAddClick, isAdding }) => {
             onClick={() => {
               return onAddClick(id);
             }}
-            className='flex items-center gap-1 mt-2 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition'
+            className='flex items-center gap-1 mt-2 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition w-full'
           >
             <Plus size={14} /> Add task
           </button>
@@ -107,7 +107,7 @@ const TaskCard = ({ task }) => {
 const NewTaskInput = ({ value, onChange, onSave, onCancel }) => {
   return (
     <Card className='mb-2 border border-dashed border-border'>
-      <CardContent className='p-3 flex items-center space-x-2'>
+      <CardContent className='p-3 flex items-center space-x-2 relative'>
         <input
           autoFocus
           value={value}
@@ -123,7 +123,7 @@ const NewTaskInput = ({ value, onChange, onSave, onCancel }) => {
         />
         <button
           onClick={onSave}
-          className='bg-black text-white rounded px-2 py-1 flex items-center gap-1 text-xs font-medium'
+          className='bg-black text-white rounded px-2 py-1 flex items-center gap-1 text-xs font-medium absolute right-2'
         >
           Save <CommandShortcut className='text-white'>⏎</CommandShortcut>
         </button>
