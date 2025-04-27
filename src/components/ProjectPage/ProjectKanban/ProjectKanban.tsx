@@ -394,6 +394,7 @@ const ProjectKanban = () => {
   const [boardActionsOpen, setBoardActionsOpen] = useState(false);
   const [editingColumn, setEditingColumn] = useState(null);
   const [newColumnName, setNewColumnName] = useState('');
+  const [editColumnName, setEditColumnName] = useState('');
   const [newColumnColor, setNewColumnColor] = useState('#e2e8f0');
 
   // Handle editing a column name
@@ -557,15 +558,15 @@ const ProjectKanban = () => {
                       <div className='space-y-2'>
                         <label className='text-sm font-medium'>Column Name</label>
                         <Input
-                          value={newColumnName}
+                          value={editColumnName}
                           onChange={(e) => {
-                            return setNewColumnName(e.target.value);
+                            return setEditColumnName(e.target.value);
                           }}
                           className='w-full'
                           autoFocus
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
-                              handleEditColumn(column.id, newColumnName);
+                              handleEditColumn(column.id, editColumnName);
                               setEditingColumn(null);
                             } else if (e.key === 'Escape') {
                               setEditingColumn(null);
@@ -603,7 +604,7 @@ const ProjectKanban = () => {
                           variant='default'
                           size='sm'
                           onClick={() => {
-                            handleEditColumn(column.id, newColumnName);
+                            handleEditColumn(column.id, editColumnName);
                             setEditingColumn(null);
                           }}
                         >
@@ -625,7 +626,7 @@ const ProjectKanban = () => {
                           variant='ghost'
                           size='sm'
                           onClick={() => {
-                            setNewColumnName(column.title);
+                            setEditColumnName(column.title);
                             setEditingColumn(column.id);
                           }}
                         >
@@ -649,7 +650,8 @@ const ProjectKanban = () => {
             })}
           </div>
 
-          <div className='grid grid-cols-[1fr_auto] gap-4 pt-4 border-t'>
+          <div className='space-y-4 pt-4 border-t'>
+            <h3 className='font-medium'>Add New Column</h3>
             <div className='space-y-4'>
               <div className='space-y-2'>
                 <label className='text-sm font-medium'>Column Name</label>
@@ -664,31 +666,28 @@ const ProjectKanban = () => {
 
               <div className='space-y-2'>
                 <label className='text-sm font-medium'>Column Color</label>
-                <div className='w-full'>
-                  <ColorPicker
-                    value={newColumnColor}
-                    onChange={(color) => {
-                      return setNewColumnColor(color);
-                    }}
-                    label=''
-                  />
-                </div>
+                <ColorPicker
+                  value={newColumnColor}
+                  onChange={(color) => {
+                    return setNewColumnColor(color);
+                  }}
+                  label=''
+                />
               </div>
-            </div>
 
-            <div className='flex items-end'>
-              <Button
-                onClick={() => {
-                  if (newColumnName.trim()) {
-                    handleAddColumn(newColumnName, newColumnColor);
-                    setNewColumnName('');
-                    setNewColumnColor('#e2e8f0');
-                  }
-                }}
-                className='h-10'
-              >
-                <Plus size={16} className='mr-2' /> Add Column
-              </Button>
+              <div className='flex justify-end'>
+                <Button
+                  onClick={() => {
+                    if (newColumnName.trim()) {
+                      handleAddColumn(newColumnName, newColumnColor);
+                      setNewColumnName('');
+                      setNewColumnColor('#e2e8f0');
+                    }
+                  }}
+                >
+                  <Plus size={16} className='mr-2' /> Add Column
+                </Button>
+              </div>
             </div>
           </div>
 
