@@ -42,48 +42,8 @@ const KanbanHeader = ({
     onSearch(query);
   };
 
-  const handleAddColumn = () => {
-    if (newColumnName.trim()) {
-      onAddColumn(newColumnName.trim(), newColumnColor);
-      setNewColumnName('');
-      setNewColumnColor('#e2e8f0');
-      setIsDialogOpen(false);
-    }
-  };
-
-  const handleUndo = () => {
-    console.log('Undo');
-  };
-
   const handleAutoSort = () => {
     console.log('Auto-sort');
-  };
-
-  const handleReset = () => {
-    console.log('Reset');
-  };
-
-  const handleTemplate = () => {
-    console.log('Template');
-  };
-
-  const handleKeyboardShortcuts = () => {
-    console.log('Keyboard shortcuts');
-  };
-
-  const handleTemplateDialogOpen = () => {
-    console.log('Template dialog open');
-  };
-
-  const handleKeyboardShortcutsDialogOpen = () => {
-    console.log('Keyboard shortcuts dialog open');
-  };
-  const setIsTemplateDialogOpen = (open: boolean) => {
-    console.log('Template dialog open', open);
-  };
-
-  const setIsKeyboardShortcutsDialogOpen = (open: boolean) => {
-    console.log('Keyboard shortcuts dialog open', open);
   };
 
   const setIsKeyboardShortcutsOpen = (open: boolean) => {
