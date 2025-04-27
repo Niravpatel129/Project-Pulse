@@ -163,26 +163,41 @@ const ProjectKanban = () => {
   ]);
 
   const initialTasks = [
-    { id: '1', title: 'Research design options', description: 'Look for inspiration' },
-    { id: '2', title: 'Create wireframes', description: 'For main screens' },
-    { id: '3', title: 'Develop homepage', description: 'Implement basic structure' },
-    { id: '4', title: 'Design review', description: 'With client' },
-    { id: '5', title: 'Fix navigation bugs', description: 'Mobile menu issues' },
-    { id: '6', title: 'Update documentation', description: 'Add recent changes' },
+    {
+      id: '1',
+      title: 'Research design options',
+      description: 'Look for inspiration',
+      columnId: 'todo',
+    },
+    { id: '2', title: 'Create wireframes', description: 'For main screens', columnId: 'todo' },
+    {
+      id: '3',
+      title: 'Develop homepage',
+      description: 'Implement basic structure',
+      columnId: 'in-progress',
+    },
+    { id: '4', title: 'Design review', description: 'With client', columnId: 'review' },
+    {
+      id: '5',
+      title: 'Fix navigation bugs',
+      description: 'Mobile menu issues',
+      columnId: 'in-progress',
+    },
+    { id: '6', title: 'Update documentation', description: 'Add recent changes', columnId: 'done' },
   ];
 
   const [columnsTasks, setColumnsTasks] = useState({
     todo: initialTasks.filter((t) => {
-      return ['1', '2'].includes(t.id);
+      return t.columnId === 'todo';
     }),
     'in-progress': initialTasks.filter((t) => {
-      return ['3', '5'].includes(t.id);
+      return t.columnId === 'in-progress';
     }),
     review: initialTasks.filter((t) => {
-      return t.id === '4';
+      return t.columnId === 'review';
     }),
     done: initialTasks.filter((t) => {
-      return t.id === '6';
+      return t.columnId === 'done';
     }),
   });
 
@@ -202,6 +217,25 @@ const ProjectKanban = () => {
     });
   };
 
+  // Alternative implementation that would be used with a real backend
+  // This demonstrates how to find a container using columnId rather than an array search
+  const findContainerById = (taskId: string) => {
+    // In a real implementation with MongoDB, you might do:
+    // 1. First find the task by ID from a tasks collection
+    // 2. Then use its columnId reference to get the column
+
+    // Simulated version for our current data structure:
+    for (const colId in columnsTasks) {
+      const task = columnsTasks[colId].find((t) => {
+        return t.id === taskId;
+      });
+      if (task) {
+        return task.columnId;
+      }
+    }
+    return null;
+  };
+
   const handleAddClick = (columnId: string) => {
     setAddingColumn(columnId);
     setNewTaskTitle('');
@@ -210,7 +244,12 @@ const ProjectKanban = () => {
   const handleSaveNew = () => {
     if (!addingColumn || !newTaskTitle.trim()) return;
     const id = Date.now().toString();
-    const newTask = { id, title: newTaskTitle.trim(), description: '', status: addingColumn };
+    const newTask = {
+      id,
+      title: newTaskTitle.trim(),
+      description: '',
+      columnId: addingColumn,
+    };
     setColumnsTasks((prev) => {
       return {
         ...prev,
@@ -252,7 +291,11 @@ const ProjectKanban = () => {
         return t.id === over.id;
       });
       const insertIndex = overIndex >= 0 ? overIndex : destItems.length;
-      destItems.splice(insertIndex, 0, activeTask!);
+
+      // Update task's columnId when moved to another column
+      const updatedTask = { ...activeTask!, columnId: toCol };
+      destItems.splice(insertIndex, 0, updatedTask);
+
       setColumnsTasks((prev) => {
         return {
           ...prev,
@@ -326,7 +369,8 @@ const ProjectKanban = () => {
 
   // Handle adding a new column
   const handleAddColumn = (name: string, color: string) => {
-    const id = name.toLowerCase().replace(/\s+/g, '-');
+    // Generate a unique ID (in a real app with MongoDB, you would use ObjectId)
+    const id = `col-${Date.now()}`;
     setColumns((prev) => {
       return [...prev, { id, title: name, color }];
     });
