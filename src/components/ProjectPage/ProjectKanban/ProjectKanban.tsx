@@ -69,7 +69,7 @@ const KanbanColumn = ({
   };
 
   return (
-    <div className='group flex flex-col w-full min-w-[246px]'>
+    <div className='flex flex-col w-full min-w-[246px]'>
       <div
         className='px-3 py-2 rounded-t-lg border border-border flex justify-between items-center'
         style={{
@@ -118,7 +118,7 @@ const KanbanColumn = ({
             onClick={() => {
               return onAddClick(id);
             }}
-            className='flex items-center gap-1 mt-2 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition w-full'
+            className='flex items-center gap-1 mt-2 text-xs text-muted-foreground transition w-full'
           >
             <Plus size={14} /> Add task
           </button>
