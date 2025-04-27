@@ -1,13 +1,5 @@
 'use client';
 import { Button } from '@/components/ui/button';
-import { ColorPicker } from '@/components/ui/color-picker';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,8 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Keyboard, Plus, Search, Settings, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { Keyboard, Search, Settings, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 
 interface KanbanHeaderProps {
@@ -100,7 +91,7 @@ const KanbanHeader = ({
   };
 
   return (
-    <div className='w-full mb-6'>
+    <div className='w-full mb-6 py-1'>
       <div className='flex justify-between items-start mb-4'>
         <div>
           <h1 className='text-2xl font-bold'>{title}</h1>
@@ -118,16 +109,7 @@ const KanbanHeader = ({
               className='pl-8'
             />
           </div>
-          <Button
-            onClick={() => {
-              return setIsDialogOpen(true);
-            }}
-            variant='outline'
-            size='sm'
-          >
-            <Plus className='h-4 w-4 mr-1' />
-            Add Column
-          </Button>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant='outline' size='icon'>
@@ -163,56 +145,6 @@ const KanbanHeader = ({
           </DropdownMenu>
         </div>
       </div>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className='sm:max-w-[425px]'>
-          <DialogHeader>
-            <DialogTitle>Add New Column</DialogTitle>
-          </DialogHeader>
-          <div className='grid gap-4 py-4'>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='name' className='text-right'>
-                Name
-              </Label>
-              <Input
-                id='name'
-                value={newColumnName}
-                onChange={(e) => {
-                  return setNewColumnName(e.target.value);
-                }}
-                className='col-span-3'
-                placeholder='e.g., In Review'
-              />
-            </div>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='color' className='text-right'>
-                Color
-              </Label>
-              <div className='col-span-3'>
-                <ColorPicker
-                  value={newColumnColor}
-                  onChange={setNewColumnColor}
-                  label='Column Color'
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={() => {
-                return setIsDialogOpen(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type='button' onClick={handleAddColumn}>
-              Add Column
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

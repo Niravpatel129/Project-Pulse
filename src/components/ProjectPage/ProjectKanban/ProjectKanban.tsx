@@ -7,7 +7,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -536,6 +535,15 @@ const ProjectKanban = () => {
 
       <Dialog open={boardActionsOpen} onOpenChange={setBoardActionsOpen}>
         <DialogContent className='sm:max-w-md'>
+          <Button
+            className='absolute top-2 right-2'
+            variant='ghost'
+            onClick={() => {
+              return setBoardActionsOpen(false);
+            }}
+          >
+            <X size={12} />
+          </Button>
           <DialogHeader>
             <DialogTitle>Board Columns</DialogTitle>
             <DialogDescription>
@@ -562,7 +570,7 @@ const ProjectKanban = () => {
                           onChange={(e) => {
                             return setEditColumnName(e.target.value);
                           }}
-                          className='w-full'
+                          className='w-full h-10'
                           autoFocus
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
@@ -658,6 +666,7 @@ const ProjectKanban = () => {
                 <Input
                   placeholder='New column name'
                   value={newColumnName}
+                  className='h-10'
                   onChange={(e) => {
                     return setNewColumnName(e.target.value);
                   }}
@@ -690,17 +699,6 @@ const ProjectKanban = () => {
               </div>
             </div>
           </div>
-
-          <DialogFooter className='sm:justify-end'>
-            <Button
-              variant='outline'
-              onClick={() => {
-                return setBoardActionsOpen(false);
-              }}
-            >
-              Done
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
