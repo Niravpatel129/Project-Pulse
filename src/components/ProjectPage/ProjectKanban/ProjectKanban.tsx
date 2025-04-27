@@ -403,6 +403,8 @@ const NewTaskInput = ({ value, onChange, onSave, onCancel }) => {
 const ProjectKanban = () => {
   const {
     mounted,
+    loading,
+    error,
     columns,
     columnsTasks,
     filteredTasks,
@@ -416,6 +418,7 @@ const ProjectKanban = () => {
     newColumnColor,
     selectedTask,
     taskDialogOpen,
+    archivedTasks,
     handleAddClick,
     handleSaveNew,
     handleCancelNew,
@@ -439,11 +442,17 @@ const ProjectKanban = () => {
     setNewTaskTitle,
     setColumns,
     handleUpdateColumnColor,
+    handleTaskDelete,
+    handleTaskArchive,
+    handleRestoreTask,
+    refreshData,
   } = useKanbanBoard();
 
-  // State for archived tasks
-  const [archivedTasks, setArchivedTasks] = useState([]);
+  // Add state for archived tasks
   const [showArchived, setShowArchived] = useState(false);
+
+  // Set up sensors for drag and drop - must be declared before any conditional returns
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   // Add keyboard shortcut effect for adding new tasks
   useEffect(() => {
@@ -460,135 +469,6 @@ const ProjectKanban = () => {
       return window.removeEventListener('keydown', handleKeyDown);
     };
   }, [columns, addingColumn, handleAddClick]);
-
-  // Add handler for archiving tasks
-  const handleTaskArchive = (taskId) => {
-    // Find which column contains this task
-    let columnId = null;
-    let taskToArchive = null;
-
-    for (const [colId, tasks] of Object.entries(columnsTasks)) {
-      const foundTask = tasks.find((task) => {
-        return task.id === taskId;
-      });
-      if (foundTask) {
-        columnId = colId;
-        taskToArchive = foundTask;
-        break;
-      }
-    }
-
-    if (columnId && taskToArchive) {
-      // Add task to archived tasks
-      setArchivedTasks((prev) => {
-        return [...prev, { ...taskToArchive, archivedAt: new Date() }];
-      });
-
-      // Instead of using a non-existent column, simply filter the task out directly
-      // using the existing hook methods
-
-      // 1. Find all tasks in the same column except the one to archive
-      const remainingTasks = columnsTasks[columnId].filter((t) => {
-        return t.id !== taskId;
-      });
-
-      // 2. Use the handleRemoveColumn and handleAddColumn to effectively rebuild
-      // the column without the archived task
-      const oldColumnId = columnId;
-      const columnToRecreate = columns.find((col) => {
-        return col.id === oldColumnId;
-      });
-
-      // 3. Create a temporary column copy with the same properties
-      if (columnToRecreate) {
-        // Remove the task directly by updating the hook state
-        // Set the task to a stringified empty object so it gets filtered out
-        // but doesn't cause iteration errors
-        handleTaskUpdate({
-          ...taskToArchive,
-          title: '[ARCHIVED] ' + taskToArchive.title,
-          _archived: true,
-        });
-      }
-    }
-  };
-
-  // Handler to restore tasks from archive
-  const handleRestoreTask = (taskId) => {
-    const taskToRestore = archivedTasks.find((task) => {
-      return task.id === taskId;
-    });
-    if (taskToRestore) {
-      // Remove archived status
-      const { archivedAt, ...restoredTask } = taskToRestore;
-
-      // Add back to its original column or the first column if original doesn't exist
-      const targetColumnId = columns.find((col) => {
-        return col.id === restoredTask.columnId;
-      })
-        ? restoredTask.columnId
-        : columns[0]?.id;
-
-      if (targetColumnId) {
-        // Update task with proper column ID and add back to active tasks
-        // Also remove the _archived flag
-        const { _archived, ...cleanTask } = restoredTask;
-        handleTaskUpdate({ ...cleanTask, columnId: targetColumnId });
-
-        // Remove from archived tasks
-        setArchivedTasks((prev) => {
-          return prev.filter((task) => {
-            return task.id !== taskId;
-          });
-        });
-      }
-    }
-  };
-
-  // Add new handler for task deletion
-  const handleTaskDelete = (taskId) => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
-      // Since we can't directly delete tasks with the current hook API,
-      // use our archive functionality but don't add to archived tasks
-
-      // Find the task
-      let columnId = null;
-      let taskToDelete = null;
-
-      for (const [colId, tasks] of Object.entries(columnsTasks)) {
-        const foundTask = tasks.find((task) => {
-          return task.id === taskId;
-        });
-        if (foundTask) {
-          columnId = colId;
-          taskToDelete = foundTask;
-          break;
-        }
-      }
-
-      if (columnId && taskToDelete) {
-        // Use the first existing column as a temporary holding place
-        const firstColId = columns[0].id;
-
-        // Move the task to the first column, then filter it out in the UI
-        // This avoids the "not iterable" error by using existing columns
-        handleTaskUpdate({
-          ...taskToDelete,
-          columnId: firstColId,
-          title: '[DELETED]',
-          _deleted: true,
-        });
-
-        // Then filter it out in the UI rendering
-      }
-    }
-  };
-
-  const handleDirectColumnEdit = (columnId, newTitle) => {
-    handleEditColumn(columnId, newTitle);
-  };
-
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   // Add new handler for moving tasks between columns
   const handleMoveTask = (taskId, targetColumnId) => {
@@ -614,8 +494,8 @@ const ProjectKanban = () => {
     }
   };
 
-  // Render a simplified version for server-side rendering
-  if (!mounted) {
+  // Render a simplified version for server-side rendering or loading state
+  if (!mounted || loading) {
     return (
       <div className='w-full'>
         <KanbanHeader
@@ -628,40 +508,92 @@ const ProjectKanban = () => {
             return setBoardActionsOpen(true);
           }}
         />
-        <div className='w-full overflow-x-auto pb-4'>
-          <div className='flex gap-4 p-2'>
-            {columns.map((col) => {
-              return (
-                <div key={col.id} className='group flex flex-col min-w-[250px]'>
-                  <div
-                    className='px-3 py-2 rounded-t-lg border border-border flex justify-between items-center'
-                    style={{
-                      backgroundColor: `${col.color}30`,
-                      borderBottomColor: col.color,
-                    }}
-                  >
-                    <h3 className='font-medium text-sm cursor-pointer hover:text-foreground transition-colors'>
-                      {col.title}
-                    </h3>
-                  </div>
-                  <div className='p-3 rounded-b-lg border border-t-0 border-border min-h-[300px] space-y-2'>
-                    {(filteredTasks[col.id] || []).map((task) => {
-                      return (
-                        <StaticTaskCard
-                          key={task.id}
-                          task={task}
-                          onTaskClick={handleTaskClick}
-                          onTaskDelete={handleTaskDelete}
-                          onTaskArchive={handleTaskArchive}
-                          columns={columns}
-                          onMoveTask={handleMoveTask}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+        <div className='w-full h-96 flex items-center justify-center'>
+          <div className='text-center'>
+            <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto'></div>
+            <p className='mt-2 text-sm text-muted-foreground'>Loading kanban board...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className='w-full'>
+        <KanbanHeader
+          title='Project Kanban Board'
+          totalTasks={0}
+          filteredTasks={0}
+          onSearch={handleSearch}
+          onAddColumn={handleAddColumn}
+          onBoardActions={() => {
+            return setBoardActionsOpen(true);
+          }}
+        />
+        <div className='w-full h-96 flex items-center justify-center'>
+          <div className='text-center'>
+            <div className='text-destructive mb-2'>
+              <svg
+                width='24'
+                height='24'
+                viewBox='0 0 24 24'
+                fill='none'
+                xmlns='http://www.w3.org/2000/svg'
+                className='mx-auto'
+              >
+                <path
+                  d='M12 9V13M12 16V16.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0378 2.66667 10.268 4L3.33978 16C2.56998 17.3333 3.53223 19 5.07183 19Z'
+                  stroke='currentColor'
+                  strokeWidth='2'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                />
+              </svg>
+            </div>
+            <h3 className='font-medium mb-1'>Failed to load kanban board</h3>
+            <p className='text-sm text-muted-foreground mb-4'>{error}</p>
+            <button
+              onClick={refreshData}
+              className='px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium'
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render empty state if no columns
+  if (columns.length === 0) {
+    return (
+      <div className='w-full'>
+        <KanbanHeader
+          title='Project Kanban Board'
+          totalTasks={0}
+          filteredTasks={0}
+          onSearch={handleSearch}
+          onAddColumn={handleAddColumn}
+          onBoardActions={() => {
+            return setBoardActionsOpen(true);
+          }}
+        />
+        <div className='w-full h-96 flex items-center justify-center'>
+          <div className='text-center max-w-md mx-auto'>
+            <h3 className='font-medium mb-2'>No columns yet</h3>
+            <p className='text-sm text-muted-foreground mb-4'>
+              Get started by creating your first column
+            </p>
+            <button
+              onClick={() => {
+                return setBoardActionsOpen(true);
+              }}
+              className='px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium'
+            >
+              <Plus size={16} className='inline-block mr-1' /> Add Column
+            </button>
           </div>
         </div>
       </div>
@@ -695,7 +627,7 @@ const ProjectKanban = () => {
               return (
                 <Card key={task.id} className='relative group'>
                   <CardContent className='p-3'>
-                    <div className='absolute top-2 right-2 opacity-0 group-hover:opacity-100'>
+                    <div className='absolute top-1/2 right-2 -translate-y-1/2 opacity-0 group-hover:opacity-100'>
                       <Button
                         size='sm'
                         variant='ghost'
@@ -741,7 +673,7 @@ const ProjectKanban = () => {
                   color={col.color}
                   onAddClick={handleAddClick}
                   isAdding={addingColumn === col.id}
-                  onEditTitle={handleDirectColumnEdit}
+                  onEditTitle={handleEditColumn}
                 >
                   <SortableContext
                     id={col.id}
