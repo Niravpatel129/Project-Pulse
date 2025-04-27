@@ -219,17 +219,17 @@ export default function NewProjectDialog({ open = true, onClose = () => {} }) {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className='w-[95vw] sm:max-w-[900px] p-0 gap-0 overflow-hidden border border-gray-200 shadow-sm rounded-lg min-h-[85vh] flex flex-col'>
         <VisuallyHidden>
-          <DialogTitle>New Project</DialogTitle>
+          <DialogTitle>New Client Work</DialogTitle>
         </VisuallyHidden>
 
         <div className='p-5 space-y-5 flex-1 flex flex-col overflow-hidden'>
           <div className='flex items-center'>
             <VisuallyHidden>
-              <div>New Project</div>
+              <div>New Client Work</div>
             </VisuallyHidden>
             <div className='flex items-center text-xs text-gray-500 font-medium'>
               <div className='flex items-center justify-center h-5 rounded text-gray-500 mr-2 w-full'>
-                <span className='text-xs'>New Project</span>
+                <span className='text-xs'>New Client Work</span>
               </div>
             </div>
           </div>

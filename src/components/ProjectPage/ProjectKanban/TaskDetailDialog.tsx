@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +22,6 @@ import {
   ArrowUpRight,
   Calendar,
   CalendarIcon,
-  ChevronDown,
   Coffee,
   FileImage,
   FileText,
@@ -243,6 +242,9 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
           </div>
         </div>
 
+        {/* Add DialogTitle for accessibility */}
+        <DialogTitle className='sr-only'>{task.title}</DialogTitle>
+
         <div className='flex h-full overflow-hidden'>
           {/* Main content - left side */}
           <div className='flex-1 overflow-auto p-6'>
@@ -357,75 +359,6 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
                     );
                   })}
                 </div>
-              )}
-            </div>
-
-            {/* Status section - clickable to edit */}
-            <div className='mb-6 flex items-center gap-2'>
-              {editingStatus ? (
-                <DropdownMenu
-                  open={true}
-                  onOpenChange={(open) => {
-                    return !open && setEditingStatus(false);
-                  }}
-                >
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant='ghost'
-                      className='px-3 py-1.5 h-auto gap-2 rounded-md font-medium text-sm flex items-center'
-                      style={{
-                        backgroundColor: `${currentColumn?.color}30`,
-                        color: currentColumn?.color,
-                      }}
-                    >
-                      <div
-                        className='w-2 h-2 rounded-full'
-                        style={{ backgroundColor: currentColumn?.color }}
-                      ></div>
-                      {currentColumn?.title}
-                      <ChevronDown size={14} />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align='start'>
-                    {columns.map((column) => {
-                      return (
-                        <DropdownMenuItem
-                          key={column.id}
-                          disabled={column.id === task.columnId}
-                          onClick={() => {
-                            return handleTransition(column.id);
-                          }}
-                        >
-                          <div className='flex items-center gap-2'>
-                            <div
-                              className='w-2 h-2 rounded-full'
-                              style={{ backgroundColor: column.color }}
-                            ></div>
-                            {column.title}
-                          </div>
-                        </DropdownMenuItem>
-                      );
-                    })}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Button
-                  variant='ghost'
-                  className='px-3 py-1.5 h-auto gap-2 rounded-md font-medium text-sm flex items-center'
-                  style={{
-                    backgroundColor: `${currentColumn?.color}30`,
-                    color: currentColumn?.color,
-                  }}
-                  onClick={() => {
-                    return setEditingStatus(true);
-                  }}
-                >
-                  <div
-                    className='w-2 h-2 rounded-full'
-                    style={{ backgroundColor: currentColumn?.color }}
-                  ></div>
-                  {currentColumn?.title}
-                </Button>
               )}
             </div>
 
@@ -638,22 +571,48 @@ const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdate, columns }) =
             <div className='p-6 space-y-6'>
               <div>
                 <h3 className='text-sm text-muted-foreground mb-2'>STATUS</h3>
-                <div
-                  className='flex items-center gap-2 p-3 rounded-md font-medium text-sm cursor-pointer hover:bg-muted/40 transition-colors'
-                  style={{
-                    backgroundColor: `${currentColumn?.color}30`,
-                    color: currentColumn?.color,
-                  }}
-                  onClick={() => {
-                    return setEditingStatus(true);
-                  }}
-                >
-                  <div
-                    className='w-2 h-2 rounded-full'
-                    style={{ backgroundColor: currentColumn?.color }}
-                  ></div>
-                  {currentColumn?.title}
-                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <div
+                      className='flex items-center gap-2 p-3 rounded-md font-medium text-sm cursor-pointer hover:bg-muted/40 transition-colors'
+                      style={{
+                        backgroundColor: `${currentColumn?.color}30`,
+                        color: currentColumn?.color,
+                      }}
+                    >
+                      <div
+                        className='w-2 h-2 rounded-full'
+                        style={{ backgroundColor: currentColumn?.color }}
+                      ></div>
+                      {currentColumn?.title}
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent align='start' className='p-1'>
+                    <div className='space-y-1'>
+                      {columns.map((column) => {
+                        return (
+                          <Button
+                            key={column.id}
+                            variant='ghost'
+                            className='w-full justify-start'
+                            disabled={column.id === task.columnId}
+                            onClick={() => {
+                              return handleTransition(column.id);
+                            }}
+                          >
+                            <div className='flex items-center gap-2'>
+                              <div
+                                className='w-2 h-2 rounded-full'
+                                style={{ backgroundColor: column.color }}
+                              ></div>
+                              {column.title}
+                            </div>
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div>

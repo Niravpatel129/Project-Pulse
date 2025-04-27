@@ -400,7 +400,7 @@ export function ProjectCreateForm({
         }}
         variant='outline'
       >
-        New Project
+        New Client Work
       </Button>
       <NewProjectDialog
         open={isNewProjectDialogOpen}

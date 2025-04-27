@@ -253,7 +253,7 @@ export default function ProjectsPage() {
       <div className='container mx-auto py-10 flex flex-col min-h-[85vh]'>
         <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4'>
           <div>
-            <h1 className='text-2xl font-semibold tracking-tight'>Projects</h1>
+            <h1 className='text-2xl font-semibold tracking-tight'>All Client Work</h1>
             <p className='text-muted-foreground mt-1.5 text-sm'>
               Manage and track all your client projects in one place
             </p>
