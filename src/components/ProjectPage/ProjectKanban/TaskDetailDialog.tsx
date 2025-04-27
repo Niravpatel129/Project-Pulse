@@ -1,6 +1,5 @@
 'use client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -14,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import { ChevronDown, FileImage, FileText, Link as LinkIcon, X } from 'lucide-react';
+import { ChevronDown, FileImage, FileText, Link as LinkIcon, User, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 // Define task and column types for type safety
@@ -348,29 +347,21 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className='max-w-4xl h-[90vh] p-0 gap-0 overflow-hidden rounded-md border shadow-sm'>
-          {/* Header - Simplified with better whitespace */}
-          <div className='px-6 py-4 border-b flex items-center justify-between'>
-            <div className='flex items-center gap-4'>
-              <span className='text-sm font-medium text-gray-500'>{ticketId}</span>
-              {storyPoints !== undefined && (
-                <span className='text-sm text-gray-500'>{storyPoints} pt</span>
-              )}
-            </div>
-            <Button
-              variant='ghost'
-              size='sm'
-              className='h-8 text-gray-500'
-              onClick={() => {
-                return onOpenChange(false);
-              }}
-            >
-              <X size={14} />
-            </Button>
-          </div>
-
+        <DialogContent className='max-w-6xl w-[80vw] h-[85vh] p-0 gap-0 overflow-hidden rounded-md border shadow-sm'>
           {/* Add DialogTitle for accessibility */}
           <DialogTitle className='sr-only'>{task.title}</DialogTitle>
+
+          {/* Close button positioned absolutely */}
+          <Button
+            variant='ghost'
+            size='sm'
+            className='absolute right-4 top-4 h-8 w-8 p-0 text-gray-500 z-10'
+            onClick={() => {
+              return onOpenChange(false);
+            }}
+          >
+            <X size={14} />
+          </Button>
 
           <div className='flex h-full overflow-hidden'>
             {/* Main content - left side */}
@@ -557,7 +548,9 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                   <div className='flex gap-3'>
                     <Avatar className='h-8 w-8'>
                       <AvatarImage src='/avatars/03.png' alt='Your avatar' />
-                      <AvatarFallback>YOU</AvatarFallback>
+                      <AvatarFallback className='flex items-center justify-center'>
+                        <User size={14} />
+                      </AvatarFallback>
                     </Avatar>
                     <div className='flex-1 space-y-3'>
                       <Textarea
@@ -607,7 +600,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
             </div>
 
             {/* Right sidebar - simplified */}
-            <div className='w-[280px] border-l overflow-auto p-6 space-y-6 bg-gray-50'>
+            <div className='w-[280px] min-w-[280px] border-l overflow-auto p-6 space-y-6 bg-gray-50'>
               {/* Status field */}
               <div>
                 <div className='text-xs text-gray-500 mb-2'>Status</div>
@@ -846,86 +839,6 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                     )}
                   </PopoverContent>
                 </Popover>
-              </div>
-
-              {/* Labels */}
-              <div>
-                <div className='text-xs text-gray-500 mb-2 flex items-center justify-between'>
-                  Labels
-                  {!showLabelInput && (
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      className='h-5 text-xs'
-                      onClick={() => {
-                        return setShowLabelInput(true);
-                      }}
-                    >
-                      Add
-                    </Button>
-                  )}
-                </div>
-                <div>
-                  <div className='flex flex-wrap gap-1 mb-2'>
-                    {labels.map((label) => {
-                      return (
-                        <Badge
-                          key={label}
-                          variant='outline'
-                          className='bg-gray-100 text-gray-700 group'
-                        >
-                          {label}
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            className='h-4 w-4 p-0 ml-1 text-gray-400 opacity-0 group-hover:opacity-100'
-                            onClick={() => {
-                              return handleRemoveLabel(label);
-                            }}
-                          >
-                            <X size={10} />
-                          </Button>
-                        </Badge>
-                      );
-                    })}
-                  </div>
-
-                  {showLabelInput && (
-                    <div className='flex items-center gap-1'>
-                      <Input
-                        value={newLabelText}
-                        onChange={(e) => {
-                          return setNewLabelText(e.target.value);
-                        }}
-                        className='h-8 text-xs flex-1'
-                        placeholder='Enter label'
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleAddLabel();
-                          if (e.key === 'Escape') setShowLabelInput(false);
-                        }}
-                      />
-                      <Button
-                        size='sm'
-                        className='h-8'
-                        onClick={handleAddLabel}
-                        disabled={!newLabelText.trim()}
-                      >
-                        Add
-                      </Button>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        className='h-8 p-0 w-8'
-                        onClick={() => {
-                          return setShowLabelInput(false);
-                        }}
-                      >
-                        <X size={12} />
-                      </Button>
-                    </div>
-                  )}
-                </div>
               </div>
 
               {/* Story Points - minimal version */}
