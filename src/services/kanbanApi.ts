@@ -1,6 +1,6 @@
 import { newRequest } from '@/utils/newRequest';
 
-// Define types
+// Frontend Task type
 export type Task = {
   id: string;
   title: string;
@@ -19,10 +19,43 @@ export type Task = {
   archivedAt?: Date;
 };
 
+// Backend Task type
+export type BackendTask = {
+  _id: string;
+  title: string;
+  columnId: string;
+  priority?: 'low' | 'medium' | 'high';
+  assignee?: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
+  dueDate?: Date;
+  labels?: string[];
+  storyPoints?: number;
+  _archived?: boolean;
+  _deleted?: boolean;
+  archivedAt?: Date;
+};
+
+// Backend Column type
+export type BackendColumn = {
+  _id: string;
+  projectId: string;
+  title: string;
+  color: string;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+};
+
+// Frontend Column type (used in UI)
 export type Column = {
   id: string;
   title: string;
   color: string;
+  order: number;
 };
 
 export type KanbanBoard = {
@@ -34,11 +67,80 @@ export type KanbanBoard = {
 const BASE_PATH = '/kanban';
 
 /**
+ * Transform a backend column to frontend format
+ */
+const transformColumn = (backendColumn: BackendColumn): Column => {
+  return {
+    id: backendColumn._id,
+    title: backendColumn.title,
+    color: backendColumn.color,
+    order: backendColumn.order,
+  };
+};
+
+/**
+ * Transform a frontend column to backend format for creation/updates
+ */
+const prepareColumnForBackend = (column: Partial<Column>): Partial<BackendColumn> => {
+  const backendColumn: any = { ...column };
+
+  if ('id' in column) {
+    backendColumn._id = column.id;
+    delete backendColumn.id;
+  }
+
+  return backendColumn as Partial<BackendColumn>;
+};
+
+/**
+ * Transform a backend task to frontend format
+ */
+const transformTask = (backendTask: BackendTask): Task => {
+  const { _id, ...rest } = backendTask;
+  return {
+    id: _id,
+    ...rest,
+  };
+};
+
+/**
+ * Transform a frontend task to backend format for creation/updates
+ */
+const prepareTaskForBackend = (task: Partial<Task>): Partial<BackendTask> => {
+  const backendTask: any = { ...task };
+
+  if ('id' in task) {
+    backendTask._id = task.id;
+    delete backendTask.id;
+  }
+
+  return backendTask as Partial<BackendTask>;
+};
+
+/**
+ * Transform an array of backend tasks to frontend format
+ */
+const transformTasks = (backendTasks: BackendTask[]): Task[] => {
+  return backendTasks.map(transformTask);
+};
+
+/**
  * Get all Kanban data for a project
  */
 export const getKanbanBoard = async (projectId: string): Promise<KanbanBoard> => {
   const response = await newRequest.get(`${BASE_PATH}/${projectId}`);
-  return response.data;
+  const data = response.data;
+
+  // Transform backend columns to frontend format
+  const columns = data.columns.map(transformColumn);
+
+  // Transform backend tasks to frontend format
+  const tasks = data.tasks ? transformTasks(data.tasks) : [];
+
+  return {
+    columns,
+    tasks,
+  };
 };
 
 /**
@@ -46,7 +148,7 @@ export const getKanbanBoard = async (projectId: string): Promise<KanbanBoard> =>
  */
 export const getColumns = async (projectId: string): Promise<Column[]> => {
   const response = await newRequest.get(`${BASE_PATH}/${projectId}/columns`);
-  return response.data;
+  return response.data.map(transformColumn);
 };
 
 /**
@@ -56,8 +158,9 @@ export const createColumn = async (
   projectId: string,
   column: Omit<Column, 'id'>,
 ): Promise<Column> => {
-  const response = await newRequest.post(`${BASE_PATH}/${projectId}/columns`, column);
-  return response.data;
+  const backendColumn = prepareColumnForBackend(column);
+  const response = await newRequest.post(`${BASE_PATH}/${projectId}/columns`, backendColumn);
+  return transformColumn(response.data);
 };
 
 /**
@@ -68,8 +171,12 @@ export const updateColumn = async (
   columnId: string,
   updates: Partial<Column>,
 ): Promise<Column> => {
-  const response = await newRequest.put(`${BASE_PATH}/${projectId}/columns/${columnId}`, updates);
-  return response.data;
+  const backendUpdates = prepareColumnForBackend(updates);
+  const response = await newRequest.put(
+    `${BASE_PATH}/${projectId}/columns/${columnId}`,
+    backendUpdates,
+  );
+  return transformColumn(response.data);
 };
 
 /**
@@ -91,7 +198,7 @@ export const updateColumnOrder = async (projectId: string, columnIds: string[]):
  */
 export const getTasks = async (projectId: string): Promise<Task[]> => {
   const response = await newRequest.get(`${BASE_PATH}/${projectId}/tasks`);
-  return response.data;
+  return transformTasks(response.data);
 };
 
 /**
@@ -99,15 +206,16 @@ export const getTasks = async (projectId: string): Promise<Task[]> => {
  */
 export const getTasksByColumn = async (projectId: string, columnId: string): Promise<Task[]> => {
   const response = await newRequest.get(`${BASE_PATH}/${projectId}/columns/${columnId}/tasks`);
-  return response.data;
+  return transformTasks(response.data);
 };
 
 /**
  * Create a new task
  */
 export const createTask = async (projectId: string, task: Omit<Task, 'id'>): Promise<Task> => {
-  const response = await newRequest.post(`${BASE_PATH}/${projectId}/tasks`, task);
-  return response.data;
+  const backendTask = prepareTaskForBackend(task);
+  const response = await newRequest.post(`${BASE_PATH}/${projectId}/tasks`, backendTask);
+  return transformTask(response.data);
 };
 
 /**
@@ -118,8 +226,12 @@ export const updateTask = async (
   taskId: string,
   updates: Partial<Task>,
 ): Promise<Task> => {
-  const response = await newRequest.put(`${BASE_PATH}/${projectId}/tasks/${taskId}`, updates);
-  return response.data;
+  const backendUpdates = prepareTaskForBackend(updates);
+  const response = await newRequest.put(
+    `${BASE_PATH}/${projectId}/tasks/${taskId}`,
+    backendUpdates,
+  );
+  return transformTask(response.data);
 };
 
 /**
@@ -135,7 +247,7 @@ export const moveTask = async (
     columnId: targetColumnId,
     position,
   });
-  return response.data;
+  return transformTask(response.data);
 };
 
 /**
@@ -150,7 +262,7 @@ export const deleteTask = async (projectId: string, taskId: string): Promise<voi
  */
 export const archiveTask = async (projectId: string, taskId: string): Promise<Task> => {
   const response = await newRequest.put(`${BASE_PATH}/${projectId}/tasks/${taskId}/archive`);
-  return response.data;
+  return transformTask(response.data);
 };
 
 /**
@@ -158,7 +270,7 @@ export const archiveTask = async (projectId: string, taskId: string): Promise<Ta
  */
 export const restoreTask = async (projectId: string, taskId: string): Promise<Task> => {
   const response = await newRequest.put(`${BASE_PATH}/${projectId}/tasks/${taskId}/restore`);
-  return response.data;
+  return transformTask(response.data);
 };
 
 /**
@@ -166,12 +278,34 @@ export const restoreTask = async (projectId: string, taskId: string): Promise<Ta
  */
 export const getArchivedTasks = async (projectId: string): Promise<Task[]> => {
   const response = await newRequest.get(`${BASE_PATH}/${projectId}/tasks/archived`);
-  return response.data;
+  return transformTasks(response.data);
 };
 
 /**
  * Save the entire board state (all columns and tasks)
  */
 export const saveKanbanBoard = async (projectId: string, board: KanbanBoard): Promise<void> => {
-  await newRequest.put(`${BASE_PATH}/${projectId}`, board);
+  // Transform columns back to backend format
+  const backendColumns = board.columns.map((column) => {
+    return {
+      _id: column.id,
+      title: column.title,
+      color: column.color,
+      order: column.order,
+    };
+  });
+
+  // Transform tasks back to backend format
+  const backendTasks = board.tasks.map((task) => {
+    const { id, ...rest } = task;
+    return {
+      _id: id,
+      ...rest,
+    };
+  });
+
+  await newRequest.put(`${BASE_PATH}/${projectId}`, {
+    columns: backendColumns,
+    tasks: backendTasks,
+  });
 };
