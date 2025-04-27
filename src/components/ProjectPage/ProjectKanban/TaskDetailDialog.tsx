@@ -365,29 +365,47 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className='max-w-5xl h-[90vh] p-0 gap-0'>
-          {/* Header - Fix story points badge placement */}
-          <div className='px-6 py-3 border-b flex items-center justify-between'>
-            <div className='flex items-center gap-3'>
-              <span className='text-sm font-medium text-blue-500'>{ticketId}</span>
+        <DialogContent className='max-w-5xl h-[90vh] p-0 gap-0 overflow-hidden rounded-lg border shadow-lg'>
+          {/* Header - Improved with better layout and visual hierarchy */}
+          <div className='px-6 py-4 border-b flex items-center justify-between bg-gradient-to-r from-blue-50 to-white'>
+            <div className='flex items-center gap-4'>
+              <span className='text-sm font-semibold bg-blue-100 text-blue-700 px-2 py-1 rounded'>
+                {ticketId}
+              </span>
               {storyPoints !== undefined && (
-                <Badge variant='outline' className='bg-blue-100 text-blue-800'>
+                <Badge
+                  variant='outline'
+                  className='bg-blue-100 text-blue-800 font-medium border-blue-200'
+                >
                   {storyPoints} {storyPoints === 1 ? 'point' : 'points'}
                 </Badge>
               )}
-              <Button variant='ghost' size='sm' className='h-7'>
+              <Button
+                variant='outline'
+                size='sm'
+                className='h-8 transition-all hover:bg-blue-50 hover:text-blue-700'
+              >
                 <ArrowUpRight size={14} className='mr-1' />
                 Open
               </Button>
             </div>
             <div className='flex items-center gap-2'>
-              <Button variant='ghost' size='sm' className='h-7'>
-                <MoreHorizontal size={16} />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant='ghost' size='sm' className='h-8 hover:bg-muted/80'>
+                    <MoreHorizontal size={16} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end'>
+                  <DropdownMenuItem>Copy link</DropdownMenuItem>
+                  <DropdownMenuItem>Export as PDF</DropdownMenuItem>
+                  <DropdownMenuItem className='text-red-600'>Delete task</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button
                 variant='ghost'
                 size='sm'
-                className='h-7'
+                className='h-8 hover:bg-muted/80'
                 onClick={() => {
                   return onOpenChange(false);
                 }}
@@ -403,11 +421,54 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
           <div className='flex h-full overflow-hidden'>
             {/* Main content - left side */}
             <div className='flex-1 overflow-auto p-6'>
-              {/* Attachment Action Bar - Slack/Notion style */}
-              <div className='mb-6 bg-muted/30 rounded-lg p-3 border'>
-                <div className='flex items-center justify-between mb-3'>
-                  <h3 className='text-sm font-medium'>Attachments & Links</h3>
-                  <div className='flex gap-1'>
+              {/* Title - click to edit with better visual indication */}
+              {editingTitle ? (
+                <div className='mb-6'>
+                  <Input
+                    value={editedTitle}
+                    onChange={(e) => {
+                      return setEditedTitle(e.target.value);
+                    }}
+                    className='text-xl font-medium border-blue-200 focus-visible:ring-blue-500'
+                    autoFocus
+                    onBlur={saveTitle}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') saveTitle();
+                      if (e.key === 'Escape') {
+                        setEditedTitle(task.title);
+                        setEditingTitle(false);
+                      }
+                    }}
+                  />
+                  <div className='text-xs text-blue-500 mt-1 flex items-center gap-1'>
+                    <kbd className='px-1 py-0.5 text-xs rounded border bg-gray-50'>Enter</kbd> to
+                    save or
+                    <kbd className='px-1 py-0.5 text-xs rounded border bg-gray-50'>Esc</kbd> to
+                    cancel
+                  </div>
+                </div>
+              ) : (
+                <h2
+                  className='text-xl font-medium mb-6 cursor-pointer px-3 py-2 -mx-3 rounded-md border border-transparent hover:border-blue-200 hover:bg-blue-50 transition-all flex items-center gap-2'
+                  onClick={() => {
+                    return setEditingTitle(true);
+                  }}
+                >
+                  {task.title}
+                  <span className='text-xs text-blue-500 opacity-0 group-hover:opacity-100'>
+                    (Click to edit)
+                  </span>
+                </h2>
+              )}
+
+              {/* Attachment Action Bar - Modernized with better grouping */}
+              <div className='mb-8 bg-muted/20 rounded-lg p-4 border'>
+                <div className='flex items-center justify-between mb-4'>
+                  <h3 className='text-sm font-semibold flex items-center gap-2'>
+                    <Paperclip size={16} className='text-blue-500' />
+                    Attachments & Links
+                  </h3>
+                  <div className='flex gap-2'>
                     <input
                       type='file'
                       id='file-upload'
@@ -416,7 +477,12 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                       onChange={handleFileUpload}
                     />
                     <label htmlFor='file-upload'>
-                      <Button variant='outline' size='sm' className='h-7' asChild>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        className='h-8 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-colors'
+                        asChild
+                      >
                         <span>
                           <Paperclip size={14} className='mr-1' />
                           File
@@ -427,7 +493,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                     <Button
                       variant='outline'
                       size='sm'
-                      className='h-7'
+                      className='h-8 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-colors'
                       onClick={() => {
                         return setShowLinkInput(true);
                       }}
@@ -438,7 +504,11 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
 
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant='outline' size='sm' className='h-7'>
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          className='h-8 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-colors'
+                        >
                           <Plus size={14} className='mr-1' />
                           More
                         </Button>
@@ -464,7 +534,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 </div>
 
                 {showLinkInput && (
-                  <div className='flex items-center gap-2 mt-2 mb-3'>
+                  <div className='flex items-center gap-2 mt-2 mb-3 bg-white p-2 rounded-md border'>
                     <Input
                       placeholder='Paste or type a link'
                       value={linkUrl}
@@ -478,7 +548,11 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                         if (e.key === 'Escape') setShowLinkInput(false);
                       }}
                     />
-                    <Button size='sm' onClick={handleAddLink}>
+                    <Button
+                      size='sm'
+                      onClick={handleAddLink}
+                      className='bg-blue-600 hover:bg-blue-700'
+                    >
                       Add
                     </Button>
                     <Button
@@ -499,19 +573,19 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                       return (
                         <div
                           key={attachment.id}
-                          className='flex items-center gap-1 bg-background rounded border px-2 py-1 text-xs'
+                          className='flex items-center gap-2 bg-white rounded-md border px-3 py-2 text-sm hover:border-blue-200 transition-colors group'
                         >
-                          <div className='text-muted-foreground'>{attachment.icon}</div>
+                          <div className='text-blue-500'>{attachment.icon}</div>
                           <span className='font-medium'>{attachment.title}</span>
                           <Button
                             variant='ghost'
                             size='sm'
-                            className='h-4 w-4 p-0 ml-1 text-muted-foreground'
+                            className='h-5 w-5 p-0 ml-1 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity'
                             onClick={() => {
                               return handleDeleteAttachment(attachment.id);
                             }}
                           >
-                            <X size={10} />
+                            <X size={12} />
                           </Button>
                         </div>
                       );
@@ -520,44 +594,25 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 )}
               </div>
 
-              {/* Title - click to edit */}
-              {editingTitle ? (
-                <div className='mb-6'>
-                  <Input
-                    value={editedTitle}
-                    onChange={(e) => {
-                      return setEditedTitle(e.target.value);
-                    }}
-                    className='text-xl font-medium'
-                    autoFocus
-                    onBlur={saveTitle}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') saveTitle();
-                      if (e.key === 'Escape') {
-                        setEditedTitle(task.title);
-                        setEditingTitle(false);
-                      }
-                    }}
-                  />
-                  <div className='text-xs text-muted-foreground mt-1'>
-                    Press Enter to save or Esc to cancel
-                  </div>
-                </div>
-              ) : (
-                <h2
-                  className='text-xl font-medium mb-6 cursor-pointer hover:bg-muted/50 px-2 py-1 -mx-2 rounded-md'
-                  onClick={() => {
-                    return setEditingTitle(true);
-                  }}
-                >
-                  {task.title}
-                </h2>
-              )}
-
-              {/* Description - click to edit */}
+              {/* Description - click to edit with improved visual cues */}
               <div className='mb-8'>
-                <div className='mb-3 font-medium text-sm'>
-                  <span>Description</span>
+                <div className='mb-3 font-medium text-sm flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <FileText size={16} className='text-blue-500' />
+                    <span>Description</span>
+                  </div>
+                  {!editingDescription && (
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      className='h-7 text-blue-500 hover:text-blue-700 hover:bg-blue-50'
+                      onClick={() => {
+                        return setEditingDescription(true);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                  )}
                 </div>
 
                 {editingDescription ? (
@@ -568,7 +623,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                         return setEditedDescription(e.target.value);
                       }}
                       placeholder='Add a description...'
-                      className='min-h-[200px]'
+                      className='min-h-[200px] border-blue-200 focus-visible:ring-blue-500'
                       autoFocus
                       onBlur={saveDescription}
                       onKeyDown={(e) => {
@@ -579,48 +634,85 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                         }
                       }}
                     />
-                    <div className='text-xs text-muted-foreground mt-1'>
-                      Press Ctrl+Enter to save or Esc to cancel
+                    <div className='mt-2 flex justify-between items-center'>
+                      <div className='text-xs text-blue-500 flex items-center gap-1'>
+                        Press{' '}
+                        <kbd className='px-1 py-0.5 text-xs rounded border bg-gray-50'>Ctrl</kbd> +
+                        <kbd className='px-1 py-0.5 text-xs rounded border bg-gray-50'>Enter</kbd>{' '}
+                        to save
+                      </div>
+                      <div className='flex gap-2'>
+                        <Button
+                          size='sm'
+                          variant='ghost'
+                          onClick={() => {
+                            setEditedDescription(task.description || '');
+                            setEditingDescription(false);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size='sm'
+                          className='bg-blue-600 hover:bg-blue-700'
+                          onClick={saveDescription}
+                        >
+                          Save
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ) : (
                   <div
-                    className='text-sm border rounded-md p-4 bg-muted/20 whitespace-pre-wrap min-h-[100px] cursor-pointer hover:bg-muted/30'
+                    className='text-sm border rounded-md p-4 bg-white whitespace-pre-wrap min-h-[100px] cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors'
                     onClick={() => {
                       return setEditingDescription(true);
                     }}
                   >
-                    {task.description || 'Click to add a description...'}
+                    {task.description || (
+                      <span className='text-muted-foreground italic flex items-center gap-2'>
+                        <Plus size={14} /> Click to add a description
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
 
               <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
-                <TabsList className='w-full justify-start mb-6'>
-                  <TabsTrigger value='comments' className='flex items-center gap-2'>
+                <TabsList className='w-full justify-start mb-4 bg-muted/30 p-1'>
+                  <TabsTrigger
+                    value='comments'
+                    className='flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm'
+                  >
                     <MessageSquare size={14} />
                     <span>Comments</span>
-                    <Badge variant='outline' className='ml-1 rounded-full'>
+                    <Badge
+                      variant='outline'
+                      className='ml-1 rounded-full bg-blue-100 text-blue-700 border-blue-200'
+                    >
                       {comments.length}
                     </Badge>
                   </TabsTrigger>
-                  <TabsTrigger value='activity' className='flex items-center gap-2'>
+                  <TabsTrigger
+                    value='activity'
+                    className='flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm'
+                  >
                     <Activity size={14} />
                     <span>Activity</span>
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value='comments' className='mt-0'>
-                  <div className='space-y-5'>
-                    <div className='flex gap-3'>
+                  <div className='space-y-6'>
+                    <div className='flex gap-3 bg-white rounded-lg p-4 border'>
                       <Avatar className='h-8 w-8'>
                         <AvatarImage src='/avatars/03.png' alt='Your avatar' />
                         <AvatarFallback>YOU</AvatarFallback>
                       </Avatar>
-                      <div className='flex-1 space-y-2'>
+                      <div className='flex-1 space-y-3'>
                         <Textarea
                           placeholder='Add a comment...'
-                          className='resize-none'
+                          className='resize-none min-h-[80px] border-muted focus-visible:ring-blue-500'
                           value={commentText}
                           onChange={(e) => {
                             return setCommentText(e.target.value);
@@ -632,22 +724,28 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                           }}
                         />
                         <div className='flex justify-between items-center'>
-                          <div className='text-xs text-muted-foreground'>
-                            Press <kbd className='border rounded px-1'>⌘</kbd> +{' '}
-                            <kbd className='border rounded px-1'>Enter</kbd> to submit
+                          <div className='text-xs text-muted-foreground flex items-center gap-1'>
+                            Press <kbd className='border rounded px-1 py-0.5 bg-muted/30'>⌘</kbd> +{' '}
+                            <kbd className='border rounded px-1 py-0.5 bg-muted/30'>Enter</kbd> to
+                            submit
                           </div>
-                          <Button size='sm' onClick={handleAddComment}>
+                          <Button
+                            size='sm'
+                            onClick={handleAddComment}
+                            className='bg-blue-600 hover:bg-blue-700'
+                            disabled={!commentText.trim()}
+                          >
                             Comment
                           </Button>
                         </div>
                       </div>
                     </div>
 
-                    <ScrollArea className='max-h-[300px]'>
-                      <div className='space-y-6'>
+                    <ScrollArea className='max-h-[300px] pr-4'>
+                      <div className='space-y-4'>
                         {comments.map((comment) => {
                           return (
-                            <div key={comment.id} className='flex gap-3'>
+                            <div key={comment.id} className='flex gap-3 group'>
                               <Avatar className='h-8 w-8'>
                                 <AvatarImage src={comment.avatar} alt={comment.author} />
                                 <AvatarFallback>{comment.author[0]}</AvatarFallback>
@@ -659,7 +757,25 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                                     {comment.time}
                                   </span>
                                 </div>
-                                <div className='text-sm'>{comment.content}</div>
+                                <div className='text-sm bg-muted/20 p-3 rounded-lg'>
+                                  {comment.content}
+                                </div>
+                                <div className='mt-1 opacity-0 group-hover:opacity-100 transition-opacity'>
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    className='h-6 text-xs text-muted-foreground'
+                                  >
+                                    Reply
+                                  </Button>
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    className='h-6 text-xs text-muted-foreground'
+                                  >
+                                    React
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           );
@@ -670,11 +786,11 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 </TabsContent>
 
                 <TabsContent value='activity' className='mt-0'>
-                  <ScrollArea className='max-h-[400px]'>
+                  <ScrollArea className='max-h-[400px] pr-4'>
                     <div className='space-y-4'>
-                      <div className='flex gap-3'>
-                        <div className='text-blue-500'>
-                          <Activity size={16} />
+                      <div className='flex gap-3 p-2 hover:bg-muted/20 rounded-md transition-colors'>
+                        <div className='text-blue-500 bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center'>
+                          <Activity size={14} />
                         </div>
                         <div>
                           <div className='flex items-center gap-2'>
@@ -689,9 +805,9 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                           </p>
                         </div>
                       </div>
-                      <div className='flex gap-3'>
-                        <div className='text-blue-500'>
-                          <User size={16} />
+                      <div className='flex gap-3 p-2 hover:bg-muted/20 rounded-md transition-colors'>
+                        <div className='text-blue-500 bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center'>
+                          <User size={14} />
                         </div>
                         <div>
                           <div className='flex items-center gap-2'>
@@ -707,14 +823,17 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
               </Tabs>
             </div>
 
-            {/* Right sidebar */}
-            <div className='w-[320px] border-l overflow-auto'>
+            {/* Right sidebar with improved styling */}
+            <div className='w-[320px] border-l overflow-auto bg-gray-50'>
               <div className='p-6 space-y-6'>
                 <div>
-                  <h3 className='text-sm text-muted-foreground mb-2'>STORY POINTS</h3>
+                  <h3 className='text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3 flex items-center gap-2'>
+                    <Coffee size={14} className='text-blue-500' />
+                    Story Points
+                  </h3>
                   {editingStoryPoints ? (
-                    <div className='space-y-2'>
-                      <div className='flex gap-1 flex-nowrap'>
+                    <div className='space-y-3 bg-white p-3 rounded-lg border'>
+                      <div className='grid grid-cols-4 gap-2'>
                         {/* Fibonacci sequence with better visual styling */}
                         {[1, 2, 3, 5, 8, 13].map((point) => {
                           return (
@@ -722,8 +841,10 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                               key={point}
                               variant={storyPoints === point ? 'default' : 'outline'}
                               size='sm'
-                              className={`h-8 w-full p-0 ${
-                                storyPoints === point ? 'bg-blue-600' : ''
+                              className={`h-10 w-full p-0 ${
+                                storyPoints === point
+                                  ? 'bg-blue-600 hover:bg-blue-700'
+                                  : 'hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
                               }`}
                               onClick={() => {
                                 return saveStoryPoints(point);
@@ -737,7 +858,11 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                         <Button
                           variant={storyPoints === 0 ? 'default' : 'outline'}
                           size='sm'
-                          className={`h-8 w-full p-0 ${storyPoints === 0 ? 'bg-blue-600' : ''}`}
+                          className={`h-10 w-full p-0 col-span-1 ${
+                            storyPoints === 0
+                              ? 'bg-blue-600 hover:bg-blue-700'
+                              : 'hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
+                          }`}
                           onClick={() => {
                             return saveStoryPoints(0);
                           }}
@@ -752,6 +877,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                           onClick={() => {
                             return setEditingStoryPoints(false);
                           }}
+                          className='hover:bg-red-50 hover:text-red-700'
                         >
                           Cancel
                         </Button>
@@ -761,6 +887,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                           onClick={() => {
                             return saveStoryPoints(undefined);
                           }}
+                          className='hover:bg-blue-50 hover:text-blue-700'
                         >
                           Clear
                         </Button>
@@ -768,7 +895,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                     </div>
                   ) : (
                     <div
-                      className='flex items-center gap-2 p-3 rounded-md text-sm cursor-pointer hover:bg-muted/40 transition-colors border border-dashed'
+                      className='flex items-center gap-2 p-3 rounded-md text-sm cursor-pointer bg-white hover:bg-blue-50 transition-colors border shadow-sm'
                       onClick={() => {
                         return setEditingStoryPoints(true);
                       }}
@@ -778,7 +905,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                           <div className='flex items-center gap-2'>
                             <Badge
                               variant='outline'
-                              className='h-7 w-7 rounded-full flex items-center justify-center bg-blue-50 border-blue-200'
+                              className='h-8 w-8 rounded-full flex items-center justify-center bg-blue-100 border-blue-200 text-blue-700'
                             >
                               {storyPoints === 0 ? '?' : storyPoints}
                             </Badge>
@@ -788,13 +915,18 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                                 : `${storyPoints} ${storyPoints === 1 ? 'point' : 'points'}`}
                             </span>
                           </div>
-                          <Button variant='ghost' size='sm' className='h-6 w-6 p-0'>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            className='h-7 w-7 p-0 text-muted-foreground hover:text-blue-700'
+                          >
                             <MoreHorizontal size={14} />
                           </Button>
                         </div>
                       ) : (
-                        <div className='w-full text-center text-muted-foreground'>
-                          <span>Click to add estimate</span>
+                        <div className='w-full text-center text-muted-foreground flex items-center justify-center gap-2'>
+                          <Plus size={14} />
+                          <span>Add estimate</span>
                         </div>
                       )}
                     </div>
@@ -802,75 +934,10 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 </div>
 
                 <div>
-                  <h3 className='text-sm text-muted-foreground mb-2'>STATUS</h3>
-                  {editingStatus ? (
-                    <DropdownMenu
-                      open={true}
-                      onOpenChange={(open) => {
-                        return !open && setEditingStatus(false);
-                      }}
-                    >
-                      <DropdownMenuTrigger asChild>
-                        <div
-                          className='flex items-center gap-2 p-3 rounded-md font-medium text-sm cursor-pointer hover:bg-muted/40 transition-colors'
-                          style={{
-                            backgroundColor: `${currentColumn?.color}15`,
-                            color: currentColumn?.color,
-                            borderLeft: `3px solid ${currentColumn?.color}`,
-                          }}
-                        >
-                          <div
-                            className='w-2 h-2 rounded-full'
-                            style={{ backgroundColor: currentColumn?.color }}
-                          ></div>
-                          {currentColumn?.title}
-                        </div>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align='start' className='min-w-[200px]'>
-                        {columns.map((column) => {
-                          return (
-                            <DropdownMenuItem
-                              key={column.id}
-                              disabled={column.id === task.columnId}
-                              onClick={() => {
-                                return saveColumnId(column.id);
-                              }}
-                            >
-                              <div className='flex items-center gap-2 w-full'>
-                                <div
-                                  className='w-2 h-2 rounded-full'
-                                  style={{ backgroundColor: column.color }}
-                                ></div>
-                                <span style={{ color: column.color }}>{column.title}</span>
-                              </div>
-                            </DropdownMenuItem>
-                          );
-                        })}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  ) : (
-                    <div
-                      className='flex items-center gap-2 p-3 rounded-md font-medium text-sm cursor-pointer hover:bg-muted/40 transition-colors'
-                      style={{
-                        backgroundColor: `${currentColumn?.color}15`,
-                        color: currentColumn?.color,
-                        borderLeft: `3px solid ${currentColumn?.color}`,
-                      }}
-                      onClick={() => {
-                        return setEditingStatus(true);
-                      }}
-                    >
-                      <div
-                        className='w-2 h-2 rounded-full'
-                        style={{ backgroundColor: currentColumn?.color }}
-                      ></div>
-                      {currentColumn?.title}
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <h3 className='text-sm text-muted-foreground mb-2'>ASSIGNEE</h3>
+                  <h3 className='text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3 flex items-center gap-2'>
+                    <User size={14} className='text-blue-500' />
+                    Assignee
+                  </h3>
                   {editingAssignee ? (
                     <DropdownMenu
                       open={true}
@@ -879,7 +946,10 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                       }}
                     >
                       <DropdownMenuTrigger asChild>
-                        <Button variant='outline' className='w-full justify-start'>
+                        <Button
+                          variant='outline'
+                          className='w-full justify-start bg-white shadow-sm'
+                        >
                           <div className='flex items-center gap-2'>
                             <Avatar className='h-6 w-6'>
                               <AvatarImage src='/avatars/01.png' alt='John Doe' />
@@ -889,7 +959,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                           </div>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align='start'>
+                      <DropdownMenuContent align='start' className='min-w-[200px]'>
                         <DropdownMenuItem
                           onClick={() => {
                             return saveAssignee({
@@ -898,6 +968,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                               avatar: '/avatars/01.png',
                             });
                           }}
+                          className='py-2'
                         >
                           <div className='flex items-center gap-2'>
                             <Avatar className='h-6 w-6'>
@@ -915,6 +986,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                               avatar: '/avatars/02.png',
                             });
                           }}
+                          className='py-2'
                         >
                           <div className='flex items-center gap-2'>
                             <Avatar className='h-6 w-6'>
@@ -932,9 +1004,10 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                               avatar: '/avatars/03.png',
                             });
                           }}
+                          className='py-2'
                         >
                           <div className='flex items-center gap-2'>
-                            <Avatar className='h-6 w-6'>
+                            <Avatar className='h-6 w-6 border-2 border-blue-500'>
                               <AvatarImage src='/avatars/03.png' alt='You' />
                               <AvatarFallback>YOU</AvatarFallback>
                             </Avatar>
@@ -945,26 +1018,38 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                     </DropdownMenu>
                   ) : (
                     <div
-                      className='flex items-center gap-2 p-3 rounded-md cursor-pointer hover:bg-muted/40 transition-colors'
+                      className='flex items-center justify-between gap-2 p-3 rounded-md cursor-pointer hover:bg-blue-50 transition-colors bg-white shadow-sm'
                       onClick={() => {
                         return setEditingAssignee(true);
                       }}
                     >
-                      <Avatar className='h-6 w-6'>
-                        <AvatarImage
-                          src={task.assignee?.avatar || '/avatars/01.png'}
-                          alt={task.assignee?.name || 'John Doe'}
-                        />
-                        <AvatarFallback>{(task.assignee?.name || 'John Doe')[0]}</AvatarFallback>
-                      </Avatar>
-                      <span className='text-sm'>{task.assignee?.name || 'John Doe'}</span>
+                      <div className='flex items-center gap-2'>
+                        <Avatar className='h-6 w-6'>
+                          <AvatarImage
+                            src={task.assignee?.avatar || '/avatars/01.png'}
+                            alt={task.assignee?.name || 'John Doe'}
+                          />
+                          <AvatarFallback>{(task.assignee?.name || 'John Doe')[0]}</AvatarFallback>
+                        </Avatar>
+                        <span className='text-sm'>{task.assignee?.name || 'John Doe'}</span>
+                      </div>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        className='h-6 w-6 p-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-blue-700'
+                      >
+                        <MoreHorizontal size={14} />
+                      </Button>
                     </div>
                   )}
                 </div>
 
                 <div>
-                  <h3 className='text-sm text-muted-foreground mb-2'>REPORTER</h3>
-                  <div className='flex items-center gap-2 p-3'>
+                  <h3 className='text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3 flex items-center gap-2'>
+                    <User size={14} className='text-green-500' />
+                    Reporter
+                  </h3>
+                  <div className='flex items-center gap-2 p-3 bg-white rounded-md shadow-sm'>
                     <Avatar className='h-6 w-6'>
                       <AvatarImage
                         src={task.reporter?.avatar || '/avatars/02.png'}
@@ -977,7 +1062,10 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 </div>
 
                 <div>
-                  <h3 className='text-sm text-muted-foreground mb-2'>PRIORITY</h3>
+                  <h3 className='text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3 flex items-center gap-2'>
+                    <Activity size={14} className='text-red-500' />
+                    Priority
+                  </h3>
                   {editingPriority ? (
                     <DropdownMenu
                       open={true}
@@ -986,40 +1074,54 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                       }}
                     >
                       <DropdownMenuTrigger asChild>
-                        <Button variant='outline' className='w-full justify-start gap-2'>
-                          <Badge className='bg-yellow-500 hover:bg-yellow-600'>
+                        <div className='flex items-center gap-2 p-3 bg-white rounded-md cursor-pointer shadow-sm'>
+                          <Badge
+                            className={
+                              task.priority === 'high'
+                                ? 'bg-red-500 hover:bg-red-600'
+                                : task.priority === 'low'
+                                ? 'bg-green-500 hover:bg-green-600'
+                                : 'bg-yellow-500 hover:bg-yellow-600'
+                            }
+                          >
                             {task.priority || 'Medium'}
                           </Badge>
                           <span className='text-sm'>Priority</span>
-                        </Button>
+                        </div>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align='start'>
                         <DropdownMenuItem
                           onClick={() => {
                             return savePriority('high');
                           }}
+                          className='py-2'
                         >
                           <Badge className='bg-red-500 hover:bg-red-600 mr-2'>High</Badge>
+                          <span>Urgent or critical issues</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
                             return savePriority('medium');
                           }}
+                          className='py-2'
                         >
                           <Badge className='bg-yellow-500 hover:bg-yellow-600 mr-2'>Medium</Badge>
+                          <span>Default priority level</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
                             return savePriority('low');
                           }}
+                          className='py-2'
                         >
                           <Badge className='bg-green-500 hover:bg-green-600 mr-2'>Low</Badge>
+                          <span>Low urgency tasks</span>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   ) : (
                     <div
-                      className='flex items-center gap-2 p-3 rounded-md cursor-pointer hover:bg-muted/40 transition-colors'
+                      className='flex items-center gap-2 p-3 rounded-md cursor-pointer hover:bg-blue-50 transition-colors bg-white shadow-sm'
                       onClick={() => {
                         return setEditingPriority(true);
                       }}
@@ -1041,18 +1143,24 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 </div>
 
                 <div>
-                  <h3 className='text-sm text-muted-foreground mb-2'>DUE DATE</h3>
+                  <h3 className='text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3 flex items-center gap-2'>
+                    <Calendar size={14} className='text-purple-500' />
+                    Due Date
+                  </h3>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant='outline'
-                        className='w-full justify-start text-left font-normal text-sm h-9 hover:bg-muted/40'
+                        className='w-full justify-start text-left font-normal text-sm h-10 bg-white shadow-sm hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
                       >
                         <CalendarIcon className='mr-2 h-4 w-4' />
                         {dueDate ? dueDate.toDateString() : 'Set due date'}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className='w-auto p-0'>
+                      <div className='p-2 border-b'>
+                        <h4 className='font-medium'>Select due date</h4>
+                      </div>
                       <CalendarComponent
                         mode='single'
                         selected={dueDate}
@@ -1062,57 +1170,94 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                         }}
                         initialFocus
                       />
+                      {dueDate && (
+                        <div className='p-2 border-t flex justify-end'>
+                          <Button
+                            size='sm'
+                            variant='ghost'
+                            onClick={() => {
+                              setDueDate(null);
+                              saveDueDate(null);
+                            }}
+                            className='text-red-600 hover:text-red-700 hover:bg-red-50'
+                          >
+                            Clear
+                          </Button>
+                        </div>
+                      )}
                     </PopoverContent>
                   </Popover>
                 </div>
 
                 <div>
-                  <h3 className='text-sm text-muted-foreground mb-2'>LABELS</h3>
-                  <div className='flex flex-wrap gap-2'>
-                    {labels.map((label) => {
-                      return (
-                        <Badge
-                          key={label}
-                          variant='outline'
-                          className='bg-muted/50 flex items-center gap-1'
-                        >
-                          {label}
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            className='h-4 w-4 p-0 ml-1 text-muted-foreground'
-                            onClick={() => {
-                              return handleRemoveLabel(label);
-                            }}
+                  <h3 className='text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3 flex items-center gap-2'>
+                    <MessageSquare size={14} className='text-amber-500' />
+                    Labels
+                  </h3>
+                  <div className='bg-white p-3 rounded-md shadow-sm'>
+                    <div className='flex flex-wrap gap-2 mb-2'>
+                      {labels.map((label) => {
+                        return (
+                          <Badge
+                            key={label}
+                            variant='outline'
+                            className='bg-muted/50 flex items-center gap-1 px-2 py-1 hover:bg-muted/80 transition-colors group'
                           >
-                            <X size={10} />
-                          </Button>
-                        </Badge>
-                      );
-                    })}
+                            {label}
+                            <Button
+                              variant='ghost'
+                              size='sm'
+                              className='h-4 w-4 p-0 ml-1 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity'
+                              onClick={() => {
+                                return handleRemoveLabel(label);
+                              }}
+                            >
+                              <X size={10} />
+                            </Button>
+                          </Badge>
+                        );
+                      })}
 
-                    {showLabelInput ? (
-                      <div className='flex items-center gap-1'>
+                      {!showLabelInput && (
+                        <Badge
+                          variant='outline'
+                          className='bg-blue-50 text-blue-700 cursor-pointer border-blue-200 hover:bg-blue-100 hover:border-blue-300 transition-colors'
+                          onClick={() => {
+                            return setShowLabelInput(true);
+                          }}
+                        >
+                          <Plus size={10} className='mr-1' /> Add
+                        </Badge>
+                      )}
+                    </div>
+
+                    {showLabelInput && (
+                      <div className='flex items-center gap-1 mt-2'>
                         <Input
                           value={newLabelText}
                           onChange={(e) => {
                             return setNewLabelText(e.target.value);
                           }}
-                          className='h-6 text-xs'
-                          placeholder='Add label'
+                          className='h-8 text-xs flex-1'
+                          placeholder='Enter label name'
                           autoFocus
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') handleAddLabel();
                             if (e.key === 'Escape') setShowLabelInput(false);
                           }}
                         />
-                        <Button size='sm' className='h-6 px-2' onClick={handleAddLabel}>
+                        <Button
+                          size='sm'
+                          className='h-8 bg-blue-600 hover:bg-blue-700 px-2'
+                          onClick={handleAddLabel}
+                          disabled={!newLabelText.trim()}
+                        >
                           Add
                         </Button>
                         <Button
                           variant='ghost'
                           size='sm'
-                          className='h-6 w-6 p-0 text-muted-foreground'
+                          className='h-8 w-8 p-0 text-muted-foreground'
                           onClick={() => {
                             return setShowLabelInput(false);
                           }}
@@ -1120,39 +1265,57 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                           <X size={12} />
                         </Button>
                       </div>
-                    ) : (
-                      <Badge
-                        variant='outline'
-                        className='bg-muted/50 cursor-pointer'
-                        onClick={() => {
-                          return setShowLabelInput(true);
-                        }}
-                      >
-                        + Add
-                      </Badge>
                     )}
                   </div>
                 </div>
 
-                <Separator />
+                <Separator className='my-6' />
 
-                <div>
-                  <h3 className='text-sm text-muted-foreground mb-2'>DATES</h3>
-                  <div className='space-y-2'>
+                <div className='bg-white p-4 rounded-lg shadow-sm'>
+                  <h3 className='text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3 flex items-center gap-2'>
+                    <Calendar size={14} className='text-blue-500' />
+                    Timeline
+                  </h3>
+                  <div className='space-y-3'>
                     <div className='flex justify-between items-center'>
                       <div className='flex items-center gap-2 text-sm'>
-                        <Calendar size={14} />
+                        <div className='w-2 h-2 rounded-full bg-green-500'></div>
                         <span>Created</span>
                       </div>
-                      <span className='text-sm'>{new Date().toLocaleDateString()}</span>
+                      <div className='flex items-center gap-1'>
+                        <span className='text-sm font-medium'>
+                          {new Date().toLocaleDateString()}
+                        </span>
+                        <span className='text-xs text-muted-foreground'>(2 days ago)</span>
+                      </div>
                     </div>
                     <div className='flex justify-between items-center'>
                       <div className='flex items-center gap-2 text-sm'>
-                        <Calendar size={14} />
+                        <div className='w-2 h-2 rounded-full bg-blue-500'></div>
                         <span>Updated</span>
                       </div>
-                      <span className='text-sm'>{new Date().toLocaleDateString()}</span>
+                      <div className='flex items-center gap-1'>
+                        <span className='text-sm font-medium'>
+                          {new Date().toLocaleDateString()}
+                        </span>
+                        <span className='text-xs text-muted-foreground'>(4 hours ago)</span>
+                      </div>
                     </div>
+
+                    {dueDate && (
+                      <div className='flex justify-between items-center'>
+                        <div className='flex items-center gap-2 text-sm'>
+                          <div className='w-2 h-2 rounded-full bg-red-500'></div>
+                          <span>Due</span>
+                        </div>
+                        <div className='flex items-center gap-1'>
+                          <span className='text-sm font-medium'>
+                            {dueDate.toLocaleDateString()}
+                          </span>
+                          <span className='text-xs text-muted-foreground'>(in 3 days)</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
