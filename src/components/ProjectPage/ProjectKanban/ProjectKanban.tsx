@@ -20,6 +20,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import KanbanHeader from './KanbanHeader';
 
 // KanbanColumn now places Add Task directly after its children
 const KanbanColumn = ({ title, children, id, onAddClick, isAdding }) => {
@@ -62,6 +63,22 @@ const SortableTaskCard = ({ task }) => {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <Card className='mb-2 shadow-sm cursor-grab'>
+        <CardContent className='p-3'>
+          <h4 className='font-medium text-sm text-wrap break-all'>{task.title}</h4>
+          {task.description && (
+            <p className='text-xs text-muted-foreground mt-1'>{task.description}</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// Non-draggable version of TaskCard for server-side rendering
+const StaticTaskCard = ({ task }) => {
+  return (
+    <div>
       <Card className='mb-2 shadow-sm cursor-grab'>
         <CardContent className='p-3'>
           <h4 className='font-medium text-sm text-wrap break-all'>{task.title}</h4>
@@ -118,15 +135,15 @@ const NewTaskInput = ({ value, onChange, onSave, onCancel }) => {
 const ProjectKanban = () => {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    return setMounted(true);
+    setMounted(true);
   }, []);
 
-  const columns = [
+  const [columns, setColumns] = useState([
     { id: 'todo', title: 'To Do' },
     { id: 'in-progress', title: 'In Progress' },
     { id: 'review', title: 'Review' },
     { id: 'done', title: 'Done' },
-  ];
+  ]);
 
   const initialTasks = [
     { id: '1', title: 'Research design options', description: 'Look for inspiration' },
@@ -155,6 +172,8 @@ const ProjectKanban = () => {
   const [activeTask, setActiveTask] = useState(null);
   const [addingColumn, setAddingColumn] = useState<string | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredTasks, setFilteredTasks] = useState<{ [key: string]: any[] }>({ ...columnsTasks });
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -250,55 +269,159 @@ const ProjectKanban = () => {
     setActiveTask(null);
   };
 
-  return (
-    <div className='w-full overflow-x-auto pb-4'>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-      >
-        <div className='flex gap-4 p-2'>
-          {columns.map((col) => {
-            return (
-              <KanbanColumn
-                key={col.id}
-                id={col.id}
-                title={col.title}
-                onAddClick={handleAddClick}
-                isAdding={addingColumn === col.id}
-              >
-                <SortableContext
-                  id={col.id}
-                  items={columnsTasks[col.id].map((t) => {
-                    return t.id;
-                  })}
-                  strategy={verticalListSortingStrategy}
-                >
-                  {columnsTasks[col.id].map((task) => {
-                    return <SortableTaskCard key={task.id} task={task} />;
-                  })}
-                </SortableContext>
-                {addingColumn === col.id && (
-                  <NewTaskInput
-                    value={newTaskTitle}
-                    onChange={setNewTaskTitle}
-                    onSave={handleSaveNew}
-                    onCancel={handleCancelNew}
-                  />
-                )}
-              </KanbanColumn>
-            );
-          })}
-        </div>
+  // Count total tasks and filtered tasks
+  const getTotalTaskCount = () => {
+    return Object.values(columnsTasks).reduce((acc, tasks) => {
+      return acc + tasks.length;
+    }, 0);
+  };
 
-        {mounted &&
-          createPortal(
+  const getFilteredTaskCount = () => {
+    return Object.values(filteredTasks).reduce((acc, tasks) => {
+      return acc + tasks.length;
+    }, 0);
+  };
+
+  // Handle search
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setFilteredTasks({ ...columnsTasks });
+      return;
+    }
+
+    const lowerQuery = query.toLowerCase();
+    const filtered = Object.fromEntries(
+      Object.entries(columnsTasks).map(([colId, tasks]) => {
+        return [
+          colId,
+          tasks.filter((task) => {
+            return (
+              task.title.toLowerCase().includes(lowerQuery) ||
+              (task.description && task.description.toLowerCase().includes(lowerQuery))
+            );
+          }),
+        ];
+      }),
+    );
+    setFilteredTasks(filtered);
+  };
+
+  // Handle adding a new column
+  const handleAddColumn = (name: string, color: string) => {
+    const id = name.toLowerCase().replace(/\s+/g, '-');
+    setColumns((prev) => {
+      return [...prev, { id, title: name }];
+    });
+    setColumnsTasks((prev) => {
+      return { ...prev, [id]: [] };
+    });
+    setFilteredTasks((prev) => {
+      return { ...prev, [id]: [] };
+    });
+  };
+
+  useEffect(() => {
+    // Update filtered tasks whenever columns tasks change
+    if (!searchQuery) {
+      setFilteredTasks({ ...columnsTasks });
+    } else {
+      handleSearch(searchQuery);
+    }
+  }, [columnsTasks]);
+
+  // Render a simplified version for server-side rendering
+  if (!mounted) {
+    return (
+      <div className='w-full'>
+        <KanbanHeader
+          title='Project Kanban Board'
+          totalTasks={getTotalTaskCount()}
+          filteredTasks={getFilteredTaskCount()}
+          onSearch={handleSearch}
+          onAddColumn={handleAddColumn}
+        />
+        <div className='w-full overflow-x-auto pb-4'>
+          <div className='flex gap-4 p-2'>
+            {columns.map((col) => {
+              return (
+                <div key={col.id} className='group flex flex-col min-w-[250px]'>
+                  <div className='px-3 py-2 bg-muted/40 rounded-t-lg border border-border'>
+                    <h3 className='font-medium text-sm'>{col.title}</h3>
+                  </div>
+                  <div className='p-3 rounded-b-lg border border-t-0 border-border min-h-[300px] space-y-2'>
+                    {(filteredTasks[col.id] || []).map((task) => {
+                      return <StaticTaskCard key={task.id} task={task} />;
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className='w-full'>
+      <KanbanHeader
+        title='Project Kanban Board'
+        totalTasks={getTotalTaskCount()}
+        filteredTasks={getFilteredTaskCount()}
+        onSearch={handleSearch}
+        onAddColumn={handleAddColumn}
+      />
+      <div className='w-full overflow-x-auto pb-4'>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragEnd={handleDragEnd}
+        >
+          <div className='flex gap-4 p-2'>
+            {columns.map((col) => {
+              return (
+                <KanbanColumn
+                  key={col.id}
+                  id={col.id}
+                  title={col.title}
+                  onAddClick={handleAddClick}
+                  isAdding={addingColumn === col.id}
+                >
+                  <SortableContext
+                    id={col.id}
+                    items={
+                      filteredTasks[col.id]?.map((t) => {
+                        return t.id;
+                      }) || []
+                    }
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {(filteredTasks[col.id] || []).map((task) => {
+                      return <SortableTaskCard key={task.id} task={task} />;
+                    })}
+                  </SortableContext>
+                  {addingColumn === col.id && (
+                    <NewTaskInput
+                      value={newTaskTitle}
+                      onChange={setNewTaskTitle}
+                      onSave={handleSaveNew}
+                      onCancel={handleCancelNew}
+                    />
+                  )}
+                </KanbanColumn>
+              );
+            })}
+          </div>
+
+          {createPortal(
             <DragOverlay>{activeTask && <TaskCard task={activeTask} />}</DragOverlay>,
             document.body,
           )}
-      </DndContext>
+        </DndContext>
+      </div>
     </div>
   );
 };
