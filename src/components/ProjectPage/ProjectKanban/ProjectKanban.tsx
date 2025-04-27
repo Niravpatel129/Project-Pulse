@@ -26,7 +26,7 @@ import KanbanHeader from './KanbanHeader';
 const KanbanColumn = ({ title, children, id, onAddClick, isAdding }) => {
   const { setNodeRef: setDroppableNodeRef } = useDroppable({ id });
   return (
-    <div className='group flex flex-col w-full min-w-[247px]'>
+    <div className='group flex flex-col w-full min-w-[246px]'>
       <div className='px-3 py-2 bg-muted/40 rounded-t-lg border border-border'>
         <h3 className='font-medium text-sm'>{title}</h3>
       </div>
