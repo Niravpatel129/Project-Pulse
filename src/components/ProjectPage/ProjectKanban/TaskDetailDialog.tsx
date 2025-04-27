@@ -13,7 +13,15 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import { ChevronDown, FileImage, FileText, Link as LinkIcon, User, X } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  FileImage,
+  FileText,
+  Link as LinkIcon,
+  User,
+  X,
+} from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 // Define task and column types for type safety
@@ -93,6 +101,8 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   const [commentText, setCommentText] = useState('');
   const [activeTab, setActiveTab] = useState('comments');
   const [dueDate, setDueDate] = useState<Date | null>(null);
+  // Add state for sidebar visibility on mobile
+  const [sidebarVisible, setSidebarVisible] = useState(true);
 
   // Attachment states
   const [showLinkInput, setShowLinkInput] = useState(false);
@@ -347,7 +357,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className='max-w-6xl w-[80vw] h-[85vh] p-0 gap-0 overflow-hidden rounded-md border shadow-sm'>
+        <DialogContent className='max-w-6xl w-[95vw] md:w-[80vw] h-[85vh] p-0 gap-0 overflow-hidden rounded-md border shadow-sm'>
           {/* Add DialogTitle for accessibility */}
           <DialogTitle className='sr-only'>{task.title}</DialogTitle>
 
@@ -363,12 +373,32 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
             <X size={14} />
           </Button>
 
-          <div className='flex h-full overflow-hidden'>
+          <div className='flex flex-col md:flex-row h-full overflow-hidden'>
             {/* Main content - left side */}
-            <div className='flex-1 overflow-auto p-6'>
+            <div className={`flex-1 overflow-auto p-4 md:p-6 ${!sidebarVisible ? 'pb-16' : ''}`}>
+              {/* Mobile sidebar toggle - fixed at bottom */}
+              <Button
+                variant='outline'
+                size='sm'
+                className='md:hidden fixed bottom-4 right-4 z-10 flex items-center gap-1 px-3 rounded-full shadow-md bg-white'
+                onClick={() => {
+                  return setSidebarVisible(!sidebarVisible);
+                }}
+              >
+                {sidebarVisible ? (
+                  <>
+                    Hide Details <ChevronDown size={14} />
+                  </>
+                ) : (
+                  <>
+                    Show Details <ChevronUp size={14} />
+                  </>
+                )}
+              </Button>
+
               {/* Title - simplified */}
               {editingTitle ? (
-                <div className='mb-8'>
+                <div className='mb-4 md:mb-8'>
                   <Input
                     value={editedTitle}
                     onChange={(e) => {
@@ -388,7 +418,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 </div>
               ) : (
                 <h2
-                  className='text-xl font-normal mb-8 cursor-pointer'
+                  className='text-xl font-normal mb-4 md:mb-8 cursor-pointer'
                   onClick={() => {
                     return setEditingTitle(true);
                   }}
@@ -398,7 +428,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
               )}
 
               {/* Description - minimalist design */}
-              <div className='mb-8'>
+              <div className='mb-4 md:mb-8'>
                 <div className='mb-3 text-sm text-gray-500 flex items-center justify-between'>
                   Description
                   {!editingDescription && (
@@ -423,7 +453,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                         return setEditedDescription(e.target.value);
                       }}
                       placeholder='Add a description...'
-                      className='min-h-[200px]'
+                      className='min-h-[150px] md:min-h-[200px]'
                       autoFocus
                       onBlur={saveDescription}
                       onKeyDown={(e) => {
@@ -452,7 +482,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                   </div>
                 ) : (
                   <div
-                    className='text-sm whitespace-pre-wrap min-h-[100px] cursor-pointer'
+                    className='text-sm whitespace-pre-wrap min-h-[80px] md:min-h-[100px] cursor-pointer'
                     onClick={() => {
                       return setEditingDescription(true);
                     }}
@@ -465,7 +495,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
               </div>
 
               {/* Attachments - simplified */}
-              <div className='mb-8'>
+              <div className='mb-4 md:mb-8'>
                 <div className='mb-3 text-sm text-gray-500 flex items-center justify-between'>
                   Attachments
                   <div className='flex gap-2'>
@@ -542,11 +572,11 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
               </div>
 
               {/* Comments - simplified */}
-              <div className='mb-6'>
+              <div className='mb-4 md:mb-6'>
                 <div className='mb-3 text-sm text-gray-500'>Comments</div>
-                <div className='space-y-6'>
+                <div className='space-y-4 md:space-y-6'>
                   <div className='flex gap-3'>
-                    <Avatar className='h-8 w-8'>
+                    <Avatar className='h-8 w-8 shrink-0'>
                       <AvatarImage src='/avatars/03.png' alt='Your avatar' />
                       <AvatarFallback className='flex items-center justify-center'>
                         <User size={14} />
@@ -574,12 +604,12 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                     </div>
                   </div>
 
-                  <ScrollArea className='max-h-[300px]'>
+                  <ScrollArea className='max-h-[200px] md:max-h-[300px]'>
                     <div className='space-y-4'>
                       {comments.map((comment) => {
                         return (
                           <div key={comment.id} className='flex gap-3 group'>
-                            <Avatar className='h-8 w-8'>
+                            <Avatar className='h-8 w-8 shrink-0'>
                               <AvatarImage src={comment.avatar} alt={comment.author} />
                               <AvatarFallback>{comment.author[0]}</AvatarFallback>
                             </Avatar>
@@ -600,7 +630,26 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
             </div>
 
             {/* Right sidebar - simplified */}
-            <div className='w-[280px] min-w-[280px] border-l overflow-auto p-6 space-y-6 bg-gray-50'>
+            <div
+              className={`border-t md:border-t-0 md:border-l w-full md:w-[280px] overflow-auto p-4 md:p-6 space-y-4 md:space-y-6 bg-gray-50 ${
+                !sidebarVisible ? 'hidden md:block' : ''
+              }`}
+            >
+              {/* Sidebar close button for mobile */}
+              <div className='flex justify-between items-center mb-2 md:hidden'>
+                <span className='text-sm font-medium'>Task Details</span>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  className='h-7 w-7 p-0'
+                  onClick={() => {
+                    return setSidebarVisible(false);
+                  }}
+                >
+                  <X size={16} />
+                </Button>
+              </div>
+
               {/* Status field */}
               <div>
                 <div className='text-xs text-gray-500 mb-2'>Status</div>
@@ -617,7 +666,10 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                         <ChevronDown size={14} className='ml-2 opacity-50' />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align='start' className='w-full'>
+                    <DropdownMenuContent
+                      align='start'
+                      className='w-[calc(100vw-2rem)] md:w-[250px]'
+                    >
                       {columns.map((column) => {
                         return (
                           <DropdownMenuItem
@@ -665,7 +717,10 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                         </div>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align='start' className='min-w-[200px]'>
+                    <DropdownMenuContent
+                      align='start'
+                      className='w-[calc(100vw-2rem)] md:w-[250px]'
+                    >
                       <DropdownMenuItem
                         onClick={() => {
                           return saveAssignee({
@@ -747,7 +802,10 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                         </div>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align='start'>
+                    <DropdownMenuContent
+                      align='start'
+                      className='w-[calc(100vw-2rem)] md:w-[250px]'
+                    >
                       <DropdownMenuItem
                         onClick={() => {
                           return savePriority('high');
