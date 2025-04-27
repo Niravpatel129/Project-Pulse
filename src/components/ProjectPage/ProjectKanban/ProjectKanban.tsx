@@ -5,28 +5,39 @@ import {
   DragOverlay,
   PointerSensor,
   closestCenter,
+  useDroppable,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
-// Simple column component
+// KanbanColumn now registers itself as droppable
 const KanbanColumn = ({ title, children, id }) => {
+  const { setNodeRef: setDroppableNodeRef } = useDroppable({ id });
   return (
     <div className='flex flex-col min-w-[250px]'>
       <div className='px-3 py-2 bg-muted/40 rounded-t-lg border border-border'>
         <h3 className='font-medium text-sm'>{title}</h3>
       </div>
-      <div className='flex-1 p-3 rounded-b-lg border border-t-0 border-border min-h-[300px]'>
+      <div
+        ref={setDroppableNodeRef}
+        className='flex-1 p-3 rounded-b-lg border border-t-0 border-border min-h-[300px]'
+      >
         {children}
       </div>
     </div>
   );
 };
 
-// Sortable task card component
+// SortableTaskCard unchanged
 const SortableTaskCard = ({ task }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
@@ -52,7 +63,7 @@ const SortableTaskCard = ({ task }) => {
   );
 };
 
-// Task card for overlay when dragging
+// TaskCard for overlay
 const TaskCard = ({ task }) => {
   return (
     <Card className='mb-2 shadow-sm'>
@@ -67,101 +78,117 @@ const TaskCard = ({ task }) => {
 };
 
 const ProjectKanban = () => {
-  // Sample data - replace with your actual project data
-  const [columns] = useState([
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    return setMounted(true);
+  }, []);
+
+  const columns = [
     { id: 'todo', title: 'To Do' },
     { id: 'in-progress', title: 'In Progress' },
     { id: 'review', title: 'Review' },
     { id: 'done', title: 'Done' },
-  ]);
+  ];
 
-  const [tasks, setTasks] = useState([
-    {
-      id: '1',
-      title: 'Research design options',
-      description: 'Look for inspiration',
-      status: 'todo',
-    },
-    { id: '2', title: 'Create wireframes', description: 'For main screens', status: 'todo' },
-    {
-      id: '3',
-      title: 'Develop homepage',
-      description: 'Implement basic structure',
-      status: 'in-progress',
-    },
-    { id: '4', title: 'Design review', description: 'With client', status: 'review' },
-    {
-      id: '5',
-      title: 'Fix navigation bugs',
-      description: 'Mobile menu issues',
-      status: 'in-progress',
-    },
-    { id: '6', title: 'Update documentation', description: 'Add recent changes', status: 'done' },
-  ]);
+  const initialTasks = [
+    { id: '1', title: 'Research design options', description: 'Look for inspiration' },
+    { id: '2', title: 'Create wireframes', description: 'For main screens' },
+    { id: '3', title: 'Develop homepage', description: 'Implement basic structure' },
+    { id: '4', title: 'Design review', description: 'With client' },
+    { id: '5', title: 'Fix navigation bugs', description: 'Mobile menu issues' },
+    { id: '6', title: 'Update documentation', description: 'Add recent changes' },
+  ];
 
-  // Active dragging task state
+  // map columnId → array of tasks
+  const [columnsTasks, setColumnsTasks] = useState({
+    todo: initialTasks.filter((t) => {
+      return ['1', '2'].includes(t.id);
+    }),
+    'in-progress': initialTasks.filter((t) => {
+      return ['3', '5'].includes(t.id);
+    }),
+    review: initialTasks.filter((t) => {
+      return t.id === '4';
+    }),
+    done: initialTasks.filter((t) => {
+      return t.id === '6';
+    }),
+  });
+
   const [activeTask, setActiveTask] = useState(null);
 
-  // Configure sensors for drag and drop
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    }),
-  );
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-  // Filter tasks by status/column
-  const getTasksByStatus = (status) => {
-    return tasks.filter((task) => {
-      return task.status === status;
+  // find the column containing a given task id
+  const findContainer = (id) => {
+    return Object.keys(columnsTasks).find((col) => {
+      return columnsTasks[col].some((t) => {
+        return t.id === id;
+      });
     });
   };
 
-  // Drag handlers
-  const handleDragStart = (event) => {
-    const { active } = event;
-    const draggedTask = tasks.find((task) => {
-      return task.id === active.id;
-    });
-    setActiveTask(draggedTask);
-  };
-
-  const handleDragOver = (event) => {
-    // We could implement more complex sorting logic here
-    // For now we'll just handle column changes in handleDragEnd
-  };
-
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-
-    if (!over) {
-      setActiveTask(null);
-      return;
-    }
-
-    // Find the containers (columns) that tasks are moving between
-    const activeTaskId = active.id;
-    const activeTask = tasks.find((task) => {
-      return task.id === activeTaskId;
-    });
-
-    // Find which column the task was dropped over
-    const overContainer = over.data?.current?.sortable?.containerId || over.id;
-
-    // If the task's status hasn't changed, do nothing
-    if (activeTask.status === overContainer) {
-      setActiveTask(null);
-      return;
-    }
-
-    // Update the task's status
-    setTasks(
-      tasks.map((task) => {
-        return task.id === activeTaskId ? { ...task, status: overContainer } : task;
+  const handleDragStart = ({ active }) => {
+    const fromCol = findContainer(active.id);
+    setActiveTask(
+      columnsTasks[fromCol].find((t) => {
+        return t.id === active.id;
       }),
     );
+  };
 
+  const handleDragOver = ({ active, over }) => {
+    if (!over) return;
+
+    // over.id will be either a task.id or a column.id (due to useDroppable)
+    const overId = over.data?.current?.sortable?.containerId ?? over.id;
+    const fromCol = findContainer(active.id);
+    const toCol = columnsTasks.hasOwnProperty(overId) ? overId : findContainer(over.id);
+
+    // same-column reorder preview
+    if (fromCol && fromCol === toCol && toCol) {
+      const items = columnsTasks[fromCol];
+      const oldIndex = items.findIndex((t) => {
+        return t.id === active.id;
+      });
+      const newIndex = items.findIndex((t) => {
+        return t.id === over.id;
+      });
+      if (oldIndex !== newIndex && newIndex >= 0) {
+        setColumnsTasks((prev) => {
+          return {
+            ...prev,
+            [fromCol]: arrayMove(prev[fromCol], oldIndex, newIndex),
+          };
+        });
+      }
+      return;
+    }
+
+    // cross-column preview (including into empty)
+    if (fromCol && toCol && fromCol !== toCol) {
+      const sourceItems = columnsTasks[fromCol].filter((t) => {
+        return t.id !== active.id;
+      });
+      const destItems = [...columnsTasks[toCol]];
+      // determine insert position in dest:
+      const overIndex = destItems.findIndex((t) => {
+        return t.id === over.id;
+      });
+      const insertIndex = overIndex >= 0 ? overIndex : destItems.length;
+      destItems.splice(insertIndex, 0, activeTask);
+
+      setColumnsTasks((prev) => {
+        return {
+          ...prev,
+          [fromCol]: sourceItems,
+          [toCol]: destItems,
+        };
+      });
+    }
+  };
+
+  const handleDragEnd = ({ active, over }) => {
     setActiveTask(null);
   };
 
@@ -175,20 +202,20 @@ const ProjectKanban = () => {
         onDragEnd={handleDragEnd}
       >
         <div className='flex gap-4 p-2'>
-          {columns.map((column) => {
+          {columns.map((col) => {
             return (
-              <KanbanColumn key={column.id} id={column.id} title={column.title}>
+              <KanbanColumn key={col.id} id={col.id} title={col.title}>
                 <SortableContext
-                  id={column.id}
-                  items={getTasksByStatus(column.id).map((task) => {
-                    return task.id;
+                  id={col.id}
+                  items={columnsTasks[col.id].map((t) => {
+                    return t.id;
                   })}
                   strategy={verticalListSortingStrategy}
                 >
-                  {getTasksByStatus(column.id).map((task) => {
+                  {columnsTasks[col.id].map((task) => {
                     return <SortableTaskCard key={task.id} task={task} />;
                   })}
-                  {getTasksByStatus(column.id).length === 0 && (
+                  {columnsTasks[col.id].length === 0 && (
                     <div className='h-full flex items-center justify-center'>
                       <p className='text-xs text-muted-foreground'>No items</p>
                     </div>
@@ -199,8 +226,11 @@ const ProjectKanban = () => {
           })}
         </div>
 
-        {/* Drag overlay */}
-        <DragOverlay>{activeTask ? <TaskCard task={activeTask} /> : null}</DragOverlay>
+        {mounted &&
+          createPortal(
+            <DragOverlay>{activeTask && <TaskCard task={activeTask} />}</DragOverlay>,
+            document.body,
+          )}
       </DndContext>
     </div>
   );
