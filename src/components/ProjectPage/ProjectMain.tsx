@@ -106,7 +106,7 @@ export default function ProjectMain() {
         </ScrollArea>
 
         <div className='flex flex-col gap-6 py-2 md:flex-row flex-1 '>
-          <div className='w-full lg:flex-1 md:px-2 '>
+          <div className='w-full lg:flex-1 md:px-2 overflow-x-auto '>
             <AnimatePresence mode='wait'>
               <motion.div
                 key={activeTab}
