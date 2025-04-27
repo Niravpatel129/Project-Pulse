@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 type Task = {
   id: string;
   title: string;
-  description: string;
   columnId: string;
 };
 
@@ -33,24 +32,21 @@ export function useKanbanBoard() {
     {
       id: '1',
       title: 'Research design options',
-      description: 'Look for inspiration',
       columnId: 'todo',
     },
-    { id: '2', title: 'Create wireframes', description: 'For main screens', columnId: 'todo' },
+    { id: '2', title: 'Create wireframes', columnId: 'todo' },
     {
       id: '3',
       title: 'Develop homepage',
-      description: 'Implement basic structure',
       columnId: 'in-progress',
     },
-    { id: '4', title: 'Design review', description: 'With client', columnId: 'review' },
+    { id: '4', title: 'Design review', columnId: 'review' },
     {
       id: '5',
       title: 'Fix navigation bugs',
-      description: 'Mobile menu issues',
       columnId: 'in-progress',
     },
-    { id: '6', title: 'Update documentation', description: 'Add recent changes', columnId: 'done' },
+    { id: '6', title: 'Update documentation', columnId: 'done' },
   ];
 
   const [columnsTasks, setColumnsTasks] = useState({
@@ -112,7 +108,6 @@ export function useKanbanBoard() {
     const newTask = {
       id,
       title: newTaskTitle.trim(),
-      description: '',
       columnId: addingColumn,
     };
     setColumnsTasks((prev) => {
@@ -218,10 +213,7 @@ export function useKanbanBoard() {
         return [
           colId,
           tasks.filter((task) => {
-            return (
-              task.title.toLowerCase().includes(lowerQuery) ||
-              (task.description && task.description.toLowerCase().includes(lowerQuery))
-            );
+            return task.title.toLowerCase().includes(lowerQuery);
           }),
         ];
       }),

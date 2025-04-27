@@ -252,9 +252,6 @@ const SortableTaskCard = ({
             </TooltipProvider>
           </div>
           <h4 className='font-medium text-sm text-wrap break-all pr-6'>{task.title}</h4>
-          {task.description && (
-            <p className='text-xs text-muted-foreground mt-1'>{task.description}</p>
-          )}
         </CardContent>
       </Card>
     </div>
@@ -359,9 +356,6 @@ const StaticTaskCard = ({
             </button>
           </div>
           <h4 className='font-medium text-sm text-wrap break-all pr-6'>{task.title}</h4>
-          {task.description && (
-            <p className='text-xs text-muted-foreground mt-1'>{task.description}</p>
-          )}
         </CardContent>
       </Card>
     </div>
@@ -373,9 +367,6 @@ const TaskCard = ({ task }) => {
     <Card className='mb-2 shadow-sm'>
       <CardContent className='p-3'>
         <h4 className='font-medium text-sm'>{task.title}</h4>
-        {task.description && (
-          <p className='text-xs text-muted-foreground mt-1'>{task.description}</p>
-        )}
       </CardContent>
     </Card>
   );
@@ -716,9 +707,6 @@ const ProjectKanban = () => {
                       </Button>
                     </div>
                     <h4 className='font-medium text-sm'>{task.title}</h4>
-                    {task.description && (
-                      <p className='text-xs text-muted-foreground mt-1'>{task.description}</p>
-                    )}
                     <div className='text-xs text-muted-foreground mt-2'>
                       Archived {new Date(task.archivedAt).toLocaleDateString()}
                     </div>

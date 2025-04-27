@@ -39,7 +39,6 @@ import { ShareDialog } from './FileComponents/ShareDialog';
 interface Task {
   _id: string | number;
   title: string;
-  description: string;
   status: string;
   dueDate: string;
 }

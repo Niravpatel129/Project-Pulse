@@ -28,7 +28,6 @@ import React, { useEffect, useState } from 'react';
 type Task = {
   id: string;
   title: string;
-  description?: string;
   columnId: string;
   priority?: 'low' | 'medium' | 'high';
   assignee?: {
@@ -90,13 +89,11 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
 }) => {
   // Individual edit states for each field rather than a global edit mode
   const [editingTitle, setEditingTitle] = useState(false);
-  const [editingDescription, setEditingDescription] = useState(false);
   const [editingAssignee, setEditingAssignee] = useState(false);
   const [editingPriority, setEditingPriority] = useState(false);
   const [editingStatus, setEditingStatus] = useState(false);
   const [editingStoryPoints, setEditingStoryPoints] = useState(false);
   const [editedTitle, setEditedTitle] = useState('');
-  const [editedDescription, setEditedDescription] = useState('');
   const [editedColumnId, setEditedColumnId] = useState('');
   const [commentText, setCommentText] = useState('');
   const [activeTab, setActiveTab] = useState('comments');
@@ -151,7 +148,6 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   useEffect(() => {
     if (task) {
       setEditedTitle(task.title);
-      setEditedDescription(task.description || '');
       setEditedColumnId(task.columnId);
       setDueDate(task.dueDate || null);
 
@@ -173,17 +169,6 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
     });
 
     setEditingTitle(false);
-  };
-
-  const saveDescription = () => {
-    if (!task) return;
-
-    onTaskUpdate({
-      ...task,
-      description: editedDescription,
-    });
-
-    setEditingDescription(false);
   };
 
   const saveColumnId = (columnId: string) => {
@@ -426,73 +411,6 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                   {task.title}
                 </h2>
               )}
-
-              {/* Description - minimalist design */}
-              <div className='mb-4 md:mb-8'>
-                <div className='mb-3 text-sm text-gray-500 flex items-center justify-between'>
-                  Description
-                  {!editingDescription && (
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      className='h-7 text-gray-500'
-                      onClick={() => {
-                        return setEditingDescription(true);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                  )}
-                </div>
-
-                {editingDescription ? (
-                  <div>
-                    <Textarea
-                      value={editedDescription}
-                      onChange={(e) => {
-                        return setEditedDescription(e.target.value);
-                      }}
-                      placeholder='Add a description...'
-                      className='min-h-[150px] md:min-h-[200px]'
-                      autoFocus
-                      onBlur={saveDescription}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && e.ctrlKey) saveDescription();
-                        if (e.key === 'Escape') {
-                          setEditedDescription(task.description || '');
-                          setEditingDescription(false);
-                        }
-                      }}
-                    />
-                    <div className='mt-2 flex justify-end items-center gap-2'>
-                      <Button
-                        size='sm'
-                        variant='ghost'
-                        onClick={() => {
-                          setEditedDescription(task.description || '');
-                          setEditingDescription(false);
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                      <Button size='sm' onClick={saveDescription}>
-                        Save
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    className='text-sm whitespace-pre-wrap min-h-[80px] md:min-h-[100px] cursor-pointer'
-                    onClick={() => {
-                      return setEditingDescription(true);
-                    }}
-                  >
-                    {task.description || (
-                      <span className='text-gray-400 italic'>Add description</span>
-                    )}
-                  </div>
-                )}
-              </div>
 
               {/* Attachments - simplified */}
               <div className='mb-4 md:mb-8'>
