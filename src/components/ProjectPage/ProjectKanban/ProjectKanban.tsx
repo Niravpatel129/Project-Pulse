@@ -1,5 +1,6 @@
 'use client';
 import { Card, CardContent } from '@/components/ui/card';
+import { CommandShortcut } from '@/components/ui/command';
 import {
   DndContext,
   DragOverlay,
@@ -16,28 +17,38 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-// KanbanColumn now registers itself as droppable
-const KanbanColumn = ({ title, children, id }) => {
+// KanbanColumn now places Add Task directly after its children
+const KanbanColumn = ({ title, children, id, onAddClick, isAdding }) => {
   const { setNodeRef: setDroppableNodeRef } = useDroppable({ id });
   return (
-    <div className='flex flex-col min-w-[250px]'>
+    <div className='group flex flex-col min-w-[250px]'>
       <div className='px-3 py-2 bg-muted/40 rounded-t-lg border border-border'>
         <h3 className='font-medium text-sm'>{title}</h3>
       </div>
       <div
         ref={setDroppableNodeRef}
-        className='flex-1 p-3 rounded-b-lg border border-t-0 border-border min-h-[300px]'
+        className='p-3 rounded-b-lg border border-t-0 border-border min-h-[300px] space-y-2'
       >
         {children}
+        {!isAdding && (
+          <button
+            onClick={() => {
+              return onAddClick(id);
+            }}
+            className='flex items-center gap-1 mt-2 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition'
+          >
+            <Plus size={14} /> Add task
+          </button>
+        )}
       </div>
     </div>
   );
 };
 
-// SortableTaskCard unchanged
 const SortableTaskCard = ({ task }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
@@ -53,7 +64,7 @@ const SortableTaskCard = ({ task }) => {
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <Card className='mb-2 shadow-sm cursor-grab'>
         <CardContent className='p-3'>
-          <h4 className='font-medium text-sm'>{task.title}</h4>
+          <h4 className='font-medium text-sm text-wrap break-all'>{task.title}</h4>
           {task.description && (
             <p className='text-xs text-muted-foreground mt-1'>{task.description}</p>
           )}
@@ -63,7 +74,6 @@ const SortableTaskCard = ({ task }) => {
   );
 };
 
-// TaskCard for overlay
 const TaskCard = ({ task }) => {
   return (
     <Card className='mb-2 shadow-sm'>
@@ -72,6 +82,34 @@ const TaskCard = ({ task }) => {
         {task.description && (
           <p className='text-xs text-muted-foreground mt-1'>{task.description}</p>
         )}
+      </CardContent>
+    </Card>
+  );
+};
+
+const NewTaskInput = ({ value, onChange, onSave, onCancel }) => {
+  return (
+    <Card className='mb-2 border border-dashed border-border'>
+      <CardContent className='p-3 flex items-center space-x-2'>
+        <input
+          autoFocus
+          value={value}
+          onChange={(e) => {
+            return onChange(e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') onSave();
+            if (e.key === 'Escape') onCancel();
+          }}
+          placeholder='New task title'
+          className='flex-1 bg-transparent outline-none text-sm'
+        />
+        <button
+          onClick={onSave}
+          className='bg-black text-white rounded px-2 py-1 flex items-center gap-1 text-xs font-medium'
+        >
+          Save <CommandShortcut className='text-white'>⏎</CommandShortcut>
+        </button>
       </CardContent>
     </Card>
   );
@@ -99,7 +137,6 @@ const ProjectKanban = () => {
     { id: '6', title: 'Update documentation', description: 'Add recent changes' },
   ];
 
-  // map columnId → array of tasks
   const [columnsTasks, setColumnsTasks] = useState({
     todo: initialTasks.filter((t) => {
       return ['1', '2'].includes(t.id);
@@ -116,37 +153,81 @@ const ProjectKanban = () => {
   });
 
   const [activeTask, setActiveTask] = useState(null);
+  const [addingColumn, setAddingColumn] = useState<string | null>(null);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-  // find the column containing a given task id
-  const findContainer = (id) => {
-    return Object.keys(columnsTasks).find((col) => {
+  const findContainer = (id: string) => {
+    return (Object.keys(columnsTasks) as Array<keyof typeof columnsTasks>).find((col) => {
       return columnsTasks[col].some((t) => {
         return t.id === id;
       });
     });
   };
 
+  const handleAddClick = (columnId: string) => {
+    setAddingColumn(columnId);
+    setNewTaskTitle('');
+  };
+
+  const handleSaveNew = () => {
+    if (!addingColumn || !newTaskTitle.trim()) return;
+    const id = Date.now().toString();
+    const newTask = { id, title: newTaskTitle.trim(), description: '', status: addingColumn };
+    setColumnsTasks((prev) => {
+      return {
+        ...prev,
+        [addingColumn]: [...prev[addingColumn], newTask],
+      };
+    });
+    setAddingColumn(null);
+    setNewTaskTitle('');
+  };
+
+  const handleCancelNew = () => {
+    setAddingColumn(null);
+    setNewTaskTitle('');
+  };
+
   const handleDragStart = ({ active }) => {
-    const fromCol = findContainer(active.id);
+    const from = findContainer(active.id)!;
     setActiveTask(
-      columnsTasks[fromCol].find((t) => {
+      columnsTasks[from].find((t) => {
         return t.id === active.id;
-      }),
+      })!,
     );
   };
 
   const handleDragOver = ({ active, over }) => {
     if (!over) return;
-
-    // over.id will be either a task.id or a column.id (due to useDroppable)
     const overId = over.data?.current?.sortable?.containerId ?? over.id;
-    const fromCol = findContainer(active.id);
-    const toCol = columnsTasks.hasOwnProperty(overId) ? overId : findContainer(over.id);
+    const fromCol = findContainer(active.id)!;
+    const toCol = columnsTasks.hasOwnProperty(overId)
+      ? (overId as keyof typeof columnsTasks)
+      : findContainer(over.id)!;
 
-    // same-column reorder preview
-    if (fromCol && fromCol === toCol && toCol) {
+    if (fromCol && toCol && fromCol !== toCol) {
+      const sourceItems = columnsTasks[fromCol].filter((t) => {
+        return t.id !== active.id;
+      });
+      const destItems = [...columnsTasks[toCol]];
+      const overIndex = destItems.findIndex((t) => {
+        return t.id === over.id;
+      });
+      const insertIndex = overIndex >= 0 ? overIndex : destItems.length;
+      destItems.splice(insertIndex, 0, activeTask!);
+      setColumnsTasks((prev) => {
+        return {
+          ...prev,
+          [fromCol]: sourceItems,
+          [toCol]: destItems,
+        };
+      });
+      return;
+    }
+
+    if (fromCol === toCol) {
       const items = columnsTasks[fromCol];
       const oldIndex = items.findIndex((t) => {
         return t.id === active.id;
@@ -162,33 +243,10 @@ const ProjectKanban = () => {
           };
         });
       }
-      return;
-    }
-
-    // cross-column preview (including into empty)
-    if (fromCol && toCol && fromCol !== toCol) {
-      const sourceItems = columnsTasks[fromCol].filter((t) => {
-        return t.id !== active.id;
-      });
-      const destItems = [...columnsTasks[toCol]];
-      // determine insert position in dest:
-      const overIndex = destItems.findIndex((t) => {
-        return t.id === over.id;
-      });
-      const insertIndex = overIndex >= 0 ? overIndex : destItems.length;
-      destItems.splice(insertIndex, 0, activeTask);
-
-      setColumnsTasks((prev) => {
-        return {
-          ...prev,
-          [fromCol]: sourceItems,
-          [toCol]: destItems,
-        };
-      });
     }
   };
 
-  const handleDragEnd = ({ active, over }) => {
+  const handleDragEnd = () => {
     setActiveTask(null);
   };
 
@@ -204,7 +262,13 @@ const ProjectKanban = () => {
         <div className='flex gap-4 p-2'>
           {columns.map((col) => {
             return (
-              <KanbanColumn key={col.id} id={col.id} title={col.title}>
+              <KanbanColumn
+                key={col.id}
+                id={col.id}
+                title={col.title}
+                onAddClick={handleAddClick}
+                isAdding={addingColumn === col.id}
+              >
                 <SortableContext
                   id={col.id}
                   items={columnsTasks[col.id].map((t) => {
@@ -215,12 +279,15 @@ const ProjectKanban = () => {
                   {columnsTasks[col.id].map((task) => {
                     return <SortableTaskCard key={task.id} task={task} />;
                   })}
-                  {columnsTasks[col.id].length === 0 && (
-                    <div className='h-full flex items-center justify-center'>
-                      <p className='text-xs text-muted-foreground'>No items</p>
-                    </div>
-                  )}
                 </SortableContext>
+                {addingColumn === col.id && (
+                  <NewTaskInput
+                    value={newTaskTitle}
+                    onChange={setNewTaskTitle}
+                    onSave={handleSaveNew}
+                    onCancel={handleCancelNew}
+                  />
+                )}
               </KanbanColumn>
             );
           })}
