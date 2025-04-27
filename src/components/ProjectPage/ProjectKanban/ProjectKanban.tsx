@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { useKanbanBoard } from '@/hooks/useKanbanBoard';
 import {
   DndContext,
   DragOverlay,
@@ -20,15 +21,10 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import {
-  SortableContext,
-  arrayMove,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Pencil, Plus, X } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import KanbanHeader from './KanbanHeader';
 import TaskDetailDialog from './TaskDetailDialog';
@@ -175,325 +171,47 @@ const NewTaskInput = ({ value, onChange, onSave, onCancel }) => {
 };
 
 const ProjectKanban = () => {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const [columns, setColumns] = useState([
-    { id: 'todo', title: 'To Do', color: '#e2e8f0' },
-    { id: 'in-progress', title: 'In Progress', color: '#bfdbfe' },
-    { id: 'review', title: 'Review', color: '#fef3c7' },
-    { id: 'done', title: 'Done', color: '#dcfce7' },
-  ]);
-
-  const initialTasks = [
-    {
-      id: '1',
-      title: 'Research design options',
-      description: 'Look for inspiration',
-      columnId: 'todo',
-    },
-    { id: '2', title: 'Create wireframes', description: 'For main screens', columnId: 'todo' },
-    {
-      id: '3',
-      title: 'Develop homepage',
-      description: 'Implement basic structure',
-      columnId: 'in-progress',
-    },
-    { id: '4', title: 'Design review', description: 'With client', columnId: 'review' },
-    {
-      id: '5',
-      title: 'Fix navigation bugs',
-      description: 'Mobile menu issues',
-      columnId: 'in-progress',
-    },
-    { id: '6', title: 'Update documentation', description: 'Add recent changes', columnId: 'done' },
-  ];
-
-  const [columnsTasks, setColumnsTasks] = useState({
-    todo: initialTasks.filter((t) => {
-      return t.columnId === 'todo';
-    }),
-    'in-progress': initialTasks.filter((t) => {
-      return t.columnId === 'in-progress';
-    }),
-    review: initialTasks.filter((t) => {
-      return t.columnId === 'review';
-    }),
-    done: initialTasks.filter((t) => {
-      return t.columnId === 'done';
-    }),
-  });
-
-  const [activeTask, setActiveTask] = useState(null);
-  const [addingColumn, setAddingColumn] = useState<string | null>(null);
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredTasks, setFilteredTasks] = useState<{ [key: string]: any[] }>({ ...columnsTasks });
+  const {
+    mounted,
+    columns,
+    columnsTasks,
+    filteredTasks,
+    activeTask,
+    addingColumn,
+    newTaskTitle,
+    boardActionsOpen,
+    editingColumn,
+    newColumnName,
+    editColumnName,
+    newColumnColor,
+    selectedTask,
+    taskDialogOpen,
+    handleAddClick,
+    handleSaveNew,
+    handleCancelNew,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    getTotalTaskCount,
+    getFilteredTaskCount,
+    handleSearch,
+    handleAddColumn,
+    setBoardActionsOpen,
+    setEditingColumn,
+    setEditColumnName,
+    setNewColumnName,
+    setNewColumnColor,
+    handleEditColumn,
+    handleRemoveColumn,
+    handleTaskClick,
+    handleTaskUpdate,
+    setTaskDialogOpen,
+    setNewTaskTitle,
+    setColumns,
+    handleUpdateColumnColor,
+  } = useKanbanBoard();
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
-
-  const findContainer = (id: string) => {
-    return (Object.keys(columnsTasks) as Array<keyof typeof columnsTasks>).find((col) => {
-      return columnsTasks[col].some((t) => {
-        return t.id === id;
-      });
-    });
-  };
-
-  // Alternative implementation that would be used with a real backend
-  // This demonstrates how to find a container using columnId rather than an array search
-  const findContainerById = (taskId: string) => {
-    // In a real implementation with MongoDB, you might do:
-    // 1. First find the task by ID from a tasks collection
-    // 2. Then use its columnId reference to get the column
-
-    // Simulated version for our current data structure:
-    for (const colId in columnsTasks) {
-      const task = columnsTasks[colId].find((t) => {
-        return t.id === taskId;
-      });
-      if (task) {
-        return task.columnId;
-      }
-    }
-    return null;
-  };
-
-  const handleAddClick = (columnId: string) => {
-    setAddingColumn(columnId);
-    setNewTaskTitle('');
-  };
-
-  const handleSaveNew = () => {
-    if (!addingColumn || !newTaskTitle.trim()) return;
-    const id = Date.now().toString();
-    const newTask = {
-      id,
-      title: newTaskTitle.trim(),
-      description: '',
-      columnId: addingColumn,
-    };
-    setColumnsTasks((prev) => {
-      return {
-        ...prev,
-        [addingColumn]: [...prev[addingColumn], newTask],
-      };
-    });
-    setAddingColumn(null);
-    setNewTaskTitle('');
-  };
-
-  const handleCancelNew = () => {
-    setAddingColumn(null);
-    setNewTaskTitle('');
-  };
-
-  const handleDragStart = ({ active }) => {
-    const from = findContainer(active.id)!;
-    setActiveTask(
-      columnsTasks[from].find((t) => {
-        return t.id === active.id;
-      })!,
-    );
-  };
-
-  const handleDragOver = ({ active, over }) => {
-    if (!over) return;
-    const overId = over.data?.current?.sortable?.containerId ?? over.id;
-    const fromCol = findContainer(active.id)!;
-    const toCol = columnsTasks.hasOwnProperty(overId)
-      ? (overId as keyof typeof columnsTasks)
-      : findContainer(over.id)!;
-
-    if (fromCol && toCol && fromCol !== toCol) {
-      const sourceItems = columnsTasks[fromCol].filter((t) => {
-        return t.id !== active.id;
-      });
-      const destItems = [...columnsTasks[toCol]];
-      const overIndex = destItems.findIndex((t) => {
-        return t.id === over.id;
-      });
-      const insertIndex = overIndex >= 0 ? overIndex : destItems.length;
-
-      // Update task's columnId when moved to another column
-      const updatedTask = { ...activeTask!, columnId: toCol };
-      destItems.splice(insertIndex, 0, updatedTask);
-
-      setColumnsTasks((prev) => {
-        return {
-          ...prev,
-          [fromCol]: sourceItems,
-          [toCol]: destItems,
-        };
-      });
-      return;
-    }
-
-    if (fromCol === toCol) {
-      const items = columnsTasks[fromCol];
-      const oldIndex = items.findIndex((t) => {
-        return t.id === active.id;
-      });
-      const newIndex = items.findIndex((t) => {
-        return t.id === over.id;
-      });
-      if (oldIndex !== newIndex && newIndex >= 0) {
-        setColumnsTasks((prev) => {
-          return {
-            ...prev,
-            [fromCol]: arrayMove(prev[fromCol], oldIndex, newIndex),
-          };
-        });
-      }
-    }
-  };
-
-  const handleDragEnd = () => {
-    setActiveTask(null);
-  };
-
-  // Count total tasks and filtered tasks
-  const getTotalTaskCount = () => {
-    return Object.values(columnsTasks).reduce((acc, tasks) => {
-      return acc + tasks.length;
-    }, 0);
-  };
-
-  const getFilteredTaskCount = () => {
-    return Object.values(filteredTasks).reduce((acc, tasks) => {
-      return acc + tasks.length;
-    }, 0);
-  };
-
-  // Handle search
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    if (!query.trim()) {
-      setFilteredTasks({ ...columnsTasks });
-      return;
-    }
-
-    const lowerQuery = query.toLowerCase();
-    const filtered = Object.fromEntries(
-      Object.entries(columnsTasks).map(([colId, tasks]) => {
-        return [
-          colId,
-          tasks.filter((task) => {
-            return (
-              task.title.toLowerCase().includes(lowerQuery) ||
-              (task.description && task.description.toLowerCase().includes(lowerQuery))
-            );
-          }),
-        ];
-      }),
-    );
-    setFilteredTasks(filtered);
-  };
-
-  // Handle adding a new column
-  const handleAddColumn = (name: string, color: string) => {
-    // Generate a unique ID (in a real app with MongoDB, you would use ObjectId)
-    const id = `col-${Date.now()}`;
-    setColumns((prev) => {
-      return [...prev, { id, title: name, color }];
-    });
-    setColumnsTasks((prev) => {
-      return { ...prev, [id]: [] };
-    });
-    setFilteredTasks((prev) => {
-      return { ...prev, [id]: [] };
-    });
-  };
-
-  useEffect(() => {
-    // Update filtered tasks whenever columns tasks change
-    if (!searchQuery) {
-      setFilteredTasks({ ...columnsTasks });
-    } else {
-      handleSearch(searchQuery);
-    }
-  }, [columnsTasks]);
-
-  const [boardActionsOpen, setBoardActionsOpen] = useState(false);
-  const [editingColumn, setEditingColumn] = useState(null);
-  const [newColumnName, setNewColumnName] = useState('');
-  const [editColumnName, setEditColumnName] = useState('');
-  const [newColumnColor, setNewColumnColor] = useState('#e2e8f0');
-
-  // Handle editing a column name
-  const handleEditColumn = (columnId, newName) => {
-    setColumns((prev) => {
-      return prev.map((col) => {
-        return col.id === columnId ? { ...col, title: newName } : col;
-      });
-    });
-  };
-
-  // Handle removing a column
-  const handleRemoveColumn = (columnId) => {
-    setColumns((prev) => {
-      return prev.filter((col) => {
-        return col.id !== columnId;
-      });
-    });
-
-    // Remove tasks from this column
-    setColumnsTasks((prev) => {
-      const newTasks = { ...prev };
-      delete newTasks[columnId];
-      return newTasks;
-    });
-
-    setFilteredTasks((prev) => {
-      const newFiltered = { ...prev };
-      delete newFiltered[columnId];
-      return newFiltered;
-    });
-  };
-
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
-
-  // Handle opening the task detail dialog
-  const handleTaskClick = (task) => {
-    setSelectedTask(task);
-    setTaskDialogOpen(true);
-  };
-
-  // Handle updating a task
-  const handleTaskUpdate = (updatedTask) => {
-    // Get current column and destination column
-    const currentColumnId = findContainer(updatedTask.id);
-    const targetColumnId = updatedTask.columnId;
-
-    if (currentColumnId === targetColumnId) {
-      // Update task within the same column
-      setColumnsTasks((prev) => {
-        return {
-          ...prev,
-          [currentColumnId]: prev[currentColumnId].map((t) => {
-            return t.id === updatedTask.id ? updatedTask : t;
-          }),
-        };
-      });
-    } else {
-      // Move task to another column
-      setColumnsTasks((prev) => {
-        const sourceItems = prev[currentColumnId].filter((t) => {
-          return t.id !== updatedTask.id;
-        });
-        const destItems = [...prev[targetColumnId], updatedTask];
-
-        return {
-          ...prev,
-          [currentColumnId]: sourceItems,
-          [targetColumnId]: destItems,
-        };
-      });
-    }
-  };
 
   // Render a simplified version for server-side rendering
   if (!mounted) {
@@ -671,11 +389,7 @@ const ProjectKanban = () => {
                         <ColorPicker
                           value={column.color}
                           onChange={(color) => {
-                            setColumns((prev) => {
-                              return prev.map((col) => {
-                                return col.id === column.id ? { ...col, color } : col;
-                              });
-                            });
+                            handleUpdateColumnColor(column.id, color);
                           }}
                           label=''
                         />
