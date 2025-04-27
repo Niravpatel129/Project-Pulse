@@ -286,6 +286,7 @@ export function useKanbanBoard() {
       const newColumn = await kanbanApi.createColumn(projectId, {
         title: name,
         color,
+        order: columns.length,
       });
 
       setColumns((prev) => {
@@ -412,6 +413,11 @@ export function useKanbanBoard() {
           };
         });
       }
+
+      // If this is the selected task, update it
+      if (selectedTask && selectedTask.id === updatedTask.id) {
+        setSelectedTask(updatedTask);
+      }
     } catch (err) {
       console.error('Error updating task:', err);
       toast({
@@ -419,6 +425,100 @@ export function useKanbanBoard() {
         description: 'Failed to update task',
         variant: 'destructive',
       });
+    }
+  };
+
+  /**
+   * Add a comment to a task
+   */
+  const handleAddComment = async (
+    taskId: string,
+    comment: Omit<kanbanApi.Comment, 'id' | 'createdAt'>,
+  ) => {
+    if (!projectId) return null;
+
+    try {
+      const newComment = await kanbanApi.addComment(projectId, taskId, comment);
+
+      // Update the task in state with the new comment
+      if (selectedTask && selectedTask.id === taskId) {
+        const updatedTask = {
+          ...selectedTask,
+          comments: [...(selectedTask.comments || []), newComment],
+        };
+
+        setSelectedTask(updatedTask);
+
+        // Also update in columnsTasks
+        const columnId = findContainer(taskId);
+        if (columnId) {
+          setColumnsTasks((prev) => {
+            return {
+              ...prev,
+              [columnId]: prev[columnId].map((t) => {
+                return t.id === taskId ? updatedTask : t;
+              }),
+            };
+          });
+        }
+      }
+
+      return newComment;
+    } catch (err) {
+      console.error('Error adding comment:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to add comment',
+        variant: 'destructive',
+      });
+      return null;
+    }
+  };
+
+  /**
+   * Add an attachment to a task
+   */
+  const handleAddAttachment = async (
+    taskId: string,
+    attachment: Omit<kanbanApi.Attachment, 'id' | 'createdAt'>,
+  ) => {
+    if (!projectId) return null;
+
+    try {
+      const newAttachment = await kanbanApi.addAttachment(projectId, taskId, attachment);
+
+      // Update the task in state with the new attachment
+      if (selectedTask && selectedTask.id === taskId) {
+        const updatedTask = {
+          ...selectedTask,
+          attachments: [...(selectedTask.attachments || []), newAttachment],
+        };
+
+        setSelectedTask(updatedTask);
+
+        // Also update in columnsTasks
+        const columnId = findContainer(taskId);
+        if (columnId) {
+          setColumnsTasks((prev) => {
+            return {
+              ...prev,
+              [columnId]: prev[columnId].map((t) => {
+                return t.id === taskId ? updatedTask : t;
+              }),
+            };
+          });
+        }
+      }
+
+      return newAttachment;
+    } catch (err) {
+      console.error('Error adding attachment:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to add attachment',
+        variant: 'destructive',
+      });
+      return null;
     }
   };
 
@@ -582,5 +682,7 @@ export function useKanbanBoard() {
     setNewTaskTitle,
     setColumns,
     refreshData: loadKanbanData,
+    handleAddComment,
+    handleAddAttachment,
   };
 }

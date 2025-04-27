@@ -446,6 +446,8 @@ const ProjectKanban = () => {
     handleTaskArchive,
     handleRestoreTask,
     refreshData,
+    handleAddComment,
+    handleAddAttachment,
   } = useKanbanBoard();
 
   // Add state for archived tasks
@@ -725,6 +727,8 @@ const ProjectKanban = () => {
           open={taskDialogOpen}
           onOpenChange={setTaskDialogOpen}
           onTaskUpdate={handleTaskUpdate}
+          onAddComment={handleAddComment}
+          onAddAttachment={handleAddAttachment}
           columns={columns}
         />
       )}

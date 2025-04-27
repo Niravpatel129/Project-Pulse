@@ -11,12 +11,47 @@ export type Task = {
     name: string;
     avatar: string;
   };
+  reporter?: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
+  description?: string;
   dueDate?: Date;
   labels?: string[];
   storyPoints?: number;
   _archived?: boolean;
   _deleted?: boolean;
   archivedAt?: Date;
+  comments?: Comment[];
+  attachments?: Attachment[];
+};
+
+// Comment type
+export type Comment = {
+  id: string;
+  author: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
+  content: string;
+  createdAt: Date;
+};
+
+// Attachment type
+export type Attachment = {
+  id: string;
+  type: string;
+  url: string;
+  title: string;
+  size?: number;
+  createdAt?: Date;
+  createdBy?: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
 };
 
 // Backend Task type
@@ -30,12 +65,41 @@ export type BackendTask = {
     name: string;
     avatar: string;
   };
+  reporter?: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
+  description?: string;
   dueDate?: Date;
   labels?: string[];
   storyPoints?: number;
   _archived?: boolean;
   _deleted?: boolean;
   archivedAt?: Date;
+  comments?: {
+    _id: string;
+    author: {
+      id: string;
+      name: string;
+      avatar: string;
+    };
+    content: string;
+    createdAt: Date;
+  }[];
+  attachments?: {
+    _id: string;
+    type: string;
+    url: string;
+    title: string;
+    size?: number;
+    createdAt?: Date;
+    createdBy?: {
+      id: string;
+      name: string;
+      avatar: string;
+    };
+  }[];
 };
 
 // Backend Column type
@@ -93,13 +157,44 @@ const prepareColumnForBackend = (column: Partial<Column>): Partial<BackendColumn
 };
 
 /**
- * Transform a backend task to frontend format
+ * Transform a backend comment to frontend format
  */
-const transformTask = (backendTask: BackendTask): Task => {
-  const { _id, ...rest } = backendTask;
+const transformComment = (backendComment: any): Comment => {
+  const { _id, ...rest } = backendComment;
   return {
     id: _id,
     ...rest,
+  };
+};
+
+/**
+ * Transform a backend attachment to frontend format
+ */
+const transformAttachment = (backendAttachment: any): Attachment => {
+  const { _id, ...rest } = backendAttachment;
+  return {
+    id: _id,
+    ...rest,
+  };
+};
+
+/**
+ * Transform a backend task to frontend format
+ */
+const transformTask = (backendTask: BackendTask): Task => {
+  const { _id, comments, attachments, ...rest } = backendTask;
+
+  // Transform comments if they exist
+  const transformedComments = comments?.map(transformComment);
+
+  // Transform attachments if they exist
+  const transformedAttachments = attachments?.map(transformAttachment);
+
+  return {
+    id: _id,
+    ...rest,
+    comments: transformedComments,
+    attachments: transformedAttachments,
   };
 };
 
@@ -112,6 +207,22 @@ const prepareTaskForBackend = (task: Partial<Task>): Partial<BackendTask> => {
   if ('id' in task) {
     backendTask._id = task.id;
     delete backendTask.id;
+  }
+
+  // Transform comments if they exist
+  if (task.comments) {
+    backendTask.comments = task.comments.map((comment) => {
+      const { id, ...rest } = comment;
+      return { _id: id, ...rest };
+    });
+  }
+
+  // Transform attachments if they exist
+  if (task.attachments) {
+    backendTask.attachments = task.attachments.map((attachment) => {
+      const { id, ...rest } = attachment;
+      return { _id: id, ...rest };
+    });
   }
 
   return backendTask as Partial<BackendTask>;
@@ -235,6 +346,36 @@ export const updateTask = async (
 };
 
 /**
+ * Add a comment to a task
+ */
+export const addComment = async (
+  projectId: string,
+  taskId: string,
+  comment: Omit<Comment, 'id' | 'createdAt'>,
+): Promise<Comment> => {
+  const response = await newRequest.post(
+    `${BASE_PATH}/${projectId}/tasks/${taskId}/comments`,
+    comment,
+  );
+  return transformComment(response.data);
+};
+
+/**
+ * Add an attachment to a task
+ */
+export const addAttachment = async (
+  projectId: string,
+  taskId: string,
+  attachment: Omit<Attachment, 'id' | 'createdAt'>,
+): Promise<Attachment> => {
+  const response = await newRequest.post(
+    `${BASE_PATH}/${projectId}/tasks/${taskId}/attachments`,
+    attachment,
+  );
+  return transformAttachment(response.data);
+};
+
+/**
  * Move a task to a different column
  */
 export const moveTask = async (
@@ -297,10 +438,25 @@ export const saveKanbanBoard = async (projectId: string, board: KanbanBoard): Pr
 
   // Transform tasks back to backend format
   const backendTasks = board.tasks.map((task) => {
-    const { id, ...rest } = task;
+    const { id, comments, attachments, ...rest } = task;
+
+    // Transform comments if they exist
+    const transformedComments = comments?.map((comment) => {
+      const { id: commentId, ...commentRest } = comment;
+      return { _id: commentId, ...commentRest };
+    });
+
+    // Transform attachments if they exist
+    const transformedAttachments = attachments?.map((attachment) => {
+      const { id: attachmentId, ...attachmentRest } = attachment;
+      return { _id: attachmentId, ...attachmentRest };
+    });
+
     return {
       _id: id,
       ...rest,
+      comments: transformedComments,
+      attachments: transformedAttachments,
     };
   });
 
