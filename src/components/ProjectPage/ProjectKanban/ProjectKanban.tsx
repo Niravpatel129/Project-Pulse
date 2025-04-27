@@ -10,7 +10,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useKanbanBoard } from '@/hooks/useKanbanBoard';
 import {
   DndContext,
@@ -23,8 +31,8 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Pencil, Plus, X } from 'lucide-react';
-import React from 'react';
+import { Archive, MoreVertical, Pencil, Plus, Trash2, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import KanbanHeader from './KanbanHeader';
 import TaskDetailDialog from './TaskDetailDialog';
@@ -40,18 +48,65 @@ type Attachment = {
 };
 
 // KanbanColumn now places Add Task directly after its children
-const KanbanColumn = ({ title, children, id, onAddClick, isAdding, color = '#e2e8f0' }) => {
+const KanbanColumn = ({
+  title,
+  children,
+  id,
+  onAddClick,
+  isAdding,
+  color = '#e2e8f0',
+  onEditTitle,
+}) => {
   const { setNodeRef: setDroppableNodeRef } = useDroppable({ id });
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(title);
+
+  const handleTitleSave = () => {
+    if (editTitle.trim()) {
+      onEditTitle(id, editTitle);
+      setIsEditing(false);
+    }
+  };
+
   return (
     <div className='group flex flex-col w-full min-w-[246px]'>
       <div
-        className='px-3 py-2 rounded-t-lg border border-border'
+        className='px-3 py-2 rounded-t-lg border border-border flex justify-between items-center'
         style={{
           backgroundColor: `${color}30`,
           borderBottomColor: color,
         }}
       >
-        <h3 className='font-medium text-sm'>{title}</h3>
+        {isEditing ? (
+          <div className='flex items-center gap-2 w-full'>
+            <input
+              className='text-sm bg-background px-1 py-0.5 rounded border flex-1'
+              value={editTitle}
+              onChange={(e) => {
+                return setEditTitle(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleTitleSave();
+                if (e.key === 'Escape') {
+                  setIsEditing(false);
+                  setEditTitle(title);
+                }
+              }}
+              onBlur={handleTitleSave}
+              autoFocus
+            />
+          </div>
+        ) : (
+          <h3
+            className='font-medium text-sm cursor-pointer hover:text-foreground transition-colors'
+            onClick={() => {
+              setEditTitle(title);
+              setIsEditing(true);
+            }}
+          >
+            {title}
+          </h3>
+        )}
       </div>
       <div
         ref={setDroppableNodeRef}
@@ -73,7 +128,14 @@ const KanbanColumn = ({ title, children, id, onAddClick, isAdding, color = '#e2e
   );
 };
 
-const SortableTaskCard = ({ task, onTaskClick }) => {
+const SortableTaskCard = ({
+  task,
+  onTaskClick,
+  onTaskDelete,
+  onTaskArchive,
+  columns,
+  onMoveTask,
+}) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
   });
@@ -84,10 +146,20 @@ const SortableTaskCard = ({ task, onTaskClick }) => {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    onTaskDelete(task.id);
+  };
+
+  const handleArchive = (e) => {
+    e.stopPropagation();
+    onTaskArchive(task.id);
+  };
+
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <Card
-        className='mb-2 shadow-sm cursor-grab'
+        className='mb-2 shadow-sm cursor-grab group relative'
         onClick={(e) => {
           // Only open dialog when clicking on the card, not when starting to drag
           const target = e.target as HTMLElement;
@@ -98,7 +170,88 @@ const SortableTaskCard = ({ task, onTaskClick }) => {
         }}
       >
         <CardContent className='p-3'>
-          <h4 className='font-medium text-sm text-wrap break-all'>{task.title}</h4>
+          <div className='absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition'>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                asChild
+                onClick={(e) => {
+                  return e.stopPropagation();
+                }}
+              >
+                <button className='text-muted-foreground hover:text-foreground'>
+                  <MoreVertical size={14} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align='end'>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTaskClick(task);
+                  }}
+                >
+                  <Pencil className='mr-2 h-4 w-4' />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {columns.map((column) => {
+                  return (
+                    <DropdownMenuItem
+                      key={column.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onMoveTask(task.id, column.id);
+                      }}
+                      disabled={task.columnId === column.id}
+                    >
+                      <div className='flex items-center'>
+                        <div
+                          className='w-3 h-3 rounded-full mr-2'
+                          style={{ backgroundColor: column.color }}
+                        />
+                        Move to {column.title}
+                      </div>
+                    </DropdownMenuItem>
+                  );
+                })}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleArchive(e);
+                  }}
+                >
+                  <Archive className='mr-2 h-4 w-4' />
+                  Archive
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(e);
+                  }}
+                  className='text-destructive'
+                >
+                  <Trash2 className='mr-2 h-4 w-4' />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className='text-muted-foreground hover:text-destructive'
+                    onClick={handleDelete}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Delete Task</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <h4 className='font-medium text-sm text-wrap break-all pr-6'>{task.title}</h4>
           {task.description && (
             <p className='text-xs text-muted-foreground mt-1'>{task.description}</p>
           )}
@@ -109,17 +262,103 @@ const SortableTaskCard = ({ task, onTaskClick }) => {
 };
 
 // Non-draggable version of TaskCard for server-side rendering
-const StaticTaskCard = ({ task, onTaskClick }) => {
+const StaticTaskCard = ({
+  task,
+  onTaskClick,
+  onTaskDelete,
+  onTaskArchive,
+  columns,
+  onMoveTask,
+}) => {
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    onTaskDelete(task.id);
+  };
+
+  const handleArchive = (e) => {
+    e.stopPropagation();
+    onTaskArchive(task.id);
+  };
+
   return (
     <div>
       <Card
-        className='mb-2 shadow-sm cursor-pointer'
+        className='mb-2 shadow-sm cursor-pointer group relative'
         onClick={() => {
           return onTaskClick(task);
         }}
       >
         <CardContent className='p-3'>
-          <h4 className='font-medium text-sm text-wrap break-all'>{task.title}</h4>
+          <div className='absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition'>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                asChild
+                onClick={(e) => {
+                  return e.stopPropagation();
+                }}
+              >
+                <button className='text-muted-foreground hover:text-foreground'>
+                  <MoreVertical size={14} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align='end'>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTaskClick(task);
+                  }}
+                >
+                  <Pencil className='mr-2 h-4 w-4' />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {columns.map((column) => {
+                  return (
+                    <DropdownMenuItem
+                      key={column.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onMoveTask(task.id, column.id);
+                      }}
+                      disabled={task.columnId === column.id}
+                    >
+                      <div className='flex items-center'>
+                        <div
+                          className='w-3 h-3 rounded-full mr-2'
+                          style={{ backgroundColor: column.color }}
+                        />
+                        Move to {column.title}
+                      </div>
+                    </DropdownMenuItem>
+                  );
+                })}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleArchive(e);
+                  }}
+                >
+                  <Archive className='mr-2 h-4 w-4' />
+                  Archive
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(e);
+                  }}
+                  className='text-destructive'
+                >
+                  <Trash2 className='mr-2 h-4 w-4' />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <button className='text-muted-foreground hover:text-destructive' onClick={handleDelete}>
+              <Trash2 size={14} />
+            </button>
+          </div>
+          <h4 className='font-medium text-sm text-wrap break-all pr-6'>{task.title}</h4>
           {task.description && (
             <p className='text-xs text-muted-foreground mt-1'>{task.description}</p>
           )}
@@ -211,7 +450,155 @@ const ProjectKanban = () => {
     handleUpdateColumnColor,
   } = useKanbanBoard();
 
+  // State for archived tasks
+  const [archivedTasks, setArchivedTasks] = useState([]);
+  const [showArchived, setShowArchived] = useState(false);
+
+  // Add keyboard shortcut effect for adding new tasks
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Alt/Option + N to add new task to first column
+      if (e.altKey && e.key === 'n' && columns.length > 0 && !addingColumn) {
+        e.preventDefault();
+        handleAddClick(columns[0].id);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      return window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [columns, addingColumn, handleAddClick]);
+
+  // Add new handlers for direct task deletion and column title editing
+  const handleTaskDelete = (taskId) => {
+    if (window.confirm('Are you sure you want to delete this task?')) {
+      // Find which column contains this task
+      let columnId = null;
+      for (const [colId, tasks] of Object.entries(columnsTasks)) {
+        if (
+          tasks.some((task) => {
+            return task.id === taskId;
+          })
+        ) {
+          columnId = colId;
+          break;
+        }
+      }
+
+      if (columnId) {
+        // Create updated tasks without the deleted task
+        const updatedColumnsTasks = { ...columnsTasks };
+        updatedColumnsTasks[columnId] = updatedColumnsTasks[columnId].filter((task) => {
+          return task.id !== taskId;
+        });
+
+        // Update the state in useKanbanBoard (assuming it has this capability)
+        // If not available in the hook, you'll need to modify the hook
+        setColumns((prev) => {
+          const newColumns = [...prev];
+          const colIndex = newColumns.findIndex((col) => {
+            return col.id === columnId;
+          });
+          if (colIndex >= 0) {
+            newColumns[colIndex] = {
+              ...newColumns[colIndex],
+              tasks: updatedColumnsTasks[columnId],
+            };
+          }
+          return newColumns;
+        });
+      }
+    }
+  };
+
+  // Add handler for archiving tasks
+  const handleTaskArchive = (taskId) => {
+    // Find which column contains this task
+    let columnId = null;
+    let taskToArchive = null;
+
+    for (const [colId, tasks] of Object.entries(columnsTasks)) {
+      const foundTask = tasks.find((task) => {
+        return task.id === taskId;
+      });
+      if (foundTask) {
+        columnId = colId;
+        taskToArchive = foundTask;
+        break;
+      }
+    }
+
+    if (columnId && taskToArchive) {
+      // Add task to archived tasks
+      setArchivedTasks((prev) => {
+        return [...prev, { ...taskToArchive, archivedAt: new Date() }];
+      });
+
+      // Remove from active tasks
+      handleTaskDelete(taskId);
+    }
+  };
+
+  // Handler to restore tasks from archive
+  const handleRestoreTask = (taskId) => {
+    const taskToRestore = archivedTasks.find((task) => {
+      return task.id === taskId;
+    });
+    if (taskToRestore) {
+      // Remove archived status
+      const { archivedAt, ...restoredTask } = taskToRestore;
+
+      // Add back to its original column or the first column if original doesn't exist
+      const targetColumnId = columns.find((col) => {
+        return col.id === restoredTask.columnId;
+      })
+        ? restoredTask.columnId
+        : columns[0]?.id;
+
+      if (targetColumnId) {
+        // Update task with proper column ID and add back to active tasks
+        handleTaskUpdate({ ...restoredTask, columnId: targetColumnId });
+
+        // Remove from archived tasks
+        setArchivedTasks((prev) => {
+          return prev.filter((task) => {
+            return task.id !== taskId;
+          });
+        });
+      }
+    }
+  };
+
+  const handleDirectColumnEdit = (columnId, newTitle) => {
+    handleEditColumn(columnId, newTitle);
+  };
+
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  // Add new handler for moving tasks between columns
+  const handleMoveTask = (taskId, targetColumnId) => {
+    // Find which column contains this task
+    let sourceColumnId = null;
+    let taskToMove = null;
+
+    for (const [colId, tasks] of Object.entries(columnsTasks)) {
+      const foundTask = tasks.find((task) => {
+        return task.id === taskId;
+      });
+      if (foundTask) {
+        sourceColumnId = colId;
+        taskToMove = foundTask;
+        break;
+      }
+    }
+
+    if (sourceColumnId && taskToMove && sourceColumnId !== targetColumnId) {
+      // Update the task with the new column ID and use the existing handleTaskUpdate function
+      const updatedTask = { ...taskToMove, columnId: targetColumnId };
+      handleTaskUpdate(updatedTask);
+    }
+  };
 
   // Render a simplified version for server-side rendering
   if (!mounted) {
@@ -233,18 +620,28 @@ const ProjectKanban = () => {
               return (
                 <div key={col.id} className='group flex flex-col min-w-[250px]'>
                   <div
-                    className='px-3 py-2 rounded-t-lg border border-border'
+                    className='px-3 py-2 rounded-t-lg border border-border flex justify-between items-center'
                     style={{
                       backgroundColor: `${col.color}30`,
                       borderBottomColor: col.color,
                     }}
                   >
-                    <h3 className='font-medium text-sm'>{col.title}</h3>
+                    <h3 className='font-medium text-sm cursor-pointer hover:text-foreground transition-colors'>
+                      {col.title}
+                    </h3>
                   </div>
                   <div className='p-3 rounded-b-lg border border-t-0 border-border min-h-[300px] space-y-2'>
                     {(filteredTasks[col.id] || []).map((task) => {
                       return (
-                        <StaticTaskCard key={task.id} task={task} onTaskClick={handleTaskClick} />
+                        <StaticTaskCard
+                          key={task.id}
+                          task={task}
+                          onTaskClick={handleTaskClick}
+                          onTaskDelete={handleTaskDelete}
+                          onTaskArchive={handleTaskArchive}
+                          columns={columns}
+                          onMoveTask={handleMoveTask}
+                        />
                       );
                     })}
                   </div>
@@ -268,7 +665,48 @@ const ProjectKanban = () => {
         onBoardActions={() => {
           return setBoardActionsOpen(true);
         }}
+        onToggleArchived={() => {
+          return setShowArchived((prev) => {
+            return !prev;
+          });
+        }}
+        showArchived={showArchived}
       />
+
+      {showArchived && archivedTasks.length > 0 ? (
+        <div className='p-4 border rounded-lg mb-4'>
+          <h3 className='font-medium mb-3'>Archived Tasks</h3>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'>
+            {archivedTasks.map((task) => {
+              return (
+                <Card key={task.id} className='relative group'>
+                  <CardContent className='p-3'>
+                    <div className='absolute top-2 right-2 opacity-0 group-hover:opacity-100'>
+                      <Button
+                        size='sm'
+                        variant='ghost'
+                        onClick={() => {
+                          return handleRestoreTask(task.id);
+                        }}
+                      >
+                        Restore
+                      </Button>
+                    </div>
+                    <h4 className='font-medium text-sm'>{task.title}</h4>
+                    {task.description && (
+                      <p className='text-xs text-muted-foreground mt-1'>{task.description}</p>
+                    )}
+                    <div className='text-xs text-muted-foreground mt-2'>
+                      Archived {new Date(task.archivedAt).toLocaleDateString()}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+
       <div className='w-full overflow-x-auto pb-4'>
         <DndContext
           sensors={sensors}
@@ -287,6 +725,7 @@ const ProjectKanban = () => {
                   color={col.color}
                   onAddClick={handleAddClick}
                   isAdding={addingColumn === col.id}
+                  onEditTitle={handleDirectColumnEdit}
                 >
                   <SortableContext
                     id={col.id}
@@ -299,7 +738,15 @@ const ProjectKanban = () => {
                   >
                     {(filteredTasks[col.id] || []).map((task) => {
                       return (
-                        <SortableTaskCard key={task.id} task={task} onTaskClick={handleTaskClick} />
+                        <SortableTaskCard
+                          key={task.id}
+                          task={task}
+                          onTaskClick={handleTaskClick}
+                          onTaskDelete={handleTaskDelete}
+                          onTaskArchive={handleTaskArchive}
+                          columns={columns}
+                          onMoveTask={handleMoveTask}
+                        />
                       );
                     })}
                   </SortableContext>

@@ -1,27 +1,19 @@
 'use client';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Keyboard, Search, Settings, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { Archive, Plus, Settings } from 'lucide-react';
 import { useState } from 'react';
 
-interface KanbanHeaderProps {
+export type KanbanHeaderProps = {
   title: string;
   totalTasks: number;
   filteredTasks: number;
   onSearch: (query: string) => void;
   onAddColumn: (name: string, color: string) => void;
   onBoardActions: () => void;
-}
+  onToggleArchived?: () => void;
+  showArchived?: boolean;
+};
 
 const KanbanHeader = ({
   title,
@@ -30,13 +22,19 @@ const KanbanHeader = ({
   onSearch,
   onAddColumn,
   onBoardActions,
+  onToggleArchived,
+  showArchived = false,
 }: KanbanHeaderProps) => {
   const [searchQuery, setSearchQuery] = useState('');
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    onSearch(query);
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+    onSearch(e.target.value);
+  };
+
+  // Open the board settings directly to add column section
+  const handleAddColumn = () => {
+    onBoardActions(); // Open the board actions dialog which contains the add column form
   };
 
   const handleAutoSort = () => {
@@ -48,59 +46,45 @@ const KanbanHeader = ({
   };
 
   return (
-    <div className='w-full mb-6 py-1'>
-      <div className='flex justify-between items-start mb-4'>
-        <div>
-          <h1 className='text-2xl font-bold'>{title}</h1>
-          <p className='text-sm text-muted-foreground'>
-            Showing {filteredTasks} of {totalTasks} tasks
-          </p>
-        </div>
-        <div className='flex items-center gap-2'>
-          <div className='relative w-64'>
-            <Search className='absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
-            <Input
-              value={searchQuery}
-              onChange={handleSearch}
-              placeholder='Search tasks...'
-              className='pl-8'
-            />
-          </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant='outline' size='icon'>
-                <span className='sr-only'>Open menu</span>
-                <SlidersHorizontal className='h-4 w-4' />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end' className='w-56'>
-              <DropdownMenuLabel>Board Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem onClick={handleAutoSort}>
-                  <Sparkles className='mr-2 h-4 w-4' />
-                  Auto-sort Tasks
-                </DropdownMenuItem>
-
-                <DropdownMenuItem onClick={onBoardActions}>
-                  <Settings className='mr-2 h-4 w-4' />
-                  Manage Columns
-                </DropdownMenuItem>
-
-                <DropdownMenuItem
-                  onClick={() => {
-                    return setIsKeyboardShortcutsOpen(true);
-                  }}
-                >
-                  <Keyboard className='mr-2 h-4 w-4' />
-                  Keyboard Shortcuts
-                  <DropdownMenuShortcut>?</DropdownMenuShortcut>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+    <div className='flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 pb-4 pt-2'>
+      <div>
+        <h1 className='text-xl font-semibold'>{title}</h1>
+        <p className='text-sm text-muted-foreground'>
+          {filteredTasks} {filteredTasks === 1 ? 'task' : 'tasks'}
+          {filteredTasks !== totalTasks ? ` (filtered from ${totalTasks})` : ''}
+        </p>
+      </div>
+      <div className='flex items-center space-x-2 w-full md:w-auto'>
+        <Input
+          type='search'
+          placeholder='Search tasks...'
+          className='h-9 w-full md:w-[200px]'
+          onChange={handleSearch}
+          value={searchQuery}
+        />
+        {onToggleArchived && (
+          <Button
+            variant={showArchived ? 'secondary' : 'outline'}
+            size='sm'
+            onClick={onToggleArchived}
+            className='flex items-center gap-1'
+          >
+            <Archive className='h-4 w-4' />
+            {showArchived ? 'Hide Archived' : 'Show Archived'}
+          </Button>
+        )}
+        <Button
+          variant='outline'
+          size='sm'
+          className='flex items-center gap-1'
+          onClick={handleAddColumn}
+        >
+          <Plus className='h-4 w-4' />
+          Add Column
+        </Button>
+        <Button variant='outline' size='sm' onClick={onBoardActions}>
+          <Settings className='h-4 w-4' />
+        </Button>
       </div>
     </div>
   );
