@@ -1,6 +1,17 @@
 'use client';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ColorPicker } from '@/components/ui/color-picker';
 import { CommandShortcut } from '@/components/ui/command';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import {
   DndContext,
   DragOverlay,
@@ -17,17 +28,23 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus } from 'lucide-react';
+import { Pencil, Plus, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import KanbanHeader from './KanbanHeader';
 
 // KanbanColumn now places Add Task directly after its children
-const KanbanColumn = ({ title, children, id, onAddClick, isAdding }) => {
+const KanbanColumn = ({ title, children, id, onAddClick, isAdding, color = '#e2e8f0' }) => {
   const { setNodeRef: setDroppableNodeRef } = useDroppable({ id });
   return (
     <div className='group flex flex-col w-full min-w-[246px]'>
-      <div className='px-3 py-2 bg-muted/40 rounded-t-lg border border-border'>
+      <div
+        className='px-3 py-2 rounded-t-lg border border-border'
+        style={{
+          backgroundColor: `${color}30`,
+          borderBottomColor: color,
+        }}
+      >
         <h3 className='font-medium text-sm'>{title}</h3>
       </div>
       <div
@@ -139,10 +156,10 @@ const ProjectKanban = () => {
   }, []);
 
   const [columns, setColumns] = useState([
-    { id: 'todo', title: 'To Do' },
-    { id: 'in-progress', title: 'In Progress' },
-    { id: 'review', title: 'Review' },
-    { id: 'done', title: 'Done' },
+    { id: 'todo', title: 'To Do', color: '#e2e8f0' },
+    { id: 'in-progress', title: 'In Progress', color: '#bfdbfe' },
+    { id: 'review', title: 'Review', color: '#fef3c7' },
+    { id: 'done', title: 'Done', color: '#dcfce7' },
   ]);
 
   const initialTasks = [
@@ -311,7 +328,7 @@ const ProjectKanban = () => {
   const handleAddColumn = (name: string, color: string) => {
     const id = name.toLowerCase().replace(/\s+/g, '-');
     setColumns((prev) => {
-      return [...prev, { id, title: name }];
+      return [...prev, { id, title: name, color }];
     });
     setColumnsTasks((prev) => {
       return { ...prev, [id]: [] };
@@ -330,6 +347,42 @@ const ProjectKanban = () => {
     }
   }, [columnsTasks]);
 
+  const [boardActionsOpen, setBoardActionsOpen] = useState(false);
+  const [editingColumn, setEditingColumn] = useState(null);
+  const [newColumnName, setNewColumnName] = useState('');
+  const [newColumnColor, setNewColumnColor] = useState('#e2e8f0');
+
+  // Handle editing a column name
+  const handleEditColumn = (columnId, newName) => {
+    setColumns((prev) => {
+      return prev.map((col) => {
+        return col.id === columnId ? { ...col, title: newName } : col;
+      });
+    });
+  };
+
+  // Handle removing a column
+  const handleRemoveColumn = (columnId) => {
+    setColumns((prev) => {
+      return prev.filter((col) => {
+        return col.id !== columnId;
+      });
+    });
+
+    // Remove tasks from this column
+    setColumnsTasks((prev) => {
+      const newTasks = { ...prev };
+      delete newTasks[columnId];
+      return newTasks;
+    });
+
+    setFilteredTasks((prev) => {
+      const newFiltered = { ...prev };
+      delete newFiltered[columnId];
+      return newFiltered;
+    });
+  };
+
   // Render a simplified version for server-side rendering
   if (!mounted) {
     return (
@@ -340,13 +393,22 @@ const ProjectKanban = () => {
           filteredTasks={getFilteredTaskCount()}
           onSearch={handleSearch}
           onAddColumn={handleAddColumn}
+          onBoardActions={() => {
+            return setBoardActionsOpen(true);
+          }}
         />
         <div className='w-full overflow-x-auto pb-4'>
           <div className='flex gap-4 p-2'>
             {columns.map((col) => {
               return (
                 <div key={col.id} className='group flex flex-col min-w-[250px]'>
-                  <div className='px-3 py-2 bg-muted/40 rounded-t-lg border border-border'>
+                  <div
+                    className='px-3 py-2 rounded-t-lg border border-border'
+                    style={{
+                      backgroundColor: `${col.color}30`,
+                      borderBottomColor: col.color,
+                    }}
+                  >
                     <h3 className='font-medium text-sm'>{col.title}</h3>
                   </div>
                   <div className='p-3 rounded-b-lg border border-t-0 border-border min-h-[300px] space-y-2'>
@@ -371,6 +433,9 @@ const ProjectKanban = () => {
         filteredTasks={getFilteredTaskCount()}
         onSearch={handleSearch}
         onAddColumn={handleAddColumn}
+        onBoardActions={() => {
+          return setBoardActionsOpen(true);
+        }}
       />
       <div className='w-full overflow-x-auto pb-4'>
         <DndContext
@@ -387,6 +452,7 @@ const ProjectKanban = () => {
                   key={col.id}
                   id={col.id}
                   title={col.title}
+                  color={col.color}
                   onAddClick={handleAddClick}
                   isAdding={addingColumn === col.id}
                 >
@@ -422,6 +488,178 @@ const ProjectKanban = () => {
           )}
         </DndContext>
       </div>
+
+      <Dialog open={boardActionsOpen} onOpenChange={setBoardActionsOpen}>
+        <DialogContent className='sm:max-w-md'>
+          <DialogHeader>
+            <DialogTitle>Board Columns</DialogTitle>
+            <DialogDescription>
+              Manage your board columns. Edit, add, or remove columns.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className='space-y-4 py-4 max-h-[60vh] overflow-y-auto'>
+            {columns.map((column) => {
+              return (
+                <div
+                  key={column.id}
+                  className={`border rounded-md overflow-hidden ${
+                    editingColumn === column.id ? 'shadow-md' : ''
+                  }`}
+                  style={{ borderLeftColor: column.color, borderLeftWidth: '4px' }}
+                >
+                  {editingColumn === column.id ? (
+                    <div className='p-4 space-y-4'>
+                      <div className='space-y-2'>
+                        <label className='text-sm font-medium'>Column Name</label>
+                        <Input
+                          value={newColumnName}
+                          onChange={(e) => {
+                            return setNewColumnName(e.target.value);
+                          }}
+                          className='w-full'
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleEditColumn(column.id, newColumnName);
+                              setEditingColumn(null);
+                            } else if (e.key === 'Escape') {
+                              setEditingColumn(null);
+                            }
+                          }}
+                        />
+                      </div>
+
+                      <div className='space-y-2'>
+                        <label className='text-sm font-medium'>Column Color</label>
+                        <ColorPicker
+                          value={column.color}
+                          onChange={(color) => {
+                            setColumns((prev) => {
+                              return prev.map((col) => {
+                                return col.id === column.id ? { ...col, color } : col;
+                              });
+                            });
+                          }}
+                          label=''
+                        />
+                      </div>
+
+                      <div className='flex justify-end gap-2 pt-2'>
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() => {
+                            return setEditingColumn(null);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant='default'
+                          size='sm'
+                          onClick={() => {
+                            handleEditColumn(column.id, newColumnName);
+                            setEditingColumn(null);
+                          }}
+                        >
+                          Save Changes
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className='flex items-center justify-between p-3'>
+                      <div className='flex items-center gap-2'>
+                        <div
+                          className='w-4 h-4 rounded-full'
+                          style={{ backgroundColor: column.color }}
+                        ></div>
+                        <span className='font-medium'>{column.title}</span>
+                      </div>
+                      <div className='flex items-center gap-2'>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => {
+                            setNewColumnName(column.title);
+                            setEditingColumn(column.id);
+                          }}
+                        >
+                          <Pencil size={14} />
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => {
+                            return handleRemoveColumn(column.id);
+                          }}
+                          disabled={Object.keys(columnsTasks).length <= 1}
+                        >
+                          <X size={14} />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className='grid grid-cols-[1fr_auto] gap-4 pt-4 border-t'>
+            <div className='space-y-4'>
+              <div className='space-y-2'>
+                <label className='text-sm font-medium'>Column Name</label>
+                <Input
+                  placeholder='New column name'
+                  value={newColumnName}
+                  onChange={(e) => {
+                    return setNewColumnName(e.target.value);
+                  }}
+                />
+              </div>
+
+              <div className='space-y-2'>
+                <label className='text-sm font-medium'>Column Color</label>
+                <div className='w-full'>
+                  <ColorPicker
+                    value={newColumnColor}
+                    onChange={(color) => {
+                      return setNewColumnColor(color);
+                    }}
+                    label=''
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className='flex items-end'>
+              <Button
+                onClick={() => {
+                  if (newColumnName.trim()) {
+                    handleAddColumn(newColumnName, newColumnColor);
+                    setNewColumnName('');
+                    setNewColumnColor('#e2e8f0');
+                  }
+                }}
+                className='h-10'
+              >
+                <Plus size={16} className='mr-2' /> Add Column
+              </Button>
+            </div>
+          </div>
+
+          <DialogFooter className='sm:justify-end'>
+            <Button
+              variant='outline'
+              onClick={() => {
+                return setBoardActionsOpen(false);
+              }}
+            >
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

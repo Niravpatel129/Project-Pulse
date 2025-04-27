@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Keyboard, Plus, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { Keyboard, Plus, Search, Settings, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 
 interface KanbanHeaderProps {
@@ -29,6 +29,7 @@ interface KanbanHeaderProps {
   filteredTasks: number;
   onSearch: (query: string) => void;
   onAddColumn: (name: string, color: string) => void;
+  onBoardActions: () => void;
 }
 
 const KanbanHeader = ({
@@ -37,6 +38,7 @@ const KanbanHeader = ({
   filteredTasks,
   onSearch,
   onAddColumn,
+  onBoardActions,
 }: KanbanHeaderProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -140,6 +142,11 @@ const KanbanHeader = ({
                 <DropdownMenuItem onClick={handleAutoSort}>
                   <Sparkles className='mr-2 h-4 w-4' />
                   Auto-sort Tasks
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={onBoardActions}>
+                  <Settings className='mr-2 h-4 w-4' />
+                  Manage Columns
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
