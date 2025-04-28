@@ -44,9 +44,9 @@ export default function ProjectReviewButton() {
     {
       state: 'in-progress',
       label: 'Review & Invoice',
-      icon: <FileText className='h-4 w-4 mr-2 text-white' />,
+      icon: <FileText className='h-4 w-4 mr-2 text-gray-500' />,
       className:
-        'font-light h-9 text-sm tracking-wide text-gray-600 transition-all border text-white ',
+        'font-light h-9 text-sm tracking-wide text-gray-700 transition-all text-white focus-visible:ring-0 bg-gray-50 text-gray-700 hover:bg-gray-300 font-normal',
       menuItems: [
         {
           label: 'Request Upfront Payment',
@@ -67,7 +67,7 @@ export default function ProjectReviewButton() {
           label: 'Complete & Final Invoice',
           icon: <FileText className='h-4 w-4 mr-2 text-gray-500' />,
           onClick: () => {
-            return console.log('Complete & Final Invoice clicked');
+            return setProjectState('invoice-sent');
           },
           separatorBefore: true,
         },
@@ -78,7 +78,7 @@ export default function ProjectReviewButton() {
       label: 'Awaiting Payment',
       icon: <AlertCircle className='h-4 w-4 mr-2' />,
       className:
-        'h-9 text-sm tracking-wide text-amber-600 bg-amber-50 hover:bg-amber-100 transition-all',
+        'h-9 text-sm tracking-wide text-amber-600 bg-amber-50 hover:bg-amber-100 transition-all focus-visible:ring-0',
       menuItems: [
         {
           label: 'Edit Project',
@@ -91,14 +91,14 @@ export default function ProjectReviewButton() {
           label: 'Cancel Invoice',
           icon: <Ban className='h-4 w-4 mr-2 text-red-500' />,
           onClick: () => {
-            return console.log('Cancel Invoice clicked');
+            return setProjectState('in-progress');
           },
         },
         {
           label: 'Mark as Paid',
           icon: <CheckCircle className='h-4 w-4 mr-2 text-green-500' />,
           onClick: () => {
-            return console.log('Mark as Paid clicked');
+            return setProjectState('completed');
           },
         },
       ],
@@ -139,7 +139,7 @@ export default function ProjectReviewButton() {
       label: 'Payment Received',
       icon: <CheckCircle className='h-4 w-4 mr-2' />,
       className:
-        'h-9 text-sm tracking-wide text-green-600 bg-green-50 hover:bg-green-100 transition-all',
+        'h-9 text-sm tracking-wide text-green-600 bg-green-50 hover:bg-green-100 transition-all focus-visible:ring-0',
       menuItems: [
         {
           label: 'Edit Project',
