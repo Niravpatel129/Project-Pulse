@@ -792,6 +792,17 @@ export default function ProjectHeader() {
             ) : (
               <div className=' py-1 sm:py-1 flex justify-between w-full'>
                 <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4'>
+                  <div className='relative h-14 w-14 rounded overflow-hidden'>
+                    <Image
+                      src={
+                        'https://img.freepik.com/premium-vector/green-gradient-abstract-background-with-shiny-soft-smooth-texture-christmas-vector-illustration_35947-440.jpg'
+                      }
+                      alt={project?.name}
+                      fill
+                      className='aspect-square'
+                    />
+                  </div>
+
                   <div>
                     <h1
                       className={cn(

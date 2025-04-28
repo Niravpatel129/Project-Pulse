@@ -17,6 +17,8 @@ const nextConfig: NextConfig = {
       'firebasestorage.googleapis.com',
       'i.ibb.co',
       'cdn.sanity.io',
+      'vercel.com',
+      'img.freepik.com',
     ],
   },
 };
