@@ -21,10 +21,13 @@ import {
   FileImage,
   FileText,
   Link as LinkIcon,
+  Trash2,
   User,
   X,
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 
 // Define props interface
 interface TaskDetailDialogProps {
@@ -37,6 +40,7 @@ interface TaskDetailDialogProps {
     taskId: string,
     attachment: Omit<Attachment, 'id' | 'createdAt'>,
   ) => Promise<Attachment | null>;
+  onRemoveAttachment?: (taskId: string, attachmentId: string) => Promise<boolean>;
   columns: Column[];
 }
 
@@ -48,6 +52,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   onTaskUpdate,
   onAddComment,
   onAddAttachment,
+  onRemoveAttachment,
   columns,
 }) => {
   // Individual edit states for each field rather than a global edit mode
@@ -75,6 +80,12 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
 
   // Add state for story points
   const [storyPoints, setStoryPoints] = useState<number | undefined>(undefined);
+
+  // File upload modal state
+  const [fileModalOpen, setFileModalOpen] = useState(false);
+
+  // Track removals in progress
+  const [removingAttachmentIds, setRemovingAttachmentIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (task) {
@@ -247,6 +258,55 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
     setEditingStoryPoints(false);
   };
 
+  const handleRemoveAttachment = async (attachmentId: string) => {
+    if (!task) return toast.error('Cannot remove attachment: Task not found');
+
+    // Add to loading state
+    setRemovingAttachmentIds((prev) => {
+      return [...prev, attachmentId];
+    });
+
+    try {
+      const success = await onRemoveAttachment(task.id, attachmentId);
+
+      if (success) {
+        // Update local state if the server operation was successful
+        const updatedAttachments = task.attachments?.filter((attachment) => {
+          return attachment.id !== attachmentId;
+        });
+
+        onTaskUpdate({
+          ...task,
+          attachments: updatedAttachments,
+        });
+
+        toast.success('Attachment removed successfully');
+      } else {
+        toast.error('Failed to remove attachment');
+      }
+    } catch (error) {
+      console.error('Failed to remove attachment:', error);
+      toast.error('Error removing attachment');
+
+      // Provide fallback behavior even on error
+      const updatedAttachments = task.attachments?.filter((attachment) => {
+        return attachment.id !== attachmentId;
+      });
+
+      onTaskUpdate({
+        ...task,
+        attachments: updatedAttachments,
+      });
+    } finally {
+      // Remove from loading state
+      setRemovingAttachmentIds((prev) => {
+        return prev.filter((id) => {
+          return id !== attachmentId;
+        });
+      });
+    }
+  };
+
   // Early return if no task
   if (!task) return null;
 
@@ -378,6 +438,16 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                         <span>Add</span>
                       </Button>
                     </label>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      className='h-7'
+                      onClick={() => {
+                        return setFileModalOpen(true);
+                      }}
+                    >
+                      Browse
+                    </Button>
                   </div>
                 </div>
 
@@ -414,10 +484,13 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 {task.attachments && task.attachments.length > 0 && (
                   <div className='flex flex-wrap gap-2'>
                     {task.attachments.map((attachment) => {
+                      const isRemoving = removingAttachmentIds.includes(attachment.id);
                       return (
                         <div
                           key={attachment.id}
-                          className='flex items-center gap-2 border px-3 py-2 text-sm rounded-sm group'
+                          className={`flex items-center gap-2 border px-3 py-2 text-sm rounded-sm group relative ${
+                            isRemoving ? 'opacity-50' : ''
+                          }`}
                         >
                           <div className='text-gray-500'>
                             {attachment.type === 'link' ? (
@@ -428,7 +501,24 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                               <FileText size={14} />
                             )}
                           </div>
-                          <span>{attachment.title}</span>
+                          <span className='flex-grow'>{attachment.title}</span>
+                          {isRemoving ? (
+                            <div className='h-4 w-4 ml-1 animate-spin rounded-full border-2 border-current border-t-transparent' />
+                          ) : (
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              className='h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50'
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleRemoveAttachment(attachment.id);
+                              }}
+                            >
+                              <Trash2 size={14} />
+                              <span className='sr-only'>Delete attachment</span>
+                            </Button>
+                          )}
                         </div>
                       );
                     })}
@@ -733,6 +823,63 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* File Upload Manager Modal */}
+      <FileUploadManagerModal
+        isOpen={fileModalOpen}
+        onClose={() => {
+          return setFileModalOpen(false);
+        }}
+        handleAddFileToProject={(file: any) => {
+          if (!task || !onAddAttachment) return;
+
+          onAddAttachment(task.id, {
+            type: file.contentType.startsWith('image/') ? 'image' : 'file',
+            url: file.downloadURL,
+            title: file.originalName,
+            size: file.size,
+          });
+
+          setFileModalOpen(false);
+        }}
+        initialFiles={task?.attachments?.map((attachment) => {
+          return {
+            _id: attachment.id,
+            originalName: attachment.title,
+            contentType: attachment.type === 'image' ? 'image/jpeg' : 'application/octet-stream',
+            downloadURL: attachment.url,
+            size: attachment.size || 0,
+            updatedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+            storagePath: attachment.url,
+            uploadedBy: { name: 'Current User' },
+          };
+        })}
+        onDeleteFile={async (file: any) => {
+          if (!task) return false;
+
+          if (file._id && !removingAttachmentIds.includes(file._id)) {
+            if (!onRemoveAttachment) {
+              // Provide a fallback behavior when onRemoveAttachment isn't available
+              const updatedAttachments = task.attachments?.filter((attachment) => {
+                return attachment.id !== file._id;
+              });
+
+              onTaskUpdate({
+                ...task,
+                attachments: updatedAttachments,
+              });
+
+              toast.success('Attachment removed successfully');
+              return true;
+            }
+
+            await handleRemoveAttachment(file._id);
+            return true;
+          }
+          return false;
+        }}
+      />
     </>
   );
 };
