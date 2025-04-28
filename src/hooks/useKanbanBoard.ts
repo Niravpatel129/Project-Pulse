@@ -431,10 +431,7 @@ export function useKanbanBoard() {
   /**
    * Add a comment to a task
    */
-  const handleAddComment = async (
-    taskId: string,
-    comment: Omit<kanbanApi.Comment, 'id' | 'createdAt'>,
-  ) => {
+  const handleAddComment = async (taskId: string, comment: { content: string }) => {
     if (!projectId) return null;
 
     try {

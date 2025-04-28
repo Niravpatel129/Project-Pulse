@@ -351,7 +351,7 @@ export const updateTask = async (
 export const addComment = async (
   projectId: string,
   taskId: string,
-  comment: Omit<Comment, 'id' | 'createdAt'>,
+  comment: { content: string },
 ): Promise<Comment> => {
   const response = await newRequest.post(
     `${BASE_PATH}/${projectId}/tasks/${taskId}/comments`,

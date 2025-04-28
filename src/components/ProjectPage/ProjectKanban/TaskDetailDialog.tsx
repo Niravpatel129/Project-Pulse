@@ -32,10 +32,7 @@ interface TaskDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onTaskUpdate: (updatedTask: Task) => void;
-  onAddComment?: (
-    taskId: string,
-    comment: Omit<Comment, 'id' | 'createdAt'>,
-  ) => Promise<Comment | null>;
+  onAddComment?: (taskId: string, comment: { content: string }) => Promise<Comment | null>;
   onAddAttachment?: (
     taskId: string,
     attachment: Omit<Attachment, 'id' | 'createdAt'>,
@@ -168,11 +165,6 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
     if (!task || !commentText.trim() || !onAddComment) return;
 
     const newComment = await onAddComment(task.id, {
-      author: {
-        id: 'current-user', // This would typically come from your auth context
-        name: 'You',
-        avatar: '/avatars/03.png',
-      },
       content: commentText,
     });
 
