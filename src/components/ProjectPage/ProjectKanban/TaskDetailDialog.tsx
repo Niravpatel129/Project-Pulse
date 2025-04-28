@@ -593,7 +593,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 sidebarVisible ? 'block' : 'hidden md:block'
               }`}
             >
-              <div className='space-y-5'>
+              <div className='space-y-5 p-1'>
                 {/* Status (Column) */}
                 <div className='space-y-1.5'>
                   <div className='text-xs text-gray-500'>Status</div>
@@ -652,7 +652,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                         {dueDate ? format(dueDate, 'PPP') : 'Set due date'}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className='w-auto p-0'>
+                    <PopoverContent className='w-auto p-0 min-w-[350px]'>
                       <CalendarComponent
                         mode='single'
                         selected={dueDate || undefined}
