@@ -1,6 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Mail, Plus, UserCircle, UserCog, Users } from 'lucide-react';
+import { Mail, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import AddParticipantDialog from '../AddParticipantDialog';
 import AddTeamDialog from '../AddTeamDialog';
@@ -224,7 +223,7 @@ export default function ProjectParticipants({
             })}
 
           {/* Add Participant Button */}
-          <DropdownMenu>
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant='outline'
@@ -290,7 +289,7 @@ export default function ProjectParticipants({
                 </DropdownMenuItem>
               </div>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
 
           <AddParticipantDialog
             isOpen={isAddParticipantOpen}
