@@ -1,7 +1,7 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Archive, Plus, Settings } from 'lucide-react';
+import { Archive, Plus } from 'lucide-react';
 import { useState } from 'react';
 
 export type KanbanHeaderProps = {
@@ -81,9 +81,6 @@ const KanbanHeader = ({
         >
           <Plus className='h-4 w-4' />
           Add Column
-        </Button>
-        <Button variant='outline' size='sm' onClick={onBoardActions}>
-          <Settings className='h-4 w-4' />
         </Button>
       </div>
     </div>
