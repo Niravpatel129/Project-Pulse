@@ -17,6 +17,7 @@ import {
   FileText,
   Mail,
   Repeat,
+  Sparkle,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -46,7 +47,7 @@ export default function ProjectReviewButton() {
       label: 'Review & Invoice',
       icon: <FileText className='h-4 w-4 mr-2 text-gray-500' />,
       className:
-        'font-light h-9 text-sm tracking-wide text-gray-700 transition-all text-white focus-visible:ring-0 bg-gray-50 text-gray-700 hover:bg-gray-300 font-normal',
+        'font-light h-9 text-sm tracking-wide text-gray-700 transition-all text-white focus-visible:ring-0 bg-gray-50 text-gray-700 hover:bg-gray-100 font-normal shadow-none px-1',
       menuItems: [
         {
           label: 'Request Upfront Payment',
@@ -65,7 +66,7 @@ export default function ProjectReviewButton() {
         },
         {
           label: 'Complete & Final Invoice',
-          icon: <FileText className='h-4 w-4 mr-2 text-gray-500' />,
+          icon: <Sparkle className='h-4 w-4 mr-2 text-green-500' />,
           onClick: () => {
             return setProjectState('invoice-sent');
           },
