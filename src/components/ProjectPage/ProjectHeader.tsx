@@ -43,6 +43,7 @@ import BlockWrapper from '../wrappers/BlockWrapper';
 import AddParticipantDialog from './AddParticipantDialog';
 import AddTeamDialog from './AddTeamDialog';
 import ProjectParticipants from './Project/ProjectParticipants';
+import ProjectReviewButton from './Project/ProjectReviewButton';
 import { ProjectSidebar } from './ProjectSidebar';
 
 interface Participant {
@@ -782,11 +783,14 @@ export default function ProjectHeader() {
       <div className=''>
         {/* Project Banner */}
         {!isMobile && (
-          <div ref={bannerRef} className='w-full'>
+          <div
+            ref={bannerRef}
+            className='w-full container mx-auto flex items-center justify-between px-0 py-3"'
+          >
             {isLoadingProject ? (
               <ProjectBannerSkeleton />
             ) : (
-              <div className='container mx-auto px-4 py-1 sm:py-1 flex justify-between w-full'>
+              <div className=' py-1 sm:py-1 flex justify-between w-full'>
                 <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4'>
                   <div>
                     <h1
@@ -817,27 +821,29 @@ export default function ProjectHeader() {
                   </div>
                 </div>
                 {/* Participants Section */}
-
-                <ProjectParticipants
-                  isLoadingProject={isLoadingProject}
-                  project={project}
-                  isLoadingCollaborators={isLoadingCollaborators}
-                  collaborators={collaborators}
-                  isLoadingTeams={isLoadingTeams}
-                  teams={teams}
-                  predefinedRoles={predefinedRoles}
-                  handleRemoveParticipant={handleRemoveParticipant}
-                  handleRemoveCollaborator={handleRemoveCollaborator}
-                  handleRemoveTeam={handleRemoveTeam}
-                  handleSelectRole={handleSelectRole}
-                  isAddParticipantOpen={isAddParticipantOpen}
-                  setIsAddParticipantOpen={setIsAddParticipantOpen}
-                  isAddTeamOpen={isAddTeamOpen}
-                  setIsAddTeamOpen={setIsAddTeamOpen}
-                  selectedRole={selectedRole}
-                  handleAddParticipant={handleAddParticipant}
-                  handleAddRole={handleAddRole}
-                />
+                <div className='flex items-center'>
+                  <ProjectParticipants
+                    isLoadingProject={isLoadingProject}
+                    project={project}
+                    isLoadingCollaborators={isLoadingCollaborators}
+                    collaborators={collaborators}
+                    isLoadingTeams={isLoadingTeams}
+                    teams={teams}
+                    predefinedRoles={predefinedRoles}
+                    handleRemoveParticipant={handleRemoveParticipant}
+                    handleRemoveCollaborator={handleRemoveCollaborator}
+                    handleRemoveTeam={handleRemoveTeam}
+                    handleSelectRole={handleSelectRole}
+                    isAddParticipantOpen={isAddParticipantOpen}
+                    setIsAddParticipantOpen={setIsAddParticipantOpen}
+                    isAddTeamOpen={isAddTeamOpen}
+                    setIsAddTeamOpen={setIsAddTeamOpen}
+                    selectedRole={selectedRole}
+                    handleAddParticipant={handleAddParticipant}
+                    handleAddRole={handleAddRole}
+                  />
+                  <ProjectReviewButton />
+                </div>
               </div>
             )}
           </div>
