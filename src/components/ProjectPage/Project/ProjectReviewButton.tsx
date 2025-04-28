@@ -1,5 +1,13 @@
 import { Button } from '@/components/ui/button';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -15,30 +23,202 @@ import {
   DollarSign,
   Edit,
   FileText,
+  Loader2,
   Mail,
   Repeat,
   Sparkle,
 } from 'lucide-react';
-import { useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 
 type ProjectState = 'in-progress' | 'invoice-sent' | 'partial-payment' | 'completed';
 
 interface ButtonConfig {
   state: ProjectState;
   label: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   className: string;
   menuItems: {
     label: string;
-    icon: React.ReactNode;
+    icon: ReactNode;
     onClick: () => void;
     separatorBefore?: boolean;
   }[];
 }
 
+interface AIWizardStep {
+  title: string;
+  description: string;
+  content: ReactNode;
+  actions?: {
+    label: string;
+    onClick: () => void;
+    variant?: 'default' | 'outline';
+  }[];
+}
+
+function AIWizardDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [scannedData, setScannedData] = useState({
+    deliverables: ['Website Design', 'Content Creation', 'SEO Optimization'],
+    timeSpent: '45 hours',
+    materialsCost: '$1,200',
+    suggestedTotal: '$4,500',
+  });
+
+  // Simulate AI scanning
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 2000);
+      return () => {
+        return clearTimeout(timer);
+      };
+    }
+  }, [open]);
+
+  const steps: AIWizardStep[] = [
+    {
+      title: 'AI Project Analysis',
+      description: 'Scanning project for deliverables, time spent, and costs...',
+      content: isLoading ? (
+        <div className='flex flex-col items-center justify-center py-8'>
+          <Loader2 className='h-8 w-8 animate-spin text-blue-500' />
+          <p className='mt-4 text-sm text-muted-foreground'>Analyzing project data...</p>
+        </div>
+      ) : (
+        <div className='space-y-4'>
+          <div className='rounded-lg border p-4'>
+            <h3 className='font-medium'>Deliverables Found</h3>
+            <ul className='mt-2 space-y-1'>
+              {scannedData.deliverables.map((item, index) => {
+                return (
+                  <li key={index} className='flex items-center gap-2 text-sm'>
+                    <CheckCircle className='h-4 w-4 text-green-500' />
+                    {item}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+          <div className='rounded-lg border p-4'>
+            <h3 className='font-medium'>Time & Costs</h3>
+            <div className='mt-2 grid grid-cols-2 gap-4 text-sm'>
+              <div>
+                <p className='text-muted-foreground'>Time Spent</p>
+                <p className='font-medium'>{scannedData.timeSpent}</p>
+              </div>
+              <div>
+                <p className='text-muted-foreground'>Materials Cost</p>
+                <p className='font-medium'>{scannedData.materialsCost}</p>
+              </div>
+            </div>
+          </div>
+          <div className='rounded-lg border p-4 bg-blue-50'>
+            <h3 className='font-medium'>Suggested Total</h3>
+            <p className='mt-2 text-2xl font-bold text-blue-600'>{scannedData.suggestedTotal}</p>
+          </div>
+        </div>
+      ),
+      actions: isLoading
+        ? undefined
+        : [
+            {
+              label: 'Continue',
+              onClick: () => {
+                return setCurrentStep(1);
+              },
+            },
+          ],
+    },
+    {
+      title: 'Review & Adjust',
+      description: 'Please review and adjust the invoice details as needed',
+      content: (
+        <div className='space-y-4'>
+          <div className='rounded-lg border p-4'>
+            <h3 className='font-medium'>Deliverables</h3>
+            <div className='mt-2 space-y-2'>
+              {scannedData.deliverables.map((item, index) => {
+                return (
+                  <div key={index} className='flex items-center gap-2'>
+                    <input
+                      type='checkbox'
+                      defaultChecked
+                      className='h-4 w-4 rounded border-gray-300'
+                    />
+                    <span className='text-sm'>{item}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className='rounded-lg border p-4'>
+            <h3 className='font-medium'>Invoice Amount</h3>
+            <div className='mt-2'>
+              <input
+                type='text'
+                defaultValue={scannedData.suggestedTotal}
+                className='w-full rounded-md border p-2 text-lg font-medium'
+              />
+            </div>
+          </div>
+        </div>
+      ),
+      actions: [
+        {
+          label: 'Back',
+          onClick: () => {
+            return setCurrentStep(0);
+          },
+          variant: 'outline',
+        },
+        {
+          label: 'Generate Invoice',
+          onClick: () => {
+            // Here you would handle the actual invoice generation
+            onOpenChange(false);
+          },
+        },
+      ],
+    },
+  ];
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className='sm:max-w-[500px]'>
+        <DialogHeader>
+          <DialogTitle>{steps[currentStep].title}</DialogTitle>
+          <DialogDescription>{steps[currentStep].description}</DialogDescription>
+        </DialogHeader>
+        {steps[currentStep].content}
+        {steps[currentStep].actions && (
+          <DialogFooter>
+            {steps[currentStep].actions.map((action, index) => {
+              return (
+                <Button key={index} variant={action.variant} onClick={action.onClick}>
+                  {action.label}
+                </Button>
+              );
+            })}
+          </DialogFooter>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function ProjectReviewButton() {
   const [projectState, setProjectState] = useState<ProjectState>('invoice-sent');
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isAIWizardOpen, setIsAIWizardOpen] = useState(false);
   const [selectedPaymentType, setSelectedPaymentType] = useState('recurring');
 
   const buttonConfigs: ButtonConfig[] = [
@@ -68,7 +248,7 @@ export default function ProjectReviewButton() {
           label: 'Complete & Final Invoice',
           icon: <Sparkle className='h-4 w-4 mr-2 text-green-500' />,
           onClick: () => {
-            return setProjectState('invoice-sent');
+            setIsAIWizardOpen(true);
           },
           separatorBefore: true,
         },
@@ -200,6 +380,8 @@ export default function ProjectReviewButton() {
           })}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <AIWizardDialog open={isAIWizardOpen} onOpenChange={setIsAIWizardOpen} />
     </div>
   );
 }
