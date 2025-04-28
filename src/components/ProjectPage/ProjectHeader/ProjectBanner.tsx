@@ -85,7 +85,6 @@ export function ProjectBanner({ project, bannerRef }: ProjectBannerProps) {
           </div>
         </div>
       </div>
-
       <Dialog open={isEditNameModalOpen} onOpenChange={setIsEditNameModalOpen}>
         <DialogContent className='sm:max-w-[425px]'>
           <DialogHeader>
