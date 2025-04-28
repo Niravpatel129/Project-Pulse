@@ -663,7 +663,12 @@ export default function ProjectReviewButton() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <InvoiceWizardDialog open={isAIWizardOpen} onOpenChange={setIsAIWizardOpen} />
+      <InvoiceWizardDialog
+        open={isAIWizardOpen}
+        onOpenChange={setIsAIWizardOpen}
+        clients={[]}
+        projectId={''}
+      />
     </div>
   );
 }
