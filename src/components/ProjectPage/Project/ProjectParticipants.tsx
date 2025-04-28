@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Mail, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import AddParticipantDialog from '../AddParticipantDialog';
@@ -61,36 +62,36 @@ const ParticipantCard = ({ participant, predefinedRoles, onRemove, type = 'parti
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className='w-auto'>
-        <div className='flex items-center gap-2.5 p-1.5 rounded-lg cursor-pointer hover:bg-gray-50/50 transition-colors'>
-          <Avatar className={` h-8 w-8 border-2 ${avatarClass} transition-colors`}>
-            {participant.avatar ? (
-              <AvatarImage src={participant.avatar} alt={participant.name} />
-            ) : (
-              <AvatarFallback
-                className={`${avatarClass.replace('border', 'bg')} font-medium text-gray-700`}
-              >
-                {participant.name
-                  .split(' ')
-                  .map((n) => {
-                    return n.charAt(0).toUpperCase();
-                  })
-                  .join('')}
-              </AvatarFallback>
-            )}
-          </Avatar>
-          <div className='hidden sm:block'>
-            <div className='flex items-center gap-1'>
-              <p className='text-sm font-medium text-gray-900'>
-                {participant.name.length > 15
-                  ? `${participant.name.substring(0, 15)}...`
-                  : participant.name}
+        <Tooltip delayDuration={100}>
+          <TooltipTrigger asChild>
+            <div className='flex items-center  rounded-lg cursor-pointer hover:bg-gray-50/50 transition-colors'>
+              <Avatar className={` h-8 w-8 border-2 ${avatarClass} transition-colors`}>
+                {participant.avatar ? (
+                  <AvatarImage src={participant.avatar} alt={participant.name} />
+                ) : (
+                  <AvatarFallback className={`text-purple-700 font-medium text-xs bg-purple-100`}>
+                    {participant.name
+                      .split(' ')
+                      .map((n) => {
+                        return n.charAt(0).toUpperCase();
+                      })
+                      .join('')}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <div className='hidden sm:block'>
+                {/* <div className='flex items-center gap-1'>
+              <p className='text-xs font-medium text-gray-900'>
+              {participant.name.length > 15
+              ? `${participant.name.substring(0, 15)}...`
+              : participant.name}
               </p>
-            </div>
-            <div className='flex items-center gap-1.5 mt-0.5'>
+              </div> */}
+                {/* <div className='flex items-center gap-1.5 mt-0.5'>
               {getRoleBadge(participant.role, predefinedRoles)}
               {type === 'collaborator' && (
                 <Badge
-                  variant='outline'
+                variant='outline'
                   className='bg-indigo-50 text-indigo-700 border-indigo-100 text-xs'
                 >
                   Collaborator
@@ -104,9 +105,14 @@ const ParticipantCard = ({ participant, predefinedRoles, onRemove, type = 'parti
                   {participant.members} members
                 </Badge>
               )}
+            </div> */}
+              </div>
             </div>
-          </div>
-        </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{participant.name}</p>
+          </TooltipContent>
+        </Tooltip>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='center' className='w-64'>
         <DropdownMenuItem
