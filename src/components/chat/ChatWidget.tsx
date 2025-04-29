@@ -10,6 +10,7 @@ import { Maximize2, MessageCircle, Minimize2, RefreshCw, SendIcon, Trash2, X } f
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import TextareaAutosize from 'react-textarea-autosize';
+import remarkGfm from 'remark-gfm';
 
 type Message = {
   id: string;
@@ -192,16 +193,18 @@ export function ChatWidget() {
           // Update DOM directly for streaming content
           const streamElement = document.getElementById(`stream-content-${userMessageId}`);
           if (streamElement) {
-            // Use innerHTML to update content without re-rendering
-            const formattedContent = contentAccumulatorRef.current[streamMessageId];
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = `<div class="markdown-content">${formattedContent}</div>`;
-
-            // Replace content to prevent ReactMarkdown from re-parsing
-            while (streamElement.firstChild) {
-              streamElement.removeChild(streamElement.firstChild);
-            }
-            streamElement.appendChild(tempDiv);
+            // Create a ReactMarkdown element with remarkGfm and set it on the stream element
+            setMessages((prev) => {
+              return prev.map((msg) => {
+                if (msg.id === streamMessageId) {
+                  return {
+                    ...msg,
+                    content: contentAccumulatorRef.current[streamMessageId],
+                  };
+                }
+                return msg;
+              });
+            });
 
             // Scroll only if user isn't manually scrolling
             if (!userScrollingRef.current) {
@@ -351,6 +354,7 @@ export function ChatWidget() {
         }, 1000);
       }
     }, [message.id]);
+    console.log('🚀 message.content:', message.content);
 
     return (
       <div
@@ -361,16 +365,16 @@ export function ChatWidget() {
         )}
       >
         {message.sender === 'ai' ? (
-          <div className='text-sm leading-relaxed prose prose-sm dark:prose-invert prose-p:my-1 prose-pre:bg-zinc-800 prose-pre:dark:bg-zinc-900 prose-pre:p-2 prose-pre:rounded prose-code:text-xs prose-code:bg-zinc-200 prose-code:dark:bg-zinc-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[""] prose-code:after:content-[""] prose-a:text-primary prose-a:no-underline hover:prose-a:underline max-w-full'>
+          <div className='text-sm leading-relaxed prose prose-sm dark:prose-invert prose-p:my-1 prose-pre:bg-zinc-800 prose-pre:dark:bg-zinc-900 prose-pre:p-2 prose-pre:rounded prose-code:text-xs prose-code:bg-zinc-200 prose-code:dark:bg-zinc-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[""] prose-code:after:content-[""] prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-table:border-collapse prose-table:w-full prose-td:border prose-td:p-2 prose-th:border prose-th:p-2 prose-th:bg-muted max-w-full'>
             {message.isStreaming ? (
               <>
                 <div id={`stream-content-${message.id.replace('ai-', '')}`}>
-                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
                 </div>
                 <span className='inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse'></span>
               </>
             ) : (
-              <ReactMarkdown>{message.content}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
             )}
           </div>
         ) : (
@@ -542,6 +546,34 @@ export function ChatWidget() {
         }
         .new-message-highlight {
           animation: highlight 1s ease-out;
+        }
+
+        /* Table styles */
+        .prose table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 1em 0;
+          overflow-x: auto;
+          display: block;
+        }
+        .prose thead {
+          background-color: rgba(0, 0, 0, 0.05);
+        }
+        .prose th {
+          font-weight: 600;
+          border: 1px solid rgba(0, 0, 0, 0.2);
+          padding: 0.5em;
+        }
+        .prose td {
+          border: 1px solid rgba(0, 0, 0, 0.2);
+          padding: 0.5em;
+        }
+        .dark .prose th,
+        .dark .prose td {
+          border-color: rgba(255, 255, 255, 0.2);
+        }
+        .dark .prose thead {
+          background-color: rgba(255, 255, 255, 0.05);
         }
       `}</style>
     </div>
