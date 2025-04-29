@@ -537,6 +537,7 @@ export function ChatWidget() {
         >
           <DialogContent className='p-0 border-none shadow-lg fixed inset-0 w-full h-full max-w-full translate-x-0 translate-y-0 top-0 left-0 rounded-none'>
             <DialogTitle className='sr-only'>Pulse Assistant</DialogTitle>
+
             <ChatContent />
           </DialogContent>
         </Dialog>
