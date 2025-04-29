@@ -98,9 +98,21 @@ export function ChatWidget() {
     setIsFullScreen(!isFullScreen);
   };
 
-  // Safe input change
+  // Fixed input change handler to maintain cursor position
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
+    const cursorPosition = e.target.selectionStart;
+    const value = e.target.value;
+
+    setInput(value);
+
+    // Use requestAnimationFrame to restore cursor position after render
+    requestAnimationFrame(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.selectionStart = cursorPosition;
+        inputRef.current.selectionEnd = cursorPosition;
+      }
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -445,7 +457,7 @@ export function ChatWidget() {
                       <div className='text-sm leading-relaxed prose prose-sm dark:prose-invert prose-p:my-1 prose-pre:bg-zinc-800 prose-pre:dark:bg-zinc-900 prose-pre:p-2 prose-pre:rounded prose-code:text-xs prose-code:bg-zinc-200 prose-code:dark:bg-zinc-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[""] prose-code:after:content-[""] prose-a:text-primary prose-a:no-underline hover:prose-a:underline max-w-full'>
                         <ReactMarkdown>{message.content}</ReactMarkdown>
                         {message.isStreaming && (
-                          <span className='inline-block w-1.5 h-4 ml-1 bg-primary opacity-0 animate-fade-in'></span>
+                          <span className='inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse'></span>
                         )}
                       </div>
                     ) : (
