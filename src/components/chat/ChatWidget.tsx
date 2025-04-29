@@ -8,12 +8,14 @@ import { cn } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
 import { MessageCircle, RefreshCw, SendIcon, Trash2, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 type Message = {
   id: string;
   content: string;
   sender: 'user' | 'ai';
   timestamp: Date;
+  isStreaming?: boolean;
 };
 
 export function ChatWidget() {
@@ -24,9 +26,11 @@ export function ChatWidget() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Scroll to bottom of messages when messages change
   useEffect(() => {
@@ -53,6 +57,11 @@ export function ChatWidget() {
       // Clear polling interval when component unmounts
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
+      }
+
+      // Cancel any active streaming requests
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
     };
   }, []);
@@ -169,6 +178,214 @@ export function ChatWidget() {
     }, 2000);
   };
 
+  const setupStreamConnection = (userMessageId: string) => {
+    // Cancel any ongoing stream request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create a new AbortController for this request
+    abortControllerRef.current = new AbortController();
+
+    // Create empty AI message placeholder for streaming
+    const streamingMessage: Message = {
+      id: `ai-${userMessageId}`,
+      content: '',
+      sender: 'ai',
+      timestamp: new Date(),
+      isStreaming: true,
+    };
+
+    setMessages((prev) => {
+      return [...prev, streamingMessage];
+    });
+    setIsStreaming(true);
+
+    try {
+      // Create POST data
+      const body = JSON.stringify({
+        message: input.trim(),
+        sessionId: sessionId,
+      });
+
+      // Get base URL from utility
+      const baseURL = newRequest.defaults.baseURL || '';
+      const url = `${baseURL}/ai/chat/stream`;
+
+      // Make a POST request to create the streaming endpoint
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body,
+        signal: abortControllerRef.current.signal,
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Failed to initialize stream');
+          }
+
+          // Extract reader from response
+          const reader = response.body?.getReader();
+          if (!reader) {
+            throw new Error('Cannot read response body');
+          }
+
+          // Process the stream chunks
+          const decoder = new TextDecoder();
+          let buffer = '';
+
+          function processChunks() {
+            reader
+              .read()
+              .then(({ done, value }) => {
+                if (done) {
+                  // Streaming is complete
+                  setMessages((prev) => {
+                    return prev.map((msg) => {
+                      if (msg.id === `ai-${userMessageId}`) {
+                        return { ...msg, isStreaming: false };
+                      }
+                      return msg;
+                    });
+                  });
+                  setIsStreaming(false);
+                  setIsLoading(false);
+                  return;
+                }
+
+                // Decode this chunk and add it to our buffer
+                const chunk = decoder.decode(value, { stream: true });
+                buffer += chunk;
+
+                // Process complete SSE messages from the buffer
+                let boundaryIndex;
+                while ((boundaryIndex = buffer.indexOf('\n\n')) !== -1) {
+                  const eventData = buffer.slice(0, boundaryIndex);
+                  buffer = buffer.slice(boundaryIndex + 2);
+
+                  // Process each SSE data line
+                  if (eventData.startsWith('data: ')) {
+                    try {
+                      const data = JSON.parse(eventData.substring(6));
+
+                      if (data.type === 'start') {
+                        // Save session ID if it's new
+                        if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
+                          setSessionId(data.sessionId);
+                          localStorage.setItem('chatSessionId', data.sessionId);
+                        }
+                      } else if (data.type === 'chunk') {
+                        // Update streaming message with new chunk
+                        setMessages((prev) => {
+                          return prev.map((msg) => {
+                            if (msg.id === `ai-${userMessageId}`) {
+                              return {
+                                ...msg,
+                                content: msg.content + (data.content || ''),
+                              };
+                            }
+                            return msg;
+                          });
+                        });
+                      } else if (data.type === 'end') {
+                        // Handled when done is true
+                      } else if (data.type === 'error') {
+                        // Handle error during streaming
+                        setMessages((prev) => {
+                          return prev.map((msg) => {
+                            if (msg.id === `ai-${userMessageId}`) {
+                              return {
+                                ...msg,
+                                content:
+                                  'Sorry, there was an error processing your request. Please try again.',
+                                isStreaming: false,
+                              };
+                            }
+                            return msg;
+                          });
+                        });
+
+                        setIsStreaming(false);
+                        setIsLoading(false);
+                        reader.cancel();
+                        return;
+                      }
+                    } catch (e) {
+                      console.error('Error parsing SSE data:', e);
+                    }
+                  }
+                }
+
+                // Continue reading the next chunk
+                processChunks();
+              })
+              .catch((error) => {
+                console.error('Error reading from stream:', error);
+                // Handle error
+                setMessages((prev) => {
+                  return prev.map((msg) => {
+                    if (msg.id === `ai-${userMessageId}`) {
+                      return {
+                        ...msg,
+                        content: 'Connection error. Please try again later.',
+                        isStreaming: false,
+                      };
+                    }
+                    return msg;
+                  });
+                });
+
+                setIsStreaming(false);
+                setIsLoading(false);
+              });
+          }
+
+          // Start processing chunks
+          processChunks();
+        })
+        .catch((error) => {
+          console.error('Error setting up stream:', error);
+
+          // Handle connection error
+          setMessages((prev) => {
+            return prev.map((msg) => {
+              if (msg.id === `ai-${userMessageId}`) {
+                return {
+                  ...msg,
+                  content: 'Connection error. Please try again later.',
+                  isStreaming: false,
+                };
+              }
+              return msg;
+            });
+          });
+
+          setIsStreaming(false);
+          setIsLoading(false);
+        });
+    } catch (error) {
+      console.error('Error in setupStreamConnection:', error);
+
+      setMessages((prev) => {
+        return prev.map((msg) => {
+          if (msg.id === `ai-${userMessageId}`) {
+            return {
+              ...msg,
+              content: 'Connection error. Please try again later.',
+              isStreaming: false,
+            };
+          }
+          return msg;
+        });
+      });
+
+      setIsStreaming(false);
+      setIsLoading(false);
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -186,45 +403,8 @@ export function ChatWidget() {
     setIsLoading(true);
 
     try {
-      const response = await newRequest.post('/ai/chat', {
-        message: userMessage.content,
-        sessionId: sessionId,
-      });
-
-      // Check if the response indicates a queued job
-      if (response.data.status === 'processing' && response.data.jobId) {
-        // Save the job ID
-        const newJobId = response.data.jobId;
-        setJobId(newJobId);
-
-        // Save session ID if it's new
-        if (response.data.sessionId && (!sessionId || sessionId !== response.data.sessionId)) {
-          setSessionId(response.data.sessionId);
-          localStorage.setItem('chatSessionId', response.data.sessionId);
-        }
-
-        // Start polling for job status
-        pollJobStatus(newJobId);
-      } else {
-        // Direct response (not queued)
-        // Save session ID if it's returned
-        if (response.data.sessionId && (!sessionId || sessionId !== response.data.sessionId)) {
-          setSessionId(response.data.sessionId);
-          localStorage.setItem('chatSessionId', response.data.sessionId);
-        }
-
-        const aiMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          content: response.data.answer || 'Sorry, I could not process your request.',
-          sender: 'ai',
-          timestamp: new Date(),
-        };
-
-        setMessages((prev) => {
-          return [...prev, aiMessage];
-        });
-        setIsLoading(false);
-      }
+      // Use streaming API instead of regular API
+      setupStreamConnection(userMessage.id);
     } catch (error) {
       console.error('Error sending message:', error);
 
@@ -305,7 +485,16 @@ export function ChatWidget() {
                           : 'bg-muted',
                       )}
                     >
-                      <p className='text-sm leading-relaxed'>{message.content}</p>
+                      {message.sender === 'ai' ? (
+                        <div className='text-sm leading-relaxed prose prose-sm dark:prose-invert prose-p:my-1 prose-pre:bg-zinc-800 prose-pre:dark:bg-zinc-900 prose-pre:p-2 prose-pre:rounded prose-code:text-xs prose-code:bg-zinc-200 prose-code:dark:bg-zinc-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[""] prose-code:after:content-[""] prose-a:text-primary prose-a:no-underline hover:prose-a:underline max-w-full'>
+                          <ReactMarkdown>{message.content}</ReactMarkdown>
+                          {message.isStreaming && (
+                            <span className='inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse'></span>
+                          )}
+                        </div>
+                      ) : (
+                        <p className='text-sm leading-relaxed'>{message.content}</p>
+                      )}
                     </div>
                   );
                 })

@@ -1,3 +1,4 @@
+import typography from '@tailwindcss/typography';
 import scrollbarHide from 'tailwind-scrollbar-hide';
 import type { Config } from 'tailwindcss';
 import animate from 'tailwindcss-animate';
@@ -92,7 +93,7 @@ const config = {
       },
     },
   },
-  plugins: [animate, scrollbarHide],
+  plugins: [animate, scrollbarHide, typography],
 } satisfies Config;
 
 export default config;
