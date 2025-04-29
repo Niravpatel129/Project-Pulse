@@ -7,8 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { newRequest, streamRequest } from '@/utils/newRequest';
 import { Maximize2, MessageCircle, Minimize2, RefreshCw, SendIcon, Trash2, X } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
-import FocusLock from 'react-focus-lock';
+import React, { useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import TextareaAutosize from 'react-textarea-autosize';
 
@@ -26,7 +25,6 @@ export function ChatWidget() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [jobId, setJobId] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -34,28 +32,7 @@ export function ChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-
-  // Set up persistent focus handling
-  useEffect(() => {
-    // Load session ID when component mounts
-    const savedSessionId = localStorage.getItem('chatSessionId');
-    if (savedSessionId) {
-      setSessionId(savedSessionId);
-    }
-
-    // Clean up on unmount
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, []);
 
   const toggleChat = () => {
     setIsOpen(!isOpen);
@@ -71,19 +48,9 @@ export function ChatWidget() {
 
   // Fixed input change handler to maintain cursor position
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const cursorPosition = e.target.selectionStart;
     const value = e.target.value;
 
     setInput(value);
-
-    // Use requestAnimationFrame to restore cursor position after render
-    requestAnimationFrame(() => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-        inputRef.current.selectionStart = cursorPosition;
-        inputRef.current.selectionEnd = cursorPosition;
-      }
-    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -105,89 +72,6 @@ export function ChatWidget() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const pollJobStatus = async (jobId: string) => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-    }
-
-    setIsPolling(true);
-
-    // Poll every 2 seconds
-    pollingIntervalRef.current = setInterval(async () => {
-      try {
-        const response = await newRequest.get(`/ai/chat/status/${jobId}`);
-        const { status, answer, sessionId: newSessionId } = response.data;
-
-        if (status === 'completed') {
-          // Save session ID if it's new
-          if (newSessionId && (!sessionId || sessionId !== newSessionId)) {
-            setSessionId(newSessionId);
-            localStorage.setItem('chatSessionId', newSessionId);
-          }
-
-          // Add AI response to messages
-          const aiMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            content: answer || 'Sorry, I could not process your request.',
-            sender: 'ai',
-            timestamp: new Date(),
-          };
-
-          setMessages((prev) => {
-            return [...prev, aiMessage];
-          });
-
-          // Clear polling
-          clearInterval(pollingIntervalRef.current!);
-          pollingIntervalRef.current = null;
-          setIsPolling(false);
-          setJobId(null);
-          setIsLoading(false);
-        } else if (status === 'failed') {
-          // Handle failed job
-          const errorMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            content: 'Sorry, there was an error processing your request. Please try again.',
-            sender: 'ai',
-            timestamp: new Date(),
-          };
-
-          setMessages((prev) => {
-            return [...prev, errorMessage];
-          });
-
-          // Clear polling
-          clearInterval(pollingIntervalRef.current!);
-          pollingIntervalRef.current = null;
-          setIsPolling(false);
-          setJobId(null);
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('Error polling job status:', error);
-
-        // Add error message
-        const errorMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          content: 'Error checking message status. Please try again later.',
-          sender: 'ai',
-          timestamp: new Date(),
-        };
-
-        setMessages((prev) => {
-          return [...prev, errorMessage];
-        });
-
-        // Clear polling
-        clearInterval(pollingIntervalRef.current!);
-        pollingIntervalRef.current = null;
-        setIsPolling(false);
-        setJobId(null);
-        setIsLoading(false);
-      }
-    }, 2000);
   };
 
   const setupStreamConnection = (userMessageId: string) => {
@@ -443,31 +327,28 @@ export function ChatWidget() {
         </ScrollArea>
 
         {/* Chat Input with FocusLock */}
-        <FocusLock disabled={!isOpen} returnFocus>
-          <div className='p-3 border-t'>
-            <div className='flex gap-2'>
-              <TextareaAutosize
-                ref={inputRef}
-                value={input}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
-                placeholder='Type a message...'
-                className='min-h-[40px] max-h-[120px] resize-none flex-1 px-3 py-2 text-sm rounded-md border border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
-                disabled={isLoading}
-                autoFocus={isOpen}
-                maxRows={4}
-              />
-              <Button
-                onClick={handleSendMessage}
-                size='icon'
-                disabled={!input.trim() || isLoading}
-                className={cn('shrink-0', isLoading && 'opacity-50 cursor-not-allowed')}
-              >
-                <SendIcon className='h-4 w-4' />
-              </Button>
-            </div>
+        <div className='p-3 border-t'>
+          <div className='flex gap-2'>
+            <TextareaAutosize
+              ref={inputRef}
+              value={input}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder='Type a message...'
+              className='min-h-[40px] max-h-[120px] resize-none flex-1 px-3 py-2 text-sm rounded-md border border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+              disabled={isLoading}
+              maxRows={4}
+            />
+            <Button
+              onClick={handleSendMessage}
+              size='icon'
+              disabled={!input.trim() || isLoading}
+              className={cn('shrink-0', isLoading && 'opacity-50 cursor-not-allowed')}
+            >
+              <SendIcon className='h-4 w-4' />
+            </Button>
           </div>
-        </FocusLock>
+        </div>
       </div>
     );
   };
