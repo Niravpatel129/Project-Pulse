@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { newRequest, streamRequest } from '@/utils/newRequest';
 import { Maximize2, MessageCircle, Minimize2, RefreshCw, SendIcon, Trash2, X } from 'lucide-react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import TextareaAutosize from 'react-textarea-autosize';
 
@@ -32,15 +32,14 @@ export function ChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  // Store accumulated content for each streaming message
+  const contentAccumulatorRef = useRef<{ [key: string]: string }>({});
+  // Prevent autoscroll on user interaction
+  const userScrollingRef = useRef(false);
+  // Track last message ID for scroll position restoration
+  const lastMessageIdRef = useRef<string | null>(null);
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
-
-  // Load session ID from localStorage on mount
+  // Load session ID from localStorage on component mount
   useEffect(() => {
     const savedSessionId = localStorage.getItem('chatSessionId');
     if (savedSessionId) {
@@ -48,169 +47,249 @@ export function ChatWidget() {
     }
   }, []);
 
-  const toggleChat = useCallback(() => {
-    setIsOpen((prev) => {
-      return !prev;
-    });
-    // Reset full screen when closing chat
-    setIsFullScreen((prev) => {
-      return prev && false;
-    });
+  // Auto-scroll to bottom when messages array length changes
+  useEffect(() => {
+    if (messages.length > 0 && !userScrollingRef.current) {
+      scrollToBottom();
+    }
+    // Track the latest message for scroll restoration
+    if (messages.length > 0) {
+      lastMessageIdRef.current = messages[messages.length - 1].id;
+    }
+  }, [messages.length]);
 
-    // Focus input when opening chat
-    if (!isOpen) {
+  // Scroll to bottom helper function
+  const scrollToBottom = useCallback(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
+
+  // Handle scroll events to detect user scrolling
+  const handleScroll = useCallback(() => {
+    if (scrollAreaRef.current) {
+      const scrollArea = scrollAreaRef.current;
+      const isScrolledToBottom =
+        scrollArea.scrollHeight - scrollArea.scrollTop <= scrollArea.clientHeight + 100;
+      userScrollingRef.current = !isScrolledToBottom;
+    }
+  }, []);
+
+  // Add scroll event listener
+  useEffect(() => {
+    const scrollArea = scrollAreaRef.current;
+    if (scrollArea) {
+      scrollArea.addEventListener('scroll', handleScroll);
+      return () => {
+        return scrollArea.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, [handleScroll]);
+
+  const toggleChat = () => {
+    setIsOpen(!isOpen);
+    // Reset full screen when closing chat
+    if (isOpen) {
+      setIsFullScreen(false);
+    } else {
+      // Focus input when opening chat
       setTimeout(() => {
         inputRef.current?.focus();
       }, 0);
+      // Delay scroll to make sure the chat is fully rendered
+      setTimeout(scrollToBottom, 100);
     }
-  }, [isOpen]);
+  };
 
-  const toggleFullScreen = useCallback(() => {
-    setIsFullScreen((prev) => {
-      return !prev;
-    });
+  const toggleFullScreen = () => {
+    setIsFullScreen(!isFullScreen);
     // Refocus after state change
     setTimeout(() => {
       inputRef.current?.focus();
-    }, 0);
-  }, []);
+      scrollToBottom();
+    }, 100);
+  };
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
-  }, []);
+  };
 
-  const clearConversation = useCallback(async () => {
+  const clearConversation = async () => {
     if (!sessionId || isLoading) return;
 
     try {
       setIsLoading(true);
       await newRequest.delete(`/ai/chat/history/${sessionId}`);
       setMessages([]);
+      // Clear content accumulator
+      contentAccumulatorRef.current = {};
     } catch (error) {
       console.error('Error clearing conversation:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId, isLoading]);
+  };
 
-  const setupStreamConnection = useCallback(
-    (userMessageId: string, messageContent: string) => {
-      // Cancel any ongoing stream request
+  const setupStreamConnection = (userMessageId: string, messageContent: string) => {
+    // Cancel any ongoing stream request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create a new AbortController for this request
+    abortControllerRef.current = new AbortController();
+
+    // Initialize content accumulator for this message
+    const streamMessageId = `ai-${userMessageId}`;
+    contentAccumulatorRef.current[streamMessageId] = '';
+
+    // Create empty AI message placeholder for streaming
+    const streamingMessage: Message = {
+      id: streamMessageId,
+      content: '',
+      sender: 'ai',
+      timestamp: new Date(),
+      isStreaming: true,
+    };
+
+    // Add streaming placeholder message to state
+    setMessages((prev) => {
+      return [...prev, streamingMessage];
+    });
+    setIsStreaming(true);
+
+    // Reset user scrolling when starting a new stream
+    userScrollingRef.current = false;
+
+    try {
+      const streamController = streamRequest({
+        endpoint: '/ai/chat/stream',
+        method: 'POST',
+        data: {
+          message: messageContent,
+          sessionId: sessionId,
+        },
+        onStart: (data) => {
+          // Save session ID if it's new
+          if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
+            setSessionId(data.sessionId);
+            localStorage.setItem('chatSessionId', data.sessionId);
+          }
+        },
+        onChunk: (data) => {
+          // Accumulate content outside of React state
+          if (data.content) {
+            contentAccumulatorRef.current[streamMessageId] += data.content;
+          }
+
+          // Update DOM directly for streaming content
+          const streamElement = document.getElementById(`stream-content-${userMessageId}`);
+          if (streamElement) {
+            // Use innerHTML to update content without re-rendering
+            const formattedContent = contentAccumulatorRef.current[streamMessageId];
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = `<div class="markdown-content">${formattedContent}</div>`;
+
+            // Replace content to prevent ReactMarkdown from re-parsing
+            while (streamElement.firstChild) {
+              streamElement.removeChild(streamElement.firstChild);
+            }
+            streamElement.appendChild(tempDiv);
+
+            // Scroll only if user isn't manually scrolling
+            if (!userScrollingRef.current) {
+              scrollToBottom();
+            }
+          } else {
+            // If element not found, update via React state (should only happen once)
+            setMessages((prev) => {
+              return prev.map((msg) => {
+                if (msg.id === streamMessageId) {
+                  return { ...msg, content: contentAccumulatorRef.current[streamMessageId] };
+                }
+                return msg;
+              });
+            });
+          }
+        },
+        onEnd: () => {
+          // Final state update with complete message
+          setMessages((prev) => {
+            return prev.map((msg) => {
+              if (msg.id === streamMessageId) {
+                return {
+                  ...msg,
+                  content: contentAccumulatorRef.current[streamMessageId],
+                  isStreaming: false,
+                };
+              }
+              return msg;
+            });
+          });
+
+          // Clean up after streaming completes
+          setIsStreaming(false);
+          setIsLoading(false);
+          abortControllerRef.current = null;
+          // Scroll to bottom after final update
+          setTimeout(scrollToBottom, 50);
+        },
+        onError: (error) => {
+          console.error('Error in stream:', error);
+
+          // Handle error during streaming
+          setMessages((prev) => {
+            return prev.map((msg) => {
+              if (msg.id === streamMessageId) {
+                return {
+                  ...msg,
+                  content: 'Sorry, there was an error processing your request. Please try again.',
+                  isStreaming: false,
+                };
+              }
+              return msg;
+            });
+          });
+
+          setIsStreaming(false);
+          setIsLoading(false);
+          abortControllerRef.current = null;
+        },
+      });
+
+      // Store cancel function in abortController ref
       if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+        const originalAbort = abortControllerRef.current.abort;
+        abortControllerRef.current.abort = () => {
+          streamController.cancel();
+          originalAbort.call(abortControllerRef.current);
+        };
       }
-
-      // Create a new AbortController for this request
-      abortControllerRef.current = new AbortController();
-
-      // Create empty AI message placeholder for streaming
-      const streamingMessage: Message = {
-        id: `ai-${userMessageId}`,
-        content: '',
-        sender: 'ai',
-        timestamp: new Date(),
-        isStreaming: true,
-      };
+    } catch (error) {
+      console.error('Error in setupStreamConnection:', error);
 
       setMessages((prev) => {
-        return [...prev, streamingMessage];
+        return prev.map((msg) => {
+          if (msg.id === streamMessageId) {
+            return {
+              ...msg,
+              content: 'Connection error. Please try again later.',
+              isStreaming: false,
+            };
+          }
+          return msg;
+        });
       });
-      setIsStreaming(true);
 
-      try {
-        // Use our streamRequest utility instead of fetch
-        const streamController = streamRequest({
-          endpoint: '/ai/chat/stream',
-          method: 'POST',
-          data: {
-            message: messageContent,
-            sessionId: sessionId,
-          },
-          onStart: (data) => {
-            // Save session ID if it's new
-            if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
-              setSessionId(data.sessionId);
-              localStorage.setItem('chatSessionId', data.sessionId);
-            }
-          },
-          onChunk: (data) => {
-            // Update streaming message with new chunk
-            setMessages((prev) => {
-              return prev.map((msg) => {
-                return msg.id === `ai-${userMessageId}`
-                  ? { ...msg, content: msg.content + (data.content || '') }
-                  : msg;
-              });
-            });
-          },
-          onEnd: () => {
-            // Streaming is complete
-            setMessages((prev) => {
-              return prev.map((msg) => {
-                return msg.id === `ai-${userMessageId}` ? { ...msg, isStreaming: false } : msg;
-              });
-            });
-            setIsStreaming(false);
-            setIsLoading(false);
-            abortControllerRef.current = null;
-          },
-          onError: (error) => {
-            console.error('Error in stream:', error);
+      setIsStreaming(false);
+      setIsLoading(false);
+    }
+  };
 
-            // Handle error during streaming
-            setMessages((prev) => {
-              return prev.map((msg) => {
-                return msg.id === `ai-${userMessageId}`
-                  ? {
-                      ...msg,
-                      content:
-                        'Sorry, there was an error processing your request. Please try again.',
-                      isStreaming: false,
-                    }
-                  : msg;
-              });
-            });
-
-            setIsStreaming(false);
-            setIsLoading(false);
-            abortControllerRef.current = null;
-          },
-        });
-
-        // Store cancel function in abortController ref
-        if (abortControllerRef.current) {
-          const originalAbort = abortControllerRef.current.abort;
-          abortControllerRef.current.abort = () => {
-            streamController.cancel();
-            originalAbort.call(abortControllerRef.current);
-          };
-        }
-      } catch (error) {
-        console.error('Error in setupStreamConnection:', error);
-
-        setMessages((prev) => {
-          return prev.map((msg) => {
-            return msg.id === `ai-${userMessageId}`
-              ? {
-                  ...msg,
-                  content: 'Connection error. Please try again later.',
-                  isStreaming: false,
-                }
-              : msg;
-          });
-        });
-
-        setIsStreaming(false);
-        setIsLoading(false);
-      }
-    },
-    [sessionId],
-  );
-
-  const handleSendMessage = useCallback(() => {
+  const handleSendMessage = async () => {
     if (!inputRef.current || !inputRef.current.value.trim() || isLoading) return;
 
     const messageContent = inputRef.current.value.trim();
@@ -230,6 +309,10 @@ export function ChatWidget() {
     inputRef.current.value = '';
     setIsLoading(true);
 
+    // Reset user scrolling when sending a new message
+    userScrollingRef.current = false;
+    setTimeout(scrollToBottom, 50);
+
     try {
       // Use streaming API
       setupStreamConnection(userMessage.id, messageContent);
@@ -248,36 +331,76 @@ export function ChatWidget() {
       });
       setIsLoading(false);
     }
-  }, [isLoading, setupStreamConnection]);
+  };
 
-  // Memoize the message list to prevent re-renders when parent component re-renders
-  const messageList = useMemo(() => {
-    return messages.map((message) => {
-      return (
-        <div
-          key={message.id}
-          className={cn(
-            'flex w-full max-w-[80%] gap-2 p-3 rounded-lg',
-            message.sender === 'user' ? 'ml-auto bg-primary text-primary-foreground' : 'bg-muted',
-          )}
-        >
-          {message.sender === 'ai' ? (
-            <div className='text-sm leading-relaxed prose prose-sm dark:prose-invert prose-p:my-1 prose-pre:bg-zinc-800 prose-pre:dark:bg-zinc-900 prose-pre:p-2 prose-pre:rounded prose-code:text-xs prose-code:bg-zinc-200 prose-code:dark:bg-zinc-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[""] prose-code:after:content-[""] prose-a:text-primary prose-a:no-underline hover:prose-a:underline max-w-full'>
-              <ReactMarkdown>{message.content}</ReactMarkdown>
-              {message.isStreaming && (
+  // Optimized message rendering with memoization to prevent re-renders
+  const MessageItem = React.memo(({ message }: { message: Message }) => {
+    const messageRef = useRef<HTMLDivElement>(null);
+
+    // Effect to highlight newly rendered messages
+    useEffect(() => {
+      if (message.id === lastMessageIdRef.current && messageRef.current) {
+        // Add a subtle highlight animation for new messages
+        messageRef.current.classList.add('new-message-highlight');
+        setTimeout(() => {
+          messageRef.current?.classList.remove('new-message-highlight');
+        }, 1000);
+      }
+    }, [message.id]);
+
+    return (
+      <div
+        ref={messageRef}
+        className={cn(
+          'flex w-full max-w-[80%] gap-2 p-3 rounded-lg transition-all',
+          message.sender === 'user' ? 'ml-auto bg-primary text-primary-foreground' : 'bg-muted',
+        )}
+      >
+        {message.sender === 'ai' ? (
+          <div className='text-sm leading-relaxed prose prose-sm dark:prose-invert prose-p:my-1 prose-pre:bg-zinc-800 prose-pre:dark:bg-zinc-900 prose-pre:p-2 prose-pre:rounded prose-code:text-xs prose-code:bg-zinc-200 prose-code:dark:bg-zinc-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[""] prose-code:after:content-[""] prose-a:text-primary prose-a:no-underline hover:prose-a:underline max-w-full'>
+            {message.isStreaming ? (
+              <>
+                <div id={`stream-content-${message.id.replace('ai-', '')}`}>
+                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                </div>
                 <span className='inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse'></span>
-              )}
-            </div>
-          ) : (
-            <p className='text-sm leading-relaxed'>{message.content}</p>
-          )}
-        </div>
-      );
-    });
-  }, [messages]);
+              </>
+            ) : (
+              <ReactMarkdown>{message.content}</ReactMarkdown>
+            )}
+          </div>
+        ) : (
+          <p className='text-sm leading-relaxed'>{message.content}</p>
+        )}
+      </div>
+    );
+  });
 
-  // Memoize ChatContent component to prevent unnecessary re-renders
-  const ChatContent = useCallback(() => {
+  // Optimize message list rendering
+  const MessageList = () => {
+    return (
+      <>
+        {messages.length === 0 ? (
+          <div className='text-center text-muted-foreground p-4'>
+            <p className='text-sm'>No messages yet. Start the conversation!</p>
+          </div>
+        ) : (
+          messages.map((message) => {
+            return <MessageItem key={message.id} message={message} />;
+          })
+        )}
+        {isPolling && (
+          <div className='flex items-center justify-center py-2'>
+            <RefreshCw className='h-4 w-4 animate-spin text-muted-foreground' />
+            <span className='ml-2 text-xs text-muted-foreground'>Processing your request...</span>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </>
+    );
+  };
+
+  const ChatContent = () => {
     return (
       <div className='shadow-lg border rounded-lg bg-background overflow-hidden h-full w-full'>
         {/* Chat Header */}
@@ -332,26 +455,11 @@ export function ChatWidget() {
           ref={scrollAreaRef}
         >
           <div className='flex flex-col gap-3'>
-            {messages.length === 0 ? (
-              <div className='text-center text-muted-foreground p-4'>
-                <p className='text-sm'>No messages yet. Start the conversation!</p>
-              </div>
-            ) : (
-              messageList
-            )}
-            {isPolling && (
-              <div className='flex items-center justify-center py-2'>
-                <RefreshCw className='h-4 w-4 animate-spin text-muted-foreground' />
-                <span className='ml-2 text-xs text-muted-foreground'>
-                  Processing your request...
-                </span>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
+            <MessageList />
           </div>
         </ScrollArea>
 
-        {/* Chat Input with FocusLock */}
+        {/* Chat Input */}
         <div className='p-3 border-t'>
           <div className='flex gap-2'>
             <TextareaAutosize
@@ -375,20 +483,7 @@ export function ChatWidget() {
         </div>
       </div>
     );
-  }, [
-    messageList,
-    isFullScreen,
-    sessionId,
-    isLoading,
-    messages.length,
-    isPolling,
-    isOpen,
-    toggleFullScreen,
-    clearConversation,
-    toggleChat,
-    handleKeyDown,
-    handleSendMessage,
-  ]);
+  };
 
   return (
     <div className='fixed bottom-4 right-4 z-50'>
@@ -427,8 +522,23 @@ export function ChatWidget() {
           </div>
         )
       )}
+
+      {/* Add styles for message highlight animation */}
+      <style jsx global>{`
+        @keyframes highlight {
+          0% {
+            background-color: rgba(59, 130, 246, 0.2);
+          }
+          100% {
+            background-color: transparent;
+          }
+        }
+        .new-message-highlight {
+          animation: highlight 1s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
 
-export default React.memo(ChatWidget);
+export default ChatWidget;
