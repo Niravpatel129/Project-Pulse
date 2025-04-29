@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { newRequest, streamRequest } from '@/utils/newRequest';
-import { MessageCircle, RefreshCw, SendIcon, Trash2, X } from 'lucide-react';
+import { Maximize2, MessageCircle, Minimize2, RefreshCw, SendIcon, Trash2, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
@@ -27,17 +27,30 @@ export function ChatWidget() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Scroll to bottom of messages when messages change
+  // Scroll to bottom of messages only when necessary
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (messagesEndRef.current && shouldAutoScroll) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [messages, shouldAutoScroll]);
+
+  // Detect scroll position to determine if auto-scrolling should happen
+  const handleScroll = () => {
+    if (scrollAreaRef.current) {
+      const { scrollHeight, scrollTop, clientHeight } = scrollAreaRef.current;
+      // Consider "at bottom" if within 100px of the bottom
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setShouldAutoScroll(isAtBottom);
+    }
+  };
 
   // Focus input when chat opens
   useEffect(() => {
@@ -68,6 +81,14 @@ export function ChatWidget() {
 
   const toggleChat = () => {
     setIsOpen(!isOpen);
+    // Reset full screen when closing chat
+    if (isOpen) {
+      setIsFullScreen(false);
+    }
+  };
+
+  const toggleFullScreen = () => {
+    setIsFullScreen(!isFullScreen);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -93,6 +114,11 @@ export function ChatWidget() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // When user sends a message, enable auto-scrolling
+  const enableAutoScroll = () => {
+    setShouldAutoScroll(true);
   };
 
   const pollJobStatus = async (jobId: string) => {
@@ -312,6 +338,8 @@ export function ChatWidget() {
     });
     setInput('');
     setIsLoading(true);
+    // Enable auto-scrolling when user sends a message
+    enableAutoScroll();
 
     try {
       // Use streaming API instead of regular API
@@ -350,7 +378,14 @@ export function ChatWidget() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className='absolute bottom-16 right-0 w-80 md:w-96 rounded-lg shadow-lg border bg-background overflow-hidden animate-in slide-in-from-bottom duration-300'>
+        <div
+          className={cn(
+            'absolute shadow-lg border bg-background overflow-hidden animate-in slide-in-from-bottom duration-300',
+            isFullScreen
+              ? 'fixed inset-0 w-full h-full z-50'
+              : 'bottom-16 right-0 w-80 md:w-96 rounded-lg',
+          )}
+        >
           {/* Chat Header */}
           <div className='bg-primary p-3 text-primary-foreground flex items-center justify-between'>
             <div className='flex items-center gap-2'>
@@ -368,6 +403,19 @@ export function ChatWidget() {
                 variant='ghost'
                 size='icon'
                 className='h-7 w-7 rounded-full'
+                onClick={toggleFullScreen}
+                title={isFullScreen ? 'Exit full screen' : 'Full screen view'}
+              >
+                {isFullScreen ? (
+                  <Minimize2 className='h-4 w-4' />
+                ) : (
+                  <Maximize2 className='h-4 w-4' />
+                )}
+              </Button>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='h-7 w-7 rounded-full'
                 onClick={clearConversation}
                 disabled={!sessionId || isLoading || messages.length === 0}
                 title='Clear conversation'
@@ -378,7 +426,11 @@ export function ChatWidget() {
           </div>
 
           {/* Chat Messages */}
-          <ScrollArea className='h-96 p-3'>
+          <ScrollArea
+            className={cn('p-3', isFullScreen ? 'h-[calc(100vh-110px)]' : 'h-96')}
+            onScroll={handleScroll}
+            ref={scrollAreaRef}
+          >
             <div className='flex flex-col gap-3'>
               {messages.length === 0 ? (
                 <div className='text-center text-muted-foreground p-4'>
@@ -400,7 +452,7 @@ export function ChatWidget() {
                         <div className='text-sm leading-relaxed prose prose-sm dark:prose-invert prose-p:my-1 prose-pre:bg-zinc-800 prose-pre:dark:bg-zinc-900 prose-pre:p-2 prose-pre:rounded prose-code:text-xs prose-code:bg-zinc-200 prose-code:dark:bg-zinc-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[""] prose-code:after:content-[""] prose-a:text-primary prose-a:no-underline hover:prose-a:underline max-w-full'>
                           <ReactMarkdown>{message.content}</ReactMarkdown>
                           {message.isStreaming && (
-                            <span className='inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse'></span>
+                            <span className='inline-block w-1.5 h-4 ml-1 bg-primary opacity-0 animate-fade-in'></span>
                           )}
                         </div>
                       ) : (
