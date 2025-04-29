@@ -17,6 +17,10 @@ export default function ClientLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pageContext = {
+    path: window.location.pathname,
+  };
+
   return (
     <>
       <QueryClientProvider client={queryClient}>
@@ -27,7 +31,7 @@ export default function ClientLayout({
 
               <div className='flex flex-col min-h-screen'>
                 <main className='flex-1'>{children}</main>
-                <ChatWidget />
+                <ChatWidget pageContext={pageContext} />
               </div>
             </TooltipProvider>
             <LoadingOverlay />
