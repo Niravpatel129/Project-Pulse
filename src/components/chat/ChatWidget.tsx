@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { newRequest, streamRequest } from '@/utils/newRequest';
 import { Maximize2, MessageCircle, Minimize2, RefreshCw, SendIcon, Trash2, X } from 'lucide-react';
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import TextareaAutosize from 'react-textarea-autosize';
 
@@ -33,35 +33,56 @@ export function ChatWidget() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const toggleChat = () => {
-    setIsOpen(!isOpen);
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
+  // Load session ID from localStorage on mount
+  useEffect(() => {
+    const savedSessionId = localStorage.getItem('chatSessionId');
+    if (savedSessionId) {
+      setSessionId(savedSessionId);
+    }
+  }, []);
+
+  const toggleChat = useCallback(() => {
+    setIsOpen((prev) => {
+      return !prev;
+    });
     // Reset full screen when closing chat
-    if (isOpen) {
-      setIsFullScreen(false);
-    } else {
-      // Focus input when opening chat
+    setIsFullScreen((prev) => {
+      return prev && false;
+    });
+
+    // Focus input when opening chat
+    if (!isOpen) {
       setTimeout(() => {
         inputRef.current?.focus();
       }, 0);
     }
-  };
+  }, [isOpen]);
 
-  const toggleFullScreen = () => {
-    setIsFullScreen(!isFullScreen);
+  const toggleFullScreen = useCallback(() => {
+    setIsFullScreen((prev) => {
+      return !prev;
+    });
     // Refocus after state change
     setTimeout(() => {
       inputRef.current?.focus();
     }, 0);
-  };
+  }, []);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
-  };
+  }, []);
 
-  const clearConversation = async () => {
+  const clearConversation = useCallback(async () => {
     if (!sessionId || isLoading) return;
 
     try {
@@ -73,128 +94,123 @@ export function ChatWidget() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [sessionId, isLoading]);
 
-  const setupStreamConnection = (userMessageId: string, messageContent: string) => {
-    // Cancel any ongoing stream request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    // Create a new AbortController for this request
-    abortControllerRef.current = new AbortController();
-
-    // Create empty AI message placeholder for streaming
-    const streamingMessage: Message = {
-      id: `ai-${userMessageId}`,
-      content: '',
-      sender: 'ai',
-      timestamp: new Date(),
-      isStreaming: true,
-    };
-
-    setMessages((prev) => {
-      return [...prev, streamingMessage];
-    });
-    setIsStreaming(true);
-
-    try {
-      // Use our streamRequest utility instead of fetch
-      const streamController = streamRequest({
-        endpoint: '/ai/chat/stream',
-        method: 'POST',
-        data: {
-          message: messageContent,
-          sessionId: sessionId,
-        },
-        onStart: (data) => {
-          // Save session ID if it's new
-          if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
-            setSessionId(data.sessionId);
-            localStorage.setItem('chatSessionId', data.sessionId);
-          }
-        },
-        onChunk: (data) => {
-          // Update streaming message with new chunk
-          setMessages((prev) => {
-            return prev.map((msg) => {
-              if (msg.id === `ai-${userMessageId}`) {
-                return {
-                  ...msg,
-                  content: msg.content + (data.content || ''),
-                };
-              }
-              return msg;
-            });
-          });
-        },
-        onEnd: () => {
-          // Streaming is complete
-          setMessages((prev) => {
-            return prev.map((msg) => {
-              if (msg.id === `ai-${userMessageId}`) {
-                return { ...msg, isStreaming: false };
-              }
-              return msg;
-            });
-          });
-          setIsStreaming(false);
-          setIsLoading(false);
-          abortControllerRef.current = null;
-        },
-        onError: (error) => {
-          console.error('Error in stream:', error);
-
-          // Handle error during streaming
-          setMessages((prev) => {
-            return prev.map((msg) => {
-              if (msg.id === `ai-${userMessageId}`) {
-                return {
-                  ...msg,
-                  content: 'Sorry, there was an error processing your request. Please try again.',
-                  isStreaming: false,
-                };
-              }
-              return msg;
-            });
-          });
-
-          setIsStreaming(false);
-          setIsLoading(false);
-          abortControllerRef.current = null;
-        },
-      });
-
-      // Store cancel function in abortController ref
+  const setupStreamConnection = useCallback(
+    (userMessageId: string, messageContent: string) => {
+      // Cancel any ongoing stream request
       if (abortControllerRef.current) {
-        const originalAbort = abortControllerRef.current.abort;
-        abortControllerRef.current.abort = () => {
-          streamController.cancel();
-          originalAbort.call(abortControllerRef.current);
-        };
+        abortControllerRef.current.abort();
       }
-    } catch (error) {
-      console.error('Error in setupStreamConnection:', error);
+
+      // Create a new AbortController for this request
+      abortControllerRef.current = new AbortController();
+
+      // Create empty AI message placeholder for streaming
+      const streamingMessage: Message = {
+        id: `ai-${userMessageId}`,
+        content: '',
+        sender: 'ai',
+        timestamp: new Date(),
+        isStreaming: true,
+      };
 
       setMessages((prev) => {
-        return prev.map((msg) => {
-          if (msg.id === `ai-${userMessageId}`) {
-            return {
-              ...msg,
-              content: 'Connection error. Please try again later.',
-              isStreaming: false,
-            };
-          }
-          return msg;
-        });
+        return [...prev, streamingMessage];
       });
+      setIsStreaming(true);
 
-      setIsStreaming(false);
-      setIsLoading(false);
-    }
-  };
+      try {
+        // Use our streamRequest utility instead of fetch
+        const streamController = streamRequest({
+          endpoint: '/ai/chat/stream',
+          method: 'POST',
+          data: {
+            message: messageContent,
+            sessionId: sessionId,
+          },
+          onStart: (data) => {
+            // Save session ID if it's new
+            if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
+              setSessionId(data.sessionId);
+              localStorage.setItem('chatSessionId', data.sessionId);
+            }
+          },
+          onChunk: (data) => {
+            // Update streaming message with new chunk
+            setMessages((prev) => {
+              return prev.map((msg) => {
+                return msg.id === `ai-${userMessageId}`
+                  ? { ...msg, content: msg.content + (data.content || '') }
+                  : msg;
+              });
+            });
+          },
+          onEnd: () => {
+            // Streaming is complete
+            setMessages((prev) => {
+              return prev.map((msg) => {
+                return msg.id === `ai-${userMessageId}` ? { ...msg, isStreaming: false } : msg;
+              });
+            });
+            setIsStreaming(false);
+            setIsLoading(false);
+            abortControllerRef.current = null;
+          },
+          onError: (error) => {
+            console.error('Error in stream:', error);
 
-  const handleSendMessage = async () => {
+            // Handle error during streaming
+            setMessages((prev) => {
+              return prev.map((msg) => {
+                return msg.id === `ai-${userMessageId}`
+                  ? {
+                      ...msg,
+                      content:
+                        'Sorry, there was an error processing your request. Please try again.',
+                      isStreaming: false,
+                    }
+                  : msg;
+              });
+            });
+
+            setIsStreaming(false);
+            setIsLoading(false);
+            abortControllerRef.current = null;
+          },
+        });
+
+        // Store cancel function in abortController ref
+        if (abortControllerRef.current) {
+          const originalAbort = abortControllerRef.current.abort;
+          abortControllerRef.current.abort = () => {
+            streamController.cancel();
+            originalAbort.call(abortControllerRef.current);
+          };
+        }
+      } catch (error) {
+        console.error('Error in setupStreamConnection:', error);
+
+        setMessages((prev) => {
+          return prev.map((msg) => {
+            return msg.id === `ai-${userMessageId}`
+              ? {
+                  ...msg,
+                  content: 'Connection error. Please try again later.',
+                  isStreaming: false,
+                }
+              : msg;
+          });
+        });
+
+        setIsStreaming(false);
+        setIsLoading(false);
+      }
+    },
+    [sessionId],
+  );
+
+  const handleSendMessage = useCallback(() => {
     if (!inputRef.current || !inputRef.current.value.trim() || isLoading) return;
 
     const messageContent = inputRef.current.value.trim();
@@ -232,9 +248,36 @@ export function ChatWidget() {
       });
       setIsLoading(false);
     }
-  };
+  }, [isLoading, setupStreamConnection]);
 
-  const ChatContent = () => {
+  // Memoize the message list to prevent re-renders when parent component re-renders
+  const messageList = useMemo(() => {
+    return messages.map((message) => {
+      return (
+        <div
+          key={message.id}
+          className={cn(
+            'flex w-full max-w-[80%] gap-2 p-3 rounded-lg',
+            message.sender === 'user' ? 'ml-auto bg-primary text-primary-foreground' : 'bg-muted',
+          )}
+        >
+          {message.sender === 'ai' ? (
+            <div className='text-sm leading-relaxed prose prose-sm dark:prose-invert prose-p:my-1 prose-pre:bg-zinc-800 prose-pre:dark:bg-zinc-900 prose-pre:p-2 prose-pre:rounded prose-code:text-xs prose-code:bg-zinc-200 prose-code:dark:bg-zinc-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[""] prose-code:after:content-[""] prose-a:text-primary prose-a:no-underline hover:prose-a:underline max-w-full'>
+              <ReactMarkdown>{message.content}</ReactMarkdown>
+              {message.isStreaming && (
+                <span className='inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse'></span>
+              )}
+            </div>
+          ) : (
+            <p className='text-sm leading-relaxed'>{message.content}</p>
+          )}
+        </div>
+      );
+    });
+  }, [messages]);
+
+  // Memoize ChatContent component to prevent unnecessary re-renders
+  const ChatContent = useCallback(() => {
     return (
       <div className='shadow-lg border rounded-lg bg-background overflow-hidden h-full w-full'>
         {/* Chat Header */}
@@ -294,30 +337,7 @@ export function ChatWidget() {
                 <p className='text-sm'>No messages yet. Start the conversation!</p>
               </div>
             ) : (
-              messages.map((message) => {
-                return (
-                  <div
-                    key={message.id}
-                    className={cn(
-                      'flex w-full max-w-[80%] gap-2 p-3 rounded-lg',
-                      message.sender === 'user'
-                        ? 'ml-auto bg-primary text-primary-foreground'
-                        : 'bg-muted',
-                    )}
-                  >
-                    {message.sender === 'ai' ? (
-                      <div className='text-sm leading-relaxed prose prose-sm dark:prose-invert prose-p:my-1 prose-pre:bg-zinc-800 prose-pre:dark:bg-zinc-900 prose-pre:p-2 prose-pre:rounded prose-code:text-xs prose-code:bg-zinc-200 prose-code:dark:bg-zinc-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[""] prose-code:after:content-[""] prose-a:text-primary prose-a:no-underline hover:prose-a:underline max-w-full'>
-                        <ReactMarkdown>{message.content}</ReactMarkdown>
-                        {message.isStreaming && (
-                          <span className='inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse'></span>
-                        )}
-                      </div>
-                    ) : (
-                      <p className='text-sm leading-relaxed'>{message.content}</p>
-                    )}
-                  </div>
-                );
-              })
+              messageList
             )}
             {isPolling && (
               <div className='flex items-center justify-center py-2'>
@@ -355,7 +375,20 @@ export function ChatWidget() {
         </div>
       </div>
     );
-  };
+  }, [
+    messageList,
+    isFullScreen,
+    sessionId,
+    isLoading,
+    messages.length,
+    isPolling,
+    isOpen,
+    toggleFullScreen,
+    clearConversation,
+    toggleChat,
+    handleKeyDown,
+    handleSendMessage,
+  ]);
 
   return (
     <div className='fixed bottom-4 right-4 z-50'>
@@ -398,4 +431,4 @@ export function ChatWidget() {
   );
 }
 
-export default ChatWidget;
+export default React.memo(ChatWidget);
