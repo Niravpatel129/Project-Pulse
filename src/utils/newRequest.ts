@@ -68,7 +68,7 @@ newRequest.interceptors.response.use(
  * @param onEnd Callback for stream end event
  * @param onError Callback for stream errors
  */
-export const streamRequest = async ({
+export const streamRequest = ({
   endpoint,
   method = 'POST',
   data = {},
@@ -85,6 +85,9 @@ export const streamRequest = async ({
   onEnd?: () => void;
   onError?: (error: any) => void;
 }) => {
+  // Create a reference to store the reader outside the promise chain
+  let readerRef: ReadableStreamDefaultReader<Uint8Array> | null = null;
+
   try {
     const url = `${connectionUrl}/api${endpoint}`;
     const token = localStorage.getItem('authToken');
@@ -110,77 +113,91 @@ export const streamRequest = async ({
       }
     }
 
-    const response = await fetch(url, {
+    // Use then/catch for Promise handling instead of await
+    fetch(url, {
       method,
       headers,
       body: method === 'POST' ? JSON.stringify(data) : undefined,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Stream request failed with status ${response.status}`);
-    }
-
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error('Cannot read response body');
-    }
-
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    const processChunks = async () => {
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-
-          if (done) {
-            onEnd?.();
-            break;
-          }
-
-          // Decode this chunk and add it to our buffer
-          const chunk = decoder.decode(value, { stream: true });
-          buffer += chunk;
-
-          // Process complete SSE messages from the buffer
-          let boundaryIndex;
-          while ((boundaryIndex = buffer.indexOf('\n\n')) !== -1) {
-            const eventData = buffer.slice(0, boundaryIndex);
-            buffer = buffer.slice(boundaryIndex + 2);
-
-            // Process each SSE data line
-            if (eventData.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(eventData.substring(6));
-
-                if (data.type === 'start') {
-                  onStart?.(data);
-                } else if (data.type === 'chunk') {
-                  onChunk?.(data);
-                } else if (data.type === 'end') {
-                  // Will be handled by done === true
-                } else if (data.type === 'error') {
-                  onError?.(data);
-                  reader.cancel();
-                  break;
-                }
-              } catch (e) {
-                console.error('Error parsing SSE data:', e);
-              }
-            }
-          }
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Stream request failed with status ${response.status}`);
         }
-      } catch (error) {
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('Cannot read response body');
+        }
+
+        // Store reader in our reference
+        readerRef = reader;
+
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        const processChunks = () => {
+          reader
+            .read()
+            .then(({ done, value }) => {
+              if (done) {
+                onEnd?.();
+                return;
+              }
+
+              // Decode this chunk and add it to our buffer
+              const chunk = decoder.decode(value, { stream: true });
+              buffer += chunk;
+
+              // Process complete SSE messages from the buffer
+              let boundaryIndex;
+              while ((boundaryIndex = buffer.indexOf('\n\n')) !== -1) {
+                const eventData = buffer.slice(0, boundaryIndex);
+                buffer = buffer.slice(boundaryIndex + 2);
+
+                // Process each SSE data line
+                if (eventData.startsWith('data: ')) {
+                  try {
+                    const data = JSON.parse(eventData.substring(6));
+
+                    if (data.type === 'start') {
+                      onStart?.(data);
+                    } else if (data.type === 'chunk') {
+                      onChunk?.(data);
+                    } else if (data.type === 'end') {
+                      // Will be handled by done === true
+                    } else if (data.type === 'error') {
+                      onError?.(data);
+                      reader.cancel();
+                      return;
+                    }
+                  } catch (e) {
+                    console.error('Error parsing SSE data:', e);
+                  }
+                }
+              }
+
+              // Continue reading
+              processChunks();
+            })
+            .catch((error) => {
+              onError?.(error);
+              reader.cancel();
+            });
+        };
+
+        // Start processing
+        processChunks();
+      })
+      .catch((error) => {
         onError?.(error);
-        reader.cancel();
-      }
-    };
+      });
 
-    processChunks();
-
+    // Return the cancel function that uses our reader reference
     return {
       cancel: () => {
-        return reader.cancel();
+        if (readerRef) {
+          readerRef.cancel();
+        }
       },
     };
   } catch (error) {

@@ -203,7 +203,7 @@ export function ChatWidget() {
 
     try {
       // Use our streamRequest utility instead of fetch
-      const cancelStream = streamRequest({
+      const streamController = streamRequest({
         endpoint: '/ai/chat/stream',
         method: 'POST',
         data: {
@@ -272,7 +272,7 @@ export function ChatWidget() {
       if (abortControllerRef.current) {
         const originalAbort = abortControllerRef.current.abort;
         abortControllerRef.current.abort = () => {
-          cancelStream?.cancel();
+          streamController.cancel();
           originalAbort.call(abortControllerRef.current);
         };
       }
