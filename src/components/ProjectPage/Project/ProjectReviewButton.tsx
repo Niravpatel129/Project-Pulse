@@ -34,7 +34,7 @@ import {
   Sparkle,
 } from 'lucide-react';
 import { ReactNode, useEffect, useState } from 'react';
-import { InvoiceWizardDialog } from './InvoiceWizardDialog';
+import InvoiceWizardDialog from './InvoiceWizardDialog';
 
 type ProjectState = 'in-progress' | 'invoice-sent' | 'partial-payment' | 'completed';
 
