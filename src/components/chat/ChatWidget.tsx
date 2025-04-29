@@ -432,7 +432,7 @@ export function ChatWidget() {
 
         {/* Chat Messages */}
         <ScrollArea
-          className={cn('p-3', isFullScreen ? 'h-[calc(100vh-110px)]' : 'h-96')}
+          className={cn('p-3', isFullScreen ? 'h-[calc(80vh-110px)]' : 'h-96')}
           onScrollCapture={handleScroll}
           ref={scrollAreaRef}
         >
@@ -527,6 +527,7 @@ export function ChatWidget() {
       )}
 
       {/* Use Dialog only for fullscreen mode */}
+      {/* Use Dialog only for fullscreen mode */}
       {isFullScreen ? (
         <Dialog
           open={isOpen}
@@ -535,9 +536,8 @@ export function ChatWidget() {
             if (!open) setIsFullScreen(false);
           }}
         >
-          <DialogContent className='p-0 border-none shadow-lg fixed inset-0 w-full h-full max-w-full translate-x-0 translate-y-0 top-0 left-0 rounded-none'>
+          <DialogContent className='max-w-3xl w-[90vw] h-[80vh] p-0 border shadow-lg'>
             <DialogTitle className='sr-only'>Pulse Assistant</DialogTitle>
-
             <ChatContent />
           </DialogContent>
         </Dialog>
