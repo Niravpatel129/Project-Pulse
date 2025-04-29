@@ -193,18 +193,8 @@ export function ChatWidget() {
           // Update DOM directly for streaming content
           const streamElement = document.getElementById(`stream-content-${userMessageId}`);
           if (streamElement) {
-            // Create a ReactMarkdown element with remarkGfm and set it on the stream element
-            setMessages((prev) => {
-              return prev.map((msg) => {
-                if (msg.id === streamMessageId) {
-                  return {
-                    ...msg,
-                    content: contentAccumulatorRef.current[streamMessageId],
-                  };
-                }
-                return msg;
-              });
-            });
+            // Just update the text content for streaming (simple and fast)
+            streamElement.textContent = contentAccumulatorRef.current[streamMessageId];
 
             // Scroll only if user isn't manually scrolling
             if (!userScrollingRef.current) {
@@ -368,8 +358,11 @@ export function ChatWidget() {
           <div className='text-sm leading-relaxed prose prose-sm dark:prose-invert prose-p:my-1 prose-pre:bg-zinc-800 prose-pre:dark:bg-zinc-900 prose-pre:p-2 prose-pre:rounded prose-code:text-xs prose-code:bg-zinc-200 prose-code:dark:bg-zinc-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[""] prose-code:after:content-[""] prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-table:border-collapse prose-table:w-full prose-td:border prose-td:p-2 prose-th:border prose-th:p-2 prose-th:bg-muted max-w-full'>
             {message.isStreaming ? (
               <>
-                <div id={`stream-content-${message.id.replace('ai-', '')}`}>
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+                <div
+                  id={`stream-content-${message.id.replace('ai-', '')}`}
+                  className='whitespace-pre-wrap'
+                >
+                  {message.content}
                 </div>
                 <span className='inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse'></span>
               </>
