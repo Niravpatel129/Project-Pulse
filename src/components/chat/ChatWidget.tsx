@@ -383,7 +383,7 @@ export function ChatWidget() {
 
   const ChatContent = () => {
     return (
-      <div className='shadow-lg border bg-background overflow-hidden h-full w-full'>
+      <div className='shadow-lg border rounded-lg bg-background overflow-hidden h-full w-full'>
         {/* Chat Header */}
         <div className='bg-primary p-3 text-primary-foreground flex items-center justify-between'>
           <div className='flex items-center gap-2'>
@@ -432,7 +432,7 @@ export function ChatWidget() {
 
         {/* Chat Messages */}
         <ScrollArea
-          className={cn('p-3', isFullScreen ? 'h-[calc(80vh-110px)]' : 'h-96')}
+          className={cn('p-3', isFullScreen ? 'h-[calc(80vh-85px)]' : 'h-96')}
           onScrollCapture={handleScroll}
           ref={scrollAreaRef}
         >
@@ -536,7 +536,7 @@ export function ChatWidget() {
             if (!open) setIsFullScreen(false);
           }}
         >
-          <DialogContent className='max-w-3xl w-[90vw] h-[80vh] p-0 border shadow-lg'>
+          <DialogContent className='max-w-3xl w-[90vw] h-[85vh] p-0 border-none shadow-none overflow-hidden'>
             <DialogTitle className='sr-only'>Pulse Assistant</DialogTitle>
             <ChatContent />
           </DialogContent>
