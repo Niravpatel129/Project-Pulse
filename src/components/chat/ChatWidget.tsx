@@ -380,6 +380,9 @@ export function ChatWidget() {
     );
   });
 
+  // Add display name to the memoized component
+  MessageItem.displayName = 'MessageItem';
+
   // Optimize message list rendering
   const MessageList = () => {
     return (
