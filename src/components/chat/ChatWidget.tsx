@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { newRequest, streamRequest } from '@/utils/newRequest';
@@ -512,17 +512,19 @@ export function ChatWidget() {
   return (
     <div className='fixed bottom-4 right-4 z-50'>
       {/* Chat Button */}
-      <Button
-        onClick={toggleChat}
-        variant='default'
-        size='icon'
-        className={cn(
-          'h-12 w-12 rounded-full shadow-lg transition-all duration-300',
-          isOpen && !isFullScreen && 'rotate-45 bg-destructive hover:bg-destructive/90',
-        )}
-      >
-        {isOpen && !isFullScreen ? <X /> : <MessageCircle />}
-      </Button>
+      {!isOpen && (
+        <Button
+          onClick={toggleChat}
+          variant='default'
+          size='icon'
+          className={cn(
+            'h-12 w-12 rounded-full shadow-lg transition-all duration-300',
+            isOpen && !isFullScreen && 'rotate-45 bg-destructive hover:bg-destructive/90',
+          )}
+        >
+          {isOpen && !isFullScreen ? <X /> : <MessageCircle />}
+        </Button>
+      )}
 
       {/* Use Dialog only for fullscreen mode */}
       {isFullScreen ? (
@@ -534,13 +536,14 @@ export function ChatWidget() {
           }}
         >
           <DialogContent className='p-0 border-none shadow-lg fixed inset-0 w-full h-full max-w-full translate-x-0 translate-y-0 top-0 left-0 rounded-none'>
+            <DialogTitle className='sr-only'>Pulse Assistant</DialogTitle>
             <ChatContent />
           </DialogContent>
         </Dialog>
       ) : (
         // Use custom positioning for the small widget at bottom right
         isOpen && (
-          <div className='absolute bottom-16 right-0 w-80 md:w-96 rounded-lg shadow-lg overflow-hidden animate-in slide-in-from-bottom duration-300'>
+          <div className='absolute bottom-2 right-0 w-80 md:w-96 rounded-lg shadow-lg overflow-hidden animate-in slide-in-from-bottom duration-300'>
             <ChatContent />
           </div>
         )
