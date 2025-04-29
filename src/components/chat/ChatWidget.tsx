@@ -20,7 +20,16 @@ type Message = {
   isStreaming?: boolean;
 };
 
-export function ChatWidget() {
+type ChatWidgetProps = {
+  pageContext?: {
+    url?: string;
+    title?: string;
+    description?: string;
+    [key: string]: any;
+  };
+};
+
+export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -176,6 +185,7 @@ export function ChatWidget() {
         data: {
           message: messageContent,
           sessionId: sessionId,
+          pageContext: pageContext || null,
         },
         onStart: (data) => {
           // Save session ID if it's new
