@@ -536,7 +536,7 @@ export function ChatWidget() {
             if (!open) setIsFullScreen(false);
           }}
         >
-          <DialogContent className='max-w-3xl w-[90vw] h-[85vh] p-0 border-none shadow-none overflow-hidden'>
+          <DialogContent className='max-w-3xl w-[90vw] h-[85vh] p-0 border-none shadow-none overflow-hidden focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'>
             <DialogTitle className='sr-only'>Pulse Assistant</DialogTitle>
             <ChatContent />
           </DialogContent>
