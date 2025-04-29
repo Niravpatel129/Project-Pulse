@@ -22,16 +22,15 @@ type Message = {
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const toggleChat = () => {
@@ -39,18 +38,20 @@ export function ChatWidget() {
     // Reset full screen when closing chat
     if (isOpen) {
       setIsFullScreen(false);
+    } else {
+      // Focus input when opening chat
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
     }
   };
 
   const toggleFullScreen = () => {
     setIsFullScreen(!isFullScreen);
-  };
-
-  // Fixed input change handler to maintain cursor position
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-
-    setInput(value);
+    // Refocus after state change
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -74,7 +75,7 @@ export function ChatWidget() {
     }
   };
 
-  const setupStreamConnection = (userMessageId: string) => {
+  const setupStreamConnection = (userMessageId: string, messageContent: string) => {
     // Cancel any ongoing stream request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -103,7 +104,7 @@ export function ChatWidget() {
         endpoint: '/ai/chat/stream',
         method: 'POST',
         data: {
-          message: input.trim(),
+          message: messageContent,
           sessionId: sessionId,
         },
         onStart: (data) => {
@@ -194,11 +195,13 @@ export function ChatWidget() {
   };
 
   const handleSendMessage = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!inputRef.current || !inputRef.current.value.trim() || isLoading) return;
+
+    const messageContent = inputRef.current.value.trim();
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: input.trim(),
+      content: messageContent,
       sender: 'user',
       timestamp: new Date(),
     };
@@ -206,12 +209,14 @@ export function ChatWidget() {
     setMessages((prev) => {
       return [...prev, userMessage];
     });
-    setInput('');
+
+    // Clear the input field
+    inputRef.current.value = '';
     setIsLoading(true);
 
     try {
       // Use streaming API
-      setupStreamConnection(userMessage.id);
+      setupStreamConnection(userMessage.id, messageContent);
     } catch (error) {
       console.error('Error sending message:', error);
 
@@ -331,18 +336,17 @@ export function ChatWidget() {
           <div className='flex gap-2'>
             <TextareaAutosize
               ref={inputRef}
-              value={input}
-              onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder='Type a message...'
               className='min-h-[40px] max-h-[120px] resize-none flex-1 px-3 py-2 text-sm rounded-md border border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
               disabled={isLoading}
               maxRows={4}
+              autoFocus={isOpen}
             />
             <Button
               onClick={handleSendMessage}
               size='icon'
-              disabled={!input.trim() || isLoading}
+              disabled={isLoading}
               className={cn('shrink-0', isLoading && 'opacity-50 cursor-not-allowed')}
             >
               <SendIcon className='h-4 w-4' />
