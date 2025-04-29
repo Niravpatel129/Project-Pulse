@@ -526,8 +526,6 @@ export function ChatWidget() {
         </Button>
       )}
 
-      {/* Use Dialog only for fullscreen mode */}
-      {/* Use Dialog only for fullscreen mode */}
       {isFullScreen ? (
         <Dialog
           open={isOpen}
@@ -542,7 +540,6 @@ export function ChatWidget() {
           </DialogContent>
         </Dialog>
       ) : (
-        // Use custom positioning for the small widget at bottom right
         isOpen && (
           <div className='absolute bottom-2 right-0 w-80 md:w-96 rounded-lg shadow-lg overflow-hidden animate-in slide-in-from-bottom duration-300'>
             <ChatContent />
