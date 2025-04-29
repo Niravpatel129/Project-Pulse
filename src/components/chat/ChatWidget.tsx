@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { newRequest } from '@/utils/newRequest';
+import { newRequest, streamRequest } from '@/utils/newRequest';
 import { MessageCircle, RefreshCw, SendIcon, Trash2, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -202,159 +202,59 @@ export function ChatWidget() {
     setIsStreaming(true);
 
     try {
-      // Create POST data
-      const body = JSON.stringify({
-        message: input.trim(),
-        sessionId: sessionId,
-      });
-
-      // Get base URL from utility
-      const baseURL = newRequest.defaults.baseURL || '';
-      const url = `${baseURL}/ai/chat/stream`;
-
-      // Make a POST request to create the streaming endpoint
-      fetch(url, {
+      // Use our streamRequest utility instead of fetch
+      const cancelStream = streamRequest({
+        endpoint: '/ai/chat/stream',
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+        data: {
+          message: input.trim(),
+          sessionId: sessionId,
         },
-        body,
-        signal: abortControllerRef.current.signal,
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error('Failed to initialize stream');
+        onStart: (data) => {
+          // Save session ID if it's new
+          if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
+            setSessionId(data.sessionId);
+            localStorage.setItem('chatSessionId', data.sessionId);
           }
-
-          // Extract reader from response
-          const reader = response.body?.getReader();
-          if (!reader) {
-            throw new Error('Cannot read response body');
-          }
-
-          // Process the stream chunks
-          const decoder = new TextDecoder();
-          let buffer = '';
-
-          function processChunks() {
-            reader
-              .read()
-              .then(({ done, value }) => {
-                if (done) {
-                  // Streaming is complete
-                  setMessages((prev) => {
-                    return prev.map((msg) => {
-                      if (msg.id === `ai-${userMessageId}`) {
-                        return { ...msg, isStreaming: false };
-                      }
-                      return msg;
-                    });
-                  });
-                  setIsStreaming(false);
-                  setIsLoading(false);
-                  return;
-                }
-
-                // Decode this chunk and add it to our buffer
-                const chunk = decoder.decode(value, { stream: true });
-                buffer += chunk;
-
-                // Process complete SSE messages from the buffer
-                let boundaryIndex;
-                while ((boundaryIndex = buffer.indexOf('\n\n')) !== -1) {
-                  const eventData = buffer.slice(0, boundaryIndex);
-                  buffer = buffer.slice(boundaryIndex + 2);
-
-                  // Process each SSE data line
-                  if (eventData.startsWith('data: ')) {
-                    try {
-                      const data = JSON.parse(eventData.substring(6));
-
-                      if (data.type === 'start') {
-                        // Save session ID if it's new
-                        if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
-                          setSessionId(data.sessionId);
-                          localStorage.setItem('chatSessionId', data.sessionId);
-                        }
-                      } else if (data.type === 'chunk') {
-                        // Update streaming message with new chunk
-                        setMessages((prev) => {
-                          return prev.map((msg) => {
-                            if (msg.id === `ai-${userMessageId}`) {
-                              return {
-                                ...msg,
-                                content: msg.content + (data.content || ''),
-                              };
-                            }
-                            return msg;
-                          });
-                        });
-                      } else if (data.type === 'end') {
-                        // Handled when done is true
-                      } else if (data.type === 'error') {
-                        // Handle error during streaming
-                        setMessages((prev) => {
-                          return prev.map((msg) => {
-                            if (msg.id === `ai-${userMessageId}`) {
-                              return {
-                                ...msg,
-                                content:
-                                  'Sorry, there was an error processing your request. Please try again.',
-                                isStreaming: false,
-                              };
-                            }
-                            return msg;
-                          });
-                        });
-
-                        setIsStreaming(false);
-                        setIsLoading(false);
-                        reader.cancel();
-                        return;
-                      }
-                    } catch (e) {
-                      console.error('Error parsing SSE data:', e);
-                    }
-                  }
-                }
-
-                // Continue reading the next chunk
-                processChunks();
-              })
-              .catch((error) => {
-                console.error('Error reading from stream:', error);
-                // Handle error
-                setMessages((prev) => {
-                  return prev.map((msg) => {
-                    if (msg.id === `ai-${userMessageId}`) {
-                      return {
-                        ...msg,
-                        content: 'Connection error. Please try again later.',
-                        isStreaming: false,
-                      };
-                    }
-                    return msg;
-                  });
-                });
-
-                setIsStreaming(false);
-                setIsLoading(false);
-              });
-          }
-
-          // Start processing chunks
-          processChunks();
-        })
-        .catch((error) => {
-          console.error('Error setting up stream:', error);
-
-          // Handle connection error
+        },
+        onChunk: (data) => {
+          // Update streaming message with new chunk
           setMessages((prev) => {
             return prev.map((msg) => {
               if (msg.id === `ai-${userMessageId}`) {
                 return {
                   ...msg,
-                  content: 'Connection error. Please try again later.',
+                  content: msg.content + (data.content || ''),
+                };
+              }
+              return msg;
+            });
+          });
+        },
+        onEnd: () => {
+          // Streaming is complete
+          setMessages((prev) => {
+            return prev.map((msg) => {
+              if (msg.id === `ai-${userMessageId}`) {
+                return { ...msg, isStreaming: false };
+              }
+              return msg;
+            });
+          });
+          setIsStreaming(false);
+          setIsLoading(false);
+          abortControllerRef.current = null;
+        },
+        onError: (error) => {
+          console.error('Error in stream:', error);
+
+          // Handle error during streaming
+          setMessages((prev) => {
+            return prev.map((msg) => {
+              if (msg.id === `ai-${userMessageId}`) {
+                return {
+                  ...msg,
+                  content: 'Sorry, there was an error processing your request. Please try again.',
                   isStreaming: false,
                 };
               }
@@ -364,7 +264,18 @@ export function ChatWidget() {
 
           setIsStreaming(false);
           setIsLoading(false);
-        });
+          abortControllerRef.current = null;
+        },
+      });
+
+      // Store cancel function in abortController ref
+      if (abortControllerRef.current) {
+        const originalAbort = abortControllerRef.current.abort;
+        abortControllerRef.current.abort = () => {
+          cancelStream?.cancel();
+          originalAbort.call(abortControllerRef.current);
+        };
+      }
     } catch (error) {
       console.error('Error in setupStreamConnection:', error);
 
