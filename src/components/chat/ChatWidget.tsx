@@ -61,8 +61,12 @@ export function ChatWidget() {
   // Scroll to bottom helper function
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      messagesEndRef.current.scrollIntoView({ behavior: 'instant' });
     }
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
   }, []);
 
   // Handle scroll events to detect user scrolling
