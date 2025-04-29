@@ -43,8 +43,6 @@ export default function DashboardLayout({
     !isInvoiceViewPage &&
     !isPaymentSuccessPage;
 
-  const isInvoicesPage = pathname.includes('/invoices');
-  const isProjectPage = pathname.includes('/');
   const isLeadsPage = pathname.includes('/leads');
 
   const isFullPage = true;

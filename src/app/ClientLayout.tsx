@@ -1,5 +1,6 @@
 'use client';
 
+import ChatWidget from '@/components/chat/ChatWidget';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -26,6 +27,7 @@ export default function ClientLayout({
 
               <div className='flex flex-col min-h-screen'>
                 <main className='flex-1'>{children}</main>
+                <ChatWidget />
               </div>
             </TooltipProvider>
             <LoadingOverlay />
