@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { newRequest, streamRequest } from '@/utils/newRequest';
 import { Maximize2, MessageCircle, Minimize2, RefreshCw, SendIcon, Trash2, X } from 'lucide-react';
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import FocusLock from 'react-focus-lock';
 import ReactMarkdown from 'react-markdown';
 import TextareaAutosize from 'react-textarea-autosize';
@@ -30,41 +30,12 @@ export function ChatWidget() {
   const [isPolling, setIsPolling] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-
-  // Safe scrolling that doesn't interfere with user focus
-  const scrollToBottom = useCallback(() => {
-    if (!shouldAutoScroll || !scrollAreaRef.current) return;
-    // We need to access scrollAreaRef.current.scrollTo, but ScrollArea from shadcn doesn't
-    // directly expose this. Let's find the actual scrollable element.
-    const scrollableElement = scrollAreaRef.current.querySelector(
-      '[data-radix-scroll-area-viewport]',
-    );
-    if (scrollableElement) {
-      scrollableElement.scrollTop = scrollableElement.scrollHeight;
-    }
-  }, [shouldAutoScroll]);
-
-  // Improved scroll detection that's less aggressive
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    // Get the actual target as it will be the scrollable viewport
-    const target = e.target as HTMLDivElement;
-    const { scrollHeight, scrollTop, clientHeight } = target;
-    // Consider "at bottom" if within 100px of the bottom
-    const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
-    setShouldAutoScroll(isAtBottom);
-  };
-
-  // Scroll after messages update
-  useLayoutEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
 
   // Set up persistent focus handling
   useEffect(() => {
@@ -135,11 +106,6 @@ export function ChatWidget() {
       setIsLoading(false);
     }
   };
-
-  // Explicitly enable auto-scrolling when user sends a message
-  const enableAutoScroll = useCallback(() => {
-    setShouldAutoScroll(true);
-  }, []);
 
   const pollJobStatus = async (jobId: string) => {
     if (pollingIntervalRef.current) {
@@ -246,7 +212,6 @@ export function ChatWidget() {
       return [...prev, streamingMessage];
     });
     setIsStreaming(true);
-    enableAutoScroll();
 
     try {
       // Use our streamRequest utility instead of fetch
@@ -359,7 +324,6 @@ export function ChatWidget() {
     });
     setInput('');
     setIsLoading(true);
-    enableAutoScroll();
 
     try {
       // Use streaming API
@@ -433,7 +397,6 @@ export function ChatWidget() {
         {/* Chat Messages */}
         <ScrollArea
           className={cn('p-3', isFullScreen ? 'h-[calc(80vh-85px)]' : 'h-96')}
-          onScrollCapture={handleScroll}
           ref={scrollAreaRef}
         >
           <div className='flex flex-col gap-3'>
