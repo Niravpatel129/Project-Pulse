@@ -1,10 +1,11 @@
-import { handleInventoryCategoriesRequest, handleInventoryItemsRequest } from './inventory';
 import { handleInvoicesRequest } from './invoices';
 import { handleProjectFilesRequest } from './project-files';
 import { handleTemplatesRequest } from './templates';
 
 // Simulate network delay (between 200-500ms)
-const NETWORK_DELAY = () => {return Math.random() * 300 + 200};
+const NETWORK_DELAY = () => {
+  return Math.random() * 300 + 200;
+};
 
 type ApiHandler = (
   method: string,
@@ -19,8 +20,12 @@ type ApiHandler = (
 const API_HANDLERS: Record<string, ApiHandler> = {
   '/project-files': handleProjectFilesRequest,
   '/templates': handleTemplatesRequest,
-  '/inventory/items': handleInventoryItemsRequest,
-  '/inventory/categories': handleInventoryCategoriesRequest,
+  '/inventory/items': () => {
+    return Promise.resolve({});
+  },
+  '/inventory/categories': () => {
+    return Promise.resolve({});
+  },
   '/invoices': handleInvoicesRequest,
 };
 
@@ -34,7 +39,9 @@ export const handleMockApiRequest = async (
   data?: unknown,
 ): Promise<unknown> => {
   // Wait to simulate network delay
-  await new Promise((resolve) => {return setTimeout(resolve, NETWORK_DELAY())});
+  await new Promise((resolve) => {
+    return setTimeout(resolve, NETWORK_DELAY());
+  });
 
   // Find the appropriate handler for this endpoint
   const pathPattern = Object.keys(API_HANDLERS).find((pattern) => {
@@ -87,9 +94,15 @@ export const handleMockApiRequest = async (
 const createMockResponse = (data: unknown): Response => {
   // Create a mock response object
   const mockResponse = {
-    json: () => {return Promise.resolve(data)},
-    text: () => {return Promise.resolve(JSON.stringify(data))},
-    blob: () => {return Promise.resolve(new Blob([JSON.stringify(data)]))},
+    json: () => {
+      return Promise.resolve(data);
+    },
+    text: () => {
+      return Promise.resolve(JSON.stringify(data));
+    },
+    blob: () => {
+      return Promise.resolve(new Blob([JSON.stringify(data)]));
+    },
     ok: true,
     status: 200,
     statusText: 'OK',
@@ -104,8 +117,12 @@ const createMockResponse = (data: unknown): Response => {
     url: '',
     body: null,
     bodyUsed: false,
-    arrayBuffer: () => {return Promise.resolve(new ArrayBuffer(0))},
-    formData: () => {return Promise.resolve(new FormData())},
+    arrayBuffer: () => {
+      return Promise.resolve(new ArrayBuffer(0));
+    },
+    formData: () => {
+      return Promise.resolve(new FormData());
+    },
   };
 
   return mockResponse as unknown as Response;
