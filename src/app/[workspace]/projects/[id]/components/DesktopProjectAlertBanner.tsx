@@ -9,7 +9,6 @@ import useProjectAlert from '../hooks/useProjectAlert';
 export default function DesktopProjectAlertBanner() {
   const { alerts, dismissAlert, remindInThreeDays, updateProjectStatus, markProjectAsFinished } =
     useProjectAlert();
-  console.log('🚀 alerts:', alerts);
   const editorRef = useRef<HTMLDivElement | null>(null);
 
   // Clean up classes if component unmounts during animation
