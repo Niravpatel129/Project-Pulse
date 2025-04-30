@@ -15,6 +15,9 @@ export type InvoiceItem = {
   stock?: number;
   tax?: string;
   isAiPriced?: boolean;
+  labels?: string[];
+  quantity?: number;
+  isApiData?: boolean;
 };
 
 export type Client = {
@@ -47,52 +50,6 @@ export const useInvoiceWizard = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Sample items - in a real implementation, this would come from an API
-  const sampleItems: InvoiceItem[] = [
-    {
-      id: '1',
-      name: 'Custom T-Shirt Design',
-      description: "Original artwork for client's band merchandise",
-      price: 250.0,
-      date: 'Jun 15, 2023',
-      status: 'completed',
-      type: 'physical',
-      sku: 'TSHIRT-CUSTOM-001',
-      weight: '0.25 kg',
-      stock: 50,
-      tax: 'Standard',
-    },
-    {
-      id: '2',
-      name: 'Brand Identity Package',
-      description: 'Logo, color palette, and brand guidelines',
-      price: 1800.0,
-      date: 'Jul 2, 2023',
-      status: 'completed',
-      type: 'digital',
-    },
-    {
-      id: '3',
-      name: 'Marketing Materials',
-      description: 'Digital assets for social media campaign',
-      price: 950.0,
-      date: 'Jul 20, 2023',
-      status: 'in-progress',
-      type: 'digital',
-      isAiPriced: true,
-    },
-    {
-      id: '4',
-      name: 'SEO Optimization',
-      description: 'Keyword research and on-page optimization',
-      price: 750.0,
-      date: 'Aug 5, 2023',
-      status: 'pending',
-      type: 'digital',
-      isAiPriced: true,
-    },
-  ];
-
   const handleAddItem = (item: InvoiceItem) => {
     setSelectedItems([...selectedItems, item]);
   };
@@ -107,7 +64,8 @@ export const useInvoiceWizard = () => {
 
   const calculateSubtotal = () => {
     return selectedItems.reduce((sum, item) => {
-      return sum + item.price;
+      const quantity = item.quantity || 1;
+      return sum + item.price * quantity;
     }, 0);
   };
 
@@ -122,13 +80,67 @@ export const useInvoiceWizard = () => {
     try {
       const response = await newRequest.get(`/project-invoices/generate/${projectId}`);
       console.log('🚀 response:', response);
+
+      if (response.data.success && response.data.data) {
+        const { deliverables, projectTasks } = response.data.data;
+
+        // Convert deliverables to invoice items
+        const deliverableItems: InvoiceItem[] = deliverables.map(
+          (deliverable: any, index: number) => {
+            return {
+              id: `deliverable-${index}`,
+              name: deliverable.name,
+              description: deliverable.description,
+              price: deliverable.fields?.total || 0,
+              date: new Date(deliverable.createdAt).toLocaleDateString(),
+              type: deliverable.labels.includes('Digital') ? 'digital' : 'physical',
+              labels: deliverable.labels,
+              quantity: deliverable.fields?.quantity || 1,
+              isApiData: true,
+            };
+          },
+        );
+
+        // Convert project tasks to invoice items
+        const taskItems: InvoiceItem[] = projectTasks.map((task: any, index: number) => {
+          return {
+            id: `task-${index}`,
+            name: task.name,
+            description: task.description,
+            price: task.total || 0,
+            date: new Date().toLocaleDateString(),
+            type: 'digital',
+            labels: task.labels,
+            quantity: task.quantity || 1,
+            isApiData: true,
+          };
+        });
+
+        // Combine all items
+        const allItems = [...deliverableItems, ...taskItems];
+
+        // Calculate totals
+        const subtotal = allItems.reduce((sum, item) => {
+          return sum + item.price;
+        }, 0);
+
+        return {
+          invoiceNumber,
+          dueDate,
+          items: allItems,
+          total: subtotal,
+          subtotal,
+          projectId: projectId || '',
+        };
+      }
+
       return response.data;
     } catch (err) {
       console.log('🚀 err:', err);
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
       return null;
     }
-  }, [projectId]);
+  }, [projectId, invoiceNumber, dueDate]);
 
   const generateInvoice = async (): Promise<InvoiceData | null> => {
     if (selectedItems.length === 0) {
@@ -154,9 +166,15 @@ export const useInvoiceWizard = () => {
     const handleFetchInvoiceDetails = async () => {
       const invoiceDetails = await fetchInvoiceDetails();
       console.log('🚀 invoiceDetails:', invoiceDetails);
+
+      if (invoiceDetails?.items?.length) {
+        setSelectedItems(invoiceDetails.items);
+      }
     };
 
-    handleFetchInvoiceDetails();
+    if (projectId) {
+      handleFetchInvoiceDetails();
+    }
   }, [projectId, fetchInvoiceDetails]);
 
   return {
@@ -167,7 +185,6 @@ export const useInvoiceWizard = () => {
     selectedClient,
     isGenerating,
     error,
-    sampleItems,
     setSelectedItems,
     setInvoiceNumber,
     setDueDate,

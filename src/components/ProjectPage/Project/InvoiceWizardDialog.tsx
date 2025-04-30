@@ -36,7 +36,6 @@ const InvoiceWizardDialog = ({
     aiSuggestions,
     isGenerating,
     error,
-    sampleItems,
     setInvoiceNumber,
     setDueDate,
     setAiSuggestions,
@@ -44,6 +43,7 @@ const InvoiceWizardDialog = ({
     calculateSubtotal,
     calculateTotal,
     generateInvoice,
+    handleRemoveItem,
   } = useInvoiceWizard();
 
   const [activeTab, setActiveTab] = useState('items');
@@ -334,89 +334,246 @@ const InvoiceWizardDialog = ({
                       <TabsTrigger value='tasks'>Tasks & Hours</TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value='deliverables' className='space-y-4'>
-                      {sampleItems.map((item) => {
-                        return (
-                          <div key={item.id} className='border rounded-lg p-4 relative'>
-                            <div className='flex justify-between'>
-                              <div>
-                                <div className='flex items-center gap-2'>
-                                  <h3 className='font-medium'>{item.name}</h3>
-                                  <Badge
-                                    variant={item.status === 'completed' ? 'default' : 'outline'}
-                                    className='text-xs'
-                                  >
-                                    {item.status}
-                                  </Badge>
-                                  {item.type === 'physical' && (
-                                    <Badge
-                                      variant='outline'
-                                      className='bg-blue-50 text-blue-600 border-blue-200 text-xs'
-                                    >
-                                      Physical Product
-                                    </Badge>
-                                  )}
-                                  {item.isAiPriced && (
-                                    <Badge
-                                      variant='outline'
-                                      className='bg-amber-50 text-amber-600 border-amber-200 text-xs'
-                                    >
-                                      AI Priced
-                                    </Badge>
-                                  )}
-                                </div>
-                                <p className='text-gray-500 text-sm mt-1'>{item.description}</p>
-                              </div>
-                              <Button
-                                variant='outline'
-                                onClick={() => {
-                                  handleAddItem(item);
-                                }}
-                                className='bg-black text-white hover:bg-gray-800'
-                              >
-                                Add
-                              </Button>
-                            </div>
+                    <TabsContent value='deliverables' className='space-y-6'>
+                      {/* Show API delivered items first */}
+                      {selectedItems.filter((item) => {
+                        return !item.id.startsWith('task-') && item.isApiData;
+                      }).length > 0 ? (
+                        <div>
+                          <h3 className='font-medium text-sm mb-3'>Project Deliverables</h3>
+                          <div className='space-y-4'>
+                            {selectedItems
+                              .filter((item) => {
+                                return !item.id.startsWith('task-') && item.isApiData;
+                              })
+                              .map((item) => {
+                                return (
+                                  <div key={item.id} className='border rounded-lg p-4 relative'>
+                                    <div className='flex justify-between'>
+                                      <div>
+                                        <div className='flex items-center gap-2 flex-wrap'>
+                                          <h3 className='font-medium'>{item.name}</h3>
+                                          <Badge
+                                            variant={
+                                              item.status === 'completed' ? 'default' : 'outline'
+                                            }
+                                            className='text-xs'
+                                          >
+                                            {item.status}
+                                          </Badge>
+                                          {item.type === 'physical' && (
+                                            <Badge
+                                              variant='outline'
+                                              className='bg-blue-50 text-blue-600 border-blue-200 text-xs'
+                                            >
+                                              Physical Product
+                                            </Badge>
+                                          )}
+                                          {item.labels?.map((label, index) => {
+                                            return (
+                                              <Badge
+                                                key={`${item.id}-label-${index}`}
+                                                variant='outline'
+                                                className='bg-gray-50 text-gray-600 border-gray-200 text-xs'
+                                              >
+                                                {label}
+                                              </Badge>
+                                            );
+                                          })}
+                                        </div>
+                                        <p className='text-gray-500 text-sm mt-1'>
+                                          {item.description}
+                                        </p>
+                                      </div>
+                                      <Button
+                                        variant='outline'
+                                        onClick={() => {
+                                          return handleRemoveItem(item.id);
+                                        }}
+                                        className='text-red-500 hover:bg-red-50'
+                                      >
+                                        Remove
+                                      </Button>
+                                    </div>
 
-                            <div className='mt-3 flex items-center gap-2'>
-                              <span className='text-gray-700'>${item.price.toFixed(2)}</span>
-                              <span className='text-gray-400'>•</span>
-                              <span className='text-gray-500 text-sm'>{item.date}</span>
-                            </div>
-
-                            {item.sku && (
-                              <div className='mt-3 flex flex-wrap gap-x-6 gap-y-2 text-xs text-gray-500'>
-                                <div className='flex items-center gap-1'>
-                                  <span>SKU:</span>
-                                  <span className='text-gray-700'>{item.sku}</span>
-                                </div>
-                                {item.weight && (
-                                  <div className='flex items-center gap-1'>
-                                    <span>Weight:</span>
-                                    <span className='text-gray-700'>{item.weight}</span>
+                                    <div className='mt-3 flex items-center gap-2'>
+                                      <span className='text-gray-700'>
+                                        ${item.price.toFixed(2)}
+                                      </span>
+                                      {item.quantity && item.quantity > 1 && (
+                                        <>
+                                          <span className='text-gray-400'>•</span>
+                                          <span className='text-gray-500 text-sm'>
+                                            Qty: {item.quantity}
+                                          </span>
+                                        </>
+                                      )}
+                                      <span className='text-gray-400'>•</span>
+                                      <span className='text-gray-500 text-sm'>{item.date}</span>
+                                    </div>
                                   </div>
-                                )}
-                                {item.stock !== undefined && (
-                                  <div className='flex items-center gap-1'>
-                                    <span>Stock:</span>
-                                    <span className='text-gray-700'>{item.stock} units</span>
-                                  </div>
-                                )}
-                                {item.tax && (
-                                  <div className='flex items-center gap-1'>
-                                    <span>Tax:</span>
-                                    <span className='text-gray-700'>{item.tax}</span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
+                                );
+                              })}
                           </div>
-                        );
-                      })}
+                        </div>
+                      ) : (
+                        <div className='py-8 text-center text-gray-500'>
+                          No items found.
+                          <p className='text-sm mt-2'>
+                            If no items are showing, try refreshing the page or check your project
+                            settings.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Show any selected non-API items */}
+                      {selectedItems.filter((item) => {
+                        return !item.id.startsWith('task-') && !item.isApiData;
+                      }).length > 0 && (
+                        <div>
+                          <h3 className='font-medium text-sm mb-3'>Added Custom Items</h3>
+                          <div className='space-y-4'>
+                            {selectedItems
+                              .filter((item) => {
+                                return !item.id.startsWith('task-') && !item.isApiData;
+                              })
+                              .map((item) => {
+                                return (
+                                  <div
+                                    key={item.id}
+                                    className='border rounded-lg p-4 border-green-200 bg-green-50'
+                                  >
+                                    <div className='flex justify-between'>
+                                      <div>
+                                        <div className='flex items-center gap-2 flex-wrap'>
+                                          <h3 className='font-medium'>{item.name}</h3>
+                                          <Badge
+                                            variant={
+                                              item.status === 'completed' ? 'default' : 'outline'
+                                            }
+                                            className='text-xs'
+                                          >
+                                            {item.status}
+                                          </Badge>
+                                          {item.type === 'physical' && (
+                                            <Badge
+                                              variant='outline'
+                                              className='bg-blue-50 text-blue-600 border-blue-200 text-xs'
+                                            >
+                                              Physical Product
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        <p className='text-gray-500 text-sm mt-1'>
+                                          {item.description}
+                                        </p>
+                                      </div>
+                                      <Button
+                                        variant='outline'
+                                        onClick={() => {
+                                          return handleRemoveItem(item.id);
+                                        }}
+                                        className='text-red-500 hover:bg-red-50 border-red-200'
+                                      >
+                                        Remove
+                                      </Button>
+                                    </div>
+
+                                    <div className='mt-3 flex items-center gap-2'>
+                                      <span className='text-gray-700'>
+                                        ${item.price.toFixed(2)}
+                                      </span>
+                                      {item.quantity && item.quantity > 1 && (
+                                        <>
+                                          <span className='text-gray-400'>•</span>
+                                          <span className='text-gray-500 text-sm'>
+                                            Qty: {item.quantity}
+                                          </span>
+                                        </>
+                                      )}
+                                      <span className='text-gray-400'>•</span>
+                                      <span className='text-gray-500 text-sm'>{item.date}</span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        </div>
+                      )}
                     </TabsContent>
 
-                    <TabsContent value='tasks'>
-                      <div className='py-8 text-center text-gray-500'>No tasks available</div>
+                    <TabsContent value='tasks' className='space-y-6'>
+                      {selectedItems.filter((item) => {
+                        return item.id.startsWith('task-') && item.isApiData;
+                      }).length > 0 ? (
+                        <div>
+                          <h3 className='font-medium text-sm mb-3'>Project Tasks</h3>
+                          <div className='space-y-4'>
+                            {selectedItems
+                              .filter((item) => {
+                                return item.id.startsWith('task-') && item.isApiData;
+                              })
+                              .map((item) => {
+                                return (
+                                  <div key={item.id} className='border rounded-lg p-4 relative'>
+                                    <div className='flex justify-between'>
+                                      <div>
+                                        <div className='flex items-center gap-2 flex-wrap'>
+                                          <h3 className='font-medium'>{item.name}</h3>
+                                          {item.labels?.map((label, index) => {
+                                            return (
+                                              <Badge
+                                                key={`${item.id}-label-${index}`}
+                                                variant='outline'
+                                                className='bg-purple-50 text-purple-600 border-purple-200 text-xs'
+                                              >
+                                                {label}
+                                              </Badge>
+                                            );
+                                          })}
+                                        </div>
+                                        <p className='text-gray-500 text-sm mt-1'>
+                                          {item.description}
+                                        </p>
+                                      </div>
+                                      <Button
+                                        variant='outline'
+                                        onClick={() => {
+                                          return handleRemoveItem(item.id);
+                                        }}
+                                        className='text-red-500 hover:bg-red-50'
+                                      >
+                                        Remove
+                                      </Button>
+                                    </div>
+
+                                    <div className='mt-3 flex items-center gap-2'>
+                                      <span className='text-gray-700'>
+                                        ${item.price.toFixed(2)}
+                                      </span>
+                                      {item.quantity && (
+                                        <>
+                                          <span className='text-gray-400'>•</span>
+                                          <span className='text-gray-500 text-sm'>
+                                            {item.quantity} {item.quantity === 1 ? 'hour' : 'hours'}
+                                          </span>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className='py-8 text-center text-gray-500'>
+                          Tasks from the project will appear here automatically.
+                          <p className='text-sm mt-2'>
+                            If no tasks are showing, try refreshing the page or check your project
+                            settings.
+                          </p>
+                        </div>
+                      )}
                     </TabsContent>
                   </Tabs>
                 )}
@@ -854,12 +1011,32 @@ const InvoiceWizardDialog = ({
                     <div className='space-y-2 mt-2'>
                       {selectedItems.map((item) => {
                         return (
-                          <div key={item.id} className='flex justify-between'>
-                            <span>{item.name}</span>
-                            <div className='flex gap-8'>
-                              <span>1</span>
+                          <div
+                            key={item.id}
+                            className='flex justify-between items-start py-2 border-b'
+                          >
+                            <div className='max-w-[180px]'>
+                              <div className='font-medium'>{item.name}</div>
+                              {item.labels && item.labels.length > 0 && (
+                                <div className='flex flex-wrap gap-1 mt-1'>
+                                  {item.labels.map((label, index) => {
+                                    return (
+                                      <Badge
+                                        key={`${item.id}-preview-${index}`}
+                                        variant='outline'
+                                        className='text-xs px-1 py-0'
+                                      >
+                                        {label}
+                                      </Badge>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                            <div className='flex gap-8 text-sm'>
+                              <span>{item.quantity || 1}</span>
                               <span>${item.price.toFixed(2)}</span>
-                              <span>${item.price.toFixed(2)}</span>
+                              <span>${((item.quantity || 1) * item.price).toFixed(2)}</span>
                             </div>
                           </div>
                         );
