@@ -44,6 +44,7 @@ const InvoiceWizardDialog = ({
     calculateTotal,
     generateInvoice,
     handleRemoveItem,
+    setSelectedItems,
   } = useInvoiceWizard();
 
   const [activeTab, setActiveTab] = useState('items');
@@ -53,6 +54,8 @@ const InvoiceWizardDialog = ({
   const [notes, setNotes] = useState('');
   const [shippingRequired, setShippingRequired] = useState(false);
   const [hasPhysicalProducts, setHasPhysicalProducts] = useState(false);
+  const [removedItems, setRemovedItems] = useState<any[]>([]);
+  const [allItems, setAllItems] = useState<any[]>([]);
 
   // Shipping related states
   const [selectedShippingMethod, setSelectedShippingMethod] = useState<any>(null);
@@ -92,6 +95,19 @@ const InvoiceWizardDialog = ({
     if (physical) {
       setShippingRequired(true);
     }
+
+    // Update allItems with selectedItems that aren't already there
+    setAllItems((prev) => {
+      const existingIds = new Set(
+        prev.map((item) => {
+          return item.id;
+        }),
+      );
+      const newItems = selectedItems.filter((item) => {
+        return !existingIds.has(item.id);
+      });
+      return [...prev, ...newItems];
+    });
   }, [selectedItems]);
 
   const handleSelectClient = (client: any) => {
@@ -124,6 +140,87 @@ const InvoiceWizardDialog = ({
       // Handle successful invoice creation - could close dialog or show success message
       onOpenChange(false);
     }
+  };
+
+  const handleItemRemove = (item: any) => {
+    setRemovedItems((prev) => {
+      return [...prev, item];
+    });
+    handleRemoveItem(item.id);
+  };
+
+  const handleAddRemovedItem = (item: any) => {
+    handleAddItem(item);
+    setRemovedItems((prev) => {
+      return prev.filter((removedItem) => {
+        return removedItem.id !== item.id;
+      });
+    });
+  };
+
+  // Function to check if an item is in the selectedItems array
+  const isItemSelected = (itemId: string) => {
+    return selectedItems.some((item) => {
+      return item.id === itemId;
+    });
+  };
+
+  // Toggle item selection
+  const toggleItemSelection = (item: any) => {
+    if (isItemSelected(item.id)) {
+      handleRemoveItem(item.id);
+    } else {
+      handleAddItem(item);
+    }
+  };
+
+  // Replace the addAllItems function with a version that adds all items at once
+  const addAllItems = (type: 'task' | 'deliverable') => {
+    // Get all items of the specified type that aren't already selected
+    const itemsToAdd = allItems.filter((item) => {
+      const isTask = item.id.startsWith('task-');
+      return (type === 'task' ? isTask : !isTask) && !isItemSelected(item.id);
+    });
+
+    // Add all items at once by updating the state directly
+    if (itemsToAdd.length > 0) {
+      setSelectedItems([...selectedItems, ...itemsToAdd]);
+    }
+  };
+
+  const removeAllItems = (type: 'task' | 'deliverable') => {
+    // Keep only items that are NOT of the specified type
+    setSelectedItems(
+      selectedItems.filter((item) => {
+        const isTask = item.id.startsWith('task-');
+        // If type is 'task', keep non-tasks. If type is 'deliverable', keep tasks.
+        return type === 'task' ? !isTask : isTask;
+      }),
+    );
+  };
+
+  // Function to check if all items of a type are selected
+  const areAllItemsSelected = (type: 'task' | 'deliverable') => {
+    const typeItems = allItems.filter((item) => {
+      const isTask = item.id.startsWith('task-');
+      return type === 'task' ? isTask : !isTask;
+    });
+
+    // If there are no items of this type, return false
+    if (typeItems.length === 0) return false;
+
+    // Check if all items of this type are selected
+    return typeItems.every((item) => {
+      return isItemSelected(item.id);
+    });
+  };
+
+  // Function to check if any items of a type are selected
+  const areAnyItemsSelected = (type: 'task' | 'deliverable') => {
+    return selectedItems.some((item) => {
+      const isTask = item.id.startsWith('task-');
+      return type === 'task' ? isTask : !isTask;
+    });
   };
 
   return (
@@ -335,20 +432,57 @@ const InvoiceWizardDialog = ({
                     </TabsList>
 
                     <TabsContent value='deliverables' className='space-y-6'>
-                      {/* Show API delivered items first */}
-                      {selectedItems.filter((item) => {
-                        return !item.id.startsWith('task-') && item.isApiData;
+                      {allItems.filter((item) => {
+                        return !item.id.startsWith('task-');
                       }).length > 0 ? (
                         <div>
-                          <h3 className='font-medium text-sm mb-3'>Project Deliverables</h3>
+                          <div className='flex justify-between items-center mb-3'>
+                            <h3 className='font-medium text-sm'>Project Deliverables</h3>
+                            <Button
+                              variant='outline'
+                              size='sm'
+                              onClick={() => {
+                                return areAllItemsSelected('deliverable')
+                                  ? removeAllItems('deliverable')
+                                  : addAllItems('deliverable');
+                              }}
+                              className={
+                                areAllItemsSelected('deliverable')
+                                  ? 'text-red-500 border-red-200 hover:bg-red-50'
+                                  : 'text-green-600 border-green-200 hover:bg-green-50'
+                              }
+                              disabled={
+                                !areAllItemsSelected('deliverable') &&
+                                allItems.filter((item) => {
+                                  return !item.id.startsWith('task-');
+                                }).length === 0
+                              }
+                            >
+                              {areAllItemsSelected('deliverable') ? (
+                                <>
+                                  <Check className='h-4 w-4 mr-1' /> Remove All
+                                </>
+                              ) : (
+                                <>
+                                  <Plus className='h-4 w-4 mr-1' /> Add All
+                                </>
+                              )}
+                            </Button>
+                          </div>
                           <div className='space-y-4'>
-                            {selectedItems
+                            {allItems
                               .filter((item) => {
-                                return !item.id.startsWith('task-') && item.isApiData;
+                                return !item.id.startsWith('task-');
                               })
                               .map((item) => {
+                                const selected = isItemSelected(item.id);
                                 return (
-                                  <div key={item.id} className='border rounded-lg p-4 relative'>
+                                  <div
+                                    key={item.id}
+                                    className={`border rounded-lg p-4 relative ${
+                                      selected ? '' : 'border-gray-200 bg-gray-50'
+                                    }`}
+                                  >
                                     <div className='flex justify-between'>
                                       <div>
                                         <div className='flex items-center gap-2 flex-wrap'>
@@ -388,11 +522,15 @@ const InvoiceWizardDialog = ({
                                       <Button
                                         variant='outline'
                                         onClick={() => {
-                                          return handleRemoveItem(item.id);
+                                          return toggleItemSelection(item);
                                         }}
-                                        className='text-red-500 hover:bg-red-50'
+                                        className={
+                                          selected
+                                            ? 'text-red-500 hover:bg-red-50'
+                                            : 'text-green-500 hover:bg-green-50 border-green-200'
+                                        }
                                       >
-                                        Remove
+                                        {selected ? 'Remove' : 'Add'}
                                       </Button>
                                     </div>
 
@@ -425,97 +563,60 @@ const InvoiceWizardDialog = ({
                           </p>
                         </div>
                       )}
-
-                      {/* Show any selected non-API items */}
-                      {selectedItems.filter((item) => {
-                        return !item.id.startsWith('task-') && !item.isApiData;
-                      }).length > 0 && (
-                        <div>
-                          <h3 className='font-medium text-sm mb-3'>Added Custom Items</h3>
-                          <div className='space-y-4'>
-                            {selectedItems
-                              .filter((item) => {
-                                return !item.id.startsWith('task-') && !item.isApiData;
-                              })
-                              .map((item) => {
-                                return (
-                                  <div
-                                    key={item.id}
-                                    className='border rounded-lg p-4 border-green-200 bg-green-50'
-                                  >
-                                    <div className='flex justify-between'>
-                                      <div>
-                                        <div className='flex items-center gap-2 flex-wrap'>
-                                          <h3 className='font-medium'>{item.name}</h3>
-                                          <Badge
-                                            variant={
-                                              item.status === 'completed' ? 'default' : 'outline'
-                                            }
-                                            className='text-xs'
-                                          >
-                                            {item.status}
-                                          </Badge>
-                                          {item.type === 'physical' && (
-                                            <Badge
-                                              variant='outline'
-                                              className='bg-blue-50 text-blue-600 border-blue-200 text-xs'
-                                            >
-                                              Physical Product
-                                            </Badge>
-                                          )}
-                                        </div>
-                                        <p className='text-gray-500 text-sm mt-1'>
-                                          {item.description}
-                                        </p>
-                                      </div>
-                                      <Button
-                                        variant='outline'
-                                        onClick={() => {
-                                          return handleRemoveItem(item.id);
-                                        }}
-                                        className='text-red-500 hover:bg-red-50 border-red-200'
-                                      >
-                                        Remove
-                                      </Button>
-                                    </div>
-
-                                    <div className='mt-3 flex items-center gap-2'>
-                                      <span className='text-gray-700'>
-                                        ${item.price.toFixed(2)}
-                                      </span>
-                                      {item.quantity && item.quantity > 1 && (
-                                        <>
-                                          <span className='text-gray-400'>•</span>
-                                          <span className='text-gray-500 text-sm'>
-                                            Qty: {item.quantity}
-                                          </span>
-                                        </>
-                                      )}
-                                      <span className='text-gray-400'>•</span>
-                                      <span className='text-gray-500 text-sm'>{item.date}</span>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                          </div>
-                        </div>
-                      )}
                     </TabsContent>
 
                     <TabsContent value='tasks' className='space-y-6'>
-                      {selectedItems.filter((item) => {
-                        return item.id.startsWith('task-') && item.isApiData;
+                      {allItems.filter((item) => {
+                        return item.id.startsWith('task-');
                       }).length > 0 ? (
                         <div>
-                          <h3 className='font-medium text-sm mb-3'>Project Tasks</h3>
+                          <div className='flex justify-between items-center mb-3'>
+                            <h3 className='font-medium text-sm'>Project Tasks</h3>
+                            <Button
+                              variant='outline'
+                              size='sm'
+                              onClick={() => {
+                                return areAllItemsSelected('task')
+                                  ? removeAllItems('task')
+                                  : addAllItems('task');
+                              }}
+                              className={
+                                areAllItemsSelected('task')
+                                  ? 'text-red-500 border-red-200 hover:bg-red-50'
+                                  : 'text-green-600 border-green-200 hover:bg-green-50'
+                              }
+                              disabled={
+                                !areAllItemsSelected('task') &&
+                                allItems.filter((item) => {
+                                  return item.id.startsWith('task-');
+                                }).length === 0
+                              }
+                            >
+                              {areAllItemsSelected('task') ? (
+                                <>
+                                  <Check className='h-4 w-4 mr-1' /> Remove All
+                                </>
+                              ) : (
+                                <>
+                                  <Plus className='h-4 w-4 mr-1' /> Add All
+                                </>
+                              )}
+                            </Button>
+                          </div>
                           <div className='space-y-4'>
-                            {selectedItems
+                            {allItems
                               .filter((item) => {
-                                return item.id.startsWith('task-') && item.isApiData;
+                                return item.id.startsWith('task-');
                               })
                               .map((item) => {
+                                const selected = isItemSelected(item.id);
                                 return (
-                                  <div key={item.id} className='border rounded-lg p-4 relative'>
+                                  <div
+                                    key={item.id}
+                                    className={`border rounded-lg p-4 relative ${
+                                      selected ? '' : 'border-gray-200 bg-gray-50'
+                                    }`}
+                                  >
                                     <div className='flex justify-between'>
                                       <div>
                                         <div className='flex items-center gap-2 flex-wrap'>
@@ -539,11 +640,15 @@ const InvoiceWizardDialog = ({
                                       <Button
                                         variant='outline'
                                         onClick={() => {
-                                          return handleRemoveItem(item.id);
+                                          return toggleItemSelection(item);
                                         }}
-                                        className='text-red-500 hover:bg-red-50'
+                                        className={
+                                          selected
+                                            ? 'text-red-500 hover:bg-red-50'
+                                            : 'text-green-500 hover:bg-green-50 border-green-200'
+                                        }
                                       >
-                                        Remove
+                                        {selected ? 'Remove' : 'Add'}
                                       </Button>
                                     </div>
 
