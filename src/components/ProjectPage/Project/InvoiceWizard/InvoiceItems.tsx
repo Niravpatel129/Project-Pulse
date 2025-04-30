@@ -26,6 +26,10 @@ const InvoiceItems = ({
   removeAllItems,
   areAllItemsSelected,
 }: InvoiceItemsProps) => {
+  // Get current selection states for tasks and deliverables
+  const areTasksAllSelected = areAllItemsSelected('task');
+  const areDeliverablesAllSelected = areAllItemsSelected('deliverable');
+
   return (
     <Tabs defaultValue='deliverables'>
       <TabsList className='mb-4'>
@@ -44,23 +48,23 @@ const InvoiceItems = ({
                 variant='outline'
                 size='sm'
                 onClick={() => {
-                  return areAllItemsSelected('deliverable')
+                  return areDeliverablesAllSelected
                     ? removeAllItems('deliverable')
                     : addAllItems('deliverable');
                 }}
                 className={
-                  areAllItemsSelected('deliverable')
+                  areDeliverablesAllSelected
                     ? 'text-red-500 border-red-200 hover:bg-red-50'
                     : 'text-green-600 border-green-200 hover:bg-green-50'
                 }
                 disabled={
-                  !areAllItemsSelected('deliverable') &&
+                  !areDeliverablesAllSelected &&
                   allItems.filter((item) => {
                     return !item.id.startsWith('task-');
                   }).length === 0
                 }
               >
-                {areAllItemsSelected('deliverable') ? (
+                {areDeliverablesAllSelected ? (
                   <>
                     <Check className='h-4 w-4 mr-1' /> Remove All
                   </>
@@ -80,7 +84,7 @@ const InvoiceItems = ({
                   const selected = isItemSelected(item.id);
                   return (
                     <div
-                      key={item.id}
+                      key={`${item.id}-${selected ? 'selected' : 'not-selected'}`}
                       className={`border rounded-lg p-4 relative ${
                         selected ? '' : 'border-gray-200 bg-gray-50'
                       }`}
@@ -304,21 +308,21 @@ const InvoiceItems = ({
                 variant='outline'
                 size='sm'
                 onClick={() => {
-                  return areAllItemsSelected('task') ? removeAllItems('task') : addAllItems('task');
+                  return areTasksAllSelected ? removeAllItems('task') : addAllItems('task');
                 }}
                 className={
-                  areAllItemsSelected('task')
+                  areTasksAllSelected
                     ? 'text-red-500 border-red-200 hover:bg-red-50'
                     : 'text-green-600 border-green-200 hover:bg-green-50'
                 }
                 disabled={
-                  !areAllItemsSelected('task') &&
+                  !areTasksAllSelected &&
                   allItems.filter((item) => {
                     return item.id.startsWith('task-');
                   }).length === 0
                 }
               >
-                {areAllItemsSelected('task') ? (
+                {areTasksAllSelected ? (
                   <>
                     <Check className='h-4 w-4 mr-1' /> Remove All
                   </>
@@ -338,7 +342,7 @@ const InvoiceItems = ({
                   const selected = isItemSelected(item.id);
                   return (
                     <div
-                      key={item.id}
+                      key={`${item.id}-${selected ? 'selected' : 'not-selected'}`}
                       className={`border rounded-lg p-4 relative ${
                         selected ? '' : 'border-gray-200 bg-gray-50'
                       }`}
