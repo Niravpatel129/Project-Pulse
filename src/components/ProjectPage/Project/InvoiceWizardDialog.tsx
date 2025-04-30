@@ -179,7 +179,7 @@ const InvoiceWizardDialog = ({ open, onOpenChange, projectId, clients = [] }) =>
                       </svg>
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className='w-auto p-0'>
+                  <PopoverContent className='w-auto p-0 min-w-[300px]'>
                     <Calendar
                       mode='single'
                       selected={dueDate}
