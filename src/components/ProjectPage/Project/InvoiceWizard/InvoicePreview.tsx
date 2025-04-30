@@ -387,7 +387,7 @@ const InvoicePreview = ({
                       <span>${itemPrice.toFixed(2)}</span>
                       <span>${itemTotal.toFixed(2)}</span>
                     </div>
-                    <div className='absolute top-2 right-0 flex opacity-0 group-hover:opacity-100'>
+                    <div className='absolute bottom-2 right-0 flex opacity-0 group-hover:opacity-100'>
                       <Button
                         size='sm'
                         variant='ghost'
