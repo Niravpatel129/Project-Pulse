@@ -16,7 +16,7 @@ import { Client, useInvoiceWizard } from '@/hooks/useInvoiceWizard';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
-import { Check, Filter, Plus, PlusCircle, Search } from 'lucide-react';
+import { Check, Plus, PlusCircle, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const InvoiceWizardDialog = ({
@@ -322,36 +322,6 @@ const InvoiceWizardDialog = ({
                 {activeTab === 'details' && 'Invoice Details'}
                 {activeTab === 'shipping' && 'Shipping Details'}
               </h2>
-              <div className='flex items-center gap-2'>
-                {activeTab === 'items' && (
-                  <>
-                    <div className='relative'>
-                      <Search
-                        className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400'
-                        size={16}
-                      />
-                      <Input placeholder='Search items...' className='pl-9 w-[250px]' />
-                    </div>
-                    <Button variant='outline' className='gap-1'>
-                      <Filter size={16} />
-                      Filter
-                    </Button>
-                    <Button variant='outline' className='gap-1'>
-                      <svg
-                        viewBox='0 0 24 24'
-                        width='16'
-                        height='16'
-                        strokeWidth='2'
-                        stroke='currentColor'
-                        fill='none'
-                      >
-                        <path d='M12 4v16m-8-8h16' />
-                      </svg>
-                      AI Assistant
-                    </Button>
-                  </>
-                )}
-              </div>
             </div>
 
             {/* Content Area */}
