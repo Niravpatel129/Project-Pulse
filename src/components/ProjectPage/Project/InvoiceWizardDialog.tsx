@@ -22,7 +22,6 @@ import { useEffect, useState } from 'react';
 const InvoiceWizardDialog = ({
   open,
   onOpenChange,
-  projectId,
   clients = [],
 }: {
   open: boolean;
@@ -45,7 +44,7 @@ const InvoiceWizardDialog = ({
     calculateSubtotal,
     calculateTotal,
     generateInvoice,
-  } = useInvoiceWizard({ projectId, clients });
+  } = useInvoiceWizard();
 
   const [activeTab, setActiveTab] = useState('items');
   const [selectedClient, setSelectedClient] = useState<any>(null);

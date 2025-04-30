@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useProject } from '@/contexts/ProjectContext';
+import { useCallback, useEffect, useState } from 'react';
 import { newRequest } from '../utils/newRequest';
 
 export type InvoiceItem = {
@@ -33,12 +34,9 @@ export type InvoiceData = {
   projectId: string;
 };
 
-interface UseInvoiceWizardProps {
-  projectId: string;
-  clients?: Client[];
-}
-
-export const useInvoiceWizard = ({ projectId, clients = [] }: UseInvoiceWizardProps) => {
+export const useInvoiceWizard = () => {
+  const { project } = useProject();
+  const projectId = project?._id;
   const [selectedItems, setSelectedItems] = useState<InvoiceItem[]>([]);
   const [invoiceNumber, setInvoiceNumber] = useState(
     `INV-${Math.floor(100000 + Math.random() * 900000)}`,
@@ -119,6 +117,19 @@ export const useInvoiceWizard = ({ projectId, clients = [] }: UseInvoiceWizardPr
     return calculateSubtotal();
   };
 
+  const fetchInvoiceDetails = useCallback(async (): Promise<InvoiceData | null> => {
+    console.log('🚀 running');
+    try {
+      const response = await newRequest.get(`/project-invoices/generate/${projectId}`);
+      console.log('🚀 response:', response);
+      return response.data;
+    } catch (err) {
+      console.log('🚀 err:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      return null;
+    }
+  }, [projectId]);
+
   const generateInvoice = async (): Promise<InvoiceData | null> => {
     if (selectedItems.length === 0) {
       setError('Please add at least one item to the invoice');
@@ -138,6 +149,15 @@ export const useInvoiceWizard = ({ projectId, clients = [] }: UseInvoiceWizardPr
       setIsGenerating(false);
     }
   };
+
+  useEffect(() => {
+    const handleFetchInvoiceDetails = async () => {
+      const invoiceDetails = await fetchInvoiceDetails();
+      console.log('🚀 invoiceDetails:', invoiceDetails);
+    };
+
+    handleFetchInvoiceDetails();
+  }, [projectId, fetchInvoiceDetails]);
 
   return {
     selectedItems,
