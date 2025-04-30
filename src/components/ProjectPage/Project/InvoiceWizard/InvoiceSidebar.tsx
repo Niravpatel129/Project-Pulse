@@ -41,7 +41,7 @@ const InvoiceSidebar = ({
   hasPhysicalProducts,
 }: InvoiceSidebarProps) => {
   return (
-    <div className='w-[280px] border-r'>
+    <div className='w-full md:w-[280px] border-r'>
       <div className='flex justify-between items-center p-4'>
         <h2 className='font-semibold'>Invoice Wizard</h2>
       </div>
