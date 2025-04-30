@@ -50,7 +50,7 @@ export type InvoiceData = {
 export const useInvoiceWizard = () => {
   const { project } = useProject();
   const projectId = project?._id;
-  const [selectedItems, setSelectedItems] = useState<InvoiceItem[]>([]);
+  const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [invoiceNumber, setInvoiceNumber] = useState(
     `INV-${Math.floor(100000 + Math.random() * 900000)}`,
   );

@@ -4,12 +4,11 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Check, Plus, Search } from 'lucide-react';
-import { Client } from './types';
 
 interface InvoiceClientProps {
-  clients: Client[];
-  selectedClient: Client | null;
-  handleSelectClient: (client: Client) => void;
+  clients: any[];
+  selectedClient: any | null;
+  handleSelectClient: (client: any) => void;
 }
 
 const InvoiceClient = ({ clients, selectedClient, handleSelectClient }: InvoiceClientProps) => {
@@ -28,7 +27,7 @@ const InvoiceClient = ({ clients, selectedClient, handleSelectClient }: InvoiceC
       </div>
 
       <div className='space-y-2'>
-        {clients.map((client: Client) => {
+        {clients.map((client: any) => {
           return (
             <div
               key={client.id}

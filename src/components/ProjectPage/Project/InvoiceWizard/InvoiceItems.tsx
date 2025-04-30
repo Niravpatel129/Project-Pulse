@@ -8,9 +8,9 @@ import InvoiceItemDetails from './InvoiceItemDetails';
 import { InvoiceItem } from './types';
 
 interface InvoiceItemsProps {
-  allItems: InvoiceItem[];
-  selectedItems: InvoiceItem[];
-  toggleItemSelection: (item: InvoiceItem) => void;
+  allItems: any[];
+  selectedItems: any[];
+  toggleItemSelection: (item: any) => void;
   addAllItems: (type: 'task' | 'deliverable') => void;
   removeAllItems: (type: 'task' | 'deliverable') => void;
 }

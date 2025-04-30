@@ -15,16 +15,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Pencil, PlusCircle, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import InvoiceItemDetails from './InvoiceItemDetails';
-import { Client, InvoiceItem } from './types';
+import { InvoiceItem } from './types';
 
 interface InvoicePreviewProps {
   selectedItems: InvoiceItem[];
   calculateSubtotal: () => number;
   calculateTotal: () => number;
-  selectedClient: Client | null;
+  selectedClient: any | null;
   setActiveTab: (tab: string) => void;
   onUpdateItems?: (items: InvoiceItem[]) => void;
-  onUpdateClient?: (client: Client) => void;
+  onUpdateClient?: (client: any) => void;
 }
 
 const InvoicePreview = ({
@@ -41,13 +41,13 @@ const InvoicePreview = ({
   const [editedItems, setEditedItems] = useState<InvoiceItem[]>([]);
   console.log('🚀 editedItems:', editedItems);
 
-  const [editedClient, setEditedClient] = useState<Client | null>(null);
+  const [editedClient, setEditedClient] = useState<any | null>(null);
   // State for edit dialogs
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
   const [clientDialogOpen, setClientDialogOpen] = useState(false);
   const [currentEditItem, setCurrentEditItem] = useState<InvoiceItem | null>(null);
   const [editedItemValues, setEditedItemValues] = useState<Partial<InvoiceItem>>({});
-  const [editedClientValues, setEditedClientValues] = useState<Partial<Client>>({});
+  const [editedClientValues, setEditedClientValues] = useState<Partial<any>>({});
 
   // Initialize edited items and client when props change
   useEffect(() => {
@@ -72,7 +72,7 @@ const InvoicePreview = ({
   };
 
   // Open client edit dialog
-  const openClientEditDialog = (client: Client) => {
+  const openClientEditDialog = (client: any) => {
     setEditedClientValues({
       name: client.name,
       email: client.email,

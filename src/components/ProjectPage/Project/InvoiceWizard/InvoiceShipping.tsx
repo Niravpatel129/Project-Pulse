@@ -7,13 +7,12 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { motion } from 'framer-motion';
 import { ReactNode } from 'react';
-import { Client, ShippingMethod } from './types';
 
 interface InvoiceShippingProps {
-  shippingMethods: ShippingMethod[];
-  selectedShippingMethod: ShippingMethod | null;
-  setSelectedShippingMethod: (method: ShippingMethod | null) => void;
-  selectedClient: Client | null;
+  shippingMethods: any[];
+  selectedShippingMethod: any | null;
+  setSelectedShippingMethod: (method: any | null) => void;
+  selectedClient: any | null;
   useShippingAddress: boolean;
   setUseShippingAddress: (use: boolean) => void;
   shippingAddress: any | null;

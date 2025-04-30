@@ -9,13 +9,13 @@ import InvoiceItems from './InvoiceItems';
 import InvoicePreview from './InvoicePreview';
 import InvoiceShipping from './InvoiceShipping';
 import InvoiceSidebar from './InvoiceSidebar';
-import { Client, InvoiceItem, ShippingMethod } from './types';
+import { InvoiceItem } from './types';
 
 interface InvoiceWizardDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
-  clients?: Client[];
+  clients?: any[];
 }
 
 const InvoiceWizardDialog = ({
@@ -43,22 +43,21 @@ const InvoiceWizardDialog = ({
   } = useInvoiceWizard();
 
   const [activeTab, setActiveTab] = useState('items');
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedClient, setSelectedClient] = useState<any | null>(null);
   const [taxRate, setTaxRate] = useState(20);
   const [reducedTaxRate, setReducedTaxRate] = useState(5);
   const [notes, setNotes] = useState('');
   const [shippingRequired, setShippingRequired] = useState(false);
   const [hasPhysicalProducts, setHasPhysicalProducts] = useState(false);
-  const [removedItems, setRemovedItems] = useState<InvoiceItem[]>([]);
   const [allItems, setAllItems] = useState<InvoiceItem[]>([]);
   const [showPreview, setShowPreview] = useState(false);
 
   // Shipping related states
-  const [selectedShippingMethod, setSelectedShippingMethod] = useState<ShippingMethod | null>(null);
+  const [selectedShippingMethod, setSelectedShippingMethod] = useState<any | null>(null);
   const [useShippingAddress, setUseShippingAddress] = useState(false);
   const [shippingAddress, setShippingAddress] = useState<any>(null);
 
-  const shippingMethods: ShippingMethod[] = [
+  const shippingMethods: any[] = [
     {
       id: 'standard',
       name: 'Standard Shipping',
@@ -93,7 +92,7 @@ const InvoiceWizardDialog = ({
     }
 
     // Update allItems with selectedItems that aren't already there
-    setAllItems((prev) => {
+    setAllItems((prev: any) => {
       const existingIds = new Set(
         prev.map((item) => {
           return item.id;
@@ -106,7 +105,7 @@ const InvoiceWizardDialog = ({
     });
   }, [selectedItems]);
 
-  const handleSelectClient = (client: Client) => {
+  const handleSelectClient = (client: any) => {
     setSelectedClient(client);
   };
 
@@ -131,7 +130,7 @@ const InvoiceWizardDialog = ({
   };
 
   // Toggle item selection
-  const toggleItemSelection = (item: InvoiceItem) => {
+  const toggleItemSelection = (item: any) => {
     if (isItemSelected(item.id)) {
       handleRemoveItem(item.id);
     } else {
@@ -209,12 +208,12 @@ const InvoiceWizardDialog = ({
   };
 
   // Function to handle updating items from the preview component
-  const handleUpdateItems = (updatedItems: InvoiceItem[]) => {
+  const handleUpdateItems = (updatedItems: any[]) => {
     setSelectedItems(updatedItems);
   };
 
   // Function to handle updating client from the preview component
-  const handleUpdateClient = (updatedClient: Client) => {
+  const handleUpdateClient = (updatedClient: any) => {
     setSelectedClient(updatedClient);
   };
 
