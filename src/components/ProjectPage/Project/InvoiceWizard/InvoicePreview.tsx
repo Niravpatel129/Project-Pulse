@@ -10,10 +10,11 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { Pencil, PlusCircle, Save } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import InvoiceItemDetails from './InvoiceItemDetails';
 import { Client, InvoiceItem } from './types';
 
 interface InvoicePreviewProps {
@@ -396,101 +397,7 @@ const InvoicePreview = ({
                                       View Details
                                     </Button>
                                   </PopoverTrigger>
-                                  <PopoverContent className='w-80 p-0'>
-                                    <div className='px-4 py-3 border-b'>
-                                      <h3 className='font-medium'>{item.name}</h3>
-                                      <p className='text-sm text-gray-500'>{item.description}</p>
-                                    </div>
-                                    <div className='p-4 max-h-[300px] overflow-y-auto'>
-                                      {item.fields &&
-                                        Object.entries(item.fields)
-                                          .filter(([key]) => {
-                                            return !['total', 'unitPrice', 'quantity'].includes(
-                                              key,
-                                            );
-                                          })
-                                          .map(([key, value]) => {
-                                            // Format the value based on its type
-                                            let displayValue: React.ReactNode = '';
-                                            if (typeof value === 'object' && value !== null) {
-                                              if (Array.isArray(value)) {
-                                                // Handle array values (like multiSelectColors)
-                                                displayValue = (
-                                                  <div className='flex gap-1 mt-1 flex-wrap'>
-                                                    {value.map((v, i) => {
-                                                      return (
-                                                        <Badge
-                                                          key={`${key}-${i}`}
-                                                          variant='outline'
-                                                          className='text-xs'
-                                                        >
-                                                          {String(v)}
-                                                        </Badge>
-                                                      );
-                                                    })}
-                                                  </div>
-                                                );
-                                              } else {
-                                                // Handle object values (like sizeBreakdown)
-                                                displayValue = (
-                                                  <div className='grid grid-cols-2 gap-2 mt-1'>
-                                                    {Object.entries(value).map(([k, v]) => {
-                                                      return (
-                                                        <div
-                                                          key={`${key}-${k}`}
-                                                          className='flex justify-between items-center p-1 bg-gray-50 rounded text-xs'
-                                                        >
-                                                          <span className='font-medium'>{k}:</span>
-                                                          <span>{String(v)}</span>
-                                                        </div>
-                                                      );
-                                                    })}
-                                                  </div>
-                                                );
-                                              }
-                                            } else if (value !== null && value !== undefined) {
-                                              // Format based on content and type
-                                              if (typeof value === 'number') {
-                                                displayValue = value.toString();
-                                              } else if (typeof value === 'string') {
-                                                // Check if it's a URL
-                                                if (value.match(/^https?:\/\//)) {
-                                                  displayValue = (
-                                                    <a
-                                                      href={value}
-                                                      target='_blank'
-                                                      rel='noopener noreferrer'
-                                                      className='text-blue-500 hover:underline truncate block'
-                                                    >
-                                                      {value.length > 30
-                                                        ? `${value.substring(0, 30)}...`
-                                                        : value}
-                                                    </a>
-                                                  );
-                                                } else {
-                                                  displayValue = value;
-                                                }
-                                              } else {
-                                                displayValue = String(value);
-                                              }
-                                            }
-
-                                            return (
-                                              <div
-                                                key={`popover-${item.id}-field-${key}`}
-                                                className='mb-3'
-                                              >
-                                                <div className='text-sm font-medium capitalize'>
-                                                  {key.replace(/([A-Z])/g, ' $1').trim()}
-                                                </div>
-                                                <div className='text-sm text-gray-700'>
-                                                  {displayValue}
-                                                </div>
-                                              </div>
-                                            );
-                                          })}
-                                    </div>
-                                  </PopoverContent>
+                                  <InvoiceItemDetails item={item} />
                                 </Popover>
                               </div>
                             )}
