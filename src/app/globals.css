@@ -96,10 +96,13 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: 'rlig' 1, 'calt' 1;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
   }
 
   /* Custom scrollbar */
   ::-webkit-scrollbar {
+    width: 6px;
   }
 
   ::-webkit-scrollbar-track {
@@ -113,6 +116,15 @@
 
   ::-webkit-scrollbar-thumb:hover {
     background: #cbd5e1;
+  }
+
+  /* Make scrollbar overlay content and not take up space */
+  * {
+    scrollbar-width: thin;
+  }
+
+  html {
+    overflow-x: hidden;
   }
 
   /* Responsive text sizes */
