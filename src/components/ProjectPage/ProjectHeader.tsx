@@ -42,6 +42,7 @@ import { Input } from '../ui/input';
 import BlockWrapper from '../wrappers/BlockWrapper';
 import AddParticipantDialog from './AddParticipantDialog';
 import AddTeamDialog from './AddTeamDialog';
+import InvoiceWizardDialog from './Project/InvoiceWizardDialog';
 import ProjectParticipants from './Project/ProjectParticipants';
 import ProjectReviewButton from './Project/ProjectReviewButton';
 import { ProjectSidebar } from './ProjectSidebar';
@@ -109,6 +110,7 @@ export default function ProjectHeader() {
   const [showParticipantsDialog, setShowParticipantsDialog] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isEditNameModalOpen, setIsEditNameModalOpen] = useState(false);
+  const [isInvoiceWizardOpen, setIsInvoiceWizardOpen] = useState(false);
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [newProjectName, setNewProjectName] = useState(project?.name || '');
 
@@ -396,6 +398,10 @@ export default function ProjectHeader() {
         </div>
       </div>
     );
+  };
+
+  const openInvoiceWizard = () => {
+    setIsInvoiceWizardOpen(true);
   };
 
   if (isMobile) {
@@ -774,6 +780,12 @@ export default function ProjectHeader() {
             </div>
           </div>
         </div>
+        <InvoiceWizardDialog
+          open={isInvoiceWizardOpen}
+          onOpenChange={setIsInvoiceWizardOpen}
+          clients={[]}
+          projectId={project?._id || ''}
+        />
       </div>
     );
   }
@@ -842,7 +854,7 @@ export default function ProjectHeader() {
                     handleAddParticipant={handleAddParticipant}
                     handleAddRole={handleAddRole}
                   />
-                  <ProjectReviewButton />
+                  <ProjectReviewButton openInvoiceWizard={openInvoiceWizard} />
                 </div>
               </div>
             )}
@@ -925,7 +937,7 @@ export default function ProjectHeader() {
                       </div>
                     </div>
                   </div>
-                ) : project?.participants?.length > 0 ? (
+                ) : project?.participants && project.participants.length > 0 ? (
                   <div>
                     <h3 className='text-sm font-medium text-muted-foreground mb-2'>Participants</h3>
                     {project.participants.map((participant) => {
@@ -1051,6 +1063,14 @@ export default function ProjectHeader() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Invoice Wizard Dialog */}
+        <InvoiceWizardDialog
+          open={isInvoiceWizardOpen}
+          onOpenChange={setIsInvoiceWizardOpen}
+          clients={[]}
+          projectId={project?._id || ''}
+        />
       </div>
     </BlockWrapper>
   );
