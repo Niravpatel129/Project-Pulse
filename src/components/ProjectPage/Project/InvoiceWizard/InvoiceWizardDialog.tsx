@@ -208,6 +208,16 @@ const InvoiceWizardDialog = ({
     setShowPreview(!showPreview);
   };
 
+  // Function to handle updating items from the preview component
+  const handleUpdateItems = (updatedItems: InvoiceItem[]) => {
+    setSelectedItems(updatedItems);
+  };
+
+  // Function to handle updating client from the preview component
+  const handleUpdateClient = (updatedClient: Client) => {
+    setSelectedClient(updatedClient);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-w-[1400px] p-0 sm:max-h-[95vh] h-full md:h-[800px] w-full'>
@@ -375,6 +385,8 @@ const InvoiceWizardDialog = ({
                   calculateTotal={calculateTotal}
                   selectedClient={selectedClient}
                   setActiveTab={setActiveTab}
+                  onUpdateItems={handleUpdateItems}
+                  onUpdateClient={handleUpdateClient}
                 />
               </div>
             </div>
