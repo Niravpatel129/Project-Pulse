@@ -944,7 +944,7 @@ const InvoiceWizardDialog = ({
               </div>
 
               {/* Invoice Preview */}
-              <div className='w-[400px] border-l p-4 flex flex-col'>
+              <div className='w-[400px] border-l p-4 flex flex-col overflow-y-auto'>
                 <div className='flex justify-between items-center mb-4'>
                   <h2 className='font-semibold'>Invoice Preview</h2>
                   <Button variant='outline' className='gap-1'>
