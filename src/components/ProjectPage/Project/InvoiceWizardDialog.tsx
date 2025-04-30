@@ -170,7 +170,30 @@ const InvoiceWizardDialog = ({
     if (isItemSelected(item.id)) {
       handleRemoveItem(item.id);
     } else {
-      handleAddItem(item);
+      // Transform item with fields if needed
+      const processedItem = { ...item };
+
+      // If the item has fields.unitPrice, fields.quantity, etc., make sure they're accessible at the top level
+      if (item.fields) {
+        if (item.fields.unitPrice !== undefined) {
+          processedItem.price = item.fields.unitPrice;
+        }
+        if (item.fields.quantity !== undefined) {
+          processedItem.quantity = item.fields.quantity;
+        }
+        // Add a type field for physical products if we have data suggesting it's physical
+        if (
+          item.fields.sizeBreakdown ||
+          (item.fields.multiSelectColors && item.fields.multiSelectColors.length > 0) ||
+          item.labels?.some((label) => {
+            return ['apparel', 'physical', 'print', 'promotional'].includes(label.toLowerCase());
+          })
+        ) {
+          processedItem.type = 'physical';
+        }
+      }
+
+      handleAddItem(processedItem);
     }
   };
 
@@ -518,6 +541,54 @@ const InvoiceWizardDialog = ({
                                         <p className='text-gray-500 text-sm mt-1'>
                                           {item.description}
                                         </p>
+
+                                        {/* Display dynamic fields */}
+                                        {item.fields && (
+                                          <div className='mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm'>
+                                            {Object.entries(item.fields).map(([key, value]) => {
+                                              // Skip displaying these fields as we show them separately
+                                              if (
+                                                key === 'total' ||
+                                                key === 'unitPrice' ||
+                                                key === 'quantity'
+                                              )
+                                                return null;
+
+                                              // Format the value based on its type
+                                              let displayValue: React.ReactNode = '';
+                                              if (typeof value === 'object' && value !== null) {
+                                                if (Array.isArray(value)) {
+                                                  // Handle array values (like multiSelectColors)
+                                                  displayValue = value.join(', ');
+                                                } else {
+                                                  // Handle object values (like sizeBreakdown)
+                                                  displayValue = Object.entries(value)
+                                                    .map(([k, v]) => {
+                                                      return `${k}: ${v}`;
+                                                    })
+                                                    .join(', ');
+                                                }
+                                              } else if (value !== null && value !== undefined) {
+                                                // Convert primitive values to string
+                                                displayValue = String(value);
+                                              }
+
+                                              return (
+                                                <div
+                                                  key={`${item.id}-field-${key}`}
+                                                  className='flex'
+                                                >
+                                                  <span className='text-gray-500 capitalize mr-2'>
+                                                    {key.replace(/([A-Z])/g, ' $1').trim()}:
+                                                  </span>
+                                                  <span className='text-gray-700'>
+                                                    {displayValue}
+                                                  </span>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        )}
                                       </div>
                                       <Button
                                         variant='outline'
@@ -536,19 +607,70 @@ const InvoiceWizardDialog = ({
 
                                     <div className='mt-3 flex items-center gap-2'>
                                       <span className='text-gray-700'>
-                                        ${item.price.toFixed(2)}
+                                        $
+                                        {item.fields?.unitPrice
+                                          ? item.fields.unitPrice.toFixed(2)
+                                          : item.price.toFixed(2)}
                                       </span>
-                                      {item.quantity && item.quantity > 1 && (
+                                      {(item.fields?.quantity || item.quantity) &&
+                                        (item.fields?.quantity || item.quantity) > 1 && (
+                                          <>
+                                            <span className='text-gray-400'>•</span>
+                                            <span className='text-gray-500 text-sm'>
+                                              Qty: {item.fields?.quantity || item.quantity}
+                                            </span>
+                                          </>
+                                        )}
+                                      <span className='text-gray-400'>•</span>
+                                      <span className='text-gray-500 text-sm'>
+                                        {item.date ||
+                                          (item.createdAt
+                                            ? new Date(item.createdAt).toLocaleDateString()
+                                            : '')}
+                                      </span>
+
+                                      {/* Display total if available */}
+                                      {item.fields?.total && (
                                         <>
                                           <span className='text-gray-400'>•</span>
-                                          <span className='text-gray-500 text-sm'>
-                                            Qty: {item.quantity}
+                                          <span className='text-gray-700 font-medium'>
+                                            Total: ${item.fields.total.toFixed(2)}
                                           </span>
                                         </>
                                       )}
-                                      <span className='text-gray-400'>•</span>
-                                      <span className='text-gray-500 text-sm'>{item.date}</span>
                                     </div>
+
+                                    {/* Display attachments if available */}
+                                    {item.attachments && item.attachments.length > 0 && (
+                                      <div className='mt-3 border-t pt-2'>
+                                        <div className='text-xs text-gray-500 mb-1'>
+                                          Attachments:
+                                        </div>
+                                        <div className='flex gap-2 flex-wrap'>
+                                          {item.attachments.map((attachment, index) => {
+                                            return (
+                                              <Badge
+                                                key={`${item.id}-attachment-${index}`}
+                                                variant='outline'
+                                                className='text-xs flex items-center gap-1'
+                                              >
+                                                <svg
+                                                  viewBox='0 0 24 24'
+                                                  width='12'
+                                                  height='12'
+                                                  fill='none'
+                                                  stroke='currentColor'
+                                                  strokeWidth='2'
+                                                >
+                                                  <path d='M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48' />
+                                                </svg>
+                                                {attachment.title || 'Attachment'}
+                                              </Badge>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 );
                               })}
@@ -1137,11 +1259,71 @@ const InvoiceWizardDialog = ({
                                   })}
                                 </div>
                               )}
+                              {/* Show a brief summary of dynamic fields */}
+                              {item.fields &&
+                                Object.keys(item.fields).filter((key) => {
+                                  return (
+                                    !['unitPrice', 'quantity', 'total'].includes(key) &&
+                                    item.fields[key] !== null &&
+                                    item.fields[key] !== undefined
+                                  );
+                                }).length > 0 && (
+                                  <div className='text-xs text-gray-500 mt-1 truncate'>
+                                    {Object.entries(item.fields)
+                                      .filter(([key]) => {
+                                        return !['unitPrice', 'quantity', 'total'].includes(key);
+                                      })
+                                      .slice(0, 2)
+                                      .map(([key, value]) => {
+                                        let displayValue = '';
+                                        if (typeof value === 'object' && value !== null) {
+                                          if (Array.isArray(value)) {
+                                            displayValue =
+                                              value.length > 0 ? `${value.length} items` : '';
+                                          } else {
+                                            displayValue =
+                                              Object.keys(value).length > 0
+                                                ? `${Object.keys(value).length} details`
+                                                : '';
+                                          }
+                                        } else if (value !== null && value !== undefined) {
+                                          displayValue =
+                                            String(value).length > 15
+                                              ? String(value).substring(0, 15) + '...'
+                                              : String(value);
+                                        }
+                                        return displayValue
+                                          ? `${key
+                                              .replace(/([A-Z])/g, ' $1')
+                                              .trim()}: ${displayValue}`
+                                          : '';
+                                      })
+                                      .filter((text) => {
+                                        return text;
+                                      })
+                                      .join(', ')}
+                                    {Object.keys(item.fields).filter((key) => {
+                                      return (
+                                        !['unitPrice', 'quantity', 'total'].includes(key) &&
+                                        item.fields[key] !== null &&
+                                        item.fields[key] !== undefined
+                                      );
+                                    }).length > 2
+                                      ? '...'
+                                      : ''}
+                                  </div>
+                                )}
                             </div>
                             <div className='flex gap-8 text-sm'>
-                              <span>{item.quantity || 1}</span>
-                              <span>${item.price.toFixed(2)}</span>
-                              <span>${((item.quantity || 1) * item.price).toFixed(2)}</span>
+                              <span>{item.fields?.quantity || item.quantity || 1}</span>
+                              <span>${(item.fields?.unitPrice || item.price).toFixed(2)}</span>
+                              <span>
+                                $
+                                {(
+                                  (item.fields?.quantity || item.quantity || 1) *
+                                  (item.fields?.unitPrice || item.price)
+                                ).toFixed(2)}
+                              </span>
                             </div>
                           </div>
                         );

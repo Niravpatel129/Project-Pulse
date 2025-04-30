@@ -18,6 +18,15 @@ export type InvoiceItem = {
   labels?: string[];
   quantity?: number;
   isApiData?: boolean;
+  // Dynamic fields from deliverables
+  fields?: Record<string, any>;
+  // Additional metadata
+  createdAt?: string;
+  attachments?: Array<{
+    type?: string;
+    url: string;
+    title: string;
+  }>;
 };
 
 export type Client = {
@@ -91,12 +100,25 @@ export const useInvoiceWizard = () => {
               id: `deliverable-${index}`,
               name: deliverable.name,
               description: deliverable.description,
-              price: deliverable.fields?.total || 0,
+              price:
+                deliverable.fields?.unitPrice ||
+                deliverable.fields?.total / (deliverable.fields?.quantity || 1) ||
+                0,
               date: new Date(deliverable.createdAt).toLocaleDateString(),
-              type: deliverable.labels.includes('Digital') ? 'digital' : 'physical',
+              type: deliverable.labels?.some((label: string) => {
+                return ['apparel', 'physical', 'print', 'promotional'].includes(
+                  label.toLowerCase(),
+                );
+              })
+                ? 'physical'
+                : 'digital',
               labels: deliverable.labels,
               quantity: deliverable.fields?.quantity || 1,
               isApiData: true,
+              // Save the original fields for reference and rendering
+              fields: deliverable.fields,
+              createdAt: deliverable.createdAt,
+              attachments: deliverable.attachments,
             };
           },
         );
