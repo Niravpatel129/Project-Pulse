@@ -239,7 +239,7 @@ const InvoiceWizardDialog = ({
             {/* Content Area */}
             <div className='flex h-full'>
               {/* Main Content */}
-              <div className='flex-1 p-4 overflow-y-auto'>
+              <div className='flex-1 p-4 overflow-y-auto pb-24'>
                 {activeTab === 'items' && (
                   <InvoiceItems
                     allItems={allItems}
