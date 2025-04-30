@@ -7,7 +7,6 @@ interface InvoiceItemAttachmentProps {
 
 const InvoiceItemAttachment = ({ attachment }: InvoiceItemAttachmentProps) => {
   const isImageUrl = attachment.url && attachment.url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-  console.log('🚀 attachment:', attachment);
 
   return (
     <PopoverContent

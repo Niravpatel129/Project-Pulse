@@ -2,8 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Check, Plus } from 'lucide-react';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import InvoiceItemAttachment from './InvoiceItemAttachment';
 import InvoiceItemDetails from './InvoiceItemDetails';
 import { InvoiceItem } from './types';
@@ -12,10 +11,8 @@ interface InvoiceItemsProps {
   allItems: InvoiceItem[];
   selectedItems: InvoiceItem[];
   toggleItemSelection: (item: InvoiceItem) => void;
-  isItemSelected: (itemId: string) => boolean;
   addAllItems: (type: 'task' | 'deliverable') => void;
   removeAllItems: (type: 'task' | 'deliverable') => void;
-  areAllItemsSelected: (type: 'task' | 'deliverable') => boolean;
 }
 
 const InvoiceItems = ({
@@ -25,64 +22,160 @@ const InvoiceItems = ({
   addAllItems,
   removeAllItems,
 }: InvoiceItemsProps) => {
-  // Memoize filtered items to avoid recalculation on every render
-  const deliverableItems = useMemo(() => {
-    return allItems.filter((item) => {
-      return !item.id.startsWith('task-');
+  // Track if we're in the middle of a bulk operation
+  const isProcessingBulkOperation = useRef(false);
+
+  // Normalize all items to ensure consistent _id usage
+  const normalizedAllItems = useMemo(() => {
+    return allItems.map((item) => {
+      // Always use _id for consistency
+      const itemId = item._id || item.id;
+      return {
+        ...item,
+        _id: itemId,
+        // Mark if the item is a task based on ID prefix
+        isTask: item.id?.startsWith('task-') || false,
+      };
     });
   }, [allItems]);
 
+  // Separate tasks and deliverables based on ID format
   const taskItems = useMemo(() => {
-    return allItems.filter((item) => {
-      return item.id.startsWith('task-');
+    return normalizedAllItems.filter((item) => {
+      return item.isTask || item.id?.startsWith('task-');
     });
-  }, [allItems]);
+  }, [normalizedAllItems]);
 
-  // Calculate selected IDs map for efficient lookup
-  const selectedIdsMap = useMemo(() => {
-    const map = new Map();
-    selectedItems.forEach((item) => {
-      // Store both the id and _id (if available) to handle both formats
-      map.set(item.id, true);
-      if (item._id) map.set(item._id, true);
+  const deliverableItems = useMemo(() => {
+    return normalizedAllItems.filter((item) => {
+      return !item.isTask && !item.id?.startsWith('task-');
     });
-    return map;
+  }, [normalizedAllItems]);
+
+  // Create Set of selected IDs for faster lookup
+  const selectedIdsSet = useMemo(() => {
+    const idSet = new Set<string>();
+    selectedItems.forEach((item) => {
+      // Always use _id for consistency
+      const itemId = item._id || item.id;
+      if (itemId) {
+        idSet.add(itemId);
+      }
+    });
+    return idSet;
   }, [selectedItems]);
 
-  // Safer item selection check that handles both id and _id
-  const isSafelySelected = useCallback(
-    (item: InvoiceItem) => {
-      if (selectedIdsMap.has(item.id)) return true;
-      if (item._id && selectedIdsMap.has(item._id)) return true;
-      return false;
+  // Force a re-render when selection changes
+  const [renderCounter, setRenderCounter] = useState(0);
+
+  // Update render counter when selection changes
+  useEffect(() => {
+    if (!isProcessingBulkOperation.current) {
+      setRenderCounter((prev) => {
+        return prev + 1;
+      });
+    }
+  }, [selectedItems, selectedIdsSet]);
+
+  // Check if an item is selected
+  const isItemSelected = useCallback(
+    (item: InvoiceItem): boolean => {
+      const itemId = item._id || item.id;
+      return selectedIdsSet.has(itemId);
     },
-    [selectedIdsMap],
+    [selectedIdsSet],
   );
 
-  // Directly calculate if all items are selected
-  const areAllDeliverablesSelected = useMemo(() => {
-    return (
-      deliverableItems.length > 0 &&
-      deliverableItems.every((item) => {
-        return isSafelySelected(item);
-      })
-    );
-  }, [deliverableItems, isSafelySelected]);
+  // Check if all items of a type are selected
+  const areAllSelected = useCallback(
+    (type: 'task' | 'deliverable'): boolean => {
+      const items = type === 'task' ? taskItems : deliverableItems;
+      return (
+        items.length > 0 &&
+        items.every((item) => {
+          return isItemSelected(item);
+        })
+      );
+    },
+    [taskItems, deliverableItems, isItemSelected],
+  );
 
-  const areAllTasksSelected = useMemo(() => {
-    return (
-      taskItems.length > 0 &&
-      taskItems.every((item) => {
-        return isSafelySelected(item);
-      })
-    );
-  }, [taskItems, isSafelySelected]);
+  // Handle Add All action
+  const handleAddAll = (type: 'task' | 'deliverable') => {
+    try {
+      isProcessingBulkOperation.current = true;
+      console.log(`Adding all ${type} items`);
+      addAllItems(type);
+    } finally {
+      // Reset the flag and force a re-render
+      setTimeout(() => {
+        isProcessingBulkOperation.current = false;
+        setRenderCounter((prev) => {
+          return prev + 1;
+        });
+      }, 0);
+    }
+  };
 
-  // Force re-render when selection state changes
-  useEffect(() => {
-    // This effect will run whenever selectedItems changes
-    // The component will re-render with the updated selection state
-  }, [selectedItems, areAllDeliverablesSelected, areAllTasksSelected]);
+  // Handle Remove All action
+  const handleRemoveAll = (type: 'task' | 'deliverable') => {
+    try {
+      isProcessingBulkOperation.current = true;
+
+      // Get all the items that should be removed
+      const itemsToRemove = type === 'task' ? taskItems : deliverableItems;
+
+      console.log(
+        `Removing ${itemsToRemove.length} ${type} items with IDs:`,
+        itemsToRemove
+          .map((item) => {
+            return item._id || item.id;
+          })
+          .join(', '),
+      );
+
+      // First call the parent's removeAll function
+      removeAllItems(type);
+
+      // Additionally, ensure each item is individually removed to sync editedItems
+      // This helps ensure both selectedItems and editedItems stay in sync
+      itemsToRemove.forEach((item) => {
+        if (isItemSelected(item)) {
+          // Use normalized item to ensure _id consistency
+          const normalizedItem = {
+            ...item,
+            _id: item._id || item.id,
+          };
+          console.log(`Ensuring item removed: ${normalizedItem._id}`);
+          toggleItemSelection(normalizedItem);
+        }
+      });
+    } finally {
+      // Reset the flag and force a re-render
+      setTimeout(() => {
+        isProcessingBulkOperation.current = false;
+        setRenderCounter((prev) => {
+          return prev + 1;
+        });
+      }, 0);
+    }
+  };
+
+  // Handle toggling a single item
+  const handleToggleItem = (item: InvoiceItem) => {
+    // Ensure we pass the item with _id property for consistent handling
+    const normalizedItem = {
+      ...item,
+      _id: item._id || item.id,
+    };
+
+    console.log(
+      `Toggling item "${item.name}" (${normalizedItem._id}), currently selected: ${isItemSelected(
+        item,
+      )}`,
+    );
+    toggleItemSelection(normalizedItem);
+  };
 
   return (
     <Tabs defaultValue='deliverables'>
@@ -91,43 +184,20 @@ const InvoiceItems = ({
         <TabsTrigger value='tasks'>Tasks & Hours</TabsTrigger>
       </TabsList>
 
-      <TabsContent value='deliverables' className='space-y-6'>
+      <TabsContent value='deliverables' className='space-y-6' key={`deliverables-${renderCounter}`}>
         {deliverableItems.length > 0 ? (
           <div>
             <div className='flex justify-between items-center mb-3'>
               <h3 className='font-medium text-sm'>Project Deliverables</h3>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() => {
-                  return areAllDeliverablesSelected
-                    ? removeAllItems('deliverable')
-                    : addAllItems('deliverable');
-                }}
-                className={
-                  areAllDeliverablesSelected
-                    ? 'text-red-500 border-red-200 hover:bg-red-50'
-                    : 'text-green-600 border-green-200 hover:bg-green-50'
-                }
-                disabled={!areAllDeliverablesSelected && deliverableItems.length === 0}
-              >
-                {areAllDeliverablesSelected ? (
-                  <>
-                    <Check className='h-4 w-4 mr-1' /> Remove All
-                  </>
-                ) : (
-                  <>
-                    <Plus className='h-4 w-4 mr-1' /> Add All
-                  </>
-                )}
-              </Button>
             </div>
             <div className='space-y-4'>
               {deliverableItems.map((item) => {
-                const selected = isSafelySelected(item);
+                const itemId = item._id || item.id;
+                const selected = isItemSelected(item);
+
                 return (
                   <div
-                    key={`${item._id || item.id}-${selected ? 'selected' : 'not-selected'}`}
+                    key={`${itemId}-${selected ? 'selected' : 'not-selected'}-${renderCounter}`}
                     className={`border rounded-lg p-4 relative ${
                       selected ? '' : 'border-gray-200 bg-gray-50'
                     }`}
@@ -153,7 +223,7 @@ const InvoiceItems = ({
                           {item.labels?.map((label, index) => {
                             return (
                               <Badge
-                                key={`${item._id || item.id}-label-${index}`}
+                                key={`${itemId}-label-${index}`}
                                 variant='outline'
                                 className='bg-gray-50 text-gray-600 border-gray-200 text-xs'
                               >
@@ -229,7 +299,7 @@ const InvoiceItems = ({
                                   }
                                   return displayValue ? (
                                     <div
-                                      key={`${item._id || item.id}-mini-${key}`}
+                                      key={`${itemId}-mini-${key}`}
                                       className='flex items-center'
                                     >
                                       <span className='text-gray-500 capitalize mr-1'>
@@ -250,7 +320,7 @@ const InvoiceItems = ({
                             <div className='flex gap-2 flex-wrap'>
                               {item.attachments.map((attachment, index) => {
                                 return (
-                                  <Popover key={`${item._id || item.id}-attachment-${index}`} modal>
+                                  <Popover key={`${itemId}-attachment-${index}`} modal>
                                     <PopoverTrigger asChild>
                                       <Button
                                         variant='outline'
@@ -281,7 +351,7 @@ const InvoiceItems = ({
                       <Button
                         variant='outline'
                         onClick={() => {
-                          return toggleItemSelection(item);
+                          return handleToggleItem(item);
                         }}
                         className={
                           selected
@@ -340,41 +410,20 @@ const InvoiceItems = ({
         )}
       </TabsContent>
 
-      <TabsContent value='tasks' className='space-y-6'>
+      <TabsContent value='tasks' className='space-y-6' key={`tasks-${renderCounter}`}>
         {taskItems.length > 0 ? (
           <div>
             <div className='flex justify-between items-center mb-3'>
               <h3 className='font-medium text-sm'>Project Tasks</h3>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() => {
-                  return areAllTasksSelected ? removeAllItems('task') : addAllItems('task');
-                }}
-                className={
-                  areAllTasksSelected
-                    ? 'text-red-500 border-red-200 hover:bg-red-50'
-                    : 'text-green-600 border-green-200 hover:bg-green-50'
-                }
-                disabled={!areAllTasksSelected && taskItems.length === 0}
-              >
-                {areAllTasksSelected ? (
-                  <>
-                    <Check className='h-4 w-4 mr-1' /> Remove All
-                  </>
-                ) : (
-                  <>
-                    <Plus className='h-4 w-4 mr-1' /> Add All
-                  </>
-                )}
-              </Button>
             </div>
             <div className='space-y-4'>
               {taskItems.map((item) => {
-                const selected = isSafelySelected(item);
+                const itemId = item._id || item.id;
+                const selected = isItemSelected(item);
+
                 return (
                   <div
-                    key={`${item._id || item.id}-${selected ? 'selected' : 'not-selected'}`}
+                    key={`${itemId}-${selected ? 'selected' : 'not-selected'}-${renderCounter}`}
                     className={`border rounded-lg p-4 relative ${
                       selected ? '' : 'border-gray-200 bg-gray-50'
                     }`}
@@ -386,7 +435,7 @@ const InvoiceItems = ({
                           {item.labels?.map((label, index) => {
                             return (
                               <Badge
-                                key={`${item._id || item.id}-label-${index}`}
+                                key={`${itemId}-label-${index}`}
                                 variant='outline'
                                 className='bg-purple-50 text-purple-600 border-purple-200 text-xs'
                               >
@@ -400,7 +449,7 @@ const InvoiceItems = ({
                       <Button
                         variant='outline'
                         onClick={() => {
-                          return toggleItemSelection(item);
+                          return handleToggleItem(item);
                         }}
                         className={
                           selected

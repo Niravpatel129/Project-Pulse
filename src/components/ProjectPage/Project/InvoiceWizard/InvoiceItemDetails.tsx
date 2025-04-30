@@ -9,7 +9,6 @@ interface InvoiceItemDetailsProps {
 
 const InvoiceItemDetails = ({ item }: InvoiceItemDetailsProps) => {
   const renderAttachmentPreview = (attachment: any) => {
-    console.log('🚀 attachment:', attachment);
     // "https://cdn.printshop.com/mockups/stickers.png"
     const isImageUrl = attachment.url && attachment.url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
     console.log('🚀 isImageUrl:', !!isImageUrl);
@@ -76,7 +75,6 @@ const InvoiceItemDetails = ({ item }: InvoiceItemDetailsProps) => {
         return (
           <div className='flex gap-2 flex-wrap'>
             {value.slice(0, 2).map((file, i) => {
-              console.log('🚀 file:', file);
               return (
                 <span
                   key={`file-${i}`}

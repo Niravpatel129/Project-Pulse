@@ -36,11 +36,12 @@ const InvoicePreview = ({
   onUpdateItems,
   onUpdateClient,
 }: InvoicePreviewProps) => {
+  console.log('🚀 selectedItems:', selectedItems);
   // State for editing
-  const [editMode, setEditMode] = useState<Record<string, boolean>>({});
   const [editedItems, setEditedItems] = useState<InvoiceItem[]>([]);
-  const [editedClient, setEditedClient] = useState<Client | null>(null);
+  console.log('🚀 editedItems:', editedItems);
 
+  const [editedClient, setEditedClient] = useState<Client | null>(null);
   // State for edit dialogs
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
   const [clientDialogOpen, setClientDialogOpen] = useState(false);
@@ -57,61 +58,6 @@ const InvoicePreview = ({
       setEditedClient({ ...selectedClient });
     }
   }, [selectedItems, selectedClient, editedClient]);
-
-  // Toggle edit mode for a specific field
-  const toggleEdit = (field: string, save = true) => {
-    setEditMode((prev) => {
-      const newState = {
-        ...prev,
-        [field]: !prev[field],
-      };
-
-      // When exiting edit mode, save changes if needed
-      if (save && prev[field] && !newState[field]) {
-        if (field.startsWith('client-') && editedClient && onUpdateClient) {
-          onUpdateClient(editedClient);
-        } else if (onUpdateItems) {
-          onUpdateItems(editedItems);
-        }
-      }
-
-      return newState;
-    });
-  };
-
-  // Handle edit of client fields
-  const handleClientEdit = (field: string, value: string) => {
-    if (!editedClient) return;
-
-    const updatedClient = {
-      ...editedClient,
-      [field]: value,
-    };
-
-    setEditedClient(updatedClient);
-  };
-
-  // Handle edit of item fields
-  const handleItemEdit = (itemId: string, field: string, value: any) => {
-    const updatedItems = editedItems.map((item) => {
-      return item.id === itemId
-        ? {
-            ...item,
-            [field]: field === 'price' || field === 'quantity' ? Number(value) : value,
-            ...(field === 'fields' ? { fields: { ...item.fields, ...value } } : {}),
-          }
-        : item;
-    });
-
-    setEditedItems(updatedItems);
-
-    // Auto-update after a short delay
-    if (onUpdateItems) {
-      setTimeout(() => {
-        return onUpdateItems(updatedItems);
-      }, 500);
-    }
-  };
 
   // Open item edit dialog
   const openItemEditDialog = (item: InvoiceItem) => {
@@ -301,7 +247,6 @@ const InvoicePreview = ({
           ) : (
             <div className='space-y-2 mt-2'>
               {editedItems.map((item) => {
-                console.log('🚀 item:', item);
                 const itemQuantity = item.fields?.quantity || item.quantity || 1;
                 const itemPrice = item.fields?.unitPrice || item.price;
                 const itemTotal = itemQuantity * itemPrice;

@@ -328,10 +328,8 @@ const InvoiceWizardDialog = ({
                     allItems={allItems}
                     selectedItems={selectedItems}
                     toggleItemSelection={toggleItemSelection}
-                    isItemSelected={isItemSelected}
                     addAllItems={addAllItems}
                     removeAllItems={removeAllItems}
-                    areAllItemsSelected={areAllItemsSelected}
                   />
                 )}
 

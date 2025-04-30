@@ -216,7 +216,6 @@ const AttachmentManager = ({
   console.log('🚀 value:', value);
 
   const handleAddFileToProject = (file) => {
-    console.log('🚀 file:', file);
     const newAttachments = [...attachments];
 
     // Create a new attachment object
@@ -394,7 +393,7 @@ export const fileCellRenderer = (params: {
                 {attachments[0].contentType?.startsWith('image/') ? (
                   <div className='h-6 w-6 relative overflow-hidden rounded-sm border border-blue-200'>
                     <Image
-                      src={attachments[0].url || attachments[0].downloadURL}
+                      src={attachments[0].url || attachments[0].downloadURL || ''}
                       alt={attachments[0].name}
                       width={24}
                       height={24}
@@ -419,7 +418,7 @@ export const fileCellRenderer = (params: {
                         {attachment.contentType?.startsWith('image/') ? (
                           <div className='h-5 w-5 overflow-hidden rounded-sm border border-gray-200'>
                             <Image
-                              src={attachment.url || attachment.downloadURL}
+                              src={attachment.url || attachment.downloadURL || ''}
                               alt={attachment.name}
                               width={20}
                               height={20}
@@ -528,7 +527,6 @@ export const fileCellRenderer = (params: {
               return setIsModalOpen(false);
             }}
             handleAddFileToProject={(file) => {
-              console.log('🚀 file:', file);
               handleUpdateAttachments([
                 ...attachments,
                 {

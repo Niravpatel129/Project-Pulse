@@ -127,6 +127,7 @@ export const useInvoiceWizard = () => {
         // Convert project tasks to invoice items
         const taskItems: InvoiceItem[] = projectTasks.map((task: any, index: number) => {
           return {
+            _id: task._id,
             id: `task-${index}`,
             name: task.name,
             description: task.description,
