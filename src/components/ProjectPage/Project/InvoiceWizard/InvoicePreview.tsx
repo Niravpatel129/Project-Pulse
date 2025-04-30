@@ -376,7 +376,7 @@ const InvoicePreview = ({
                             {/* Add View Details button */}
                             {item.fields && Object.entries(item.fields).length > 0 && (
                               <div className='flex items-center gap-2 mt-1'>
-                                <Popover>
+                                <Popover modal>
                                   <PopoverTrigger asChild>
                                     <Button
                                       variant='outline'
