@@ -9,11 +9,15 @@ interface InvoiceItemDetailsProps {
 
 const InvoiceItemDetails = ({ item }: InvoiceItemDetailsProps) => {
   const renderAttachmentPreview = (attachment: any) => {
+    console.log('🚀 attachment:', attachment);
+    // "https://cdn.printshop.com/mockups/stickers.png"
     const isImageUrl = attachment.url && attachment.url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+    console.log('🚀 isImageUrl:', !!isImageUrl);
+    console.log('🚀 isImageUrl:', attachment.url, isImageUrl);
 
     return (
       <div className='p-3'>
-        {isImageUrl ? (
+        {!!isImageUrl ? (
           <div className='aspect-video bg-gray-100 rounded flex items-center justify-center overflow-hidden'>
             <img
               src={attachment.url}
@@ -72,10 +76,14 @@ const InvoiceItemDetails = ({ item }: InvoiceItemDetailsProps) => {
         return (
           <div className='flex gap-2 flex-wrap'>
             {value.slice(0, 2).map((file, i) => {
+              console.log('🚀 file:', file);
               return (
                 <span
                   key={`file-${i}`}
-                  className='text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded flex items-center gap-1'
+                  className='text-xs  text-blue-600 rounded flex items-center gap-1 cursor-pointer'
+                  onClick={() => {
+                    window.open(file.url, '_blank');
+                  }}
                 >
                   <svg
                     viewBox='0 0 24 24'

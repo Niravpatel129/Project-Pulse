@@ -1,4 +1,5 @@
 import { PopoverContent } from '@/components/ui/popover';
+import Image from 'next/image';
 
 interface InvoiceItemAttachmentProps {
   attachment: any;
@@ -6,9 +7,14 @@ interface InvoiceItemAttachmentProps {
 
 const InvoiceItemAttachment = ({ attachment }: InvoiceItemAttachmentProps) => {
   const isImageUrl = attachment.url && attachment.url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+  console.log('🚀 attachment:', attachment);
 
   return (
-    <PopoverContent side='right' align='start' className='w-72 p-0 max-h-[80vh] flex flex-col'>
+    <PopoverContent
+      side='right'
+      align='start'
+      className='w-72 p-0 max-h-[80vh] overflow-y-auto flex flex-col'
+    >
       <div className='p-3 border-b flex flex-col gap-1'>
         <h3 className='font-medium'>{attachment.title || 'Attachment'}</h3>
         <p className='text-xs text-gray-500'>{attachment.type || 'File'}</p>
@@ -16,7 +22,9 @@ const InvoiceItemAttachment = ({ attachment }: InvoiceItemAttachmentProps) => {
       <div className='p-3 overflow-y-auto'>
         {isImageUrl ? (
           <div className='aspect-video bg-gray-100 rounded flex items-center justify-center overflow-hidden'>
-            <img
+            <Image
+              width={100}
+              height={100}
               src={attachment.url}
               alt={attachment.title || 'Preview'}
               className='max-w-full max-h-full object-contain'

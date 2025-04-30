@@ -130,7 +130,7 @@ const InvoiceItems = ({
                                   field details
                                 </span>
 
-                                <Popover>
+                                <Popover modal>
                                   <PopoverTrigger asChild>
                                     <Button
                                       variant='outline'
@@ -203,7 +203,7 @@ const InvoiceItems = ({
                               <div className='flex gap-2 flex-wrap'>
                                 {item.attachments.map((attachment, index) => {
                                   return (
-                                    <Popover key={`${item.id}-attachment-${index}`}>
+                                    <Popover key={`${item.id}-attachment-${index}`} modal>
                                       <PopoverTrigger asChild>
                                         <Button
                                           variant='outline'
