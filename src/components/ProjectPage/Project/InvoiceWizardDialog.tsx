@@ -87,13 +87,13 @@ const InvoiceWizardDialog = ({ open, onOpenChange, projectId, clients = [] }) =>
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={true} onOpenChange={onOpenChange}>
       <DialogContent className='max-w-[1400px] p-0 overflow-hidden'>
         <DialogTitle className='sr-only'>Invoice Wizard</DialogTitle>
         <div className='flex h-[800px]'>
           {/* Sidebar Navigation */}
           <div className='w-[280px] border-r'>
-            <div className='flex justify-between items-center p-4 border-b'>
+            <div className='flex justify-between items-center p-4'>
               <h2 className='font-semibold'>Invoice Wizard</h2>
             </div>
 
