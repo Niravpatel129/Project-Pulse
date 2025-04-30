@@ -150,12 +150,16 @@ const InvoiceItems = ({
                                       View Details
                                     </Button>
                                   </PopoverTrigger>
-                                  <PopoverContent className='w-80 p-0'>
+                                  <PopoverContent
+                                    side='right'
+                                    align='start'
+                                    className='w-80 p-0 max-h-[80vh] flex flex-col'
+                                  >
                                     <div className='px-4 py-3 border-b'>
                                       <h3 className='font-medium'>{item.name}</h3>
                                       <p className='text-sm text-gray-500'>{item.description}</p>
                                     </div>
-                                    <div className='p-4 max-h-[300px] overflow-y-auto'>
+                                    <div className='p-4 overflow-y-auto'>
                                       {Object.entries(item.fields)
                                         .filter(([key]) => {
                                           return !['total', 'unitPrice', 'quantity'].includes(key);
@@ -165,22 +169,77 @@ const InvoiceItems = ({
                                           let displayValue: ReactNode = '';
                                           if (typeof value === 'object' && value !== null) {
                                             if (Array.isArray(value)) {
-                                              // Handle array values (like multiSelectColors)
-                                              displayValue = (
-                                                <div className='flex gap-1 mt-1 flex-wrap'>
-                                                  {value.map((v: any, i: number) => {
-                                                    return (
-                                                      <Badge
-                                                        key={`${key}-${i}`}
-                                                        variant='outline'
-                                                        className='text-xs'
-                                                      >
-                                                        {String(v)}
-                                                      </Badge>
-                                                    );
-                                                  })}
-                                                </div>
-                                              );
+                                              if (key === 'linkedItems') {
+                                                // Handle linkedItems array specially
+                                                displayValue = (
+                                                  <div className='flex flex-col gap-2 mt-1'>
+                                                    {value.length > 0 ? (
+                                                      value.map((item: any, i: number) => {
+                                                        return (
+                                                          <div
+                                                            key={`linkedItem-${i}`}
+                                                            className='border rounded p-2 bg-gray-50 text-sm'
+                                                          >
+                                                            <div className='font-medium mb-1'>
+                                                              {item.tableName || 'Linked Record'}
+                                                            </div>
+                                                            {item.displayValues && (
+                                                              <div className='grid grid-cols-1 gap-1'>
+                                                                {Object.entries(item.displayValues)
+                                                                  .slice(0, 3) // Limit fields shown
+                                                                  .map(([dKey, dValue]) => {
+                                                                    return (
+                                                                      <div
+                                                                        key={`display-${dKey}`}
+                                                                        className='flex items-start'
+                                                                      >
+                                                                        <span className='text-xs text-gray-500 min-w-[80px] mr-1'>
+                                                                          {dKey}:
+                                                                        </span>
+                                                                        <span className='text-xs truncate max-w-[150px]'>
+                                                                          {Array.isArray(dValue)
+                                                                            ? `${dValue.length} items`
+                                                                            : String(
+                                                                                dValue,
+                                                                              ).substring(0, 20) +
+                                                                              (String(dValue)
+                                                                                .length > 20
+                                                                                ? '...'
+                                                                                : '')}
+                                                                        </span>
+                                                                      </div>
+                                                                    );
+                                                                  })}
+                                                              </div>
+                                                            )}
+                                                          </div>
+                                                        );
+                                                      })
+                                                    ) : (
+                                                      <span className='text-gray-500 text-xs'>
+                                                        No linked items
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                );
+                                              } else {
+                                                // Handle regular arrays (like multiSelectColors)
+                                                displayValue = (
+                                                  <div className='flex gap-1 mt-1 flex-wrap'>
+                                                    {value.map((v: any, i: number) => {
+                                                      return (
+                                                        <Badge
+                                                          key={`${key}-${i}`}
+                                                          variant='outline'
+                                                          className='text-xs'
+                                                        >
+                                                          {String(v)}
+                                                        </Badge>
+                                                      );
+                                                    })}
+                                                  </div>
+                                                );
+                                              }
                                             } else {
                                               // Handle object values (like sizeBreakdown)
                                               displayValue = (
@@ -229,9 +288,9 @@ const InvoiceItems = ({
                                           return (
                                             <div
                                               key={`popover-${item.id}-field-${key}`}
-                                              className='mb-3'
+                                              className='mb-4 last:mb-0'
                                             >
-                                              <div className='text-sm font-medium capitalize'>
+                                              <div className='text-sm font-medium capitalize mb-1'>
                                                 {key.replace(/([A-Z])/g, ' $1').trim()}
                                               </div>
                                               <div className='text-sm text-gray-700'>
