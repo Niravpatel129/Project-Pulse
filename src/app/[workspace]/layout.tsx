@@ -19,6 +19,7 @@ export default function DashboardLayout({
     if (
       !loading &&
       !isAuthenticated &&
+      pathname &&
       !pathname.includes('/login') &&
       !pathname.includes('/register') &&
       !pathname.includes('/invoice/')
@@ -27,12 +28,12 @@ export default function DashboardLayout({
     }
   }, [isAuthenticated, loading, pathname, router]);
 
-  const isAuthPage = pathname.includes('/login') || pathname.includes('/register');
-  const isPortalPage = pathname.includes('/portal');
-  const isApprovalsPage = pathname.includes('/approvals');
-  const isInvoiceNewPage = pathname.includes('/invoices/new');
-  const isInvoiceViewPage = pathname.includes('/invoice/');
-  const isPaymentSuccessPage = pathname.includes('/payment-success');
+  const isAuthPage = pathname?.includes('/login') || pathname?.includes('/register');
+  const isPortalPage = pathname?.includes('/portal');
+  const isApprovalsPage = pathname?.includes('/approvals');
+  const isInvoiceNewPage = pathname?.includes('/invoices/new');
+  const isInvoiceViewPage = pathname?.includes('/invoice/');
+  const isPaymentSuccessPage = pathname?.includes('/payment-success');
 
   const showNavigation =
     !isAuthPage &&
@@ -43,7 +44,7 @@ export default function DashboardLayout({
     !isInvoiceViewPage &&
     !isPaymentSuccessPage;
 
-  const isLeadsPage = pathname.includes('/leads');
+  const isLeadsPage = pathname?.includes('/leads');
 
   const isFullPage = true;
 

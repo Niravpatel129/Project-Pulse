@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 interface Customer {
   id: string;
   name: string;
-  email: string;
+  email: string | undefined;
   phone?: string;
   company?: string;
 }

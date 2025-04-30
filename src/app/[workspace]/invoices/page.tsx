@@ -32,7 +32,7 @@ export default function InvoiceInterface() {
     }
   };
 
-  const status = searchParams.get('status');
+  const status = searchParams?.get('status');
 
   if (isAccountStatusLoading) {
     return (

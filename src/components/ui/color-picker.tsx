@@ -7,7 +7,7 @@ import { ChromePicker, ColorResult } from 'react-color';
 
 interface ColorPickerProps {
   label: string;
-  value: string;
+  value: string | undefined;
   onChange: (value: string) => void;
   className?: string;
 }

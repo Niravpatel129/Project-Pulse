@@ -27,7 +27,7 @@ interface TableToolbarProps {
   showFilters: boolean;
   setShowFilters: (show: boolean) => void;
   filters: Array<{ column: string; value: string }>;
-  quickFilterRef: React.RefObject<HTMLInputElement>;
+  quickFilterRef: React.RefObject<HTMLInputElement | null>;
   onFilterTextChange: () => void;
   addNewRow: () => void;
   handleAddColumn: () => void;

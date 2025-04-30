@@ -390,7 +390,7 @@ export default function BookingPage() {
                             }
                           }}
                           maxDate={
-                            booking?.dateRange?.end ? new Date(booking?.dateRange?.end) : null
+                            booking?.dateRange?.end ? new Date(booking?.dateRange?.end) : undefined
                           }
                           disabled={[{ before: new Date() }]}
                           className='w-full'

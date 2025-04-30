@@ -16,10 +16,13 @@ export const useInvoices = () => {
   const invoicesQuery = useQuery({
     queryKey: ['invoices'],
     queryFn: async () => {
+      if (!project?._id) {
+        throw new Error('Project ID is required');
+      }
       const res = await newRequest.get(`/projects/${project._id}/invoices`);
       return res.data.data;
     },
-    enabled: !!project,
+    enabled: !!project?._id,
   });
 
   const createStripeAccountMutation = useMutation({

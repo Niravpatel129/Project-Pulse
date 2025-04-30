@@ -122,8 +122,8 @@ function PaymentForm({
 
 export default function InvoicePage() {
   const params = useParams();
-  const invoiceId = params.id as string;
-  const workspace = params.workspace as string;
+  const invoiceId = params?.id as string;
+  const workspace = params?.workspace as string;
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   const { data: invoice, isLoading } = useQuery<Invoice>({

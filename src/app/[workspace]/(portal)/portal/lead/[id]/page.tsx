@@ -16,7 +16,8 @@ interface FormData {
 }
 
 export default function LeadPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params?.id as string;
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);

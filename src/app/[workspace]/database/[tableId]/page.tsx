@@ -74,10 +74,12 @@ export default function TablePage() {
   const [showFilters, setShowFilters] = useState(false);
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
-  const quickFilterRef = useRef<HTMLInputElement>(null);
+  const [quickFilterValue, setQuickFilterValue] = useState('');
+  const [filters, setFilters] = useState<Array<{ column: string; value: string }>>([]);
+  const [quickFilterTimeout, setQuickFilterTimeout] = useState<NodeJS.Timeout | null>(null);
+  const quickFilterRef = useRef<HTMLInputElement | null>(null);
 
   // Filter state
-  const [filters, setFilters] = useState<Array<{ column: string; value: string }>>([]);
   const [filterColumn, setFilterColumn] = useState('');
   const [filterValue, setFilterValue] = useState('');
 
@@ -178,8 +180,10 @@ export default function TablePage() {
       current: gridElement ? (gridElement as any).__agGridReact : null,
     };
 
-    handleDeleteSelected(gridRef, params.tableId as string, setRecords, setRowOrder, queryClient);
-  }, [params.tableId, setRecords, setRowOrder, queryClient]);
+    if (params?.tableId) {
+      handleDeleteSelected(gridRef, params.tableId as string, setRecords, setRowOrder, queryClient);
+    }
+  }, [params?.tableId, setRecords, setRowOrder, queryClient]);
 
   // Handle adding a new column
   const handleAddColumn = useCallback(() => {
@@ -189,9 +193,11 @@ export default function TablePage() {
   // Handle row drag end
   const handleRowDragEndCallback = useCallback(
     (event: any) => {
-      handleRowDragEnd(event, records, params.tableId as string, setRecords, setRowOrder);
+      if (params?.tableId) {
+        handleRowDragEnd(event, records, params.tableId as string, setRecords, setRowOrder);
+      }
     },
-    [records, params.tableId, setRecords, setRowOrder],
+    [records, params?.tableId, setRecords, setRowOrder],
   );
 
   // Handle importing data from XLSX
@@ -285,7 +291,7 @@ export default function TablePage() {
         });
 
         // Verify columns exist in the backend before proceeding
-        let tableColumns = [];
+        let tableColumns: any[] = [];
         try {
           const checkTableResponse = await newRequest.get(`/tables/${newTableId}`);
           tableColumns = checkTableResponse.data.data.columns;
@@ -294,7 +300,7 @@ export default function TablePage() {
 
           // Create a mapping of column names to backend IDs to ensure correct assignment
           const columnMapping = new Map();
-          tableColumns.forEach((col) => {
+          tableColumns.forEach((col: any) => {
             columnMapping.set(col.name.toLowerCase(), col._id || col.id);
           });
 

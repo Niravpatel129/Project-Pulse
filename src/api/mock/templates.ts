@@ -46,8 +46,8 @@ export const handleTemplatesRequest = (
 
           // Sort templates
           filteredTemplates.sort((a, b) => {
-            const aValue = a[sort as keyof Template];
-            const bValue = b[sort as keyof Template];
+            const aValue: any = a[sort as keyof Template];
+            const bValue: any = b[sort as keyof Template];
 
             if (order === 'asc') {
               return aValue > bValue ? 1 : -1;

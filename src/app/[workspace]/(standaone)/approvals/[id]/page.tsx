@@ -198,9 +198,10 @@ function renderRelationValue(value: any) {
 }
 
 export default function ApprovalRequestPage() {
-  const { id } = useParams();
-  const searchParams = useSearchParams();
-  const userId = searchParams.get('user');
+  const params = useParams();
+  const id = params?.id as string;
+  const searchParams = useSearchParams() || new URLSearchParams();
+  const userId = searchParams.get('user') || undefined;
 
   const { approvalRequest, loading, error, updateStatus, selectedVersion, switchVersion } =
     useApprovalRequest(id as string, userId || undefined);
@@ -297,7 +298,7 @@ export default function ApprovalRequestPage() {
       title: approvalRequest?.requestedBy?.name || '',
       action: 'requested approval for',
       description: approvalRequest?.timeline[0]?.description || '',
-      image: approvalRequest?.requestedBy?.avatar || null,
+      image: approvalRequest?.requestedBy?.avatar || undefined,
     },
     ...(approvalRequest?.timeline.slice(1).map((item, index) => {
       return {
@@ -306,7 +307,7 @@ export default function ApprovalRequestPage() {
         title: item.action === 'commented' ? item.author : approvalRequest?.requestedBy?.name,
         action: item.action,
         description: item.description,
-        image: approvalRequest?.requestedBy?.avatar || null,
+        image: approvalRequest?.requestedBy?.avatar || undefined,
       };
     }) || []),
   ];

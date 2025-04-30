@@ -19,7 +19,7 @@ interface EditClientDialogProps {
   client: {
     id: string;
     name: string;
-    email: string;
+    email: string | undefined;
     phone?: string;
     company?: string;
   };
