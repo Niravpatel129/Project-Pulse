@@ -36,7 +36,7 @@ export const handleTemplatesRequest = (
           let filteredTemplates = [...mockTemplates];
           if (search) {
             const searchLower = search.toLowerCase();
-            filteredTemplates = filteredTemplates.filter((template) => {
+            filteredTemplates = filteredTemplates.filter((template: any) => {
               return (
                 template.name.toLowerCase().includes(searchLower) ||
                 template.description.toLowerCase().includes(searchLower)
