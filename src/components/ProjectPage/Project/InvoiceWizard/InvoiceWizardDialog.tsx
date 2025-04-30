@@ -210,9 +210,9 @@ const InvoiceWizardDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-[1400px] p-0 overflow-hidden sm:max-h-[95vh] h-full md:h-[800px] w-full'>
+      <DialogContent className='max-w-[1400px] p-0 sm:max-h-[95vh] h-full md:h-[800px] w-full'>
         <DialogTitle className='sr-only'>Invoice Wizard</DialogTitle>
-        <div className='flex flex-col md:flex-row h-full'>
+        <div className='flex flex-col md:flex-row h-full overflow-hidden'>
           {/* Sidebar Navigation - Hidden on mobile, shown on tablet/desktop */}
           <div className='hidden md:block'>
             <InvoiceSidebar
@@ -294,7 +294,7 @@ const InvoiceWizardDialog = ({
           </div>
 
           {/* Main Content */}
-          <div className='flex-1 flex flex-col h-full'>
+          <div className='flex-1 flex flex-col h-full overflow-hidden'>
             {/* Select Items Header - Desktop only */}
             <div className='hidden md:flex justify-between items-center p-4 border-b'>
               <h2 className='font-semibold'>
@@ -306,7 +306,7 @@ const InvoiceWizardDialog = ({
             </div>
 
             {/* Content Area */}
-            <div className='flex h-full flex-col md:flex-row'>
+            <div className='flex h-full flex-col md:flex-row overflow-hidden'>
               {/* Main Content - Hidden when preview is shown on mobile */}
               <div
                 className={`flex-1 p-4 overflow-y-auto pb-24 ${
@@ -364,7 +364,11 @@ const InvoiceWizardDialog = ({
               </div>
 
               {/* Invoice Preview - Hidden by default on mobile, shown when toggled */}
-              <div className={`${showPreview ? 'block' : 'hidden md:block'} md:w-[400px] border-l`}>
+              <div
+                className={`${
+                  showPreview ? 'block' : 'hidden md:block'
+                } md:w-[400px] border-l overflow-y-auto`}
+              >
                 <InvoicePreview
                   selectedItems={selectedItems}
                   calculateSubtotal={calculateSubtotal}
