@@ -4,6 +4,7 @@ import { newRequest } from '../utils/newRequest';
 
 export type InvoiceItem = {
   id: string;
+  _id?: string;
   name: string;
   description: string;
   price: number;

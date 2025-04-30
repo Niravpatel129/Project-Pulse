@@ -22,10 +22,8 @@ const InvoiceItems = ({
   allItems,
   selectedItems,
   toggleItemSelection,
-  isItemSelected,
   addAllItems,
   removeAllItems,
-  areAllItemsSelected,
 }: InvoiceItemsProps) => {
   // Memoize filtered items to avoid recalculation on every render
   const deliverableItems = useMemo(() => {
