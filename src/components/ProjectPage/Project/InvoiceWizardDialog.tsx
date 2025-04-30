@@ -1055,6 +1055,7 @@ const InvoiceWizardDialog = ({
                     <span>${calculateTotal().toFixed(2)}</span>
                   </div>
                 </div>
+                <div className='pb-24'></div>
               </div>
             </div>
           </div>
