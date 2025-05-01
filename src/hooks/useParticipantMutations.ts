@@ -67,8 +67,31 @@ export const useParticipantMutations = (
     },
   });
 
+  const updateParticipantMutation = useMutation({
+    mutationFn: ({
+      participantId,
+      updates,
+    }: {
+      participantId: string;
+      updates: Partial<Participant>;
+    }) => {
+      return participantService.updateParticipant(projectId, participantId, updates);
+    },
+    onSuccess: (_, variables) => {
+      toast.success('Participant Updated', {
+        description: `Participant information has been updated successfully.`,
+      });
+      invalidateQueries();
+      onOpenChange(false);
+    },
+    onError: (error: APIError) => {
+      return handleError(error);
+    },
+  });
+
   return {
     addParticipantMutation,
     addExistingContactMutation,
+    updateParticipantMutation,
   };
 };

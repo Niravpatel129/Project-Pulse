@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
+import { useProject } from '@/contexts/ProjectContext';
+import { useParticipantMutations } from '@/hooks/useParticipantMutations';
 import { Pencil, PlusCircle, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import InvoiceItemDetails from './InvoiceItemDetails';
@@ -47,6 +49,16 @@ const InvoicePreview = ({
   const [currentEditItem, setCurrentEditItem] = useState<InvoiceItem | null>(null);
   const [editedItemValues, setEditedItemValues] = useState<Partial<InvoiceItem>>({});
   const [editedClientValues, setEditedClientValues] = useState<Partial<any>>({});
+
+  // Use project ID from the client if available
+  const { project } = useProject();
+  const projectId = project._id;
+
+  // Initialize participant mutations
+  const { addParticipantMutation, addExistingContactMutation, updateParticipantMutation } =
+    useParticipantMutations(projectId, (open: boolean) => {
+      return setClientDialogOpen(open);
+    });
 
   // Initialize edited items and client when props change
   useEffect(() => {
@@ -116,15 +128,35 @@ const InvoicePreview = ({
     setItemDialogOpen(false);
   };
 
-  // Save client edits from dialog
+  // Save client edits from dialog with mutation support
   const saveClientEdits = () => {
     if (!editedClient || !editedClientValues) return;
 
     const updatedClient = { ...editedClient, ...editedClientValues };
     setEditedClient(updatedClient);
+    console.log('🚀 updatedClient:', updatedClient);
 
-    if (onUpdateClient) {
-      onUpdateClient(updatedClient);
+    // If client has an ID and is a participant in the project
+    if (updatedClient._id && projectId) {
+      // Use the updateParticipantMutation to update the participant details
+      updateParticipantMutation.mutate({
+        participantId: updatedClient._id,
+        updates: {
+          name: updatedClient.name,
+          email: updatedClient.email,
+          // Add company and address as custom fields if they exist
+          customFields: [
+            ...(updatedClient.customFields || []),
+            ...(updatedClient.company ? [{ key: 'company', value: updatedClient.company }] : []),
+            ...(updatedClient.address ? [{ key: 'address', value: updatedClient.address }] : []),
+          ],
+        },
+      });
+    } else {
+      // Fall back to the regular onUpdateClient
+      if (onUpdateClient) {
+        onUpdateClient(updatedClient);
+      }
     }
 
     setClientDialogOpen(false);

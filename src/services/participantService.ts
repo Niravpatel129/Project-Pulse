@@ -45,4 +45,14 @@ export const participantService = {
       projectId,
     });
   },
+
+  updateParticipant: async (
+    projectId: string,
+    participantId: string,
+    updates: Partial<Participant>,
+  ) => {
+    return await newRequest.put(`/projects/${projectId}/participants/${participantId}`, {
+      updates,
+    });
+  },
 };
