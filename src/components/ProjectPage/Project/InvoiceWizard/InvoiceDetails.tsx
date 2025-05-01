@@ -270,7 +270,7 @@ const InvoiceDetails = ({
           <div>
             <Label className='flex items-center gap-2 mb-1'>
               <Switch checked={includePaymentLink} onCheckedChange={setIncludePaymentLink} />
-              <span className='font-medium'>Include payment link</span>
+              <span className='font-medium'>Include online payment</span>
             </Label>
             <p className='text-xs text-gray-500 ml-9'>
               {includePaymentLink
