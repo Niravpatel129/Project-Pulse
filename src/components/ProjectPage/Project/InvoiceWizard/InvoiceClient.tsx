@@ -32,6 +32,7 @@ const InvoiceClient = ({ clients, selectedClient, handleSelectClient }: InvoiceC
   const [clientToEdit, setClientToEdit] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const queryClient = useQueryClient();
+  console.log('🚀 participants:', participants);
 
   // Helper function to check if a client is selected
   const isClientSelected = (client: any) => {

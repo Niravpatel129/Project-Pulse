@@ -85,9 +85,7 @@ export default function ClientDetailsDialog({
     setIsSubmitting(true);
 
     try {
-      let response;
       const clientId = client.id || client._id;
-      const isParticipant = !!client._id;
 
       // Format the data for the API
       const clientData = {
@@ -101,14 +99,10 @@ export default function ClientDetailsDialog({
         customFields: values.customFields,
       };
 
-      if (isParticipant && project?._id) {
-        // Update participant in the project
-        response = await newRequest.put(`/participants/${clientId}`, clientData);
-      } else {
-        // Update regular client
-        response = await newRequest.patch(`/workspaces/clients/${clientId}`, clientData);
-      }
+      // Update client using the clients endpoint only
+      const response = await newRequest.put(`/participants/${clientId}`, clientData);
 
+      // Handle the response based on the structure returned by the backend
       const updatedClient = response.data.data || { ...client, ...clientData };
       toast.success('Client updated successfully');
 
