@@ -37,8 +37,14 @@ const InvoicePreview = ({
   onUpdateClient,
 }: InvoicePreviewProps) => {
   // Get shipping information from context
-  const { shippingItem, removeShipping, calculateShippingTotal, shippingRequired } =
-    useInvoiceWizardContext();
+  const {
+    shippingItem,
+    removeShipping,
+    calculateShippingTotal,
+    shippingRequired,
+    taxId,
+    showTaxId,
+  } = useInvoiceWizardContext();
 
   // State for editing
   const [editedItems, setEditedItems] = useState<InvoiceItem[]>([]);
@@ -248,6 +254,16 @@ const InvoicePreview = ({
             </>
           )}
         </div>
+
+        {/* Display Tax ID if enabled */}
+        {showTaxId && taxId && (
+          <div className='mt-4 mb-2 p-3 border rounded-md bg-white'>
+            <div className='flex flex-col'>
+              <h5 className='font-medium mb-1'>Tax ID</h5>
+              <p className='text-sm text-muted-foreground'>{taxId}</p>
+            </div>
+          </div>
+        )}
 
         <div className='mt-4 flex-1 overflow-y-auto'>
           <h4 className='font-medium mb-2'>Items</h4>

@@ -33,6 +33,10 @@ const InvoiceSidebar = ({
     isGenerating,
     handleCreateInvoice,
     shippingItem,
+    taxId,
+    setTaxId,
+    showTaxId,
+    setShowTaxId,
   } = useInvoiceWizardContext();
 
   // Show shipping tab if shipping is required, there are physical products, or a shipping item exists
@@ -142,14 +146,31 @@ const InvoiceSidebar = ({
 
       <div className='p-4 border-t mt-auto'>
         <div className='mb-4'>
-          <label className='text-sm text-gray-500'>Invoice Number</label>
+          <div className='flex items-center justify-between mb-2'>
+            <label className='text-sm text-gray-500'>Tax ID</label>
+            <div className='flex items-center'>
+              <label htmlFor='showTaxId' className='text-xs text-gray-600 mr-2'>
+                Show on invoice
+              </label>
+              <Switch
+                id='showTaxId'
+                className='data-[state=checked]:bg-gray-900'
+                checked={showTaxId}
+                onCheckedChange={(checked) => {
+                  return setShowTaxId(checked);
+                }}
+              />
+            </div>
+          </div>
           <Input
-            value={invoiceNumber}
+            value={taxId}
             onChange={(e) => {
-              return setInvoiceNumber(e.target.value);
+              return setTaxId(e.target.value);
             }}
             className='mt-1'
+            placeholder='Enter your tax ID'
           />
+          <p className='text-xs text-gray-500 mt-1'>This will appear on the invoice if enabled.</p>
         </div>
 
         <div>
@@ -180,11 +201,6 @@ const InvoiceSidebar = ({
               />
             </PopoverContent>
           </Popover>
-        </div>
-
-        <div className='flex items-center justify-between mt-4'>
-          <span className='text-sm'>AI Suggestions</span>
-          <Switch checked={aiSuggestions} onCheckedChange={setAiSuggestions} />
         </div>
 
         <div className='mt-6 space-y-2'>

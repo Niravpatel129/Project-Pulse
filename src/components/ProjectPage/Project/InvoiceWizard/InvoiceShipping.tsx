@@ -120,18 +120,6 @@ const InvoiceShipping = ({ setActiveTab }: InvoiceShippingProps) => {
               {shippingItem.name} (${shippingItem.price.toFixed(2)})
             </p>
             <p className='text-xs text-green-600 mt-1'>{shippingItem.description}</p>
-            <div className='flex justify-end mt-3'>
-              <Button
-                variant='outline'
-                size='sm'
-                className='text-green-700 border-green-300 hover:bg-green-100'
-                onClick={() => {
-                  return setActiveTab('items');
-                }}
-              >
-                View Invoice
-              </Button>
-            </div>
           </div>
         )}
 
@@ -242,15 +230,6 @@ const InvoiceShipping = ({ setActiveTab }: InvoiceShippingProps) => {
         )}
 
         <div className='mt-4 flex space-x-2'>
-          <Button
-            variant='outline'
-            className='flex-1'
-            onClick={() => {
-              return setActiveTab('items');
-            }}
-          >
-            Back to Items
-          </Button>
           <Button
             className='flex-1'
             onClick={handleAddShippingAndContinue}

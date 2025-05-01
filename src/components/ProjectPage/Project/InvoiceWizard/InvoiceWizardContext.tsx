@@ -1,4 +1,6 @@
+import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { useInvoiceWizard } from '@/hooks/useInvoiceWizard';
+import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { InvoiceItem } from './types';
 
@@ -33,6 +35,10 @@ type InvoiceWizardContextType = {
   setAllItems: (items: InvoiceItem[]) => void;
   showPreview: boolean;
   setShowPreview: (show: boolean) => void;
+  taxId: string;
+  setTaxId: (id: string) => void;
+  showTaxId: boolean;
+  setShowTaxId: (show: boolean) => void;
 
   // Shipping related states - now separate
   selectedShippingMethod: any | null;
@@ -110,6 +116,9 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
     setSelectedItems,
   } = useInvoiceWizard();
 
+  const { data: invoiceSettings } = useInvoiceSettings();
+  const updateInvoiceSettings = useUpdateInvoiceSettings();
+
   const [activeTab, setActiveTab] = useState('items');
   const [selectedClient, setSelectedClient] = useState<any | null>(null);
   const [taxRate, setTaxRate] = useState(20);
@@ -120,12 +129,51 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
   const [hasPhysicalProducts, setHasPhysicalProducts] = useState(false);
   const [allItems, setAllItems] = useState<InvoiceItem[]>([]);
   const [showPreview, setShowPreview] = useState(false);
+  const [taxId, setTaxId] = useState('');
+  const [showTaxId, setShowTaxId] = useState(false);
 
   // Separate shipping state
   const [selectedShippingMethod, setSelectedShippingMethod] = useState<any | null>(null);
   const [shippingItem, setShippingItem] = useState<ShippingItem | null>(null);
   const [useShippingAddress, setUseShippingAddress] = useState(false);
   const [shippingAddress, setShippingAddress] = useState<any>(null);
+
+  // Initialize taxId and showTaxId from invoice settings
+  useEffect(() => {
+    if (invoiceSettings) {
+      if (invoiceSettings.taxId !== undefined) {
+        setTaxId(invoiceSettings.taxId);
+      }
+      if (invoiceSettings.showTaxId !== undefined) {
+        setShowTaxId(invoiceSettings.showTaxId);
+      }
+    }
+  }, [invoiceSettings]);
+
+  // Update invoice settings when taxId or showTaxId changes
+  const handleTaxIdChange = (value: string) => {
+    setTaxId(value);
+    if (invoiceSettings) {
+      updateInvoiceSettings.mutate({
+        settings: {
+          ...invoiceSettings,
+          taxId: value,
+        },
+      });
+    }
+  };
+
+  const handleShowTaxIdChange = (value: boolean) => {
+    setShowTaxId(value);
+    if (invoiceSettings) {
+      updateInvoiceSettings.mutate({
+        settings: {
+          ...invoiceSettings,
+          showTaxId: value,
+        },
+      });
+    }
+  };
 
   useEffect(() => {
     // Check if any selected items are physical products
@@ -192,6 +240,8 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
       dueDate,
       taxRate,
       notes,
+      taxId,
+      showTaxId,
       shipping: shippingItem
         ? {
             item: shippingItem,
@@ -342,6 +392,10 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
     setUseShippingAddress,
     shippingAddress,
     setShippingAddress,
+    taxId,
+    setTaxId: handleTaxIdChange,
+    showTaxId,
+    setShowTaxId: handleShowTaxIdChange,
 
     // Invoice wizard hook values
     selectedItems,
