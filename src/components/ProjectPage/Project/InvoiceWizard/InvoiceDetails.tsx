@@ -15,7 +15,7 @@ import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
 import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface InvoiceDetailsProps {
   selectedTax: string;
@@ -40,6 +40,13 @@ const InvoiceDetails = ({
   const updateInvoiceSettings = useUpdateInvoiceSettings();
   const [isCreatingTax, setIsCreatingTax] = useState(false);
   const [newTax, setNewTax] = useState({ name: '', rate: 0 });
+  const [localCurrency, setLocalCurrency] = useState(invoiceSettings?.currency || 'usd');
+
+  useEffect(() => {
+    if (invoiceSettings?.currency) {
+      setLocalCurrency(invoiceSettings.currency);
+    }
+  }, [invoiceSettings?.currency]);
 
   const handleSettingsUpdate = (updates: Partial<typeof invoiceSettings>) => {
     updateInvoiceSettings.mutate({
@@ -159,18 +166,28 @@ const InvoiceDetails = ({
         </p>
       </div>
 
+      {/* Currency section */}
       <div>
-        <Label htmlFor='currency'>Currency</Label>
-        <select
-          id='currency'
-          className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1'
-          defaultValue='USD'
+        <h2 className='text-sm font-medium text-gray-900 mb-3'>Currency</h2>
+        <Select
+          value={localCurrency}
+          onValueChange={(value) => {
+            setLocalCurrency(value);
+            handleSettingsUpdate({ currency: value });
+          }}
         >
-          <option value='USD'>USD ($)</option>
-          <option value='EUR'>EUR (€)</option>
-          <option value='GBP'>GBP (£)</option>
-          <option value='CAD'>CAD (C$)</option>
-        </select>
+          <SelectTrigger className='w-full bg-white border-gray-200'>
+            <SelectValue placeholder='Select currency' />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value='usd'>USD - US Dollar</SelectItem>
+            <SelectItem value='eur'>EUR - Euro</SelectItem>
+            <SelectItem value='gbp'>GBP - British Pound</SelectItem>
+            <SelectItem value='cad'>CAD - Canadian Dollar</SelectItem>
+            <SelectItem value='aud'>AUD - Australian Dollar</SelectItem>
+            <SelectItem value='jpy'>JPY - Japanese Yen</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div>
