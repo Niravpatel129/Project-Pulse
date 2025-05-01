@@ -49,7 +49,7 @@ const InvoiceDetails = ({
   const [isCreatingTax, setIsCreatingTax] = useState(false);
   const [newTax, setNewTax] = useState({ name: '', rate: 0 });
   const [localCurrency, setLocalCurrency] = useState(invoiceSettings?.currency || 'usd');
-  const { shippingItem, discount, setDiscount } = useInvoiceWizardContext();
+  const { shippingItem, discount, setDiscount, removeShipping } = useInvoiceWizardContext();
 
   // Toggle states
   const [sendAutomatically, setSendAutomatically] = useState(true);
@@ -329,7 +329,8 @@ const InvoiceDetails = ({
                 size='sm'
                 className='text-red-600 p-0'
                 onClick={() => {
-                  return setShippingRequired(false);
+                  removeShipping();
+                  setShippingRequired(false);
                 }}
               >
                 Remove shipping
