@@ -163,6 +163,13 @@ const InvoicePreview = ({
     }
   };
 
+  // Remove a shipping item with confirmation
+  const removeShippingItem = (itemId: string) => {
+    if (window.confirm('Remove shipping from invoice?')) {
+      removeItem(itemId);
+    }
+  };
+
   return (
     <>
       <div className='w-full md:w-[400px] p-4 flex flex-col overflow-y-auto'>
@@ -241,135 +248,43 @@ const InvoicePreview = ({
           )}
         </div>
 
-        <div className='mt-4'>
-          <div className='flex justify-between font-medium border-b pb-2'>
-            <span>Item</span>
-            <div className='flex gap-8'>
-              <span>Qty</span>
-              <span>Price</span>
-              <span>Total</span>
+        {/* Add shipping info section */}
+        {editedItems.some((item) => {
+          return item.type === 'shipping';
+        }) && (
+          <div className='flex flex-col py-4 border-b w-full'>
+            <div className='flex justify-between items-start'>
+              <h4 className='font-medium mb-2'>Shipping:</h4>
+              <Button
+                size='sm'
+                variant='ghost'
+                className='text-xs text-blue-600 p-0 h-6'
+                onClick={() => {
+                  return setActiveTab('shipping');
+                }}
+              >
+                Change
+              </Button>
             </div>
-          </div>
-
-          {editedItems.length === 0 ? (
-            <div className='text-center py-8 text-gray-500'>No items added to invoice</div>
-          ) : (
-            <div className='space-y-2 mt-2'>
-              {editedItems.map((item) => {
-                const itemQuantity = item.fields?.quantity || item.quantity || 1;
-                const itemPrice = item.fields?.unitPrice || item.price;
-                const itemTotal = itemQuantity * itemPrice;
-
+            {editedItems
+              .filter((item) => {
+                return item.type === 'shipping';
+              })
+              .map((item) => {
                 return (
-                  <div
-                    key={item.id}
-                    className='flex justify-between items-start py-2 border-b relative group'
-                  >
-                    <div className='max-w-[180px]'>
-                      <div className='font-medium'>{item.name}</div>
-
-                      {item.labels && item.labels.length > 0 && (
-                        <div className='flex flex-wrap gap-1 mt-1'>
-                          {item.labels.map((label, index) => {
-                            return (
-                              <Badge
-                                key={`${item.id}-preview-${index}`}
-                                variant='outline'
-                                className='text-xs px-1 py-0'
-                              >
-                                {label}
-                              </Badge>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {/* Show a brief summary of dynamic fields */}
-                      {item.fields &&
-                        Object.keys(item.fields).filter((key) => {
-                          return (
-                            !['unitPrice', 'quantity', 'total'].includes(key) &&
-                            key in item.fields! &&
-                            item.fields![key] !== null &&
-                            item.fields![key] !== undefined
-                          );
-                        }).length > 0 && (
-                          <div className='text-xs text-gray-500 mt-1 truncate'>
-                            {Object.entries(item.fields)
-                              .filter(([key]) => {
-                                return !['unitPrice', 'quantity', 'total'].includes(key);
-                              })
-                              .slice(0, 2)
-                              .map(([key, value]) => {
-                                let displayValue = '';
-                                if (typeof value === 'object' && value !== null) {
-                                  if (Array.isArray(value)) {
-                                    displayValue = value.length > 0 ? `${value.length} items` : '';
-                                  } else {
-                                    displayValue =
-                                      Object.keys(value).length > 0
-                                        ? `${Object.keys(value).length} details`
-                                        : '';
-                                  }
-                                } else if (value !== null && value !== undefined) {
-                                  displayValue =
-                                    String(value).length > 15
-                                      ? String(value).substring(0, 15) + '...'
-                                      : String(value);
-                                }
-                                return displayValue
-                                  ? `${key.replace(/([A-Z])/g, ' $1').trim()}: ${displayValue}`
-                                  : '';
-                              })
-                              .filter((text) => {
-                                return text;
-                              })
-                              .join(', ')}
-                            {item.fields && Object.keys(item.fields).length > 2 ? '...' : ''}
-
-                            {/* Add View Details button */}
-                            {item.fields && Object.entries(item.fields).length > 0 && (
-                              <div className='flex items-center gap-2 mt-1'>
-                                <Popover modal>
-                                  <PopoverTrigger asChild>
-                                    <Button
-                                      variant='outline'
-                                      size='sm'
-                                      className='h-7 px-2 gap-1 text-blue-600 border-blue-200 hover:bg-blue-50'
-                                    >
-                                      <svg
-                                        viewBox='0 0 24 24'
-                                        width='14'
-                                        height='14'
-                                        fill='none'
-                                        stroke='currentColor'
-                                        strokeWidth='2'
-                                      >
-                                        <circle cx='12' cy='12' r='10' />
-                                        <path d='M12 16v-4M12 8h.01' />
-                                      </svg>
-                                      View Details
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <InvoiceItemDetails item={item} />
-                                </Popover>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                  <div key={item.id} className='flex justify-between w-full mb-2 relative group'>
+                    <div>
+                      <p className='font-medium text-sm'>{item.name}</p>
+                      <p className='text-xs text-muted-foreground'>{item.description}</p>
                     </div>
-                    <div className='flex gap-8 text-sm'>
-                      <span>{itemQuantity}</span>
-                      <span>${itemPrice.toFixed(2)}</span>
-                      <span>${itemTotal.toFixed(2)}</span>
-                    </div>
-                    <div className='absolute bottom-2 right-0 flex opacity-0 group-hover:opacity-100'>
+                    <div className='flex items-center'>
+                      <span className='font-medium mr-6'>${item.price.toFixed(2)}</span>
                       <Button
                         size='sm'
                         variant='ghost'
-                        className='rounded-full h-6 w-6 p-0 mr-1 text-red-500 hover:text-red-700 hover:bg-red-50'
+                        className='h-6 w-6 p-0 rounded-full text-red-500 opacity-0 group-hover:opacity-100'
                         onClick={() => {
-                          return removeItem(item.id);
+                          return removeShippingItem(item.id);
                         }}
                       >
                         <svg
@@ -388,20 +303,181 @@ const InvoicePreview = ({
                           />
                         </svg>
                       </Button>
-                      <Button
-                        size='sm'
-                        variant='ghost'
-                        className='rounded-full h-6 w-6 p-0'
-                        onClick={() => {
-                          return openItemEditDialog(item);
-                        }}
-                      >
-                        <Pencil size={12} />
-                      </Button>
                     </div>
                   </div>
                 );
               })}
+          </div>
+        )}
+
+        <div className='mt-4'>
+          <div className='flex justify-between font-medium border-b pb-2'>
+            <span>Item</span>
+            <div className='flex gap-8'>
+              <span>Qty</span>
+              <span>Price</span>
+              <span>Total</span>
+            </div>
+          </div>
+
+          {editedItems.filter((item) => {
+            return item.type !== 'shipping';
+          }).length === 0 ? (
+            <div className='text-center py-8 text-gray-500'>No items added to invoice</div>
+          ) : (
+            <div className='space-y-2 mt-2'>
+              {editedItems
+                .filter((item) => {
+                  return item.type !== 'shipping';
+                })
+                .map((item) => {
+                  const itemQuantity = item.fields?.quantity || item.quantity || 1;
+                  const itemPrice = item.fields?.unitPrice || item.price;
+                  const itemTotal = itemQuantity * itemPrice;
+
+                  return (
+                    <div
+                      key={item.id}
+                      className='flex justify-between items-start py-2 border-b relative group'
+                    >
+                      <div className='max-w-[180px]'>
+                        <div className='font-medium'>{item.name}</div>
+
+                        {item.labels && item.labels.length > 0 && (
+                          <div className='flex flex-wrap gap-1 mt-1'>
+                            {item.labels.map((label, index) => {
+                              return (
+                                <Badge
+                                  key={`${item.id}-preview-${index}`}
+                                  variant='outline'
+                                  className='text-xs px-1 py-0'
+                                >
+                                  {label}
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Show a brief summary of dynamic fields */}
+                        {item.fields &&
+                          Object.keys(item.fields).filter((key) => {
+                            return (
+                              !['unitPrice', 'quantity', 'total'].includes(key) &&
+                              key in item.fields! &&
+                              item.fields![key] !== null &&
+                              item.fields![key] !== undefined
+                            );
+                          }).length > 0 && (
+                            <div className='text-xs text-gray-500 mt-1 truncate'>
+                              {Object.entries(item.fields)
+                                .filter(([key]) => {
+                                  return !['unitPrice', 'quantity', 'total'].includes(key);
+                                })
+                                .slice(0, 2)
+                                .map(([key, value]) => {
+                                  let displayValue = '';
+                                  if (typeof value === 'object' && value !== null) {
+                                    if (Array.isArray(value)) {
+                                      displayValue =
+                                        value.length > 0 ? `${value.length} items` : '';
+                                    } else {
+                                      displayValue =
+                                        Object.keys(value).length > 0
+                                          ? `${Object.keys(value).length} details`
+                                          : '';
+                                    }
+                                  } else if (value !== null && value !== undefined) {
+                                    displayValue =
+                                      String(value).length > 15
+                                        ? String(value).substring(0, 15) + '...'
+                                        : String(value);
+                                  }
+                                  return displayValue
+                                    ? `${key.replace(/([A-Z])/g, ' $1').trim()}: ${displayValue}`
+                                    : '';
+                                })
+                                .filter((text) => {
+                                  return text;
+                                })
+                                .join(', ')}
+                              {item.fields && Object.keys(item.fields).length > 2 ? '...' : ''}
+
+                              {/* Add View Details button */}
+                              {item.fields && Object.entries(item.fields).length > 0 && (
+                                <div className='flex items-center gap-2 mt-1'>
+                                  <Popover modal>
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant='outline'
+                                        size='sm'
+                                        className='h-7 px-2 gap-1 text-blue-600 border-blue-200 hover:bg-blue-50'
+                                      >
+                                        <svg
+                                          viewBox='0 0 24 24'
+                                          width='14'
+                                          height='14'
+                                          fill='none'
+                                          stroke='currentColor'
+                                          strokeWidth='2'
+                                        >
+                                          <circle cx='12' cy='12' r='10' />
+                                          <path d='M12 16v-4M12 8h.01' />
+                                        </svg>
+                                        View Details
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <InvoiceItemDetails item={item} />
+                                  </Popover>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                      </div>
+                      <div className='flex gap-8 text-sm'>
+                        <span>{itemQuantity}</span>
+                        <span>${itemPrice.toFixed(2)}</span>
+                        <span>${itemTotal.toFixed(2)}</span>
+                      </div>
+                      <div className='absolute bottom-2 right-0 flex opacity-0 group-hover:opacity-100'>
+                        <Button
+                          size='sm'
+                          variant='ghost'
+                          className='rounded-full h-6 w-6 p-0 mr-1 text-red-500 hover:text-red-700 hover:bg-red-50'
+                          onClick={() => {
+                            return removeItem(item.id);
+                          }}
+                        >
+                          <svg
+                            width='14'
+                            height='14'
+                            viewBox='0 0 24 24'
+                            fill='none'
+                            xmlns='http://www.w3.org/2000/svg'
+                          >
+                            <path
+                              d='M6 6L18 18M6 18L18 6'
+                              stroke='currentColor'
+                              strokeWidth='2'
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                            />
+                          </svg>
+                        </Button>
+                        <Button
+                          size='sm'
+                          variant='ghost'
+                          className='rounded-full h-6 w-6 p-0'
+                          onClick={() => {
+                            return openItemEditDialog(item);
+                          }}
+                        >
+                          <Pencil size={12} />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
           )}
         </div>
@@ -411,7 +487,28 @@ const InvoicePreview = ({
             <span>Subtotal</span>
             <span>${calculateSubtotal().toFixed(2)}</span>
           </div>
-          <div className='flex justify-between font-semibold'>
+
+          {/* Shipping total - only if shipping items exist */}
+          {editedItems.some((item) => {
+            return item.type === 'shipping';
+          }) && (
+            <div className='flex justify-between'>
+              <span>Shipping</span>
+              <span>
+                $
+                {editedItems
+                  .filter((item) => {
+                    return item.type === 'shipping';
+                  })
+                  .reduce((sum, item) => {
+                    return sum + item.price;
+                  }, 0)
+                  .toFixed(2)}
+              </span>
+            </div>
+          )}
+
+          <div className='flex justify-between font-semibold border-t pt-2 mt-2'>
             <span>Total</span>
             <span>${calculateTotal().toFixed(2)}</span>
           </div>

@@ -87,8 +87,27 @@ const InvoiceWizardDialog = ({
   };
 
   const addShippingToInvoice = () => {
-    // Implementation would add shipping to the invoice
-    console.log('Adding shipping method:', selectedShippingMethod);
+    if (!selectedShippingMethod) return;
+
+    // Create a shipping item to add to the invoice
+    const shippingItem = {
+      id: `shipping-${Date.now()}`,
+      name: `${selectedShippingMethod.name} (${selectedShippingMethod.carrier})`,
+      description: `Shipping via ${selectedShippingMethod.carrier} - ${selectedShippingMethod.estimatedDays}`,
+      price: selectedShippingMethod.price,
+      quantity: 1,
+      type: 'shipping',
+      taxable: false, // Depending on tax requirements
+    };
+
+    // Add the shipping item to the selected items
+    setSelectedItems([...selectedItems, shippingItem]);
+
+    // Optionally navigate to preview or items tab
+    setActiveTab('items');
+
+    // Show a confirmation or feedback
+    console.log('Shipping added to invoice:', shippingItem);
   };
 
   const handleCreateInvoice = async () => {
@@ -194,6 +213,35 @@ const InvoiceWizardDialog = ({
     setSelectedClient(updatedClient);
   };
 
+  // Custom calculate functions that handle shipping items properly
+  const calculateInvoiceSubtotal = () => {
+    // Calculate only non-shipping items
+    return selectedItems
+      .filter((item) => {
+        return item.type !== 'shipping';
+      })
+      .reduce((sum, item) => {
+        const quantity = item.quantity || 1;
+        return sum + item.price * quantity;
+      }, 0);
+  };
+
+  const calculateShippingTotal = () => {
+    // Calculate only shipping items
+    return selectedItems
+      .filter((item) => {
+        return item.type === 'shipping';
+      })
+      .reduce((sum, item) => {
+        return sum + item.price;
+      }, 0);
+  };
+
+  const calculateInvoiceTotal = () => {
+    // Calculate subtotal + shipping
+    return calculateInvoiceSubtotal() + calculateShippingTotal();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-w-[1400px] p-0 sm:max-h-[95vh] h-full md:h-[800px] w-full'>
@@ -210,8 +258,8 @@ const InvoiceWizardDialog = ({
               setDueDate={setDueDate}
               aiSuggestions={aiSuggestions}
               setAiSuggestions={setAiSuggestions}
-              calculateSubtotal={calculateSubtotal}
-              calculateTotal={calculateTotal}
+              calculateSubtotal={calculateInvoiceSubtotal}
+              calculateTotal={calculateInvoiceTotal}
               error={error}
               isGenerating={isGenerating}
               handleCreateInvoice={handleCreateInvoice}
@@ -356,8 +404,8 @@ const InvoiceWizardDialog = ({
               >
                 <InvoicePreview
                   selectedItems={selectedItems}
-                  calculateSubtotal={calculateSubtotal}
-                  calculateTotal={calculateTotal}
+                  calculateSubtotal={calculateInvoiceSubtotal}
+                  calculateTotal={calculateInvoiceTotal}
                   selectedClient={selectedClient}
                   setActiveTab={setActiveTab}
                   onUpdateItems={handleUpdateItems}
@@ -369,7 +417,7 @@ const InvoiceWizardDialog = ({
             {/* Mobile Action Bar */}
             <div className='md:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-between gap-2'>
               <div className='text-sm'>
-                <div>Total: ${calculateTotal().toFixed(2)}</div>
+                <div>Total: ${calculateInvoiceTotal().toFixed(2)}</div>
                 {error && <div className='text-red-500 text-xs'>{error}</div>}
               </div>
               <Button

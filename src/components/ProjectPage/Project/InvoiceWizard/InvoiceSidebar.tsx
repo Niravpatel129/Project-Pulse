@@ -118,7 +118,7 @@ const InvoiceSidebar = ({
           <span className={activeTab === 'details' ? 'font-medium' : ''}>Details</span>
         </button>
 
-        {(shippingRequired || hasPhysicalProducts) && (
+        {hasPhysicalProducts && (
           <button
             className={`flex items-center gap-3 w-full p-4 rounded-md ${
               activeTab === 'shipping' ? 'bg-gray-100' : ''
@@ -197,8 +197,19 @@ const InvoiceSidebar = ({
             <span className='text-sm'>Subtotal</span>
             <span className='font-medium'>${calculateSubtotal().toFixed(2)}</span>
           </div>
-          <div className='flex justify-between'>
-            <span className='text-sm'>Total</span>
+
+          {/* Show shipping costs if there are shipping items */}
+          {hasPhysicalProducts && shippingRequired && (
+            <div className='flex justify-between'>
+              <span className='text-sm'>Shipping</span>
+              <span className='font-medium'>
+                ${(calculateTotal() - calculateSubtotal()).toFixed(2)}
+              </span>
+            </div>
+          )}
+
+          <div className='flex justify-between border-t pt-2'>
+            <span className='text-sm font-medium'>Total</span>
             <span className='font-medium'>${calculateTotal().toFixed(2)}</span>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { Client } from '@/hooks/useInvoiceWizard';
 import { InvoiceWizardDialog } from './InvoiceWizard';
 
-interface OriginalInvoiceWizardDialogProps {
+interface InvoiceWizardDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
@@ -17,7 +17,7 @@ const OriginalInvoiceWizardDialog = ({
   onOpenChange,
   projectId,
   clients = [],
-}: OriginalInvoiceWizardDialogProps) => {
+}: InvoiceWizardDialogProps) => {
   return (
     <InvoiceWizardDialog
       open={open}

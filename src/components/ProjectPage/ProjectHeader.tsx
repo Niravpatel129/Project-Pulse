@@ -42,7 +42,7 @@ import { Input } from '../ui/input';
 import BlockWrapper from '../wrappers/BlockWrapper';
 import AddParticipantDialog from './AddParticipantDialog';
 import AddTeamDialog from './AddTeamDialog';
-import InvoiceWizardDialog from './Project/InvoiceWizardDialog';
+import { InvoiceWizardDialog } from './Project';
 import ProjectParticipants from './Project/ProjectParticipants';
 import ProjectReviewButton from './Project/ProjectReviewButton';
 import { ProjectSidebar } from './ProjectSidebar';
