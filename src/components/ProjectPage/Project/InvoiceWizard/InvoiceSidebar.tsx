@@ -21,12 +21,8 @@ const InvoiceSidebar = ({
   hasPhysicalProducts,
 }: InvoiceSidebarProps) => {
   const {
-    invoiceNumber,
-    setInvoiceNumber,
     dueDate,
     setDueDate,
-    aiSuggestions,
-    setAiSuggestions,
     calculateInvoiceSubtotal,
     calculateInvoiceTotal,
     error,
