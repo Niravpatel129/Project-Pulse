@@ -51,7 +51,7 @@ const InvoiceDetails = ({
   const [isCreatingTax, setIsCreatingTax] = useState(false);
   const [newTax, setNewTax] = useState({ name: '', rate: 0 });
   const [localCurrency, setLocalCurrency] = useState(invoiceSettings?.currency || 'usd');
-  const { shippingItem } = useInvoiceWizardContext();
+  const { shippingItem, discount, setDiscount } = useInvoiceWizardContext();
 
   useEffect(() => {
     if (invoiceSettings?.currency) {
@@ -89,6 +89,10 @@ const InvoiceDetails = ({
     if (checked) {
       setActiveTab('shipping');
     }
+  };
+
+  const handleDiscountChange = (value: string) => {
+    setDiscount(Number(value));
   };
 
   return (
@@ -178,6 +182,30 @@ const InvoiceDetails = ({
             })}
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Discount section */}
+      <div>
+        <h2 className='text-sm font-medium text-gray-900 mb-3'>Discount</h2>
+        <Select value={String(discount || '0')} onValueChange={handleDiscountChange}>
+          <SelectTrigger className='w-full bg-white border-gray-200'>
+            <SelectValue placeholder='Select discount' />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value='0'>No Discount</SelectItem>
+            <SelectItem value='5'>5% off</SelectItem>
+            <SelectItem value='10'>10% off</SelectItem>
+            <SelectItem value='15'>15% off</SelectItem>
+            <SelectItem value='20'>20% off</SelectItem>
+            <SelectItem value='25'>25% off</SelectItem>
+            <SelectItem value='50'>50% off</SelectItem>
+          </SelectContent>
+        </Select>
+        {Number(discount) > 0 && (
+          <p className='text-xs text-emerald-600 font-medium mt-1'>
+            {discount}% discount will be applied to the invoice
+          </p>
+        )}
       </div>
 
       {/* Currency section */}

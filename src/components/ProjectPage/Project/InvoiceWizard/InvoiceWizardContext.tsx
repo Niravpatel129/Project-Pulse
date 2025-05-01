@@ -39,6 +39,8 @@ type InvoiceWizardContextType = {
   setTaxId: (id: string) => void;
   showTaxId: boolean;
   setShowTaxId: (show: boolean) => void;
+  discount: number;
+  setDiscount: (discount: number) => void;
 
   // Shipping related states - now separate
   selectedShippingMethod: any | null;
@@ -131,6 +133,7 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
   const [showPreview, setShowPreview] = useState(false);
   const [taxId, setTaxId] = useState('');
   const [showTaxId, setShowTaxId] = useState(false);
+  const [discount, setDiscount] = useState(0);
 
   // Separate shipping state
   const [selectedShippingMethod, setSelectedShippingMethod] = useState<any | null>(null);
@@ -348,9 +351,8 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
 
   // Calculate invoice subtotal (regular items only)
   const calculateInvoiceSubtotal = () => {
-    return selectedItems.reduce((sum, item) => {
-      const quantity = item.quantity || 1;
-      return sum + item.price * quantity;
+    return selectedItems.reduce((total, item) => {
+      return total + Number(item.price) * (item.quantity || 1);
     }, 0);
   };
 
@@ -359,9 +361,20 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
     return shippingItem ? shippingItem.price : 0;
   };
 
+  // Calculate discount amount
+  const calculateDiscountAmount = () => {
+    if (!discount) return 0;
+    const subtotal = calculateInvoiceSubtotal();
+    return (subtotal * discount) / 100;
+  };
+
   // Calculate total invoice amount
   const calculateInvoiceTotal = () => {
-    return calculateInvoiceSubtotal() + calculateShippingTotal();
+    const subtotal = calculateInvoiceSubtotal();
+    const shippingTotal = calculateShippingTotal();
+    const discountAmount = calculateDiscountAmount();
+
+    return subtotal - discountAmount + shippingTotal;
   };
 
   const value = {
@@ -396,6 +409,8 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
     setTaxId: handleTaxIdChange,
     showTaxId,
     setShowTaxId: handleShowTaxIdChange,
+    discount,
+    setDiscount,
 
     // Invoice wizard hook values
     selectedItems,

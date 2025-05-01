@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
 import { format } from 'date-fns';
-import { TruckIcon } from 'lucide-react';
+import { Percent, TruckIcon } from 'lucide-react';
 import { useInvoiceWizardContext } from './InvoiceWizardContext';
 
 interface InvoiceSidebarProps {
@@ -37,10 +37,18 @@ const InvoiceSidebar = ({
     setTaxId,
     showTaxId,
     setShowTaxId,
+    discount,
   } = useInvoiceWizardContext();
 
   // Show shipping tab if shipping is required, there are physical products, or a shipping item exists
   const showShippingTab = shippingRequired || hasPhysicalProducts || !!shippingItem;
+
+  // Calculate discount amount
+  const calculateDiscountAmount = () => {
+    if (!discount) return 0;
+    const subtotal = calculateInvoiceSubtotal();
+    return (subtotal * discount) / 100;
+  };
 
   return (
     <div className='w-full md:w-[280px] border-r'>
@@ -223,12 +231,29 @@ const InvoiceSidebar = ({
             <span className='font-medium'>${calculateInvoiceSubtotal().toFixed(2)}</span>
           </div>
 
+          {/* Display discount if it exists */}
+          {discount > 0 && (
+            <div className='flex justify-between'>
+              <span className='text-sm flex items-center gap-1'>
+                <Percent size={12} /> Discount ({discount}%)
+              </span>
+              <span className='font-medium text-emerald-600'>
+                -${calculateDiscountAmount().toFixed(2)}
+              </span>
+            </div>
+          )}
+
           {/* Show shipping costs if there's a shipping item */}
           {shippingItem && (
             <div className='flex justify-between'>
               <span className='text-sm'>Shipping</span>
               <span className='font-medium'>
-                ${(calculateInvoiceTotal() - calculateInvoiceSubtotal()).toFixed(2)}
+                $
+                {(
+                  calculateInvoiceTotal() -
+                  calculateInvoiceSubtotal() +
+                  calculateDiscountAmount()
+                ).toFixed(2)}
               </span>
             </div>
           )}

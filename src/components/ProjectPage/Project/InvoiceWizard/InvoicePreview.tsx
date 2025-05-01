@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useProject } from '@/contexts/ProjectContext';
 import { format } from 'date-fns';
-import { Pencil, PlusCircle, Save, Trash2 } from 'lucide-react';
+import { Pencil, Percent, PlusCircle, Save, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import ClientDetailsDialog from './ClientDetailsDialog';
 import { useInvoiceWizardContext } from './InvoiceWizardContext';
@@ -45,6 +45,7 @@ const InvoicePreview = ({
     taxId,
     showTaxId,
     dueDate,
+    discount,
   } = useInvoiceWizardContext();
 
   // State for editing
@@ -176,6 +177,13 @@ const InvoicePreview = ({
     if (window.confirm('Remove shipping from invoice?')) {
       removeShipping();
     }
+  };
+
+  // Calculate discount amount
+  const calculateDiscountAmount = () => {
+    if (!discount) return 0;
+    const subtotal = calculateSubtotal();
+    return (subtotal * discount) / 100;
   };
 
   return (
@@ -382,6 +390,18 @@ const InvoicePreview = ({
               <span className='text-sm'>Subtotal</span>
               <span className='font-medium'>${calculateSubtotal().toFixed(2)}</span>
             </div>
+
+            {/* Show discount in totals if there's a discount applied */}
+            {discount > 0 && (
+              <div className='flex justify-between'>
+                <span className='text-sm flex items-center gap-1'>
+                  <Percent size={12} className='text-emerald-600' /> Discount ({discount}%)
+                </span>
+                <span className='font-medium text-emerald-600'>
+                  -${calculateDiscountAmount().toFixed(2)}
+                </span>
+              </div>
+            )}
 
             {/* Show shipping in totals if there's a shipping item */}
             {shippingItem && (
