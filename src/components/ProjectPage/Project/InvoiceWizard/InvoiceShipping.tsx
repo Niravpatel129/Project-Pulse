@@ -14,6 +14,14 @@ import { useInvoiceWizardContext } from './InvoiceWizardContext';
 
 interface InvoiceShippingProps {
   setActiveTab: (tab: string) => void;
+  selectedShippingMethod?: any | null;
+  setSelectedShippingMethod?: (method: any) => void;
+  selectedClient?: any;
+  useShippingAddress?: boolean;
+  setUseShippingAddress?: (use: boolean) => void;
+  shippingAddress?: any;
+  setShippingAddress?: (address: any) => void;
+  addShippingToInvoice?: () => void;
 }
 
 const InvoiceShipping = ({ setActiveTab }: InvoiceShippingProps) => {
