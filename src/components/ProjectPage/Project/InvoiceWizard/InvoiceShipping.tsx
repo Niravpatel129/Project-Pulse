@@ -50,14 +50,22 @@ const InvoiceShipping = ({ setActiveTab }: InvoiceShippingProps) => {
   const formatAddress = (address: any): ReactNode => {
     if (!address) return null;
 
+    // Handle different address formats
+    const line1 = address.line1 || address.streetAddress1;
+    const line2 = address.line2 || address.streetAddress2;
+    const city = address.city;
+    const state = address.state;
+    const postalCode = address.postalCode;
+    const country = address.country;
+
     return (
       <div className='space-y-1'>
-        <p>{address.line1}</p>
-        {address.line2 && <p>{address.line2}</p>}
+        <p>{line1}</p>
+        {line2 && <p>{line2}</p>}
         <p>
-          {address.city}, {address.state} {address.postalCode}
+          {city}, {state} {postalCode}
         </p>
-        <p>{address.country}</p>
+        <p>{country}</p>
       </div>
     );
   };
@@ -353,16 +361,21 @@ const InvoiceShipping = ({ setActiveTab }: InvoiceShippingProps) => {
               <Card>
                 <CardContent className='pt-4'>
                   <h5 className='font-medium mb-2'>Using client&apos;s billing address:</h5>
-                  {selectedClient?.address || selectedClient?.customFields?.address ? (
+                  {selectedClient?.address ||
+                  selectedClient?.customFields?.address ||
+                  selectedClient?.mailingAddress ||
+                  selectedClient?.shippingAddress ? (
                     <div className='text-sm'>
                       {formatAddress(
-                        selectedClient.address || {
-                          line1: selectedClient.customFields?.address,
-                          city: selectedClient.customFields?.city,
-                          state: selectedClient.customFields?.state,
-                          postalCode: selectedClient.customFields?.postalCode,
-                          country: selectedClient.customFields?.country,
-                        },
+                        selectedClient.address ||
+                          selectedClient.shippingAddress || {
+                            line1:
+                              selectedClient.customFields?.address || selectedClient.mailingAddress,
+                            city: selectedClient.customFields?.city,
+                            state: selectedClient.customFields?.state,
+                            postalCode: selectedClient.customFields?.postalCode,
+                            country: selectedClient.customFields?.country,
+                          },
                       )}
                     </div>
                   ) : (

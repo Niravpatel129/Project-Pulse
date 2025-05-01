@@ -212,6 +212,23 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
     // Set the shipping item
     setShippingItem(newShippingItem);
 
+    // If we're not using a custom shipping address, set the shipping address from the client
+    if (!useShippingAddress && selectedClient) {
+      if (selectedClient.shippingAddress) {
+        setShippingAddress(selectedClient.shippingAddress);
+      } else if (selectedClient.mailingAddress) {
+        setShippingAddress({
+          streetAddress1: selectedClient.mailingAddress,
+          city: selectedClient.customFields?.city || '',
+          state: selectedClient.customFields?.state || '',
+          postalCode: selectedClient.customFields?.postalCode || '',
+          country: selectedClient.customFields?.country || '',
+        });
+      } else if (selectedClient.address) {
+        setShippingAddress(selectedClient.address);
+      }
+    }
+
     // Optionally navigate to a different tab
     setActiveTab('items');
 
@@ -238,7 +255,18 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
       shipping: shippingItem
         ? {
             item: shippingItem,
-            address: useShippingAddress ? shippingAddress : null,
+            address: useShippingAddress
+              ? shippingAddress
+              : selectedClient?.shippingAddress ||
+                (selectedClient?.mailingAddress
+                  ? {
+                      streetAddress1: selectedClient?.mailingAddress,
+                      city: selectedClient?.customFields?.city || '',
+                      state: selectedClient?.customFields?.state || '',
+                      postalCode: selectedClient?.customFields?.postalCode || '',
+                      country: selectedClient?.customFields?.country || '',
+                    }
+                  : null),
           }
         : null,
     });
