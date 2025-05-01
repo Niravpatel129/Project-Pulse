@@ -40,8 +40,8 @@ const InvoiceSidebar = ({
     discount,
   } = useInvoiceWizardContext();
 
-  // Show shipping tab if shipping is required, there are physical products, or a shipping item exists
-  const showShippingTab = shippingRequired || hasPhysicalProducts || !!shippingItem;
+  // Show shipping tab only when shipping is required
+  const showShippingTab = shippingRequired;
 
   // Calculate discount amount
   const calculateDiscountAmount = () => {
