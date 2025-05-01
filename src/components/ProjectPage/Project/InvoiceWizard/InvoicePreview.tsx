@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -284,28 +283,18 @@ const InvoicePreview = ({
               return (
                 <div
                   key={item.id}
-                  className='p-3 border rounded-md bg-white hover:bg-gray-50 transition-colors'
+                  className='p-3 border rounded-md bg-white hover:bg-gray-50 transition-colors group'
                 >
                   <div className='flex justify-between items-start'>
                     <div>
                       <div className='flex items-center gap-2'>
                         <h5 className='font-medium'>{item.name}</h5>
-                        {item.status === 'completed' && (
-                          <Badge variant='outline' className='bg-green-50 text-green-700'>
-                            Completed
-                          </Badge>
-                        )}
-                        {item.status === 'in-progress' && (
-                          <Badge variant='outline' className='bg-blue-50 text-blue-700'>
-                            In Progress
-                          </Badge>
-                        )}
                       </div>
                       <p className='text-sm text-muted-foreground mt-1 line-clamp-2'>
                         {item.description}
                       </p>
                     </div>
-                    <div className='flex'>
+                    <div className='flex opacity-0 group-hover:opacity-100 transition-opacity'>
                       <Button
                         variant='ghost'
                         size='icon'
