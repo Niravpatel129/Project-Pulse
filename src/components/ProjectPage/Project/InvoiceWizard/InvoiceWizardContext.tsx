@@ -54,12 +54,10 @@ type InvoiceWizardContextType = {
 
   // Invoice wizard hook values
   selectedItems: InvoiceItem[];
-  invoiceNumber: string;
   dueDate: Date | null;
   aiSuggestions: boolean;
   isGenerating: boolean;
   error: string | null;
-  setInvoiceNumber: (number: string) => void;
   setDueDate: React.Dispatch<React.SetStateAction<Date | null>>;
   setAiSuggestions: (suggestions: boolean) => void;
   setSelectedItems: (items: InvoiceItem[]) => void;
@@ -99,21 +97,17 @@ interface InvoiceWizardProviderProps {
   projectId: string;
 }
 
-export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProviderProps) => {
+export const InvoiceWizardProvider = ({ children }: InvoiceWizardProviderProps) => {
   const {
     selectedItems,
-    invoiceNumber,
     dueDate,
     aiSuggestions,
     isGenerating,
     error,
-    setInvoiceNumber,
     setDueDate,
     setAiSuggestions,
     handleAddItem,
-    calculateSubtotal,
-    calculateTotal,
-    generateInvoice,
+
     handleRemoveItem,
     setSelectedItems,
   } = useInvoiceWizard();
@@ -246,7 +240,6 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
     console.log('Creating invoice with data:', {
       selectedItems,
       selectedClient,
-      invoiceNumber,
       dueDate: dueDate ? dueDate : undefined,
       taxRate,
       notes,
@@ -432,12 +425,10 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
 
     // Invoice wizard hook values
     selectedItems,
-    invoiceNumber,
     dueDate,
     aiSuggestions,
     isGenerating,
     error,
-    setInvoiceNumber,
     setDueDate,
     setAiSuggestions,
     setSelectedItems,

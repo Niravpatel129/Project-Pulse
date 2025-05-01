@@ -38,7 +38,6 @@ export type Client = {
 };
 
 export type InvoiceData = {
-  invoiceNumber: string;
   dueDate: Date;
   items: InvoiceItem[];
   client?: Client;
@@ -149,7 +148,6 @@ export const useInvoiceWizard = () => {
         }, 0);
 
         return {
-          invoiceNumber,
           dueDate,
           items: allItems,
           total: subtotal,
@@ -164,7 +162,7 @@ export const useInvoiceWizard = () => {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
       return null;
     }
-  }, [projectId, invoiceNumber, dueDate]);
+  }, [projectId, dueDate]);
 
   const generateInvoice = async (): Promise<InvoiceData | null> => {
     if (selectedItems.length === 0) {
@@ -203,14 +201,12 @@ export const useInvoiceWizard = () => {
 
   return {
     selectedItems,
-    invoiceNumber,
     dueDate,
     aiSuggestions,
     selectedClient,
     isGenerating,
     error,
     setSelectedItems,
-    setInvoiceNumber,
     setDueDate,
     setAiSuggestions,
     setSelectedClient,
