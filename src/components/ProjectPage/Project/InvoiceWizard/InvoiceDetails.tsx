@@ -14,7 +14,6 @@ import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
 import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 interface InvoiceDetailsProps {
@@ -158,12 +157,6 @@ const InvoiceDetails = ({
             })}
           </SelectContent>
         </Select>
-        <p className='text-xs text-gray-500 mt-1'>
-          Manage taxes in{' '}
-          <Link href='/settings/invoices' className='underline'>
-            invoice settings
-          </Link>
-        </p>
       </div>
 
       {/* Currency section */}
