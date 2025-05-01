@@ -603,237 +603,352 @@ const InvoicePreview = ({
 
       {/* Edit Client Dialog */}
       <Dialog open={clientDialogOpen} onOpenChange={setClientDialogOpen}>
-        <DialogContent className='sm:max-w-[550px]'>
-          <DialogHeader>
-            <DialogTitle>Edit Client Information</DialogTitle>
-          </DialogHeader>
+        <DialogContent className='sm:max-w-[480px] p-0 overflow-hidden bg-white rounded-lg border-none shadow-md'>
+          <div className='px-6 pt-6 pb-5'>
+            <DialogTitle className='text-base font-medium text-gray-800'>
+              Client Information
+            </DialogTitle>
+          </div>
 
           <Tabs defaultValue='basic' className='w-full'>
-            <TabsList className='grid grid-cols-3 mb-4'>
-              <TabsTrigger value='basic'>Basic Info</TabsTrigger>
-              <TabsTrigger value='contact'>Contact Details</TabsTrigger>
-              <TabsTrigger value='custom'>Custom Fields</TabsTrigger>
-            </TabsList>
+            <div className='px-6'>
+              <TabsList className='w-full flex border-b border-gray-200 mb-5 p-0 bg-transparent space-x-5'>
+                <TabsTrigger
+                  value='basic'
+                  className='px-0 py-2.5 text-sm rounded-none font-normal data-[state=active]:font-medium data-[state=active]:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-gray-800 text-gray-500 hover:text-gray-700 bg-transparent'
+                >
+                  Basic
+                </TabsTrigger>
+                <TabsTrigger
+                  value='contact'
+                  className='px-0 py-2.5 text-sm rounded-none font-normal data-[state=active]:font-medium data-[state=active]:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-gray-800 text-gray-500 hover:text-gray-700 bg-transparent'
+                >
+                  Contact
+                </TabsTrigger>
+                <TabsTrigger
+                  value='custom'
+                  className='px-0 py-2.5 text-sm rounded-none font-normal data-[state=active]:font-medium data-[state=active]:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-gray-800 text-gray-500 hover:text-gray-700 bg-transparent'
+                >
+                  Custom
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-            <TabsContent value='basic' className='space-y-4'>
-              <div className='grid grid-cols-2 gap-4'>
-                <div className='space-y-2'>
-                  <Label htmlFor='client-name'>Name</Label>
-                  <Input
-                    id='client-name'
-                    value={editedClientValues.name || ''}
-                    onChange={(e) => {
-                      return setEditedClientValues({ ...editedClientValues, name: e.target.value });
-                    }}
-                  />
+            <div className='px-6 pb-6'>
+              <TabsContent value='basic' className='mt-0 space-y-5'>
+                <div className='grid grid-cols-2 gap-5'>
+                  <div>
+                    <Label
+                      htmlFor='client-name'
+                      className='block text-xs font-medium text-gray-600 mb-1.5'
+                    >
+                      Name
+                    </Label>
+                    <Input
+                      id='client-name'
+                      value={editedClientValues.name || ''}
+                      onChange={(e) => {
+                        return setEditedClientValues({
+                          ...editedClientValues,
+                          name: e.target.value,
+                        });
+                      }}
+                      className='h-9 w-full border-gray-200 rounded-md bg-white focus:border-gray-300 focus:ring-0 text-sm text-gray-800'
+                    />
+                  </div>
+
+                  <div>
+                    <Label
+                      htmlFor='client-email'
+                      className='block text-xs font-medium text-gray-600 mb-1.5'
+                    >
+                      Email
+                    </Label>
+                    <Input
+                      id='client-email'
+                      type='email'
+                      value={editedClientValues.email || ''}
+                      onChange={(e) => {
+                        return setEditedClientValues({
+                          ...editedClientValues,
+                          email: e.target.value,
+                        });
+                      }}
+                      className='h-9 w-full border-gray-200 rounded-md bg-white focus:border-gray-300 focus:ring-0 text-sm text-gray-800'
+                    />
+                  </div>
+
+                  <div>
+                    <Label
+                      htmlFor='client-company'
+                      className='block text-xs font-medium text-gray-600 mb-1.5'
+                    >
+                      Company
+                    </Label>
+                    <Input
+                      id='client-company'
+                      value={editedClientValues.customFields?.company || ''}
+                      onChange={(e) => {
+                        return setEditedClientValues({
+                          ...editedClientValues,
+                          customFields: {
+                            ...editedClientValues.customFields,
+                            company: e.target.value,
+                          },
+                        });
+                      }}
+                      className='h-9 w-full border-gray-200 rounded-md bg-white focus:border-gray-300 focus:ring-0 text-sm text-gray-800'
+                    />
+                  </div>
+
+                  <div>
+                    <Label
+                      htmlFor='client-jobTitle'
+                      className='block text-xs font-medium text-gray-600 mb-1.5'
+                    >
+                      Job Title
+                    </Label>
+                    <Input
+                      id='client-jobTitle'
+                      value={editedClientValues.jobTitle || ''}
+                      onChange={(e) => {
+                        return setEditedClientValues({
+                          ...editedClientValues,
+                          jobTitle: e.target.value,
+                        });
+                      }}
+                      className='h-9 w-full border-gray-200 rounded-md bg-white focus:border-gray-300 focus:ring-0 text-sm text-gray-800'
+                    />
+                  </div>
                 </div>
+              </TabsContent>
 
-                <div className='space-y-2'>
-                  <Label htmlFor='client-email'>Email</Label>
-                  <Input
-                    id='client-email'
-                    type='email'
-                    value={editedClientValues.email || ''}
-                    onChange={(e) => {
-                      return setEditedClientValues({
-                        ...editedClientValues,
-                        email: e.target.value,
-                      });
-                    }}
-                  />
+              <TabsContent value='contact' className='mt-0 space-y-5'>
+                <div className='grid grid-cols-2 gap-5'>
+                  <div>
+                    <Label
+                      htmlFor='client-phone'
+                      className='block text-xs font-medium text-gray-600 mb-1.5'
+                    >
+                      Phone
+                    </Label>
+                    <Input
+                      id='client-phone'
+                      type='tel'
+                      value={editedClientValues.phone || ''}
+                      onChange={(e) => {
+                        return setEditedClientValues({
+                          ...editedClientValues,
+                          phone: e.target.value,
+                        });
+                      }}
+                      className='h-9 w-full border-gray-200 rounded-md bg-white focus:border-gray-300 focus:ring-0 text-sm text-gray-800'
+                    />
+                  </div>
+
+                  <div>
+                    <Label
+                      htmlFor='client-website'
+                      className='block text-xs font-medium text-gray-600 mb-1.5'
+                    >
+                      Website
+                    </Label>
+                    <Input
+                      id='client-website'
+                      type='url'
+                      value={editedClientValues.website || ''}
+                      onChange={(e) => {
+                        return setEditedClientValues({
+                          ...editedClientValues,
+                          website: e.target.value,
+                        });
+                      }}
+                      className='h-9 w-full border-gray-200 rounded-md bg-white focus:border-gray-300 focus:ring-0 text-sm text-gray-800'
+                    />
+                  </div>
+
+                  <div className='col-span-2'>
+                    <Label
+                      htmlFor='client-custom-address'
+                      className='block text-xs font-medium text-gray-600 mb-1.5'
+                    >
+                      Address
+                    </Label>
+                    <Input
+                      id='client-custom-address'
+                      value={editedClientValues.customFields?.address || ''}
+                      onChange={(e) => {
+                        return setEditedClientValues({
+                          ...editedClientValues,
+                          customFields: {
+                            ...editedClientValues.customFields,
+                            address: e.target.value,
+                          },
+                        });
+                      }}
+                      className='h-9 w-full border-gray-200 rounded-md bg-white focus:border-gray-300 focus:ring-0 text-sm text-gray-800'
+                    />
+                  </div>
+
+                  <div className='col-span-2'>
+                    <Label
+                      htmlFor='client-mailingAddress'
+                      className='block text-xs font-medium text-gray-600 mb-1.5'
+                    >
+                      Mailing Address
+                    </Label>
+                    <Textarea
+                      id='client-mailingAddress'
+                      value={editedClientValues.mailingAddress || ''}
+                      onChange={(e) => {
+                        return setEditedClientValues({
+                          ...editedClientValues,
+                          mailingAddress: e.target.value,
+                        });
+                      }}
+                      placeholder='Street, City, State, ZIP, Country'
+                      className='min-h-[64px] w-full border-gray-200 rounded-md bg-white focus:border-gray-300 focus:ring-0 resize-none text-sm text-gray-800'
+                    />
+                  </div>
+
+                  <div className='col-span-2'>
+                    <Label
+                      htmlFor='client-comments'
+                      className='block text-xs font-medium text-gray-600 mb-1.5'
+                    >
+                      Notes
+                    </Label>
+                    <Textarea
+                      id='client-comments'
+                      value={editedClientValues.comments || ''}
+                      onChange={(e) => {
+                        return setEditedClientValues({
+                          ...editedClientValues,
+                          comments: e.target.value,
+                        });
+                      }}
+                      placeholder='Additional notes about this client'
+                      className='min-h-[64px] w-full border-gray-200 rounded-md bg-white focus:border-gray-300 focus:ring-0 resize-none text-sm text-gray-800'
+                    />
+                  </div>
                 </div>
+              </TabsContent>
 
-                <div className='space-y-2'>
-                  <Label htmlFor='client-company'>Company</Label>
-                  <Input
-                    id='client-company'
-                    value={editedClientValues.customFields?.company || ''}
-                    onChange={(e) => {
-                      return setEditedClientValues({
-                        ...editedClientValues,
-                        customFields: {
-                          ...editedClientValues.customFields,
-                          company: e.target.value,
-                        },
-                      });
-                    }}
-                  />
-                </div>
+              <TabsContent value='custom' className='mt-0'>
+                {/* Custom Fields List */}
+                {Object.entries(editedClientValues.customFields || {}).filter(([key]) => {
+                  return !['company', 'address'].includes(key);
+                }).length > 0 && (
+                  <div className='mb-6'>
+                    {Object.entries(editedClientValues.customFields || {})
+                      .filter(([key]) => {
+                        return !['company', 'address'].includes(key);
+                      })
+                      .map(([key, value], index) => {
+                        return (
+                          <div
+                            key={key}
+                            className='flex items-center py-3 border-b border-gray-100 group'
+                          >
+                            <div className='w-1/3 text-sm text-gray-700'>{key}</div>
+                            <div className='flex-1 flex items-center'>
+                              <Input
+                                className='flex-1 h-8 border-gray-200 bg-white focus:border-gray-300 focus:ring-0 text-sm text-gray-800'
+                                value={value}
+                                onChange={(e) => {
+                                  return setEditedClientValues({
+                                    ...editedClientValues,
+                                    customFields: {
+                                      ...editedClientValues.customFields,
+                                      [key]: e.target.value,
+                                    },
+                                  });
+                                }}
+                              />
+                              <Button
+                                variant='ghost'
+                                size='icon'
+                                className='ml-2 h-8 w-8 text-gray-300 opacity-0 group-hover:opacity-100 hover:text-gray-500 hover:bg-transparent transition-opacity duration-150'
+                                onClick={() => {
+                                  return removeCustomField(key);
+                                }}
+                                aria-label={`Remove ${key} field`}
+                              >
+                                <Trash2 className='h-3.5 w-3.5' />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
 
-                <div className='space-y-2'>
-                  <Label htmlFor='client-jobTitle'>Job Title</Label>
-                  <Input
-                    id='client-jobTitle'
-                    value={editedClientValues.jobTitle || ''}
-                    onChange={(e) => {
-                      return setEditedClientValues({
-                        ...editedClientValues,
-                        jobTitle: e.target.value,
-                      });
-                    }}
-                  />
-                </div>
-              </div>
-            </TabsContent>
+                {/* Empty State - Only shown when no custom fields */}
+                {Object.entries(editedClientValues.customFields || {}).filter(([key]) => {
+                  return !['company', 'address'].includes(key);
+                }).length === 0 && (
+                  <div className='flex items-center justify-center py-8 text-gray-400 text-sm mb-6'>
+                    No custom fields
+                  </div>
+                )}
 
-            <TabsContent value='contact' className='space-y-4'>
-              <div className='grid grid-cols-2 gap-4'>
-                <div className='space-y-2'>
-                  <Label htmlFor='client-phone'>Phone</Label>
-                  <Input
-                    id='client-phone'
-                    type='tel'
-                    value={editedClientValues.phone || ''}
-                    onChange={(e) => {
-                      return setEditedClientValues({
-                        ...editedClientValues,
-                        phone: e.target.value,
-                      });
-                    }}
-                  />
-                </div>
+                {/* Add New Field */}
+                <div className='flex items-end space-x-3'>
+                  <div className='w-1/3'>
+                    <Label className='block text-xs font-medium text-gray-600 mb-1.5'>Field</Label>
+                    <Input
+                      placeholder='Name'
+                      value={customFieldKey}
+                      onChange={(e) => {
+                        return setCustomFieldKey(e.target.value);
+                      }}
+                      className='h-9 w-full border-gray-200 bg-white focus:border-gray-300 focus:ring-0 text-sm text-gray-800'
+                    />
+                  </div>
 
-                <div className='space-y-2'>
-                  <Label htmlFor='client-website'>Website</Label>
-                  <Input
-                    id='client-website'
-                    type='url'
-                    value={editedClientValues.website || ''}
-                    onChange={(e) => {
-                      return setEditedClientValues({
-                        ...editedClientValues,
-                        website: e.target.value,
-                      });
-                    }}
-                  />
-                </div>
+                  <div className='flex-1'>
+                    <Label className='block text-xs font-medium text-gray-600 mb-1.5'>Value</Label>
+                    <Input
+                      placeholder='Value'
+                      value={customFieldValue}
+                      onChange={(e) => {
+                        return setCustomFieldValue(e.target.value);
+                      }}
+                      className='h-9 w-full border-gray-200 bg-white focus:border-gray-300 focus:ring-0 text-sm text-gray-800'
+                    />
+                  </div>
 
-                <div className='space-y-2 col-span-2'>
-                  <Label htmlFor='client-custom-address'>Address</Label>
-                  <Input
-                    id='client-custom-address'
-                    value={editedClientValues.customFields?.address || ''}
-                    onChange={(e) => {
-                      return setEditedClientValues({
-                        ...editedClientValues,
-                        customFields: {
-                          ...editedClientValues.customFields,
-                          address: e.target.value,
-                        },
-                      });
-                    }}
-                  />
-                </div>
-
-                <div className='space-y-2 col-span-2'>
-                  <Label htmlFor='client-mailingAddress'>Mailing Address</Label>
-                  <Textarea
-                    id='client-mailingAddress'
-                    value={editedClientValues.mailingAddress || ''}
-                    onChange={(e) => {
-                      return setEditedClientValues({
-                        ...editedClientValues,
-                        mailingAddress: e.target.value,
-                      });
-                    }}
-                    placeholder='Street, City, State, ZIP, Country'
-                    rows={2}
-                  />
-                </div>
-
-                <div className='space-y-2 col-span-2'>
-                  <Label htmlFor='client-comments'>Comments</Label>
-                  <Textarea
-                    id='client-comments'
-                    value={editedClientValues.comments || ''}
-                    onChange={(e) => {
-                      return setEditedClientValues({
-                        ...editedClientValues,
-                        comments: e.target.value,
-                      });
-                    }}
-                    placeholder='Additional comments about the client'
-                    rows={2}
-                  />
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value='custom' className='space-y-4'>
-              {/* Display existing custom fields (excluding company and address which have dedicated inputs) */}
-              <div className='space-y-3'>
-                {Object.entries(editedClientValues.customFields || {})
-                  .filter(([key]) => {
-                    return !['company', 'address'].includes(key);
-                  })
-                  .map(([key, value]) => {
-                    return (
-                      <div key={key} className='flex items-center gap-2'>
-                        <div className='w-1/3 font-medium text-sm'>{key}</div>
-                        <Input
-                          className='flex-1'
-                          value={value}
-                          onChange={(e) => {
-                            setEditedClientValues({
-                              ...editedClientValues,
-                              customFields: {
-                                ...editedClientValues.customFields,
-                                [key]: e.target.value,
-                              },
-                            });
-                          }}
-                        />
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          onClick={() => {
-                            return removeCustomField(key);
-                          }}
-                        >
-                          <Trash2 className='h-4 w-4' />
-                        </Button>
-                      </div>
-                    );
-                  })}
-
-                {/* Add new custom field */}
-                <div className='flex items-center gap-2 pt-2 mt-2 border-t'>
-                  <Input
-                    placeholder='Field name'
-                    value={customFieldKey}
-                    onChange={(e) => {
-                      return setCustomFieldKey(e.target.value);
-                    }}
-                    className='w-1/3'
-                  />
-                  <Input
-                    placeholder='Value'
-                    value={customFieldValue}
-                    onChange={(e) => {
-                      return setCustomFieldValue(e.target.value);
-                    }}
-                    className='flex-1'
-                  />
                   <Button
-                    variant='outline'
-                    size='sm'
+                    variant='ghost'
+                    className='h-9 px-3 border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-800'
                     onClick={addCustomField}
                     disabled={!customFieldKey.trim()}
                   >
-                    <PlusCircle className='h-4 w-4 mr-1' />
                     Add
                   </Button>
                 </div>
-              </div>
-            </TabsContent>
+              </TabsContent>
+            </div>
           </Tabs>
 
-          <DialogFooter>
-            <Button type='submit' onClick={saveClientEdits}>
-              <Save className='mr-2 h-4 w-4' />
-              Save Changes
+          <div className='flex justify-end items-center gap-3 px-6 py-4 border-t border-gray-100'>
+            <Button
+              variant='ghost'
+              className='h-9 text-gray-600 hover:text-gray-800 hover:bg-transparent'
+              onClick={() => {
+                return setClientDialogOpen(false);
+              }}
+            >
+              Cancel
             </Button>
-          </DialogFooter>
+            <Button
+              type='submit'
+              className='h-9 bg-gray-800 hover:bg-gray-900 text-white'
+              onClick={saveClientEdits}
+            >
+              Save
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </>
