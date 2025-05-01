@@ -16,6 +16,7 @@ import { motion } from 'framer-motion';
 import { Check, Edit, MoreVertical, Plus, Search, Trash2, Users } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import ClientDetailsDialog from './ClientDetailsDialog';
 
 interface InvoiceClientProps {
   clients: any[];
@@ -27,6 +28,7 @@ const InvoiceClient = ({ clients, selectedClient, handleSelectClient }: InvoiceC
   const { project } = useProject();
   const participants = project.participants || [];
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [clientToEdit, setClientToEdit] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const queryClient = useQueryClient();
@@ -53,10 +55,23 @@ const InvoiceClient = ({ clients, selectedClient, handleSelectClient }: InvoiceC
     handleSelectClient(newClient);
   };
 
+  const handleClientUpdated = (updatedClient: any) => {
+    // Update the selected client if it's the one being edited
+    if (isClientSelected(updatedClient)) {
+      handleSelectClient(updatedClient);
+    }
+
+    // Refresh the clients list
+    queryClient.invalidateQueries({ queryKey: ['clients'] });
+    if (project) {
+      queryClient.invalidateQueries({ queryKey: ['project'] });
+    }
+  };
+
   const handleEditClient = (client: any, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setClientToEdit(client);
-    setIsClientDialogOpen(true);
+    setIsEditDialogOpen(true);
   };
 
   const handleDeleteClient = async (client: any, e?: React.MouseEvent) => {
@@ -255,20 +270,28 @@ const InvoiceClient = ({ clients, selectedClient, handleSelectClient }: InvoiceC
       <Button
         className='w-full'
         onClick={() => {
-          setClientToEdit(null);
-          return setIsClientDialogOpen(true);
+          setIsClientDialogOpen(true);
         }}
       >
         <Plus className='mr-2 h-4 w-4' />
         Add New Client
       </Button>
 
+      {/* Create new client dialog */}
       <CreateClientDialog
         open={isClientDialogOpen}
         onOpenChange={setIsClientDialogOpen}
         onClientCreated={handleClientCreated}
         project={project}
-        clientToEdit={clientToEdit}
+      />
+
+      {/* Edit client dialog */}
+      <ClientDetailsDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        client={clientToEdit}
+        onClientUpdated={handleClientUpdated}
+        project={project}
       />
     </motion.div>
   );
