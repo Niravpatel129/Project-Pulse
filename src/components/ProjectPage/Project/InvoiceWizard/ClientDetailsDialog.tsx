@@ -24,11 +24,17 @@ export type ClientFormValues = {
   phone: string;
   website: string;
   jobTitle: string;
-  mailingAddress: string;
+  shippingAddress: {
+    streetAddress1: string;
+    streetAddress2: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+  };
   comments: string;
   customFields: {
     company: string;
-    address: string;
     [key: string]: string;
   };
 };
@@ -51,29 +57,62 @@ export default function ClientDetailsDialog({
     phone: '',
     website: '',
     jobTitle: '',
-    mailingAddress: '',
+    shippingAddress: {
+      streetAddress1: '',
+      streetAddress2: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: '',
+    },
     comments: '',
     customFields: {
       company: '',
-      address: '',
     },
   });
 
   // Initialize client data when editing
   useEffect(() => {
     if (client) {
+      // Handle migration from older flat shippingAddress/mailingAddress format
+      let shippingAddressData = {
+        streetAddress1: '',
+        streetAddress2: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        country: '',
+      };
+
+      // If client has structured shippingAddress, use it
+      if (client.shippingAddress && typeof client.shippingAddress === 'object') {
+        shippingAddressData = {
+          ...shippingAddressData,
+          ...client.shippingAddress,
+        };
+      }
+      // Otherwise try to use legacy string format as streetAddress1
+      else if (client.shippingAddress || client.mailingAddress) {
+        shippingAddressData.streetAddress1 = client.shippingAddress || client.mailingAddress || '';
+      }
+
       setValues({
         name: client.name || '',
         email: client.email || '',
         phone: client.phone || '',
         website: client.website || '',
         jobTitle: client.jobTitle || '',
-        mailingAddress: client.mailingAddress || '',
+        shippingAddress: shippingAddressData,
         comments: client.comments || '',
         customFields: {
           company: client.customFields?.company || '',
-          address: client.customFields?.address || '',
-          ...(client.customFields || {}),
+          ...((client.customFields &&
+            Object.fromEntries(
+              Object.entries(client.customFields).filter(([key]) => {
+                return key !== 'address';
+              }),
+            )) ||
+            {}),
         },
       });
     }
@@ -94,7 +133,7 @@ export default function ClientDetailsDialog({
         phone: values.phone,
         website: values.website,
         jobTitle: values.jobTitle,
-        mailingAddress: values.mailingAddress,
+        shippingAddress: values.shippingAddress,
         comments: values.comments,
         customFields: values.customFields,
       };
@@ -175,6 +214,12 @@ export default function ClientDetailsDialog({
                 className='px-0 py-2.5 text-sm rounded-none font-normal data-[state=active]:font-medium data-[state=active]:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-gray-800 text-gray-500 hover:text-gray-700 bg-transparent'
               >
                 Contact
+              </TabsTrigger>
+              <TabsTrigger
+                value='shipping'
+                className='px-0 py-2.5 text-sm rounded-none font-normal data-[state=active]:font-medium data-[state=active]:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-gray-800 text-gray-500 hover:text-gray-700 bg-transparent'
+              >
+                Shipping
               </TabsTrigger>
               <TabsTrigger
                 value='custom'
@@ -320,50 +365,6 @@ export default function ClientDetailsDialog({
 
                 <div className='col-span-2'>
                   <Label
-                    htmlFor='client-custom-address'
-                    className='block text-xs font-medium text-gray-600 mb-1.5'
-                  >
-                    Address
-                  </Label>
-                  <Input
-                    id='client-custom-address'
-                    value={values.customFields?.address || ''}
-                    onChange={(e) => {
-                      return setValues({
-                        ...values,
-                        customFields: {
-                          ...values.customFields,
-                          address: e.target.value,
-                        },
-                      });
-                    }}
-                    className='h-9 w-full border-gray-200 rounded-md bg-white focus:border-gray-300 focus:ring-0 text-sm text-gray-800'
-                  />
-                </div>
-
-                <div className='col-span-2'>
-                  <Label
-                    htmlFor='client-mailingAddress'
-                    className='block text-xs font-medium text-gray-600 mb-1.5'
-                  >
-                    Mailing Address
-                  </Label>
-                  <Textarea
-                    id='client-mailingAddress'
-                    value={values.mailingAddress}
-                    onChange={(e) => {
-                      return setValues({
-                        ...values,
-                        mailingAddress: e.target.value,
-                      });
-                    }}
-                    placeholder='Street, City, State, ZIP, Country'
-                    className='min-h-[64px] w-full border-gray-200 rounded-md bg-white focus:border-gray-300 focus:ring-0 resize-none text-sm text-gray-800'
-                  />
-                </div>
-
-                <div className='col-span-2'>
-                  <Label
                     htmlFor='client-comments'
                     className='block text-xs font-medium text-gray-600 mb-1.5'
                   >
@@ -385,15 +386,159 @@ export default function ClientDetailsDialog({
               </div>
             </TabsContent>
 
+            <TabsContent value='shipping' className='mt-0 space-y-5'>
+              <div className='grid grid-cols-2 gap-5'>
+                <div className='col-span-2'>
+                  <Label
+                    htmlFor='shipping-streetAddress1'
+                    className='block text-xs font-medium text-gray-600 mb-1.5'
+                  >
+                    Street Address
+                  </Label>
+                  <Input
+                    id='shipping-streetAddress1'
+                    value={values.shippingAddress.streetAddress1}
+                    onChange={(e) => {
+                      return setValues({
+                        ...values,
+                        shippingAddress: {
+                          ...values.shippingAddress,
+                          streetAddress1: e.target.value,
+                        },
+                      });
+                    }}
+                    placeholder='Street address, P.O. box'
+                    className='h-9 w-full border-gray-200 rounded-md bg-white focus:border-gray-300 focus:ring-0 text-sm text-gray-800'
+                  />
+                </div>
+
+                <div className='col-span-2'>
+                  <Label
+                    htmlFor='shipping-streetAddress2'
+                    className='block text-xs font-medium text-gray-600 mb-1.5'
+                  >
+                    Apartment, Suite, etc. (optional)
+                  </Label>
+                  <Input
+                    id='shipping-streetAddress2'
+                    value={values.shippingAddress.streetAddress2}
+                    onChange={(e) => {
+                      return setValues({
+                        ...values,
+                        shippingAddress: {
+                          ...values.shippingAddress,
+                          streetAddress2: e.target.value,
+                        },
+                      });
+                    }}
+                    placeholder='Apartment, suite, unit, building, floor, etc.'
+                    className='h-9 w-full border-gray-200 rounded-md bg-white focus:border-gray-300 focus:ring-0 text-sm text-gray-800'
+                  />
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor='shipping-city'
+                    className='block text-xs font-medium text-gray-600 mb-1.5'
+                  >
+                    City
+                  </Label>
+                  <Input
+                    id='shipping-city'
+                    value={values.shippingAddress.city}
+                    onChange={(e) => {
+                      return setValues({
+                        ...values,
+                        shippingAddress: {
+                          ...values.shippingAddress,
+                          city: e.target.value,
+                        },
+                      });
+                    }}
+                    className='h-9 w-full border-gray-200 rounded-md bg-white focus:border-gray-300 focus:ring-0 text-sm text-gray-800'
+                  />
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor='shipping-state'
+                    className='block text-xs font-medium text-gray-600 mb-1.5'
+                  >
+                    State / Province
+                  </Label>
+                  <Input
+                    id='shipping-state'
+                    value={values.shippingAddress.state}
+                    onChange={(e) => {
+                      return setValues({
+                        ...values,
+                        shippingAddress: {
+                          ...values.shippingAddress,
+                          state: e.target.value,
+                        },
+                      });
+                    }}
+                    className='h-9 w-full border-gray-200 rounded-md bg-white focus:border-gray-300 focus:ring-0 text-sm text-gray-800'
+                  />
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor='shipping-postalCode'
+                    className='block text-xs font-medium text-gray-600 mb-1.5'
+                  >
+                    Postal / ZIP Code
+                  </Label>
+                  <Input
+                    id='shipping-postalCode'
+                    value={values.shippingAddress.postalCode}
+                    onChange={(e) => {
+                      return setValues({
+                        ...values,
+                        shippingAddress: {
+                          ...values.shippingAddress,
+                          postalCode: e.target.value,
+                        },
+                      });
+                    }}
+                    className='h-9 w-full border-gray-200 rounded-md bg-white focus:border-gray-300 focus:ring-0 text-sm text-gray-800'
+                  />
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor='shipping-country'
+                    className='block text-xs font-medium text-gray-600 mb-1.5'
+                  >
+                    Country
+                  </Label>
+                  <Input
+                    id='shipping-country'
+                    value={values.shippingAddress.country}
+                    onChange={(e) => {
+                      return setValues({
+                        ...values,
+                        shippingAddress: {
+                          ...values.shippingAddress,
+                          country: e.target.value,
+                        },
+                      });
+                    }}
+                    className='h-9 w-full border-gray-200 rounded-md bg-white focus:border-gray-300 focus:ring-0 text-sm text-gray-800'
+                  />
+                </div>
+              </div>
+            </TabsContent>
+
             <TabsContent value='custom' className='mt-0'>
               {/* Custom Fields List */}
               {Object.entries(values.customFields || {}).filter(([key]) => {
-                return !['company', 'address'].includes(key);
+                return !['company'].includes(key);
               }).length > 0 && (
                 <div className='mb-6'>
                   {Object.entries(values.customFields || {})
                     .filter(([key]) => {
-                      return !['company', 'address'].includes(key);
+                      return !['company'].includes(key);
                     })
                     .map(([key, value], index) => {
                       return (
@@ -436,7 +581,7 @@ export default function ClientDetailsDialog({
 
               {/* Empty State - Only shown when no custom fields */}
               {Object.entries(values.customFields || {}).filter(([key]) => {
-                return !['company', 'address'].includes(key);
+                return !['company'].includes(key);
               }).length === 0 && (
                 <div className='flex items-center justify-center py-8 text-gray-400 text-sm mb-6'>
                   No custom fields
