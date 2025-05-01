@@ -10,7 +10,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverTrigger } from '@/components/ui/popover';
-import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useProject } from '@/contexts/ProjectContext';
 import { useParticipantMutations } from '@/hooks/useParticipantMutations';
@@ -603,238 +603,231 @@ const InvoicePreview = ({
 
       {/* Edit Client Dialog */}
       <Dialog open={clientDialogOpen} onOpenChange={setClientDialogOpen}>
-        <DialogContent className='sm:max-w-[425px]'>
+        <DialogContent className='sm:max-w-[550px]'>
           <DialogHeader>
             <DialogTitle>Edit Client Information</DialogTitle>
           </DialogHeader>
-          <div className='grid gap-4 py-4'>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='client-name' className='text-right'>
-                Name
-              </Label>
-              <Input
-                id='client-name'
-                value={editedClientValues.name || ''}
-                onChange={(e) => {
-                  return setEditedClientValues({ ...editedClientValues, name: e.target.value });
-                }}
-                className='col-span-3'
-              />
-            </div>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='client-company' className='text-right'>
-                Company
-              </Label>
-              <Input
-                id='client-company'
-                value={editedClientValues.customFields?.company || ''}
-                onChange={(e) => {
-                  return setEditedClientValues({
-                    ...editedClientValues,
-                    customFields: {
-                      ...editedClientValues.customFields,
-                      company: e.target.value,
-                    },
-                  });
-                }}
-                className='col-span-3'
-              />
-            </div>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='client-email' className='text-right'>
-                Email
-              </Label>
-              <Input
-                id='client-email'
-                type='email'
-                value={editedClientValues.email || ''}
-                onChange={(e) => {
-                  return setEditedClientValues({ ...editedClientValues, email: e.target.value });
-                }}
-                className='col-span-3'
-              />
-            </div>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='client-phone' className='text-right'>
-                Phone
-              </Label>
-              <Input
-                id='client-phone'
-                type='tel'
-                value={editedClientValues.phone || ''}
-                onChange={(e) => {
-                  return setEditedClientValues({ ...editedClientValues, phone: e.target.value });
-                }}
-                className='col-span-3'
-              />
-            </div>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='client-website' className='text-right'>
-                Website
-              </Label>
-              <Input
-                id='client-website'
-                type='url'
-                value={editedClientValues.website || ''}
-                onChange={(e) => {
-                  return setEditedClientValues({ ...editedClientValues, website: e.target.value });
-                }}
-                className='col-span-3'
-              />
-            </div>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='client-jobTitle' className='text-right'>
-                Job Title
-              </Label>
-              <Input
-                id='client-jobTitle'
-                value={editedClientValues.jobTitle || ''}
-                onChange={(e) => {
-                  return setEditedClientValues({ ...editedClientValues, jobTitle: e.target.value });
-                }}
-                className='col-span-3'
-              />
-            </div>
-            <div className='grid grid-cols-4 items-start gap-4'>
-              <Label htmlFor='client-mailingAddress' className='text-right pt-2'>
-                Mailing Address
-              </Label>
-              <Textarea
-                id='client-mailingAddress'
-                value={editedClientValues.mailingAddress || ''}
-                onChange={(e) => {
-                  return setEditedClientValues({
-                    ...editedClientValues,
-                    mailingAddress: e.target.value,
-                  });
-                }}
-                placeholder='Street, City, State, ZIP, Country'
-                className='col-span-3'
-              />
-            </div>
-            <div className='grid grid-cols-4 items-start gap-4'>
-              <Label htmlFor='client-comments' className='text-right pt-2'>
-                Comments
-              </Label>
-              <Textarea
-                id='client-comments'
-                value={editedClientValues.comments || ''}
-                onChange={(e) => {
-                  return setEditedClientValues({ ...editedClientValues, comments: e.target.value });
-                }}
-                placeholder='Additional comments about the client'
-                className='col-span-3'
-              />
-            </div>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='client-custom-address' className='text-right'>
-                Address
-              </Label>
-              <Input
-                id='client-custom-address'
-                value={editedClientValues.customFields?.address || ''}
-                onChange={(e) => {
-                  return setEditedClientValues({
-                    ...editedClientValues,
-                    customFields: {
-                      ...editedClientValues.customFields,
-                      address: e.target.value,
-                    },
-                  });
-                }}
-                className='col-span-3'
-              />
-            </div>
 
-            <Separator className='my-4' />
-            <h3 className='font-medium mb-2'>Additional Custom Fields</h3>
+          <Tabs defaultValue='basic' className='w-full'>
+            <TabsList className='grid grid-cols-3 mb-4'>
+              <TabsTrigger value='basic'>Basic Info</TabsTrigger>
+              <TabsTrigger value='contact'>Contact Details</TabsTrigger>
+              <TabsTrigger value='custom'>Custom Fields</TabsTrigger>
+            </TabsList>
 
-            {/* Display existing custom fields (excluding company and address which have dedicated inputs) */}
-            {Object.entries(editedClientValues.customFields || {})
-              .filter(([key]) => {
-                return !['company', 'address'].includes(key);
-              })
-              .map(([key, value]) => {
-                return (
-                  <div key={key} className='grid grid-cols-4 items-center gap-4'>
-                    <div className='col-span-1 text-right font-medium text-sm'>{key}</div>
-                    <div className='col-span-2 flex items-center'>
-                      <Input
-                        value={value}
-                        onChange={(e) => {
-                          setEditedClientValues({
-                            ...editedClientValues,
-                            customFields: {
-                              ...editedClientValues.customFields,
-                              [key]: e.target.value,
-                            },
-                          });
-                        }}
-                      />
-                    </div>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      className='col-span-1'
-                      onClick={() => {
-                        return removeCustomField(key);
-                      }}
-                    >
-                      <Trash2 className='h-4 w-4' />
-                    </Button>
-                  </div>
-                );
-              })}
+            <TabsContent value='basic' className='space-y-4'>
+              <div className='grid grid-cols-2 gap-4'>
+                <div className='space-y-2'>
+                  <Label htmlFor='client-name'>Name</Label>
+                  <Input
+                    id='client-name'
+                    value={editedClientValues.name || ''}
+                    onChange={(e) => {
+                      return setEditedClientValues({ ...editedClientValues, name: e.target.value });
+                    }}
+                  />
+                </div>
 
-            {/* Add new custom field */}
-            <div className='grid grid-cols-4 items-center gap-4 mt-2'>
-              <div className='col-span-1 text-right'>
-                <Label>Add Field</Label>
+                <div className='space-y-2'>
+                  <Label htmlFor='client-email'>Email</Label>
+                  <Input
+                    id='client-email'
+                    type='email'
+                    value={editedClientValues.email || ''}
+                    onChange={(e) => {
+                      return setEditedClientValues({
+                        ...editedClientValues,
+                        email: e.target.value,
+                      });
+                    }}
+                  />
+                </div>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='client-company'>Company</Label>
+                  <Input
+                    id='client-company'
+                    value={editedClientValues.customFields?.company || ''}
+                    onChange={(e) => {
+                      return setEditedClientValues({
+                        ...editedClientValues,
+                        customFields: {
+                          ...editedClientValues.customFields,
+                          company: e.target.value,
+                        },
+                      });
+                    }}
+                  />
+                </div>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='client-jobTitle'>Job Title</Label>
+                  <Input
+                    id='client-jobTitle'
+                    value={editedClientValues.jobTitle || ''}
+                    onChange={(e) => {
+                      return setEditedClientValues({
+                        ...editedClientValues,
+                        jobTitle: e.target.value,
+                      });
+                    }}
+                  />
+                </div>
               </div>
-              <div className='col-span-3 flex items-center gap-2'>
-                <Input
-                  placeholder='Field name'
-                  value={customFieldKey}
-                  onChange={(e) => {
-                    return setCustomFieldKey(e.target.value);
-                  }}
-                  className='w-1/3'
-                />
-                <Input
-                  placeholder='Value'
-                  value={customFieldValue}
-                  onChange={(e) => {
-                    return setCustomFieldValue(e.target.value);
-                  }}
-                  className='flex-1'
-                />
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={addCustomField}
-                  disabled={!customFieldKey.trim()}
-                >
-                  <PlusCircle className='h-4 w-4 mr-1' />
-                  Add
-                </Button>
-              </div>
-            </div>
+            </TabsContent>
 
-            <div className='grid grid-cols-4 items-start gap-4 mt-4'>
-              <Label htmlFor='client-comments' className='text-right pt-2'>
-                Comments
-              </Label>
-              <Textarea
-                id='client-comments'
-                value={editedClientValues.comments || ''}
-                onChange={(e) => {
-                  return setEditedClientValues({ ...editedClientValues, comments: e.target.value });
-                }}
-                placeholder='Additional comments about the client'
-                className='col-span-3'
-              />
-            </div>
-          </div>
+            <TabsContent value='contact' className='space-y-4'>
+              <div className='grid grid-cols-2 gap-4'>
+                <div className='space-y-2'>
+                  <Label htmlFor='client-phone'>Phone</Label>
+                  <Input
+                    id='client-phone'
+                    type='tel'
+                    value={editedClientValues.phone || ''}
+                    onChange={(e) => {
+                      return setEditedClientValues({
+                        ...editedClientValues,
+                        phone: e.target.value,
+                      });
+                    }}
+                  />
+                </div>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='client-website'>Website</Label>
+                  <Input
+                    id='client-website'
+                    type='url'
+                    value={editedClientValues.website || ''}
+                    onChange={(e) => {
+                      return setEditedClientValues({
+                        ...editedClientValues,
+                        website: e.target.value,
+                      });
+                    }}
+                  />
+                </div>
+
+                <div className='space-y-2 col-span-2'>
+                  <Label htmlFor='client-custom-address'>Address</Label>
+                  <Input
+                    id='client-custom-address'
+                    value={editedClientValues.customFields?.address || ''}
+                    onChange={(e) => {
+                      return setEditedClientValues({
+                        ...editedClientValues,
+                        customFields: {
+                          ...editedClientValues.customFields,
+                          address: e.target.value,
+                        },
+                      });
+                    }}
+                  />
+                </div>
+
+                <div className='space-y-2 col-span-2'>
+                  <Label htmlFor='client-mailingAddress'>Mailing Address</Label>
+                  <Textarea
+                    id='client-mailingAddress'
+                    value={editedClientValues.mailingAddress || ''}
+                    onChange={(e) => {
+                      return setEditedClientValues({
+                        ...editedClientValues,
+                        mailingAddress: e.target.value,
+                      });
+                    }}
+                    placeholder='Street, City, State, ZIP, Country'
+                    rows={2}
+                  />
+                </div>
+
+                <div className='space-y-2 col-span-2'>
+                  <Label htmlFor='client-comments'>Comments</Label>
+                  <Textarea
+                    id='client-comments'
+                    value={editedClientValues.comments || ''}
+                    onChange={(e) => {
+                      return setEditedClientValues({
+                        ...editedClientValues,
+                        comments: e.target.value,
+                      });
+                    }}
+                    placeholder='Additional comments about the client'
+                    rows={2}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value='custom' className='space-y-4'>
+              {/* Display existing custom fields (excluding company and address which have dedicated inputs) */}
+              <div className='space-y-3'>
+                {Object.entries(editedClientValues.customFields || {})
+                  .filter(([key]) => {
+                    return !['company', 'address'].includes(key);
+                  })
+                  .map(([key, value]) => {
+                    return (
+                      <div key={key} className='flex items-center gap-2'>
+                        <div className='w-1/3 font-medium text-sm'>{key}</div>
+                        <Input
+                          className='flex-1'
+                          value={value}
+                          onChange={(e) => {
+                            setEditedClientValues({
+                              ...editedClientValues,
+                              customFields: {
+                                ...editedClientValues.customFields,
+                                [key]: e.target.value,
+                              },
+                            });
+                          }}
+                        />
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          onClick={() => {
+                            return removeCustomField(key);
+                          }}
+                        >
+                          <Trash2 className='h-4 w-4' />
+                        </Button>
+                      </div>
+                    );
+                  })}
+
+                {/* Add new custom field */}
+                <div className='flex items-center gap-2 pt-2 mt-2 border-t'>
+                  <Input
+                    placeholder='Field name'
+                    value={customFieldKey}
+                    onChange={(e) => {
+                      return setCustomFieldKey(e.target.value);
+                    }}
+                    className='w-1/3'
+                  />
+                  <Input
+                    placeholder='Value'
+                    value={customFieldValue}
+                    onChange={(e) => {
+                      return setCustomFieldValue(e.target.value);
+                    }}
+                    className='flex-1'
+                  />
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={addCustomField}
+                    disabled={!customFieldKey.trim()}
+                  >
+                    <PlusCircle className='h-4 w-4 mr-1' />
+                    Add
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+
           <DialogFooter>
             <Button type='submit' onClick={saveClientEdits}>
               <Save className='mr-2 h-4 w-4' />
