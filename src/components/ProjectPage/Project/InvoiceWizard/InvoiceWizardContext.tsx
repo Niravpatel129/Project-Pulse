@@ -179,16 +179,6 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
   };
 
   useEffect(() => {
-    // Check if any selected items are physical products
-    const physical = selectedItems.some((item) => {
-      return item.type === 'physical';
-    });
-    setHasPhysicalProducts(physical);
-    if (physical) {
-      setShippingRequired(true);
-    }
-
-    // Update allItems with selectedItems that aren't already there
     setAllItems((prev: any) => {
       const existingIds = new Set(
         prev.map((item) => {
