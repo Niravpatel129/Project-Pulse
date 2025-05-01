@@ -255,16 +255,6 @@ const InvoicePreview = ({
           <div className='flex flex-col py-4 border-b w-full'>
             <div className='flex justify-between items-start'>
               <h4 className='font-medium mb-2'>Shipping:</h4>
-              <Button
-                size='sm'
-                variant='ghost'
-                className='text-xs text-blue-600 p-0 h-6'
-                onClick={() => {
-                  return setActiveTab('shipping');
-                }}
-              >
-                Change
-              </Button>
             </div>
             {editedItems
               .filter((item) => {
