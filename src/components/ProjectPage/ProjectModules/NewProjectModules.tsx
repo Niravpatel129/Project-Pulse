@@ -642,7 +642,7 @@ export default function NewProjectModules() {
     <motion.div variants={containerVariants} initial='hidden' animate='visible'>
       <div className='flex items-center justify-between mb-4'>
         <div className='text-sm font-medium'>All Modules</div>
-        <DropdownMenu>
+        {/* <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant='outline' size='sm'>
               <div className='flex items-center gap-2'>
@@ -652,7 +652,7 @@ export default function NewProjectModules() {
             </Button>
           </DropdownMenuTrigger>
           {renderDropdownMenu()}
-        </DropdownMenu>
+        </DropdownMenu> */}
       </div>
       <div className=''>
         {isLoading ? (

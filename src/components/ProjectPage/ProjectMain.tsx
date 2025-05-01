@@ -40,7 +40,13 @@ export default function ProjectMain() {
     { href: baseUrl, label: 'Home', icon: Home, tab: 'home' },
     { href: `${baseUrl}/kanban`, label: 'Kanban', icon: ChartBar, tab: 'kanban' },
     { href: `${baseUrl}/schedule`, label: 'Schedule', icon: CalendarDays, tab: 'schedule' },
-    { href: `${baseUrl}/modules`, label: 'Storage', icon: PanelsTopLeft, tab: 'modules', badge: 5 },
+    {
+      href: `${baseUrl}/deliverables`,
+      label: 'Deliverables',
+      icon: PanelsTopLeft,
+      tab: 'deliverables',
+      badge: 5,
+    },
     { href: `${baseUrl}/payments`, label: 'Payments', icon: CreditCard, tab: 'payments' },
   ];
 
@@ -128,7 +134,7 @@ export default function ProjectMain() {
                   {activeTab === 'kanban' && <ProjectKanban />}
                   {activeTab === 'timeline' && <TimelineExample />}
                   {activeTab === 'schedule' && <ProjectSchedule />}
-                  {activeTab === 'modules' && <ProjectModules />}
+                  {activeTab === 'deliverables' && <ProjectModules />}
                   {activeTab === 'payments' && <ProjectPayments />}
                 </Suspense>
               </motion.div>
