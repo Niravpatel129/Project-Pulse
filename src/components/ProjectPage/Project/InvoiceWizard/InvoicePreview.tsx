@@ -10,10 +10,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverTrigger } from '@/components/ui/popover';
+import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { useProject } from '@/contexts/ProjectContext';
 import { useParticipantMutations } from '@/hooks/useParticipantMutations';
-import { Pencil, PlusCircle, Save } from 'lucide-react';
+import { Pencil, PlusCircle, Save, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import InvoiceItemDetails from './InvoiceItemDetails';
 import { InvoiceItem } from './types';
@@ -48,7 +49,36 @@ const InvoicePreview = ({
   const [clientDialogOpen, setClientDialogOpen] = useState(false);
   const [currentEditItem, setCurrentEditItem] = useState<InvoiceItem | null>(null);
   const [editedItemValues, setEditedItemValues] = useState<Partial<InvoiceItem>>({});
-  const [editedClientValues, setEditedClientValues] = useState<Partial<any>>({});
+  const [editedClientValues, setEditedClientValues] = useState<{
+    name: string;
+    email: string;
+    phone: string;
+    website: string;
+    jobTitle: string;
+    mailingAddress: string;
+    comments: string;
+    customFields: {
+      company: string;
+      address: string;
+      [key: string]: string;
+    };
+  }>({
+    name: '',
+    email: '',
+    phone: '',
+    website: '',
+    jobTitle: '',
+    mailingAddress: '',
+    comments: '',
+    customFields: {
+      company: '',
+      address: '',
+    },
+  });
+
+  // Edit Client Dialog
+  const [customFieldKey, setCustomFieldKey] = useState('');
+  const [customFieldValue, setCustomFieldValue] = useState('');
 
   // Use project ID from the client if available
   const { project } = useProject();
@@ -91,9 +121,18 @@ const InvoicePreview = ({
   // Open client edit dialog
   const openClientEditDialog = (client: any) => {
     setEditedClientValues({
-      name: client.name,
-      email: client.email,
-      company: client.company,
+      name: client.name || '',
+      email: client.email || '',
+      phone: client.phone || '',
+      website: client.website || '',
+      jobTitle: client.jobTitle || '',
+      mailingAddress: client.mailingAddress || '',
+      comments: client.comments || '',
+      customFields: {
+        company: client.customFields?.company || '',
+        address: client.customFields?.address || '',
+        ...(client.customFields || {}),
+      },
     });
     setClientDialogOpen(true);
   };
@@ -132,7 +171,10 @@ const InvoicePreview = ({
   const saveClientEdits = () => {
     if (!editedClient || !editedClientValues) return;
 
-    const updatedClient = { ...editedClient, ...editedClientValues };
+    const updatedClient = {
+      ...editedClient,
+      ...editedClientValues,
+    };
     setEditedClient(updatedClient);
     console.log('🚀 updatedClient:', updatedClient);
 
@@ -144,12 +186,9 @@ const InvoicePreview = ({
         updates: {
           name: updatedClient.name,
           email: updatedClient.email,
-          // Add company and address as custom fields if they exist
-          customFields: [
-            ...(updatedClient.customFields || []),
-            ...(updatedClient.company ? [{ key: 'company', value: updatedClient.company }] : []),
-            ...(updatedClient.address ? [{ key: 'address', value: updatedClient.address }] : []),
-          ],
+          phone: updatedClient.phone,
+          // Don't need to transform customFields as it's already the correct format
+          customFields: updatedClient.customFields,
         },
       });
     } else {
@@ -200,6 +239,34 @@ const InvoicePreview = ({
     }
   };
 
+  // Add a new custom field
+  const addCustomField = () => {
+    if (!customFieldKey.trim()) return;
+
+    setEditedClientValues({
+      ...editedClientValues,
+      customFields: {
+        ...editedClientValues.customFields,
+        [customFieldKey.trim()]: customFieldValue,
+      },
+    });
+
+    // Reset the input fields
+    setCustomFieldKey('');
+    setCustomFieldValue('');
+  };
+
+  // Remove a custom field
+  const removeCustomField = (key: string) => {
+    const updatedCustomFields = { ...editedClientValues.customFields };
+    delete updatedCustomFields[key];
+
+    setEditedClientValues({
+      ...editedClientValues,
+      customFields: updatedCustomFields,
+    });
+  };
+
   return (
     <>
       <div className='w-full md:w-[400px] p-4 flex flex-col overflow-y-auto'>
@@ -232,14 +299,19 @@ const InvoicePreview = ({
                 <p className='text-sm text-muted-foreground'>
                   {editedClient?.email || selectedClient.email}
                 </p>
-                {(editedClient?.company || selectedClient.company) && (
+                {(editedClient?.customFields?.company || selectedClient.customFields?.company) && (
                   <p className='text-sm text-muted-foreground'>
-                    {editedClient?.company || selectedClient.company}
+                    {editedClient?.customFields?.company || selectedClient.customFields?.company}
                   </p>
                 )}
-                {(editedClient?.address || selectedClient.address) && (
+                {(editedClient?.customFields?.address || selectedClient.customFields?.address) && (
                   <p className='text-sm text-muted-foreground mt-1'>
-                    {editedClient?.address || selectedClient.address}
+                    {editedClient?.customFields?.address || selectedClient.customFields?.address}
+                  </p>
+                )}
+                {(editedClient?.mailingAddress || selectedClient.mailingAddress) && (
+                  <p className='text-sm text-muted-foreground mt-1'>
+                    {editedClient?.mailingAddress || selectedClient.mailingAddress}
                   </p>
                 )}
               </div>
@@ -555,9 +627,15 @@ const InvoicePreview = ({
               </Label>
               <Input
                 id='client-company'
-                value={editedClientValues.company || ''}
+                value={editedClientValues.customFields?.company || ''}
                 onChange={(e) => {
-                  return setEditedClientValues({ ...editedClientValues, company: e.target.value });
+                  return setEditedClientValues({
+                    ...editedClientValues,
+                    customFields: {
+                      ...editedClientValues.customFields,
+                      company: e.target.value,
+                    },
+                  });
                 }}
                 className='col-span-3'
               />
@@ -576,17 +654,183 @@ const InvoicePreview = ({
                 className='col-span-3'
               />
             </div>
+            <div className='grid grid-cols-4 items-center gap-4'>
+              <Label htmlFor='client-phone' className='text-right'>
+                Phone
+              </Label>
+              <Input
+                id='client-phone'
+                type='tel'
+                value={editedClientValues.phone || ''}
+                onChange={(e) => {
+                  return setEditedClientValues({ ...editedClientValues, phone: e.target.value });
+                }}
+                className='col-span-3'
+              />
+            </div>
+            <div className='grid grid-cols-4 items-center gap-4'>
+              <Label htmlFor='client-website' className='text-right'>
+                Website
+              </Label>
+              <Input
+                id='client-website'
+                type='url'
+                value={editedClientValues.website || ''}
+                onChange={(e) => {
+                  return setEditedClientValues({ ...editedClientValues, website: e.target.value });
+                }}
+                className='col-span-3'
+              />
+            </div>
+            <div className='grid grid-cols-4 items-center gap-4'>
+              <Label htmlFor='client-jobTitle' className='text-right'>
+                Job Title
+              </Label>
+              <Input
+                id='client-jobTitle'
+                value={editedClientValues.jobTitle || ''}
+                onChange={(e) => {
+                  return setEditedClientValues({ ...editedClientValues, jobTitle: e.target.value });
+                }}
+                className='col-span-3'
+              />
+            </div>
             <div className='grid grid-cols-4 items-start gap-4'>
-              <Label htmlFor='client-address' className='text-right pt-2'>
-                Address
+              <Label htmlFor='client-mailingAddress' className='text-right pt-2'>
+                Mailing Address
               </Label>
               <Textarea
-                id='client-address'
-                value={editedClientValues.address || ''}
+                id='client-mailingAddress'
+                value={editedClientValues.mailingAddress || ''}
                 onChange={(e) => {
-                  return setEditedClientValues({ ...editedClientValues, address: e.target.value });
+                  return setEditedClientValues({
+                    ...editedClientValues,
+                    mailingAddress: e.target.value,
+                  });
                 }}
                 placeholder='Street, City, State, ZIP, Country'
+                className='col-span-3'
+              />
+            </div>
+            <div className='grid grid-cols-4 items-start gap-4'>
+              <Label htmlFor='client-comments' className='text-right pt-2'>
+                Comments
+              </Label>
+              <Textarea
+                id='client-comments'
+                value={editedClientValues.comments || ''}
+                onChange={(e) => {
+                  return setEditedClientValues({ ...editedClientValues, comments: e.target.value });
+                }}
+                placeholder='Additional comments about the client'
+                className='col-span-3'
+              />
+            </div>
+            <div className='grid grid-cols-4 items-center gap-4'>
+              <Label htmlFor='client-custom-address' className='text-right'>
+                Address
+              </Label>
+              <Input
+                id='client-custom-address'
+                value={editedClientValues.customFields?.address || ''}
+                onChange={(e) => {
+                  return setEditedClientValues({
+                    ...editedClientValues,
+                    customFields: {
+                      ...editedClientValues.customFields,
+                      address: e.target.value,
+                    },
+                  });
+                }}
+                className='col-span-3'
+              />
+            </div>
+
+            <Separator className='my-4' />
+            <h3 className='font-medium mb-2'>Additional Custom Fields</h3>
+
+            {/* Display existing custom fields (excluding company and address which have dedicated inputs) */}
+            {Object.entries(editedClientValues.customFields || {})
+              .filter(([key]) => {
+                return !['company', 'address'].includes(key);
+              })
+              .map(([key, value]) => {
+                return (
+                  <div key={key} className='grid grid-cols-4 items-center gap-4'>
+                    <div className='col-span-1 text-right font-medium text-sm'>{key}</div>
+                    <div className='col-span-2 flex items-center'>
+                      <Input
+                        value={value}
+                        onChange={(e) => {
+                          setEditedClientValues({
+                            ...editedClientValues,
+                            customFields: {
+                              ...editedClientValues.customFields,
+                              [key]: e.target.value,
+                            },
+                          });
+                        }}
+                      />
+                    </div>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='col-span-1'
+                      onClick={() => {
+                        return removeCustomField(key);
+                      }}
+                    >
+                      <Trash2 className='h-4 w-4' />
+                    </Button>
+                  </div>
+                );
+              })}
+
+            {/* Add new custom field */}
+            <div className='grid grid-cols-4 items-center gap-4 mt-2'>
+              <div className='col-span-1 text-right'>
+                <Label>Add Field</Label>
+              </div>
+              <div className='col-span-3 flex items-center gap-2'>
+                <Input
+                  placeholder='Field name'
+                  value={customFieldKey}
+                  onChange={(e) => {
+                    return setCustomFieldKey(e.target.value);
+                  }}
+                  className='w-1/3'
+                />
+                <Input
+                  placeholder='Value'
+                  value={customFieldValue}
+                  onChange={(e) => {
+                    return setCustomFieldValue(e.target.value);
+                  }}
+                  className='flex-1'
+                />
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={addCustomField}
+                  disabled={!customFieldKey.trim()}
+                >
+                  <PlusCircle className='h-4 w-4 mr-1' />
+                  Add
+                </Button>
+              </div>
+            </div>
+
+            <div className='grid grid-cols-4 items-start gap-4 mt-4'>
+              <Label htmlFor='client-comments' className='text-right pt-2'>
+                Comments
+              </Label>
+              <Textarea
+                id='client-comments'
+                value={editedClientValues.comments || ''}
+                onChange={(e) => {
+                  return setEditedClientValues({ ...editedClientValues, comments: e.target.value });
+                }}
+                placeholder='Additional comments about the client'
                 className='col-span-3'
               />
             </div>
