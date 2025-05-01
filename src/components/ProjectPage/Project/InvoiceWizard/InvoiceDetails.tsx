@@ -29,6 +29,7 @@ interface InvoiceDetailsProps {
   reducedTaxRate: number;
   setReducedTaxRate: (value: number) => void;
   setActiveTab: (tab: string) => void;
+  hasPhysicalProducts?: boolean;
 }
 
 const InvoiceDetails = ({
@@ -43,6 +44,7 @@ const InvoiceDetails = ({
   reducedTaxRate,
   setReducedTaxRate,
   setActiveTab,
+  hasPhysicalProducts,
 }: InvoiceDetailsProps) => {
   const { data: invoiceSettings } = useInvoiceSettings();
   const updateInvoiceSettings = useUpdateInvoiceSettings();
