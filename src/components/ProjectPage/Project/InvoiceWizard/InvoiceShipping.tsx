@@ -5,11 +5,13 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
+import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
 import { motion } from 'framer-motion';
-import { ReactNode } from 'react';
+import { Plus } from 'lucide-react';
+import { ReactNode, useState } from 'react';
 
 interface InvoiceShippingProps {
-  shippingMethods: any[];
   selectedShippingMethod: any | null;
   setSelectedShippingMethod: (method: any | null) => void;
   selectedClient: any | null;
@@ -22,7 +24,6 @@ interface InvoiceShippingProps {
 }
 
 const InvoiceShipping = ({
-  shippingMethods,
   selectedShippingMethod,
   setSelectedShippingMethod,
   selectedClient,
@@ -33,6 +34,16 @@ const InvoiceShipping = ({
   addShippingToInvoice,
   setActiveTab,
 }: InvoiceShippingProps) => {
+  const { data: invoiceSettings } = useInvoiceSettings();
+  const updateInvoiceSettings = useUpdateInvoiceSettings();
+  const [isCreatingShipping, setIsCreatingShipping] = useState(false);
+  const [newShipping, setNewShipping] = useState({
+    name: '',
+    carrier: '',
+    price: 0,
+    estimatedDays: '',
+  });
+
   const formatAddress = (address: any): ReactNode => {
     if (!address) return null;
 
@@ -48,6 +59,35 @@ const InvoiceShipping = ({
     );
   };
 
+  const handleSettingsUpdate = (updates: Partial<typeof invoiceSettings>) => {
+    updateInvoiceSettings.mutate({
+      settings: {
+        ...invoiceSettings,
+        ...updates,
+      },
+    });
+  };
+
+  const handleAddShippingMethod = () => {
+    if (!newShipping.name || !newShipping.carrier || newShipping.price <= 0) return;
+
+    const newShippingId = `shipping-${Date.now()}`;
+    const updatedShippingMethods = [
+      ...(invoiceSettings?.shippingMethods || []),
+      {
+        id: newShippingId,
+        name: newShipping.name,
+        carrier: newShipping.carrier,
+        price: Number(newShipping.price),
+        estimatedDays: newShipping.estimatedDays || 'Varies',
+      },
+    ];
+
+    handleSettingsUpdate({ shippingMethods: updatedShippingMethods });
+    setNewShipping({ name: '', carrier: '', price: 0, estimatedDays: '' });
+    setIsCreatingShipping(false);
+  };
+
   return (
     <motion.div
       key='shipping'
@@ -58,17 +98,101 @@ const InvoiceShipping = ({
       className='space-y-6'
     >
       <div>
-        <h3 className='font-medium mb-3'>Shipping Method</h3>
+        <div className='flex items-center justify-between mb-3'>
+          <h3 className='font-medium'>Shipping Method</h3>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={() => {
+              return setIsCreatingShipping(true);
+            }}
+            className='flex items-center gap-2'
+          >
+            <Plus className='h-4 w-4' />
+            Add Shipping Method
+          </Button>
+        </div>
+
+        {isCreatingShipping && (
+          <div className='mb-4 p-4 bg-gray-50 rounded-lg'>
+            <div className='grid grid-cols-2 gap-4 mb-4'>
+              <div>
+                <Label htmlFor='shipping-name'>Method Name</Label>
+                <Input
+                  id='shipping-name'
+                  placeholder='e.g. Standard Shipping'
+                  value={newShipping.name}
+                  onChange={(e) => {
+                    return setNewShipping({ ...newShipping, name: e.target.value });
+                  }}
+                />
+              </div>
+              <div>
+                <Label htmlFor='shipping-carrier'>Carrier</Label>
+                <Input
+                  id='shipping-carrier'
+                  placeholder='e.g. USPS, FedEx'
+                  value={newShipping.carrier}
+                  onChange={(e) => {
+                    return setNewShipping({ ...newShipping, carrier: e.target.value });
+                  }}
+                />
+              </div>
+            </div>
+            <div className='grid grid-cols-2 gap-4 mb-4'>
+              <div>
+                <Label htmlFor='shipping-price'>Price ($)</Label>
+                <Input
+                  id='shipping-price'
+                  type='number'
+                  min='0'
+                  step='0.01'
+                  value={newShipping.price}
+                  onChange={(e) => {
+                    return setNewShipping({ ...newShipping, price: Number(e.target.value) });
+                  }}
+                />
+              </div>
+              <div>
+                <Label htmlFor='shipping-days'>Estimated Delivery</Label>
+                <Input
+                  id='shipping-days'
+                  placeholder='e.g. 2-3 Days'
+                  value={newShipping.estimatedDays}
+                  onChange={(e) => {
+                    return setNewShipping({ ...newShipping, estimatedDays: e.target.value });
+                  }}
+                />
+              </div>
+            </div>
+            <div className='flex justify-end gap-2'>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => {
+                  setIsCreatingShipping(false);
+                  setNewShipping({ name: '', carrier: '', price: 0, estimatedDays: '' });
+                }}
+              >
+                Cancel
+              </Button>
+              <Button size='sm' onClick={handleAddShippingMethod}>
+                Add Method
+              </Button>
+            </div>
+          </div>
+        )}
+
         <RadioGroup
           value={selectedShippingMethod?.id || ''}
           onValueChange={(value) => {
-            const method = shippingMethods.find((m) => {
+            const method = invoiceSettings?.shippingMethods?.find((m) => {
               return m.id === value;
             });
             setSelectedShippingMethod(method || null);
           }}
         >
-          {shippingMethods.map((method) => {
+          {invoiceSettings?.shippingMethods?.map((method) => {
             return (
               <div key={method.id} className='flex items-center space-x-2 mb-2'>
                 <RadioGroupItem value={method.id} id={method.id} />
@@ -87,6 +211,13 @@ const InvoiceShipping = ({
             );
           })}
         </RadioGroup>
+
+        {(invoiceSettings?.shippingMethods?.length === 0 || !invoiceSettings?.shippingMethods) && (
+          <div className='text-center p-4 border rounded-lg'>
+            <p className='text-muted-foreground'>No shipping methods available.</p>
+            <p className='text-sm mt-2'>Add a shipping method to continue.</p>
+          </div>
+        )}
 
         <Button
           className='mt-4 w-full'

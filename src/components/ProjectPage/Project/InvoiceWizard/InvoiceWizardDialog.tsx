@@ -46,6 +46,7 @@ const InvoiceWizardDialog = ({
   const [selectedClient, setSelectedClient] = useState<any | null>(null);
   const [taxRate, setTaxRate] = useState(20);
   const [reducedTaxRate, setReducedTaxRate] = useState(5);
+  const [selectedTax, setSelectedTax] = useState('no-tax');
   const [notes, setNotes] = useState('');
   const [shippingRequired, setShippingRequired] = useState(false);
   const [hasPhysicalProducts, setHasPhysicalProducts] = useState(false);
@@ -56,30 +57,6 @@ const InvoiceWizardDialog = ({
   const [selectedShippingMethod, setSelectedShippingMethod] = useState<any | null>(null);
   const [useShippingAddress, setUseShippingAddress] = useState(false);
   const [shippingAddress, setShippingAddress] = useState<any>(null);
-
-  const shippingMethods: any[] = [
-    {
-      id: 'standard',
-      name: 'Standard Shipping',
-      carrier: 'USPS',
-      estimatedDays: '3-5 business days',
-      price: 5.99,
-    },
-    {
-      id: 'express',
-      name: 'Express Shipping',
-      carrier: 'FedEx',
-      estimatedDays: '1-2 business days',
-      price: 12.99,
-    },
-    {
-      id: 'overnight',
-      name: 'Overnight Shipping',
-      carrier: 'UPS',
-      estimatedDays: 'Next business day',
-      price: 24.99,
-    },
-  ];
 
   useEffect(() => {
     // Check if any selected items are physical products
@@ -351,12 +328,13 @@ const InvoiceWizardDialog = ({
                     shippingRequired={shippingRequired}
                     setShippingRequired={setShippingRequired}
                     hasPhysicalProducts={hasPhysicalProducts}
+                    selectedTax={selectedTax}
+                    setSelectedTax={setSelectedTax}
                   />
                 )}
 
                 {activeTab === 'shipping' && (
                   <InvoiceShipping
-                    shippingMethods={shippingMethods}
                     selectedShippingMethod={selectedShippingMethod}
                     setSelectedShippingMethod={setSelectedShippingMethod}
                     selectedClient={selectedClient}

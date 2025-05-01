@@ -24,6 +24,10 @@ interface InvoiceDetailsProps {
   shippingRequired: boolean;
   setShippingRequired: (value: boolean) => void;
   hasPhysicalProducts: boolean;
+  taxRate: number;
+  setTaxRate: (value: number) => void;
+  reducedTaxRate: number;
+  setReducedTaxRate: (value: number) => void;
 }
 
 const InvoiceDetails = ({
@@ -34,6 +38,10 @@ const InvoiceDetails = ({
   shippingRequired,
   setShippingRequired,
   hasPhysicalProducts,
+  taxRate,
+  setTaxRate,
+  reducedTaxRate,
+  setReducedTaxRate,
 }: InvoiceDetailsProps) => {
   const { data: invoiceSettings } = useInvoiceSettings();
   const updateInvoiceSettings = useUpdateInvoiceSettings();

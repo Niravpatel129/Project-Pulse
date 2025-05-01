@@ -13,6 +13,13 @@ interface InvoiceSettings {
     name: string;
     rate: number;
   }>;
+  shippingMethods?: Array<{
+    id: string;
+    name: string;
+    carrier: string;
+    price: number;
+    estimatedDays: string;
+  }>;
   currency?: string;
 }
 
@@ -40,6 +47,8 @@ export const useInvoiceSettings = () => {
           showTaxId: false,
           icon: '',
           logo: '',
+          taxes: [],
+          shippingMethods: [],
         };
       }
     },
