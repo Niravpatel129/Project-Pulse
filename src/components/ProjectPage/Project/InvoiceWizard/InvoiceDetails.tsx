@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
 import { motion } from 'framer-motion';
-import { Plus, TruckIcon } from 'lucide-react';
+import { Info, Plus, TruckIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useInvoiceWizardContext } from './InvoiceWizardContext';
 
@@ -52,6 +52,11 @@ const InvoiceDetails = ({
   const [newTax, setNewTax] = useState({ name: '', rate: 0 });
   const [localCurrency, setLocalCurrency] = useState(invoiceSettings?.currency || 'usd');
   const { shippingItem, discount, setDiscount } = useInvoiceWizardContext();
+
+  // Toggle states
+  const [sendAutomatically, setSendAutomatically] = useState(true);
+  const [includePaymentLink, setIncludePaymentLink] = useState(true);
+  const [scheduleReminders, setScheduleReminders] = useState(false);
 
   useEffect(() => {
     if (invoiceSettings?.currency) {
@@ -245,25 +250,56 @@ const InvoiceDetails = ({
         />
       </div>
 
-      <div>
-        <Label className='flex items-center gap-2'>
-          <Switch checked={true} onCheckedChange={() => {}} />
-          <span>Send invoice to client automatically</span>
-        </Label>
-      </div>
+      {/* Invoice delivery settings */}
+      <div className='border p-4 rounded-lg'>
+        <h2 className='text-sm font-medium text-gray-900 mb-3'>Invoice Delivery Options</h2>
 
-      <div>
-        <Label className='flex items-center gap-2'>
-          <Switch checked={true} onCheckedChange={() => {}} />
-          <span>Include payment link</span>
-        </Label>
-      </div>
+        <div className='space-y-4'>
+          <div>
+            <Label className='flex items-center gap-2 mb-1'>
+              <Switch checked={sendAutomatically} onCheckedChange={setSendAutomatically} />
+              <span className='font-medium'>Send invoice to client automatically</span>
+            </Label>
+            <p className='text-xs text-gray-500 ml-9'>
+              {sendAutomatically
+                ? "Invoice will be emailed to client as soon as it's finalized"
+                : "You'll need to manually send the invoice to your client"}
+            </p>
+          </div>
 
-      <div>
-        <Label className='flex items-center gap-2'>
-          <Switch checked={false} onCheckedChange={() => {}} />
-          <span>Schedule automatic reminders</span>
-        </Label>
+          <div>
+            <Label className='flex items-center gap-2 mb-1'>
+              <Switch checked={includePaymentLink} onCheckedChange={setIncludePaymentLink} />
+              <span className='font-medium'>Include payment link</span>
+            </Label>
+            <p className='text-xs text-gray-500 ml-9'>
+              {includePaymentLink
+                ? 'Client can pay online directly through the invoice'
+                : 'Client will need to arrange payment manually'}
+            </p>
+          </div>
+
+          <div>
+            <Label className='flex items-center gap-2 mb-1'>
+              <Switch checked={scheduleReminders} onCheckedChange={setScheduleReminders} />
+              <span className='font-medium'>Schedule automatic reminders</span>
+            </Label>
+            <p className='text-xs text-gray-500 ml-9'>
+              {scheduleReminders
+                ? 'Reminders will be sent if invoice is overdue'
+                : 'No automatic reminders will be sent'}
+            </p>
+            {scheduleReminders && (
+              <div className='mt-2 ml-9 p-2 bg-blue-50 rounded-md text-xs flex items-start gap-2'>
+                <Info className='h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0' />
+                <p className='text-blue-700'>
+                  Reminders will be sent 3, 7, and 14 days after the due date if the invoice remains
+                  unpaid.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Shipping section with prominent styling */}
