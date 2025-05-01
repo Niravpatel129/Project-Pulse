@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { newRequest } from '@/utils/newRequest';
 import { useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface CreateClientDialogProps {
@@ -18,6 +18,7 @@ interface CreateClientDialogProps {
   onOpenChange: (open: boolean) => void;
   onClientCreated: (client: any) => void;
   project?: any;
+  clientToEdit?: any | null;
 }
 
 export default function CreateClientDialog({
@@ -25,6 +26,7 @@ export default function CreateClientDialog({
   onOpenChange,
   onClientCreated,
   project,
+  clientToEdit,
 }: CreateClientDialogProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -33,23 +35,56 @@ export default function CreateClientDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
 
+  const isEditMode = !!clientToEdit;
+
+  // Load client data when editing
+  useEffect(() => {
+    if (clientToEdit) {
+      setName(clientToEdit.name || '');
+      setEmail(clientToEdit.email || '');
+      setPhone(clientToEdit.phone || '');
+      setCompany(clientToEdit.company || '');
+    } else {
+      // Reset form when not editing
+      setName('');
+      setEmail('');
+      setPhone('');
+      setCompany('');
+    }
+  }, [clientToEdit, open]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const response = await newRequest.post('/workspaces/clients', {
-        name,
-        email,
-        phone,
-        company,
-        status: 'active',
-        projectId: project?._id,
-      });
+      let response;
 
-      const newClient = response.data.data;
-      toast.success('Client created successfully');
-      onClientCreated(newClient);
+      if (isEditMode) {
+        // Update existing client
+        const clientId = clientToEdit.id || clientToEdit._id;
+        response = await newRequest.patch(`/workspaces/clients/${clientId}`, {
+          name,
+          email,
+          phone,
+          company,
+        });
+        toast.success('Client updated successfully');
+      } else {
+        // Create new client
+        response = await newRequest.post('/workspaces/clients', {
+          name,
+          email,
+          phone,
+          company,
+          status: 'active',
+          projectId: project?._id,
+        });
+        toast.success('Client created successfully');
+      }
+
+      const clientData = response.data.data;
+      onClientCreated(clientData);
       onOpenChange(false);
 
       // Reset form
@@ -65,8 +100,8 @@ export default function CreateClientDialog({
         queryClient.invalidateQueries({ queryKey: ['project'] });
       }
     } catch (error) {
-      console.error('Error creating client:', error);
-      toast.error('Failed to create client');
+      console.error(`Error ${isEditMode ? 'updating' : 'creating'} client:`, error);
+      toast.error(`Failed to ${isEditMode ? 'update' : 'create'} client`);
     } finally {
       setIsSubmitting(false);
     }
@@ -76,7 +111,9 @@ export default function CreateClientDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='sm:max-w-[400px] p-6 border border-gray-100 shadow-sm rounded-lg'>
         <DialogHeader className='mb-4'>
-          <DialogTitle className='text-base font-medium text-gray-800'>New Client</DialogTitle>
+          <DialogTitle className='text-base font-medium text-gray-800'>
+            {isEditMode ? 'Edit Client' : 'New Client'}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className='space-y-5'>
           <div className='space-y-2'>
@@ -154,7 +191,13 @@ export default function CreateClientDialog({
               disabled={isSubmitting}
               className='h-8 text-xs font-normal bg-gray-900 hover:bg-gray-800 transition-colors'
             >
-              {isSubmitting ? 'Creating...' : 'Create Client'}
+              {isSubmitting
+                ? isEditMode
+                  ? 'Updating...'
+                  : 'Creating...'
+                : isEditMode
+                ? 'Update Client'
+                : 'Create Client'}
             </Button>
           </DialogFooter>
         </form>

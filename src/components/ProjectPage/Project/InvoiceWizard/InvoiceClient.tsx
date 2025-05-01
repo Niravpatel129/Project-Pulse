@@ -1,12 +1,21 @@
 import CreateClientDialog from '@/components/ProjectPage/NewProjectDialog/CreateClientDialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { useProject } from '@/contexts/ProjectContext';
 import { cn } from '@/lib/utils';
+import { newRequest } from '@/utils/newRequest';
+import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Check, Plus, Search, Users } from 'lucide-react';
+import { Check, Edit, MoreVertical, Plus, Search, Trash2, Users } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface InvoiceClientProps {
   clients: any[];
@@ -18,6 +27,9 @@ const InvoiceClient = ({ clients, selectedClient, handleSelectClient }: InvoiceC
   const { project } = useProject();
   const participants = project.participants || [];
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+  const [clientToEdit, setClientToEdit] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const queryClient = useQueryClient();
 
   // Helper function to check if a client is selected
   const isClientSelected = (client: any) => {
@@ -39,6 +51,46 @@ const InvoiceClient = ({ clients, selectedClient, handleSelectClient }: InvoiceC
   const handleClientCreated = (newClient: any) => {
     // Select the newly created client
     handleSelectClient(newClient);
+  };
+
+  const handleEditClient = (client: any, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setClientToEdit(client);
+    setIsClientDialogOpen(true);
+  };
+
+  const handleDeleteClient = async (client: any, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+
+    if (!window.confirm(`Are you sure you want to delete ${client.name}?`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      const clientId = client.id || client._id;
+      await newRequest.delete(`/workspaces/clients/${clientId}`);
+
+      toast.success('Client deleted successfully');
+
+      // If the deleted client was selected, clear the selection
+      if (isClientSelected(client)) {
+        handleSelectClient(null);
+      }
+
+      // Invalidate clients query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+
+      if (project) {
+        queryClient.invalidateQueries({ queryKey: ['project'] });
+      }
+    } catch (error) {
+      console.error('Error deleting client:', error);
+      toast.error('Failed to delete client');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -83,7 +135,44 @@ const InvoiceClient = ({ clients, selectedClient, handleSelectClient }: InvoiceC
                       <p className='text-sm text-muted-foreground'>{participant.email}</p>
                     </div>
                   </div>
-                  {isClientSelected(participant) && <Check className='h-5 w-5 text-primary' />}
+                  <div className='flex items-center gap-2'>
+                    {isClientSelected(participant) && (
+                      <>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            asChild
+                            onClick={(e) => {
+                              return e.stopPropagation();
+                            }}
+                          >
+                            <Button variant='ghost' size='icon' className='h-8 w-8'>
+                              <MoreVertical className='h-4 w-4' />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align='end'>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                return handleEditClient(participant, e);
+                              }}
+                            >
+                              <Edit className='mr-2 h-4 w-4' />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                return handleDeleteClient(participant, e);
+                              }}
+                              disabled={isDeleting}
+                            >
+                              <Trash2 className='mr-2 h-4 w-4' />
+                              {isDeleting ? 'Deleting...' : 'Delete'}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Check className='h-5 w-5 text-primary' />
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -118,7 +207,44 @@ const InvoiceClient = ({ clients, selectedClient, handleSelectClient }: InvoiceC
                       <p className='text-sm text-muted-foreground'>{client.email}</p>
                     </div>
                   </div>
-                  {isClientSelected(client) && <Check className='h-5 w-5 text-primary' />}
+                  <div className='flex items-center gap-2'>
+                    {isClientSelected(client) && (
+                      <>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            asChild
+                            onClick={(e) => {
+                              return e.stopPropagation();
+                            }}
+                          >
+                            <Button variant='ghost' size='icon' className='h-8 w-8'>
+                              <MoreVertical className='h-4 w-4' />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align='end'>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                return handleEditClient(client, e);
+                              }}
+                            >
+                              <Edit className='mr-2 h-4 w-4' />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                return handleDeleteClient(client, e);
+                              }}
+                              disabled={isDeleting}
+                            >
+                              <Trash2 className='mr-2 h-4 w-4' />
+                              {isDeleting ? 'Deleting...' : 'Delete'}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Check className='h-5 w-5 text-primary' />
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -129,6 +255,7 @@ const InvoiceClient = ({ clients, selectedClient, handleSelectClient }: InvoiceC
       <Button
         className='w-full'
         onClick={() => {
+          setClientToEdit(null);
           return setIsClientDialogOpen(true);
         }}
       >
@@ -141,6 +268,7 @@ const InvoiceClient = ({ clients, selectedClient, handleSelectClient }: InvoiceC
         onOpenChange={setIsClientDialogOpen}
         onClientCreated={handleClientCreated}
         project={project}
+        clientToEdit={clientToEdit}
       />
     </motion.div>
   );
