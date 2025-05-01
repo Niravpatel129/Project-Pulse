@@ -1,3 +1,4 @@
+import CreateClientDialog from '@/components/ProjectPage/NewProjectDialog/CreateClientDialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -5,6 +6,7 @@ import { useProject } from '@/contexts/ProjectContext';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Check, Plus, Search, Users } from 'lucide-react';
+import { useState } from 'react';
 
 interface InvoiceClientProps {
   clients: any[];
@@ -15,6 +17,7 @@ interface InvoiceClientProps {
 const InvoiceClient = ({ clients, selectedClient, handleSelectClient }: InvoiceClientProps) => {
   const { project } = useProject();
   const participants = project.participants || [];
+  const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
 
   // Helper function to check if a client is selected
   const isClientSelected = (client: any) => {
@@ -31,6 +34,11 @@ const InvoiceClient = ({ clients, selectedClient, handleSelectClient }: InvoiceC
     }
 
     return false;
+  };
+
+  const handleClientCreated = (newClient: any) => {
+    // Select the newly created client
+    handleSelectClient(newClient);
   };
 
   return (
@@ -118,10 +126,22 @@ const InvoiceClient = ({ clients, selectedClient, handleSelectClient }: InvoiceC
         </div>
       )}
 
-      <Button className='w-full'>
+      <Button
+        className='w-full'
+        onClick={() => {
+          return setIsClientDialogOpen(true);
+        }}
+      >
         <Plus className='mr-2 h-4 w-4' />
         Add New Client
       </Button>
+
+      <CreateClientDialog
+        open={isClientDialogOpen}
+        onOpenChange={setIsClientDialogOpen}
+        onClientCreated={handleClientCreated}
+        project={project}
+      />
     </motion.div>
   );
 };
