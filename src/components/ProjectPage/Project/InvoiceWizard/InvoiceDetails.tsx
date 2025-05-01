@@ -1,14 +1,25 @@
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
+import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
 import { motion } from 'framer-motion';
+import { Plus } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
 
 interface InvoiceDetailsProps {
-  taxRate: number;
-  setTaxRate: (value: number) => void;
-  reducedTaxRate: number;
-  setReducedTaxRate: (value: number) => void;
+  selectedTax: string;
+  setSelectedTax: (value: string) => void;
   notes: string;
   setNotes: (value: string) => void;
   shippingRequired: boolean;
@@ -17,16 +28,42 @@ interface InvoiceDetailsProps {
 }
 
 const InvoiceDetails = ({
-  taxRate,
-  setTaxRate,
-  reducedTaxRate,
-  setReducedTaxRate,
+  selectedTax,
+  setSelectedTax,
   notes,
   setNotes,
   shippingRequired,
   setShippingRequired,
   hasPhysicalProducts,
 }: InvoiceDetailsProps) => {
+  const { data: invoiceSettings } = useInvoiceSettings();
+  const updateInvoiceSettings = useUpdateInvoiceSettings();
+  const [isCreatingTax, setIsCreatingTax] = useState(false);
+  const [newTax, setNewTax] = useState({ name: '', rate: 0 });
+
+  const handleSettingsUpdate = (updates: Partial<typeof invoiceSettings>) => {
+    updateInvoiceSettings.mutate({
+      settings: {
+        ...invoiceSettings,
+        ...updates,
+      },
+    });
+  };
+
+  const handleAddTax = () => {
+    if (!newTax.name || newTax.rate <= 0) return;
+
+    const newTaxId = `tax-${Date.now()}`;
+    const updatedTaxes = [
+      ...(invoiceSettings?.taxes || []),
+      { id: newTaxId, name: newTax.name, rate: newTax.rate },
+    ];
+
+    handleSettingsUpdate({ taxes: updatedTaxes });
+    setNewTax({ name: '', rate: 0 });
+    setIsCreatingTax(false);
+  };
+
   return (
     <motion.div
       key='details'
@@ -36,31 +73,90 @@ const InvoiceDetails = ({
       transition={{ duration: 0.2 }}
       className='space-y-6'
     >
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-        <div>
-          <Label htmlFor='tax-rate'>Standard Tax Rate (%)</Label>
-          <Input
-            id='tax-rate'
-            type='number'
-            value={taxRate}
-            onChange={(e) => {
-              return setTaxRate(Number(e.target.value));
+      {/* Tax section */}
+      <div>
+        <div className='flex items-center justify-between mb-2'>
+          <h2 className='text-sm font-medium text-gray-900'>Taxes</h2>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={() => {
+              return setIsCreatingTax(true);
             }}
-            className='mt-1'
-          />
+            className='flex items-center gap-2'
+          >
+            <Plus className='h-4 w-4' />
+            Add Tax
+          </Button>
         </div>
-        <div>
-          <Label htmlFor='reduced-tax-rate'>Reduced Tax Rate (%)</Label>
-          <Input
-            id='reduced-tax-rate'
-            type='number'
-            value={reducedTaxRate}
-            onChange={(e) => {
-              return setReducedTaxRate(Number(e.target.value));
-            }}
-            className='mt-1'
-          />
-        </div>
+
+        {isCreatingTax && (
+          <div className='mb-4 p-4 bg-gray-50 rounded-lg'>
+            <div className='grid grid-cols-2 gap-4 mb-4'>
+              <div>
+                <Label htmlFor='tax-name'>Tax Name</Label>
+                <Input
+                  id='tax-name'
+                  placeholder='e.g. GST, VAT'
+                  value={newTax.name}
+                  onChange={(e) => {
+                    return setNewTax({ ...newTax, name: e.target.value });
+                  }}
+                />
+              </div>
+              <div>
+                <Label htmlFor='tax-rate'>Rate (%)</Label>
+                <Input
+                  id='tax-rate'
+                  type='number'
+                  min='0'
+                  step='0.1'
+                  value={newTax.rate}
+                  onChange={(e) => {
+                    return setNewTax({ ...newTax, rate: Number(e.target.value) });
+                  }}
+                />
+              </div>
+            </div>
+            <div className='flex justify-end gap-2'>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => {
+                  setIsCreatingTax(false);
+                  setNewTax({ name: '', rate: 0 });
+                }}
+              >
+                Cancel
+              </Button>
+              <Button size='sm' onClick={handleAddTax}>
+                Add Tax
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <Select value={selectedTax} onValueChange={setSelectedTax}>
+          <SelectTrigger className='w-full bg-white border-gray-200'>
+            <SelectValue placeholder='Select tax rate' />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value='no-tax'>No Tax</SelectItem>
+            {invoiceSettings?.taxes?.map((tax) => {
+              return (
+                <SelectItem key={tax.id} value={tax.id}>
+                  {tax.name} ({tax.rate}%)
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+        <p className='text-xs text-gray-500 mt-1'>
+          Manage taxes in{' '}
+          <Link href='/settings/invoices' className='underline'>
+            invoice settings
+          </Link>
+        </p>
       </div>
 
       <div>
