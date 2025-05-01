@@ -86,7 +86,7 @@ const InvoiceClient = ({ clients, selectedClient, handleSelectClient }: InvoiceC
 
     try {
       const clientId = client.id || client._id;
-      await newRequest.delete(`/workspaces/clients/${clientId}`);
+      await newRequest.delete(`/projects/${project._id}/participants/${clientId}`);
 
       toast.success('Client deleted successfully');
 

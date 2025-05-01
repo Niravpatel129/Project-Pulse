@@ -174,7 +174,7 @@ const InvoicePreview = ({
           </Button>
         </div>
 
-        <div className='flex flex-col items-start pb-8 border-b w-full'>
+        <div className='flex flex-col py-4 border-b w-full items-center'>
           {selectedClient ? (
             <div className='w-full'>
               <div className=''>
