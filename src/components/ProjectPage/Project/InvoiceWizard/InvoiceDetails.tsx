@@ -24,7 +24,6 @@ interface InvoiceDetailsProps {
   setNotes: (value: string) => void;
   shippingRequired: boolean;
   setShippingRequired: (value: boolean) => void;
-  hasPhysicalProducts: boolean;
   taxRate: number;
   setTaxRate: (value: number) => void;
   reducedTaxRate: number;
@@ -39,7 +38,6 @@ const InvoiceDetails = ({
   setNotes,
   shippingRequired,
   setShippingRequired,
-  hasPhysicalProducts,
   taxRate,
   setTaxRate,
   reducedTaxRate,
@@ -315,33 +313,42 @@ const InvoiceDetails = ({
             <p className='text-xs text-green-600 mt-1'>
               {shippingItem.name} - ${shippingItem.price.toFixed(2)}
             </p>
-            <Button
-              variant='link'
-              size='sm'
-              className='text-green-700 p-0 mt-1'
-              onClick={() => {
-                return setActiveTab('shipping');
-              }}
-            >
-              Edit shipping details
-            </Button>
+            <div className='flex justify-between items-center mt-2'>
+              <Button
+                variant='link'
+                size='sm'
+                className='text-green-700 p-0'
+                onClick={() => {
+                  return setActiveTab('shipping');
+                }}
+              >
+                Edit shipping details
+              </Button>
+              <Button
+                variant='ghost'
+                size='sm'
+                className='text-red-600 p-0'
+                onClick={() => {
+                  return setShippingRequired(false);
+                }}
+              >
+                Remove shipping
+              </Button>
+            </div>
           </div>
         ) : (
           <>
             <Label className='flex items-center gap-2 mb-3'>
-              <Switch
-                checked={shippingRequired || hasPhysicalProducts}
-                onCheckedChange={handleShippingToggle}
-                disabled={hasPhysicalProducts} // Disable if we already have physical products
-              />
-              <span>
-                {hasPhysicalProducts
-                  ? 'Shipping required for physical products'
-                  : 'Add shipping to this invoice'}
-              </span>
+              <Switch checked={shippingRequired} onCheckedChange={handleShippingToggle} />
+              <span>Add shipping to this invoice</span>
             </Label>
+            <p className='text-xs text-gray-500 ml-9 mb-3'>
+              {shippingRequired
+                ? 'Shipping will be added as a line item to this invoice'
+                : 'No shipping charges will be added to this invoice'}
+            </p>
 
-            {(shippingRequired || hasPhysicalProducts) && !shippingItem && (
+            {shippingRequired && !shippingItem && (
               <Button
                 variant='outline'
                 size='sm'
