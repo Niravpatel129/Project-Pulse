@@ -4,21 +4,12 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
 import { format } from 'date-fns';
+import { TruckIcon } from 'lucide-react';
+import { useInvoiceWizardContext } from './InvoiceWizardContext';
 
 interface InvoiceSidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  invoiceNumber: string;
-  setInvoiceNumber: (value: string) => void;
-  dueDate: Date;
-  setDueDate: (date: Date) => void;
-  aiSuggestions: boolean;
-  setAiSuggestions: (value: boolean) => void;
-  calculateSubtotal: () => number;
-  calculateTotal: () => number;
-  error: string | null;
-  isGenerating: boolean;
-  handleCreateInvoice: () => void;
   shippingRequired: boolean;
   hasPhysicalProducts: boolean;
 }
@@ -26,20 +17,27 @@ interface InvoiceSidebarProps {
 const InvoiceSidebar = ({
   activeTab,
   setActiveTab,
-  invoiceNumber,
-  setInvoiceNumber,
-  dueDate,
-  setDueDate,
-  aiSuggestions,
-  setAiSuggestions,
-  calculateSubtotal,
-  calculateTotal,
-  error,
-  isGenerating,
-  handleCreateInvoice,
   shippingRequired,
   hasPhysicalProducts,
 }: InvoiceSidebarProps) => {
+  const {
+    invoiceNumber,
+    setInvoiceNumber,
+    dueDate,
+    setDueDate,
+    aiSuggestions,
+    setAiSuggestions,
+    calculateInvoiceSubtotal,
+    calculateInvoiceTotal,
+    error,
+    isGenerating,
+    handleCreateInvoice,
+    shippingItem,
+  } = useInvoiceWizardContext();
+
+  // Show shipping tab if shipping is required, there are physical products, or a shipping item exists
+  const showShippingTab = shippingRequired || hasPhysicalProducts || !!shippingItem;
+
   return (
     <div className='w-full md:w-[280px] border-r'>
       <div className='flex justify-between items-center p-4'>
@@ -118,7 +116,7 @@ const InvoiceSidebar = ({
           <span className={activeTab === 'details' ? 'font-medium' : ''}>Details</span>
         </button>
 
-        {hasPhysicalProducts && (
+        {showShippingTab && (
           <button
             className={`flex items-center gap-3 w-full p-4 rounded-md ${
               activeTab === 'shipping' ? 'bg-gray-100' : ''
@@ -128,19 +126,16 @@ const InvoiceSidebar = ({
             }}
           >
             <div className={`p-1 rounded ${activeTab === 'shipping' ? 'bg-gray-200' : ''}`}>
-              <svg
-                viewBox='0 0 24 24'
-                width='18'
-                height='18'
-                strokeWidth='2'
-                stroke='currentColor'
-                fill='none'
-              >
-                <path d='M5 8h14M5 8a2 2 0 100-4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2v-8' />
-                <path d='M15 19l-2-2m0 0l-2 2m2-2v-4' />
-              </svg>
+              <TruckIcon size={18} />
             </div>
-            <span className={activeTab === 'shipping' ? 'font-medium' : ''}>Shipping</span>
+            <span className={activeTab === 'shipping' ? 'font-medium' : ''}>
+              Shipping
+              {shippingItem && (
+                <span className='ml-2 text-xs inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-700'>
+                  Added
+                </span>
+              )}
+            </span>
           </button>
         )}
       </div>
@@ -195,22 +190,22 @@ const InvoiceSidebar = ({
         <div className='mt-6 space-y-2'>
           <div className='flex justify-between'>
             <span className='text-sm'>Subtotal</span>
-            <span className='font-medium'>${calculateSubtotal().toFixed(2)}</span>
+            <span className='font-medium'>${calculateInvoiceSubtotal().toFixed(2)}</span>
           </div>
 
-          {/* Show shipping costs if there are shipping items */}
-          {hasPhysicalProducts && shippingRequired && (
+          {/* Show shipping costs if there's a shipping item */}
+          {shippingItem && (
             <div className='flex justify-between'>
               <span className='text-sm'>Shipping</span>
               <span className='font-medium'>
-                ${(calculateTotal() - calculateSubtotal()).toFixed(2)}
+                ${(calculateInvoiceTotal() - calculateInvoiceSubtotal()).toFixed(2)}
               </span>
             </div>
           )}
 
           <div className='flex justify-between border-t pt-2'>
             <span className='text-sm font-medium'>Total</span>
-            <span className='font-medium'>${calculateTotal().toFixed(2)}</span>
+            <span className='font-medium'>${calculateInvoiceTotal().toFixed(2)}</span>
           </div>
         </div>
 

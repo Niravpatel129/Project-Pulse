@@ -10,7 +10,7 @@ import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
 import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
 import { ReactNode, useState } from 'react';
-import { useInvoiceWizardContext } from './InvoiceWizardContext';
+import { useInvoiceWizardContext } from './InvoiceWizard/InvoiceWizardContext';
 
 interface InvoiceShippingProps {
   setActiveTab: (tab: string) => void;

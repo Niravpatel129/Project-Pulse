@@ -13,8 +13,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
 import { motion } from 'framer-motion';
-import { Plus } from 'lucide-react';
+import { Plus, TruckIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useInvoiceWizardContext } from './InvoiceWizardContext';
 
 interface InvoiceDetailsProps {
   selectedTax: string;
@@ -28,6 +29,7 @@ interface InvoiceDetailsProps {
   setTaxRate: (value: number) => void;
   reducedTaxRate: number;
   setReducedTaxRate: (value: number) => void;
+  setActiveTab: (tab: string) => void;
 }
 
 const InvoiceDetails = ({
@@ -42,12 +44,14 @@ const InvoiceDetails = ({
   setTaxRate,
   reducedTaxRate,
   setReducedTaxRate,
+  setActiveTab,
 }: InvoiceDetailsProps) => {
   const { data: invoiceSettings } = useInvoiceSettings();
   const updateInvoiceSettings = useUpdateInvoiceSettings();
   const [isCreatingTax, setIsCreatingTax] = useState(false);
   const [newTax, setNewTax] = useState({ name: '', rate: 0 });
   const [localCurrency, setLocalCurrency] = useState(invoiceSettings?.currency || 'usd');
+  const { shippingItem } = useInvoiceWizardContext();
 
   useEffect(() => {
     if (invoiceSettings?.currency) {
@@ -76,6 +80,15 @@ const InvoiceDetails = ({
     handleSettingsUpdate({ taxes: updatedTaxes });
     setNewTax({ name: '', rate: 0 });
     setIsCreatingTax(false);
+  };
+
+  const handleShippingToggle = (checked: boolean) => {
+    setShippingRequired(checked);
+
+    // If shipping is enabled, navigate to the shipping tab
+    if (checked) {
+      setActiveTab('shipping');
+    }
   };
 
   return (
@@ -224,21 +237,61 @@ const InvoiceDetails = ({
           <span>Schedule automatic reminders</span>
         </Label>
       </div>
-      <div>
-        <Label className='flex items-center gap-2'>
-          <Switch
-            checked={shippingRequired || hasPhysicalProducts}
-            onCheckedChange={(checked) => {
-              return setShippingRequired(checked);
-            }}
-            disabled={hasPhysicalProducts} // Disable if we already have physical products
-          />
-          <span>
-            {hasPhysicalProducts
-              ? 'Shipping required for physical products'
-              : 'Add shipping to this invoice'}
-          </span>
-        </Label>
+
+      {/* Shipping section with prominent styling */}
+      <div className='border p-4 rounded-lg bg-gray-50'>
+        <h2 className='text-sm font-medium text-gray-900 mb-3 flex items-center gap-2'>
+          <TruckIcon size={18} />
+          Shipping Options
+        </h2>
+
+        {shippingItem ? (
+          <div className='mb-3 p-3 rounded-md bg-green-50 border border-green-200'>
+            <p className='text-sm text-green-700 font-medium'>Shipping added to invoice</p>
+            <p className='text-xs text-green-600 mt-1'>
+              {shippingItem.name} - ${shippingItem.price.toFixed(2)}
+            </p>
+            <Button
+              variant='link'
+              size='sm'
+              className='text-green-700 p-0 mt-1'
+              onClick={() => {
+                return setActiveTab('shipping');
+              }}
+            >
+              Edit shipping details
+            </Button>
+          </div>
+        ) : (
+          <>
+            <Label className='flex items-center gap-2 mb-3'>
+              <Switch
+                checked={shippingRequired || hasPhysicalProducts}
+                onCheckedChange={handleShippingToggle}
+                disabled={hasPhysicalProducts} // Disable if we already have physical products
+              />
+              <span>
+                {hasPhysicalProducts
+                  ? 'Shipping required for physical products'
+                  : 'Add shipping to this invoice'}
+              </span>
+            </Label>
+
+            {(shippingRequired || hasPhysicalProducts) && !shippingItem && (
+              <Button
+                variant='outline'
+                size='sm'
+                className='w-full mt-2'
+                onClick={() => {
+                  return setActiveTab('shipping');
+                }}
+              >
+                <TruckIcon size={14} className='mr-2' />
+                Configure Shipping Details
+              </Button>
+            )}
+          </>
+        )}
       </div>
     </motion.div>
   );

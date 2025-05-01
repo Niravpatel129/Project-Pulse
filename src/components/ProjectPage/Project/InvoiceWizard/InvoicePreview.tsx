@@ -9,13 +9,12 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { useProject } from '@/contexts/ProjectContext';
-import { Pencil, PlusCircle, Save } from 'lucide-react';
+import { Pencil, PlusCircle, Save, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import ClientDetailsDialog from './ClientDetailsDialog';
-import InvoiceItemDetails from './InvoiceItemDetails';
+import { useInvoiceWizardContext } from './InvoiceWizardContext';
 import { InvoiceItem } from './types';
 
 interface InvoicePreviewProps {
@@ -37,12 +36,14 @@ const InvoicePreview = ({
   onUpdateItems,
   onUpdateClient,
 }: InvoicePreviewProps) => {
-  console.log('🚀 selectedItems:', selectedItems);
+  // Get shipping information from context
+  const { shippingItem, removeShipping, calculateShippingTotal, shippingRequired } =
+    useInvoiceWizardContext();
+
   // State for editing
   const [editedItems, setEditedItems] = useState<InvoiceItem[]>([]);
-  console.log('🚀 editedItems:', editedItems);
-
   const [editedClient, setEditedClient] = useState<any | null>(null);
+
   // State for edit dialogs
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
   const [clientDialogOpen, setClientDialogOpen] = useState(false);
@@ -163,10 +164,10 @@ const InvoicePreview = ({
     }
   };
 
-  // Remove a shipping item with confirmation
-  const removeShippingItem = (itemId: string) => {
+  // Add a confirmation for removing shipping
+  const handleRemoveShipping = () => {
     if (window.confirm('Remove shipping from invoice?')) {
-      removeItem(itemId);
+      removeShipping();
     }
   };
 
@@ -248,350 +249,238 @@ const InvoicePreview = ({
           )}
         </div>
 
-        {/* Add shipping info section */}
-        {editedItems.some((item) => {
-          return item.type === 'shipping';
-        }) && (
-          <div className='flex flex-col py-4 border-b w-full'>
-            <div className='flex justify-between items-start'>
-              <h4 className='font-medium mb-2'>Shipping:</h4>
-            </div>
-            {editedItems
-              .filter((item) => {
-                return item.type === 'shipping';
-              })
-              .map((item) => {
-                return (
-                  <div key={item.id} className='flex justify-between w-full mb-2 relative group'>
+        <div className='mt-4 flex-1 overflow-y-auto'>
+          <h4 className='font-medium mb-2'>Items</h4>
+          <div className='space-y-2 mb-4'>
+            {editedItems.map((item) => {
+              return (
+                <div
+                  key={item.id}
+                  className='p-3 border rounded-md bg-white hover:bg-gray-50 transition-colors'
+                >
+                  <div className='flex justify-between items-start'>
                     <div>
-                      <p className='font-medium text-sm'>{item.name}</p>
-                      <p className='text-xs text-muted-foreground'>{item.description}</p>
+                      <div className='flex items-center gap-2'>
+                        <h5 className='font-medium'>{item.name}</h5>
+                        {item.status === 'completed' && (
+                          <Badge variant='outline' className='bg-green-50 text-green-700'>
+                            Completed
+                          </Badge>
+                        )}
+                        {item.status === 'in-progress' && (
+                          <Badge variant='outline' className='bg-blue-50 text-blue-700'>
+                            In Progress
+                          </Badge>
+                        )}
+                      </div>
+                      <p className='text-sm text-muted-foreground mt-1 line-clamp-2'>
+                        {item.description}
+                      </p>
                     </div>
-                    <div className='flex items-center'>
-                      <span className='font-medium mr-6'>${item.price.toFixed(2)}</span>
+                    <div className='flex'>
                       <Button
-                        size='sm'
                         variant='ghost'
-                        className='h-6 w-6 p-0 rounded-full text-red-500 opacity-0 group-hover:opacity-100'
+                        size='icon'
+                        className='h-8 w-8'
                         onClick={() => {
-                          return removeShippingItem(item.id);
+                          return openItemEditDialog(item);
                         }}
                       >
-                        <svg
-                          width='14'
-                          height='14'
-                          viewBox='0 0 24 24'
-                          fill='none'
-                          xmlns='http://www.w3.org/2000/svg'
-                        >
-                          <path
-                            d='M6 6L18 18M6 18L18 6'
-                            stroke='currentColor'
-                            strokeWidth='2'
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                          />
-                        </svg>
+                        <Pencil size={14} />
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='h-8 w-8 text-red-500'
+                        onClick={() => {
+                          return removeItem(item.id);
+                        }}
+                      >
+                        <Trash2 size={14} />
                       </Button>
                     </div>
                   </div>
-                );
-              })}
-          </div>
-        )}
+                  <div className='flex justify-between items-center mt-2 text-sm'>
+                    <span>
+                      {item.quantity || 1} x ${item.price}
+                    </span>
+                    <span className='font-medium'>
+                      ${((item.quantity || 1) * item.price).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
 
-        <div className='mt-4'>
-          <div className='flex justify-between font-medium border-b pb-2'>
-            <span>Item</span>
-            <div className='flex gap-8'>
-              <span>Qty</span>
-              <span>Price</span>
-              <span>Total</span>
-            </div>
-          </div>
-
-          {editedItems.filter((item) => {
-            return item.type !== 'shipping';
-          }).length === 0 ? (
-            <div className='text-center py-8 text-gray-500'>No items added to invoice</div>
-          ) : (
-            <div className='space-y-2 mt-2'>
-              {editedItems
-                .filter((item) => {
-                  return item.type !== 'shipping';
-                })
-                .map((item) => {
-                  const itemQuantity = item.fields?.quantity || item.quantity || 1;
-                  const itemPrice = item.fields?.unitPrice || item.price;
-                  const itemTotal = itemQuantity * itemPrice;
-
-                  return (
-                    <div
-                      key={item.id}
-                      className='flex justify-between items-start py-2 border-b relative group'
-                    >
-                      <div className='max-w-[180px]'>
-                        <div className='font-medium'>{item.name}</div>
-
-                        {item.labels && item.labels.length > 0 && (
-                          <div className='flex flex-wrap gap-1 mt-1'>
-                            {item.labels.map((label, index) => {
-                              return (
-                                <Badge
-                                  key={`${item.id}-preview-${index}`}
-                                  variant='outline'
-                                  className='text-xs px-1 py-0'
-                                >
-                                  {label}
-                                </Badge>
-                              );
-                            })}
-                          </div>
-                        )}
-
-                        {/* Show a brief summary of dynamic fields */}
-                        {item.fields &&
-                          Object.keys(item.fields).filter((key) => {
-                            return (
-                              !['unitPrice', 'quantity', 'total'].includes(key) &&
-                              key in item.fields! &&
-                              item.fields![key] !== null &&
-                              item.fields![key] !== undefined
-                            );
-                          }).length > 0 && (
-                            <div className='text-xs text-gray-500 mt-1 truncate'>
-                              {Object.entries(item.fields)
-                                .filter(([key]) => {
-                                  return !['unitPrice', 'quantity', 'total'].includes(key);
-                                })
-                                .slice(0, 2)
-                                .map(([key, value]) => {
-                                  let displayValue = '';
-                                  if (typeof value === 'object' && value !== null) {
-                                    if (Array.isArray(value)) {
-                                      displayValue =
-                                        value.length > 0 ? `${value.length} items` : '';
-                                    } else {
-                                      displayValue =
-                                        Object.keys(value).length > 0
-                                          ? `${Object.keys(value).length} details`
-                                          : '';
-                                    }
-                                  } else if (value !== null && value !== undefined) {
-                                    displayValue =
-                                      String(value).length > 15
-                                        ? String(value).substring(0, 15) + '...'
-                                        : String(value);
-                                  }
-                                  return displayValue
-                                    ? `${key.replace(/([A-Z])/g, ' $1').trim()}: ${displayValue}`
-                                    : '';
-                                })
-                                .filter((text) => {
-                                  return text;
-                                })
-                                .join(', ')}
-                              {item.fields && Object.keys(item.fields).length > 2 ? '...' : ''}
-
-                              {/* Add View Details button */}
-                              {item.fields && Object.entries(item.fields).length > 0 && (
-                                <div className='flex items-center gap-2 mt-1'>
-                                  <Popover modal>
-                                    <PopoverTrigger asChild>
-                                      <Button
-                                        variant='outline'
-                                        size='sm'
-                                        className='h-7 px-2 gap-1 text-blue-600 border-blue-200 hover:bg-blue-50'
-                                      >
-                                        <svg
-                                          viewBox='0 0 24 24'
-                                          width='14'
-                                          height='14'
-                                          fill='none'
-                                          stroke='currentColor'
-                                          strokeWidth='2'
-                                        >
-                                          <circle cx='12' cy='12' r='10' />
-                                          <path d='M12 16v-4M12 8h.01' />
-                                        </svg>
-                                        View Details
-                                      </Button>
-                                    </PopoverTrigger>
-                                    <InvoiceItemDetails item={item} />
-                                  </Popover>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                      </div>
-                      <div className='flex gap-8 text-sm'>
-                        <span>{itemQuantity}</span>
-                        <span>${itemPrice.toFixed(2)}</span>
-                        <span>${itemTotal.toFixed(2)}</span>
-                      </div>
-                      <div className='absolute bottom-2 right-0 flex opacity-0 group-hover:opacity-100'>
-                        <Button
-                          size='sm'
-                          variant='ghost'
-                          className='rounded-full h-6 w-6 p-0 mr-1 text-red-500 hover:text-red-700 hover:bg-red-50'
-                          onClick={() => {
-                            return removeItem(item.id);
-                          }}
-                        >
-                          <svg
-                            width='14'
-                            height='14'
-                            viewBox='0 0 24 24'
-                            fill='none'
-                            xmlns='http://www.w3.org/2000/svg'
-                          >
-                            <path
-                              d='M6 6L18 18M6 18L18 6'
-                              stroke='currentColor'
-                              strokeWidth='2'
-                              strokeLinecap='round'
-                              strokeLinejoin='round'
-                            />
-                          </svg>
-                        </Button>
-                        <Button
-                          size='sm'
-                          variant='ghost'
-                          className='rounded-full h-6 w-6 p-0'
-                          onClick={() => {
-                            return openItemEditDialog(item);
-                          }}
-                        >
-                          <Pencil size={12} />
-                        </Button>
-                      </div>
+            {/* Shipping as a separate section */}
+            {shippingItem && (
+              <div className='mt-6'>
+                <div className='flex justify-between items-center mb-2'>
+                  <h4 className='font-medium'>Shipping</h4>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    className='h-8 text-red-500 flex items-center gap-1'
+                    onClick={handleRemoveShipping}
+                  >
+                    <Trash2 size={14} />
+                    <span>Remove</span>
+                  </Button>
+                </div>
+                <div className='p-3 border rounded-md bg-white hover:bg-gray-50 transition-colors'>
+                  <div className='flex justify-between items-start'>
+                    <div>
+                      <h5 className='font-medium'>{shippingItem.name}</h5>
+                      <p className='text-sm text-muted-foreground mt-1'>
+                        {shippingItem.description}
+                      </p>
                     </div>
-                  );
-                })}
-            </div>
-          )}
-        </div>
+                  </div>
+                  <div className='flex justify-between items-center mt-2 text-sm'>
+                    <span>Shipping Cost</span>
+                    <span className='font-medium'>${shippingItem.price.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
-        <div className='mt-auto space-y-2'>
-          <div className='flex justify-between'>
-            <span>Subtotal</span>
-            <span>${calculateSubtotal().toFixed(2)}</span>
+            {editedItems.length === 0 && !shippingItem && (
+              <div className='text-center p-4 border rounded-lg'>
+                <p className='text-muted-foreground'>No items added</p>
+                <Button
+                  variant='link'
+                  className='mt-1'
+                  onClick={() => {
+                    return setActiveTab('items');
+                  }}
+                >
+                  Add items
+                </Button>
+              </div>
+            )}
           </div>
 
-          {/* Shipping total - only if shipping items exist */}
-          {editedItems.some((item) => {
-            return item.type === 'shipping';
-          }) && (
+          <div className='mt-4 space-y-2'>
             <div className='flex justify-between'>
-              <span>Shipping</span>
-              <span>
-                $
-                {editedItems
-                  .filter((item) => {
-                    return item.type === 'shipping';
-                  })
-                  .reduce((sum, item) => {
-                    return sum + item.price;
-                  }, 0)
-                  .toFixed(2)}
-              </span>
+              <span className='text-sm'>Subtotal</span>
+              <span className='font-medium'>${calculateSubtotal().toFixed(2)}</span>
             </div>
-          )}
 
-          <div className='flex justify-between font-semibold border-t pt-2 mt-2'>
-            <span>Total</span>
-            <span>${calculateTotal().toFixed(2)}</span>
+            {/* Show shipping in totals if there's a shipping item */}
+            {shippingItem && (
+              <div className='flex justify-between'>
+                <span className='text-sm'>Shipping</span>
+                <span className='font-medium'>${calculateShippingTotal().toFixed(2)}</span>
+              </div>
+            )}
+
+            <div className='flex justify-between border-t pt-2'>
+              <span className='text-sm font-medium'>Total</span>
+              <span className='font-medium'>${calculateTotal().toFixed(2)}</span>
+            </div>
           </div>
         </div>
-        <div className='pb-24'></div>
       </div>
 
-      {/* Edit Item Dialog */}
+      {/* Item Edit Dialog */}
       <Dialog open={itemDialogOpen} onOpenChange={setItemDialogOpen}>
-        <DialogContent className='sm:max-w-[425px]'>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Item</DialogTitle>
           </DialogHeader>
-          <div className='grid gap-4 py-4'>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='item-name' className='text-right'>
-                Name
-              </Label>
+          <div className='space-y-4'>
+            <div>
+              <Label htmlFor='item-name'>Name</Label>
               <Input
                 id='item-name'
                 value={editedItemValues.name || ''}
                 onChange={(e) => {
                   return setEditedItemValues({ ...editedItemValues, name: e.target.value });
                 }}
-                className='col-span-3'
               />
             </div>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='item-description' className='text-right'>
-                Description
-              </Label>
+            <div>
+              <Label htmlFor='item-description'>Description</Label>
               <Textarea
                 id='item-description'
                 value={editedItemValues.description || ''}
                 onChange={(e) => {
-                  return setEditedItemValues({ ...editedItemValues, description: e.target.value });
+                  return setEditedItemValues({
+                    ...editedItemValues,
+                    description: e.target.value,
+                  });
                 }}
-                className='col-span-3'
               />
             </div>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='item-price' className='text-right'>
-                Price
-              </Label>
-              <Input
-                id='item-price'
-                type='number'
-                step='0.01'
-                value={editedItemValues.price || 0}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  if (!isNaN(value)) {
-                    setEditedItemValues({ ...editedItemValues, price: value });
-                  }
-                }}
-                className='col-span-3'
-              />
+            <div className='grid grid-cols-2 gap-4'>
+              <div>
+                <Label htmlFor='item-price'>Price ($)</Label>
+                <Input
+                  id='item-price'
+                  type='number'
+                  min='0'
+                  step='0.01'
+                  value={editedItemValues.price || 0}
+                  onChange={(e) => {
+                    return setEditedItemValues({
+                      ...editedItemValues,
+                      price: parseFloat(e.target.value),
+                    });
+                  }}
+                />
+              </div>
+              <div>
+                <Label htmlFor='item-quantity'>Quantity</Label>
+                <Input
+                  id='item-quantity'
+                  type='number'
+                  min='1'
+                  value={editedItemValues.quantity || 1}
+                  onChange={(e) => {
+                    return setEditedItemValues({
+                      ...editedItemValues,
+                      quantity: parseInt(e.target.value, 10),
+                    });
+                  }}
+                />
+              </div>
             </div>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='item-quantity' className='text-right'>
-                Quantity
-              </Label>
-              <Input
-                id='item-quantity'
-                type='number'
-                value={editedItemValues.quantity || 1}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  if (!isNaN(value)) {
-                    setEditedItemValues({ ...editedItemValues, quantity: value });
-                  }
-                }}
-                className='col-span-3'
-              />
+            {/* Total calculation */}
+            <div className='pt-2 border-t'>
+              <div className='flex justify-between'>
+                <span className='text-sm'>Total:</span>
+                <span className='font-medium'>
+                  ${((editedItemValues.price || 0) * (editedItemValues.quantity || 1)).toFixed(2)}
+                </span>
+              </div>
             </div>
           </div>
           <DialogFooter>
-            <Button type='submit' onClick={saveItemEdits}>
-              <Save className='mr-2 h-4 w-4' />
+            <Button
+              variant='outline'
+              onClick={() => {
+                return setItemDialogOpen(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={saveItemEdits}>
+              <Save size={16} className='mr-2' />
               Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Client Details Dialog */}
-      <ClientDetailsDialog
-        open={clientDialogOpen}
-        onOpenChange={setClientDialogOpen}
-        client={editedClient || selectedClient}
-        onClientUpdated={handleClientUpdated}
-        project={project}
-      />
+      {/* Client Edit Dialog */}
+      {clientDialogOpen && editedClient && (
+        <ClientDetailsDialog
+          client={editedClient}
+          open={clientDialogOpen}
+          onOpenChange={setClientDialogOpen}
+          onClientUpdated={handleClientUpdated}
+        />
+      )}
     </>
   );
 };
