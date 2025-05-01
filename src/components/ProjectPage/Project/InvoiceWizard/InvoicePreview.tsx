@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useProject } from '@/contexts/ProjectContext';
+import { format } from 'date-fns';
 import { Pencil, PlusCircle, Save, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import ClientDetailsDialog from './ClientDetailsDialog';
@@ -44,6 +45,7 @@ const InvoicePreview = ({
     shippingRequired,
     taxId,
     showTaxId,
+    dueDate,
   } = useInvoiceWizardContext();
 
   // State for editing
@@ -261,6 +263,16 @@ const InvoicePreview = ({
             <div className='flex flex-col'>
               <h5 className='font-medium mb-1'>Tax ID</h5>
               <p className='text-sm text-muted-foreground'>{taxId}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Display Due Date if set */}
+        {dueDate && (
+          <div className='mt-4 mb-2 p-3 border rounded-md bg-white'>
+            <div className='flex flex-col'>
+              <h5 className='font-medium mb-1'>Due Date</h5>
+              <p className='text-sm text-muted-foreground'>{format(dueDate, 'MMMM do, yyyy')}</p>
             </div>
           </div>
         )}

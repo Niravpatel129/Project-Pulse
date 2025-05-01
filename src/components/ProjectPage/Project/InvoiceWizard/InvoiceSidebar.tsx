@@ -174,11 +174,25 @@ const InvoiceSidebar = ({
         </div>
 
         <div>
-          <label className='text-sm text-gray-500'>Due Date</label>
+          <div className='flex items-center justify-between mb-2'>
+            <label className='text-sm text-gray-500'>Due Date</label>
+            {dueDate && (
+              <Button
+                variant='ghost'
+                size='sm'
+                className='h-6 p-1 text-gray-500 hover:text-red-500'
+                onClick={() => {
+                  return setDueDate(null);
+                }}
+              >
+                Clear
+              </Button>
+            )}
+          </div>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant='outline' className='w-full justify-between mt-1'>
-                {format(dueDate, 'MMMM do, yyyy')}
+                {dueDate ? format(dueDate, 'MMMM do, yyyy') : 'No due date'}
                 <svg
                   viewBox='0 0 24 24'
                   width='16'
@@ -196,7 +210,7 @@ const InvoiceSidebar = ({
                 mode='single'
                 selected={dueDate}
                 onSelect={(date) => {
-                  if (date) setDueDate(date);
+                  setDueDate(date);
                 }}
               />
             </PopoverContent>
