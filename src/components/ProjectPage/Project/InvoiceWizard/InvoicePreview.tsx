@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useProject } from '@/contexts/ProjectContext';
 import { format } from 'date-fns';
-import { Pencil, Percent, PlusCircle, Save, Trash2 } from 'lucide-react';
+import { Pencil, Percent, PlusCircle, Save, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import ClientDetailsDialog from './ClientDetailsDialog';
 import { useInvoiceWizardContext } from './InvoiceWizardContext';
@@ -264,6 +264,40 @@ const InvoicePreview = ({
           )}
         </div>
 
+        {/* Shipping as a separate section */}
+        {shippingItem && (
+          <div className='mt-6'>
+            <div className='flex justify-between items-center mb-2'>
+              {/* <Button
+                variant='ghost'
+                size='sm'
+                className='h-8 text-red-500 flex items-center gap-1'
+                onClick={handleRemoveShipping}
+              >
+                <Trash2 size={14} />
+                <span>Remove</span>
+              </Button> */}
+            </div>
+            <div className='p-3 border rounded-md bg-white hover:bg-gray-50 transition-colors relative group'>
+              <X
+                size={14}
+                className='text-black absolute top-2 right-2 cursor-pointer hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity'
+                onClick={handleRemoveShipping}
+              />
+              <div className='flex justify-between items-start'>
+                <div>
+                  <h5 className='font-medium'>{shippingItem.name}</h5>
+                  <p className='text-sm text-muted-foreground mt-1'>{shippingItem.description}</p>
+                </div>
+              </div>
+              <div className='flex justify-between items-center mt-2 text-sm'>
+                <span>Shipping Cost</span>
+                <span className='font-medium'>${shippingItem.price.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Display Tax ID if enabled */}
         {showTaxId && taxId && (
           <div className='mt-4 mb-2 p-3 border rounded-md bg-white'>
@@ -336,38 +370,6 @@ const InvoicePreview = ({
                 </div>
               );
             })}
-
-            {/* Shipping as a separate section */}
-            {shippingItem && (
-              <div className='mt-6'>
-                <div className='flex justify-between items-center mb-2'>
-                  <h4 className='font-medium'>Shipping</h4>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    className='h-8 text-red-500 flex items-center gap-1'
-                    onClick={handleRemoveShipping}
-                  >
-                    <Trash2 size={14} />
-                    <span>Remove</span>
-                  </Button>
-                </div>
-                <div className='p-3 border rounded-md bg-white hover:bg-gray-50 transition-colors'>
-                  <div className='flex justify-between items-start'>
-                    <div>
-                      <h5 className='font-medium'>{shippingItem.name}</h5>
-                      <p className='text-sm text-muted-foreground mt-1'>
-                        {shippingItem.description}
-                      </p>
-                    </div>
-                  </div>
-                  <div className='flex justify-between items-center mt-2 text-sm'>
-                    <span>Shipping Cost</span>
-                    <span className='font-medium'>${shippingItem.price.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {editedItems.length === 0 && !shippingItem && (
               <div className='text-center p-4 border rounded-lg'>
