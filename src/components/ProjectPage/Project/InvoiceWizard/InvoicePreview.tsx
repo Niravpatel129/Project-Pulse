@@ -1,4 +1,3 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -54,8 +53,14 @@ const InvoicePreview = ({
     if (selectedItems.length > 0) {
       setEditedItems([...selectedItems]);
     }
-    if (selectedClient && (!editedClient || selectedClient.id !== editedClient.id)) {
-      setEditedClient({ ...selectedClient });
+
+    if (selectedClient) {
+      const clientId = selectedClient.id || selectedClient._id;
+      const editedClientId = editedClient?.id || editedClient?._id;
+
+      if (!editedClient || clientId !== editedClientId) {
+        setEditedClient({ ...selectedClient });
+      }
     }
   }, [selectedItems, selectedClient, editedClient]);
 
@@ -174,34 +179,38 @@ const InvoicePreview = ({
           </Button>
         </div>
 
-        <div className='flex flex-col items-center justify-center py-10 border-b relative'>
+        <div className='flex flex-col items-start pb-8 border-b w-full'>
           {selectedClient ? (
-            <div className='w-full flex items-center gap-3 p-3 border rounded-lg'>
-              <Avatar className='h-12 w-12'>
-                <AvatarImage src={editedClient?.avatar || '/placeholder.svg'} />
-                <AvatarFallback>
-                  {(editedClient?.name || selectedClient.name).charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <div className='flex-1'>
-                <h3 className='font-medium'>{editedClient?.name || selectedClient.name}</h3>
-                <p className='text-sm text-muted-foreground'>
-                  {editedClient?.company || selectedClient.company}
-                </p>
+            <div className='w-full'>
+              <div className=''>
+                <div className='flex justify-between items-start'>
+                  <h4 className='font-medium mb-2'>Bill To:</h4>
+                  <Button
+                    size='sm'
+                    variant='ghost'
+                    className='rounded-full h-6 w-6 p-0'
+                    onClick={() => {
+                      return editedClient && openClientEditDialog(editedClient);
+                    }}
+                  >
+                    <Pencil size={12} />
+                  </Button>
+                </div>
+                <p>{editedClient?.name || selectedClient.name}</p>
                 <p className='text-sm text-muted-foreground'>
                   {editedClient?.email || selectedClient.email}
                 </p>
+                {(editedClient?.company || selectedClient.company) && (
+                  <p className='text-sm text-muted-foreground'>
+                    {editedClient?.company || selectedClient.company}
+                  </p>
+                )}
+                {(editedClient?.address || selectedClient.address) && (
+                  <p className='text-sm text-muted-foreground mt-1'>
+                    {editedClient?.address || selectedClient.address}
+                  </p>
+                )}
               </div>
-              <Button
-                size='sm'
-                variant='ghost'
-                className='rounded-full h-6 w-6 p-0 absolute top-2 right-2'
-                onClick={() => {
-                  return editedClient && openClientEditDialog(editedClient);
-                }}
-              >
-                <Pencil size={12} />
-              </Button>
             </div>
           ) : (
             <>
@@ -532,6 +541,20 @@ const InvoicePreview = ({
                 onChange={(e) => {
                   return setEditedClientValues({ ...editedClientValues, email: e.target.value });
                 }}
+                className='col-span-3'
+              />
+            </div>
+            <div className='grid grid-cols-4 items-start gap-4'>
+              <Label htmlFor='client-address' className='text-right pt-2'>
+                Address
+              </Label>
+              <Textarea
+                id='client-address'
+                value={editedClientValues.address || ''}
+                onChange={(e) => {
+                  return setEditedClientValues({ ...editedClientValues, address: e.target.value });
+                }}
+                placeholder='Street, City, State, ZIP, Country'
                 className='col-span-3'
               />
             </div>
