@@ -1,4 +1,4 @@
-import { Calendar, DollarSign, FileText, Package } from 'lucide-react';
+import { DollarSign, FileText, Package } from 'lucide-react';
 import { useEffect } from 'react';
 
 interface ReviewTabProps {
@@ -169,19 +169,6 @@ const ReviewTab = ({ formData, setHasUnsavedChanges }: ReviewTabProps) => {
                 <div>
                   <h4 className='text-xs uppercase tracking-wider text-neutral-500 mb-1'>Type</h4>
                   <p className='text-neutral-900'>{getDeliverableTypeLabel()}</p>
-                </div>
-              </div>
-
-              {/* Availability Date */}
-              <div className='flex items-start gap-3'>
-                <div className='mt-0.5 bg-neutral-100 rounded-full p-1.5'>
-                  <Calendar size={14} className='text-neutral-500' />
-                </div>
-                <div>
-                  <h4 className='text-xs uppercase tracking-wider text-neutral-500 mb-1'>
-                    Available From
-                  </h4>
-                  <p className='text-neutral-900'>{formatDate(formData.availabilityDate)}</p>
                 </div>
               </div>
             </div>
