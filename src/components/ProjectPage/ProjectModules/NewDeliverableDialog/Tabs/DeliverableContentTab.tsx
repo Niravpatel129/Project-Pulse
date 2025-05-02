@@ -13,11 +13,19 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  Eye,
+  FileCode,
+  File as FileIcon,
+  FileImage,
+  FileSpreadsheet,
   FileText,
+  FileType,
+  FileVideo,
   Link as LinkIcon,
   List,
   ListChecks,
   MoreHorizontal,
+  Paperclip,
   Plus,
   Type,
   X,
@@ -44,6 +52,7 @@ const FIELD_TYPES = [
   { id: 'bulletList', label: 'Bullet List', icon: <List className='mr-2' size={16} /> },
   { id: 'numberList', label: 'Numbered List', icon: <ListChecks className='mr-2' size={16} /> },
   { id: 'link', label: 'Link', icon: <LinkIcon className='mr-2' size={16} /> },
+  { id: 'attachment', label: 'Attachment', icon: <Paperclip className='mr-2' size={16} /> },
   { id: 'specification', label: 'Specification', icon: <AlertCircle className='mr-2' size={16} /> },
 ];
 
@@ -208,6 +217,83 @@ const DeliverableContentTab = ({
     prevFieldsLengthRef.current = currentFieldsLength;
   }, [formData.customFields, fieldsWithAnimation]);
 
+  // Function to get file icon based on file type
+  const getFileIcon = (filename: string) => {
+    const extension = filename.split('.').pop()?.toLowerCase() || '';
+
+    // Image files
+    if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(extension)) {
+      return <FileImage size={20} className='text-indigo-500' />;
+    }
+
+    // Document files
+    if (['pdf'].includes(extension)) {
+      return <FileText size={20} className='text-red-500' />;
+    }
+
+    // Word files
+    if (['doc', 'docx', 'rtf', 'txt'].includes(extension)) {
+      return <FileText size={20} className='text-blue-500' />;
+    }
+
+    // Spreadsheet files
+    if (['xls', 'xlsx', 'csv'].includes(extension)) {
+      return <FileSpreadsheet size={20} className='text-green-500' />;
+    }
+
+    // Code files
+    if (['json', 'xml', 'html', 'css', 'js'].includes(extension)) {
+      return <FileCode size={20} className='text-amber-500' />;
+    }
+
+    // Video files
+    if (['mp4', 'mov', 'avi', 'webm'].includes(extension)) {
+      return <FileVideo size={20} className='text-purple-500' />;
+    }
+
+    // Presentation files
+    if (['ppt', 'pptx'].includes(extension)) {
+      return <FileType size={20} className='text-orange-500' />;
+    }
+
+    // Default for other files
+    return <FileIcon size={20} className='text-gray-500' />;
+  };
+
+  // Function to check if file is an image
+  const isImageFile = (filename: string) => {
+    const extension = filename.split('.').pop()?.toLowerCase() || '';
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension);
+  };
+
+  // Function to get file type label
+  const getFileTypeLabel = (filename: string) => {
+    const extension = filename.split('.').pop()?.toLowerCase() || '';
+
+    if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(extension)) {
+      return 'Image';
+    } else if (['pdf'].includes(extension)) {
+      return 'PDF';
+    } else if (['doc', 'docx'].includes(extension)) {
+      return 'Document';
+    } else if (['xls', 'xlsx', 'csv'].includes(extension)) {
+      return 'Spreadsheet';
+    } else if (['ppt', 'pptx'].includes(extension)) {
+      return 'Presentation';
+    } else if (['mp4', 'mov', 'avi', 'webm'].includes(extension)) {
+      return 'Video';
+    }
+
+    return extension.toUpperCase();
+  };
+
+  // Function to format file size
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    else return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
   // Function to format field content based on type for display in view mode
   const getFormattedContent = (field: any) => {
     switch (field.type) {
@@ -245,6 +331,54 @@ const DeliverableContentTab = ({
               <LinkIcon size={14} className='mr-1.5' />
               {field.text || field.url}
             </a>
+          </div>
+        );
+
+      case 'attachment':
+        return (
+          <div className='space-y-3'>
+            {field.attachments && field.attachments.length > 0 ? (
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+                {field.attachments.map((attachment: any, i: number) => {
+                  return (
+                    <div
+                      key={i}
+                      className='group rounded-lg border border-neutral-200 overflow-hidden transition-all hover:border-neutral-300 hover:shadow-sm'
+                    >
+                      {/* Preview area */}
+                      <div className='relative bg-neutral-50 h-[100px] flex items-center justify-center'>
+                        {isImageFile(attachment.name) ? (
+                          <img
+                            src={attachment.url}
+                            alt={attachment.name}
+                            className='h-full w-full object-contain'
+                          />
+                        ) : (
+                          <div className='flex flex-col items-center justify-center h-full w-full'>
+                            <div className='mb-1'>{getFileIcon(attachment.name)}</div>
+                            <div className='text-xs font-medium bg-neutral-200 text-neutral-700 px-2 py-0.5 rounded-full'>
+                              {getFileTypeLabel(attachment.name)}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* File info area */}
+                      <div className='p-2 bg-white'>
+                        <div className='text-sm font-medium text-neutral-800 truncate pb-0.5'>
+                          {attachment.name}
+                        </div>
+                        <div className='text-xs text-neutral-500'>
+                          {formatFileSize(attachment.size)}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className='text-neutral-500 text-sm italic'>No attachments</div>
+            )}
           </div>
         );
 
@@ -459,6 +593,128 @@ const DeliverableContentTab = ({
             >
               Save Link
             </Button>
+          </div>
+        );
+
+      case 'attachment':
+        return (
+          <div className='space-y-4'>
+            {/* Display existing attachments */}
+            {field.attachments && field.attachments.length > 0 && (
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+                {field.attachments.map((attachment: any, index: number) => {
+                  return (
+                    <div
+                      key={index}
+                      className='group relative rounded-lg border border-neutral-200 overflow-hidden hover:border-neutral-300 hover:shadow-sm transition-all'
+                    >
+                      {/* Preview area */}
+                      <div className='relative bg-neutral-50 h-[100px] flex items-center justify-center'>
+                        {isImageFile(attachment.name) ? (
+                          <img
+                            src={attachment.url}
+                            alt={attachment.name}
+                            className='h-full w-full object-contain'
+                          />
+                        ) : (
+                          <div className='flex flex-col items-center justify-center h-full w-full'>
+                            <div className='mb-1'>{getFileIcon(attachment.name)}</div>
+                            <div className='text-xs font-medium bg-neutral-200 text-neutral-700 px-2 py-0.5 rounded-full'>
+                              {getFileTypeLabel(attachment.name)}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Overlay actions */}
+                        <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2'>
+                          <Button
+                            type='button'
+                            variant='secondary'
+                            size='sm'
+                            className='h-8 w-8 rounded-full p-0'
+                            onClick={() => {
+                              window.open(attachment.url, '_blank');
+                            }}
+                          >
+                            <Eye size={14} />
+                          </Button>
+                          <Button
+                            type='button'
+                            variant='destructive'
+                            size='sm'
+                            className='h-8 w-8 rounded-full p-0'
+                            onClick={() => {
+                              const updatedAttachments = [...(field.attachments || [])];
+                              updatedAttachments.splice(index, 1);
+                              safeUpdateFieldProperty(field.id, 'attachments', updatedAttachments);
+                            }}
+                          >
+                            <X size={14} />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* File info area */}
+                      <div className='p-2 bg-white'>
+                        <div className='text-sm font-medium text-neutral-800 truncate pb-0.5'>
+                          {attachment.name}
+                        </div>
+                        <div className='text-xs text-neutral-500'>
+                          {formatFileSize(attachment.size)}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Upload new attachment button */}
+            <div className='pt-2'>
+              <label htmlFor={`attachment-upload-${field.id}`} className='cursor-pointer block'>
+                <div className='border-2 border-dashed border-neutral-200 rounded-lg p-5 text-center hover:border-neutral-300 transition-colors'>
+                  <div className='w-12 h-12 mx-auto rounded-full bg-neutral-100 flex items-center justify-center mb-3'>
+                    <Paperclip className='text-neutral-500' size={20} />
+                  </div>
+                  <p className='text-sm font-medium text-neutral-700 mb-1'>Upload Attachments</p>
+                  <p className='text-xs text-neutral-500'>Drop files here or click to browse</p>
+                  <p className='text-xs text-neutral-400 mt-2'>
+                    Accepts documents, images, spreadsheets, and more
+                  </p>
+                </div>
+                <input
+                  id={`attachment-upload-${field.id}`}
+                  type='file'
+                  accept='.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.jpg,.jpeg,.png,.gif,.svg,.mp4,.mov,.avi,.webm'
+                  multiple
+                  className='hidden'
+                  onChange={(e) => {
+                    const files = e.target.files;
+                    if (!files || files.length === 0) return;
+
+                    // Process files and create temporary URLs
+                    const newAttachments = Array.from(files).map((file) => {
+                      return {
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        url: URL.createObjectURL(file),
+                        file: file, // Keep reference to the file for actual upload
+                      };
+                    });
+
+                    const currentAttachments = field.attachments || [];
+                    safeUpdateFieldProperty(field.id, 'attachments', [
+                      ...currentAttachments,
+                      ...newAttachments,
+                    ]);
+
+                    // Reset input value to allow uploading the same file again if needed
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+            </div>
           </div>
         );
 
