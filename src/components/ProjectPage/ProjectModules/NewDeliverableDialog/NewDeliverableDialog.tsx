@@ -399,6 +399,9 @@ const DeliverableDialogContent = ({
     return (
       <Dialog open={isOpen} onOpenChange={handleClose}>
         <DialogContent className='max-w-[95vw] sm:max-w-[1000px] p-0 overflow-hidden shadow-sm border-neutral-200 h-[95vh] sm:h-[800px] flex items-center justify-center'>
+          <DialogHeader className='sr-only'>
+            <DialogTitle>{isEditMode ? 'Edit Deliverable' : 'Create Deliverable'}</DialogTitle>
+          </DialogHeader>
           <div className='text-center'>Loading deliverable data...</div>
         </DialogContent>
       </Dialog>
