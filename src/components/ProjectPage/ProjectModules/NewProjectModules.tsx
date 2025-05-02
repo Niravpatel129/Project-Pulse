@@ -35,6 +35,7 @@ import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
 import NewTemplateSheet from '../FileComponents/NewTemplateSheet';
 import { DeleteModuleDialog } from '../ModuleComponents/DeleteModuleDialog';
 import { Module } from '../ModuleComponents/types';
+import DeliverablesTable from './DeliverablesTable/DeliverablesTable';
 import ModuleCard from './ModuleCard';
 import ModuleDialog from './ModuleDialog';
 import NewDeliverableDialog from './NewDeliverableDialog/NewDeliverableDialog';
@@ -697,27 +698,30 @@ export default function NewProjectModules() {
               })}
           </motion.div>
         ) : (
-          <motion.div
-            className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-4 auto-rows-fr'
-            variants={containerVariants}
-            initial='hidden'
-            animate='visible'
-          >
-            <AnimatePresence mode='popLayout'>
-              {modules.map((item, index) => {
-                return (
-                  <motion.div
-                    key={item._id}
-                    className='flex justify-center w-full h-full'
-                    variants={itemVariants}
-                    layout
-                  >
-                    {renderProjectItem(item)}
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </motion.div>
+          <>
+            <DeliverablesTable />
+            {/* <motion.div
+              className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-4 auto-rows-fr'
+              variants={containerVariants}
+              initial='hidden'
+              animate='visible'
+            >
+              <AnimatePresence mode='popLayout'>
+                {modules.map((item, index) => {
+                  return (
+                    <motion.div
+                      key={item._id}
+                      className='flex justify-center w-full h-full'
+                      variants={itemVariants}
+                      layout
+                    >
+                      {renderProjectItem(item)}
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </motion.div> */}
+          </>
         )}
         {!isLoading && !modules.length && (
           <motion.div
