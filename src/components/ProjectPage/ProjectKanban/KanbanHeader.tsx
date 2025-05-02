@@ -37,14 +37,6 @@ const KanbanHeader = ({
     onBoardActions(); // Open the board actions dialog which contains the add column form
   };
 
-  const handleAutoSort = () => {
-    console.log('Auto-sort');
-  };
-
-  const setIsKeyboardShortcutsOpen = (open: boolean) => {
-    console.log('Keyboard shortcuts open', open);
-  };
-
   return (
     <div className='flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 pb-4 pt-2'>
       <div>
