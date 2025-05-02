@@ -1,5 +1,13 @@
-import { DollarSign, FileText, Package } from 'lucide-react';
-import { useEffect } from 'react';
+import { DollarSign, FileText, Maximize2, Package } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import PreviewModal from './DeliverableContent/components/PreviewModal';
+import SharedDisplayItemDetails from './DeliverableContent/components/SharedDisplayItemDetails';
+import {
+  formatFileSize,
+  getFileIcon,
+  getFileTypeLabel,
+  isImageFile,
+} from './DeliverableContent/utils/file-utils';
 
 interface ReviewTabProps {
   formData: any;
@@ -8,6 +16,8 @@ interface ReviewTabProps {
 }
 
 const ReviewTab = ({ formData, setHasUnsavedChanges }: ReviewTabProps) => {
+  const [previewAttachment, setPreviewAttachment] = useState<any>(null);
+
   // Helper function to format price
   const formatPrice = (price: string) => {
     if (!price) return '-';
@@ -62,6 +72,10 @@ const ReviewTab = ({ formData, setHasUnsavedChanges }: ReviewTabProps) => {
         return Array.isArray(field.items) && field.items.length > 0;
       case 'link':
         return !!field.url;
+      case 'attachment':
+        return Array.isArray(field.attachments) && field.attachments.length > 0;
+      case 'databaseItem':
+        return !!field.selectedItem;
       default:
         return false;
     }
@@ -113,6 +127,101 @@ const ReviewTab = ({ formData, setHasUnsavedChanges }: ReviewTabProps) => {
           </div>
         );
 
+      case 'attachment':
+        return (
+          <div className='space-y-3'>
+            {field.attachments && field.attachments.length > 0 ? (
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                {field.attachments.map((attachment: any, i: number) => {
+                  return (
+                    <div
+                      key={i}
+                      className='group relative rounded-lg shadow-sm border border-neutral-200 overflow-hidden transition-all hover:shadow-md hover:border-neutral-300 hover:-translate-y-1 duration-200'
+                    >
+                      {/* Preview area */}
+                      <div
+                        className='relative bg-neutral-50 h-32 flex items-center justify-center cursor-pointer'
+                        onClick={() => {
+                          return setPreviewAttachment(attachment);
+                        }}
+                      >
+                        {isImageFile(attachment.name) ? (
+                          <div className='relative w-full h-full overflow-hidden'>
+                            <img
+                              src={attachment.url}
+                              alt={attachment.name}
+                              className='h-full w-full object-cover'
+                            />
+                            <div className='absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100'>
+                              <Maximize2 className='text-white drop-shadow-md' size={22} />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className='flex flex-col items-center justify-center h-full w-full group-hover:scale-105 transition-transform'>
+                            <div className='mb-2 transform group-hover:scale-110 transition-transform'>
+                              {getFileIcon(attachment.name)}
+                            </div>
+                            <div className='text-xs font-medium bg-neutral-200 text-neutral-700 px-2.5 py-1 rounded-full'>
+                              {getFileTypeLabel(attachment.name)}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* File info area */}
+                      <div className='px-3 py-2.5 bg-white border-t border-neutral-100'>
+                        <div className='text-sm font-medium text-neutral-800 truncate pb-0.5 group-hover:text-blue-600 transition-colors'>
+                          {attachment.name}
+                        </div>
+                        <div className='text-xs text-neutral-500 flex items-center'>
+                          <span className='inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5'></span>
+                          {formatFileSize(attachment.size)}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className='text-neutral-500 text-sm italic'>No attachments</div>
+            )}
+          </div>
+        );
+
+      case 'databaseItem':
+        return (
+          <div>
+            {field.selectedItem ? (
+              <div
+                className={`w-full ${
+                  field.alignment === 'center'
+                    ? 'flex justify-center'
+                    : field.alignment === 'right'
+                    ? 'flex justify-end'
+                    : ''
+                }`}
+              >
+                <div
+                  className={`${
+                    field.alignment === 'center' || field.alignment === 'right'
+                      ? 'inline-block'
+                      : 'w-full'
+                  }`}
+                >
+                  <SharedDisplayItemDetails
+                    item={field.selectedItem}
+                    useFieldVisibility={true}
+                    tableColumns={[]}
+                    visibleColumns={field.visibleColumns || {}}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className='italic text-neutral-500 text-sm'>No database item selected</div>
+            )}
+          </div>
+        );
+
       default:
         return <p>{field.content || '-'}</p>;
     }
@@ -128,6 +237,16 @@ const ReviewTab = ({ formData, setHasUnsavedChanges }: ReviewTabProps) => {
 
   return (
     <div className='max-w-3xl mx-auto'>
+      {previewAttachment && (
+        <PreviewModal
+          isOpen={!!previewAttachment}
+          onClose={() => {
+            return setPreviewAttachment(null);
+          }}
+          attachment={previewAttachment}
+        />
+      )}
+
       <div className='mb-6'>
         <h3 className='text-lg font-medium text-neutral-900 mb-2'>Review Deliverable</h3>
         <p className='text-neutral-600 text-sm'>
@@ -194,13 +313,15 @@ const ReviewTab = ({ formData, setHasUnsavedChanges }: ReviewTabProps) => {
             </div>
           </div>
 
-          {formData.customFields.length > 0 ? (
+          {formData.customFields && formData.customFields.length > 0 ? (
             <div className='divide-y divide-neutral-100'>
               {formData.customFields.map((field: any) => {
                 return (
                   hasContent(field) && (
                     <div key={field.id} className='p-5'>
-                      <h4 className='font-medium text-neutral-900 mb-2'>{field.label}</h4>
+                      <h4 className='font-medium text-neutral-900 mb-2'>
+                        {field.label || `Untitled ${field.type}`}
+                      </h4>
                       <div className='text-neutral-700'>{formatFieldContent(field)}</div>
                     </div>
                   )
