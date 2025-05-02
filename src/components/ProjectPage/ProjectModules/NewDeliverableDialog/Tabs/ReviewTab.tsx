@@ -20,22 +20,6 @@ const ReviewTab = () => {
     return price.startsWith('$') ? price : `$${price}`;
   };
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '-';
-
-    try {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      }).format(date);
-    } catch (error) {
-      return dateString;
-    }
-  };
-
   // Get the deliverable type label
   const getDeliverableTypeLabel = () => {
     switch (formData.deliverableType) {
@@ -260,10 +244,6 @@ const ReviewTab = () => {
                 <DollarSign className='text-green-600 mr-1 h-4 w-4' />
                 {formatPrice(formData.price) || '-'}
               </p>
-            </div>
-            <div className='space-y-1'>
-              <h4 className='text-sm text-neutral-500'>Availability Date</h4>
-              <p className='font-medium'>{formatDate(formData.availabilityDate)}</p>
             </div>
           </div>
           {formData.description && (

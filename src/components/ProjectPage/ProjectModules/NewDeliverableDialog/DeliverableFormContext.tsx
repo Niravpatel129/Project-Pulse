@@ -5,7 +5,6 @@ interface FormData {
   description: string;
   price: string;
   deliverableType: string;
-  availabilityDate: string;
   customFields: any[];
   teamNotes: string;
   customDeliverableType: string;
@@ -40,7 +39,6 @@ export const DeliverableFormProvider = ({ children }: { children: ReactNode }) =
     description: '',
     price: '',
     deliverableType: 'digital',
-    availabilityDate: '',
     customFields: [],
     teamNotes: '',
     customDeliverableType: '',

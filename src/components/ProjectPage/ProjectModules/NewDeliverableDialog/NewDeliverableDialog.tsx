@@ -174,10 +174,6 @@ const NewDeliverableDialogContent = ({
       } else if (!/^\$?(\d*(\.\d{0,2})?)$/.test(formData.price.trim())) {
         newErrors.price = 'Please enter a valid price';
       }
-
-      if (!formData.availabilityDate) {
-        newErrors.availabilityDate = 'Availability date is required';
-      }
     } else if (currentStage === 'custom-fields') {
       // Validate content fields if needed
       if (formData.customFields.length === 0) {
