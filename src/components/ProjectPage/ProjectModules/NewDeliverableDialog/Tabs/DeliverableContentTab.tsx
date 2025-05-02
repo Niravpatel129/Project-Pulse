@@ -428,52 +428,12 @@ const DatabaseItemDialog = ({
 
   // Component to display item details with visible columns
   const DisplayItemDetails = ({ item }: { item: any }) => {
-    // Get all fields except system fields
-    const displayFields = Object.entries(item).filter(([key, value]) =>
-      // Skip system/internal fields
-      {
-        return !['id', 'position', '_id', '__v'].includes(key) && typeof value !== 'object';
-      },
-    );
-
-    // Find the main/primary field to display prominently
-    const primaryValue = item.name || findDisplayValue(item);
-
-    // Get the remaining fields to potentially display
-    const secondaryFields = displayFields.filter(([key, value]) => {
-      return value !== primaryValue && key !== 'name';
-    });
-
     return (
-      <>
-        <div className='font-medium text-neutral-800 truncate'>
-          {primaryValue || `Item ${item.id}`}
-        </div>
-        {secondaryFields.length > 0 && (
-          <div className='mt-1 flex flex-wrap gap-x-4 gap-y-1'>
-            {secondaryFields.map(([key, value]) => {
-              // Find column definition to get proper name
-              const column = tableColumns.find((col: any) => {
-                return col.id === key;
-              });
-              const displayName = column?.name || key;
-
-              // Check if this column should be visible
-              if (column && visibleColumns[column.id] === false) {
-                return null;
-              }
-
-              return (
-                <div key={key} className='text-xs text-neutral-500 truncate flex items-center'>
-                  <span className='w-2 h-2 bg-neutral-200 rounded-full mr-1.5 flex-shrink-0'></span>
-                  <span className='font-medium text-neutral-600'>{displayName}:</span>
-                  <span className='ml-1'>{String(value)}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </>
+      <SharedDisplayItemDetails
+        item={item}
+        tableColumns={tableColumns}
+        visibleColumns={visibleColumns}
+      />
     );
   };
 
@@ -715,7 +675,11 @@ const DatabaseItemDialog = ({
                             <div className='mt-1 h-5 w-5 border-2 border-neutral-200 rounded-full flex-shrink-0'></div>
                           )}
                           <div className='flex-1 min-w-0'>
-                            <DisplayItemDetails item={item} />
+                            <SharedDisplayItemDetails
+                              item={item}
+                              tableColumns={tableColumns}
+                              visibleColumns={visibleColumns}
+                            />
                           </div>
                         </div>
                       );
@@ -792,6 +756,95 @@ const DatabaseItemDialog = ({
         </div>
       </div>
     </div>
+  );
+};
+
+// Component to display item details with visible columns that can be shared between components
+const SharedDisplayItemDetails = ({
+  item,
+  useFieldVisibility = false,
+  tableColumns = [],
+  visibleColumns = {},
+}: {
+  item: any;
+  useFieldVisibility?: boolean;
+  tableColumns?: any[];
+  visibleColumns?: Record<string, boolean>;
+}) => {
+  // Helper function to find a good display value for an item
+  const findDisplayValue = (item: any) => {
+    // Try to find a string field other than id or position
+    const stringFields = Object.entries(item)
+      .filter(([key, value]) => {
+        return typeof value === 'string' && key !== 'id' && key !== 'position';
+      })
+      .map(([_, value]) => {
+        return value;
+      });
+
+    return stringFields[0] || `Item ${item.id}`;
+  };
+
+  // Get all fields except system fields
+  const displayFields = Object.entries(item).filter(([key, value]) =>
+    // Skip system/internal fields
+    {
+      return !['id', 'position', '_id', '__v'].includes(key) && typeof value !== 'object';
+    },
+  );
+
+  // Find the main/primary field to display prominently
+  const primaryValue = item.name || findDisplayValue(item);
+
+  // Get the remaining fields to potentially display
+  const secondaryFields = displayFields.filter(([key, value]) => {
+    return value !== primaryValue && key !== 'name';
+  });
+
+  // When displaying a field in the form, we might need to use different visibility settings
+  // Get these from the parent component (DeliverableContentTab) context
+  const getEffectiveVisibleColumns = () => {
+    if (useFieldVisibility) {
+      // For field display, use the field's saved settings
+      const fieldVisibleColumns = item.visibleColumns || visibleColumns;
+      return fieldVisibleColumns;
+    }
+    // For dialog display, use the current state
+    return visibleColumns;
+  };
+
+  const effectiveVisibleColumns = getEffectiveVisibleColumns();
+
+  return (
+    <>
+      <div className='font-medium text-neutral-800 truncate'>
+        {primaryValue || `Item ${item.id}`}
+      </div>
+      {secondaryFields.length > 0 && (
+        <div className='mt-1 flex flex-wrap gap-x-4 gap-y-1'>
+          {secondaryFields.map(([key, value]) => {
+            // Find column definition to get proper name
+            const column = tableColumns.find((col: any) => {
+              return col.id === key;
+            });
+            const displayName = column?.name || key;
+
+            // Check if this column should be visible
+            if (column && effectiveVisibleColumns[column.id] === false) {
+              return null;
+            }
+
+            return (
+              <div key={key} className='text-xs text-neutral-500 truncate flex items-center'>
+                <span className='w-2 h-2 bg-neutral-200 rounded-full mr-1.5 flex-shrink-0'></span>
+                <span className='font-medium text-neutral-600'>{displayName}:</span>
+                <span className='ml-1'>{String(value)}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </>
   );
 };
 
@@ -1273,7 +1326,12 @@ const DeliverableContentTab = ({
                       : 'w-full'
                   }`}
                 >
-                  <DisplayItemDetails item={field.selectedItem} useFieldVisibility={true} />
+                  <SharedDisplayItemDetails
+                    item={field.selectedItem}
+                    useFieldVisibility={true}
+                    tableColumns={tableColumns}
+                    visibleColumns={field.visibleColumns || {}}
+                  />
                 </div>
               </div>
             ) : (
@@ -1672,7 +1730,12 @@ const DeliverableContentTab = ({
                 <div className='w-full'>
                   <div className='flex items-center'>
                     <div className='flex-1'>
-                      <DisplayItemDetails item={field.selectedItem} useFieldVisibility={true} />
+                      <SharedDisplayItemDetails
+                        item={field.selectedItem}
+                        useFieldVisibility={true}
+                        tableColumns={tableColumns}
+                        visibleColumns={field.visibleColumns || {}}
+                      />
                     </div>
                   </div>
 
