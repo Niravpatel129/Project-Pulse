@@ -107,7 +107,6 @@ export function ProjectProvider({
     queryFn: async () => {
       try {
         const response = await newRequest.get(`/projects/${projectId}`);
-        console.log('🚀 response123:', response);
         return response.data.data;
       } catch (err) {
         console.error('Error fetching project:', err);
