@@ -22,7 +22,7 @@ import {
   Type,
   X,
 } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface DeliverableContentTabProps {
   formData: any;
@@ -62,12 +62,6 @@ const getFieldError = (field: any, errors: any) => {
   return fieldErrors.length > 0 ? fieldErrors[0] : null;
 };
 
-interface FieldEditorState {
-  linkText: string;
-  linkUrl: string;
-  listItem: string;
-}
-
 const DeliverableContentTab = ({
   formData,
   errors,
@@ -80,93 +74,112 @@ const DeliverableContentTab = ({
   updateFieldProperty,
   setHasUnsavedChanges,
 }: DeliverableContentTabProps) => {
-  // Single editor state object to track temporary edit values
-  const [editorState, setEditorState] = useState<Record<string, FieldEditorState>>({});
+  // Track temporary state for current editing field only
+  const [tempLinkText, setTempLinkText] = useState('');
+  const [tempLinkUrl, setTempLinkUrl] = useState('');
+  const [tempListItem, setTempListItem] = useState('');
+
+  // Animation state
   const [fieldsWithAnimation, setFieldsWithAnimation] = useState<string[]>([]);
   const prevFieldsLengthRef = useRef(0);
 
-  // Safe way to get the current editor state for a field
-  const getEditorStateForField = useCallback(
-    (fieldId: string): FieldEditorState => {
-      return (
-        editorState[fieldId] || {
-          linkText: '',
-          linkUrl: '',
-          listItem: '',
-        }
-      );
-    },
-    [editorState],
-  );
+  // Keep track of current editing field to prevent focus jumping issues
+  const activeFieldIdRef = useRef<string | null>(null);
+  // Track when we've entered edit mode for a field
+  const hasInitializedEditRef = useRef<boolean>(false);
 
-  // Safe way to update editor state for a specific field and property
-  const updateEditorState = useCallback(
-    (fieldId: string, key: keyof FieldEditorState, value: string) => {
-      setEditorState((prev) => {
-        return {
-          ...prev,
-          [fieldId]: {
-            ...getEditorStateForField(fieldId),
-            [key]: value,
-          },
-        };
-      });
-    },
-    [getEditorStateForField],
-  );
+  // Handle field property updates safely without affecting which field is selected
+  const safeUpdateFieldProperty = (fieldId: string, property: string, value: any) => {
+    // Verify this is a valid field ID
+    const fieldExists = formData.customFields.some((field: any) => {
+      return field.id === fieldId;
+    });
+    if (!fieldExists) {
+      console.error(`Attempted to update non-existent field: ${fieldId}`);
+      return;
+    }
 
-  // Safely update field property with validation
-  const safeUpdateFieldProperty = useCallback(
-    (fieldId: string, property: string, value: any) => {
-      // Verify that this field exists before updating
-      const fieldExists = formData.customFields.some((field: any) => {
-        return field.id === fieldId;
-      });
-      if (!fieldExists) {
-        console.error(`Attempted to update non-existent field: ${fieldId}`);
-        return;
-      }
+    // Update the field property
+    updateFieldProperty(fieldId, property, value);
+    setHasUnsavedChanges(true);
+  };
 
-      updateFieldProperty(fieldId, property, value);
-      setHasUnsavedChanges(true);
-    },
-    [formData.customFields, updateFieldProperty, setHasUnsavedChanges],
-  );
-
-  // Initialize editor state when entering edit mode
+  // Reset temporary state when editing field changes
   useEffect(() => {
     if (editingFieldId) {
+      // Update the ref to track the currently edited field
+      activeFieldIdRef.current = editingFieldId;
+      // Flag that we're entering edit mode for a new field
+      hasInitializedEditRef.current = false;
+
       const field = formData.customFields.find((f: any) => {
         return f.id === editingFieldId;
       });
 
       if (field) {
-        // Initialize editor state for this field
-        setEditorState((prev) => {
-          return {
-            ...prev,
-            [field.id]: {
-              linkText: field.text || '',
-              linkUrl: field.url || '',
-              listItem: '',
-            },
-          };
-        });
+        // Clear all temporary state first
+        setTempListItem('');
 
-        // Find and focus the first input
-        setTimeout(() => {
+        // Set link-specific state if needed
+        if (field.type === 'link') {
+          setTempLinkText(field.text || '');
+          setTempLinkUrl(field.url || '');
+        } else {
+          // Reset link state when not editing a link
+          setTempLinkText('');
+          setTempLinkUrl('');
+        }
+      }
+    } else {
+      // No field is being edited
+      activeFieldIdRef.current = null;
+      hasInitializedEditRef.current = false;
+    }
+  }, [editingFieldId]);
+
+  // Handle focus once when entering edit mode
+  useEffect(() => {
+    if (editingFieldId && !hasInitializedEditRef.current) {
+      // Set flag to prevent future focus
+      hasInitializedEditRef.current = true;
+
+      // Focus the first input element with a small delay
+      setTimeout(() => {
+        // Only focus if we're still editing the same field
+        if (activeFieldIdRef.current === editingFieldId) {
           const input = document.querySelector(
             `.content-item[data-field-id="${editingFieldId}"] input, .content-item[data-field-id="${editingFieldId}"] textarea`,
           );
           if (input) {
             (input as HTMLElement).focus();
           }
-        }, 50);
-      }
+        }
+      }, 50);
     }
-  }, [editingFieldId, formData.customFields]);
+  }, [editingFieldId]);
 
-  // Animation effect for new fields
+  // Handle field completion - save any pending changes
+  const completeFieldEdit = () => {
+    if (editingFieldId) {
+      const field = formData.customFields.find((f: any) => {
+        return f.id === editingFieldId;
+      });
+
+      // Save any unsaved link data when completing edit
+      if (field?.type === 'link' && tempLinkUrl.trim()) {
+        safeUpdateFieldProperty(field.id, 'text', tempLinkText);
+        safeUpdateFieldProperty(field.id, 'url', tempLinkUrl);
+      }
+
+      // Clear the active field reference
+      activeFieldIdRef.current = null;
+
+      // Close the editor
+      setEditingFieldId(null);
+    }
+  };
+
+  // Improved animation effect for new fields
   useEffect(() => {
     const currentFieldsLength = formData.customFields.length;
 
@@ -248,55 +261,61 @@ const DeliverableContentTab = ({
     }
   };
 
-  // Add a list item to a field
-  const addListItem = useCallback(
-    (field: any) => {
-      const state = getEditorStateForField(field.id);
-      if (!state.listItem.trim()) return;
+  // Add a list item
+  const addListItem = (field: any) => {
+    if (!tempListItem.trim()) return;
 
-      const updatedItems = [...(field.items || []), state.listItem];
-      safeUpdateFieldProperty(field.id, 'items', updatedItems);
-      updateEditorState(field.id, 'listItem', '');
-    },
-    [getEditorStateForField, safeUpdateFieldProperty, updateEditorState],
-  );
+    const updatedItems = [...(field.items || []), tempListItem];
+    safeUpdateFieldProperty(field.id, 'items', updatedItems);
+    setTempListItem('');
+  };
 
-  // Remove a list item from a field
-  const removeListItem = useCallback(
-    (field: any, index: number) => {
-      const updatedItems = [...(field.items || [])];
-      updatedItems.splice(index, 1);
-      safeUpdateFieldProperty(field.id, 'items', updatedItems);
-    },
-    [safeUpdateFieldProperty],
-  );
+  // Remove a list item
+  const removeListItem = (field: any, index: number) => {
+    const updatedItems = [...(field.items || [])];
+    updatedItems.splice(index, 1);
+    safeUpdateFieldProperty(field.id, 'items', updatedItems);
+  };
 
-  // Update a list item in a field
-  const updateListItem = useCallback(
-    (field: any, index: number, value: string) => {
-      const updatedItems = [...(field.items || [])];
-      updatedItems[index] = value;
-      safeUpdateFieldProperty(field.id, 'items', updatedItems);
-    },
-    [safeUpdateFieldProperty],
-  );
+  // Update a list item
+  const updateListItem = (field: any, index: number, value: string) => {
+    const updatedItems = [...(field.items || [])];
+    updatedItems[index] = value;
+    safeUpdateFieldProperty(field.id, 'items', updatedItems);
+  };
 
-  // Save link data for a field
-  const saveLink = useCallback(
-    (field: any) => {
-      const state = getEditorStateForField(field.id);
-      if (!state.linkUrl.trim()) return;
+  // Save link data
+  const saveLink = (field: any) => {
+    if (!tempLinkUrl.trim()) return;
 
-      safeUpdateFieldProperty(field.id, 'text', state.linkText);
-      safeUpdateFieldProperty(field.id, 'url', state.linkUrl);
-    },
-    [getEditorStateForField, safeUpdateFieldProperty],
-  );
+    safeUpdateFieldProperty(field.id, 'text', tempLinkText);
+    safeUpdateFieldProperty(field.id, 'url', tempLinkUrl);
+  };
+
+  // Handler to select a field for editing
+  const handleSelectFieldForEdit = (fieldId: string) => {
+    // Don't do anything if this field is already being edited
+    if (editingFieldId === fieldId) return;
+
+    // If we're switching from another field that was being edited
+    if (editingFieldId) {
+      // Save any pending link changes
+      const currentField = formData.customFields.find((f: any) => {
+        return f.id === editingFieldId;
+      });
+      if (currentField?.type === 'link' && tempLinkUrl.trim()) {
+        safeUpdateFieldProperty(currentField.id, 'text', tempLinkText);
+        safeUpdateFieldProperty(currentField.id, 'url', tempLinkUrl);
+      }
+    }
+
+    // Set the new field as editing
+    setEditingFieldId(fieldId);
+  };
 
   // Render edit mode content based on field type
   const renderEditMode = (field: any) => {
     const fieldError = getFieldError(field, errors);
-    const fieldState = getEditorStateForField(field.id);
 
     switch (field.type) {
       case 'shortText':
@@ -305,7 +324,7 @@ const DeliverableContentTab = ({
             <Input
               value={field.content || ''}
               onChange={(e) => {
-                return safeUpdateFieldProperty(field.id, 'content', e.target.value);
+                safeUpdateFieldProperty(field.id, 'content', e.target.value);
               }}
               placeholder='Enter short text'
               className={`w-full border-none shadow-none focus-visible:ring-0 px-0 text-base ${
@@ -322,7 +341,7 @@ const DeliverableContentTab = ({
           <Textarea
             value={field.content || ''}
             onChange={(e) => {
-              return safeUpdateFieldProperty(field.id, 'content', e.target.value);
+              safeUpdateFieldProperty(field.id, 'content', e.target.value);
             }}
             placeholder='Enter detailed text'
             className='w-full resize-none border-none shadow-none focus-visible:ring-0 px-0'
@@ -361,9 +380,9 @@ const DeliverableContentTab = ({
 
             <div className='flex items-center gap-2 pt-1'>
               <Input
-                value={fieldState.listItem}
+                value={tempListItem}
                 onChange={(e) => {
-                  return updateEditorState(field.id, 'listItem', e.target.value);
+                  return setTempListItem(e.target.value);
                 }}
                 placeholder='Add new item'
                 className='flex-1 border-none shadow-none focus-visible:ring-0 px-0'
@@ -382,7 +401,7 @@ const DeliverableContentTab = ({
                   return addListItem(field);
                 }}
                 className='h-8 w-8 shrink-0'
-                disabled={!fieldState.listItem.trim()}
+                disabled={!tempListItem.trim()}
               >
                 <Plus size={16} />
               </Button>
@@ -402,9 +421,9 @@ const DeliverableContentTab = ({
               </Label>
               <Input
                 id={`link-text-${field.id}`}
-                value={fieldState.linkText}
+                value={tempLinkText}
                 onChange={(e) => {
-                  return updateEditorState(field.id, 'linkText', e.target.value);
+                  return setTempLinkText(e.target.value);
                 }}
                 placeholder='Display text for the link'
                 className='border-none shadow-none focus-visible:ring-0 px-0'
@@ -420,9 +439,9 @@ const DeliverableContentTab = ({
               </Label>
               <Input
                 id={`link-url-${field.id}`}
-                value={fieldState.linkUrl}
+                value={tempLinkUrl}
                 onChange={(e) => {
-                  return updateEditorState(field.id, 'linkUrl', e.target.value);
+                  return setTempLinkUrl(e.target.value);
                 }}
                 placeholder='https://example.com'
                 className='border-none shadow-none focus-visible:ring-0 px-0'
@@ -433,7 +452,7 @@ const DeliverableContentTab = ({
               type='button'
               size='sm'
               className='mt-1'
-              disabled={!fieldState.linkUrl.trim()}
+              disabled={!tempLinkUrl.trim()}
               onClick={() => {
                 return saveLink(field);
               }}
@@ -448,7 +467,7 @@ const DeliverableContentTab = ({
           <Textarea
             value={field.content || ''}
             onChange={(e) => {
-              return safeUpdateFieldProperty(field.id, 'content', e.target.value);
+              safeUpdateFieldProperty(field.id, 'content', e.target.value);
             }}
             placeholder='Enter important specification or requirement'
             className='w-full resize-none border-none shadow-none focus-visible:ring-0 px-0'
@@ -459,26 +478,6 @@ const DeliverableContentTab = ({
       default:
         return null;
     }
-  };
-
-  // Handle field selection for editing
-  const handleSelectFieldForEdit = (fieldId: string) => {
-    // Check if it's a different field than currently editing
-    if (editingFieldId && editingFieldId !== fieldId) {
-      // Save any pending changes before switching fields
-      const previousField = formData.customFields.find((f: any) => {
-        return f.id === editingFieldId;
-      });
-      if (previousField?.type === 'link') {
-        const prevState = getEditorStateForField(editingFieldId);
-        if (prevState.linkUrl.trim()) {
-          safeUpdateFieldProperty(editingFieldId, 'text', prevState.linkText);
-          safeUpdateFieldProperty(editingFieldId, 'url', prevState.linkUrl);
-        }
-      }
-    }
-
-    setEditingFieldId(fieldId);
   };
 
   return (
@@ -555,7 +554,7 @@ const DeliverableContentTab = ({
                         <Input
                           value={field.label || ''}
                           onChange={(e) => {
-                            return safeUpdateFieldProperty(field.id, 'label', e.target.value);
+                            safeUpdateFieldProperty(field.id, 'label', e.target.value);
                           }}
                           className='font-medium border-none shadow-none focus-visible:ring-0 px-0 text-base'
                           placeholder={`Enter ${
@@ -587,9 +586,7 @@ const DeliverableContentTab = ({
                         <Button
                           type='button'
                           size='sm'
-                          onClick={() => {
-                            return setEditingFieldId(null);
-                          }}
+                          onClick={completeFieldEdit}
                           className='text-xs'
                         >
                           <Check size={14} className='mr-1' />
