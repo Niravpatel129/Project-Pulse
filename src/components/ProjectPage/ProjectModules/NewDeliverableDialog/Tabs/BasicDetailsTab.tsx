@@ -170,9 +170,6 @@ const BasicDetailsTab = ({
         {errors.availabilityDate && (
           <p className='text-xs text-red-500 mt-1'>{errors.availabilityDate}</p>
         )}
-        <span className='text-xs text-neutral-500'>
-          Date from which this deliverable can be used
-        </span>
       </div>
     </div>
   );
