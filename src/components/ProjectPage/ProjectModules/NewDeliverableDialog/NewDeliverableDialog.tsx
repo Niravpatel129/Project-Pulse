@@ -383,7 +383,7 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className='max-w-[90vw] sm:max-w-[800px] md:max-w-[900px] lg:max-w-[1000px] p-0 overflow-hidden shadow-sm border-neutral-200 transition-all duration-150 ease-in-out h-[90vh] sm:h-[600px] md:h-[650px] flex flex-col'>
+      <DialogContent className='max-w-[95vw] sm:max-w-[1000px] md:max-w-[1200px] lg:max-w-[1400px] p-0 overflow-hidden shadow-sm border-neutral-200 transition-all duration-150 ease-in-out h-[95vh] sm:h-[800px] md:h-[800px] flex flex-col'>
         {showUnsavedWarning && (
           <div className='absolute inset-0 bg-black/50 z-50 flex items-center justify-center p-4'>
             <div className='bg-white rounded-md p-6 max-w-md shadow-lg'>
