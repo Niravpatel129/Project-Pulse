@@ -239,14 +239,13 @@ const DeliverableContentTab = ({
   const [tempListItem, setTempListItem] = useState('');
   const [previewAttachment, setPreviewAttachment] = useState<any>(null);
 
-  // Animation state
-  const [fieldsWithAnimation, setFieldsWithAnimation] = useState<string[]>([]);
+  // Track the last added field for auto-editing
+  const [lastAddedField, setLastAddedField] = useState<string | null>(null);
   const prevFieldsLengthRef = useRef(0);
 
-  // Keep track of current editing field to prevent focus jumping issues
+  // Keep track of when field focus has been initialized
+  const focusInitializedRef = useRef<boolean>(false);
   const activeFieldIdRef = useRef<string | null>(null);
-  // Track when we've entered edit mode for a field
-  const hasInitializedEditRef = useRef<boolean>(false);
 
   // Handle field property updates safely without affecting which field is selected
   const safeUpdateFieldProperty = (fieldId: string, property: string, value: any) => {
@@ -267,10 +266,10 @@ const DeliverableContentTab = ({
   // Reset temporary state when editing field changes
   useEffect(() => {
     if (editingFieldId) {
-      // Update the ref to track the currently edited field
+      // Update active field tracking
       activeFieldIdRef.current = editingFieldId;
-      // Flag that we're entering edit mode for a new field
-      hasInitializedEditRef.current = false;
+      // Reset focus initialized flag for the new field
+      focusInitializedRef.current = false;
 
       const field = formData.customFields.find((f: any) => {
         return f.id === editingFieldId;
@@ -293,19 +292,20 @@ const DeliverableContentTab = ({
     } else {
       // No field is being edited
       activeFieldIdRef.current = null;
-      hasInitializedEditRef.current = false;
+      focusInitializedRef.current = false;
     }
   }, [editingFieldId]);
 
-  // Handle focus once when entering edit mode
+  // Handle focus initialization separately
   useEffect(() => {
-    if (editingFieldId && !hasInitializedEditRef.current) {
-      // Set flag to prevent future focus
-      hasInitializedEditRef.current = true;
+    // Only focus if we have an editing field and haven't focused already
+    if (editingFieldId && !focusInitializedRef.current) {
+      // Mark focus as initialized
+      focusInitializedRef.current = true;
 
-      // Focus the first input element with a small delay
+      // Focus with a small delay
       setTimeout(() => {
-        // Only focus if we're still editing the same field
+        // Only focus if still on the same field
         if (activeFieldIdRef.current === editingFieldId) {
           const input = document.querySelector(
             `.content-item[data-field-id="${editingFieldId}"] input, .content-item[data-field-id="${editingFieldId}"] textarea`,
@@ -331,46 +331,30 @@ const DeliverableContentTab = ({
         safeUpdateFieldProperty(field.id, 'url', tempLinkUrl);
       }
 
-      // Clear the active field reference
-      activeFieldIdRef.current = null;
-
       // Close the editor
       setEditingFieldId(null);
     }
   };
 
-  // Improved animation effect for new fields
+  // Detect newly added fields and auto-edit them
   useEffect(() => {
     const currentFieldsLength = formData.customFields.length;
 
     if (currentFieldsLength > prevFieldsLengthRef.current && currentFieldsLength > 0) {
+      // Get the last field
       const lastField = formData.customFields[currentFieldsLength - 1];
 
-      if (lastField && !fieldsWithAnimation.includes(lastField.id)) {
-        // Add animation
-        setFieldsWithAnimation((prev) => {
-          return [...prev, lastField.id];
-        });
-
-        const timer = setTimeout(() => {
-          setFieldsWithAnimation((prev) => {
-            return prev.filter((id) => {
-              return id !== lastField.id;
-            });
-          });
-        }, 500);
+      if (lastField) {
+        // Track this as the last added field
+        setLastAddedField(lastField.id);
 
         // Automatically set the new field to edit mode
         setEditingFieldId(lastField.id);
-
-        return () => {
-          return clearTimeout(timer);
-        };
       }
     }
 
     prevFieldsLengthRef.current = currentFieldsLength;
-  }, [formData.customFields, fieldsWithAnimation, setEditingFieldId]);
+  }, [formData.customFields.length, setEditingFieldId]);
 
   // Function to format field content based on type for display in view mode
   const getFormattedContent = (field: any) => {
@@ -875,7 +859,7 @@ const DeliverableContentTab = ({
         <>
           <div className='bg-white border border-neutral-200 rounded-lg overflow-hidden mb-6 shadow-sm'>
             {formData.customFields.map((field: any, index: number) => {
-              const isAnimated = fieldsWithAnimation.includes(field.id);
+              const isNewField = lastAddedField === field.id;
               const isEditing = editingFieldId === field.id;
 
               return (
@@ -884,7 +868,7 @@ const DeliverableContentTab = ({
                   data-field-id={field.id}
                   className={`content-item ${
                     isEditing ? 'bg-blue-50/30' : ''
-                  } transition-all duration-150 ${isAnimated ? 'animate-fadeIn' : ''} ${
+                  } transition-all duration-150 ${isNewField ? 'animate-fadeIn' : ''} ${
                     index !== 0 ? 'border-t border-neutral-200' : ''
                   }`}
                 >
