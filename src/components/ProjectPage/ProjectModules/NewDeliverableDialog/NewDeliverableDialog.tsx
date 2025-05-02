@@ -133,11 +133,69 @@ const NewDeliverableDialogContent = ({
 
     setIsSubmitting(true);
     try {
-      // Make API call to create deliverable
-      const response = await newRequest.post('/deliverables', {
-        ...formData,
+      // Create a FormData object for the HTTP request
+      const requestFormData = new FormData();
+
+      // Create a deep copy of the form data
+      const processedData = JSON.parse(JSON.stringify(formData));
+
+      // Process attachments and prepare files
+      if (processedData.customFields && processedData.customFields.length > 0) {
+        for (const field of processedData.customFields) {
+          if (field.type === 'attachment' && field.attachments?.length > 0) {
+            // Process each attachment
+            field.attachments = await Promise.all(
+              field.attachments.map(async (attachment: any) => {
+                if (attachment.url) {
+                  // Generate a unique file ID
+                  const fileId = `file_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+                  // Fetch the file from the blob URL
+                  try {
+                    const response = await fetch(attachment.url);
+                    const blob = await response.blob();
+
+                    // Append the file to FormData with the fileId as the field name
+                    requestFormData.append(fileId, blob, attachment.name);
+
+                    // Return updated attachment object with fileId reference
+                    return {
+                      name: attachment.name,
+                      type: attachment.type,
+                      size: attachment.size,
+                      fileId: fileId, // Reference to the file in FormData
+                    };
+                  } catch (error) {
+                    console.error('Error fetching file from URL:', error);
+                    // Return attachment without fileId if fetch fails
+                    return {
+                      name: attachment.name,
+                      type: attachment.type,
+                      size: attachment.size,
+                    };
+                  }
+                }
+
+                // Return attachment as is if no URL
+                return attachment;
+              }),
+            );
+          }
+        }
+      }
+
+      // Add project ID to form data
+      const finalPayload = {
+        ...processedData,
         project: project?._id,
-      });
+      };
+
+      // Append the JSON data to FormData
+      requestFormData.append('data', JSON.stringify(finalPayload));
+
+      // Send the request as FormData instead of JSON
+      const response = await newRequest.post('/deliverables', requestFormData);
+
       console.log('Created deliverable:', response.data);
       setHasUnsavedChanges(false);
       onClose();
