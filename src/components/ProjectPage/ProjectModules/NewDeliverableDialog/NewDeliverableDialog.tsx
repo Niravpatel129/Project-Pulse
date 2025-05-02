@@ -15,25 +15,20 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
-  Database,
-  Download,
   FileText,
-  Image as ImageIcon,
   Link as LinkIcon,
   List,
   ListChecks,
   Menu,
   MoveDown,
   MoveUp,
-  Quote as QuoteIcon,
-  SeparatorHorizontal,
+  Plus,
   Settings,
-  Square,
   Trash2,
   Type,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 // Define the stages
 const STAGES = [
@@ -59,24 +54,18 @@ const STAGES = [
 
 // Define custom field types
 const FIELD_TYPES = [
-  { id: 'heading', label: 'Heading', icon: <Type className='mr-2' size={16} /> },
-  { id: 'subheading', label: 'Subheading', icon: <Type className='mr-2' size={14} /> },
-  { id: 'paragraph', label: 'Paragraph', icon: <FileText className='mr-2' size={16} /> },
-  { id: 'text', label: 'Text', icon: <FileText className='mr-2' size={16} /> },
-  { id: 'list', label: 'List', icon: <List className='mr-2' size={16} /> },
-  { id: 'image', label: 'Image', icon: <ImageIcon className='mr-2' size={16} /> },
-  { id: 'quote', label: 'Quote', icon: <QuoteIcon className='mr-2' size={16} /> },
-  { id: 'callout', label: 'Callout', icon: <AlertCircle className='mr-2' size={16} /> },
-  { id: 'database', label: 'Database Item', icon: <Database className='mr-2' size={16} /> },
-  { id: 'button', label: 'Button', icon: <Square className='mr-2' size={16} /> },
-  { id: 'download', label: 'Download Button', icon: <Download className='mr-2' size={16} /> },
+  { id: 'shortText', label: 'Short Text', icon: <Type className='mr-2' size={16} /> },
+  { id: 'longText', label: 'Long Text', icon: <FileText className='mr-2' size={16} /> },
+  { id: 'bulletList', label: 'Bullet List', icon: <List className='mr-2' size={16} /> },
+  { id: 'numberList', label: 'Numbered List', icon: <ListChecks className='mr-2' size={16} /> },
   { id: 'link', label: 'Link', icon: <LinkIcon className='mr-2' size={16} /> },
-  { id: 'separator', label: 'Separator', icon: <SeparatorHorizontal className='mr-2' size={16} /> },
+  { id: 'specification', label: 'Specification', icon: <AlertCircle className='mr-2' size={16} /> },
 ];
 
 const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const [currentStage, setCurrentStage] = useState(STAGES[0].value);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -260,7 +249,7 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
   };
 
   // Update field label or content
-  const updateFieldProperty = (id: string, property: string, value: string) => {
+  const updateFieldProperty = (id: string, property: string, value: string | boolean | any[]) => {
     setFormData((prev) => {
       return {
         ...prev,
@@ -308,6 +297,24 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  // Add a click handler to the document to handle clicking outside content items
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        editingFieldId &&
+        !(event.target as Element).closest('.content-item') &&
+        !(event.target as Element).closest('#addContentMenu')
+      ) {
+        setEditingFieldId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [editingFieldId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -608,75 +615,95 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                     className='p-4 sm:p-5 m-0 data-[state=inactive]:hidden'
                   >
                     <div className='space-y-5 max-w-3xl mx-auto'>
-                      <div className='flex flex-col gap-3'>
-                        <h3 className='text-sm font-medium text-neutral-700'>Add Content Fields</h3>
+                      <div className='flex flex-col gap-2'>
+                        <h3 className='text-sm font-medium text-neutral-700'>
+                          Deliverable Content
+                        </h3>
                         <p className='text-xs text-neutral-500'>
-                          Customize how this deliverable will appear. Add details, specifications,
-                          or any other information that helps explain the value of your work.
+                          Add details about what&apos;s included in this deliverable.
                         </p>
-
-                        <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 p-4 border border-neutral-200 rounded-md bg-neutral-50'>
-                          {FIELD_TYPES.map((field) => {
-                            return (
-                              <Button
-                                key={field.id}
-                                variant='outline'
-                                className='flex items-center justify-start h-auto py-2 px-3 text-left text-sm'
-                                onClick={() => {
-                                  return addCustomField(field.id);
-                                }}
-                              >
-                                {field.icon}
-                                <span>{field.label}</span>
-                              </Button>
-                            );
-                          })}
-                        </div>
                       </div>
 
-                      <div className='border rounded-md p-4 min-h-[200px] bg-white'>
-                        <h3 className='text-sm font-medium text-neutral-700 mb-2'>
-                          {formData.customFields.length
-                            ? 'Your Custom Fields'
-                            : 'No custom fields added yet'}
-                        </h3>
-
-                        {/* This would be replaced by actual functionality */}
-                        <div className='text-xs text-neutral-500'>
-                          {formData.customFields.length === 0 && (
-                            <p>Click on any field type above to add it to your deliverable.</p>
-                          )}
-
-                          {formData.customFields.length > 0 && (
-                            <div className='space-y-2'>
-                              {formData.customFields.map((field: any, index: number) => {
-                                return (
+                      <div className='bg-white border rounded-md p-5 min-h-[350px]'>
+                        {formData.customFields.length === 0 ? (
+                          <div className='h-full flex flex-col items-center justify-center text-center p-6'>
+                            <div className='w-12 h-12 bg-neutral-50 rounded-full flex items-center justify-center mb-4'>
+                              <FileText className='w-6 h-6 text-neutral-400' />
+                            </div>
+                            <h4 className='text-sm font-medium text-neutral-700 mb-2'>
+                              No content yet
+                            </h4>
+                            <p className='text-xs text-neutral-500 mb-4 max-w-md'>
+                              Start by adding content to describe what&apos;s included in this
+                              deliverable.
+                            </p>
+                            <div className='flex flex-wrap gap-2 justify-center'>
+                              <Button
+                                variant='outline'
+                                size='sm'
+                                onClick={() => {
+                                  return addCustomField('shortText');
+                                }}
+                                className='text-xs'
+                              >
+                                <Type className='mr-1.5 w-3.5 h-3.5' />
+                                Add Text
+                              </Button>
+                              <Button
+                                variant='outline'
+                                size='sm'
+                                onClick={() => {
+                                  return addCustomField('bulletList');
+                                }}
+                                className='text-xs'
+                              >
+                                <List className='mr-1.5 w-3.5 h-3.5' />
+                                Add List
+                              </Button>
+                              <Button
+                                variant='outline'
+                                size='sm'
+                                onClick={() => {
+                                  return addCustomField('specification');
+                                }}
+                                className='text-xs'
+                              >
+                                <AlertCircle className='mr-1.5 w-3.5 h-3.5' />
+                                Add Specs
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className='space-y-4'>
+                            {formData.customFields.map((field: any, index: number) => {
+                              return (
+                                <div key={field.id} className='group relative'>
+                                  {/* Content block */}
                                   <div
-                                    key={field.id}
-                                    className='p-3 border border-neutral-200 rounded-md'
+                                    className={`rounded-md border p-3 transition-colors ${
+                                      editingFieldId === field.id
+                                        ? 'border-blue-200 bg-blue-50/30'
+                                        : 'border-transparent hover:border-neutral-200 hover:bg-neutral-50'
+                                    }`}
+                                    onClick={() => {
+                                      return setEditingFieldId(field.id);
+                                    }}
                                   >
-                                    <div className='flex items-center justify-between mb-2'>
-                                      <div className='flex items-center'>
-                                        {
-                                          FIELD_TYPES.find((f) => {
-                                            return f.id === field.type;
-                                          })?.icon
-                                        }
-                                        <span className='ml-2 text-sm font-medium text-neutral-700'>
-                                          {
-                                            FIELD_TYPES.find((f) => {
-                                              return f.id === field.type;
-                                            })?.label
-                                          }{' '}
-                                          {index + 1}
-                                        </span>
-                                      </div>
-                                      <div className='flex gap-1'>
+                                    {/* Control buttons - only show when editing or hovering */}
+                                    {(editingFieldId === field.id || true) && (
+                                      <div
+                                        className={`absolute right-3 top-3 bg-white rounded-md border border-neutral-100 shadow-sm ${
+                                          editingFieldId === field.id
+                                            ? 'flex'
+                                            : 'hidden group-hover:flex'
+                                        }`}
+                                      >
                                         <Button
                                           variant='ghost'
                                           size='icon'
-                                          className='h-6 w-6'
-                                          onClick={() => {
+                                          className='h-7 w-7 text-neutral-500'
+                                          onClick={(e) => {
+                                            e.stopPropagation();
                                             return moveFieldUp(index);
                                           }}
                                           disabled={index === 0}
@@ -686,8 +713,9 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                                         <Button
                                           variant='ghost'
                                           size='icon'
-                                          className='h-6 w-6'
-                                          onClick={() => {
+                                          className='h-7 w-7 text-neutral-500'
+                                          onClick={(e) => {
+                                            e.stopPropagation();
                                             return moveFieldDown(index);
                                           }}
                                           disabled={index === formData.customFields.length - 1}
@@ -697,71 +725,36 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                                         <Button
                                           variant='ghost'
                                           size='icon'
-                                          className='h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-50'
-                                          onClick={() => {
+                                          className='h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50'
+                                          onClick={(e) => {
+                                            e.stopPropagation();
                                             return removeCustomField(field.id);
                                           }}
                                         >
                                           <Trash2 size={14} />
                                         </Button>
                                       </div>
-                                    </div>
+                                    )}
 
-                                    <div className='space-y-2'>
-                                      <div>
-                                        <Label
-                                          htmlFor={`field-${field.id}-label`}
-                                          className='text-xs'
-                                        >
-                                          Field Label
-                                        </Label>
-                                        <Input
-                                          id={`field-${field.id}-label`}
-                                          value={field.label}
-                                          onChange={(e) => {
-                                            return updateFieldProperty(
-                                              field.id,
-                                              'label',
-                                              e.target.value,
-                                            );
-                                          }}
-                                          className='text-xs h-7 mt-1'
-                                        />
-                                      </div>
-
-                                      {/* Only show content field for appropriate types */}
-                                      {[
-                                        'text',
-                                        'paragraph',
-                                        'heading',
-                                        'subheading',
-                                        'quote',
-                                      ].includes(field.type) && (
-                                        <div>
-                                          <Label
-                                            htmlFor={`field-${field.id}-content`}
-                                            className='text-xs'
-                                          >
-                                            Default Content
-                                          </Label>
-                                          {field.type === 'paragraph' || field.type === 'quote' ? (
-                                            <Textarea
-                                              id={`field-${field.id}-content`}
-                                              value={field.content}
-                                              onChange={(e) => {
-                                                return updateFieldProperty(
-                                                  field.id,
-                                                  'content',
-                                                  e.target.value,
-                                                );
-                                              }}
-                                              className='text-xs mt-1'
-                                              rows={2}
-                                            />
-                                          ) : (
+                                    {/* EDIT MODE - Type-specific content editors */}
+                                    {editingFieldId === field.id ? (
+                                      <>
+                                        {field.type === 'shortText' && (
+                                          <div className='space-y-1 max-w-2xl'>
                                             <Input
-                                              id={`field-${field.id}-content`}
-                                              value={field.content}
+                                              value={field.label || ''}
+                                              onChange={(e) => {
+                                                return updateFieldProperty(
+                                                  field.id,
+                                                  'label',
+                                                  e.target.value,
+                                                );
+                                              }}
+                                              className='text-base font-medium text-neutral-800 border-none p-0 h-auto bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-neutral-400'
+                                              placeholder='Enter heading...'
+                                            />
+                                            <Input
+                                              value={field.content || ''}
                                               onChange={(e) => {
                                                 return updateFieldProperty(
                                                   field.id,
@@ -769,73 +762,488 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                                                   e.target.value,
                                                 );
                                               }}
-                                              className='text-xs h-7 mt-1'
+                                              className='border-none p-0 h-auto text-sm text-neutral-600 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-neutral-400'
+                                              placeholder='Enter text...'
                                             />
-                                          )}
-                                        </div>
-                                      )}
+                                          </div>
+                                        )}
 
-                                      {/* Link fields get URL input */}
-                                      {(field.type === 'link' ||
-                                        field.type === 'button' ||
-                                        field.type === 'download') && (
-                                        <div>
-                                          <Label
-                                            htmlFor={`field-${field.id}-url`}
-                                            className='text-xs'
-                                          >
-                                            URL
-                                          </Label>
-                                          <Input
-                                            id={`field-${field.id}-url`}
-                                            value={field.url || ''}
-                                            onChange={(e) => {
-                                              return updateFieldProperty(
-                                                field.id,
-                                                'url',
-                                                e.target.value,
-                                              );
-                                            }}
-                                            placeholder='https://'
-                                            className='text-xs h-7 mt-1'
-                                          />
-                                        </div>
-                                      )}
+                                        {field.type === 'longText' && (
+                                          <div className='space-y-1 max-w-2xl'>
+                                            <Input
+                                              value={field.label || ''}
+                                              onChange={(e) => {
+                                                return updateFieldProperty(
+                                                  field.id,
+                                                  'label',
+                                                  e.target.value,
+                                                );
+                                              }}
+                                              className='text-base font-medium text-neutral-800 border-none p-0 h-auto bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-neutral-400'
+                                              placeholder='Enter heading...'
+                                            />
+                                            <Textarea
+                                              value={field.content || ''}
+                                              onChange={(e) => {
+                                                return updateFieldProperty(
+                                                  field.id,
+                                                  'content',
+                                                  e.target.value,
+                                                );
+                                              }}
+                                              className='border-none p-0 text-sm text-neutral-600 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-neutral-400 min-h-[80px] resize-none'
+                                              placeholder='Enter detailed description...'
+                                            />
+                                          </div>
+                                        )}
 
-                                      {/* Image fields get URL input */}
-                                      {field.type === 'image' && (
-                                        <div>
-                                          <Label
-                                            htmlFor={`field-${field.id}-url`}
-                                            className='text-xs'
-                                          >
-                                            Image URL
-                                          </Label>
-                                          <Input
-                                            id={`field-${field.id}-url`}
-                                            value={field.url || ''}
-                                            onChange={(e) => {
-                                              return updateFieldProperty(
-                                                field.id,
-                                                'url',
-                                                e.target.value,
-                                              );
+                                        {field.type === 'bulletList' && (
+                                          <div className='space-y-2 max-w-2xl'>
+                                            <Input
+                                              value={field.label || ''}
+                                              onChange={(e) => {
+                                                return updateFieldProperty(
+                                                  field.id,
+                                                  'label',
+                                                  e.target.value,
+                                                );
+                                              }}
+                                              className='text-base font-medium text-neutral-800 border-none p-0 h-auto bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-neutral-400'
+                                              placeholder='List title...'
+                                            />
+                                            <div className='pl-2'>
+                                              <Textarea
+                                                value={field.content || ''}
+                                                onChange={(e) => {
+                                                  return updateFieldProperty(
+                                                    field.id,
+                                                    'content',
+                                                    e.target.value,
+                                                  );
+                                                }}
+                                                className='border-none p-0 text-sm text-neutral-600 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-neutral-400 min-h-[80px] resize-none'
+                                                placeholder='Enter items (one per line)...'
+                                              />
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {field.type === 'numberList' && (
+                                          <div className='space-y-2 max-w-2xl'>
+                                            <Input
+                                              value={field.label || ''}
+                                              onChange={(e) => {
+                                                return updateFieldProperty(
+                                                  field.id,
+                                                  'label',
+                                                  e.target.value,
+                                                );
+                                              }}
+                                              className='text-base font-medium text-neutral-800 border-none p-0 h-auto bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-neutral-400'
+                                              placeholder='List title...'
+                                            />
+                                            <div className='pl-2'>
+                                              <Textarea
+                                                value={field.content || ''}
+                                                onChange={(e) => {
+                                                  return updateFieldProperty(
+                                                    field.id,
+                                                    'content',
+                                                    e.target.value,
+                                                  );
+                                                }}
+                                                className='border-none p-0 text-sm text-neutral-600 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-neutral-400 min-h-[80px] resize-none'
+                                                placeholder='Enter items (one per line)...'
+                                              />
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {field.type === 'link' && (
+                                          <div className='space-y-2 max-w-2xl'>
+                                            <Input
+                                              value={field.label || ''}
+                                              onChange={(e) => {
+                                                return updateFieldProperty(
+                                                  field.id,
+                                                  'label',
+                                                  e.target.value,
+                                                );
+                                              }}
+                                              className='text-base font-medium text-neutral-800 border-none p-0 h-auto bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-neutral-400'
+                                              placeholder='Link title...'
+                                            />
+                                            <div className='flex items-center'>
+                                              <LinkIcon className='w-4 h-4 text-neutral-400 mr-2' />
+                                              <Input
+                                                value={field.url || ''}
+                                                onChange={(e) => {
+                                                  return updateFieldProperty(
+                                                    field.id,
+                                                    'url',
+                                                    e.target.value,
+                                                  );
+                                                }}
+                                                className='border-none p-0 h-auto text-sm text-blue-600 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-neutral-400'
+                                                placeholder='https://example.com'
+                                              />
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {field.type === 'specification' && (
+                                          <div className='space-y-3 max-w-2xl'>
+                                            <Input
+                                              value={field.label || ''}
+                                              onChange={(e) => {
+                                                return updateFieldProperty(
+                                                  field.id,
+                                                  'label',
+                                                  e.target.value,
+                                                );
+                                              }}
+                                              className='text-base font-medium text-neutral-800 border-none p-0 h-auto bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-neutral-400'
+                                              placeholder='Specifications'
+                                            />
+                                            <div className='grid grid-cols-2 gap-2 mt-1'>
+                                              {field.specs ? (
+                                                field.specs.map((spec: any, i: number) => {
+                                                  return (
+                                                    <div
+                                                      key={i}
+                                                      className='flex gap-2 items-center'
+                                                    >
+                                                      <Input
+                                                        value={spec.name}
+                                                        onChange={(e) => {
+                                                          const newSpecs = [...field.specs];
+                                                          newSpecs[i] = {
+                                                            ...spec,
+                                                            name: e.target.value,
+                                                          };
+                                                          updateFieldProperty(
+                                                            field.id,
+                                                            'specs',
+                                                            newSpecs,
+                                                          );
+                                                        }}
+                                                        className='text-xs font-medium border border-neutral-200 h-7 bg-white'
+                                                        placeholder='Name'
+                                                      />
+                                                      <Input
+                                                        value={spec.value}
+                                                        onChange={(e) => {
+                                                          const newSpecs = [...field.specs];
+                                                          newSpecs[i] = {
+                                                            ...spec,
+                                                            value: e.target.value,
+                                                          };
+                                                          updateFieldProperty(
+                                                            field.id,
+                                                            'specs',
+                                                            newSpecs,
+                                                          );
+                                                        }}
+                                                        className='text-xs border border-neutral-200 h-7 bg-white'
+                                                        placeholder='Value'
+                                                      />
+                                                      <Button
+                                                        variant='ghost'
+                                                        size='icon'
+                                                        className='h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-50'
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          const newSpecs = field.specs.filter(
+                                                            (_: any, index: number) => {
+                                                              return index !== i;
+                                                            },
+                                                          );
+                                                          updateFieldProperty(
+                                                            field.id,
+                                                            'specs',
+                                                            newSpecs,
+                                                          );
+                                                        }}
+                                                      >
+                                                        <X size={12} />
+                                                      </Button>
+                                                    </div>
+                                                  );
+                                                })
+                                              ) : (
+                                                <div className='col-span-2 p-3 border border-dashed border-neutral-200 rounded-md text-center'>
+                                                  <p className='text-xs text-neutral-500 mb-2'>
+                                                    No specifications yet
+                                                  </p>
+                                                </div>
+                                              )}
+                                            </div>
+                                            <Button
+                                              variant='outline'
+                                              size='sm'
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                const specs = field.specs || [];
+                                                const newSpecs = [
+                                                  ...specs,
+                                                  { name: '', value: '' },
+                                                ];
+                                                updateFieldProperty(field.id, 'specs', newSpecs);
+                                              }}
+                                              className='text-xs mt-1 w-full'
+                                            >
+                                              <Plus className='mr-1.5 w-3 h-3' />
+                                              Add Specification
+                                            </Button>
+                                          </div>
+                                        )}
+
+                                        {/* Done button */}
+                                        <div className='mt-2 text-right'>
+                                          <Button
+                                            variant='ghost'
+                                            size='sm'
+                                            className='text-xs text-blue-600 hover:text-blue-700'
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setEditingFieldId(null);
                                             }}
-                                            placeholder='https://'
-                                            className='text-xs h-7 mt-1'
-                                          />
-                                          <p className='text-xs text-neutral-500 mt-1'>
-                                            Will implement file upload in the future
-                                          </p>
+                                          >
+                                            Done
+                                          </Button>
                                         </div>
-                                      )}
-                                    </div>
+                                      </>
+                                    ) : (
+                                      /* VIEW MODE - Formatted content display */
+                                      <>
+                                        {field.type === 'shortText' && (
+                                          <div className='space-y-1 max-w-2xl'>
+                                            {field.label && (
+                                              <h3 className='text-base font-medium text-neutral-800'>
+                                                {field.label}
+                                              </h3>
+                                            )}
+                                            {field.content && (
+                                              <p className='text-sm text-neutral-600'>
+                                                {field.content}
+                                              </p>
+                                            )}
+                                          </div>
+                                        )}
+
+                                        {field.type === 'longText' && (
+                                          <div className='space-y-2 max-w-2xl'>
+                                            {field.label && (
+                                              <h3 className='text-base font-medium text-neutral-800'>
+                                                {field.label}
+                                              </h3>
+                                            )}
+                                            {field.content && (
+                                              <div className='text-sm text-neutral-600 whitespace-pre-wrap'>
+                                                {field.content}
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
+
+                                        {field.type === 'bulletList' && (
+                                          <div className='space-y-2 max-w-2xl'>
+                                            {field.label && (
+                                              <h3 className='text-base font-medium text-neutral-800'>
+                                                {field.label}
+                                              </h3>
+                                            )}
+                                            {field.content && (
+                                              <ul className='list-disc pl-5 text-sm text-neutral-600 space-y-1'>
+                                                {field.content
+                                                  .split('\n')
+                                                  .filter(Boolean)
+                                                  .map((item: string, i: number) => {
+                                                    return <li key={i}>{item}</li>;
+                                                  })}
+                                              </ul>
+                                            )}
+                                          </div>
+                                        )}
+
+                                        {field.type === 'numberList' && (
+                                          <div className='space-y-2 max-w-2xl'>
+                                            {field.label && (
+                                              <h3 className='text-base font-medium text-neutral-800'>
+                                                {field.label}
+                                              </h3>
+                                            )}
+                                            {field.content && (
+                                              <ol className='list-decimal pl-5 text-sm text-neutral-600 space-y-1'>
+                                                {field.content
+                                                  .split('\n')
+                                                  .filter(Boolean)
+                                                  .map((item: string, i: number) => {
+                                                    return <li key={i}>{item}</li>;
+                                                  })}
+                                              </ol>
+                                            )}
+                                          </div>
+                                        )}
+
+                                        {field.type === 'link' && (
+                                          <div className='space-y-2 max-w-2xl'>
+                                            {field.url && (
+                                              <div className='flex items-center'>
+                                                <LinkIcon className='w-4 h-4 text-blue-500 mr-2 flex-shrink-0' />
+                                                <a
+                                                  href={field.url}
+                                                  target='_blank'
+                                                  rel='noopener noreferrer'
+                                                  className='text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium'
+                                                  onClick={(e) => {
+                                                    return e.stopPropagation();
+                                                  }}
+                                                >
+                                                  {field.label || field.url}
+                                                </a>
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
+
+                                        {field.type === 'specification' && (
+                                          <div className='space-y-3 max-w-2xl'>
+                                            {field.label && (
+                                              <h3 className='text-base font-medium text-neutral-800'>
+                                                {field.label}
+                                              </h3>
+                                            )}
+                                            {field.specs?.length > 0 ? (
+                                              <div className='grid grid-cols-2 gap-x-6 gap-y-2'>
+                                                {field.specs.map((spec: any, i: number) => {
+                                                  return (
+                                                    spec.name && (
+                                                      <div
+                                                        key={i}
+                                                        className='flex items-baseline justify-between border-b border-neutral-100 pb-1'
+                                                      >
+                                                        <span className='text-sm font-medium text-neutral-700'>
+                                                          {spec.name}:
+                                                        </span>
+                                                        <span className='text-sm text-neutral-600'>
+                                                          {spec.value || '—'}
+                                                        </span>
+                                                      </div>
+                                                    )
+                                                  );
+                                                })}
+                                              </div>
+                                            ) : null}
+                                          </div>
+                                        )}
+
+                                        {/* "Click to edit" hint on hover */}
+                                        <div className='hidden group-hover:block absolute top-2 right-16 bg-neutral-100 text-neutral-500 text-xs px-2 py-1 rounded'>
+                                          Click to edit
+                                        </div>
+                                      </>
+                                    )}
                                   </div>
-                                );
-                              })}
+                                </div>
+                              );
+                            })}
+
+                            {/* Add more content button */}
+                            <div className='flex gap-2 pt-4'>
+                              <div className='relative'>
+                                <Button
+                                  variant='outline'
+                                  onClick={() => {
+                                    const menu = document.getElementById('addContentMenu');
+                                    if (menu) menu.classList.toggle('hidden');
+                                  }}
+                                  className='flex items-center text-sm'
+                                >
+                                  <Plus className='mr-2 w-4 h-4' />
+                                  Add Content
+                                </Button>
+                                <div
+                                  id='addContentMenu'
+                                  className='hidden absolute left-0 top-full mt-1 z-10 bg-white rounded-md border border-neutral-200 shadow-md p-1.5 w-48'
+                                >
+                                  <button
+                                    className='flex items-center text-sm w-full text-left rounded px-3 py-2 hover:bg-neutral-50'
+                                    onClick={() => {
+                                      addCustomField('shortText');
+                                      document
+                                        .getElementById('addContentMenu')
+                                        ?.classList.add('hidden');
+                                    }}
+                                  >
+                                    <Type className='mr-2 w-4 h-4 text-neutral-500' />
+                                    Short Text
+                                  </button>
+                                  <button
+                                    className='flex items-center text-sm w-full text-left rounded px-3 py-2 hover:bg-neutral-50'
+                                    onClick={() => {
+                                      addCustomField('longText');
+                                      document
+                                        .getElementById('addContentMenu')
+                                        ?.classList.add('hidden');
+                                    }}
+                                  >
+                                    <FileText className='mr-2 w-4 h-4 text-neutral-500' />
+                                    Long Text
+                                  </button>
+                                  <button
+                                    className='flex items-center text-sm w-full text-left rounded px-3 py-2 hover:bg-neutral-50'
+                                    onClick={() => {
+                                      addCustomField('bulletList');
+                                      document
+                                        .getElementById('addContentMenu')
+                                        ?.classList.add('hidden');
+                                    }}
+                                  >
+                                    <List className='mr-2 w-4 h-4 text-neutral-500' />
+                                    Bullet List
+                                  </button>
+                                  <button
+                                    className='flex items-center text-sm w-full text-left rounded px-3 py-2 hover:bg-neutral-50'
+                                    onClick={() => {
+                                      addCustomField('numberList');
+                                      document
+                                        .getElementById('addContentMenu')
+                                        ?.classList.add('hidden');
+                                    }}
+                                  >
+                                    <ListChecks className='mr-2 w-4 h-4 text-neutral-500' />
+                                    Numbered List
+                                  </button>
+                                  <button
+                                    className='flex items-center text-sm w-full text-left rounded px-3 py-2 hover:bg-neutral-50'
+                                    onClick={() => {
+                                      addCustomField('link');
+                                      document
+                                        .getElementById('addContentMenu')
+                                        ?.classList.add('hidden');
+                                    }}
+                                  >
+                                    <LinkIcon className='mr-2 w-4 h-4 text-neutral-500' />
+                                    Link
+                                  </button>
+                                  <button
+                                    className='flex items-center text-sm w-full text-left rounded px-3 py-2 hover:bg-neutral-50'
+                                    onClick={() => {
+                                      addCustomField('specification');
+                                      document
+                                        .getElementById('addContentMenu')
+                                        ?.classList.add('hidden');
+                                    }}
+                                  >
+                                    <AlertCircle className='mr-2 w-4 h-4 text-neutral-500' />
+                                    Specifications
+                                  </button>
+                                </div>
+                              </div>
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </TabsContent>
