@@ -620,18 +620,6 @@ const DeliverableContentTab = ({
                 className='border-none shadow-none focus-visible:ring-0 px-0'
               />
             </div>
-
-            <Button
-              type='button'
-              size='sm'
-              className='mt-1'
-              disabled={!tempLinkUrl.trim()}
-              onClick={() => {
-                return saveLink(field);
-              }}
-            >
-              Save Link
-            </Button>
           </div>
         );
 
@@ -802,14 +790,6 @@ const DeliverableContentTab = ({
     const updatedItems = [...(field.items || [])];
     updatedItems[index] = value;
     safeUpdateFieldProperty(field.id, 'items', updatedItems);
-  };
-
-  // Save link data
-  const saveLink = (field: any) => {
-    if (!tempLinkUrl.trim()) return;
-
-    safeUpdateFieldProperty(field.id, 'text', tempLinkText);
-    safeUpdateFieldProperty(field.id, 'url', tempLinkUrl);
   };
 
   // Handler to select a field for editing
