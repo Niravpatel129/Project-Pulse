@@ -12,6 +12,7 @@ import ReviewTab from './Tabs/ReviewTab';
 
 // Import the context provider
 import { useProject } from '@/contexts/ProjectContext';
+import { useQuery } from '@tanstack/react-query';
 import { DeliverableFormProvider, useDeliverableForm } from './DeliverableFormContext';
 
 // Define the stages
@@ -36,28 +37,50 @@ const STAGES = [
   },
 ];
 
-// Main component wrapper that provides the context
-const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+// Fetch deliverable by ID
+const fetchDeliverable = async (id: string) => {
+  if (!id) return null;
+  const response = await newRequest.get(`/deliverables/${id}`);
+  return response.data.data || null;
+};
+
+/**
+ * DeliverableDialog Component
+ * Used for both creating new deliverables and editing existing ones
+ * If deliverableId is provided, it operates in edit mode, otherwise in create mode
+ */
+const NewDeliverableDialog = ({
+  isOpen,
+  onClose,
+  deliverableId,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  deliverableId?: string | null;
+}) => {
   return (
     <DeliverableFormProvider>
-      <NewDeliverableDialogContent isOpen={isOpen} onClose={onClose} />
+      <DeliverableDialogContent isOpen={isOpen} onClose={onClose} deliverableId={deliverableId} />
     </DeliverableFormProvider>
   );
 };
 
 // Inner component that consumes the context
-const NewDeliverableDialogContent = ({
+const DeliverableDialogContent = ({
   isOpen,
   onClose,
+  deliverableId,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  deliverableId?: string | null;
 }) => {
   const {
     formData,
     errors,
     editingFieldId,
     hasUnsavedChanges,
+    setFormData,
     setEditingFieldId,
     setHasUnsavedChanges,
     setErrors,
@@ -68,6 +91,32 @@ const NewDeliverableDialogContent = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
   const { project } = useProject();
+  const isEditMode = !!deliverableId;
+
+  // Fetch deliverable data if in edit mode
+  const { data: existingDeliverable, isLoading: isLoadingDeliverable } = useQuery({
+    queryKey: ['deliverable', deliverableId],
+    queryFn: () => {
+      return fetchDeliverable(deliverableId || '');
+    },
+    enabled: isEditMode,
+  });
+
+  // Populate form with existing data when in edit mode
+  useEffect(() => {
+    if (isEditMode && existingDeliverable) {
+      setFormData({
+        name: existingDeliverable.name || '',
+        description: existingDeliverable.description || '',
+        price: existingDeliverable.price || '',
+        deliverableType: existingDeliverable.deliverableType || 'default',
+        customDeliverableType: existingDeliverable.customDeliverableType || '',
+        customFields: existingDeliverable.customFields || [],
+        teamNotes: existingDeliverable.teamNotes || '',
+      });
+      setHasUnsavedChanges(false);
+    }
+  }, [existingDeliverable, isEditMode, setFormData, setHasUnsavedChanges]);
 
   // Navigate to next stage
   const handleNext = () => {
@@ -146,7 +195,8 @@ const NewDeliverableDialogContent = ({
             // Process each attachment
             field.attachments = await Promise.all(
               field.attachments.map(async (attachment: any) => {
-                if (attachment.url) {
+                if (attachment.url && !attachment.firebaseUrl) {
+                  // Only process new attachments that don't have a firebaseUrl
                   // Generate a unique file ID
                   const fileId = `file_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
@@ -176,7 +226,7 @@ const NewDeliverableDialogContent = ({
                   }
                 }
 
-                // Return attachment as is if no URL
+                // Return attachment as is if no URL or if it already has a firebaseUrl
                 return attachment;
               }),
             );
@@ -193,14 +243,20 @@ const NewDeliverableDialogContent = ({
       // Append the JSON data to FormData
       requestFormData.append('data', JSON.stringify(finalPayload));
 
-      // Send the request as FormData instead of JSON
-      const response = await newRequest.post('/deliverables', requestFormData);
+      // Send the request as FormData - either POST for new or PUT for update
+      let response;
+      if (isEditMode) {
+        response = await newRequest.put(`/deliverables/${deliverableId}`, requestFormData);
+        console.log('Updated deliverable:', response.data);
+      } else {
+        response = await newRequest.post('/deliverables', requestFormData);
+        console.log('Created deliverable:', response.data);
+      }
 
-      console.log('Created deliverable:', response.data);
       setHasUnsavedChanges(false);
       onClose();
     } catch (error) {
-      console.error('Error submitting deliverable:', error);
+      console.error(`Error ${isEditMode ? 'updating' : 'submitting'} deliverable:`, error);
       // Handle submission error
     } finally {
       setIsSubmitting(false);
@@ -306,6 +362,17 @@ const NewDeliverableDialogContent = ({
     };
   }, [editingFieldId, setEditingFieldId]);
 
+  // Loading state while fetching deliverable data
+  if (isEditMode && isLoadingDeliverable) {
+    return (
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent className='max-w-[95vw] sm:max-w-[1000px] p-0 overflow-hidden shadow-sm border-neutral-200 h-[95vh] sm:h-[800px] flex items-center justify-center'>
+          <div className='text-center'>Loading deliverable data...</div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className='max-w-[95vw] sm:max-w-[1000px] md:max-w-[1200px] lg:max-w-[1400px] p-0 overflow-hidden shadow-sm border-neutral-200 transition-all duration-150 ease-in-out h-[95vh] sm:h-[800px] md:h-[800px] flex flex-col'>
@@ -344,7 +411,9 @@ const NewDeliverableDialogContent = ({
             <Button variant='ghost' size='icon' onClick={toggleSidebar} className='md:hidden mr-2'>
               <Menu size={18} />
             </Button>
-            <DialogTitle className='text-base font-medium'>Create Deliverable</DialogTitle>
+            <DialogTitle className='text-base font-medium'>
+              {isEditMode ? 'Edit Deliverable' : 'Create Deliverable'}
+            </DialogTitle>
           </div>
           <Button
             variant='ghost'
@@ -485,7 +554,13 @@ const NewDeliverableDialogContent = ({
               disabled={isSubmitting}
               className='text-sm font-normal transition-colors duration-150'
             >
-              {isSubmitting ? 'Creating...' : 'Create Deliverable'}
+              {isSubmitting
+                ? isEditMode
+                  ? 'Updating...'
+                  : 'Creating...'
+                : isEditMode
+                ? 'Update Deliverable'
+                : 'Create Deliverable'}
             </Button>
           )}
         </div>

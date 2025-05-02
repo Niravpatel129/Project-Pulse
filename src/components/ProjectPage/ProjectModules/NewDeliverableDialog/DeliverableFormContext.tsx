@@ -27,6 +27,7 @@ interface DeliverableFormContextType {
   setEditingFieldId: (id: string | null) => void;
   setHasUnsavedChanges: (value: boolean) => void;
   setErrors: (errors: { [key: string]: string }) => void;
+  setFormData: (data: FormData | ((prev: FormData) => FormData)) => void;
 }
 
 export const DeliverableFormContext = createContext<DeliverableFormContextType | undefined>(
@@ -176,6 +177,7 @@ export const DeliverableFormProvider = ({ children }: { children: ReactNode }) =
     setEditingFieldId,
     setHasUnsavedChanges,
     setErrors,
+    setFormData,
   };
 
   return (

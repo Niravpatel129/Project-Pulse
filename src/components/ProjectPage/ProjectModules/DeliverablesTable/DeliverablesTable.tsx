@@ -43,6 +43,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
+import NewDeliverableDialog from '../NewDeliverableDialog/NewDeliverableDialog';
 
 interface Attachment {
   name: string;
@@ -107,6 +108,8 @@ const DeliverablesTable = () => {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [deliverableToDelete, setDeliverableToDelete] = useState<string | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deliverableToEdit, setDeliverableToEdit] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<{
     key: SortKey;
     direction: SortDirection;
@@ -218,8 +221,14 @@ const DeliverablesTable = () => {
   };
 
   const handleEdit = (deliverableId: string) => {
-    // Implement edit functionality
-    console.log('Edit deliverable:', deliverableId);
+    setDeliverableToEdit(deliverableId);
+    setEditDialogOpen(true);
+  };
+
+  const handleCloseEditDialog = () => {
+    setEditDialogOpen(false);
+    setDeliverableToEdit(null);
+    refetch(); // Refresh the list after editing
   };
 
   const handleDelete = async (deliverableId: string) => {
@@ -571,6 +580,14 @@ const DeliverablesTable = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {editDialogOpen && (
+        <NewDeliverableDialog
+          isOpen={editDialogOpen}
+          onClose={handleCloseEditDialog}
+          deliverableId={deliverableToEdit}
+        />
+      )}
     </div>
   );
 };
