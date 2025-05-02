@@ -114,7 +114,7 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
     const newField = {
       id: Date.now().toString(),
       type,
-      label: `New ${type}`,
+      label: '',
       content: '',
     };
 
