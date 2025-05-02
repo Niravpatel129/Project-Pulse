@@ -237,6 +237,564 @@ interface DatabaseItems {
   [key: string]: DatabaseItem[];
 }
 
+// DatabaseItemDialog component for selecting database items
+interface DatabaseItemDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  selectedDatabaseId: string | null;
+  setSelectedDatabaseId: (id: string | null) => void;
+  selectedItem: any;
+  onSelectItem: (item: any) => void;
+  onSave: (
+    item: any,
+    databaseId: string | null,
+    visibleColumns: Record<string, boolean>,
+    alignment: string,
+  ) => void;
+  alignment: string;
+  setAlignment: (alignment: string) => void;
+  initialVisibleColumns?: Record<string, boolean>;
+}
+
+const DatabaseItemDialog = ({
+  isOpen,
+  onClose,
+  selectedDatabaseId,
+  setSelectedDatabaseId,
+  selectedItem,
+  onSelectItem,
+  onSave,
+  alignment,
+  setAlignment,
+  initialVisibleColumns = {},
+}: DatabaseItemDialogProps) => {
+  // Local state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [visibleColumns, setVisibleColumns] =
+    useState<Record<string, boolean>>(initialVisibleColumns);
+
+  // Reset search when dialog opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setSearchTerm('');
+    }
+  }, [isOpen]);
+
+  // Reset visibility settings when initialVisibleColumns changes
+  useEffect(() => {
+    if (Object.keys(initialVisibleColumns).length > 0) {
+      setVisibleColumns(initialVisibleColumns);
+    }
+  }, [initialVisibleColumns]);
+
+  // Fetch tables using React Query
+  const { data: tables = [] } = useQuery<any[]>({
+    queryKey: ['tables'],
+    queryFn: async () => {
+      const response = await newRequest.get('/tables/workspace');
+      return response.data.data;
+    },
+  });
+
+  // Also fetch column definitions to understand what each field represents
+  const { data: tableColumns = [] } = useQuery<any[]>({
+    queryKey: ['tableColumns', selectedDatabaseId],
+    queryFn: async () => {
+      if (!selectedDatabaseId) return [];
+      const response = await newRequest.get(`/tables/${selectedDatabaseId}`);
+      return response.data.data?.columns || [];
+    },
+    enabled: !!selectedDatabaseId,
+  });
+
+  // Fetch items for selected database
+  const { data: databaseItemsRaw = [] } = useQuery({
+    queryKey: ['tableItems', selectedDatabaseId],
+    queryFn: async () => {
+      if (!selectedDatabaseId) return [];
+      const response = await newRequest.get(`/tables/${selectedDatabaseId}/records`);
+      return response.data.data;
+    },
+    enabled: !!selectedDatabaseId,
+  });
+
+  // Set up initial column visibility when columns change
+  useEffect(() => {
+    if (tableColumns.length > 0 && Object.keys(visibleColumns).length === 0) {
+      const initialVisibility: Record<string, boolean> = {};
+      tableColumns.forEach((column: any) => {
+        // By default show all columns except internal/system ones
+        const isSystem = ['id', 'position', '_id', '__v', 'createdAt', 'updatedAt'].includes(
+          column.name,
+        );
+        initialVisibility[column.id] = !isSystem;
+      });
+      setVisibleColumns(initialVisibility);
+    }
+  }, [tableColumns, visibleColumns]);
+
+  // Process raw records into usable format
+  const databaseItems = databaseItemsRaw.map((row: any) => {
+    // Create a base item with row ID
+    const item: any = {
+      id: row.rowId,
+      position: row.position,
+    };
+
+    // Process each record and combine values
+    row.records.forEach((record: any) => {
+      // Find the column definition to get the column name
+      const column = tableColumns.find((col: any) => {
+        return col.id === record.columnId;
+      });
+      if (column && record.values[record.columnId] !== undefined) {
+        // Use column name as the key if available, otherwise use columnId
+        const key = column.name || record.columnId;
+        item[key] = record.values[record.columnId];
+
+        // If this is the first column or marked as primary, also set it as name for convenience
+        if (column.isPrimaryKey || column.order === 0) {
+          item.name = record.values[record.columnId];
+        }
+      }
+    });
+
+    return item;
+  });
+
+  // Transform tables into the format expected by the component
+  const databases = tables.map((table: any) => {
+    return {
+      id: table._id,
+      name: table.name,
+      description: table.description || 'No description',
+      icon: getIconForTableType(table.name),
+    };
+  });
+
+  // Function to determine icon based on table name
+  function getIconForTableType(tableName: string) {
+    const name = tableName.toLowerCase();
+    if (name.includes('product') || name.includes('item') || name.includes('inventory'))
+      return 'product';
+    if (name.includes('customer') || name.includes('client') || name.includes('user'))
+      return 'customer';
+    if (name.includes('project') || name.includes('task')) return 'project';
+    if (name.includes('invoice') || name.includes('payment') || name.includes('bill'))
+      return 'invoice';
+    if (name.includes('flag')) return 'flag';
+    if (name.includes('order')) return 'order';
+    return 'database';
+  }
+
+  // Function to get database icon based on table name/type
+  const getDatabaseIcon = (tableName: string) => {
+    const name = typeof tableName === 'string' ? tableName.toLowerCase() : 'database';
+
+    if (name.includes('product') || name.includes('item') || name.includes('inventory')) {
+      return <FileType className='h-4 w-4 mr-2' />;
+    }
+    if (name.includes('customer') || name.includes('client') || name.includes('user')) {
+      return <FileText className='h-4 w-4 mr-2' />;
+    }
+    if (name.includes('project') || name.includes('task')) {
+      return <FileIcon className='h-4 w-4 mr-2' />;
+    }
+    if (name.includes('invoice') || name.includes('payment') || name.includes('bill')) {
+      return <FileText className='h-4 w-4 mr-2' />;
+    }
+    if (name.includes('flag')) {
+      return <FileType className='h-4 w-4 mr-2' />;
+    }
+    if (name.includes('order')) {
+      return <FileText className='h-4 w-4 mr-2' />;
+    }
+    return <Database className='h-4 w-4 mr-2' />;
+  };
+
+  // Helper function to find a good display value for an item
+  const findDisplayValue = (item: any) => {
+    // Try to find a string field other than id or position
+    const stringFields = Object.entries(item)
+      .filter(([key, value]) => {
+        return typeof value === 'string' && key !== 'id' && key !== 'position';
+      })
+      .map(([_, value]) => {
+        return value;
+      });
+
+    return stringFields[0] || `Item ${item.id}`;
+  };
+
+  // Component to display item details with visible columns
+  const DisplayItemDetails = ({ item }: { item: any }) => {
+    // Get all fields except system fields
+    const displayFields = Object.entries(item).filter(([key, value]) =>
+      // Skip system/internal fields
+      {
+        return !['id', 'position', '_id', '__v'].includes(key) && typeof value !== 'object';
+      },
+    );
+
+    // Find the main/primary field to display prominently
+    const primaryValue = item.name || findDisplayValue(item);
+
+    // Get the remaining fields to potentially display
+    const secondaryFields = displayFields.filter(([key, value]) => {
+      return value !== primaryValue && key !== 'name';
+    });
+
+    return (
+      <>
+        <div className='font-medium text-neutral-800 truncate'>
+          {primaryValue || `Item ${item.id}`}
+        </div>
+        {secondaryFields.length > 0 && (
+          <div className='mt-1 flex flex-wrap gap-x-4 gap-y-1'>
+            {secondaryFields.map(([key, value]) => {
+              // Find column definition to get proper name
+              const column = tableColumns.find((col: any) => {
+                return col.id === key;
+              });
+              const displayName = column?.name || key;
+
+              // Check if this column should be visible
+              if (column && visibleColumns[column.id] === false) {
+                return null;
+              }
+
+              return (
+                <div key={key} className='text-xs text-neutral-500 truncate flex items-center'>
+                  <span className='w-2 h-2 bg-neutral-200 rounded-full mr-1.5 flex-shrink-0'></span>
+                  <span className='font-medium text-neutral-600'>{displayName}:</span>
+                  <span className='ml-1'>{String(value)}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </>
+    );
+  };
+
+  // Database modal header that shows selected database info
+  const DatabaseModalHeader = () => {
+    if (!selectedDatabaseId) return null;
+
+    const selectedTable = tables.find((table: any) => {
+      return table._id === selectedDatabaseId;
+    });
+    if (!selectedTable) return null;
+
+    return (
+      <div className='py-3 px-4 rounded-md border border-blue-100 bg-blue-50 mb-4 flex items-center'>
+        <div className='h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3 flex-shrink-0'>
+          {getDatabaseIcon(selectedTable.name)}
+        </div>
+        <div>
+          <div className='font-semibold text-blue-800'>{selectedTable.name}</div>
+          <div className='text-xs text-blue-700 flex items-center gap-2'>
+            <span className='flex items-center'>
+              <FileText className='h-3 w-3 mr-1' />
+              {tableColumns.length} columns
+            </span>
+            <span className='bg-blue-200 w-1 h-1 rounded-full'></span>
+            <span className='flex items-center'>
+              <Database className='h-3 w-3 mr-1' />
+              {databaseItems.length} records
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Add column visibility settings UI to the database modal
+  const ColumnVisibilitySettings = () => {
+    if (!selectedDatabaseId || tableColumns.length === 0) return null;
+
+    return (
+      <div className='mt-3 border-t border-neutral-100 pt-3'>
+        <div className='flex items-center justify-between mb-2.5'>
+          <div className='text-sm font-medium text-neutral-700'>Column Visibility</div>
+          <div className='flex gap-2'>
+            <button
+              className='text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors'
+              onClick={() => {
+                const allVisible = { ...visibleColumns };
+                tableColumns.forEach((col: any) => {
+                  allVisible[col.id] = true;
+                });
+                setVisibleColumns(allVisible);
+              }}
+            >
+              Show All
+            </button>
+            <span className='text-neutral-300'>|</span>
+            <button
+              className='text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors'
+              onClick={() => {
+                // Always keep at least primary column visible
+                const onlyPrimary = { ...visibleColumns };
+                tableColumns.forEach((col: any) => {
+                  onlyPrimary[col.id] = col.isPrimaryKey || col.order === 0;
+                });
+                setVisibleColumns(onlyPrimary);
+              }}
+            >
+              Hide All
+            </button>
+          </div>
+        </div>
+
+        <div className='flex flex-wrap gap-1.5 mt-2'>
+          {tableColumns.map((column: any) => {
+            return (
+              <label
+                key={column.id}
+                className={`flex items-center px-2 py-1 rounded text-xs cursor-pointer transition-colors ${
+                  visibleColumns[column.id] !== false
+                    ? 'bg-blue-50 border border-blue-200 text-blue-800 hover:bg-blue-100'
+                    : 'bg-white border border-neutral-200 text-neutral-500 hover:bg-neutral-50'
+                }`}
+              >
+                <input
+                  type='checkbox'
+                  checked={visibleColumns[column.id] !== false}
+                  onChange={(e) => {
+                    setVisibleColumns({
+                      ...visibleColumns,
+                      [column.id]: e.target.checked,
+                    });
+                  }}
+                  className='mr-1.5 h-3 w-3'
+                />
+                {column.name}
+              </label>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // Save handler
+  const handleSave = () => {
+    onSave(selectedItem, selectedDatabaseId, visibleColumns, alignment);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className='fixed inset-0 bg-black/70 z-50 flex items-center justify-center'
+      onClick={onClose}
+    >
+      <div
+        className='bg-white rounded-lg shadow-xl border border-neutral-200 w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col'
+        onClick={(e) => {
+          return e.stopPropagation();
+        }}
+      >
+        <div className='p-4 border-b border-neutral-200 flex justify-between items-center'>
+          <h3 className='font-medium text-lg'>Select Database Item</h3>
+          <Button variant='ghost' size='icon' onClick={onClose} className='h-8 w-8 rounded-full'>
+            <X size={16} />
+          </Button>
+        </div>
+
+        <div className='p-4 border-b border-neutral-100 bg-neutral-50'>
+          {/* Database type selector */}
+          <div className='mb-2'>
+            <Label className='text-sm text-neutral-700'>Database Type</Label>
+            <select
+              value={selectedDatabaseId || ''}
+              onChange={(e) => {
+                return setSelectedDatabaseId(e.target.value || null);
+              }}
+              className='w-full h-10 px-3 mt-1 rounded-md border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+            >
+              <option value=''>Select a database</option>
+              {databases.map((database) => {
+                return (
+                  <option key={database.id} value={database.id}>
+                    {database.name}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
+          {/* Show column information for selected database */}
+          {selectedDatabaseId && tableColumns.length > 0 && (
+            <div className='mt-2 text-xs text-neutral-500 border border-neutral-100 rounded p-2 bg-neutral-50'>
+              <p className='font-medium mb-1'>Table Columns:</p>
+              <div className='flex flex-wrap gap-1'>
+                {tableColumns.map((col: any) => {
+                  return (
+                    <span
+                      key={col.id}
+                      className='bg-white px-2 py-0.5 rounded border border-neutral-200'
+                    >
+                      {col.name}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Column visibility settings */}
+          {selectedDatabaseId && tableColumns.length > 0 && <ColumnVisibilitySettings />}
+        </div>
+
+        <div className='p-4 flex-grow overflow-auto'>
+          {selectedDatabaseId ? (
+            <>
+              <DatabaseModalHeader />
+
+              <div className='mb-4 relative'>
+                <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    className='h-4 w-4 text-neutral-400'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    stroke='currentColor'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
+                    />
+                  </svg>
+                </div>
+                <Input
+                  type='text'
+                  placeholder='Search items...'
+                  value={searchTerm}
+                  onChange={(e) => {
+                    return setSearchTerm(e.target.value);
+                  }}
+                  className='pl-10 pr-4 py-2 border-neutral-200 focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50'
+                />
+              </div>
+
+              {databaseItems.length > 0 ? (
+                <div className='grid grid-cols-1 gap-2.5 min-h-[200px] max-h-[400px] overflow-y-auto pr-1'>
+                  {databaseItems
+                    .filter((item: any) => {
+                      // Search in all string values
+                      return Object.entries(item).some(([key, value]) => {
+                        return (
+                          typeof value === 'string' &&
+                          value.toLowerCase().includes(searchTerm.toLowerCase())
+                        );
+                      });
+                    })
+                    .map((item: any) => {
+                      return (
+                        <div
+                          key={item.id}
+                          className={`p-3.5 border rounded-lg flex items-start gap-3 cursor-pointer hover:bg-neutral-50 transition-colors ${
+                            selectedItem?.id === item.id
+                              ? 'bg-blue-50 border-blue-200 shadow-sm'
+                              : 'border-neutral-200'
+                          }`}
+                          onClick={() => {
+                            return onSelectItem(item);
+                          }}
+                        >
+                          {selectedItem?.id === item.id ? (
+                            <div className='mt-1 h-5 w-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0'>
+                              <Check className='h-3 w-3 text-white' />
+                            </div>
+                          ) : (
+                            <div className='mt-1 h-5 w-5 border-2 border-neutral-200 rounded-full flex-shrink-0'></div>
+                          )}
+                          <div className='flex-1 min-w-0'>
+                            <DisplayItemDetails item={item} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              ) : (
+                <div className='text-center py-10 bg-neutral-50 rounded-lg border border-dashed border-neutral-200'>
+                  <Database className='h-10 w-10 mx-auto text-neutral-300 mb-3' />
+                  <p className='text-neutral-700 font-medium mb-1'>No records found</p>
+                  <p className='text-neutral-500 text-sm max-w-xs mx-auto'>
+                    This table doesn&apos;t contain any records yet. Try selecting a different
+                    database.
+                  </p>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className='text-center py-8'>
+              <Database className='h-12 w-12 mx-auto text-neutral-300 mb-3' />
+              <p className='text-neutral-600 font-medium'>Select a database type</p>
+              <p className='text-neutral-500 text-sm mt-1'>Choose from the dropdown above</p>
+            </div>
+          )}
+        </div>
+
+        <div className='p-4 border-t border-neutral-200 flex justify-between'>
+          <div className='flex items-center gap-2'>
+            <Label className='text-xs text-neutral-500'>Alignment:</Label>
+            <div className='flex flex-wrap gap-1'>
+              <Button
+                type='button'
+                size='sm'
+                variant={alignment === 'left' ? 'default' : 'outline'}
+                onClick={() => {
+                  return setAlignment('left');
+                }}
+                className='h-7 text-xs'
+              >
+                Left
+              </Button>
+              <Button
+                type='button'
+                size='sm'
+                variant={alignment === 'center' ? 'default' : 'outline'}
+                onClick={() => {
+                  return setAlignment('center');
+                }}
+                className='h-7 text-xs'
+              >
+                Center
+              </Button>
+              <Button
+                type='button'
+                size='sm'
+                variant={alignment === 'right' ? 'default' : 'outline'}
+                onClick={() => {
+                  return setAlignment('right');
+                }}
+                className='h-7 text-xs'
+              >
+                Right
+              </Button>
+            </div>
+          </div>
+
+          <div className='flex gap-2'>
+            <Button variant='outline' onClick={onClose}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={!selectedItem}>
+              Select Item
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Replace mock databases with real database connection
 const DeliverableContentTab = ({
   formData,
@@ -279,7 +837,7 @@ const DeliverableContentTab = ({
   const activeFieldIdRef = useRef<string | null>(null);
 
   // Fetch tables using React Query
-  const { data: tables = [] } = useQuery({
+  const { data: tables = [] } = useQuery<any[]>({
     queryKey: ['tables'],
     queryFn: async () => {
       const response = await newRequest.get('/tables/workspace');
@@ -384,31 +942,6 @@ const DeliverableContentTab = ({
     setTimeout(() => {
       preventEditToggle.current = false;
     }, 300); // Block for 300ms after a selection
-  };
-
-  // Function to get database icon based on table name/type
-  const getDatabaseIcon = (tableName: string) => {
-    const name = typeof tableName === 'string' ? tableName.toLowerCase() : 'database';
-
-    if (name.includes('product') || name.includes('item') || name.includes('inventory')) {
-      return <FileType className='h-4 w-4 mr-2' />;
-    }
-    if (name.includes('customer') || name.includes('client') || name.includes('user')) {
-      return <FileText className='h-4 w-4 mr-2' />;
-    }
-    if (name.includes('project') || name.includes('task')) {
-      return <FileIcon className='h-4 w-4 mr-2' />;
-    }
-    if (name.includes('invoice') || name.includes('payment') || name.includes('bill')) {
-      return <FileText className='h-4 w-4 mr-2' />;
-    }
-    if (name.includes('flag')) {
-      return <FileType className='h-4 w-4 mr-2' />;
-    }
-    if (name.includes('order')) {
-      return <FileText className='h-4 w-4 mr-2' />;
-    }
-    return <Database className='h-4 w-4 mr-2' />;
   };
 
   // Open database selection modal for a specific field
@@ -1266,172 +1799,6 @@ const DeliverableContentTab = ({
     setEditingFieldId(fieldId);
   };
 
-  // Database modal header that shows selected database info
-  const DatabaseModalHeader = () => {
-    if (!selectedDatabaseId) return null;
-
-    const selectedTable = tables.find((table: any) => {
-      return table._id === selectedDatabaseId;
-    });
-    if (!selectedTable) return null;
-
-    return (
-      <div className='py-3 px-4 rounded-md border border-blue-100 bg-blue-50 mb-4 flex items-center'>
-        <div className='h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3 flex-shrink-0'>
-          {getDatabaseIcon(selectedTable.name)}
-        </div>
-        <div>
-          <div className='font-semibold text-blue-800'>{selectedTable.name}</div>
-          <div className='text-xs text-blue-700 flex items-center gap-2'>
-            <span className='flex items-center'>
-              <FileText className='h-3 w-3 mr-1' />
-              {tableColumns.length} columns
-            </span>
-            <span className='bg-blue-200 w-1 h-1 rounded-full'></span>
-            <span className='flex items-center'>
-              <Database className='h-3 w-3 mr-1' />
-              {databaseItems.length} records
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Add column visibility settings UI to the database modal
-  const ColumnVisibilitySettings = () => {
-    if (!selectedDatabaseId || tableColumns.length === 0) return null;
-
-    return (
-      <div className='mt-3 border-t border-neutral-100 pt-3'>
-        <div className='flex items-center justify-between mb-2.5'>
-          <div className='text-sm font-medium text-neutral-700'>Column Visibility</div>
-          <div className='flex gap-2'>
-            <button
-              className='text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors'
-              onClick={() => {
-                const allVisible = { ...visibleColumns };
-                tableColumns.forEach((col: any) => {
-                  allVisible[col.id] = true;
-                });
-                setVisibleColumns(allVisible);
-              }}
-            >
-              Show All
-            </button>
-            <span className='text-neutral-300'>|</span>
-            <button
-              className='text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors'
-              onClick={() => {
-                // Always keep at least primary column visible
-                const onlyPrimary = { ...visibleColumns };
-                tableColumns.forEach((col: any) => {
-                  onlyPrimary[col.id] = col.isPrimaryKey || col.order === 0;
-                });
-                setVisibleColumns(onlyPrimary);
-              }}
-            >
-              Hide All
-            </button>
-          </div>
-        </div>
-
-        <div className='flex flex-wrap gap-1.5 mt-2'>
-          {tableColumns.map((column: any) => {
-            return (
-              <label
-                key={column.id}
-                className={`flex items-center px-2 py-1 rounded text-xs cursor-pointer transition-colors ${
-                  visibleColumns[column.id] !== false
-                    ? 'bg-blue-50 border border-blue-200 text-blue-800 hover:bg-blue-100'
-                    : 'bg-white border border-neutral-200 text-neutral-500 hover:bg-neutral-50'
-                }`}
-              >
-                <input
-                  type='checkbox'
-                  checked={visibleColumns[column.id] !== false}
-                  onChange={(e) => {
-                    setVisibleColumns({
-                      ...visibleColumns,
-                      [column.id]: e.target.checked,
-                    });
-                  }}
-                  className='mr-1.5 h-3 w-3'
-                />
-                {column.name}
-              </label>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
-  // Component to display item details with visible columns
-  const DisplayItemDetails = ({
-    item,
-    useFieldVisibility = false,
-  }: {
-    item: any;
-    useFieldVisibility?: boolean;
-  }) => {
-    // Get all fields except system fields
-    const displayFields = Object.entries(item).filter(([key, value]) =>
-      // Skip system/internal fields
-      {
-        return !['id', 'position', '_id', '__v'].includes(key) && typeof value !== 'object';
-      },
-    );
-
-    // Find the main/primary field to display prominently
-    const primaryValue = item.name || findDisplayValue(item);
-
-    // Get the remaining fields to potentially display
-    const secondaryFields = displayFields.filter(([key, value]) => {
-      return value !== primaryValue && key !== 'name';
-    });
-
-    // Get visibility settings - if in modal use current state, if displaying a field use field's saved settings
-    const effectiveVisibleColumns =
-      useFieldVisibility && editingFieldId
-        ? formData.customFields.find((f: any) => {
-            return f.id === editingFieldId;
-          })?.visibleColumns || visibleColumns
-        : visibleColumns;
-
-    return (
-      <>
-        <div className='font-medium text-neutral-800 truncate'>
-          {primaryValue || `Item ${item.id}`}
-        </div>
-        {secondaryFields.length > 0 && (
-          <div className='mt-1 flex flex-wrap gap-x-4 gap-y-1'>
-            {secondaryFields.map(([key, value]) => {
-              // Find column definition to get proper name
-              const column = tableColumns.find((col: any) => {
-                return col.id === key;
-              });
-              const displayName = column?.name || key;
-
-              // Check if this column should be visible
-              if (column && effectiveVisibleColumns[column.id] === false) {
-                return null;
-              }
-
-              return (
-                <div key={key} className='text-xs text-neutral-500 truncate flex items-center'>
-                  <span className='w-2 h-2 bg-neutral-200 rounded-full mr-1.5 flex-shrink-0'></span>
-                  <span className='font-medium text-neutral-600'>{displayName}:</span>
-                  <span className='ml-1'>{String(value)}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </>
-    );
-  };
-
   return (
     <div className='max-w-3xl mx-auto'>
       {previewAttachment && (
@@ -1663,216 +2030,22 @@ const DeliverableContentTab = ({
 
       {/* Database selection modal */}
       {isDatabaseModalOpen && (
-        <div
-          className='fixed inset-0 bg-black/70 z-50 flex items-center justify-center'
-          onClick={cancelDatabaseSelection}
-        >
-          <div
-            className='bg-white rounded-lg shadow-xl border border-neutral-200 w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col'
-            onClick={(e) => {
-              return e.stopPropagation();
-            }}
-          >
-            <div className='p-4 border-b border-neutral-200 flex justify-between items-center'>
-              <h3 className='font-medium text-lg'>Select Database Item</h3>
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={cancelDatabaseSelection}
-                className='h-8 w-8 rounded-full'
-              >
-                <X size={16} />
-              </Button>
-            </div>
-
-            <div className='p-4 border-b border-neutral-100 bg-neutral-50'>
-              {/* Database type selector */}
-              <div className='mb-2'>
-                <Label className='text-sm text-neutral-700'>Database Type</Label>
-                <select
-                  value={selectedDatabaseId || ''}
-                  onChange={(e) => {
-                    return setSelectedDatabaseId(e.target.value || null);
-                  }}
-                  className='w-full h-10 px-3 mt-1 rounded-md border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                >
-                  <option value=''>Select a database</option>
-                  {databases.map((database) => {
-                    return (
-                      <option key={database.id} value={database.id}>
-                        {database.name}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-
-              {/* Show column information for selected database */}
-              {selectedDatabaseId && tableColumns.length > 0 && (
-                <div className='mt-2 text-xs text-neutral-500 border border-neutral-100 rounded p-2 bg-neutral-50'>
-                  <p className='font-medium mb-1'>Table Columns:</p>
-                  <div className='flex flex-wrap gap-1'>
-                    {tableColumns.map((col: any) => {
-                      return (
-                        <span
-                          key={col.id}
-                          className='bg-white px-2 py-0.5 rounded border border-neutral-200'
-                        >
-                          {col.name}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Column visibility settings */}
-              {selectedDatabaseId && tableColumns.length > 0 && <ColumnVisibilitySettings />}
-            </div>
-
-            <div className='p-4 flex-grow overflow-auto'>
-              {selectedDatabaseId ? (
-                <>
-                  <DatabaseModalHeader />
-
-                  <div className='mb-4 relative'>
-                    <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
-                      <svg
-                        xmlns='http://www.w3.org/2000/svg'
-                        className='h-4 w-4 text-neutral-400'
-                        fill='none'
-                        viewBox='0 0 24 24'
-                        stroke='currentColor'
-                      >
-                        <path
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                          strokeWidth={2}
-                          d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
-                        />
-                      </svg>
-                    </div>
-                    <Input
-                      type='text'
-                      placeholder='Search items...'
-                      value={dbSearchTerm}
-                      onChange={(e) => {
-                        return setDbSearchTerm(e.target.value);
-                      }}
-                      className='pl-10 pr-4 py-2 border-neutral-200 focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50'
-                    />
-                  </div>
-
-                  {databaseItems.length > 0 ? (
-                    <div className='grid grid-cols-1 gap-2.5 min-h-[200px] max-h-[400px] overflow-y-auto pr-1'>
-                      {databaseItems
-                        .filter((item: any) => {
-                          // Search in all string values
-                          return Object.entries(item).some(([key, value]) => {
-                            return (
-                              typeof value === 'string' &&
-                              value.toLowerCase().includes(dbSearchTerm.toLowerCase())
-                            );
-                          });
-                        })
-                        .map((item: any) => {
-                          return (
-                            <div
-                              key={item.id}
-                              className={`p-3.5 border rounded-lg flex items-start gap-3 cursor-pointer hover:bg-neutral-50 transition-colors ${
-                                dbSelectedItem?.id === item.id
-                                  ? 'bg-blue-50 border-blue-200 shadow-sm'
-                                  : 'border-neutral-200'
-                              }`}
-                              onClick={() => {
-                                return setDbSelectedItem(item);
-                              }}
-                            >
-                              {dbSelectedItem?.id === item.id ? (
-                                <div className='mt-1 h-5 w-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0'>
-                                  <Check className='h-3 w-3 text-white' />
-                                </div>
-                              ) : (
-                                <div className='mt-1 h-5 w-5 border-2 border-neutral-200 rounded-full flex-shrink-0'></div>
-                              )}
-                              <div className='flex-1 min-w-0'>
-                                <DisplayItemDetails item={item} useFieldVisibility={true} />
-                              </div>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  ) : (
-                    <div className='text-center py-10 bg-neutral-50 rounded-lg border border-dashed border-neutral-200'>
-                      <Database className='h-10 w-10 mx-auto text-neutral-300 mb-3' />
-                      <p className='text-neutral-700 font-medium mb-1'>No records found</p>
-                      <p className='text-neutral-500 text-sm max-w-xs mx-auto'>
-                        This table doesn&apos;t contain any records yet. Try selecting a different
-                        database.
-                      </p>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className='text-center py-8'>
-                  <Database className='h-12 w-12 mx-auto text-neutral-300 mb-3' />
-                  <p className='text-neutral-600 font-medium'>Select a database type</p>
-                  <p className='text-neutral-500 text-sm mt-1'>Choose from the dropdown above</p>
-                </div>
-              )}
-            </div>
-
-            <div className='p-4 border-t border-neutral-200 flex justify-between'>
-              <div className='flex items-center gap-2'>
-                <Label className='text-xs text-neutral-500'>Alignment:</Label>
-                <div className='flex flex-wrap gap-1'>
-                  <Button
-                    type='button'
-                    size='sm'
-                    variant={dbTempAlignment === 'left' ? 'default' : 'outline'}
-                    onClick={() => {
-                      return setDbTempAlignment('left');
-                    }}
-                    className='h-7 text-xs'
-                  >
-                    Left
-                  </Button>
-                  <Button
-                    type='button'
-                    size='sm'
-                    variant={dbTempAlignment === 'center' ? 'default' : 'outline'}
-                    onClick={() => {
-                      return setDbTempAlignment('center');
-                    }}
-                    className='h-7 text-xs'
-                  >
-                    Center
-                  </Button>
-                  <Button
-                    type='button'
-                    size='sm'
-                    variant={dbTempAlignment === 'right' ? 'default' : 'outline'}
-                    onClick={() => {
-                      return setDbTempAlignment('right');
-                    }}
-                    className='h-7 text-xs'
-                  >
-                    Right
-                  </Button>
-                </div>
-              </div>
-
-              <div className='flex gap-2'>
-                <Button variant='outline' onClick={cancelDatabaseSelection}>
-                  Cancel
-                </Button>
-                <Button onClick={saveDatabaseSelections} disabled={!dbSelectedItem}>
-                  Select Item
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <DatabaseItemDialog
+          isOpen={isDatabaseModalOpen}
+          onClose={cancelDatabaseSelection}
+          selectedDatabaseId={selectedDatabaseId}
+          setSelectedDatabaseId={setSelectedDatabaseId}
+          selectedItem={dbSelectedItem}
+          onSelectItem={(item) => {
+            setDbSelectedItem(item);
+          }}
+          onSave={saveDatabaseSelections}
+          alignment={dbTempAlignment}
+          setAlignment={(alignment) => {
+            safeUpdateFieldProperty(editingDatabaseFieldId, 'alignment', alignment);
+          }}
+          initialVisibleColumns={visibleColumns}
+        />
       )}
     </div>
   );
