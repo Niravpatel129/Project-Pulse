@@ -497,6 +497,20 @@ const DeliverablesTable = () => {
     );
   }
 
+  const getDeliverableTypeColor = (type: string) => {
+    console.log('🚀 type:', type);
+    switch (type) {
+      case 'service':
+        return 'bg-purple-500/10 text-purple-500';
+      case 'digital':
+        return 'bg-blue-500/10 text-blue-500';
+      case 'custom':
+        return 'bg-green-500/10 text-green-500';
+      default:
+        return 'bg-blue-500/10 text-blue-500';
+    }
+  };
+
   return (
     <div className='space-y-4'>
       <div className='flex items-center justify-between'>
@@ -620,7 +634,13 @@ const DeliverablesTable = () => {
                         {deliverable.description}
                       </TableCell>
                       <TableCell className='py-2.5'>
-                        <Badge variant='secondary' className='text-xs font-normal py-0.5 px-2'>
+                        <Badge
+                          variant='secondary'
+                          className={cn(
+                            'text-xs font-normal py-0.5 px-2',
+                            getDeliverableTypeColor(deliverable.deliverableType),
+                          )}
+                        >
                           {deliverable.deliverableType}
                         </Badge>
                       </TableCell>
