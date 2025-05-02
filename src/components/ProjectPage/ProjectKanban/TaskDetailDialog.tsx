@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Attachment, Column, Comment, Task, TimeEntry } from '@/services/kanbanApi';
+import { newRequest } from '@/utils/newRequest';
 import { format } from 'date-fns';
 import {
   ChevronDown,
@@ -42,6 +43,10 @@ interface TaskDetailDialogProps {
     attachment: Omit<Attachment, 'id' | 'createdAt'>,
   ) => Promise<Attachment | null>;
   onRemoveAttachment?: (taskId: string, attachmentId: string) => Promise<boolean>;
+  onLogTime?: (
+    taskId: string,
+    timeEntry: Omit<TimeEntry, 'id' | 'user'>,
+  ) => Promise<TimeEntry | null>;
   columns: Column[];
 }
 
@@ -54,6 +59,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   onAddComment,
   onAddAttachment,
   onRemoveAttachment,
+  onLogTime,
   columns,
 }) => {
   // Individual edit states for each field rather than a global edit mode
@@ -94,6 +100,9 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   const [timeDescription, setTimeDescription] = useState('');
   const [timeEntryDate, setTimeEntryDate] = useState<Date>(new Date());
 
+  // Add local state for time entries after the timeEntryDate state variable
+  const [localTimeEntries, setLocalTimeEntries] = useState<TimeEntry[]>([]);
+
   useEffect(() => {
     if (task) {
       setEditedTitle(task.title);
@@ -112,6 +121,9 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
       setTimeToLog(0);
       setTimeDescription('');
       setTimeEntryDate(new Date());
+
+      // Initialize local time entries from task
+      setLocalTimeEntries(task.timeEntries || []);
     }
   }, [task]);
 
@@ -320,41 +332,94 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
     }
   };
 
-  const handleLogTime = () => {
+  const logTimeToAPI = async (
+    taskId: string,
+    timeData: {
+      hours: number;
+      description: string;
+      date: string;
+    },
+  ) => {
+    try {
+      // Extract project ID from the task ID or use a prop if available
+      // Here we're hardcoding the project ID based on the URL provided
+      const projectId = '680a0a86a3558269e39b6835';
+
+      console.log('Making POST request to log time:', timeData);
+
+      // Make the direct API call - note we're not using axios here to ensure a fresh implementation
+      const response = await newRequest.post(`/kanban/${projectId}/tasks/${taskId}/time`, timeData);
+
+      const responseData = response.data;
+      console.log('Time logging API response:', responseData);
+
+      return responseData;
+    } catch (error) {
+      console.error('Error logging time:', error);
+      throw error;
+    }
+  };
+
+  const handleLogTime = async () => {
     if (!task || !timeToLog || timeToLog <= 0) return;
 
-    // Create a new time entry
-    const newTimeEntry: TimeEntry = {
-      id: Date.now().toString(), // Generate a temporary ID
-      hours: timeToLog,
-      description: timeDescription,
-      date: timeEntryDate.toISOString(),
-      user: {
-        id: '1', // In a real app, this would be the current user's ID
-        name: 'Current User', // In a real app, this would be the current user's name
-        avatar: '/avatars/03.png', // In a real app, this would be the current user's avatar
-      },
-    };
+    try {
+      // Capture values locally to avoid any closure issues
+      const hours = timeToLog;
+      const description = timeDescription;
+      const date = timeEntryDate.toISOString();
 
-    // Get existing time entries or initialize empty array
-    const existingTimeEntries = task.timeEntries || [];
+      // Clear form immediately to prevent double submissions
+      setTimeToLog(0);
+      setTimeDescription('');
+      setShowTimeInput(false);
 
-    // Update the task with the new time entry
-    onTaskUpdate({
-      ...task,
-      timeEntries: [...existingTimeEntries, newTimeEntry],
-    });
+      // Create the time entry data
+      const timeEntryData = {
+        hours,
+        description,
+        date,
+      };
 
-    // Reset form
-    setTimeToLog(0);
-    setTimeDescription('');
-    setShowTimeInput(false);
+      try {
+        // Make the POST request directly
+        const result = await logTimeToAPI(task.id, timeEntryData);
+
+        if (result) {
+          // Show success message
+          toast.success('Time logged successfully');
+
+          // Add to local time entries state to update UI without triggering task update
+          const newEntry = result.timeEntry || {
+            id: Date.now().toString(),
+            hours,
+            description,
+            date,
+            user: {
+              id: '1',
+              name: 'Current User',
+              avatar: '/avatars/03.png',
+            },
+          };
+
+          setLocalTimeEntries((prev) => {
+            return [...prev, newEntry];
+          });
+        }
+      } catch (error) {
+        console.error('Failed to log time:', error);
+        toast.error('Failed to log time');
+      }
+    } catch (error) {
+      console.error('Failed to log time:', error);
+      toast.error('Failed to log time');
+    }
   };
 
   // Calculate total logged hours
   const getTotalLoggedHours = () => {
-    if (!task?.timeEntries) return 0;
-    return task.timeEntries.reduce((total, entry) => {
+    if (!localTimeEntries.length) return 0;
+    return localTimeEntries.reduce((total, entry) => {
       return total + entry.hours;
     }, 0);
   };
@@ -758,13 +823,6 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 <div className='space-y-1.5'>
                   <div className='text-xs text-gray-500'>Time Tracking</div>
 
-                  {/* Show logged hours summary */}
-                  <div className='flex items-center gap-2 mb-1'>
-                    <Clock size={14} className='text-gray-500' />
-                    <span className='text-sm'>{getTotalLoggedHours()} hours logged</span>
-                  </div>
-
-                  {/* Form to log time */}
                   {showTimeInput ? (
                     <div className='space-y-2 mt-2'>
                       <div className='flex items-center gap-2'>
@@ -803,7 +861,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                         onChange={(e) => {
                           return setTimeDescription(e.target.value);
                         }}
-                        className='resize-none min-h-[60px]'
+                        className='resize-none min-h-[60px] text-sm'
                       />
                       <div className='flex justify-end gap-2'>
                         <Button
@@ -825,46 +883,49 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <Button
-                      variant='outline'
-                      className='w-full justify-start h-9'
-                      size='sm'
-                      onClick={() => {
-                        return setShowTimeInput(true);
-                      }}
-                    >
-                      + Log Hours
-                    </Button>
+                    <div>
+                      <div className='flex items-center justify-between'>
+                        <div className='flex items-center gap-2'>
+                          <Clock size={14} className='text-gray-500' />
+                          <span>{getTotalLoggedHours()} hours</span>
+                        </div>
+                      </div>
+                      <Button
+                        variant='outline'
+                        className='w-full justify-start h-9 mt-2'
+                        size='sm'
+                        onClick={() => {
+                          return setShowTimeInput(true);
+                        }}
+                      >
+                        + Log Hours
+                      </Button>
+                    </div>
                   )}
 
                   {/* Display time entries if they exist */}
-                  {task?.timeEntries && task.timeEntries.length > 0 && (
+                  {localTimeEntries.length > 0 && (
                     <div className='mt-3 space-y-2'>
                       <div className='text-xs text-gray-500'>Time History</div>
-                      <div className='space-y-2 max-h-[200px] overflow-y-auto'>
-                        {task.timeEntries.map((entry) => {
+                      <div className='space-y-2 max-h-[200px] overflow-y-auto pr-1'>
+                        {localTimeEntries.map((entry) => {
                           return (
-                            <div
-                              key={entry.id}
-                              className='flex justify-between items-start border rounded-sm p-2 text-sm'
-                            >
-                              <div>
-                                <div className='font-medium'>{entry.hours} hours</div>
-                                {entry.description && (
-                                  <p className='text-xs text-gray-600 mt-1'>{entry.description}</p>
-                                )}
+                            <div key={entry._id} className='border rounded-sm p-2 pb-1.5'>
+                              <div className='flex justify-between items-center'>
+                                <span>{entry.hours} hours</span>
+                                <span className='text-xs text-gray-500'>
+                                  {format(new Date(entry.date), 'MMM d')}
+                                </span>
                               </div>
-                              <div className='text-right'>
-                                <div className='text-xs text-gray-500'>
-                                  {format(new Date(entry.date), 'MMM d, yyyy')}
-                                </div>
-                                <div className='flex items-center gap-1 mt-1 text-xs text-gray-500'>
-                                  <Avatar className='h-4 w-4'>
-                                    <AvatarImage src={entry.user.avatar} alt={entry.user.name} />
-                                    <AvatarFallback>{entry.user.name.charAt(0)}</AvatarFallback>
-                                  </Avatar>
-                                  {entry.user.name}
-                                </div>
+                              {entry.description && (
+                                <p className='text-xs text-gray-600 mt-1'>{entry.description}</p>
+                              )}
+                              <div className='flex items-center gap-1 mt-1.5 text-xs text-gray-500'>
+                                <Avatar className='h-4 w-4'>
+                                  <AvatarImage src={entry.user.avatar} alt={entry.user.name} />
+                                  <AvatarFallback>{entry.user.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                {entry.user.name}
                               </div>
                             </div>
                           );
