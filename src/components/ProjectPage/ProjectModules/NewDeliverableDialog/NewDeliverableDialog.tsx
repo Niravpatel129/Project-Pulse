@@ -1,19 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight,
-  FileText,
-  Link as LinkIcon,
-  List,
-  ListChecks,
-  Menu,
-  Settings,
-  Type,
-  X,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileText, ListChecks, Menu, Settings, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 // Import tab components
@@ -41,16 +29,6 @@ const STAGES = [
     value: 'review-notes',
     icon: <ListChecks className='mr-2 opacity-70' size={15} aria-hidden='true' />,
   },
-];
-
-// Define custom field types
-const FIELD_TYPES = [
-  { id: 'shortText', label: 'Short Text', icon: <Type className='mr-2' size={16} /> },
-  { id: 'longText', label: 'Long Text', icon: <FileText className='mr-2' size={16} /> },
-  { id: 'bulletList', label: 'Bullet List', icon: <List className='mr-2' size={16} /> },
-  { id: 'numberList', label: 'Numbered List', icon: <ListChecks className='mr-2' size={16} /> },
-  { id: 'link', label: 'Link', icon: <LinkIcon className='mr-2' size={16} /> },
-  { id: 'specification', label: 'Specification', icon: <AlertCircle className='mr-2' size={16} /> },
 ];
 
 const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
