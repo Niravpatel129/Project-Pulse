@@ -56,6 +56,7 @@ const DeliverableContentTab = () => {
     moveFieldDown,
     updateFieldProperty,
     setHasUnsavedChanges,
+    setErrors,
   } = useDeliverableForm();
 
   // Track temporary state for current editing field only
@@ -318,10 +319,24 @@ const DeliverableContentTab = () => {
         return f.id === editingFieldId;
       });
 
-      // Save any unsaved link data when completing edit
-      if (field?.type === 'link' && tempLinkUrl.trim()) {
-        safeUpdateFieldProperty(field.id, 'text', tempLinkText);
-        safeUpdateFieldProperty(field.id, 'url', tempLinkUrl);
+      if (field) {
+        // Check if field has a label before completing
+        const fieldIndex = formData.customFields.findIndex((f: any) => {
+          return f.id === field.id;
+        });
+        const labelErrorKey = `customField_${fieldIndex}_label`;
+
+        // If field has no label, don't exit edit mode
+        if (!field.label || field.label.trim() === '') {
+          setErrors({ ...errors, [labelErrorKey]: 'Field label is required' });
+          return; // Don't close the editor
+        }
+
+        // Save any unsaved link data when completing edit
+        if (field.type === 'link' && tempLinkUrl.trim()) {
+          safeUpdateFieldProperty(field.id, 'text', tempLinkText);
+          safeUpdateFieldProperty(field.id, 'url', tempLinkUrl);
+        }
       }
 
       // Close the editor
@@ -596,15 +611,21 @@ const DeliverableContentTab = () => {
 
       case 'longText':
         return (
-          <Textarea
-            value={field.content || ''}
-            onChange={(e) => {
-              safeUpdateFieldProperty(field.id, 'content', e.target.value);
-            }}
-            placeholder='Enter detailed text'
-            className='w-full resize-none border-none shadow-none focus-visible:ring-0 px-0'
-            rows={4}
-          />
+          <>
+            <Textarea
+              value={field.content || ''}
+              onChange={(e) => {
+                safeUpdateFieldProperty(field.id, 'content', e.target.value);
+              }}
+              placeholder='Enter detailed text'
+              className={`w-full resize-none border-none shadow-none focus-visible:ring-0 px-0 ${
+                fieldError ? 'text-red-500' : ''
+              }`}
+              rows={4}
+              aria-invalid={!!fieldError}
+            />
+            {fieldError && <p className='text-xs text-red-500 mt-1'>{fieldError}</p>}
+          </>
         );
 
       case 'bulletList':
@@ -643,13 +664,16 @@ const DeliverableContentTab = () => {
                   return setTempListItem(e.target.value);
                 }}
                 placeholder='Add new item'
-                className='flex-1 border-none shadow-none focus-visible:ring-0 px-0'
+                className={`flex-1 border-none shadow-none focus-visible:ring-0 px-0 ${
+                  fieldError && (!field.items || field.items.length === 0) ? 'text-red-500' : ''
+                }`}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
                     addListItem(field);
                   }
                 }}
+                aria-invalid={!!fieldError && (!field.items || field.items.length === 0)}
               />
               <Button
                 type='button'
@@ -664,6 +688,10 @@ const DeliverableContentTab = () => {
                 <Plus size={16} />
               </Button>
             </div>
+
+            {fieldError && (!field.items || field.items.length === 0) && (
+              <p className='text-xs text-red-500 mt-1'>{fieldError}</p>
+            )}
           </div>
         );
 
@@ -702,8 +730,12 @@ const DeliverableContentTab = () => {
                   return setTempLinkUrl(e.target.value);
                 }}
                 placeholder='https://example.com'
-                className='border-none shadow-none focus-visible:ring-0 px-0'
+                className={`border-none shadow-none focus-visible:ring-0 px-0 ${
+                  fieldError ? 'text-red-500' : ''
+                }`}
+                aria-invalid={!!fieldError}
               />
+              {fieldError && <p className='text-xs text-red-500 mt-1'>{fieldError}</p>}
             </div>
           </div>
         );
@@ -838,15 +870,21 @@ const DeliverableContentTab = () => {
 
       case 'specification':
         return (
-          <Textarea
-            value={field.content || ''}
-            onChange={(e) => {
-              safeUpdateFieldProperty(field.id, 'content', e.target.value);
-            }}
-            placeholder='Enter important specification or requirement'
-            className='w-full resize-none border-none shadow-none focus-visible:ring-0 px-0'
-            rows={3}
-          />
+          <>
+            <Textarea
+              value={field.content || ''}
+              onChange={(e) => {
+                safeUpdateFieldProperty(field.id, 'content', e.target.value);
+              }}
+              placeholder='Enter important specification or requirement'
+              className={`w-full resize-none border-none shadow-none focus-visible:ring-0 px-0 ${
+                fieldError ? 'text-red-500' : ''
+              }`}
+              rows={3}
+              aria-invalid={!!fieldError}
+            />
+            {fieldError && <p className='text-xs text-red-500 mt-1'>{fieldError}</p>}
+          </>
         );
 
       case 'databaseItem':
@@ -1075,18 +1113,28 @@ const DeliverableContentTab = () => {
                     {/* Label/header area */}
                     <div className='flex-1'>
                       {isEditing ? (
-                        <Input
-                          value={field.label || ''}
-                          onChange={(e) => {
-                            safeUpdateFieldProperty(field.id, 'label', e.target.value);
-                          }}
-                          className='font-medium border-none shadow-none focus-visible:ring-0 px-0 text-base bg-transparent'
-                          placeholder={`Enter ${
-                            FIELD_TYPES.find((t) => {
-                              return t.id === field.type;
-                            })?.label || 'Section'
-                          } title`}
-                        />
+                        <>
+                          <Input
+                            value={field.label || ''}
+                            onChange={(e) => {
+                              safeUpdateFieldProperty(field.id, 'label', e.target.value);
+                            }}
+                            className={`font-medium border-none shadow-none focus-visible:ring-0 px-0 text-base bg-transparent ${
+                              errors[`customField_${index}_label`] ? 'text-red-500' : ''
+                            }`}
+                            placeholder={`Enter ${
+                              FIELD_TYPES.find((t) => {
+                                return t.id === field.type;
+                              })?.label || 'Section'
+                            } title`}
+                            aria-invalid={!!errors[`customField_${index}_label`]}
+                          />
+                          {errors[`customField_${index}_label`] && (
+                            <p className='text-xs text-red-500 mt-1'>
+                              {errors[`customField_${index}_label`]}
+                            </p>
+                          )}
+                        </>
                       ) : (
                         <h4
                           className='font-medium text-neutral-900 cursor-pointer'
@@ -1111,7 +1159,11 @@ const DeliverableContentTab = () => {
                           type='button'
                           size='sm'
                           onClick={completeFieldEdit}
-                          className='text-xs'
+                          className={`text-xs ${
+                            errors[`customField_${index}_label`]
+                              ? 'border-red-500 bg-red-50 hover:bg-red-100 text-red-600'
+                              : ''
+                          }`}
                         >
                           <Check size={14} className='mr-1' />
                           Done

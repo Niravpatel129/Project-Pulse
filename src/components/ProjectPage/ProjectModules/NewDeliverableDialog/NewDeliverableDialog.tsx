@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { newRequest } from '@/utils/newRequest';
 import { ChevronLeft, ChevronRight, FileText, ListChecks, Menu, Settings, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 // Import tab components
 import BasicDetailsTab from './Tabs/BasicDetailsTab';
@@ -163,7 +164,11 @@ const DeliverableDialogContent = ({
   // Navigate to next stage
   const handleNext = () => {
     if (!validateCurrentStage()) {
-      // Show an error toast or message
+      // Show error toast when validation fails
+      toast.error('Please fix the validation errors before continuing', {
+        description: 'Required fields are highlighted in red.',
+      });
+
       // Focus the first field with an error
       const firstErrorField = document.querySelector('[aria-invalid="true"]');
       if (firstErrorField) {
@@ -329,6 +334,9 @@ const DeliverableDialogContent = ({
       if (formData.customFields.length === 0) {
         // Not showing an error, but could implement if required
       } else {
+        // Track the first field with an error to auto-focus
+        let firstFieldWithError: string | null = null;
+
         // Validate that content fields have content
         formData.customFields.forEach((field: any, index: number) => {
           const fieldId = field.id;
@@ -336,6 +344,7 @@ const DeliverableDialogContent = ({
 
           if (!field.label || field.label.trim() === '') {
             newErrors[`${fieldName}_label`] = 'Field label is required';
+            if (!firstFieldWithError) firstFieldWithError = fieldId;
           }
 
           // Check for content based on type
@@ -347,6 +356,7 @@ const DeliverableDialogContent = ({
                 newErrors[`${fieldName}_content`] = `Content is required for "${
                   field.label || 'this field'
                 }"`;
+                if (!firstFieldWithError) firstFieldWithError = fieldId;
               }
               break;
             case 'bulletList':
@@ -355,6 +365,7 @@ const DeliverableDialogContent = ({
                 newErrors[`${fieldName}_items`] = `At least one item is required for "${
                   field.label || 'this list'
                 }"`;
+                if (!firstFieldWithError) firstFieldWithError = fieldId;
               }
               break;
             case 'link':
@@ -362,10 +373,16 @@ const DeliverableDialogContent = ({
                 newErrors[`${fieldName}_url`] = `URL is required for "${
                   field.label || 'this link'
                 }"`;
+                if (!firstFieldWithError) firstFieldWithError = fieldId;
               }
               break;
           }
         });
+
+        // If there are errors, put the first field with an error into edit mode
+        if (firstFieldWithError) {
+          setEditingFieldId(firstFieldWithError);
+        }
       }
     } else if (currentStage === 'review-notes') {
       // Validation for review stage isn't typically needed
