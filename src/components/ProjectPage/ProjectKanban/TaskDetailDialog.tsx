@@ -17,6 +17,7 @@ import { Attachment, Column, Comment, Task, TimeEntry } from '@/services/kanbanA
 import { newRequest } from '@/utils/newRequest';
 import { format } from 'date-fns';
 import {
+  Calendar,
   ChevronDown,
   ChevronUp,
   Clock,
@@ -30,6 +31,29 @@ import {
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import FileUploadManagerModal from '../FileComponents/FileUploadManagerModal';
+
+// Helper function to format hours with proper singular/plural form
+const formatHours = (hours: number): string => {
+  if (hours === 0) return '0 hours';
+
+  // For whole hours
+  if (hours % 1 === 0) {
+    return hours === 1 ? '1 hour' : `${hours} hours`;
+  }
+
+  // For values less than 1 hour or with decimal part, convert to minutes
+  const totalMinutes = Math.round(hours * 60);
+  if (totalMinutes < 60) {
+    return `${totalMinutes} ${totalMinutes === 1 ? 'minute' : 'minutes'}`;
+  }
+
+  // For mixed hours and minutes (e.g., 1h 30m)
+  const wholeHours = Math.floor(hours);
+  const minutes = Math.round((hours - wholeHours) * 60);
+
+  const hourText = wholeHours === 1 ? '1 hour' : `${wholeHours} hours`;
+  return minutes > 0 ? `${hourText} ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}` : hourText;
+};
 
 // Define props interface
 interface TaskDetailDialogProps {
@@ -888,15 +912,16 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                           onChange={(e) => {
                             return setTimeToLog(parseFloat(e.target.value) || 0);
                           }}
-                          className='w-20 h-9'
+                          className='w-full h-9'
                         />
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button variant='outline' className='h-9'>
+                              <Calendar />
                               {format(timeEntryDate, 'MMM d')}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className='w-auto p-0'>
+                          <PopoverContent className='w-full p-0'>
                             <CalendarComponent
                               mode='single'
                               selected={timeEntryDate}
@@ -940,7 +965,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                       <div className='flex items-center justify-between'>
                         <div className='flex items-center gap-2 text-sm text-[#020817] font-medium'>
                           <Clock size={14} className='text-gray-500' />
-                          <span>{getTotalLoggedHours()} hours</span>
+                          <span>{formatHours(getTotalLoggedHours())}</span>
                         </div>
                       </div>
                       <Button
@@ -972,7 +997,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                               }`}
                             >
                               <div className='flex justify-between items-center text-sm text-[#020817] font-medium'>
-                                <span>{entry.hours} hours</span>
+                                <span>{formatHours(entry.hours)}</span>
                                 <div className='flex items-center gap-1'>
                                   <span className='text-xs text-gray-500'>
                                     {format(new Date(entry.date), 'MMM d')}
