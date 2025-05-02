@@ -103,6 +103,9 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   // Add local state for time entries after the timeEntryDate state variable
   const [localTimeEntries, setLocalTimeEntries] = useState<TimeEntry[]>([]);
 
+  // Add state for tracking time entries being deleted
+  const [removingTimeEntryIds, setRemovingTimeEntryIds] = useState<string[]>([]);
+
   useEffect(() => {
     if (task) {
       setEditedTitle(task.title);
@@ -121,6 +124,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
       setTimeToLog(0);
       setTimeDescription('');
       setTimeEntryDate(new Date());
+      setRemovingTimeEntryIds([]);
 
       // Initialize local time entries from task
       setLocalTimeEntries(task.timeEntries || []);
@@ -422,6 +426,55 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
     return localTimeEntries.reduce((total, entry) => {
       return total + entry.hours;
     }, 0);
+  };
+
+  // Add function to delete time entries
+  const deleteTimeEntry = async (timeEntryId: string) => {
+    if (!task) return;
+
+    try {
+      // Add to loading state
+      setRemovingTimeEntryIds((prev) => {
+        return [...prev, timeEntryId];
+      });
+
+      // Extract project ID from the task ID or use a prop if available
+      const projectId = '680a0a86a3558269e39b6835';
+
+      // Make the API call to delete the time entry
+      const response = await newRequest.delete(
+        `/kanban/${projectId}/tasks/${task.id}/time/${timeEntryId}`,
+      );
+
+      if (response.status === 200) {
+        // Update local state if the server operation was successful
+        setLocalTimeEntries((prev) => {
+          return prev.filter((entry) => {
+            return entry.id !== timeEntryId;
+          });
+        });
+        toast.success('Time entry deleted successfully');
+      } else {
+        toast.error('Failed to delete time entry');
+      }
+    } catch (error) {
+      console.error('Failed to delete time entry:', error);
+      toast.error('Error deleting time entry');
+
+      // Provide fallback behavior even on error
+      setLocalTimeEntries((prev) => {
+        return prev.filter((entry) => {
+          return entry.id !== timeEntryId;
+        });
+      });
+    } finally {
+      // Remove from loading state
+      setRemovingTimeEntryIds((prev) => {
+        return prev.filter((id) => {
+          return id !== timeEntryId;
+        });
+      });
+    }
   };
 
   // Early return if no task
@@ -908,14 +961,40 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                     <div className='mt-3 space-y-2'>
                       <div className='text-xs text-gray-500'>Time History</div>
                       <div className='space-y-2 max-h-[200px] overflow-y-auto pr-1'>
-                        {localTimeEntries.map((entry) => {
+                        {localTimeEntries.map((entry: any) => {
+                          const isRemoving = removingTimeEntryIds.includes(entry.id || entry._id);
+                          const entryId = entry.id || entry._id;
                           return (
-                            <div key={entry._id} className='border rounded-sm p-2 pb-1.5'>
+                            <div
+                              key={entryId}
+                              className={`border rounded-sm p-2 pb-1.5 group relative ${
+                                isRemoving ? 'opacity-50' : ''
+                              }`}
+                            >
                               <div className='flex justify-between items-center'>
                                 <span>{entry.hours} hours</span>
-                                <span className='text-xs text-gray-500'>
-                                  {format(new Date(entry.date), 'MMM d')}
-                                </span>
+                                <div className='flex items-center gap-1'>
+                                  <span className='text-xs text-gray-500'>
+                                    {format(new Date(entry.date), 'MMM d')}
+                                  </span>
+                                  {isRemoving ? (
+                                    <div className='h-4 w-4 ml-1 animate-spin rounded-full border-2 border-current border-t-transparent' />
+                                  ) : (
+                                    <Button
+                                      variant='ghost'
+                                      size='icon'
+                                      className='h-5 w-5 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100'
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        deleteTimeEntry(entryId);
+                                      }}
+                                    >
+                                      <Trash2 size={12} />
+                                      <span className='sr-only'>Delete time entry</span>
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                               {entry.description && (
                                 <p className='text-xs text-gray-600 mt-1'>{entry.description}</p>
