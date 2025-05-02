@@ -8,6 +8,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { newRequest } from '@/utils/newRequest';
+import { useQuery } from '@tanstack/react-query';
 import {
   AlertCircle,
   Check,
@@ -224,226 +226,18 @@ const PreviewModal = ({ isOpen, onClose, attachment }: PreviewModalProps) => {
 };
 
 // Type definitions for database items
-interface ProductItem {
+interface DatabaseItem {
   id: string;
-  name: string;
-  sku: string;
-  price: string;
-  category: string;
-  status: string;
-  description: string;
-  imageUrl: string;
-}
-
-interface CustomerItem {
-  id: string;
-  name: string;
-  contactPerson: string;
-  email: string;
-  phone: string;
-  status: string;
-  description: string;
-  imageUrl: string;
-}
-
-interface ProjectItem {
-  id: string;
-  name: string;
-  client: string;
-  deadline: string;
-  status: string;
-  description: string;
-  imageUrl: string;
-}
-
-interface InvoiceItem {
-  id: string;
-  invoiceNumber: string;
-  client: string;
-  amount: string;
-  date: string;
-  status: string;
-  description: string;
-  imageUrl: string;
   name?: string;
+  invoiceNumber?: string;
+  [key: string]: any;
 }
-
-type DatabaseItem = ProductItem | CustomerItem | ProjectItem | InvoiceItem;
 
 interface DatabaseItems {
-  products: ProductItem[];
-  customers: CustomerItem[];
-  projects: ProjectItem[];
-  invoices: InvoiceItem[];
+  [key: string]: DatabaseItem[];
 }
 
-// Mock products for database item type
-const mockDatabases = [
-  {
-    id: 'products',
-    name: 'Product Catalog',
-    description: 'All available products and services',
-    icon: 'cube',
-  },
-  {
-    id: 'customers',
-    name: 'Customer Database',
-    description: 'Client and customer information',
-    icon: 'users',
-  },
-  {
-    id: 'projects',
-    name: 'Project Repository',
-    description: 'All active and completed projects',
-    icon: 'folder',
-  },
-  {
-    id: 'invoices',
-    name: 'Invoice Records',
-    description: 'Billing and payment information',
-    icon: 'receipt',
-  },
-];
-
-// Mock database items
-const mockDatabaseItems: DatabaseItems = {
-  products: [
-    {
-      id: 'p1',
-      name: 'Premium Widget',
-      sku: 'WDG-001',
-      price: '$99.99',
-      category: 'Widgets',
-      status: 'In Stock',
-      description: 'High-quality widget with premium features and extended warranty.',
-      imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop',
-    },
-    {
-      id: 'p2',
-      name: 'Basic Gadget',
-      sku: 'GDG-101',
-      price: '$49.99',
-      category: 'Gadgets',
-      status: 'In Stock',
-      description: 'Affordable gadget for everyday use with standard features.',
-      imageUrl: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=300&h=300&fit=crop',
-    },
-    {
-      id: 'p3',
-      name: 'Deluxe Gizmo',
-      sku: 'GZM-202',
-      price: '$129.99',
-      category: 'Gizmos',
-      status: 'Low Stock',
-      description: 'Deluxe edition gizmo with advanced functionality and premium materials.',
-      imageUrl: 'https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?w=300&h=300&fit=crop',
-    },
-    {
-      id: 'p4',
-      name: 'Smart Doohickey',
-      sku: 'DHK-505',
-      price: '$79.99',
-      category: 'Smart Devices',
-      status: 'In Stock',
-      description: 'Intelligent doohickey with smart connectivity and voice control.',
-      imageUrl: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=300&h=300&fit=crop',
-    },
-  ],
-  customers: [
-    {
-      id: 'c1',
-      name: 'Acme Corporation',
-      contactPerson: 'John Smith',
-      email: 'john@acme.com',
-      phone: '(555) 123-4567',
-      status: 'Active',
-      description: 'Large enterprise client with multiple ongoing projects.',
-      imageUrl: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=300&h=300&fit=crop',
-    },
-    {
-      id: 'c2',
-      name: 'TechStart Inc.',
-      contactPerson: 'Sarah Johnson',
-      email: 'sarah@techstart.io',
-      phone: '(555) 987-6543',
-      status: 'Active',
-      description: 'Emerging tech startup focused on AI applications.',
-      imageUrl: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=300&h=300&fit=crop',
-    },
-    {
-      id: 'c3',
-      name: 'Global Logistics Ltd.',
-      contactPerson: 'Michael Chen',
-      email: 'mchen@globallogistics.com',
-      phone: '(555) 456-7890',
-      status: 'Inactive',
-      description: 'International shipping and logistics company.',
-      imageUrl: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=300&h=300&fit=crop',
-    },
-  ],
-  projects: [
-    {
-      id: 'pr1',
-      name: 'Website Redesign',
-      client: 'Acme Corporation',
-      deadline: '2023-12-15',
-      status: 'In Progress',
-      description: 'Complete overhaul of corporate website with new branding and features.',
-      imageUrl: 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=300&h=300&fit=crop',
-    },
-    {
-      id: 'pr2',
-      name: 'Mobile App Development',
-      client: 'TechStart Inc.',
-      deadline: '2024-01-30',
-      status: 'Planning',
-      description: 'Cross-platform mobile application for product management.',
-      imageUrl: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=300&h=300&fit=crop',
-    },
-    {
-      id: 'pr3',
-      name: 'ERP Integration',
-      client: 'Global Logistics Ltd.',
-      deadline: '2023-11-10',
-      status: 'Completed',
-      description: 'Integration of shipping systems with enterprise resource planning software.',
-      imageUrl: 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=300&h=300&fit=crop',
-    },
-  ],
-  invoices: [
-    {
-      id: 'inv1',
-      invoiceNumber: 'INV-2023-101',
-      client: 'Acme Corporation',
-      amount: '$12,500.00',
-      date: '2023-09-15',
-      status: 'Paid',
-      description: 'Website design phase 1 milestone payment.',
-      imageUrl: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=300&h=300&fit=crop',
-    },
-    {
-      id: 'inv2',
-      invoiceNumber: 'INV-2023-102',
-      client: 'TechStart Inc.',
-      amount: '$8,750.00',
-      date: '2023-10-01',
-      status: 'Pending',
-      description: 'Mobile app development initial payment.',
-      imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=300&h=300&fit=crop',
-    },
-    {
-      id: 'inv3',
-      invoiceNumber: 'INV-2023-103',
-      client: 'Global Logistics Ltd.',
-      amount: '$15,000.00',
-      date: '2023-08-22',
-      status: 'Overdue',
-      description: 'ERP integration final payment.',
-      imageUrl: 'https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=300&h=300&fit=crop',
-    },
-  ],
-};
-
+// Replace mock databases with real database connection
 const DeliverableContentTab = ({
   formData,
   errors,
@@ -467,6 +261,7 @@ const DeliverableContentTab = ({
   const [dbSelectedItem, setDbSelectedItem] = useState<any>(null);
   const [dbTempAlignment, setDbTempAlignment] = useState('left');
   const [selectedDatabaseId, setSelectedDatabaseId] = useState<string | null>(null);
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({});
 
   // Database modal state
   const [isDatabaseModalOpen, setIsDatabaseModalOpen] = useState(false);
@@ -483,12 +278,137 @@ const DeliverableContentTab = ({
   const focusInitializedRef = useRef<boolean>(false);
   const activeFieldIdRef = useRef<string | null>(null);
 
+  // Fetch tables using React Query
+  const { data: tables = [] } = useQuery({
+    queryKey: ['tables'],
+    queryFn: async () => {
+      const response = await newRequest.get('/tables/workspace');
+      return response.data.data;
+    },
+  });
+
+  // Fetch items for selected database
+  const { data: databaseItemsRaw = [] } = useQuery({
+    queryKey: ['tableItems', selectedDatabaseId],
+    queryFn: async () => {
+      if (!selectedDatabaseId) return [];
+      const response = await newRequest.get(`/tables/${selectedDatabaseId}/records`);
+      return response.data.data;
+    },
+    enabled: !!selectedDatabaseId,
+  });
+
+  // Also fetch column definitions to understand what each field represents
+  const { data: tableColumns = [] } = useQuery<any[]>({
+    queryKey: ['tableColumns', selectedDatabaseId],
+    queryFn: async () => {
+      if (!selectedDatabaseId) return [];
+      const response = await newRequest.get(`/tables/${selectedDatabaseId}`);
+      return response.data.data?.columns || [];
+    },
+    enabled: !!selectedDatabaseId,
+  });
+
+  // Set up initial column visibility when columns change
+  useEffect(() => {
+    if (tableColumns.length > 0) {
+      const initialVisibility: Record<string, boolean> = {};
+      tableColumns.forEach((column: any) => {
+        // By default show all columns except internal/system ones
+        const isSystem = ['id', 'position', '_id', '__v', 'createdAt', 'updatedAt'].includes(
+          column.name,
+        );
+        initialVisibility[column.id] = !isSystem;
+      });
+      setVisibleColumns(initialVisibility);
+    }
+  }, [tableColumns]);
+
+  // Process raw records into usable format
+  const databaseItems = databaseItemsRaw.map((row: any) => {
+    // Create a base item with row ID
+    const item: any = {
+      id: row.rowId,
+      position: row.position,
+    };
+
+    // Process each record and combine values
+    row.records.forEach((record: any) => {
+      // Find the column definition to get the column name
+      const column = tableColumns.find((col: any) => {
+        return col.id === record.columnId;
+      });
+      if (column && record.values[record.columnId] !== undefined) {
+        // Use column name as the key if available, otherwise use columnId
+        const key = column.name || record.columnId;
+        item[key] = record.values[record.columnId];
+
+        // If this is the first column or marked as primary, also set it as name for convenience
+        if (column.isPrimaryKey || column.order === 0) {
+          item.name = record.values[record.columnId];
+        }
+      }
+    });
+
+    return item;
+  });
+
+  // Transform tables into the format expected by the component
+  const databases = tables.map((table: any) => {
+    return {
+      id: table._id,
+      name: table.name,
+      description: table.description || 'No description',
+      icon: getIconForTableType(table.name),
+    };
+  });
+
+  // Function to determine icon based on table name
+  function getIconForTableType(tableName: string) {
+    const name = tableName.toLowerCase();
+    if (name.includes('product') || name.includes('item') || name.includes('inventory'))
+      return 'product';
+    if (name.includes('customer') || name.includes('client') || name.includes('user'))
+      return 'customer';
+    if (name.includes('project') || name.includes('task')) return 'project';
+    if (name.includes('invoice') || name.includes('payment') || name.includes('bill'))
+      return 'invoice';
+    if (name.includes('flag')) return 'flag';
+    if (name.includes('order')) return 'order';
+    return 'database';
+  }
+
   // Function to safely block toggling edit mode temporarily
   const temporarilyPreventEditToggle = () => {
     preventEditToggle.current = true;
     setTimeout(() => {
       preventEditToggle.current = false;
     }, 300); // Block for 300ms after a selection
+  };
+
+  // Function to get database icon based on table name/type
+  const getDatabaseIcon = (tableName: string) => {
+    const name = typeof tableName === 'string' ? tableName.toLowerCase() : 'database';
+
+    if (name.includes('product') || name.includes('item') || name.includes('inventory')) {
+      return <FileType className='h-4 w-4 mr-2' />;
+    }
+    if (name.includes('customer') || name.includes('client') || name.includes('user')) {
+      return <FileText className='h-4 w-4 mr-2' />;
+    }
+    if (name.includes('project') || name.includes('task')) {
+      return <FileIcon className='h-4 w-4 mr-2' />;
+    }
+    if (name.includes('invoice') || name.includes('payment') || name.includes('bill')) {
+      return <FileText className='h-4 w-4 mr-2' />;
+    }
+    if (name.includes('flag')) {
+      return <FileType className='h-4 w-4 mr-2' />;
+    }
+    if (name.includes('order')) {
+      return <FileText className='h-4 w-4 mr-2' />;
+    }
+    return <Database className='h-4 w-4 mr-2' />;
   };
 
   // Open database selection modal for a specific field
@@ -501,6 +421,12 @@ const DeliverableContentTab = ({
       setDbSelectedItem(field.selectedItem || null);
       setSelectedDatabaseId(field.selectedDatabaseId || null);
       setDbTempAlignment(field.alignment || 'left');
+
+      // Load visible columns if they exist
+      if (field.visibleColumns) {
+        setVisibleColumns(field.visibleColumns);
+      }
+
       setDbSearchTerm('');
 
       // Set the field we're editing
@@ -514,9 +440,25 @@ const DeliverableContentTab = ({
   // Save database selections from modal
   const saveDatabaseSelections = () => {
     if (editingDatabaseFieldId) {
+      // Save the selected item
       safeUpdateFieldProperty(editingDatabaseFieldId, 'selectedItem', dbSelectedItem);
+
+      // Save the database ID
       safeUpdateFieldProperty(editingDatabaseFieldId, 'selectedDatabaseId', selectedDatabaseId);
+
+      // Save the alignment
       safeUpdateFieldProperty(editingDatabaseFieldId, 'alignment', dbTempAlignment);
+
+      // Save visible columns configuration
+      safeUpdateFieldProperty(editingDatabaseFieldId, 'visibleColumns', visibleColumns);
+
+      // Save the table metadata for future reference
+      const selectedTable = tables.find((table: any) => {
+        return table._id === selectedDatabaseId;
+      });
+      if (selectedTable) {
+        safeUpdateFieldProperty(editingDatabaseFieldId, 'selectedTableName', selectedTable.name);
+      }
 
       // Close the modal
       setIsDatabaseModalOpen(false);
@@ -669,22 +611,6 @@ const DeliverableContentTab = ({
     prevFieldsLengthRef.current = currentFieldsLength;
   }, [formData.customFields.length, setEditingFieldId]);
 
-  // Function to get database icon
-  const getDatabaseIcon = (iconName: string) => {
-    switch (iconName) {
-      case 'cube':
-        return <FileType className='h-4 w-4 mr-2' />;
-      case 'users':
-        return <FileText className='h-4 w-4 mr-2' />;
-      case 'folder':
-        return <FileIcon className='h-4 w-4 mr-2' />;
-      case 'receipt':
-        return <FileText className='h-4 w-4 mr-2' />;
-      default:
-        return <Database className='h-4 w-4 mr-2' />;
-    }
-  };
-
   // Function to format field content based on type for display in view mode
   const getFormattedContent = (field: any) => {
     switch (field.type) {
@@ -814,48 +740,15 @@ const DeliverableContentTab = ({
                       : 'w-full'
                   }`}
                 >
-                  {field.selectedItem.imageUrl && (
-                    <div className='relative w-12 h-12 rounded overflow-hidden flex-shrink-0'>
-                      <img
-                        src={field.selectedItem.imageUrl}
-                        alt={
-                          'name' in field.selectedItem
-                            ? field.selectedItem.name
-                            : 'invoiceNumber' in field.selectedItem
-                            ? field.selectedItem.invoiceNumber
-                            : ''
-                        }
-                        className='w-full h-full object-cover'
-                      />
-                    </div>
-                  )}
                   <div className='flex-1'>
                     <div className='font-medium text-neutral-900'>
-                      {'name' in field.selectedItem
-                        ? field.selectedItem.name
-                        : 'invoiceNumber' in field.selectedItem
-                        ? field.selectedItem.invoiceNumber
-                        : ''}
+                      {field.selectedItem.name || findDisplayValue(field.selectedItem)}
                     </div>
-                    <div className='text-xs text-neutral-600'>
-                      {field.selectedDatabaseId === 'products' && 'sku' in field.selectedItem
-                        ? `SKU: ${field.selectedItem.sku}`
-                        : field.selectedDatabaseId === 'customers' &&
-                          'contactPerson' in field.selectedItem
-                        ? `Contact: ${field.selectedItem.contactPerson}`
-                        : field.selectedDatabaseId === 'projects' && 'client' in field.selectedItem
-                        ? `Client: ${field.selectedItem.client}`
-                        : field.selectedDatabaseId === 'invoices' && 'client' in field.selectedItem
-                        ? `Client: ${field.selectedItem.client}`
-                        : ''}
-                    </div>
+                    <DisplaySecondaryValues
+                      item={field.selectedItem}
+                      fieldVisibleColumns={field.visibleColumns}
+                    />
                   </div>
-                  {field.selectedDatabaseId === 'products' && 'price' in field.selectedItem && (
-                    <div className='text-sm font-medium'>{field.selectedItem.price}</div>
-                  )}
-                  {field.selectedDatabaseId === 'invoices' && 'amount' in field.selectedItem && (
-                    <div className='text-sm font-medium'>{field.selectedItem.amount}</div>
-                  )}
                 </div>
               </div>
             ) : (
@@ -867,6 +760,72 @@ const DeliverableContentTab = ({
       default:
         return <p>{field.content}</p>;
     }
+  };
+
+  // Helper function to find a good display value for an item
+  const findDisplayValue = (item: any) => {
+    // Try to find a string field other than id or position
+    const stringFields = Object.entries(item)
+      .filter(([key, value]) => {
+        return typeof value === 'string' && key !== 'id' && key !== 'position';
+      })
+      .map(([_, value]) => {
+        return value;
+      });
+
+    return stringFields[0] || `Item ${item.id}`;
+  };
+
+  // Helper component to display secondary values
+  const DisplaySecondaryValues = ({
+    item,
+    fieldVisibleColumns,
+  }: {
+    item: any;
+    fieldVisibleColumns?: Record<string, boolean>;
+  }) => {
+    // Get all fields except primary ones
+    const secondaryFields = Object.entries(item).filter(([key, value]) => {
+      return (
+        typeof value !== 'object' &&
+        key !== 'id' &&
+        key !== 'position' &&
+        key !== 'name' &&
+        // Skip the field used as the primary display value if it's not "name"
+        (!item.name || value !== findDisplayValue(item))
+      );
+    });
+
+    if (secondaryFields.length === 0) return null;
+
+    return (
+      <div className='text-xs space-y-1 text-neutral-600'>
+        {secondaryFields.map(([key, value]) => {
+          // Find column definition to get proper name
+          const column = tableColumns.find((col: any) => {
+            return col.id === key;
+          });
+          const displayName = column?.name || key;
+
+          // Check if this column should be visible based on field settings (if provided)
+          if (column && fieldVisibleColumns && fieldVisibleColumns[column.id] === false) {
+            return null;
+          }
+
+          // Check if this column should be visible based on current modal settings
+          if (column && !fieldVisibleColumns && visibleColumns[column.id] === false) {
+            return null;
+          }
+
+          return (
+            <div key={key} className='flex items-center'>
+              <span className='font-medium text-neutral-700 min-w-[80px]'>{displayName}:</span>
+              <span>{String(value)}</span>
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   // Render edit mode content based on field type
@@ -1159,50 +1118,15 @@ const DeliverableContentTab = ({
               {field.selectedItem ? (
                 <div className='w-full'>
                   <div className='flex items-center gap-3'>
-                    {field.selectedItem.imageUrl && (
-                      <div className='relative w-12 h-12 rounded overflow-hidden flex-shrink-0'>
-                        <img
-                          src={field.selectedItem.imageUrl}
-                          alt={
-                            'name' in field.selectedItem
-                              ? field.selectedItem.name
-                              : 'invoiceNumber' in field.selectedItem
-                              ? field.selectedItem.invoiceNumber
-                              : ''
-                          }
-                          className='w-full h-full object-cover'
-                        />
-                      </div>
-                    )}
                     <div className='flex-1'>
                       <div className='font-medium text-neutral-900'>
-                        {'name' in field.selectedItem
-                          ? field.selectedItem.name
-                          : 'invoiceNumber' in field.selectedItem
-                          ? field.selectedItem.invoiceNumber
-                          : ''}
+                        {field.selectedItem.name || findDisplayValue(field.selectedItem)}
                       </div>
-                      <div className='text-xs text-neutral-600'>
-                        {field.selectedDatabaseId === 'products' && 'sku' in field.selectedItem
-                          ? `SKU: ${field.selectedItem.sku}`
-                          : field.selectedDatabaseId === 'customers' &&
-                            'contactPerson' in field.selectedItem
-                          ? `Contact: ${field.selectedItem.contactPerson}`
-                          : field.selectedDatabaseId === 'projects' &&
-                            'client' in field.selectedItem
-                          ? `Client: ${field.selectedItem.client}`
-                          : field.selectedDatabaseId === 'invoices' &&
-                            'client' in field.selectedItem
-                          ? `Client: ${field.selectedItem.client}`
-                          : ''}
-                      </div>
+                      <DisplaySecondaryValues
+                        item={field.selectedItem}
+                        fieldVisibleColumns={field.visibleColumns}
+                      />
                     </div>
-                    {field.selectedDatabaseId === 'products' && 'price' in field.selectedItem && (
-                      <div className='text-sm font-medium'>{field.selectedItem.price}</div>
-                    )}
-                    {field.selectedDatabaseId === 'invoices' && 'amount' in field.selectedItem && (
-                      <div className='text-sm font-medium'>{field.selectedItem.amount}</div>
-                    )}
                   </div>
 
                   <Button
@@ -1223,7 +1147,7 @@ const DeliverableContentTab = ({
                   <Database className='h-12 w-12 mx-auto text-neutral-400 mb-3' />
                   <p className='text-neutral-600 font-medium mb-2'>Select a Database Item</p>
                   <p className='text-neutral-500 text-sm mb-4'>
-                    Choose from products, customers, projects, or invoices
+                    Choose from available database tables
                   </p>
                   <Button>
                     <Database className='w-4 h-4 mr-2' />
@@ -1326,6 +1250,139 @@ const DeliverableContentTab = ({
 
     // Set the new field as editing
     setEditingFieldId(fieldId);
+  };
+
+  // Database modal header that shows selected database info
+  const DatabaseModalHeader = () => {
+    if (!selectedDatabaseId) return null;
+
+    const selectedTable = tables.find((table: any) => {
+      return table._id === selectedDatabaseId;
+    });
+    if (!selectedTable) return null;
+
+    return (
+      <div className='py-2 px-3 bg-neutral-50 rounded border border-neutral-200 mb-3 flex items-center'>
+        {getDatabaseIcon(selectedTable.name)}
+        <div>
+          <div className='font-medium'>{selectedTable.name}</div>
+          <div className='text-xs text-neutral-500'>
+            {tableColumns.length} columns • {databaseItems.length} records
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Add column visibility settings UI to the database modal
+  const ColumnVisibilitySettings = () => {
+    if (!selectedDatabaseId || tableColumns.length === 0) return null;
+
+    return (
+      <div className='mt-3 border-t border-neutral-100 pt-3'>
+        <div className='flex items-center justify-between mb-2'>
+          <div className='text-sm font-medium'>Column Visibility</div>
+          <div className='flex gap-2'>
+            <button
+              className='text-xs text-blue-600 hover:underline'
+              onClick={() => {
+                const allVisible = { ...visibleColumns };
+                tableColumns.forEach((col: any) => {
+                  allVisible[col.id] = true;
+                });
+                setVisibleColumns(allVisible);
+              }}
+            >
+              Show All
+            </button>
+            <span className='text-neutral-300'>|</span>
+            <button
+              className='text-xs text-blue-600 hover:underline'
+              onClick={() => {
+                // Always keep at least primary column visible
+                const onlyPrimary = { ...visibleColumns };
+                tableColumns.forEach((col: any) => {
+                  onlyPrimary[col.id] = col.isPrimaryKey || col.order === 0;
+                });
+                setVisibleColumns(onlyPrimary);
+              }}
+            >
+              Hide All
+            </button>
+          </div>
+        </div>
+
+        <div className='flex flex-wrap gap-2 mt-2'>
+          {tableColumns.map((column: any) => {
+            return (
+              <label
+                key={column.id}
+                className='flex items-center bg-white px-2 py-1 rounded border border-neutral-200 cursor-pointer hover:bg-neutral-50'
+              >
+                <input
+                  type='checkbox'
+                  checked={visibleColumns[column.id] !== false}
+                  onChange={(e) => {
+                    setVisibleColumns({
+                      ...visibleColumns,
+                      [column.id]: e.target.checked,
+                    });
+                  }}
+                  className='mr-1.5 h-3 w-3'
+                />
+                <span className='text-xs'>{column.name}</span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // Component to display item details with visible columns
+  const DisplayItemDetails = ({ item }: { item: any }) => {
+    // Get all fields except system fields
+    const displayFields = Object.entries(item).filter(([key, value]) =>
+      // Skip system/internal fields
+      {
+        return !['id', 'position', '_id', '__v'].includes(key) && typeof value !== 'object';
+      },
+    );
+
+    // Find the main/primary field to display prominently
+    const primaryValue = item.name || findDisplayValue(item);
+
+    // Get the remaining fields to potentially display
+    const secondaryFields = displayFields.filter(([key, value]) => {
+      return value !== primaryValue && key !== 'name';
+    });
+
+    return (
+      <>
+        <div className='font-medium truncate mb-1'>{primaryValue || `Item ${item.id}`}</div>
+
+        <div className='grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-neutral-500'>
+          {secondaryFields.map(([key, value]) => {
+            // Find column definition to get proper name
+            const column = tableColumns.find((col: any) => {
+              return col.id === key;
+            });
+            const displayName = column?.name || key;
+
+            // Check if this column should be visible
+            if (column && visibleColumns[column.id] === false) {
+              return null;
+            }
+
+            return (
+              <div key={key} className='truncate'>
+                <span className='text-neutral-400'>{displayName}:</span> {String(value)}
+              </div>
+            );
+          })}
+        </div>
+      </>
+    );
   };
 
   return (
@@ -1593,7 +1650,7 @@ const DeliverableContentTab = ({
                   className='w-full h-10 px-3 mt-1 rounded-md border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                 >
                   <option value=''>Select a database</option>
-                  {mockDatabases.map((database) => {
+                  {databases.map((database) => {
                     return (
                       <option key={database.id} value={database.id}>
                         {database.name}
@@ -1602,15 +1659,39 @@ const DeliverableContentTab = ({
                   })}
                 </select>
               </div>
+
+              {/* Show column information for selected database */}
+              {selectedDatabaseId && tableColumns.length > 0 && (
+                <div className='mt-2 text-xs text-neutral-500 border border-neutral-100 rounded p-2 bg-neutral-50'>
+                  <p className='font-medium mb-1'>Table Columns:</p>
+                  <div className='flex flex-wrap gap-1'>
+                    {tableColumns.map((col: any) => {
+                      return (
+                        <span
+                          key={col.id}
+                          className='bg-white px-2 py-0.5 rounded border border-neutral-200'
+                        >
+                          {col.name}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Column visibility settings */}
+              {selectedDatabaseId && tableColumns.length > 0 && <ColumnVisibilitySettings />}
             </div>
 
             <div className='p-4 flex-grow overflow-auto'>
               {selectedDatabaseId ? (
                 <>
+                  <DatabaseModalHeader />
+
                   <div className='mb-4'>
                     <Input
                       type='text'
-                      placeholder={`Search ${selectedDatabaseId}...`}
+                      placeholder={`Search items...`}
                       value={dbSearchTerm}
                       onChange={(e) => {
                         return setDbSearchTerm(e.target.value);
@@ -1618,76 +1699,48 @@ const DeliverableContentTab = ({
                     />
                   </div>
 
-                  <div className='grid grid-cols-1 gap-2'>
-                    {mockDatabaseItems[selectedDatabaseId as keyof typeof mockDatabaseItems]
-                      .filter((item) => {
-                        const searchLower = dbSearchTerm.toLowerCase();
-                        return (
-                          item.name?.toLowerCase().includes(searchLower) ||
-                          ('invoiceNumber' in item &&
-                            item.invoiceNumber.toLowerCase().includes(searchLower)) ||
-                          ('sku' in item && item.sku.toLowerCase().includes(searchLower))
-                        );
-                      })
-                      .map((item) => {
-                        return (
-                          <div
-                            key={item.id}
-                            className={`p-3 border rounded-md flex items-center gap-3 cursor-pointer hover:bg-neutral-50 transition-colors ${
-                              dbSelectedItem?.id === item.id ? 'bg-blue-50 border-blue-200' : ''
-                            }`}
-                            onClick={() => {
-                              return setDbSelectedItem(item);
-                            }}
-                          >
-                            {item.imageUrl && (
-                              <div className='relative w-10 h-10 rounded overflow-hidden flex-shrink-0'>
-                                <img
-                                  src={item.imageUrl}
-                                  alt={
-                                    'name' in item
-                                      ? item.name
-                                      : 'invoiceNumber' in item
-                                      ? item.invoiceNumber
-                                      : ''
-                                  }
-                                  className='w-full h-full object-cover'
-                                />
+                  {databaseItems.length > 0 ? (
+                    <div className='grid grid-cols-1 gap-2'>
+                      {databaseItems
+                        .filter((item: any) => {
+                          // Search in all string values
+                          return Object.entries(item).some(([key, value]) => {
+                            return (
+                              typeof value === 'string' &&
+                              value.toLowerCase().includes(dbSearchTerm.toLowerCase())
+                            );
+                          });
+                        })
+                        .map((item: any) => {
+                          return (
+                            <div
+                              key={item.id}
+                              className={`p-3 border rounded-md flex items-center gap-3 cursor-pointer hover:bg-neutral-50 transition-colors ${
+                                dbSelectedItem?.id === item.id ? 'bg-blue-50 border-blue-200' : ''
+                              }`}
+                              onClick={() => {
+                                return setDbSelectedItem(item);
+                              }}
+                            >
+                              <div className='flex-1 min-w-0'>
+                                <DisplayItemDetails item={item} />
                               </div>
-                            )}
-                            <div className='flex-1 min-w-0'>
-                              <div className='font-medium truncate'>
-                                {'name' in item
-                                  ? item.name
-                                  : 'invoiceNumber' in item
-                                  ? item.invoiceNumber
-                                  : ''}
-                              </div>
-                              <div className='text-xs text-neutral-500 truncate'>
-                                {'sku' in item
-                                  ? `SKU: ${item.sku}`
-                                  : 'client' in item
-                                  ? `Client: ${item.client}`
-                                  : 'contactPerson' in item
-                                  ? `Contact: ${item.contactPerson}`
-                                  : ''}
-                              </div>
+                              {dbSelectedItem?.id === item.id && (
+                                <div className='h-5 w-5 bg-blue-500 rounded-full flex items-center justify-center'>
+                                  <Check className='h-3 w-3 text-white' />
+                                </div>
+                              )}
                             </div>
-                            {selectedDatabaseId === 'products' && 'price' in item && (
-                              <div className='text-sm font-medium'>{item.price}</div>
-                            )}
-                            {selectedDatabaseId === 'invoices' && 'amount' in item && (
-                              <div className='text-sm font-medium'>{item.amount}</div>
-                            )}
-                            {dbSelectedItem?.id === item.id && (
-                              <div className='h-5 w-5 bg-blue-500 rounded-full flex items-center justify-center'>
-                                <Check className='h-3 w-3 text-white' />
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                  </div>
+                          );
+                        })}
+                    </div>
+                  ) : (
+                    <div className='text-center py-6 text-neutral-500'>
+                      <Database className='h-8 w-8 mx-auto mb-2 text-neutral-300' />
+                      <p>No records found in this table.</p>
+                      <p className='text-xs mt-1'>Try selecting a different database.</p>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className='text-center py-8'>
