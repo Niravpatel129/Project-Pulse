@@ -13,7 +13,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
-  Eye,
+  Download,
   FileCode,
   File as FileIcon,
   FileImage,
@@ -24,6 +24,7 @@ import {
   Link as LinkIcon,
   List,
   ListChecks,
+  Maximize2,
   MoreHorizontal,
   Paperclip,
   Plus,
@@ -71,6 +72,155 @@ const getFieldError = (field: any, errors: any) => {
   return fieldErrors.length > 0 ? fieldErrors[0] : null;
 };
 
+// Function to check if file is an image
+const isImageFile = (filename: string) => {
+  const extension = filename.split('.').pop()?.toLowerCase() || '';
+  return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension);
+};
+
+// Function to get file icon based on file type
+const getFileIcon = (filename: string) => {
+  const extension = filename.split('.').pop()?.toLowerCase() || '';
+
+  // Image files
+  if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(extension)) {
+    return <FileImage size={20} className='text-indigo-500' />;
+  }
+
+  // Document files
+  if (['pdf'].includes(extension)) {
+    return <FileText size={20} className='text-red-500' />;
+  }
+
+  // Word files
+  if (['doc', 'docx', 'rtf', 'txt'].includes(extension)) {
+    return <FileText size={20} className='text-blue-500' />;
+  }
+
+  // Spreadsheet files
+  if (['xls', 'xlsx', 'csv'].includes(extension)) {
+    return <FileSpreadsheet size={20} className='text-green-500' />;
+  }
+
+  // Code files
+  if (['json', 'xml', 'html', 'css', 'js'].includes(extension)) {
+    return <FileCode size={20} className='text-amber-500' />;
+  }
+
+  // Video files
+  if (['mp4', 'mov', 'avi', 'webm'].includes(extension)) {
+    return <FileVideo size={20} className='text-purple-500' />;
+  }
+
+  // Presentation files
+  if (['ppt', 'pptx'].includes(extension)) {
+    return <FileType size={20} className='text-orange-500' />;
+  }
+
+  // Default for other files
+  return <FileIcon size={20} className='text-gray-500' />;
+};
+
+// Function to get file type label
+const getFileTypeLabel = (filename: string) => {
+  const extension = filename.split('.').pop()?.toLowerCase() || '';
+
+  if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(extension)) {
+    return 'Image';
+  } else if (['pdf'].includes(extension)) {
+    return 'PDF';
+  } else if (['doc', 'docx'].includes(extension)) {
+    return 'Document';
+  } else if (['xls', 'xlsx', 'csv'].includes(extension)) {
+    return 'Spreadsheet';
+  } else if (['ppt', 'pptx'].includes(extension)) {
+    return 'Presentation';
+  } else if (['mp4', 'mov', 'avi', 'webm'].includes(extension)) {
+    return 'Video';
+  }
+
+  return extension.toUpperCase();
+};
+
+// Function to format file size
+const formatFileSize = (bytes: number) => {
+  if (bytes < 1024) return bytes + ' B';
+  else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  else return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+};
+
+// Define a new interface for the preview modal
+interface PreviewModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  attachment: any;
+}
+
+// Preview Modal Component for larger file previews
+const PreviewModal = ({ isOpen, onClose, attachment }: PreviewModalProps) => {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70'
+      onClick={onClose}
+    >
+      <div
+        className='relative max-w-4xl w-full bg-white rounded-lg shadow-xl p-1'
+        onClick={(e) => {
+          return e.stopPropagation();
+        }}
+      >
+        {/* Header */}
+        <div className='flex items-center justify-between p-3 border-b'>
+          <div className='flex items-center space-x-3'>
+            <div className='shrink-0'>{getFileIcon(attachment.name)}</div>
+            <div>
+              <h3 className='font-medium'>{attachment.name}</h3>
+              <p className='text-xs text-neutral-500'>{formatFileSize(attachment.size)}</p>
+            </div>
+          </div>
+          <Button variant='ghost' size='icon' className='rounded-full' onClick={onClose}>
+            <X size={18} />
+          </Button>
+        </div>
+
+        {/* Preview Content */}
+        <div
+          className='p-4 flex justify-center items-center bg-neutral-50'
+          style={{ minHeight: '400px' }}
+        >
+          {isImageFile(attachment.name) ? (
+            <img
+              src={attachment.url}
+              alt={attachment.name}
+              className='max-h-[70vh] max-w-full object-contain'
+            />
+          ) : (
+            <div className='text-center'>
+              <div className='mx-auto mb-4 w-16 h-16 flex items-center justify-center bg-neutral-100 rounded-full'>
+                {getFileIcon(attachment.name)}
+              </div>
+              <p className='text-neutral-600 mb-2'>Preview not available</p>
+              <Button
+                variant='outline'
+                size='sm'
+                className='mt-2'
+                onClick={() => {
+                  return window.open(attachment.url, '_blank');
+                }}
+              >
+                <Download size={14} className='mr-1.5' />
+                Download File
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const DeliverableContentTab = ({
   formData,
   errors,
@@ -87,6 +237,7 @@ const DeliverableContentTab = ({
   const [tempLinkText, setTempLinkText] = useState('');
   const [tempLinkUrl, setTempLinkUrl] = useState('');
   const [tempListItem, setTempListItem] = useState('');
+  const [previewAttachment, setPreviewAttachment] = useState<any>(null);
 
   // Animation state
   const [fieldsWithAnimation, setFieldsWithAnimation] = useState<string[]>([]);
@@ -217,83 +368,6 @@ const DeliverableContentTab = ({
     prevFieldsLengthRef.current = currentFieldsLength;
   }, [formData.customFields, fieldsWithAnimation]);
 
-  // Function to get file icon based on file type
-  const getFileIcon = (filename: string) => {
-    const extension = filename.split('.').pop()?.toLowerCase() || '';
-
-    // Image files
-    if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(extension)) {
-      return <FileImage size={20} className='text-indigo-500' />;
-    }
-
-    // Document files
-    if (['pdf'].includes(extension)) {
-      return <FileText size={20} className='text-red-500' />;
-    }
-
-    // Word files
-    if (['doc', 'docx', 'rtf', 'txt'].includes(extension)) {
-      return <FileText size={20} className='text-blue-500' />;
-    }
-
-    // Spreadsheet files
-    if (['xls', 'xlsx', 'csv'].includes(extension)) {
-      return <FileSpreadsheet size={20} className='text-green-500' />;
-    }
-
-    // Code files
-    if (['json', 'xml', 'html', 'css', 'js'].includes(extension)) {
-      return <FileCode size={20} className='text-amber-500' />;
-    }
-
-    // Video files
-    if (['mp4', 'mov', 'avi', 'webm'].includes(extension)) {
-      return <FileVideo size={20} className='text-purple-500' />;
-    }
-
-    // Presentation files
-    if (['ppt', 'pptx'].includes(extension)) {
-      return <FileType size={20} className='text-orange-500' />;
-    }
-
-    // Default for other files
-    return <FileIcon size={20} className='text-gray-500' />;
-  };
-
-  // Function to check if file is an image
-  const isImageFile = (filename: string) => {
-    const extension = filename.split('.').pop()?.toLowerCase() || '';
-    return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension);
-  };
-
-  // Function to get file type label
-  const getFileTypeLabel = (filename: string) => {
-    const extension = filename.split('.').pop()?.toLowerCase() || '';
-
-    if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(extension)) {
-      return 'Image';
-    } else if (['pdf'].includes(extension)) {
-      return 'PDF';
-    } else if (['doc', 'docx'].includes(extension)) {
-      return 'Document';
-    } else if (['xls', 'xlsx', 'csv'].includes(extension)) {
-      return 'Spreadsheet';
-    } else if (['ppt', 'pptx'].includes(extension)) {
-      return 'Presentation';
-    } else if (['mp4', 'mov', 'avi', 'webm'].includes(extension)) {
-      return 'Video';
-    }
-
-    return extension.toUpperCase();
-  };
-
-  // Function to format file size
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B';
-    else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    else return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  };
-
   // Function to format field content based on type for display in view mode
   const getFormattedContent = (field: any) => {
     switch (field.type) {
@@ -338,25 +412,37 @@ const DeliverableContentTab = ({
         return (
           <div className='space-y-3'>
             {field.attachments && field.attachments.length > 0 ? (
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                 {field.attachments.map((attachment: any, i: number) => {
                   return (
                     <div
                       key={i}
-                      className='group rounded-lg border border-neutral-200 overflow-hidden transition-all hover:border-neutral-300 hover:shadow-sm'
+                      className='group relative rounded-lg shadow-sm border border-neutral-200 overflow-hidden transition-all hover:shadow-md hover:border-neutral-300 hover:-translate-y-1 duration-200'
                     >
                       {/* Preview area */}
-                      <div className='relative bg-neutral-50 h-[100px] flex items-center justify-center'>
+                      <div
+                        className='relative bg-neutral-50 h-32 flex items-center justify-center cursor-pointer'
+                        onClick={() => {
+                          return setPreviewAttachment(attachment);
+                        }}
+                      >
                         {isImageFile(attachment.name) ? (
-                          <img
-                            src={attachment.url}
-                            alt={attachment.name}
-                            className='h-full w-full object-contain'
-                          />
+                          <div className='relative w-full h-full overflow-hidden'>
+                            <img
+                              src={attachment.url}
+                              alt={attachment.name}
+                              className='h-full w-full object-cover'
+                            />
+                            <div className='absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100'>
+                              <Maximize2 className='text-white drop-shadow-md' size={22} />
+                            </div>
+                          </div>
                         ) : (
-                          <div className='flex flex-col items-center justify-center h-full w-full'>
-                            <div className='mb-1'>{getFileIcon(attachment.name)}</div>
-                            <div className='text-xs font-medium bg-neutral-200 text-neutral-700 px-2 py-0.5 rounded-full'>
+                          <div className='flex flex-col items-center justify-center h-full w-full group-hover:scale-105 transition-transform'>
+                            <div className='mb-2 transform group-hover:scale-110 transition-transform'>
+                              {getFileIcon(attachment.name)}
+                            </div>
+                            <div className='text-xs font-medium bg-neutral-200 text-neutral-700 px-2.5 py-1 rounded-full'>
                               {getFileTypeLabel(attachment.name)}
                             </div>
                           </div>
@@ -364,11 +450,12 @@ const DeliverableContentTab = ({
                       </div>
 
                       {/* File info area */}
-                      <div className='p-2 bg-white'>
-                        <div className='text-sm font-medium text-neutral-800 truncate pb-0.5'>
+                      <div className='px-3 py-2.5 bg-white border-t border-neutral-100'>
+                        <div className='text-sm font-medium text-neutral-800 truncate pb-0.5 group-hover:text-blue-600 transition-colors'>
                           {attachment.name}
                         </div>
-                        <div className='text-xs text-neutral-500'>
+                        <div className='text-xs text-neutral-500 flex items-center'>
+                          <span className='inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5'></span>
                           {formatFileSize(attachment.size)}
                         </div>
                       </div>
@@ -393,58 +480,6 @@ const DeliverableContentTab = ({
       default:
         return <p>{field.content}</p>;
     }
-  };
-
-  // Add a list item
-  const addListItem = (field: any) => {
-    if (!tempListItem.trim()) return;
-
-    const updatedItems = [...(field.items || []), tempListItem];
-    safeUpdateFieldProperty(field.id, 'items', updatedItems);
-    setTempListItem('');
-  };
-
-  // Remove a list item
-  const removeListItem = (field: any, index: number) => {
-    const updatedItems = [...(field.items || [])];
-    updatedItems.splice(index, 1);
-    safeUpdateFieldProperty(field.id, 'items', updatedItems);
-  };
-
-  // Update a list item
-  const updateListItem = (field: any, index: number, value: string) => {
-    const updatedItems = [...(field.items || [])];
-    updatedItems[index] = value;
-    safeUpdateFieldProperty(field.id, 'items', updatedItems);
-  };
-
-  // Save link data
-  const saveLink = (field: any) => {
-    if (!tempLinkUrl.trim()) return;
-
-    safeUpdateFieldProperty(field.id, 'text', tempLinkText);
-    safeUpdateFieldProperty(field.id, 'url', tempLinkUrl);
-  };
-
-  // Handler to select a field for editing
-  const handleSelectFieldForEdit = (fieldId: string) => {
-    // Don't do anything if this field is already being edited
-    if (editingFieldId === fieldId) return;
-
-    // If we're switching from another field that was being edited
-    if (editingFieldId) {
-      // Save any pending link changes
-      const currentField = formData.customFields.find((f: any) => {
-        return f.id === editingFieldId;
-      });
-      if (currentField?.type === 'link' && tempLinkUrl.trim()) {
-        safeUpdateFieldProperty(currentField.id, 'text', tempLinkText);
-        safeUpdateFieldProperty(currentField.id, 'url', tempLinkUrl);
-      }
-    }
-
-    // Set the new field as editing
-    setEditingFieldId(fieldId);
   };
 
   // Render edit mode content based on field type
@@ -601,25 +636,28 @@ const DeliverableContentTab = ({
           <div className='space-y-4'>
             {/* Display existing attachments */}
             {field.attachments && field.attachments.length > 0 && (
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                 {field.attachments.map((attachment: any, index: number) => {
                   return (
                     <div
                       key={index}
-                      className='group relative rounded-lg border border-neutral-200 overflow-hidden hover:border-neutral-300 hover:shadow-sm transition-all'
+                      className='group relative rounded-lg shadow-sm border border-neutral-200 overflow-hidden hover:shadow-md hover:border-neutral-300 transition-all hover:-translate-y-0.5 duration-200'
                     >
                       {/* Preview area */}
-                      <div className='relative bg-neutral-50 h-[100px] flex items-center justify-center'>
+                      <div className='relative bg-neutral-50 h-32 flex items-center justify-center'>
                         {isImageFile(attachment.name) ? (
-                          <img
-                            src={attachment.url}
-                            alt={attachment.name}
-                            className='h-full w-full object-contain'
-                          />
+                          <div className='relative w-full h-full overflow-hidden'>
+                            <img
+                              src={attachment.url}
+                              alt={attachment.name}
+                              className='h-full w-full object-cover'
+                            />
+                            <div className='absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors'></div>
+                          </div>
                         ) : (
-                          <div className='flex flex-col items-center justify-center h-full w-full'>
-                            <div className='mb-1'>{getFileIcon(attachment.name)}</div>
-                            <div className='text-xs font-medium bg-neutral-200 text-neutral-700 px-2 py-0.5 rounded-full'>
+                          <div className='flex flex-col items-center justify-center h-full w-full group-hover:scale-105 transition-transform'>
+                            <div className='mb-2'>{getFileIcon(attachment.name)}</div>
+                            <div className='text-xs font-medium bg-neutral-200 text-neutral-700 px-2.5 py-1 rounded-full'>
                               {getFileTypeLabel(attachment.name)}
                             </div>
                           </div>
@@ -631,35 +669,36 @@ const DeliverableContentTab = ({
                             type='button'
                             variant='secondary'
                             size='sm'
-                            className='h-8 w-8 rounded-full p-0'
+                            className='h-9 w-9 rounded-full p-0'
                             onClick={() => {
-                              window.open(attachment.url, '_blank');
+                              return setPreviewAttachment(attachment);
                             }}
                           >
-                            <Eye size={14} />
+                            <Maximize2 size={15} />
                           </Button>
                           <Button
                             type='button'
                             variant='destructive'
                             size='sm'
-                            className='h-8 w-8 rounded-full p-0'
+                            className='h-9 w-9 rounded-full p-0'
                             onClick={() => {
                               const updatedAttachments = [...(field.attachments || [])];
                               updatedAttachments.splice(index, 1);
                               safeUpdateFieldProperty(field.id, 'attachments', updatedAttachments);
                             }}
                           >
-                            <X size={14} />
+                            <X size={15} />
                           </Button>
                         </div>
                       </div>
 
                       {/* File info area */}
-                      <div className='p-2 bg-white'>
+                      <div className='px-3 py-2.5 bg-white border-t border-neutral-100'>
                         <div className='text-sm font-medium text-neutral-800 truncate pb-0.5'>
                           {attachment.name}
                         </div>
-                        <div className='text-xs text-neutral-500'>
+                        <div className='text-xs text-neutral-500 flex items-center'>
+                          <span className='inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5'></span>
                           {formatFileSize(attachment.size)}
                         </div>
                       </div>
@@ -672,11 +711,13 @@ const DeliverableContentTab = ({
             {/* Upload new attachment button */}
             <div className='pt-2'>
               <label htmlFor={`attachment-upload-${field.id}`} className='cursor-pointer block'>
-                <div className='border-2 border-dashed border-neutral-200 rounded-lg p-5 text-center hover:border-neutral-300 transition-colors'>
-                  <div className='w-12 h-12 mx-auto rounded-full bg-neutral-100 flex items-center justify-center mb-3'>
-                    <Paperclip className='text-neutral-500' size={20} />
+                <div className='border-2 border-dashed border-neutral-200 rounded-lg p-6 text-center hover:border-blue-300 hover:bg-blue-50/30 transition-all group'>
+                  <div className='w-14 h-14 mx-auto rounded-full bg-blue-50 flex items-center justify-center mb-3 group-hover:bg-blue-100 transition-colors'>
+                    <Paperclip className='text-blue-500' size={22} />
                   </div>
-                  <p className='text-sm font-medium text-neutral-700 mb-1'>Upload Attachments</p>
+                  <p className='text-sm font-medium text-neutral-700 mb-1 group-hover:text-blue-600 transition-colors'>
+                    Upload Attachments
+                  </p>
                   <p className='text-xs text-neutral-500'>Drop files here or click to browse</p>
                   <p className='text-xs text-neutral-400 mt-2'>
                     Accepts documents, images, spreadsheets, and more
@@ -736,8 +777,70 @@ const DeliverableContentTab = ({
     }
   };
 
+  // Add a list item
+  const addListItem = (field: any) => {
+    if (!tempListItem.trim()) return;
+
+    const updatedItems = [...(field.items || []), tempListItem];
+    safeUpdateFieldProperty(field.id, 'items', updatedItems);
+    setTempListItem('');
+  };
+
+  // Remove a list item
+  const removeListItem = (field: any, index: number) => {
+    const updatedItems = [...(field.items || [])];
+    updatedItems.splice(index, 1);
+    safeUpdateFieldProperty(field.id, 'items', updatedItems);
+  };
+
+  // Update a list item
+  const updateListItem = (field: any, index: number, value: string) => {
+    const updatedItems = [...(field.items || [])];
+    updatedItems[index] = value;
+    safeUpdateFieldProperty(field.id, 'items', updatedItems);
+  };
+
+  // Save link data
+  const saveLink = (field: any) => {
+    if (!tempLinkUrl.trim()) return;
+
+    safeUpdateFieldProperty(field.id, 'text', tempLinkText);
+    safeUpdateFieldProperty(field.id, 'url', tempLinkUrl);
+  };
+
+  // Handler to select a field for editing
+  const handleSelectFieldForEdit = (fieldId: string) => {
+    // Don't do anything if this field is already being edited
+    if (editingFieldId === fieldId) return;
+
+    // If we're switching from another field that was being edited
+    if (editingFieldId) {
+      // Save any pending link changes
+      const currentField = formData.customFields.find((f: any) => {
+        return f.id === editingFieldId;
+      });
+      if (currentField?.type === 'link' && tempLinkUrl.trim()) {
+        safeUpdateFieldProperty(currentField.id, 'text', tempLinkText);
+        safeUpdateFieldProperty(currentField.id, 'url', tempLinkUrl);
+      }
+    }
+
+    // Set the new field as editing
+    setEditingFieldId(fieldId);
+  };
+
   return (
     <div className='max-w-3xl mx-auto'>
+      {previewAttachment && (
+        <PreviewModal
+          isOpen={!!previewAttachment}
+          onClose={() => {
+            return setPreviewAttachment(null);
+          }}
+          attachment={previewAttachment}
+        />
+      )}
+
       {/* Instruction text */}
       <div className='mb-6'>
         <h3 className='text-lg font-medium text-neutral-900 mb-2'>Deliverable Content</h3>
