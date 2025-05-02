@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { newRequest } from '@/utils/newRequest';
 import { ChevronLeft, ChevronRight, FileText, ListChecks, Menu, Settings, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -130,11 +131,9 @@ const NewDeliverableDialogContent = ({
 
     setIsSubmitting(true);
     try {
-      // Simulate API call with timeout
-      await new Promise((resolve) => {
-        return setTimeout(resolve, 1000);
-      });
-      console.log('Submitted data:', formData);
+      // Make API call to create deliverable
+      const response = await newRequest.post('/deliverables', formData);
+      console.log('Created deliverable:', response.data);
       setHasUnsavedChanges(false);
       onClose();
     } catch (error) {
