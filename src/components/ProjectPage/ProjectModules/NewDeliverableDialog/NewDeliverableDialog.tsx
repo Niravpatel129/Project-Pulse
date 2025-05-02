@@ -123,8 +123,37 @@ const DeliverableDialogContent = ({
       setHasUnsavedChanges(false);
       onClose();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error creating deliverable:', error);
+
+      // Get error message from the API response
+      const errorMessage = error.response?.data?.message || 'Failed to create deliverable';
+
+      // Display error message to the user
+      toast.error('Failed to create deliverable', {
+        description: errorMessage,
+      });
+
+      // Check for specific validation errors
+      if (errorMessage === 'Missing required fields') {
+        // Set form to the general info tab if we need to fill in basic fields
+        setCurrentStage('general-info');
+
+        // If backend provides field names that are missing
+        if (error.response?.data?.fields && Array.isArray(error.response.data.fields)) {
+          const newErrors: { [key: string]: string } = {};
+          error.response.data.fields.forEach((field: string) => {
+            newErrors[field] = `${field} is required`;
+          });
+          setErrors(newErrors);
+        } else {
+          // Generic message if specific fields aren't provided
+          setErrors({
+            name: 'Deliverable name is required',
+            price: 'Price is required',
+          });
+        }
+      }
     },
   });
 
@@ -137,8 +166,37 @@ const DeliverableDialogContent = ({
       setHasUnsavedChanges(false);
       onClose();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error updating deliverable:', error);
+
+      // Get error message from the API response
+      const errorMessage = error.response?.data?.message || 'Failed to update deliverable';
+
+      // Display error message to the user
+      toast.error('Failed to update deliverable', {
+        description: errorMessage,
+      });
+
+      // Check for specific validation errors
+      if (errorMessage === 'Missing required fields') {
+        // Set form to the general info tab if we need to fill in basic fields
+        setCurrentStage('general-info');
+
+        // If backend provides field names that are missing
+        if (error.response?.data?.fields && Array.isArray(error.response.data.fields)) {
+          const newErrors: { [key: string]: string } = {};
+          error.response.data.fields.forEach((field: string) => {
+            newErrors[field] = `${field} is required`;
+          });
+          setErrors(newErrors);
+        } else {
+          // Generic message if specific fields aren't provided
+          setErrors({
+            name: 'Deliverable name is required',
+            price: 'Price is required',
+          });
+        }
+      }
     },
   });
 
