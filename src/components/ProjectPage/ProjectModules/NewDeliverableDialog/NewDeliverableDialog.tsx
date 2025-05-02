@@ -11,6 +11,7 @@ import DeliverableContentTab from './Tabs/DeliverableContentTab';
 import ReviewTab from './Tabs/ReviewTab';
 
 // Import the context provider
+import { useProject } from '@/contexts/ProjectContext';
 import { DeliverableFormProvider, useDeliverableForm } from './DeliverableFormContext';
 
 // Define the stages
@@ -66,6 +67,7 @@ const NewDeliverableDialogContent = ({
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
+  const { project } = useProject();
 
   // Navigate to next stage
   const handleNext = () => {
@@ -132,7 +134,10 @@ const NewDeliverableDialogContent = ({
     setIsSubmitting(true);
     try {
       // Make API call to create deliverable
-      const response = await newRequest.post('/deliverables', formData);
+      const response = await newRequest.post('/deliverables', {
+        ...formData,
+        project: project?._id,
+      });
       console.log('Created deliverable:', response.data);
       setHasUnsavedChanges(false);
       onClose();
