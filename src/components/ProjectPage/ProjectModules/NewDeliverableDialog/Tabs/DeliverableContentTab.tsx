@@ -893,7 +893,7 @@ const DeliverableContentTab = ({
       {/* Content fields list */}
       {formData.customFields.length > 0 && (
         <>
-          <div className='space-y-5 mb-6'>
+          <div className='bg-white border border-neutral-200 rounded-lg overflow-hidden mb-6 shadow-sm'>
             {formData.customFields.map((field: any, index: number) => {
               const isAnimated = fieldsWithAnimation.includes(field.id);
               const isEditing = editingFieldId === field.id;
@@ -902,15 +902,15 @@ const DeliverableContentTab = ({
                 <div
                   key={field.id}
                   data-field-id={field.id}
-                  className={`content-item bg-white rounded-lg border ${
-                    isEditing
-                      ? 'border-blue-300 shadow-sm ring-1 ring-blue-200'
-                      : 'border-neutral-200 hover:border-neutral-300'
-                  } transition-all duration-150 overflow-hidden ${
-                    isAnimated ? 'animate-fadeIn' : ''
+                  className={`content-item ${
+                    isEditing ? 'bg-blue-50/30' : ''
+                  } transition-all duration-150 ${isAnimated ? 'animate-fadeIn' : ''} ${
+                    index !== 0 ? 'border-t border-neutral-200' : ''
                   }`}
                 >
-                  <div className='flex justify-between items-start p-4'>
+                  <div
+                    className={`flex justify-between items-start p-4 ${isEditing ? 'pb-2' : ''}`}
+                  >
                     {/* Label/header area */}
                     <div className='flex-1'>
                       {isEditing ? (
@@ -919,7 +919,7 @@ const DeliverableContentTab = ({
                           onChange={(e) => {
                             safeUpdateFieldProperty(field.id, 'label', e.target.value);
                           }}
-                          className='font-medium border-none shadow-none focus-visible:ring-0 px-0 text-base'
+                          className='font-medium border-none shadow-none focus-visible:ring-0 px-0 text-base bg-transparent'
                           placeholder={`Enter ${
                             FIELD_TYPES.find((t) => {
                               return t.id === field.type;
@@ -1021,6 +1021,10 @@ const DeliverableContentTab = ({
                       </div>
                     )}
                   </div>
+
+                  {isEditing && index !== formData.customFields.length - 1 && (
+                    <div className='h-2 border-t border-dashed border-blue-200'></div>
+                  )}
                 </div>
               );
             })}
