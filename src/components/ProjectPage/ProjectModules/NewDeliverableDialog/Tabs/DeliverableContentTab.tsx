@@ -7,6 +7,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
@@ -568,22 +575,25 @@ const DatabaseItemDialog = ({
           {/* Database type selector */}
           <div className='mb-2'>
             <Label className='text-sm text-neutral-700'>Database Type</Label>
-            <select
+            <Select
               value={selectedDatabaseId || ''}
-              onChange={(e) => {
-                return setSelectedDatabaseId(e.target.value || null);
+              onValueChange={(value) => {
+                return setSelectedDatabaseId(value || null);
               }}
-              className='w-full h-10 px-3 mt-1 rounded-md border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
             >
-              <option value=''>Select a database</option>
-              {databases.map((database) => {
-                return (
-                  <option key={database.id} value={database.id}>
-                    {database.name}
-                  </option>
-                );
-              })}
-            </select>
+              <SelectTrigger className='w-full mt-1'>
+                <SelectValue placeholder='Select a database' />
+              </SelectTrigger>
+              <SelectContent>
+                {databases.map((database) => {
+                  return (
+                    <SelectItem key={database.id} value={database.id}>
+                      {database.name}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
