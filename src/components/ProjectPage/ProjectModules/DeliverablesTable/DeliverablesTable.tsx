@@ -277,7 +277,7 @@ const DeliverablesTable = () => {
           <div className='flex flex-col items-center justify-center py-8 text-center'>
             <div className='text-lg font-medium mb-2'>No deliverables found</div>
             <p className='text-muted-foreground mb-4'>
-              This project doesn't have any deliverables yet.
+              This project doesn&apos;t have any deliverables yet.
             </p>
           </div>
         </CardContent>
