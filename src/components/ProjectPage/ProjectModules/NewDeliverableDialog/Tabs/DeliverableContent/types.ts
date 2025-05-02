@@ -31,6 +31,7 @@ export interface DatabaseItemDialogProps {
     databaseId: string | null,
     visibleColumns: Record<string, boolean>,
     alignment: string,
+    databaseName?: string,
   ) => void;
   alignment: string;
   setAlignment: (alignment: string) => void;

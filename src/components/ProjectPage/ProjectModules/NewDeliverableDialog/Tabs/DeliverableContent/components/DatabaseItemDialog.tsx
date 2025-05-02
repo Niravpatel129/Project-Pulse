@@ -135,7 +135,13 @@ const DatabaseItemDialog = ({
 
   // Save handler
   const handleSave = () => {
-    onSave(selectedItem, selectedDatabaseId, visibleColumns, alignment);
+    // Find the database name for the selected database ID
+    const selectedDatabase = databases.find((db) => {
+      return db.id === selectedDatabaseId;
+    });
+    const databaseName = selectedDatabase?.name || '';
+
+    onSave(selectedItem, selectedDatabaseId, visibleColumns, alignment, databaseName);
     onClose();
   };
 

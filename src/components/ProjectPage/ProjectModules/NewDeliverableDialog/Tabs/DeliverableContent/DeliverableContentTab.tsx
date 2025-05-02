@@ -207,26 +207,40 @@ const DeliverableContentTab = () => {
   };
 
   // Save database selections from modal
-  const saveDatabaseSelections = () => {
+  const saveDatabaseSelections = (
+    item: any,
+    databaseId: string | null,
+    visibleColumns: Record<string, boolean>,
+    alignment: string,
+    databaseName: string,
+  ) => {
     if (editingDatabaseFieldId) {
       // Save the selected item
-      safeUpdateFieldProperty(editingDatabaseFieldId, 'selectedItem', dbSelectedItem);
+      safeUpdateFieldProperty(editingDatabaseFieldId, 'selectedItem', item);
 
       // Save the database ID
-      safeUpdateFieldProperty(editingDatabaseFieldId, 'selectedDatabaseId', selectedDatabaseId);
+      safeUpdateFieldProperty(editingDatabaseFieldId, 'selectedDatabaseId', databaseId);
 
       // Save the alignment
-      safeUpdateFieldProperty(editingDatabaseFieldId, 'alignment', dbTempAlignment);
+      safeUpdateFieldProperty(editingDatabaseFieldId, 'alignment', alignment);
 
       // Save visible columns configuration
       safeUpdateFieldProperty(editingDatabaseFieldId, 'visibleColumns', visibleColumns);
 
       // Save the table metadata for future reference
       const selectedTable = tables.find((table: any) => {
-        return table._id === selectedDatabaseId;
+        return table._id === databaseId;
       });
       if (selectedTable) {
         safeUpdateFieldProperty(editingDatabaseFieldId, 'selectedTableName', selectedTable.name);
+      }
+
+      // Use database name as label if the current label is empty
+      const field = formData.customFields.find((f: any) => {
+        return f.id === editingDatabaseFieldId;
+      });
+      if (field && (!field.label || field.label.trim() === '') && databaseName) {
+        safeUpdateFieldProperty(editingDatabaseFieldId, 'label', databaseName);
       }
 
       // Close the modal
@@ -1290,7 +1304,9 @@ const DeliverableContentTab = () => {
           onSelectItem={(item) => {
             setDbSelectedItem(item);
           }}
-          onSave={saveDatabaseSelections}
+          onSave={(item, databaseId, visibleColumns, alignment, databaseName) => {
+            saveDatabaseSelections(item, databaseId, visibleColumns, alignment, databaseName);
+          }}
           alignment={dbTempAlignment}
           setAlignment={(alignment) => {
             safeUpdateFieldProperty(editingDatabaseFieldId, 'alignment', alignment);
