@@ -351,11 +351,6 @@ const DeliverablesTable = () => {
             className='pl-8'
           />
         </div>
-
-        <div className='text-sm text-muted-foreground'>
-          {sortedAndFilteredDeliverables.length} deliverable
-          {sortedAndFilteredDeliverables.length !== 1 ? 's' : ''}
-        </div>
       </div>
 
       <div className='rounded-md border overflow-hidden'>

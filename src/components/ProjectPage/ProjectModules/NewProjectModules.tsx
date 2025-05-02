@@ -644,7 +644,7 @@ export default function NewProjectModules() {
   return (
     <motion.div variants={containerVariants} initial='hidden' animate='visible'>
       <div className='flex items-center justify-between mb-4'>
-        <div className='text-sm font-medium'>All Modules</div>
+        <div className='text-sm font-medium'>All Deliverables</div>
         <Button
           variant='outline'
           size='sm'
