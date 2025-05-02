@@ -185,21 +185,37 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
   // Navigate to next stage
   const handleNext = () => {
-    if (!validateCurrentStage()) return;
+    if (!validateCurrentStage()) {
+      // Show an error toast or message
+      // Focus the first field with an error
+      const firstErrorField = document.querySelector('[aria-invalid="true"]');
+      if (firstErrorField) {
+        (firstErrorField as HTMLElement).focus();
+      }
+      return;
+    }
 
     const currentIndex = STAGES.findIndex((stage) => {
       return stage.value === currentStage;
     });
+
     if (currentIndex < STAGES.length - 1) {
+      // Clear editing mode when changing tabs
+      setEditingFieldId(null);
+      // Set the new stage
       setCurrentStage(STAGES[currentIndex + 1].value);
     }
   };
 
   // Navigate to previous stage
   const handleBack = () => {
+    // Always clear editing mode when changing tabs
+    setEditingFieldId(null);
+
     const currentIndex = STAGES.findIndex((stage) => {
       return stage.value === currentStage;
     });
+
     if (currentIndex > 0) {
       setCurrentStage(STAGES[currentIndex - 1].value);
     }
@@ -272,7 +288,7 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
       if (!formData.price.trim()) {
         newErrors.price = 'Price is required';
-      } else if (!/^\$?\d+(\.\d{1,2})?$/.test(formData.price.trim())) {
+      } else if (!/^\$?(\d*(\.\d{0,2})?)$/.test(formData.price.trim())) {
         newErrors.price = 'Please enter a valid price';
       }
 
@@ -280,9 +296,51 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
         newErrors.availabilityDate = 'Availability date is required';
       }
     } else if (currentStage === 'custom-fields') {
-      // Add validation for custom fields if needed
+      // Validate content fields if needed
+      if (formData.customFields.length === 0) {
+        // Not showing an error, but could implement if required
+      } else {
+        // Validate that content fields have content
+        formData.customFields.forEach((field: any, index: number) => {
+          const fieldId = field.id;
+          const fieldName = `customField_${index}`;
+
+          if (!field.label || field.label.trim() === '') {
+            newErrors[`${fieldName}_label`] = 'Field label is required';
+          }
+
+          // Check for content based on type
+          switch (field.type) {
+            case 'shortText':
+            case 'longText':
+            case 'specification':
+              if (!field.content || field.content.trim() === '') {
+                newErrors[`${fieldName}_content`] = `Content is required for "${
+                  field.label || 'this field'
+                }"`;
+              }
+              break;
+            case 'bulletList':
+            case 'numberList':
+              if (!field.items || field.items.length === 0) {
+                newErrors[`${fieldName}_items`] = `At least one item is required for "${
+                  field.label || 'this list'
+                }"`;
+              }
+              break;
+            case 'link':
+              if (!field.url || field.url.trim() === '') {
+                newErrors[`${fieldName}_url`] = `URL is required for "${
+                  field.label || 'this link'
+                }"`;
+              }
+              break;
+          }
+        });
+      }
     } else if (currentStage === 'review-notes') {
-      // Add validation for review section if needed
+      // Validation for review stage isn't typically needed
+      // But could check that all previous validations pass
     }
 
     setErrors(newErrors);

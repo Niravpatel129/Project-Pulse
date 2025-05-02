@@ -22,10 +22,11 @@ import {
   Type,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface DeliverableContentTabProps {
   formData: any;
+  errors: any;
   editingFieldId: string | null;
   setEditingFieldId: (id: string | null) => void;
   addCustomField: (type: string) => void;
@@ -46,8 +47,24 @@ const FIELD_TYPES = [
   { id: 'specification', label: 'Specification', icon: <AlertCircle className='mr-2' size={16} /> },
 ];
 
+const getFieldError = (field: any, errors: any) => {
+  if (!errors) return null;
+
+  // Find errors related to this field
+  const fieldErrors = Object.keys(errors)
+    .filter((key) => {
+      return key.includes(`customField_`) && key.includes(field.id);
+    })
+    .map((key) => {
+      return errors[key];
+    });
+
+  return fieldErrors.length > 0 ? fieldErrors[0] : null;
+};
+
 const DeliverableContentTab = ({
   formData,
+  errors,
   editingFieldId,
   setEditingFieldId,
   addCustomField,
@@ -60,6 +77,65 @@ const DeliverableContentTab = ({
   const [newLinkText, setNewLinkText] = useState('');
   const [newLinkUrl, setNewLinkUrl] = useState('');
   const [newListItem, setNewListItem] = useState('');
+  const [fieldsWithAnimation, setFieldsWithAnimation] = useState<string[]>([]);
+  const prevFieldsLengthRef = useRef(0);
+
+  // Focus input when entering edit mode
+  useEffect(() => {
+    if (editingFieldId) {
+      // Find the first input in the editing field and focus it
+      const input = document.querySelector(
+        `.content-item[data-field-id="${editingFieldId}"] input, .content-item[data-field-id="${editingFieldId}"] textarea`,
+      );
+      if (input) {
+        (input as HTMLElement).focus();
+      }
+
+      // Set up link editing if it's a link
+      const field = formData.customFields.find((f: any) => {
+        return f.id === editingFieldId;
+      });
+      if (field?.type === 'link') {
+        setNewLinkText(field.text || '');
+        setNewLinkUrl(field.url || '');
+      }
+    }
+  }, [editingFieldId, formData.customFields]);
+
+  // Improved animation effect for new fields
+  useEffect(() => {
+    const currentFieldsLength = formData.customFields.length;
+
+    // Only apply animation when a new field is added
+    if (currentFieldsLength > prevFieldsLengthRef.current && currentFieldsLength > 0) {
+      const lastField = formData.customFields[currentFieldsLength - 1];
+
+      if (lastField && !fieldsWithAnimation.includes(lastField.id)) {
+        // Add the field to animated fields list
+        setFieldsWithAnimation((prev) => {
+          return [...prev, lastField.id];
+        });
+
+        // Clean up animation class after it completes
+        const animationDuration = 500; // Match this with your CSS animation duration
+        const timer = setTimeout(() => {
+          setFieldsWithAnimation((prev) => {
+            return prev.filter((id) => {
+              return id !== lastField.id;
+            });
+          });
+        }, animationDuration);
+
+        // Clean up timer if component unmounts
+        return () => {
+          return clearTimeout(timer);
+        };
+      }
+    }
+
+    // Update reference for next render
+    prevFieldsLengthRef.current = currentFieldsLength;
+  }, [formData.customFields, fieldsWithAnimation]);
 
   // Function to format field content based on type for display in view mode
   const getFormattedContent = (field: any) => {
@@ -147,17 +223,25 @@ const DeliverableContentTab = ({
 
   // Render edit mode content based on field type
   const renderEditMode = (field: any) => {
+    const fieldError = getFieldError(field, errors);
+
     switch (field.type) {
       case 'shortText':
         return (
-          <Input
-            value={field.content || ''}
-            onChange={(e) => {
-              return updateFieldProperty(field.id, 'content', e.target.value);
-            }}
-            placeholder='Enter short text'
-            className='w-full border-none shadow-none focus-visible:ring-0 px-0 text-base'
-          />
+          <>
+            <Input
+              value={field.content || ''}
+              onChange={(e) => {
+                return updateFieldProperty(field.id, 'content', e.target.value);
+              }}
+              placeholder='Enter short text'
+              className={`w-full border-none shadow-none focus-visible:ring-0 px-0 text-base ${
+                fieldError ? 'border-red-300' : ''
+              }`}
+              aria-invalid={!!fieldError}
+            />
+            {fieldError && <p className='text-xs text-red-500 mt-1'>{fieldError}</p>}
+          </>
         );
 
       case 'longText':
@@ -315,160 +399,195 @@ const DeliverableContentTab = ({
         </p>
       </div>
 
+      {/* Empty state */}
+      {formData.customFields.length === 0 && (
+        <div className='text-center py-10 bg-neutral-50 rounded-lg border border-dashed border-neutral-200 mb-6'>
+          <FileText className='mx-auto h-10 w-10 text-neutral-300 mb-3' />
+          <p className='text-neutral-600 font-medium mb-2'>No content sections yet</p>
+          <p className='text-sm text-neutral-500 max-w-md mx-auto mb-4'>
+            Add sections to describe what&apos;s included in this deliverable. These details will
+            help your clients understand what they&apos;re receiving.
+          </p>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className='mt-2'>
+                <Plus size={16} className='mr-1.5' />
+                Add First Section
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='center' className='w-48'>
+              {FIELD_TYPES.map((type) => {
+                return (
+                  <DropdownMenuItem
+                    key={type.id}
+                    onClick={() => {
+                      return addCustomField(type.id);
+                    }}
+                  >
+                    {type.icon}
+                    {type.label}
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
       {/* Content fields list */}
-      <div className='space-y-5 mb-6'>
-        {formData.customFields.length > 0 ? (
-          formData.customFields.map((field: any, index: number) => {
-            return (
-              <div
-                key={field.id}
-                className={`content-item bg-white rounded-lg border ${
-                  editingFieldId === field.id
-                    ? 'border-blue-300 shadow-sm'
-                    : 'border-neutral-200 hover:border-neutral-300'
-                } transition-all duration-150 overflow-hidden`}
-              >
-                <div className='flex justify-between items-start p-4'>
-                  {/* Label/header area */}
-                  <div className='flex-1'>
+      {formData.customFields.length > 0 && (
+        <>
+          <div className='space-y-5 mb-6'>
+            {formData.customFields.map((field: any, index: number) => {
+              const isAnimated = fieldsWithAnimation.includes(field.id);
+
+              return (
+                <div
+                  key={field.id}
+                  data-field-id={field.id}
+                  className={`content-item bg-white rounded-lg border ${
+                    editingFieldId === field.id
+                      ? 'border-blue-300 shadow-sm ring-1 ring-blue-200'
+                      : 'border-neutral-200 hover:border-neutral-300'
+                  } transition-all duration-150 overflow-hidden ${
+                    isAnimated ? 'animate-fadeIn' : ''
+                  }`}
+                >
+                  <div className='flex justify-between items-start p-4'>
+                    {/* Label/header area */}
+                    <div className='flex-1'>
+                      {editingFieldId === field.id ? (
+                        <Input
+                          value={field.label}
+                          onChange={(e) => {
+                            return updateFieldProperty(field.id, 'label', e.target.value);
+                          }}
+                          className='font-medium border-none shadow-none focus-visible:ring-0 px-0 text-base'
+                        />
+                      ) : (
+                        <h4
+                          className='font-medium text-neutral-900 cursor-pointer'
+                          onClick={() => {
+                            return setEditingFieldId(field.id);
+                          }}
+                        >
+                          {field.label}
+                        </h4>
+                      )}
+                    </div>
+
+                    {/* Actions area */}
+                    <div className='flex items-center gap-1'>
+                      {editingFieldId === field.id ? (
+                        <Button
+                          type='button'
+                          size='sm'
+                          onClick={() => {
+                            return setEditingFieldId(null);
+                          }}
+                          className='text-xs'
+                        >
+                          <Check size={14} className='mr-1' />
+                          Done
+                        </Button>
+                      ) : (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant='ghost' size='icon' className='h-8 w-8'>
+                              <MoreHorizontal size={16} />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align='end' className='w-48'>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                return setEditingFieldId(field.id);
+                              }}
+                            >
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                return moveFieldUp(index);
+                              }}
+                              disabled={index === 0}
+                            >
+                              <ChevronUp size={14} className='mr-2' />
+                              Move Up
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                return moveFieldDown(index);
+                              }}
+                              disabled={index === formData.customFields.length - 1}
+                            >
+                              <ChevronDown size={14} className='mr-2' />
+                              Move Down
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                return removeCustomField(field.id);
+                              }}
+                              className='text-red-600'
+                            >
+                              <X size={14} className='mr-2' />
+                              Remove
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Content area */}
+                  <div className='px-4 pb-4'>
                     {editingFieldId === field.id ? (
-                      <Input
-                        value={field.label}
-                        onChange={(e) => {
-                          return updateFieldProperty(field.id, 'label', e.target.value);
-                        }}
-                        className='font-medium border-none shadow-none focus-visible:ring-0 px-0 text-base'
-                      />
+                      renderEditMode(field)
                     ) : (
-                      <h4
-                        className='font-medium text-neutral-900 cursor-pointer'
+                      <div
+                        className='text-neutral-700 cursor-pointer'
                         onClick={() => {
                           return setEditingFieldId(field.id);
                         }}
                       >
-                        {field.label}
-                      </h4>
-                    )}
-                  </div>
-
-                  {/* Actions area */}
-                  <div className='flex items-center gap-1'>
-                    {editingFieldId === field.id ? (
-                      <Button
-                        type='button'
-                        size='sm'
-                        onClick={() => {
-                          return setEditingFieldId(null);
-                        }}
-                        className='text-xs'
-                      >
-                        <Check size={14} className='mr-1' />
-                        Done
-                      </Button>
-                    ) : (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant='ghost' size='icon' className='h-8 w-8'>
-                            <MoreHorizontal size={16} />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align='end' className='w-48'>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              return setEditingFieldId(field.id);
-                            }}
-                          >
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              return moveFieldUp(index);
-                            }}
-                            disabled={index === 0}
-                          >
-                            <ChevronUp size={14} className='mr-2' />
-                            Move Up
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              return moveFieldDown(index);
-                            }}
-                            disabled={index === formData.customFields.length - 1}
-                          >
-                            <ChevronDown size={14} className='mr-2' />
-                            Move Down
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              return removeCustomField(field.id);
-                            }}
-                            className='text-red-600'
-                          >
-                            <X size={14} className='mr-2' />
-                            Remove
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        {getFormattedContent(field)}
+                      </div>
                     )}
                   </div>
                 </div>
-
-                {/* Content area */}
-                <div className='px-4 pb-4'>
-                  {editingFieldId === field.id ? (
-                    renderEditMode(field)
-                  ) : (
-                    <div
-                      className='text-neutral-700 cursor-pointer'
-                      onClick={() => {
-                        return setEditingFieldId(field.id);
-                      }}
-                    >
-                      {getFormattedContent(field)}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })
-        ) : (
-          <div className='text-center py-8 bg-neutral-50 rounded-lg border border-dashed border-neutral-200'>
-            <p className='text-neutral-500 mb-2'>No content sections added yet</p>
-            <p className='text-sm text-neutral-400'>
-              Use the &quot;Add Content&quot; button below to add sections to your deliverable
-            </p>
+              );
+            })}
           </div>
-        )}
-      </div>
 
-      {/* Add content button */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant='outline'
-            id='addContentMenu'
-            className='border-dashed border-neutral-300'
-          >
-            <Plus size={16} className='mr-1.5' />
-            Add Content
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align='start' className='w-48'>
-          {FIELD_TYPES.map((type) => {
-            return (
-              <DropdownMenuItem
-                key={type.id}
-                onClick={() => {
-                  return addCustomField(type.id);
-                }}
+          {/* Add content button for non-empty state */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant='outline'
+                id='addContentMenu'
+                className='border-dashed border-neutral-300'
               >
-                {type.icon}
-                {type.label}
-              </DropdownMenuItem>
-            );
-          })}
-        </DropdownMenuContent>
-      </DropdownMenu>
+                <Plus size={16} className='mr-1.5' />
+                Add Content
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='start' className='w-48'>
+              {FIELD_TYPES.map((type) => {
+                return (
+                  <DropdownMenuItem
+                    key={type.id}
+                    onClick={() => {
+                      return addCustomField(type.id);
+                    }}
+                  >
+                    {type.icon}
+                    {type.label}
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
+      )}
     </div>
   );
 };

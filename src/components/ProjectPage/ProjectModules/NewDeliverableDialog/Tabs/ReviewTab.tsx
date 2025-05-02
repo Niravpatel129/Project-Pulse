@@ -1,10 +1,13 @@
 import { Calendar, DollarSign, FileText, Package } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface ReviewTabProps {
   formData: any;
+  errors?: any;
+  setHasUnsavedChanges?: (value: boolean) => void;
 }
 
-const ReviewTab = ({ formData }: ReviewTabProps) => {
+const ReviewTab = ({ formData, setHasUnsavedChanges }: ReviewTabProps) => {
   // Helper function to format price
   const formatPrice = (price: string) => {
     if (!price) return '-';
@@ -115,6 +118,14 @@ const ReviewTab = ({ formData }: ReviewTabProps) => {
     }
   };
 
+  useEffect(() => {
+    // Set unsaved changes to false when we reach the review tab
+    if (setHasUnsavedChanges) {
+      // Mark all validations as complete when reaching review stage
+      setHasUnsavedChanges(false);
+    }
+  }, [setHasUnsavedChanges]);
+
   return (
     <div className='max-w-3xl mx-auto'>
       <div className='mb-6'>
@@ -125,7 +136,7 @@ const ReviewTab = ({ formData }: ReviewTabProps) => {
         </p>
       </div>
 
-      <div className='space-y-6'>
+      <div className='space-y-6 animate-fadeIn'>
         {/* Basic Info Card */}
         <div className='bg-white rounded-lg border border-neutral-200 overflow-hidden shadow-sm'>
           <div className='bg-neutral-50 px-5 py-3 border-b border-neutral-200'>
