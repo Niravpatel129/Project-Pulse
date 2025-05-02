@@ -1,5 +1,6 @@
 import { DollarSign, FileText, Maximize2, Package } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useDeliverableForm } from '../DeliverableFormContext';
 import PreviewModal from './DeliverableContent/components/PreviewModal';
 import SharedDisplayItemDetails from './DeliverableContent/components/SharedDisplayItemDetails';
 import {
@@ -9,13 +10,8 @@ import {
   isImageFile,
 } from './DeliverableContent/utils/file-utils';
 
-interface ReviewTabProps {
-  formData: any;
-  errors?: any;
-  setHasUnsavedChanges?: (value: boolean) => void;
-}
-
-const ReviewTab = ({ formData, setHasUnsavedChanges }: ReviewTabProps) => {
+const ReviewTab = () => {
+  const { formData, setHasUnsavedChanges } = useDeliverableForm();
   const [previewAttachment, setPreviewAttachment] = useState<any>(null);
 
   // Helper function to format price
@@ -201,29 +197,22 @@ const ReviewTab = ({ formData, setHasUnsavedChanges }: ReviewTabProps) => {
                     : ''
                 }`}
               >
-                <div
-                  className={`${
-                    field.alignment === 'center' || field.alignment === 'right'
-                      ? 'inline-block'
-                      : 'w-full'
-                  }`}
-                >
+                <div className='bg-neutral-50 border border-neutral-200 rounded-md px-4 py-3'>
                   <SharedDisplayItemDetails
                     item={field.selectedItem}
                     useFieldVisibility={true}
-                    tableColumns={[]}
-                    visibleColumns={field.visibleColumns || {}}
+                    visibleColumns={field.visibleColumns}
                   />
                 </div>
               </div>
             ) : (
-              <div className='italic text-neutral-500 text-sm'>No database item selected</div>
+              <div className='text-neutral-500 text-sm italic'>No item selected</div>
             )}
           </div>
         );
 
       default:
-        return <p>{field.content || '-'}</p>;
+        return null;
     }
   };
 
@@ -236,7 +225,8 @@ const ReviewTab = ({ formData, setHasUnsavedChanges }: ReviewTabProps) => {
   }, [setHasUnsavedChanges]);
 
   return (
-    <div className='max-w-3xl mx-auto'>
+    <div className='max-w-4xl mx-auto flex flex-col space-y-6'>
+      {/* Preview modal for attachments */}
       {previewAttachment && (
         <PreviewModal
           isOpen={!!previewAttachment}
@@ -247,106 +237,72 @@ const ReviewTab = ({ formData, setHasUnsavedChanges }: ReviewTabProps) => {
         />
       )}
 
-      <div className='mb-6'>
-        <h3 className='text-lg font-medium text-neutral-900 mb-2'>Review Deliverable</h3>
-        <p className='text-neutral-600 text-sm'>
-          Review the details of your deliverable before creating it. You can go back to make changes
-          if needed.
-        </p>
-      </div>
+      {/* Basic details summary */}
+      <section className='border border-neutral-200 rounded-lg overflow-hidden'>
+        <header className='bg-neutral-50 border-b border-neutral-200 px-4 py-3 flex items-center'>
+          <FileText className='mr-3 text-neutral-500' size={18} />
+          <h3 className='font-medium text-neutral-800'>Basic Details</h3>
+        </header>
 
-      <div className='space-y-6 animate-fadeIn'>
-        {/* Basic Info Card */}
-        <div className='bg-white rounded-lg border border-neutral-200 overflow-hidden shadow-sm'>
-          <div className='bg-neutral-50 px-5 py-3 border-b border-neutral-200'>
-            <h3 className='font-medium text-neutral-900'>Basic Information</h3>
-          </div>
-          <div className='p-5'>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
-              {/* Name */}
-              <div>
-                <h4 className='text-xs uppercase tracking-wider text-neutral-500 mb-1.5'>Name</h4>
-                <p className='text-neutral-900 font-medium'>{formData.name || '-'}</p>
-              </div>
-
-              {/* Price */}
-              <div className='flex items-start gap-3'>
-                <div className='mt-0.5 bg-neutral-100 rounded-full p-1.5'>
-                  <DollarSign size={14} className='text-neutral-500' />
-                </div>
-                <div>
-                  <h4 className='text-xs uppercase tracking-wider text-neutral-500 mb-1'>Price</h4>
-                  <p className='text-neutral-900 font-medium'>{formatPrice(formData.price)}</p>
-                </div>
-              </div>
-
-              {/* Type */}
-              <div className='flex items-start gap-3'>
-                <div className='mt-0.5 bg-neutral-100 rounded-full p-1.5'>
-                  <Package size={14} className='text-neutral-500' />
-                </div>
-                <div>
-                  <h4 className='text-xs uppercase tracking-wider text-neutral-500 mb-1'>Type</h4>
-                  <p className='text-neutral-900'>{getDeliverableTypeLabel()}</p>
-                </div>
-              </div>
+        <div className='p-5 space-y-5'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+            <div className='space-y-1'>
+              <h4 className='text-sm text-neutral-500'>Deliverable Name</h4>
+              <p className='font-medium'>{formData.name || '-'}</p>
             </div>
-
-            {/* Description */}
-            {formData.description && (
-              <div className='mt-5 pt-5 border-t border-neutral-200'>
-                <h4 className='text-xs uppercase tracking-wider text-neutral-500 mb-2'>
-                  Description
-                </h4>
-                <p className='text-neutral-700 whitespace-pre-wrap'>{formData.description}</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Content Sections Card */}
-        <div className='bg-white rounded-lg border border-neutral-200 overflow-hidden shadow-sm'>
-          <div className='bg-neutral-50 px-5 py-3 border-b border-neutral-200'>
-            <div className='flex items-center'>
-              <FileText size={16} className='text-neutral-500 mr-2' />
-              <h3 className='font-medium text-neutral-900'>Content Sections</h3>
+            <div className='space-y-1'>
+              <h4 className='text-sm text-neutral-500'>Deliverable Type</h4>
+              <p className='font-medium'>{getDeliverableTypeLabel()}</p>
+            </div>
+            <div className='space-y-1'>
+              <h4 className='text-sm text-neutral-500'>Price</h4>
+              <p className='font-medium flex items-center'>
+                <DollarSign className='text-green-600 mr-1 h-4 w-4' />
+                {formatPrice(formData.price) || '-'}
+              </p>
+            </div>
+            <div className='space-y-1'>
+              <h4 className='text-sm text-neutral-500'>Availability Date</h4>
+              <p className='font-medium'>{formatDate(formData.availabilityDate)}</p>
             </div>
           </div>
-
-          {formData.customFields && formData.customFields.length > 0 ? (
-            <div className='divide-y divide-neutral-100'>
-              {formData.customFields.map((field: any) => {
-                return (
-                  hasContent(field) && (
-                    <div key={field.id} className='p-5'>
-                      <h4 className='font-medium text-neutral-900 mb-2'>
-                        {field.label || `Untitled ${field.type}`}
-                      </h4>
-                      <div className='text-neutral-700'>{formatFieldContent(field)}</div>
-                    </div>
-                  )
-                );
-              })}
-            </div>
-          ) : (
-            <div className='p-5 text-center'>
-              <p className='text-neutral-500'>No content sections added</p>
+          {formData.description && (
+            <div className='space-y-1 border-t border-neutral-100 pt-4 mt-4'>
+              <h4 className='text-sm text-neutral-500'>Description</h4>
+              <p className='text-neutral-700 whitespace-pre-wrap'>{formData.description}</p>
             </div>
           )}
         </div>
+      </section>
 
-        {/* Notes Card (if applicable) */}
-        {formData.teamNotes && (
-          <div className='bg-white rounded-lg border border-neutral-200 overflow-hidden shadow-sm'>
-            <div className='bg-neutral-50 px-5 py-3 border-b border-neutral-200'>
-              <h3 className='font-medium text-neutral-900'>Team Notes</h3>
-            </div>
-            <div className='p-5'>
-              <p className='text-neutral-700 whitespace-pre-wrap'>{formData.teamNotes}</p>
+      {/* Content Fields */}
+      {formData.customFields && formData.customFields.length > 0 && (
+        <section className='border border-neutral-200 rounded-lg overflow-hidden'>
+          <header className='bg-neutral-50 border-b border-neutral-200 px-4 py-3 flex items-center'>
+            <Package className='mr-3 text-neutral-500' size={18} />
+            <h3 className='font-medium text-neutral-800'>Content Details</h3>
+          </header>
+
+          <div className='p-5 space-y-5'>
+            <div className='space-y-6'>
+              {formData.customFields.map((field: any, index: number) => {
+                if (!hasContent(field)) return null;
+                return (
+                  <div key={field.id} className='space-y-2'>
+                    <h4 className='font-medium text-neutral-800'>
+                      {field.label || 'Untitled Field'}
+                    </h4>
+                    <div className='text-neutral-700'>{formatFieldContent(field)}</div>
+                  </div>
+                );
+              })}
+              {formData.customFields.filter(hasContent).length === 0 && (
+                <p className='text-neutral-500 italic'>No content fields added</p>
+              )}
             </div>
           </div>
-        )}
-      </div>
+        </section>
+      )}
     </div>
   );
 };

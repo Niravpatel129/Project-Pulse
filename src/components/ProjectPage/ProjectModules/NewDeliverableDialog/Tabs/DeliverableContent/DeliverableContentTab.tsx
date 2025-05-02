@@ -35,8 +35,8 @@ import DatabaseItemDialog from './components/DatabaseItemDialog';
 import PreviewModal from './components/PreviewModal';
 import SharedDisplayItemDetails from './components/SharedDisplayItemDetails';
 
-// Import types
-import { DeliverableContentTabProps } from './types';
+// Import context
+import { useDeliverableForm } from '../../DeliverableFormContext';
 
 // Import utils
 import { FIELD_TYPES } from './utils/constants';
@@ -44,18 +44,20 @@ import { formatFileSize, getFileIcon, getFileTypeLabel, isImageFile } from './ut
 import { getFieldError, getIconForTableType } from './utils/helpers';
 
 // Main component
-const DeliverableContentTab = ({
-  formData,
-  errors,
-  editingFieldId,
-  setEditingFieldId,
-  addCustomField,
-  removeCustomField,
-  moveFieldUp,
-  moveFieldDown,
-  updateFieldProperty,
-  setHasUnsavedChanges,
-}: DeliverableContentTabProps) => {
+const DeliverableContentTab = () => {
+  const {
+    formData,
+    errors,
+    editingFieldId,
+    setEditingFieldId,
+    addCustomField,
+    removeCustomField,
+    moveFieldUp,
+    moveFieldDown,
+    updateFieldProperty,
+    setHasUnsavedChanges,
+  } = useDeliverableForm();
+
   // Track temporary state for current editing field only
   const [tempLinkText, setTempLinkText] = useState('');
   const [tempLinkUrl, setTempLinkUrl] = useState('');

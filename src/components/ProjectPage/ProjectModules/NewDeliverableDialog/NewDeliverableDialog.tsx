@@ -9,6 +9,9 @@ import BasicDetailsTab from './Tabs/BasicDetailsTab';
 import DeliverableContentTab from './Tabs/DeliverableContentTab';
 import ReviewTab from './Tabs/ReviewTab';
 
+// Import the context provider
+import { DeliverableFormProvider, useDeliverableForm } from './DeliverableFormContext';
+
 // Define the stages
 const STAGES = [
   {
@@ -31,135 +34,37 @@ const STAGES = [
   },
 ];
 
+// Main component wrapper that provides the context
 const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  return (
+    <DeliverableFormProvider>
+      <NewDeliverableDialogContent isOpen={isOpen} onClose={onClose} />
+    </DeliverableFormProvider>
+  );
+};
+
+// Inner component that consumes the context
+const NewDeliverableDialogContent = ({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) => {
+  const {
+    formData,
+    errors,
+    editingFieldId,
+    hasUnsavedChanges,
+    setEditingFieldId,
+    setHasUnsavedChanges,
+    setErrors,
+  } = useDeliverableForm();
+
   const [currentStage, setCurrentStage] = useState(STAGES[0].value);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    price: '',
-    deliverableType: 'digital',
-    availabilityDate: '',
-    customFields: [],
-    teamNotes: '',
-    customDeliverableType: '',
-  });
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
-
-  // Handle input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => {
-      return { ...prev, [name]: value };
-    });
-
-    // Clear error when field is edited
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-
-    setHasUnsavedChanges(true);
-  };
-
-  // Handle select changes
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => {
-      return { ...prev, [name]: value };
-    });
-
-    // Clear error when field is changed
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-
-    setHasUnsavedChanges(true);
-  };
-
-  // Add custom field
-  const addCustomField = (type: string) => {
-    const newField = {
-      id: Date.now().toString(),
-      type,
-      label: '',
-      content: '',
-    };
-
-    setFormData((prev) => {
-      return { ...prev, customFields: [...prev.customFields, newField] };
-    });
-
-    setHasUnsavedChanges(true);
-  };
-
-  // Remove custom field
-  const removeCustomField = (id: string) => {
-    setFormData((prev) => {
-      return {
-        ...prev,
-        customFields: prev.customFields.filter((field: any) => {
-          return field.id !== id;
-        }),
-      };
-    });
-
-    setHasUnsavedChanges(true);
-  };
-
-  // Move field up in the order
-  const moveFieldUp = (index: number) => {
-    if (index === 0) return; // Can't move up if already at the top
-
-    setFormData((prev) => {
-      const newFields = [...prev.customFields];
-      const temp = newFields[index];
-      newFields[index] = newFields[index - 1];
-      newFields[index - 1] = temp;
-      return { ...prev, customFields: newFields };
-    });
-
-    setHasUnsavedChanges(true);
-  };
-
-  // Move field down in the order
-  const moveFieldDown = (index: number) => {
-    setFormData((prev) => {
-      if (index === prev.customFields.length - 1) return prev; // Can't move down if already at the bottom
-
-      const newFields = [...prev.customFields];
-      const temp = newFields[index];
-      newFields[index] = newFields[index + 1];
-      newFields[index + 1] = temp;
-      return { ...prev, customFields: newFields };
-    });
-
-    setHasUnsavedChanges(true);
-  };
-
-  // Update field property
-  const updateFieldProperty = (id: string, property: string, value: string | boolean | any[]) => {
-    setFormData((prev) => {
-      return {
-        ...prev,
-        customFields: prev.customFields.map((field: any) => {
-          return field.id === id ? { ...field, [property]: value } : field;
-        }),
-      };
-    });
-
-    setHasUnsavedChanges(true);
-  };
 
   // Navigate to next stage
   const handleNext = () => {
@@ -341,23 +246,7 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [editingFieldId]);
-
-  // Create a props object to pass to tab components
-  const tabProps = {
-    formData,
-    errors,
-    handleChange,
-    handleSelectChange,
-    addCustomField,
-    removeCustomField,
-    moveFieldUp,
-    moveFieldDown,
-    updateFieldProperty,
-    editingFieldId,
-    setEditingFieldId,
-    setHasUnsavedChanges,
-  };
+  }, [editingFieldId, setEditingFieldId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -487,21 +376,21 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                     value='general-info'
                     className='p-4 sm:p-5 m-0 data-[state=inactive]:hidden'
                   >
-                    <BasicDetailsTab {...tabProps} />
+                    <BasicDetailsTab />
                   </TabsContent>
 
                   <TabsContent
                     value='custom-fields'
                     className='p-4 sm:p-5 m-0 data-[state=inactive]:hidden'
                   >
-                    <DeliverableContentTab {...tabProps} />
+                    <DeliverableContentTab />
                   </TabsContent>
 
                   <TabsContent
                     value='review-notes'
                     className='p-4 sm:p-5 m-0 data-[state=inactive]:hidden'
                   >
-                    <ReviewTab {...tabProps} />
+                    <ReviewTab />
                   </TabsContent>
                 </div>
               </div>

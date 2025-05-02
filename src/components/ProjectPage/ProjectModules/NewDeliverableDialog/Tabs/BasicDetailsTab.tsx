@@ -8,20 +8,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useDeliverableForm } from '../DeliverableFormContext';
 
-interface BasicDetailsTabProps {
-  formData: any;
-  errors: any;
-  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  handleSelectChange: (name: string, value: string) => void;
-}
+const BasicDetailsTab = () => {
+  const { formData, errors, handleChange, handleSelectChange } = useDeliverableForm();
 
-const BasicDetailsTab = ({
-  formData,
-  errors,
-  handleChange,
-  handleSelectChange,
-}: BasicDetailsTabProps) => {
   return (
     <div className='space-y-5 max-w-3xl mx-auto'>
       <div className='space-y-1'>
