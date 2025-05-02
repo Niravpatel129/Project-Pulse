@@ -25,6 +25,7 @@ export type Task = {
   archivedAt?: Date;
   comments?: Comment[];
   attachments?: Attachment[];
+  timeEntries?: TimeEntry[];
 };
 
 // Comment type
@@ -51,6 +52,19 @@ export type Attachment = {
     id: string;
     name: string;
     avatar: string;
+  };
+};
+
+// TimeEntry type
+export type TimeEntry = {
+  id: string;
+  hours: number;
+  description: string;
+  date: string;
+  user: {
+    id: string;
+    name: string;
+    avatar?: string;
   };
 };
 
@@ -98,6 +112,17 @@ export type BackendTask = {
       id: string;
       name: string;
       avatar: string;
+    };
+  }[];
+  timeEntries?: {
+    _id: string;
+    hours: number;
+    description: string;
+    date: string;
+    user: {
+      id: string;
+      name: string;
+      avatar?: string;
     };
   }[];
 };
@@ -182,7 +207,7 @@ const transformAttachment = (backendAttachment: any): Attachment => {
  * Transform a backend task to frontend format
  */
 const transformTask = (backendTask: BackendTask): Task => {
-  const { _id, comments, attachments, ...rest } = backendTask;
+  const { _id, comments, attachments, timeEntries, ...rest } = backendTask;
 
   // Transform comments if they exist
   const transformedComments = comments?.map(transformComment);
@@ -190,11 +215,21 @@ const transformTask = (backendTask: BackendTask): Task => {
   // Transform attachments if they exist
   const transformedAttachments = attachments?.map(transformAttachment);
 
+  // Transform timeEntries if they exist
+  const transformedTimeEntries = timeEntries?.map((entry) => {
+    const { _id, ...entryRest } = entry;
+    return {
+      id: _id,
+      ...entryRest,
+    };
+  });
+
   return {
     id: _id,
     ...rest,
     comments: transformedComments,
     attachments: transformedAttachments,
+    timeEntries: transformedTimeEntries,
   };
 };
 
@@ -221,6 +256,14 @@ const prepareTaskForBackend = (task: Partial<Task>): Partial<BackendTask> => {
   if (task.attachments) {
     backendTask.attachments = task.attachments.map((attachment) => {
       const { id, ...rest } = attachment;
+      return { _id: id, ...rest };
+    });
+  }
+
+  // Transform timeEntries if they exist
+  if (task.timeEntries) {
+    backendTask.timeEntries = task.timeEntries.map((entry) => {
+      const { id, ...rest } = entry;
       return { _id: id, ...rest };
     });
   }

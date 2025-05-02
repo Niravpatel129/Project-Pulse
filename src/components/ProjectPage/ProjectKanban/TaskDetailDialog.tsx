@@ -13,11 +13,12 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import { Attachment, Column, Comment, Task } from '@/services/kanbanApi';
+import { Attachment, Column, Comment, Task, TimeEntry } from '@/services/kanbanApi';
 import { format } from 'date-fns';
 import {
   ChevronDown,
   ChevronUp,
+  Clock,
   FileImage,
   FileText,
   Link as LinkIcon,
@@ -87,6 +88,12 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   // Track removals in progress
   const [removingAttachmentIds, setRemovingAttachmentIds] = useState<string[]>([]);
 
+  // Add state for time tracking
+  const [showTimeInput, setShowTimeInput] = useState(false);
+  const [timeToLog, setTimeToLog] = useState<number>(0);
+  const [timeDescription, setTimeDescription] = useState('');
+  const [timeEntryDate, setTimeEntryDate] = useState<Date>(new Date());
+
   useEffect(() => {
     if (task) {
       setEditedTitle(task.title);
@@ -99,6 +106,12 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
 
       // Set story points when task changes
       setStoryPoints(task.storyPoints);
+
+      // Reset time tracking state
+      setShowTimeInput(false);
+      setTimeToLog(0);
+      setTimeDescription('');
+      setTimeEntryDate(new Date());
     }
   }, [task]);
 
@@ -305,6 +318,45 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
         });
       });
     }
+  };
+
+  const handleLogTime = () => {
+    if (!task || !timeToLog || timeToLog <= 0) return;
+
+    // Create a new time entry
+    const newTimeEntry: TimeEntry = {
+      id: Date.now().toString(), // Generate a temporary ID
+      hours: timeToLog,
+      description: timeDescription,
+      date: timeEntryDate.toISOString(),
+      user: {
+        id: '1', // In a real app, this would be the current user's ID
+        name: 'Current User', // In a real app, this would be the current user's name
+        avatar: '/avatars/03.png', // In a real app, this would be the current user's avatar
+      },
+    };
+
+    // Get existing time entries or initialize empty array
+    const existingTimeEntries = task.timeEntries || [];
+
+    // Update the task with the new time entry
+    onTaskUpdate({
+      ...task,
+      timeEntries: [...existingTimeEntries, newTimeEntry],
+    });
+
+    // Reset form
+    setTimeToLog(0);
+    setTimeDescription('');
+    setShowTimeInput(false);
+  };
+
+  // Calculate total logged hours
+  const getTotalLoggedHours = () => {
+    if (!task?.timeEntries) return 0;
+    return task.timeEntries.reduce((total, entry) => {
+      return total + entry.hours;
+    }, 0);
   };
 
   // Early return if no task
@@ -702,6 +754,175 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                   </DropdownMenu>
                 </div>
 
+                {/* Time Tracking */}
+                <div className='space-y-1.5'>
+                  <div className='text-xs text-gray-500'>Time Tracking</div>
+
+                  {/* Show logged hours summary */}
+                  <div className='flex items-center gap-2 mb-1'>
+                    <Clock size={14} className='text-gray-500' />
+                    <span className='text-sm'>{getTotalLoggedHours()} hours logged</span>
+                  </div>
+
+                  {/* Form to log time */}
+                  {showTimeInput ? (
+                    <div className='space-y-2 mt-2'>
+                      <div className='flex items-center gap-2'>
+                        <Input
+                          type='number'
+                          placeholder='Hours'
+                          value={timeToLog || ''}
+                          min={0.25}
+                          step={0.25}
+                          onChange={(e) => {
+                            return setTimeToLog(parseFloat(e.target.value) || 0);
+                          }}
+                          className='w-20 h-9'
+                        />
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant='outline' className='h-9'>
+                              {format(timeEntryDate, 'MMM d')}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className='w-auto p-0'>
+                            <CalendarComponent
+                              mode='single'
+                              selected={timeEntryDate}
+                              onSelect={(date) => {
+                                return date && setTimeEntryDate(date);
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      <Textarea
+                        placeholder='Description (optional)'
+                        value={timeDescription}
+                        onChange={(e) => {
+                          return setTimeDescription(e.target.value);
+                        }}
+                        className='resize-none min-h-[60px]'
+                      />
+                      <div className='flex justify-end gap-2'>
+                        <Button
+                          size='sm'
+                          variant='ghost'
+                          onClick={() => {
+                            return setShowTimeInput(false);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size='sm'
+                          onClick={handleLogTime}
+                          disabled={!timeToLog || timeToLog <= 0}
+                        >
+                          Log Time
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      variant='outline'
+                      className='w-full justify-start h-9'
+                      size='sm'
+                      onClick={() => {
+                        return setShowTimeInput(true);
+                      }}
+                    >
+                      + Log Hours
+                    </Button>
+                  )}
+
+                  {/* Display time entries if they exist */}
+                  {task?.timeEntries && task.timeEntries.length > 0 && (
+                    <div className='mt-3 space-y-2'>
+                      <div className='text-xs text-gray-500'>Time History</div>
+                      <div className='space-y-2 max-h-[200px] overflow-y-auto'>
+                        {task.timeEntries.map((entry) => {
+                          return (
+                            <div
+                              key={entry.id}
+                              className='flex justify-between items-start border rounded-sm p-2 text-sm'
+                            >
+                              <div>
+                                <div className='font-medium'>{entry.hours} hours</div>
+                                {entry.description && (
+                                  <p className='text-xs text-gray-600 mt-1'>{entry.description}</p>
+                                )}
+                              </div>
+                              <div className='text-right'>
+                                <div className='text-xs text-gray-500'>
+                                  {format(new Date(entry.date), 'MMM d, yyyy')}
+                                </div>
+                                <div className='flex items-center gap-1 mt-1 text-xs text-gray-500'>
+                                  <Avatar className='h-4 w-4'>
+                                    <AvatarImage src={entry.user.avatar} alt={entry.user.name} />
+                                    <AvatarFallback>{entry.user.name.charAt(0)}</AvatarFallback>
+                                  </Avatar>
+                                  {entry.user.name}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Story Points */}
+                <div className='space-y-1.5'>
+                  <div className='text-xs text-gray-500'>Story Points</div>
+                  {editingStoryPoints ? (
+                    <div className='flex items-center gap-2'>
+                      <Input
+                        type='number'
+                        value={storyPoints !== undefined ? storyPoints : ''}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          setStoryPoints(isNaN(value) ? undefined : value);
+                        }}
+                        className='w-24 h-9'
+                        autoFocus
+                        onBlur={() => {
+                          return saveStoryPoints(storyPoints);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') saveStoryPoints(storyPoints);
+                          if (e.key === 'Escape') {
+                            setStoryPoints(task.storyPoints);
+                            setEditingStoryPoints(false);
+                          }
+                        }}
+                      />
+                      <Button
+                        size='sm'
+                        className='h-9'
+                        onClick={() => {
+                          return saveStoryPoints(storyPoints);
+                        }}
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant='outline'
+                      className='w-full justify-start h-9'
+                      size='sm'
+                      onClick={() => {
+                        return setEditingStoryPoints(true);
+                      }}
+                    >
+                      {task.storyPoints !== undefined ? task.storyPoints : 'No points'}
+                    </Button>
+                  )}
+                </div>
+
                 {/* Labels */}
                 <div className='space-y-1.5'>
                   <div className='text-xs text-gray-500'>Labels</div>
@@ -768,55 +989,6 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                       </Button>
                     )}
                   </div>
-                </div>
-
-                {/* Story Points */}
-                <div className='space-y-1.5'>
-                  <div className='text-xs text-gray-500'>Story Points</div>
-                  {editingStoryPoints ? (
-                    <div className='flex items-center gap-2'>
-                      <Input
-                        type='number'
-                        value={storyPoints !== undefined ? storyPoints : ''}
-                        onChange={(e) => {
-                          const value = parseInt(e.target.value);
-                          setStoryPoints(isNaN(value) ? undefined : value);
-                        }}
-                        className='w-24 h-9'
-                        autoFocus
-                        onBlur={() => {
-                          return saveStoryPoints(storyPoints);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') saveStoryPoints(storyPoints);
-                          if (e.key === 'Escape') {
-                            setStoryPoints(task.storyPoints);
-                            setEditingStoryPoints(false);
-                          }
-                        }}
-                      />
-                      <Button
-                        size='sm'
-                        className='h-9'
-                        onClick={() => {
-                          return saveStoryPoints(storyPoints);
-                        }}
-                      >
-                        Save
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      variant='outline'
-                      className='w-full justify-start h-9'
-                      size='sm'
-                      onClick={() => {
-                        return setEditingStoryPoints(true);
-                      }}
-                    >
-                      {task.storyPoints !== undefined ? task.storyPoints : 'No points'}
-                    </Button>
-                  )}
                 </div>
               </div>
             </ScrollArea>
