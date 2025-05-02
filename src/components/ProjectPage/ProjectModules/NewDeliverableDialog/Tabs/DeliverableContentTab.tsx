@@ -422,7 +422,7 @@ const DeliverableContentTab = ({
       setSelectedDatabaseId(field.selectedDatabaseId || null);
       setDbTempAlignment(field.alignment || 'left');
 
-      // Load visible columns if they exist
+      // Load saved column visibility settings if they exist
       if (field.visibleColumns) {
         setVisibleColumns(field.visibleColumns);
       }
@@ -734,21 +734,13 @@ const DeliverableContentTab = ({
                 }`}
               >
                 <div
-                  className={`flex items-center gap-3 ${
+                  className={`${
                     field.alignment === 'center' || field.alignment === 'right'
-                      ? 'inline-flex'
+                      ? 'inline-block'
                       : 'w-full'
                   }`}
                 >
-                  <div className='flex-1'>
-                    <div className='font-medium text-neutral-900'>
-                      {field.selectedItem.name || findDisplayValue(field.selectedItem)}
-                    </div>
-                    <DisplaySecondaryValues
-                      item={field.selectedItem}
-                      fieldVisibleColumns={field.visibleColumns}
-                    />
-                  </div>
+                  <DisplayItemDetails item={field.selectedItem} useFieldVisibility={true} />
                 </div>
               </div>
             ) : (
@@ -776,7 +768,37 @@ const DeliverableContentTab = ({
     return stringFields[0] || `Item ${item.id}`;
   };
 
-  // Helper component to display secondary values
+  // Reset visibility settings when database selection changes
+  useEffect(() => {
+    if (selectedDatabaseId) {
+      // If editing an existing field with this database and saved visibility settings
+      if (editingDatabaseFieldId) {
+        const field = formData.customFields.find((f: any) => {
+          return f.id === editingDatabaseFieldId;
+        });
+        if (field && field.selectedDatabaseId === selectedDatabaseId && field.visibleColumns) {
+          // Use saved visibility settings
+          setVisibleColumns(field.visibleColumns);
+          return;
+        }
+      }
+
+      // Default visibility - wait for columns to load first
+      if (tableColumns.length > 0) {
+        const initialVisibility: Record<string, boolean> = {};
+        tableColumns.forEach((column: any) => {
+          // By default show all columns except internal/system ones
+          const isSystem = ['id', 'position', '_id', '__v', 'createdAt', 'updatedAt'].includes(
+            column.name,
+          );
+          initialVisibility[column.id] = !isSystem;
+        });
+        setVisibleColumns(initialVisibility);
+      }
+    }
+  }, [selectedDatabaseId, tableColumns, editingDatabaseFieldId, formData.customFields]);
+
+  // Helper component to display secondary values properly respecting column visibility
   const DisplaySecondaryValues = ({
     item,
     fieldVisibleColumns,
@@ -798,6 +820,9 @@ const DeliverableContentTab = ({
 
     if (secondaryFields.length === 0) return null;
 
+    // Use provided field visibility settings if available, otherwise use current modal settings
+    const effectiveVisibleColumns = fieldVisibleColumns || visibleColumns;
+
     return (
       <div className='text-xs space-y-1 text-neutral-600'>
         {secondaryFields.map(([key, value]) => {
@@ -807,13 +832,8 @@ const DeliverableContentTab = ({
           });
           const displayName = column?.name || key;
 
-          // Check if this column should be visible based on field settings (if provided)
-          if (column && fieldVisibleColumns && fieldVisibleColumns[column.id] === false) {
-            return null;
-          }
-
-          // Check if this column should be visible based on current modal settings
-          if (column && !fieldVisibleColumns && visibleColumns[column.id] === false) {
+          // Skip if column is set to hidden in visibility settings
+          if (column && effectiveVisibleColumns[column.id] === false) {
             return null;
           }
 
@@ -1117,15 +1137,9 @@ const DeliverableContentTab = ({
             >
               {field.selectedItem ? (
                 <div className='w-full'>
-                  <div className='flex items-center gap-3'>
+                  <div className='flex items-center'>
                     <div className='flex-1'>
-                      <div className='font-medium text-neutral-900'>
-                        {field.selectedItem.name || findDisplayValue(field.selectedItem)}
-                      </div>
-                      <DisplaySecondaryValues
-                        item={field.selectedItem}
-                        fieldVisibleColumns={field.visibleColumns}
-                      />
+                      <DisplayItemDetails item={field.selectedItem} useFieldVisibility={true} />
                     </div>
                   </div>
 
@@ -1354,7 +1368,13 @@ const DeliverableContentTab = ({
   };
 
   // Component to display item details with visible columns
-  const DisplayItemDetails = ({ item }: { item: any }) => {
+  const DisplayItemDetails = ({
+    item,
+    useFieldVisibility = false,
+  }: {
+    item: any;
+    useFieldVisibility?: boolean;
+  }) => {
     // Get all fields except system fields
     const displayFields = Object.entries(item).filter(([key, value]) =>
       // Skip system/internal fields
@@ -1371,6 +1391,14 @@ const DeliverableContentTab = ({
       return value !== primaryValue && key !== 'name';
     });
 
+    // Get visibility settings - if in modal use current state, if displaying a field use field's saved settings
+    const effectiveVisibleColumns =
+      useFieldVisibility && editingFieldId
+        ? formData.customFields.find((f: any) => {
+            return f.id === editingFieldId;
+          })?.visibleColumns || visibleColumns
+        : visibleColumns;
+
     return (
       <>
         <div className='font-medium text-neutral-800 truncate'>
@@ -1386,7 +1414,7 @@ const DeliverableContentTab = ({
               const displayName = column?.name || key;
 
               // Check if this column should be visible
-              if (column && visibleColumns[column.id] === false) {
+              if (column && effectiveVisibleColumns[column.id] === false) {
                 return null;
               }
 
@@ -1768,7 +1796,7 @@ const DeliverableContentTab = ({
                                 <div className='mt-1 h-5 w-5 border-2 border-neutral-200 rounded-full flex-shrink-0'></div>
                               )}
                               <div className='flex-1 min-w-0'>
-                                <DisplayItemDetails item={item} />
+                                <DisplayItemDetails item={item} useFieldVisibility={true} />
                               </div>
                             </div>
                           );
