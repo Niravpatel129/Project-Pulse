@@ -22,7 +22,7 @@ import {
   Type,
   X,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface DeliverableContentTabProps {
   formData: any;
@@ -62,6 +62,12 @@ const getFieldError = (field: any, errors: any) => {
   return fieldErrors.length > 0 ? fieldErrors[0] : null;
 };
 
+interface FieldEditorState {
+  linkText: string;
+  linkUrl: string;
+  listItem: string;
+}
+
 const DeliverableContentTab = ({
   formData,
   errors,
@@ -74,66 +80,118 @@ const DeliverableContentTab = ({
   updateFieldProperty,
   setHasUnsavedChanges,
 }: DeliverableContentTabProps) => {
-  const [newLinkText, setNewLinkText] = useState('');
-  const [newLinkUrl, setNewLinkUrl] = useState('');
-  const [newListItem, setNewListItem] = useState('');
+  // Single editor state object to track temporary edit values
+  const [editorState, setEditorState] = useState<Record<string, FieldEditorState>>({});
   const [fieldsWithAnimation, setFieldsWithAnimation] = useState<string[]>([]);
   const prevFieldsLengthRef = useRef(0);
 
-  // Focus input when entering edit mode
-  useEffect(() => {
-    if (editingFieldId) {
-      // Find the first input in the editing field and focus it
-      const input = document.querySelector(
-        `.content-item[data-field-id="${editingFieldId}"] input, .content-item[data-field-id="${editingFieldId}"] textarea`,
+  // Safe way to get the current editor state for a field
+  const getEditorStateForField = useCallback(
+    (fieldId: string): FieldEditorState => {
+      return (
+        editorState[fieldId] || {
+          linkText: '',
+          linkUrl: '',
+          listItem: '',
+        }
       );
-      if (input) {
-        (input as HTMLElement).focus();
+    },
+    [editorState],
+  );
+
+  // Safe way to update editor state for a specific field and property
+  const updateEditorState = useCallback(
+    (fieldId: string, key: keyof FieldEditorState, value: string) => {
+      setEditorState((prev) => {
+        return {
+          ...prev,
+          [fieldId]: {
+            ...getEditorStateForField(fieldId),
+            [key]: value,
+          },
+        };
+      });
+    },
+    [getEditorStateForField],
+  );
+
+  // Safely update field property with validation
+  const safeUpdateFieldProperty = useCallback(
+    (fieldId: string, property: string, value: any) => {
+      // Verify that this field exists before updating
+      const fieldExists = formData.customFields.some((field: any) => {
+        return field.id === fieldId;
+      });
+      if (!fieldExists) {
+        console.error(`Attempted to update non-existent field: ${fieldId}`);
+        return;
       }
 
-      // Set up link editing if it's a link
+      updateFieldProperty(fieldId, property, value);
+      setHasUnsavedChanges(true);
+    },
+    [formData.customFields, updateFieldProperty, setHasUnsavedChanges],
+  );
+
+  // Initialize editor state when entering edit mode
+  useEffect(() => {
+    if (editingFieldId) {
       const field = formData.customFields.find((f: any) => {
         return f.id === editingFieldId;
       });
-      if (field?.type === 'link') {
-        setNewLinkText(field.text || '');
-        setNewLinkUrl(field.url || '');
+
+      if (field) {
+        // Initialize editor state for this field
+        setEditorState((prev) => {
+          return {
+            ...prev,
+            [field.id]: {
+              linkText: field.text || '',
+              linkUrl: field.url || '',
+              listItem: '',
+            },
+          };
+        });
+
+        // Find and focus the first input
+        setTimeout(() => {
+          const input = document.querySelector(
+            `.content-item[data-field-id="${editingFieldId}"] input, .content-item[data-field-id="${editingFieldId}"] textarea`,
+          );
+          if (input) {
+            (input as HTMLElement).focus();
+          }
+        }, 50);
       }
     }
   }, [editingFieldId, formData.customFields]);
 
-  // Improved animation effect for new fields
+  // Animation effect for new fields
   useEffect(() => {
     const currentFieldsLength = formData.customFields.length;
 
-    // Only apply animation when a new field is added
     if (currentFieldsLength > prevFieldsLengthRef.current && currentFieldsLength > 0) {
       const lastField = formData.customFields[currentFieldsLength - 1];
 
       if (lastField && !fieldsWithAnimation.includes(lastField.id)) {
-        // Add the field to animated fields list
         setFieldsWithAnimation((prev) => {
           return [...prev, lastField.id];
         });
 
-        // Clean up animation class after it completes
-        const animationDuration = 500; // Match this with your CSS animation duration
         const timer = setTimeout(() => {
           setFieldsWithAnimation((prev) => {
             return prev.filter((id) => {
               return id !== lastField.id;
             });
           });
-        }, animationDuration);
+        }, 500);
 
-        // Clean up timer if component unmounts
         return () => {
           return clearTimeout(timer);
         };
       }
     }
 
-    // Update reference for next render
     prevFieldsLengthRef.current = currentFieldsLength;
   }, [formData.customFields, fieldsWithAnimation]);
 
@@ -190,40 +248,55 @@ const DeliverableContentTab = ({
     }
   };
 
-  // Add a list item
-  const addListItem = (field: any) => {
-    if (!newListItem.trim()) return;
+  // Add a list item to a field
+  const addListItem = useCallback(
+    (field: any) => {
+      const state = getEditorStateForField(field.id);
+      if (!state.listItem.trim()) return;
 
-    const updatedItems = [...(field.items || []), newListItem];
-    updateFieldProperty(field.id, 'items', updatedItems);
-    setNewListItem('');
-  };
+      const updatedItems = [...(field.items || []), state.listItem];
+      safeUpdateFieldProperty(field.id, 'items', updatedItems);
+      updateEditorState(field.id, 'listItem', '');
+    },
+    [getEditorStateForField, safeUpdateFieldProperty, updateEditorState],
+  );
 
-  // Remove a list item
-  const removeListItem = (field: any, index: number) => {
-    const updatedItems = [...(field.items || [])];
-    updatedItems.splice(index, 1);
-    updateFieldProperty(field.id, 'items', updatedItems);
-  };
+  // Remove a list item from a field
+  const removeListItem = useCallback(
+    (field: any, index: number) => {
+      const updatedItems = [...(field.items || [])];
+      updatedItems.splice(index, 1);
+      safeUpdateFieldProperty(field.id, 'items', updatedItems);
+    },
+    [safeUpdateFieldProperty],
+  );
 
-  // Update a list item
-  const updateListItem = (field: any, index: number, value: string) => {
-    const updatedItems = [...(field.items || [])];
-    updatedItems[index] = value;
-    updateFieldProperty(field.id, 'items', updatedItems);
-  };
+  // Update a list item in a field
+  const updateListItem = useCallback(
+    (field: any, index: number, value: string) => {
+      const updatedItems = [...(field.items || [])];
+      updatedItems[index] = value;
+      safeUpdateFieldProperty(field.id, 'items', updatedItems);
+    },
+    [safeUpdateFieldProperty],
+  );
 
-  // Save link data
-  const saveLink = (field: any) => {
-    updateFieldProperty(field.id, 'text', newLinkText);
-    updateFieldProperty(field.id, 'url', newLinkUrl);
-    setNewLinkText('');
-    setNewLinkUrl('');
-  };
+  // Save link data for a field
+  const saveLink = useCallback(
+    (field: any) => {
+      const state = getEditorStateForField(field.id);
+      if (!state.linkUrl.trim()) return;
+
+      safeUpdateFieldProperty(field.id, 'text', state.linkText);
+      safeUpdateFieldProperty(field.id, 'url', state.linkUrl);
+    },
+    [getEditorStateForField, safeUpdateFieldProperty],
+  );
 
   // Render edit mode content based on field type
   const renderEditMode = (field: any) => {
     const fieldError = getFieldError(field, errors);
+    const fieldState = getEditorStateForField(field.id);
 
     switch (field.type) {
       case 'shortText':
@@ -232,7 +305,7 @@ const DeliverableContentTab = ({
             <Input
               value={field.content || ''}
               onChange={(e) => {
-                return updateFieldProperty(field.id, 'content', e.target.value);
+                return safeUpdateFieldProperty(field.id, 'content', e.target.value);
               }}
               placeholder='Enter short text'
               className={`w-full border-none shadow-none focus-visible:ring-0 px-0 text-base ${
@@ -249,7 +322,7 @@ const DeliverableContentTab = ({
           <Textarea
             value={field.content || ''}
             onChange={(e) => {
-              return updateFieldProperty(field.id, 'content', e.target.value);
+              return safeUpdateFieldProperty(field.id, 'content', e.target.value);
             }}
             placeholder='Enter detailed text'
             className='w-full resize-none border-none shadow-none focus-visible:ring-0 px-0'
@@ -288,9 +361,9 @@ const DeliverableContentTab = ({
 
             <div className='flex items-center gap-2 pt-1'>
               <Input
-                value={newListItem}
+                value={fieldState.listItem}
                 onChange={(e) => {
-                  return setNewListItem(e.target.value);
+                  return updateEditorState(field.id, 'listItem', e.target.value);
                 }}
                 placeholder='Add new item'
                 className='flex-1 border-none shadow-none focus-visible:ring-0 px-0'
@@ -309,7 +382,7 @@ const DeliverableContentTab = ({
                   return addListItem(field);
                 }}
                 className='h-8 w-8 shrink-0'
-                disabled={!newListItem.trim()}
+                disabled={!fieldState.listItem.trim()}
               >
                 <Plus size={16} />
               </Button>
@@ -329,9 +402,9 @@ const DeliverableContentTab = ({
               </Label>
               <Input
                 id={`link-text-${field.id}`}
-                value={newLinkText || field.text || ''}
+                value={fieldState.linkText}
                 onChange={(e) => {
-                  return setNewLinkText(e.target.value);
+                  return updateEditorState(field.id, 'linkText', e.target.value);
                 }}
                 placeholder='Display text for the link'
                 className='border-none shadow-none focus-visible:ring-0 px-0'
@@ -347,9 +420,9 @@ const DeliverableContentTab = ({
               </Label>
               <Input
                 id={`link-url-${field.id}`}
-                value={newLinkUrl || field.url || ''}
+                value={fieldState.linkUrl}
                 onChange={(e) => {
-                  return setNewLinkUrl(e.target.value);
+                  return updateEditorState(field.id, 'linkUrl', e.target.value);
                 }}
                 placeholder='https://example.com'
                 className='border-none shadow-none focus-visible:ring-0 px-0'
@@ -360,7 +433,7 @@ const DeliverableContentTab = ({
               type='button'
               size='sm'
               className='mt-1'
-              disabled={!newLinkUrl.trim()}
+              disabled={!fieldState.linkUrl.trim()}
               onClick={() => {
                 return saveLink(field);
               }}
@@ -375,7 +448,7 @@ const DeliverableContentTab = ({
           <Textarea
             value={field.content || ''}
             onChange={(e) => {
-              return updateFieldProperty(field.id, 'content', e.target.value);
+              return safeUpdateFieldProperty(field.id, 'content', e.target.value);
             }}
             placeholder='Enter important specification or requirement'
             className='w-full resize-none border-none shadow-none focus-visible:ring-0 px-0'
@@ -386,6 +459,26 @@ const DeliverableContentTab = ({
       default:
         return null;
     }
+  };
+
+  // Handle field selection for editing
+  const handleSelectFieldForEdit = (fieldId: string) => {
+    // Check if it's a different field than currently editing
+    if (editingFieldId && editingFieldId !== fieldId) {
+      // Save any pending changes before switching fields
+      const previousField = formData.customFields.find((f: any) => {
+        return f.id === editingFieldId;
+      });
+      if (previousField?.type === 'link') {
+        const prevState = getEditorStateForField(editingFieldId);
+        if (prevState.linkUrl.trim()) {
+          safeUpdateFieldProperty(editingFieldId, 'text', prevState.linkText);
+          safeUpdateFieldProperty(editingFieldId, 'url', prevState.linkUrl);
+        }
+      }
+    }
+
+    setEditingFieldId(fieldId);
   };
 
   return (
@@ -421,7 +514,8 @@ const DeliverableContentTab = ({
                   <DropdownMenuItem
                     key={type.id}
                     onClick={() => {
-                      return addCustomField(type.id);
+                      addCustomField(type.id);
+                      setHasUnsavedChanges(true);
                     }}
                   >
                     {type.icon}
@@ -440,13 +534,14 @@ const DeliverableContentTab = ({
           <div className='space-y-5 mb-6'>
             {formData.customFields.map((field: any, index: number) => {
               const isAnimated = fieldsWithAnimation.includes(field.id);
+              const isEditing = editingFieldId === field.id;
 
               return (
                 <div
                   key={field.id}
                   data-field-id={field.id}
                   className={`content-item bg-white rounded-lg border ${
-                    editingFieldId === field.id
+                    isEditing
                       ? 'border-blue-300 shadow-sm ring-1 ring-blue-200'
                       : 'border-neutral-200 hover:border-neutral-300'
                   } transition-all duration-150 overflow-hidden ${
@@ -456,29 +551,39 @@ const DeliverableContentTab = ({
                   <div className='flex justify-between items-start p-4'>
                     {/* Label/header area */}
                     <div className='flex-1'>
-                      {editingFieldId === field.id ? (
+                      {isEditing ? (
                         <Input
-                          value={field.label}
+                          value={field.label || ''}
                           onChange={(e) => {
-                            return updateFieldProperty(field.id, 'label', e.target.value);
+                            return safeUpdateFieldProperty(field.id, 'label', e.target.value);
                           }}
                           className='font-medium border-none shadow-none focus-visible:ring-0 px-0 text-base'
+                          placeholder={`Enter ${
+                            FIELD_TYPES.find((t) => {
+                              return t.id === field.type;
+                            })?.label || 'Section'
+                          } title`}
                         />
                       ) : (
                         <h4
                           className='font-medium text-neutral-900 cursor-pointer'
                           onClick={() => {
-                            return setEditingFieldId(field.id);
+                            return handleSelectFieldForEdit(field.id);
                           }}
                         >
-                          {field.label}
+                          {field.label ||
+                            `Untitled ${
+                              FIELD_TYPES.find((t) => {
+                                return t.id === field.type;
+                              })?.label || 'Section'
+                            }`}
                         </h4>
                       )}
                     </div>
 
                     {/* Actions area */}
                     <div className='flex items-center gap-1'>
-                      {editingFieldId === field.id ? (
+                      {isEditing ? (
                         <Button
                           type='button'
                           size='sm'
@@ -500,14 +605,15 @@ const DeliverableContentTab = ({
                           <DropdownMenuContent align='end' className='w-48'>
                             <DropdownMenuItem
                               onClick={() => {
-                                return setEditingFieldId(field.id);
+                                return handleSelectFieldForEdit(field.id);
                               }}
                             >
                               Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {
-                                return moveFieldUp(index);
+                                moveFieldUp(index);
+                                setHasUnsavedChanges(true);
                               }}
                               disabled={index === 0}
                             >
@@ -516,7 +622,8 @@ const DeliverableContentTab = ({
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {
-                                return moveFieldDown(index);
+                                moveFieldDown(index);
+                                setHasUnsavedChanges(true);
                               }}
                               disabled={index === formData.customFields.length - 1}
                             >
@@ -525,7 +632,8 @@ const DeliverableContentTab = ({
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {
-                                return removeCustomField(field.id);
+                                removeCustomField(field.id);
+                                setHasUnsavedChanges(true);
                               }}
                               className='text-red-600'
                             >
@@ -540,13 +648,13 @@ const DeliverableContentTab = ({
 
                   {/* Content area */}
                   <div className='px-4 pb-4'>
-                    {editingFieldId === field.id ? (
+                    {isEditing ? (
                       renderEditMode(field)
                     ) : (
                       <div
                         className='text-neutral-700 cursor-pointer'
                         onClick={() => {
-                          return setEditingFieldId(field.id);
+                          return handleSelectFieldForEdit(field.id);
                         }}
                       >
                         {getFormattedContent(field)}
@@ -576,7 +684,8 @@ const DeliverableContentTab = ({
                   <DropdownMenuItem
                     key={type.id}
                     onClick={() => {
-                      return addCustomField(type.id);
+                      addCustomField(type.id);
+                      setHasUnsavedChanges(true);
                     }}
                   >
                     {type.icon}
