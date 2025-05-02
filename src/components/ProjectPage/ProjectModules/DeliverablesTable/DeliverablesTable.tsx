@@ -506,6 +506,10 @@ const DeliverablesTable = () => {
         return 'bg-blue-500/10 text-blue-500';
       case 'custom':
         return 'bg-green-500/10 text-green-500';
+      case 'package':
+        return 'bg-orange-500/10 text-orange-500';
+      case 'physical':
+        return 'bg-red-500/10 text-red-500';
       default:
         return 'bg-blue-500/10 text-blue-500';
     }
