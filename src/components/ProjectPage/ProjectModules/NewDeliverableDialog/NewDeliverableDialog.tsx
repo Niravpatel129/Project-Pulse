@@ -13,19 +13,19 @@ const STAGES = [
     id: 1,
     title: 'Basic Info',
     value: 'basic-info',
-    icon: <FileText className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />,
+    icon: <FileText className='mr-2 opacity-70' size={15} aria-hidden='true' />,
   },
   {
     id: 2,
     title: 'Details',
     value: 'details',
-    icon: <Settings className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />,
+    icon: <Settings className='mr-2 opacity-70' size={15} aria-hidden='true' />,
   },
   {
     id: 3,
     title: 'Review',
     value: 'review',
-    icon: <ListChecks className='-ms-0.5 me-1.5 opacity-60' size={16} aria-hidden='true' />,
+    icon: <ListChecks className='mr-2 opacity-70' size={15} aria-hidden='true' />,
   },
 ];
 
@@ -83,10 +83,10 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className='sm:max-w-[800px] p-0 overflow-hidden'>
-        <div className='flex flex-col h-[500px]'>
-          <DialogHeader className='p-4 pb-3 border-b mb-0'>
-            <DialogTitle>New Deliverable</DialogTitle>
+      <DialogContent className='sm:max-w-[640px] p-0 overflow-hidden shadow-sm border-neutral-200 transition-all duration-150 ease-in-out'>
+        <div className='flex flex-col h-[520px]'>
+          <DialogHeader className='px-5 py-4 border-b border-neutral-100'>
+            <DialogTitle className='text-base font-medium'>New Deliverable</DialogTitle>
           </DialogHeader>
 
           <div className='flex flex-1 overflow-hidden'>
@@ -96,13 +96,17 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
               className='flex flex-row w-full h-full'
             >
               <div className='flex h-full w-full'>
-                <TabsList className='text-foreground flex-col gap-1 rounded-none bg-transparent p-4 w-52 border-r h-full justify-start'>
+                <TabsList className='flex-col gap-0.5 rounded-none bg-transparent px-3 py-4 w-48 border-r border-neutral-100 h-full justify-start'>
                   {STAGES.map((stage) => {
                     return (
                       <TabsTrigger
                         key={stage.value}
                         value={stage.value}
-                        className='hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative w-full justify-start after:absolute after:inset-y-0 after:start-0 after:-ms-1 after:w-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none'
+                        className='relative w-full justify-start px-3 py-2 text-sm font-normal text-neutral-600 data-[state=active]:text-neutral-900 transition-colors duration-150 
+                      hover:bg-neutral-50 data-[state=active]:bg-neutral-100/50 
+                      data-[state=active]:after:bg-neutral-900 after:absolute after:inset-y-0 after:left-0 
+                      after:w-[2px] data-[state=active]:after:opacity-100 after:opacity-0 
+                      rounded-md data-[state=active]:shadow-none'
                       >
                         {stage.icon}
                         {stage.title}
@@ -112,20 +116,28 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                 </TabsList>
 
                 <div className='flex-1'>
-                  <TabsContent value='basic-info' className='p-6 m-0 h-full overflow-y-auto'>
-                    <div className='space-y-4'>
-                      <div className='space-y-2'>
-                        <Label htmlFor='name'>Deliverable Name</Label>
+                  <TabsContent value='basic-info' className='p-5 m-0 h-full overflow-y-auto'>
+                    <div className='space-y-5'>
+                      <div className='space-y-1.5'>
+                        <Label htmlFor='name' className='text-sm font-medium text-neutral-700'>
+                          Deliverable Name
+                        </Label>
                         <Input
                           id='name'
                           name='name'
                           value={formData.name}
                           onChange={handleChange}
                           placeholder='Enter deliverable name'
+                          className='transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200'
                         />
                       </div>
-                      <div className='space-y-2'>
-                        <Label htmlFor='description'>Description</Label>
+                      <div className='space-y-1.5'>
+                        <Label
+                          htmlFor='description'
+                          className='text-sm font-medium text-neutral-700'
+                        >
+                          Description
+                        </Label>
                         <Textarea
                           id='description'
                           name='description'
@@ -133,45 +145,57 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                           onChange={handleChange}
                           placeholder='Brief description of the deliverable'
                           rows={4}
+                          className='resize-none transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200'
                         />
                       </div>
-                      <div className='space-y-2'>
-                        <Label htmlFor='dueDate'>Due Date</Label>
+                      <div className='space-y-1.5'>
+                        <Label htmlFor='dueDate' className='text-sm font-medium text-neutral-700'>
+                          Due Date
+                        </Label>
                         <Input
                           id='dueDate'
                           name='dueDate'
                           value={formData.dueDate}
                           onChange={handleChange}
                           type='date'
+                          className='transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200'
                         />
                       </div>
                     </div>
                   </TabsContent>
 
-                  <TabsContent value='details' className='p-6 m-0 h-full overflow-y-auto'>
-                    <div className='space-y-4'>
-                      <div className='space-y-2'>
-                        <Label htmlFor='priority'>Priority</Label>
+                  <TabsContent value='details' className='p-5 m-0 h-full overflow-y-auto'>
+                    <div className='space-y-5'>
+                      <div className='space-y-1.5'>
+                        <Label htmlFor='priority' className='text-sm font-medium text-neutral-700'>
+                          Priority
+                        </Label>
                         <Input
                           id='priority'
                           name='priority'
                           value={formData.priority}
                           onChange={handleChange}
                           placeholder='Set priority level'
+                          className='transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200'
                         />
                       </div>
-                      <div className='space-y-2'>
-                        <Label htmlFor='assignee'>Assignee</Label>
+                      <div className='space-y-1.5'>
+                        <Label htmlFor='assignee' className='text-sm font-medium text-neutral-700'>
+                          Assignee
+                        </Label>
                         <Input
                           id='assignee'
                           name='assignee'
                           value={formData.assignee}
                           onChange={handleChange}
                           placeholder='Assign to team member'
+                          className='transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200'
                         />
                       </div>
-                      <div className='space-y-2'>
-                        <Label htmlFor='notes'>Additional Notes</Label>
+                      <div className='space-y-1.5'>
+                        <Label htmlFor='notes' className='text-sm font-medium text-neutral-700'>
+                          Additional Notes
+                        </Label>
                         <Textarea
                           id='notes'
                           name='notes'
@@ -179,32 +203,39 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                           onChange={handleChange}
                           placeholder='Any additional details or requirements'
                           rows={4}
+                          className='resize-none transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200'
                         />
                       </div>
                     </div>
                   </TabsContent>
 
-                  <TabsContent value='review' className='p-6 m-0 h-full overflow-y-auto'>
+                  <TabsContent value='review' className='p-5 m-0 h-full overflow-y-auto'>
                     <div className='space-y-4'>
-                      <h3 className='text-lg font-medium'>Review Information</h3>
-                      <div className='space-y-3 rounded-lg border p-4'>
-                        <div>
-                          <span className='font-medium'>Name:</span> {formData.name}
+                      <h3 className='text-sm font-medium text-neutral-600'>Review Information</h3>
+                      <div className='space-y-3 rounded-md border border-neutral-100 p-4 bg-neutral-50/50'>
+                        <div className='flex flex-row gap-1 text-sm'>
+                          <span className='w-24 font-medium text-neutral-700'>Name:</span>
+                          <span className='text-neutral-800'>{formData.name || '—'}</span>
                         </div>
-                        <div>
-                          <span className='font-medium'>Description:</span> {formData.description}
+                        <div className='flex flex-row gap-1 text-sm'>
+                          <span className='w-24 font-medium text-neutral-700'>Description:</span>
+                          <span className='text-neutral-800'>{formData.description || '—'}</span>
                         </div>
-                        <div>
-                          <span className='font-medium'>Due Date:</span> {formData.dueDate}
+                        <div className='flex flex-row gap-1 text-sm'>
+                          <span className='w-24 font-medium text-neutral-700'>Due Date:</span>
+                          <span className='text-neutral-800'>{formData.dueDate || '—'}</span>
                         </div>
-                        <div>
-                          <span className='font-medium'>Priority:</span> {formData.priority}
+                        <div className='flex flex-row gap-1 text-sm'>
+                          <span className='w-24 font-medium text-neutral-700'>Priority:</span>
+                          <span className='text-neutral-800'>{formData.priority || '—'}</span>
                         </div>
-                        <div>
-                          <span className='font-medium'>Assignee:</span> {formData.assignee}
+                        <div className='flex flex-row gap-1 text-sm'>
+                          <span className='w-24 font-medium text-neutral-700'>Assignee:</span>
+                          <span className='text-neutral-800'>{formData.assignee || '—'}</span>
                         </div>
-                        <div>
-                          <span className='font-medium'>Notes:</span> {formData.notes}
+                        <div className='flex flex-row gap-1 text-sm'>
+                          <span className='w-24 font-medium text-neutral-700'>Notes:</span>
+                          <span className='text-neutral-800'>{formData.notes || '—'}</span>
                         </div>
                       </div>
                     </div>
@@ -215,10 +246,14 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
           </div>
 
           {/* Bottom Buttons */}
-          <div className='flex justify-between p-6 border-t w-full'>
+          <div className='flex justify-between px-5 py-4 border-t border-neutral-100'>
             {getCurrentStageIndex() > 0 ? (
-              <Button variant='outline' onClick={handleBack}>
-                <ChevronLeft className='mr-2 h-4 w-4' />
+              <Button
+                variant='outline'
+                onClick={handleBack}
+                className='text-sm font-normal border-neutral-200 hover:bg-neutral-50 transition-colors duration-150'
+              >
+                <ChevronLeft className='mr-1.5 h-3.5 w-3.5' />
                 Back
               </Button>
             ) : (
@@ -226,12 +261,20 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
             )}
 
             {getCurrentStageIndex() < STAGES.length - 1 ? (
-              <Button onClick={handleNext}>
+              <Button
+                onClick={handleNext}
+                className='text-sm font-normal transition-colors duration-150'
+              >
                 Continue
-                <ChevronRight className='ml-2 h-4 w-4' />
+                <ChevronRight className='ml-1.5 h-3.5 w-3.5' />
               </Button>
             ) : (
-              <Button onClick={handleSubmit}>Create Deliverable</Button>
+              <Button
+                onClick={handleSubmit}
+                className='text-sm font-normal transition-colors duration-150'
+              >
+                Create Deliverable
+              </Button>
             )}
           </div>
         </div>
