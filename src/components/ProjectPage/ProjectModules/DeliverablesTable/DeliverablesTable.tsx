@@ -263,18 +263,18 @@ const DeliverablesTable = () => {
 
       case 'attachment':
         return (
-          <div className='space-y-3'>
+          <div className='space-y-2'>
             {field.attachments && field.attachments.length > 0 ? (
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
                 {field.attachments.map((attachment, i) => {
                   return (
                     <div
                       key={i}
-                      className='group relative rounded-lg shadow-sm border border-neutral-200 overflow-hidden transition-all hover:shadow-md hover:border-neutral-300 hover:-translate-y-1 duration-200'
+                      className='group relative rounded-md border border-neutral-200 overflow-hidden transition-all hover:border-neutral-300 duration-150'
                     >
                       {/* Preview area */}
                       <div
-                        className='relative bg-neutral-50 h-32 flex items-center justify-center cursor-pointer'
+                        className='relative bg-neutral-50 h-28 flex items-center justify-center cursor-pointer'
                         onClick={() => {
                           return setPreviewAttachment(attachment);
                         }}
@@ -286,16 +286,14 @@ const DeliverablesTable = () => {
                               alt={attachment.name}
                               className='h-full w-full object-cover'
                             />
-                            <div className='absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100'>
-                              <Maximize2 className='text-white drop-shadow-md' size={22} />
+                            <div className='absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100'>
+                              <Maximize2 className='text-neutral-700 drop-shadow-sm' size={18} />
                             </div>
                           </div>
                         ) : (
-                          <div className='flex flex-col items-center justify-center h-full w-full group-hover:scale-105 transition-transform'>
-                            <div className='mb-2 transform group-hover:scale-110 transition-transform'>
-                              {getFileIcon(attachment.name)}
-                            </div>
-                            <div className='text-xs font-medium bg-neutral-200 text-neutral-700 px-2.5 py-1 rounded-full'>
+                          <div className='flex flex-col items-center justify-center h-full w-full'>
+                            <div className='mb-1.5'>{getFileIcon(attachment.name)}</div>
+                            <div className='text-xs font-normal bg-neutral-100 text-neutral-600 px-2 py-0.5 rounded-full'>
                               {getFileTypeLabel(attachment.name)}
                             </div>
                           </div>
@@ -303,12 +301,12 @@ const DeliverablesTable = () => {
                       </div>
 
                       {/* File info area */}
-                      <div className='px-3 py-2.5 bg-white border-t border-neutral-100'>
-                        <div className='text-sm font-medium text-neutral-800 truncate pb-0.5 group-hover:text-blue-600 transition-colors'>
+                      <div className='px-3 py-2 bg-white border-t border-neutral-100'>
+                        <div className='text-xs font-medium text-neutral-700 truncate pb-0.5'>
                           {attachment.name}
                         </div>
                         <div className='text-xs text-neutral-500 flex items-center'>
-                          <span className='inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5'></span>
+                          <span className='inline-block w-1.5 h-1.5 rounded-full bg-green-500/80 mr-1'></span>
                           {formatFileSize(attachment.size)}
                         </div>
                       </div>
@@ -317,7 +315,7 @@ const DeliverablesTable = () => {
                 })}
               </div>
             ) : (
-              <div className='text-neutral-500 text-sm italic'>No attachments</div>
+              <div className='text-neutral-500 text-xs italic'>No attachments</div>
             )}
           </div>
         );
@@ -335,12 +333,12 @@ const DeliverablesTable = () => {
                     : ''
                 }`}
               >
-                <div className='bg-neutral-50 border border-neutral-200 rounded-md px-4 py-3'>
-                  <div className='flex flex-col gap-2'>
-                    <div className='text-neutral-800 font-medium'>{field.selectedItem.name}</div>
+                <div className='bg-neutral-50 border border-neutral-100 rounded-md px-3 py-2'>
+                  <div className='flex flex-col gap-1.5'>
+                    <div className='text-neutral-700 text-sm'>{field.selectedItem.name}</div>
                     {field.selectedItem.Price !== undefined && (
-                      <div className='flex items-center text-green-600'>
-                        <DollarSign className='h-4 w-4 mr-1' />
+                      <div className='flex items-center text-green-600/90 text-xs'>
+                        <DollarSign className='h-3 w-3 mr-0.5' />
                         <span>${field.selectedItem.Price}</span>
                       </div>
                     )}
@@ -348,7 +346,7 @@ const DeliverablesTable = () => {
                 </div>
               </div>
             ) : (
-              <div className='text-neutral-500 text-sm italic'>No item selected</div>
+              <div className='text-neutral-500 text-xs italic'>No item selected</div>
             )}
           </div>
         );
@@ -503,24 +501,24 @@ const DeliverablesTable = () => {
     <div className='space-y-4'>
       <div className='flex items-center justify-between'>
         <div className='relative w-full max-w-sm'>
-          <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
+          <Search className='absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground/70' />
           <Input
             placeholder='Search deliverables...'
             value={searchQuery}
             onChange={(e) => {
               return setSearchQuery(e.target.value);
             }}
-            className='pl-8'
+            className='pl-8 h-9 text-sm'
           />
         </div>
       </div>
 
-      <div className='rounded-md border overflow-hidden'>
+      <div className='rounded-md border overflow-hidden border-neutral-200 bg-white'>
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className='border-neutral-200'>
               <TableHead
-                className='cursor-pointer hover:bg-muted/50 transition-colors'
+                className='cursor-pointer hover:bg-neutral-50 transition-colors h-9 text-xs font-medium text-neutral-600'
                 onClick={() => {
                   return handleSort('name');
                 }}
@@ -529,15 +527,17 @@ const DeliverablesTable = () => {
                   Name
                   {sortConfig.key === 'name' &&
                     (sortConfig.direction === 'asc' ? (
-                      <SortAsc className='h-3.5 w-3.5' />
+                      <SortAsc className='h-3 w-3' />
                     ) : (
-                      <SortDesc className='h-3.5 w-3.5' />
+                      <SortDesc className='h-3 w-3' />
                     ))}
                 </div>
               </TableHead>
-              <TableHead>Description</TableHead>
+              <TableHead className='text-xs font-medium text-neutral-600 h-9'>
+                Description
+              </TableHead>
               <TableHead
-                className='cursor-pointer hover:bg-muted/50 transition-colors'
+                className='cursor-pointer hover:bg-neutral-50 transition-colors text-xs font-medium text-neutral-600 h-9'
                 onClick={() => {
                   return handleSort('deliverableType');
                 }}
@@ -546,14 +546,14 @@ const DeliverablesTable = () => {
                   Type
                   {sortConfig.key === 'deliverableType' &&
                     (sortConfig.direction === 'asc' ? (
-                      <SortAsc className='h-3.5 w-3.5' />
+                      <SortAsc className='h-3 w-3' />
                     ) : (
-                      <SortDesc className='h-3.5 w-3.5' />
+                      <SortDesc className='h-3 w-3' />
                     ))}
                 </div>
               </TableHead>
               <TableHead
-                className='text-right cursor-pointer hover:bg-muted/50 transition-colors'
+                className='text-right cursor-pointer hover:bg-neutral-50 transition-colors text-xs font-medium text-neutral-600 h-9'
                 onClick={() => {
                   return handleSort('price');
                 }}
@@ -562,9 +562,9 @@ const DeliverablesTable = () => {
                   Price
                   {sortConfig.key === 'price' &&
                     (sortConfig.direction === 'asc' ? (
-                      <SortAsc className='h-3.5 w-3.5' />
+                      <SortAsc className='h-3 w-3' />
                     ) : (
-                      <SortDesc className='h-3.5 w-3.5' />
+                      <SortDesc className='h-3 w-3' />
                     ))}
                 </div>
               </TableHead>
@@ -576,7 +576,9 @@ const DeliverablesTable = () => {
               <TableRow>
                 <TableCell colSpan={5} className='h-[200px] text-center'>
                   <div className='flex flex-col items-center justify-center gap-2'>
-                    <div className='text-muted-foreground'>No matching deliverables found</div>
+                    <div className='text-muted-foreground text-sm'>
+                      No matching deliverables found
+                    </div>
                     {searchQuery && (
                       <Button
                         variant='ghost'
@@ -584,6 +586,7 @@ const DeliverablesTable = () => {
                         onClick={() => {
                           return setSearchQuery('');
                         }}
+                        className='h-8 text-xs mt-1'
                       >
                         Clear search
                       </Button>
@@ -596,63 +599,92 @@ const DeliverablesTable = () => {
                 const isExpanded = expandedRow === deliverable._id;
                 return (
                   <React.Fragment key={deliverable._id}>
-                    <TableRow className={cn(isExpanded && 'bg-muted/30')}>
-                      <TableCell className='font-medium'>{deliverable.name}</TableCell>
-                      <TableCell className='max-w-[300px] truncate' title={deliverable.description}>
+                    <TableRow
+                      className={cn(
+                        isExpanded ? 'bg-neutral-50' : 'bg-white',
+                        'cursor-pointer hover:bg-neutral-50/70 transition-colors border-neutral-200',
+                      )}
+                      onClick={(e) => {
+                        // Prevent toggling when clicking on dropdown menu
+                        if ((e.target as HTMLElement).closest('.dropdown-action')) return;
+                        toggleRowExpansion(deliverable._id);
+                      }}
+                    >
+                      <TableCell className='py-2.5 text-sm font-medium text-neutral-800'>
+                        {deliverable.name}
+                      </TableCell>
+                      <TableCell
+                        className='max-w-[300px] truncate py-2.5 text-sm text-neutral-600'
+                        title={deliverable.description}
+                      >
                         {deliverable.description}
                       </TableCell>
-                      <TableCell>
-                        <Badge variant='secondary' className='capitalize'>
+                      <TableCell className='py-2.5'>
+                        <Badge variant='secondary' className='text-xs font-normal py-0.5 px-2'>
                           {deliverable.deliverableType}
                         </Badge>
                       </TableCell>
-                      <TableCell className='text-right font-semibold'>
+                      <TableCell className='text-right font-medium text-sm py-2.5 text-neutral-800'>
                         $
                         {parseFloat(deliverable.price).toLocaleString('en-US', {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
                       </TableCell>
-                      <TableCell>
-                        <div className='flex items-center gap-2'>
+                      <TableCell className='py-2.5'>
+                        <div className='flex items-center gap-1 dropdown-action'>
                           <Button
                             variant='ghost'
                             size='sm'
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               return toggleRowExpansion(deliverable._id);
                             }}
-                            className='h-8 w-8 p-0'
+                            className='h-7 w-7 p-0'
                             aria-label={isExpanded ? 'Hide details' : 'Show details'}
                           >
                             {isExpanded ? (
-                              <ChevronUp className='h-4 w-4' />
+                              <ChevronUp className='h-3.5 w-3.5 text-neutral-600' />
                             ) : (
-                              <ChevronDown className='h-4 w-4' />
+                              <ChevronDown className='h-3.5 w-3.5 text-neutral-600' />
                             )}
                           </Button>
 
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant='ghost' size='sm' className='h-8 w-8 p-0'>
-                                <MoreHorizontal className='h-4 w-4' />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align='end'>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  return handleEdit(deliverable._id);
+                              <Button
+                                variant='ghost'
+                                size='sm'
+                                className='h-7 w-7 p-0'
+                                onClick={(e) => {
+                                  return e.stopPropagation();
                                 }}
                               >
-                                <Pencil className='mr-2 h-4 w-4' />
+                                <MoreHorizontal className='h-3.5 w-3.5 text-neutral-600' />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              align='end'
+                              className='dropdown-action min-w-[140px]'
+                            >
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  return handleEdit(deliverable._id);
+                                }}
+                                className='text-xs py-1.5'
+                              >
+                                <Pencil className='mr-2 h-3.5 w-3.5 text-neutral-500' />
                                 Edit
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className='text-destructive'
-                                onClick={() => {
+                                className='text-xs text-destructive py-1.5'
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   return setDeliverableToDelete(deliverable._id);
                                 }}
                               >
-                                <Trash2 className='mr-2 h-4 w-4' />
+                                <Trash2 className='mr-2 h-3.5 w-3.5' />
                                 Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -662,35 +694,37 @@ const DeliverablesTable = () => {
                     </TableRow>
 
                     {isExpanded && (
-                      <TableRow className='bg-muted/50'>
-                        <TableCell colSpan={5} className='p-0'>
+                      <TableRow className='bg-neutral-50/80 border-neutral-200'>
+                        <TableCell colSpan={5} className='p-0 border-t-0'>
                           <div className='p-4 space-y-6'>
                             {/* Basic Details Section */}
-                            <section className='border border-neutral-200 rounded-lg overflow-hidden'>
-                              <header className='bg-neutral-50 border-b border-neutral-200 px-4 py-3 flex items-center'>
-                                <FileText className='mr-3 text-neutral-500' size={18} />
-                                <h3 className='font-medium text-neutral-800'>Basic Details</h3>
+                            <section className='border border-neutral-200 rounded-lg overflow-hidden bg-white'>
+                              <header className='px-4 py-3 border-b border-neutral-100 flex items-center'>
+                                <FileText className='mr-3 text-neutral-500/70' size={16} />
+                                <h3 className='font-medium text-sm text-neutral-700'>
+                                  Basic Details
+                                </h3>
                               </header>
 
-                              <div className='p-5 space-y-5 bg-white'>
-                                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                                  <div className='space-y-1'>
-                                    <h4 className='text-sm text-neutral-500'>Deliverable Name</h4>
-                                    <p className='font-medium'>{deliverable.name || '-'}</p>
+                              <div className='p-4 space-y-4'>
+                                <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
+                                  <div>
+                                    <h4 className='text-xs text-neutral-500 mb-1.5'>Name</h4>
+                                    <p className='font-medium text-sm'>{deliverable.name || '-'}</p>
                                   </div>
-                                  <div className='space-y-1'>
-                                    <h4 className='text-sm text-neutral-500'>Deliverable Type</h4>
-                                    <p className='font-medium'>
+                                  <div>
+                                    <h4 className='text-xs text-neutral-500 mb-1.5'>Type</h4>
+                                    <p className='font-medium text-sm'>
                                       {getDeliverableTypeLabel(
                                         deliverable.deliverableType,
                                         deliverable.customDeliverableType,
                                       )}
                                     </p>
                                   </div>
-                                  <div className='space-y-1'>
-                                    <h4 className='text-sm text-neutral-500'>Price</h4>
-                                    <p className='font-medium flex items-center'>
-                                      <DollarSign className='text-green-600 mr-1 h-4 w-4' />
+                                  <div>
+                                    <h4 className='text-xs text-neutral-500 mb-1.5'>Price</h4>
+                                    <p className='font-medium text-sm flex items-center'>
+                                      <DollarSign className='text-green-600/80 mr-1 h-3.5 w-3.5' />
                                       {parseFloat(deliverable.price).toLocaleString('en-US', {
                                         minimumFractionDigits: 2,
                                         maximumFractionDigits: 2,
@@ -699,9 +733,9 @@ const DeliverablesTable = () => {
                                   </div>
                                 </div>
                                 {deliverable.description && (
-                                  <div className='space-y-1 border-t border-neutral-100 pt-4 mt-4'>
-                                    <h4 className='text-sm text-neutral-500'>Description</h4>
-                                    <p className='text-neutral-700 whitespace-pre-wrap'>
+                                  <div className='border-t border-neutral-100 pt-4 mt-1'>
+                                    <h4 className='text-xs text-neutral-500 mb-1.5'>Description</h4>
+                                    <p className='text-sm text-neutral-700 whitespace-pre-wrap leading-relaxed'>
                                       {deliverable.description}
                                     </p>
                                   </div>
@@ -711,29 +745,31 @@ const DeliverablesTable = () => {
 
                             {/* Custom Fields Section */}
                             {deliverable.customFields && deliverable.customFields.length > 0 && (
-                              <section className='border border-neutral-200 rounded-lg overflow-hidden'>
-                                <header className='bg-neutral-50 border-b border-neutral-200 px-4 py-3 flex items-center'>
-                                  <Package className='mr-3 text-neutral-500' size={18} />
-                                  <h3 className='font-medium text-neutral-800'>Content Details</h3>
+                              <section className='border border-neutral-200 rounded-lg overflow-hidden bg-white'>
+                                <header className='px-4 py-3 border-b border-neutral-100 flex items-center'>
+                                  <Package className='mr-3 text-neutral-500/70' size={16} />
+                                  <h3 className='font-medium text-sm text-neutral-700'>
+                                    Content Details
+                                  </h3>
                                 </header>
 
-                                <div className='p-5 space-y-5 bg-white'>
-                                  <div className='space-y-6'>
+                                <div className='p-4 space-y-5'>
+                                  <div className='space-y-5'>
                                     {deliverable.customFields.map((field) => {
                                       if (!hasContent(field)) return null;
                                       return (
-                                        <div key={field._id} className='space-y-2'>
-                                          <h4 className='font-medium text-neutral-800'>
+                                        <div key={field._id} className='space-y-1.5'>
+                                          <h4 className='text-xs text-neutral-500'>
                                             {field.label || 'Untitled Field'}
                                           </h4>
-                                          <div className='text-neutral-700'>
+                                          <div className='text-sm text-neutral-700'>
                                             {formatFieldContent(field)}
                                           </div>
                                         </div>
                                       );
                                     })}
                                     {deliverable.customFields.filter(hasContent).length === 0 && (
-                                      <p className='text-neutral-500 italic'>
+                                      <p className='text-sm text-neutral-500 italic'>
                                         No content fields added
                                       </p>
                                     )}
@@ -744,15 +780,17 @@ const DeliverablesTable = () => {
 
                             {/* Team Notes Section */}
                             {deliverable.teamNotes && (
-                              <section className='border border-neutral-200 rounded-lg overflow-hidden'>
-                                <header className='bg-neutral-50 border-b border-neutral-200 px-4 py-3 flex items-center'>
-                                  <FileText className='mr-3 text-neutral-500' size={18} />
-                                  <h3 className='font-medium text-neutral-800'>Team Notes</h3>
+                              <section className='border border-neutral-200 rounded-lg overflow-hidden bg-white'>
+                                <header className='px-4 py-3 border-b border-neutral-100 flex items-center'>
+                                  <FileText className='mr-3 text-neutral-500/70' size={16} />
+                                  <h3 className='font-medium text-sm text-neutral-700'>
+                                    Team Notes
+                                  </h3>
                                 </header>
-                                <div className='p-5'>
-                                  <div className='bg-white p-3 rounded-md border border-neutral-200'>
-                                    <p className='whitespace-pre-wrap'>{deliverable.teamNotes}</p>
-                                  </div>
+                                <div className='p-4'>
+                                  <p className='text-sm text-neutral-700 whitespace-pre-wrap leading-relaxed'>
+                                    {deliverable.teamNotes}
+                                  </p>
                                 </div>
                               </section>
                             )}
@@ -774,18 +812,18 @@ const DeliverablesTable = () => {
           return !open && setDeliverableToDelete(null);
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className='max-w-md rounded-md'>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className='text-base'>Delete deliverable?</AlertDialogTitle>
+            <AlertDialogDescription className='text-sm text-neutral-600'>
               This action cannot be undone. This will permanently delete the deliverable and remove
               it from the project.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className='gap-2'>
+            <AlertDialogCancel className='h-9 text-sm'>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+              className='bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 text-sm'
               onClick={() => {
                 return deliverableToDelete && handleDelete(deliverableToDelete);
               }}
