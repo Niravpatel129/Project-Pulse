@@ -347,6 +347,7 @@ const DeliverableContentTab = ({
       const lastField = formData.customFields[currentFieldsLength - 1];
 
       if (lastField && !fieldsWithAnimation.includes(lastField.id)) {
+        // Add animation
         setFieldsWithAnimation((prev) => {
           return [...prev, lastField.id];
         });
@@ -359,6 +360,9 @@ const DeliverableContentTab = ({
           });
         }, 500);
 
+        // Automatically set the new field to edit mode
+        setEditingFieldId(lastField.id);
+
         return () => {
           return clearTimeout(timer);
         };
@@ -366,7 +370,7 @@ const DeliverableContentTab = ({
     }
 
     prevFieldsLengthRef.current = currentFieldsLength;
-  }, [formData.customFields, fieldsWithAnimation]);
+  }, [formData.customFields, fieldsWithAnimation, setEditingFieldId]);
 
   // Function to format field content based on type for display in view mode
   const getFormattedContent = (field: any) => {
