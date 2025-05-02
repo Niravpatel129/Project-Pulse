@@ -1201,14 +1201,18 @@ const DeliverableContentTab = ({
                 Add Content
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align='start' className='w-48'>
+            <DropdownMenuContent align='start' className='w-48' sideOffset={4}>
               {FIELD_TYPES.map((type) => {
                 return (
                   <DropdownMenuItem
                     key={type.id}
                     onClick={() => {
-                      addCustomField(type.id);
-                      setHasUnsavedChanges(true);
+                      // Add a slight delay to allow dropdown animation to complete
+                      // before changing the layout with the new field
+                      setTimeout(() => {
+                        addCustomField(type.id);
+                        setHasUnsavedChanges(true);
+                      }, 150);
                     }}
                   >
                     {type.icon}
