@@ -13,6 +13,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  Database,
   Download,
   FileCode,
   File as FileIcon,
@@ -55,6 +56,7 @@ const FIELD_TYPES = [
   { id: 'link', label: 'Link', icon: <LinkIcon className='mr-2' size={16} /> },
   { id: 'attachment', label: 'Attachment', icon: <Paperclip className='mr-2' size={16} /> },
   { id: 'specification', label: 'Specification', icon: <AlertCircle className='mr-2' size={16} /> },
+  { id: 'databaseItem', label: 'Database Item', icon: <Database className='mr-2' size={16} /> },
 ];
 
 const getFieldError = (field: any, errors: any) => {
@@ -221,6 +223,227 @@ const PreviewModal = ({ isOpen, onClose, attachment }: PreviewModalProps) => {
   );
 };
 
+// Type definitions for database items
+interface ProductItem {
+  id: string;
+  name: string;
+  sku: string;
+  price: string;
+  category: string;
+  status: string;
+  description: string;
+  imageUrl: string;
+}
+
+interface CustomerItem {
+  id: string;
+  name: string;
+  contactPerson: string;
+  email: string;
+  phone: string;
+  status: string;
+  description: string;
+  imageUrl: string;
+}
+
+interface ProjectItem {
+  id: string;
+  name: string;
+  client: string;
+  deadline: string;
+  status: string;
+  description: string;
+  imageUrl: string;
+}
+
+interface InvoiceItem {
+  id: string;
+  invoiceNumber: string;
+  client: string;
+  amount: string;
+  date: string;
+  status: string;
+  description: string;
+  imageUrl: string;
+  name?: string;
+}
+
+type DatabaseItem = ProductItem | CustomerItem | ProjectItem | InvoiceItem;
+
+interface DatabaseItems {
+  products: ProductItem[];
+  customers: CustomerItem[];
+  projects: ProjectItem[];
+  invoices: InvoiceItem[];
+}
+
+// Mock products for database item type
+const mockDatabases = [
+  {
+    id: 'products',
+    name: 'Product Catalog',
+    description: 'All available products and services',
+    icon: 'cube',
+  },
+  {
+    id: 'customers',
+    name: 'Customer Database',
+    description: 'Client and customer information',
+    icon: 'users',
+  },
+  {
+    id: 'projects',
+    name: 'Project Repository',
+    description: 'All active and completed projects',
+    icon: 'folder',
+  },
+  {
+    id: 'invoices',
+    name: 'Invoice Records',
+    description: 'Billing and payment information',
+    icon: 'receipt',
+  },
+];
+
+// Mock database items
+const mockDatabaseItems: DatabaseItems = {
+  products: [
+    {
+      id: 'p1',
+      name: 'Premium Widget',
+      sku: 'WDG-001',
+      price: '$99.99',
+      category: 'Widgets',
+      status: 'In Stock',
+      description: 'High-quality widget with premium features and extended warranty.',
+      imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop',
+    },
+    {
+      id: 'p2',
+      name: 'Basic Gadget',
+      sku: 'GDG-101',
+      price: '$49.99',
+      category: 'Gadgets',
+      status: 'In Stock',
+      description: 'Affordable gadget for everyday use with standard features.',
+      imageUrl: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=300&h=300&fit=crop',
+    },
+    {
+      id: 'p3',
+      name: 'Deluxe Gizmo',
+      sku: 'GZM-202',
+      price: '$129.99',
+      category: 'Gizmos',
+      status: 'Low Stock',
+      description: 'Deluxe edition gizmo with advanced functionality and premium materials.',
+      imageUrl: 'https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?w=300&h=300&fit=crop',
+    },
+    {
+      id: 'p4',
+      name: 'Smart Doohickey',
+      sku: 'DHK-505',
+      price: '$79.99',
+      category: 'Smart Devices',
+      status: 'In Stock',
+      description: 'Intelligent doohickey with smart connectivity and voice control.',
+      imageUrl: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=300&h=300&fit=crop',
+    },
+  ],
+  customers: [
+    {
+      id: 'c1',
+      name: 'Acme Corporation',
+      contactPerson: 'John Smith',
+      email: 'john@acme.com',
+      phone: '(555) 123-4567',
+      status: 'Active',
+      description: 'Large enterprise client with multiple ongoing projects.',
+      imageUrl: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=300&h=300&fit=crop',
+    },
+    {
+      id: 'c2',
+      name: 'TechStart Inc.',
+      contactPerson: 'Sarah Johnson',
+      email: 'sarah@techstart.io',
+      phone: '(555) 987-6543',
+      status: 'Active',
+      description: 'Emerging tech startup focused on AI applications.',
+      imageUrl: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=300&h=300&fit=crop',
+    },
+    {
+      id: 'c3',
+      name: 'Global Logistics Ltd.',
+      contactPerson: 'Michael Chen',
+      email: 'mchen@globallogistics.com',
+      phone: '(555) 456-7890',
+      status: 'Inactive',
+      description: 'International shipping and logistics company.',
+      imageUrl: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=300&h=300&fit=crop',
+    },
+  ],
+  projects: [
+    {
+      id: 'pr1',
+      name: 'Website Redesign',
+      client: 'Acme Corporation',
+      deadline: '2023-12-15',
+      status: 'In Progress',
+      description: 'Complete overhaul of corporate website with new branding and features.',
+      imageUrl: 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=300&h=300&fit=crop',
+    },
+    {
+      id: 'pr2',
+      name: 'Mobile App Development',
+      client: 'TechStart Inc.',
+      deadline: '2024-01-30',
+      status: 'Planning',
+      description: 'Cross-platform mobile application for product management.',
+      imageUrl: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=300&h=300&fit=crop',
+    },
+    {
+      id: 'pr3',
+      name: 'ERP Integration',
+      client: 'Global Logistics Ltd.',
+      deadline: '2023-11-10',
+      status: 'Completed',
+      description: 'Integration of shipping systems with enterprise resource planning software.',
+      imageUrl: 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=300&h=300&fit=crop',
+    },
+  ],
+  invoices: [
+    {
+      id: 'inv1',
+      invoiceNumber: 'INV-2023-101',
+      client: 'Acme Corporation',
+      amount: '$12,500.00',
+      date: '2023-09-15',
+      status: 'Paid',
+      description: 'Website design phase 1 milestone payment.',
+      imageUrl: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=300&h=300&fit=crop',
+    },
+    {
+      id: 'inv2',
+      invoiceNumber: 'INV-2023-102',
+      client: 'TechStart Inc.',
+      amount: '$8,750.00',
+      date: '2023-10-01',
+      status: 'Pending',
+      description: 'Mobile app development initial payment.',
+      imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=300&h=300&fit=crop',
+    },
+    {
+      id: 'inv3',
+      invoiceNumber: 'INV-2023-103',
+      client: 'Global Logistics Ltd.',
+      amount: '$15,000.00',
+      date: '2023-08-22',
+      status: 'Overdue',
+      description: 'ERP integration final payment.',
+      imageUrl: 'https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=300&h=300&fit=crop',
+    },
+  ],
+};
+
 const DeliverableContentTab = ({
   formData,
   errors,
@@ -239,6 +462,19 @@ const DeliverableContentTab = ({
   const [tempListItem, setTempListItem] = useState('');
   const [previewAttachment, setPreviewAttachment] = useState<any>(null);
 
+  // Database item specific states
+  const [dbSearchTerm, setDbSearchTerm] = useState('');
+  const [dbSelectedItem, setDbSelectedItem] = useState<any>(null);
+  const [dbTempAlignment, setDbTempAlignment] = useState('left');
+  const [selectedDatabaseId, setSelectedDatabaseId] = useState<string | null>(null);
+
+  // Database modal state
+  const [isDatabaseModalOpen, setIsDatabaseModalOpen] = useState(false);
+  const [editingDatabaseFieldId, setEditingDatabaseFieldId] = useState<string | null>(null);
+
+  // Flag to temporarily block edit mode toggling
+  const preventEditToggle = useRef<boolean>(false);
+
   // Track the last added field for auto-editing
   const [lastAddedField, setLastAddedField] = useState<string | null>(null);
   const prevFieldsLengthRef = useRef(0);
@@ -246,6 +482,53 @@ const DeliverableContentTab = ({
   // Keep track of when field focus has been initialized
   const focusInitializedRef = useRef<boolean>(false);
   const activeFieldIdRef = useRef<string | null>(null);
+
+  // Function to safely block toggling edit mode temporarily
+  const temporarilyPreventEditToggle = () => {
+    preventEditToggle.current = true;
+    setTimeout(() => {
+      preventEditToggle.current = false;
+    }, 300); // Block for 300ms after a selection
+  };
+
+  // Open database selection modal for a specific field
+  const openDatabaseModal = (fieldId: string) => {
+    const field = formData.customFields.find((f: any) => {
+      return f.id === fieldId;
+    });
+    if (field && field.type === 'databaseItem') {
+      // Load current field values into temporary state
+      setDbSelectedItem(field.selectedItem || null);
+      setSelectedDatabaseId(field.selectedDatabaseId || null);
+      setDbTempAlignment(field.alignment || 'left');
+      setDbSearchTerm('');
+
+      // Set the field we're editing
+      setEditingDatabaseFieldId(fieldId);
+
+      // Open the modal
+      setIsDatabaseModalOpen(true);
+    }
+  };
+
+  // Save database selections from modal
+  const saveDatabaseSelections = () => {
+    if (editingDatabaseFieldId) {
+      safeUpdateFieldProperty(editingDatabaseFieldId, 'selectedItem', dbSelectedItem);
+      safeUpdateFieldProperty(editingDatabaseFieldId, 'selectedDatabaseId', selectedDatabaseId);
+      safeUpdateFieldProperty(editingDatabaseFieldId, 'alignment', dbTempAlignment);
+
+      // Close the modal
+      setIsDatabaseModalOpen(false);
+      setEditingDatabaseFieldId(null);
+    }
+  };
+
+  // Cancel database selection
+  const cancelDatabaseSelection = () => {
+    setIsDatabaseModalOpen(false);
+    setEditingDatabaseFieldId(null);
+  };
 
   // Handle field property updates safely without affecting which field is selected
   const safeUpdateFieldProperty = (fieldId: string, property: string, value: any) => {
@@ -294,7 +577,7 @@ const DeliverableContentTab = ({
       activeFieldIdRef.current = null;
       focusInitializedRef.current = false;
     }
-  }, [editingFieldId]);
+  }, [editingFieldId, formData.customFields]);
 
   // Handle focus initialization separately
   useEffect(() => {
@@ -336,6 +619,36 @@ const DeliverableContentTab = ({
     }
   };
 
+  // Handler for click outside content items (to auto-exit editing)
+  const handleContentItemClickOutside = (e: MouseEvent) => {
+    if (!editingFieldId) return;
+
+    // Get the currently editing field
+    const field = formData.customFields.find((f: any) => {
+      return f.id === editingFieldId;
+    });
+
+    // Skip this auto-exit behavior for database items - they need explicit completion
+    if (field?.type === 'databaseItem') return;
+
+    const contentItemElement = document.querySelector(
+      `.content-item[data-field-id="${editingFieldId}"]`,
+    );
+
+    // Check if the click is outside the content item
+    if (contentItemElement && !contentItemElement.contains(e.target as Node)) {
+      completeFieldEdit();
+    }
+  };
+
+  // Add document click listener for outside clicks
+  useEffect(() => {
+    document.addEventListener('mousedown', handleContentItemClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleContentItemClickOutside);
+    };
+  }, [editingFieldId, formData.customFields]);
+
   // Detect newly added fields and auto-edit them
   useEffect(() => {
     const currentFieldsLength = formData.customFields.length;
@@ -355,6 +668,22 @@ const DeliverableContentTab = ({
 
     prevFieldsLengthRef.current = currentFieldsLength;
   }, [formData.customFields.length, setEditingFieldId]);
+
+  // Function to get database icon
+  const getDatabaseIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'cube':
+        return <FileType className='h-4 w-4 mr-2' />;
+      case 'users':
+        return <FileText className='h-4 w-4 mr-2' />;
+      case 'folder':
+        return <FileIcon className='h-4 w-4 mr-2' />;
+      case 'receipt':
+        return <FileText className='h-4 w-4 mr-2' />;
+      default:
+        return <Database className='h-4 w-4 mr-2' />;
+    }
+  };
 
   // Function to format field content based on type for display in view mode
   const getFormattedContent = (field: any) => {
@@ -462,6 +791,76 @@ const DeliverableContentTab = ({
           <div className='flex items-start space-x-2 text-amber-700 bg-amber-50 p-3 rounded-md'>
             <AlertCircle size={18} className='mt-0.5 shrink-0' />
             <div className='text-sm'>{field.content}</div>
+          </div>
+        );
+
+      case 'databaseItem':
+        return (
+          <div>
+            {field.selectedItem ? (
+              <div
+                className={`w-full ${
+                  field.alignment === 'center'
+                    ? 'flex justify-center'
+                    : field.alignment === 'right'
+                    ? 'flex justify-end'
+                    : ''
+                }`}
+              >
+                <div
+                  className={`flex items-center gap-3 ${
+                    field.alignment === 'center' || field.alignment === 'right'
+                      ? 'inline-flex'
+                      : 'w-full'
+                  }`}
+                >
+                  {field.selectedItem.imageUrl && (
+                    <div className='relative w-12 h-12 rounded overflow-hidden flex-shrink-0'>
+                      <img
+                        src={field.selectedItem.imageUrl}
+                        alt={
+                          'name' in field.selectedItem
+                            ? field.selectedItem.name
+                            : 'invoiceNumber' in field.selectedItem
+                            ? field.selectedItem.invoiceNumber
+                            : ''
+                        }
+                        className='w-full h-full object-cover'
+                      />
+                    </div>
+                  )}
+                  <div className='flex-1'>
+                    <div className='font-medium text-neutral-900'>
+                      {'name' in field.selectedItem
+                        ? field.selectedItem.name
+                        : 'invoiceNumber' in field.selectedItem
+                        ? field.selectedItem.invoiceNumber
+                        : ''}
+                    </div>
+                    <div className='text-xs text-neutral-600'>
+                      {field.selectedDatabaseId === 'products' && 'sku' in field.selectedItem
+                        ? `SKU: ${field.selectedItem.sku}`
+                        : field.selectedDatabaseId === 'customers' &&
+                          'contactPerson' in field.selectedItem
+                        ? `Contact: ${field.selectedItem.contactPerson}`
+                        : field.selectedDatabaseId === 'projects' && 'client' in field.selectedItem
+                        ? `Client: ${field.selectedItem.client}`
+                        : field.selectedDatabaseId === 'invoices' && 'client' in field.selectedItem
+                        ? `Client: ${field.selectedItem.client}`
+                        : ''}
+                    </div>
+                  </div>
+                  {field.selectedDatabaseId === 'products' && 'price' in field.selectedItem && (
+                    <div className='text-sm font-medium'>{field.selectedItem.price}</div>
+                  )}
+                  {field.selectedDatabaseId === 'invoices' && 'amount' in field.selectedItem && (
+                    <div className='text-sm font-medium'>{field.selectedItem.amount}</div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className='italic text-neutral-500 text-sm'>No database item selected</div>
+            )}
           </div>
         );
 
@@ -748,6 +1147,138 @@ const DeliverableContentTab = ({
           />
         );
 
+      case 'databaseItem':
+        return (
+          <div className='space-y-4'>
+            <div
+              className='min-h-[120px] border-2 border-dashed border-neutral-300 rounded-md p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-neutral-50 hover:border-blue-300 transition-colors'
+              onClick={() => {
+                return openDatabaseModal(field.id);
+              }}
+            >
+              {field.selectedItem ? (
+                <div className='w-full'>
+                  <div className='flex items-center gap-3'>
+                    {field.selectedItem.imageUrl && (
+                      <div className='relative w-12 h-12 rounded overflow-hidden flex-shrink-0'>
+                        <img
+                          src={field.selectedItem.imageUrl}
+                          alt={
+                            'name' in field.selectedItem
+                              ? field.selectedItem.name
+                              : 'invoiceNumber' in field.selectedItem
+                              ? field.selectedItem.invoiceNumber
+                              : ''
+                          }
+                          className='w-full h-full object-cover'
+                        />
+                      </div>
+                    )}
+                    <div className='flex-1'>
+                      <div className='font-medium text-neutral-900'>
+                        {'name' in field.selectedItem
+                          ? field.selectedItem.name
+                          : 'invoiceNumber' in field.selectedItem
+                          ? field.selectedItem.invoiceNumber
+                          : ''}
+                      </div>
+                      <div className='text-xs text-neutral-600'>
+                        {field.selectedDatabaseId === 'products' && 'sku' in field.selectedItem
+                          ? `SKU: ${field.selectedItem.sku}`
+                          : field.selectedDatabaseId === 'customers' &&
+                            'contactPerson' in field.selectedItem
+                          ? `Contact: ${field.selectedItem.contactPerson}`
+                          : field.selectedDatabaseId === 'projects' &&
+                            'client' in field.selectedItem
+                          ? `Client: ${field.selectedItem.client}`
+                          : field.selectedDatabaseId === 'invoices' &&
+                            'client' in field.selectedItem
+                          ? `Client: ${field.selectedItem.client}`
+                          : ''}
+                      </div>
+                    </div>
+                    {field.selectedDatabaseId === 'products' && 'price' in field.selectedItem && (
+                      <div className='text-sm font-medium'>{field.selectedItem.price}</div>
+                    )}
+                    {field.selectedDatabaseId === 'invoices' && 'amount' in field.selectedItem && (
+                      <div className='text-sm font-medium'>{field.selectedItem.amount}</div>
+                    )}
+                  </div>
+
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    className='w-full mt-4 border-dashed'
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openDatabaseModal(field.id);
+                    }}
+                  >
+                    <Database className='w-4 h-4 mr-2' />
+                    Change Database Item
+                  </Button>
+                </div>
+              ) : (
+                <div className='text-center'>
+                  <Database className='h-12 w-12 mx-auto text-neutral-400 mb-3' />
+                  <p className='text-neutral-600 font-medium mb-2'>Select a Database Item</p>
+                  <p className='text-neutral-500 text-sm mb-4'>
+                    Choose from products, customers, projects, or invoices
+                  </p>
+                  <Button>
+                    <Database className='w-4 h-4 mr-2' />
+                    Browse Database Items
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {field.selectedItem && (
+              <div className='pt-1 pb-2'>
+                <Label className='text-sm text-neutral-700 mb-1 block'>Display Alignment</Label>
+                <div className='flex flex-wrap gap-1'>
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant={field.alignment === 'left' ? 'default' : 'outline'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      safeUpdateFieldProperty(field.id, 'alignment', 'left');
+                    }}
+                    className='h-8'
+                  >
+                    Left
+                  </Button>
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant={field.alignment === 'center' ? 'default' : 'outline'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      safeUpdateFieldProperty(field.id, 'alignment', 'center');
+                    }}
+                    className='h-8'
+                  >
+                    Center
+                  </Button>
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant={field.alignment === 'right' ? 'default' : 'outline'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      safeUpdateFieldProperty(field.id, 'alignment', 'right');
+                    }}
+                    className='h-8'
+                  >
+                    Right
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
       default:
         return null;
     }
@@ -1024,6 +1555,200 @@ const DeliverableContentTab = ({
             </DropdownMenuContent>
           </DropdownMenu>
         </>
+      )}
+
+      {/* Database selection modal */}
+      {isDatabaseModalOpen && (
+        <div
+          className='fixed inset-0 bg-black/70 z-50 flex items-center justify-center'
+          onClick={cancelDatabaseSelection}
+        >
+          <div
+            className='bg-white rounded-lg shadow-xl border border-neutral-200 w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col'
+            onClick={(e) => {
+              return e.stopPropagation();
+            }}
+          >
+            <div className='p-4 border-b border-neutral-200 flex justify-between items-center'>
+              <h3 className='font-medium text-lg'>Select Database Item</h3>
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={cancelDatabaseSelection}
+                className='h-8 w-8 rounded-full'
+              >
+                <X size={16} />
+              </Button>
+            </div>
+
+            <div className='p-4 border-b border-neutral-100 bg-neutral-50'>
+              {/* Database type selector */}
+              <div className='mb-2'>
+                <Label className='text-sm text-neutral-700'>Database Type</Label>
+                <select
+                  value={selectedDatabaseId || ''}
+                  onChange={(e) => {
+                    return setSelectedDatabaseId(e.target.value || null);
+                  }}
+                  className='w-full h-10 px-3 mt-1 rounded-md border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                >
+                  <option value=''>Select a database</option>
+                  {mockDatabases.map((database) => {
+                    return (
+                      <option key={database.id} value={database.id}>
+                        {database.name}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            </div>
+
+            <div className='p-4 flex-grow overflow-auto'>
+              {selectedDatabaseId ? (
+                <>
+                  <div className='mb-4'>
+                    <Input
+                      type='text'
+                      placeholder={`Search ${selectedDatabaseId}...`}
+                      value={dbSearchTerm}
+                      onChange={(e) => {
+                        return setDbSearchTerm(e.target.value);
+                      }}
+                    />
+                  </div>
+
+                  <div className='grid grid-cols-1 gap-2'>
+                    {mockDatabaseItems[selectedDatabaseId as keyof typeof mockDatabaseItems]
+                      .filter((item) => {
+                        const searchLower = dbSearchTerm.toLowerCase();
+                        return (
+                          item.name?.toLowerCase().includes(searchLower) ||
+                          ('invoiceNumber' in item &&
+                            item.invoiceNumber.toLowerCase().includes(searchLower)) ||
+                          ('sku' in item && item.sku.toLowerCase().includes(searchLower))
+                        );
+                      })
+                      .map((item) => {
+                        return (
+                          <div
+                            key={item.id}
+                            className={`p-3 border rounded-md flex items-center gap-3 cursor-pointer hover:bg-neutral-50 transition-colors ${
+                              dbSelectedItem?.id === item.id ? 'bg-blue-50 border-blue-200' : ''
+                            }`}
+                            onClick={() => {
+                              return setDbSelectedItem(item);
+                            }}
+                          >
+                            {item.imageUrl && (
+                              <div className='relative w-10 h-10 rounded overflow-hidden flex-shrink-0'>
+                                <img
+                                  src={item.imageUrl}
+                                  alt={
+                                    'name' in item
+                                      ? item.name
+                                      : 'invoiceNumber' in item
+                                      ? item.invoiceNumber
+                                      : ''
+                                  }
+                                  className='w-full h-full object-cover'
+                                />
+                              </div>
+                            )}
+                            <div className='flex-1 min-w-0'>
+                              <div className='font-medium truncate'>
+                                {'name' in item
+                                  ? item.name
+                                  : 'invoiceNumber' in item
+                                  ? item.invoiceNumber
+                                  : ''}
+                              </div>
+                              <div className='text-xs text-neutral-500 truncate'>
+                                {'sku' in item
+                                  ? `SKU: ${item.sku}`
+                                  : 'client' in item
+                                  ? `Client: ${item.client}`
+                                  : 'contactPerson' in item
+                                  ? `Contact: ${item.contactPerson}`
+                                  : ''}
+                              </div>
+                            </div>
+                            {selectedDatabaseId === 'products' && 'price' in item && (
+                              <div className='text-sm font-medium'>{item.price}</div>
+                            )}
+                            {selectedDatabaseId === 'invoices' && 'amount' in item && (
+                              <div className='text-sm font-medium'>{item.amount}</div>
+                            )}
+                            {dbSelectedItem?.id === item.id && (
+                              <div className='h-5 w-5 bg-blue-500 rounded-full flex items-center justify-center'>
+                                <Check className='h-3 w-3 text-white' />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                  </div>
+                </>
+              ) : (
+                <div className='text-center py-8'>
+                  <Database className='h-12 w-12 mx-auto text-neutral-300 mb-3' />
+                  <p className='text-neutral-600 font-medium'>Select a database type</p>
+                  <p className='text-neutral-500 text-sm mt-1'>Choose from the dropdown above</p>
+                </div>
+              )}
+            </div>
+
+            <div className='p-4 border-t border-neutral-200 flex justify-between'>
+              <div className='flex items-center gap-2'>
+                <Label className='text-xs text-neutral-500'>Alignment:</Label>
+                <div className='flex flex-wrap gap-1'>
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant={dbTempAlignment === 'left' ? 'default' : 'outline'}
+                    onClick={() => {
+                      return setDbTempAlignment('left');
+                    }}
+                    className='h-7 text-xs'
+                  >
+                    Left
+                  </Button>
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant={dbTempAlignment === 'center' ? 'default' : 'outline'}
+                    onClick={() => {
+                      return setDbTempAlignment('center');
+                    }}
+                    className='h-7 text-xs'
+                  >
+                    Center
+                  </Button>
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant={dbTempAlignment === 'right' ? 'default' : 'outline'}
+                    onClick={() => {
+                      return setDbTempAlignment('right');
+                    }}
+                    className='h-7 text-xs'
+                  >
+                    Right
+                  </Button>
+                </div>
+              </div>
+
+              <div className='flex gap-2'>
+                <Button variant='outline' onClick={cancelDatabaseSelection}>
+                  Cancel
+                </Button>
+                <Button onClick={saveDatabaseSelections} disabled={!dbSelectedItem}>
+                  Select Item
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
