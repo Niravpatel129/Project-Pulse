@@ -37,6 +37,7 @@ import { DeleteModuleDialog } from '../ModuleComponents/DeleteModuleDialog';
 import { Module } from '../ModuleComponents/types';
 import ModuleCard from './ModuleCard';
 import ModuleDialog from './ModuleDialog';
+import NewDeliverableDialog from './NewDeliverableDialog/NewDeliverableDialog';
 import NewTemplateModuleModal from './NewTemplateModuleModal';
 
 const containerVariants = {
@@ -113,6 +114,7 @@ export default function NewProjectModules() {
   const [duplicateModuleName, setDuplicateModuleName] = useState('');
   const [moduleToDuplicate, setModuleToDuplicate] = useState<Module | null>(null);
   const queryClient = useQueryClient();
+  const [isNewDeliverableDialogOpen, setIsNewDeliverableDialogOpen] = useState(false);
 
   const handleEditTemplate = (template: Template) => {
     setTemplateToEdit(template);
@@ -642,6 +644,24 @@ export default function NewProjectModules() {
     <motion.div variants={containerVariants} initial='hidden' animate='visible'>
       <div className='flex items-center justify-between mb-4'>
         <div className='text-sm font-medium'>All Modules</div>
+        <Button
+          variant='outline'
+          size='sm'
+          onClick={() => {
+            return setIsNewDeliverableDialogOpen(true);
+          }}
+        >
+          Add Deliverable
+        </Button>
+        {isNewDeliverableDialogOpen && (
+          <NewDeliverableDialog
+            isOpen={isNewDeliverableDialogOpen}
+            onClose={() => {
+              return setIsNewDeliverableDialogOpen(false);
+            }}
+          />
+        )}
+
         {/* <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant='outline' size='sm'>
