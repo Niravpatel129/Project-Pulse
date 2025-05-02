@@ -585,35 +585,11 @@ const DatabaseItemDialog = ({
               })}
             </select>
           </div>
-
-          {/* Show column information for selected database */}
-          {selectedDatabaseId && tableColumns.length > 0 && (
-            <div className='mt-2 text-xs text-neutral-500 border border-neutral-100 rounded p-2 bg-neutral-50'>
-              <p className='font-medium mb-1'>Table Columns:</p>
-              <div className='flex flex-wrap gap-1'>
-                {tableColumns.map((col: any) => {
-                  return (
-                    <span
-                      key={col.id}
-                      className='bg-white px-2 py-0.5 rounded border border-neutral-200'
-                    >
-                      {col.name}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Column visibility settings */}
-          {selectedDatabaseId && tableColumns.length > 0 && <ColumnVisibilitySettings />}
         </div>
 
         <div className='p-4 flex-grow overflow-auto'>
           {selectedDatabaseId ? (
             <>
-              <DatabaseModalHeader />
-
               <div className='mb-4 relative'>
                 <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
                   <svg
