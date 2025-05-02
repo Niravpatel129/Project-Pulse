@@ -1262,12 +1262,22 @@ const DeliverableContentTab = ({
     if (!selectedTable) return null;
 
     return (
-      <div className='py-2 px-3 bg-neutral-50 rounded border border-neutral-200 mb-3 flex items-center'>
-        {getDatabaseIcon(selectedTable.name)}
+      <div className='py-3 px-4 rounded-md border border-blue-100 bg-blue-50 mb-4 flex items-center'>
+        <div className='h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3 flex-shrink-0'>
+          {getDatabaseIcon(selectedTable.name)}
+        </div>
         <div>
-          <div className='font-medium'>{selectedTable.name}</div>
-          <div className='text-xs text-neutral-500'>
-            {tableColumns.length} columns • {databaseItems.length} records
+          <div className='font-semibold text-blue-800'>{selectedTable.name}</div>
+          <div className='text-xs text-blue-700 flex items-center gap-2'>
+            <span className='flex items-center'>
+              <FileText className='h-3 w-3 mr-1' />
+              {tableColumns.length} columns
+            </span>
+            <span className='bg-blue-200 w-1 h-1 rounded-full'></span>
+            <span className='flex items-center'>
+              <Database className='h-3 w-3 mr-1' />
+              {databaseItems.length} records
+            </span>
           </div>
         </div>
       </div>
@@ -1280,11 +1290,11 @@ const DeliverableContentTab = ({
 
     return (
       <div className='mt-3 border-t border-neutral-100 pt-3'>
-        <div className='flex items-center justify-between mb-2'>
-          <div className='text-sm font-medium'>Column Visibility</div>
+        <div className='flex items-center justify-between mb-2.5'>
+          <div className='text-sm font-medium text-neutral-700'>Column Visibility</div>
           <div className='flex gap-2'>
             <button
-              className='text-xs text-blue-600 hover:underline'
+              className='text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors'
               onClick={() => {
                 const allVisible = { ...visibleColumns };
                 tableColumns.forEach((col: any) => {
@@ -1297,7 +1307,7 @@ const DeliverableContentTab = ({
             </button>
             <span className='text-neutral-300'>|</span>
             <button
-              className='text-xs text-blue-600 hover:underline'
+              className='text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors'
               onClick={() => {
                 // Always keep at least primary column visible
                 const onlyPrimary = { ...visibleColumns };
@@ -1312,12 +1322,16 @@ const DeliverableContentTab = ({
           </div>
         </div>
 
-        <div className='flex flex-wrap gap-2 mt-2'>
+        <div className='flex flex-wrap gap-1.5 mt-2'>
           {tableColumns.map((column: any) => {
             return (
               <label
                 key={column.id}
-                className='flex items-center bg-white px-2 py-1 rounded border border-neutral-200 cursor-pointer hover:bg-neutral-50'
+                className={`flex items-center px-2 py-1 rounded text-xs cursor-pointer transition-colors ${
+                  visibleColumns[column.id] !== false
+                    ? 'bg-blue-50 border border-blue-200 text-blue-800 hover:bg-blue-100'
+                    : 'bg-white border border-neutral-200 text-neutral-500 hover:bg-neutral-50'
+                }`}
               >
                 <input
                   type='checkbox'
@@ -1330,7 +1344,7 @@ const DeliverableContentTab = ({
                   }}
                   className='mr-1.5 h-3 w-3'
                 />
-                <span className='text-xs'>{column.name}</span>
+                {column.name}
               </label>
             );
           })}
@@ -1359,28 +1373,33 @@ const DeliverableContentTab = ({
 
     return (
       <>
-        <div className='font-medium truncate mb-1'>{primaryValue || `Item ${item.id}`}</div>
-
-        <div className='grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-neutral-500'>
-          {secondaryFields.map(([key, value]) => {
-            // Find column definition to get proper name
-            const column = tableColumns.find((col: any) => {
-              return col.id === key;
-            });
-            const displayName = column?.name || key;
-
-            // Check if this column should be visible
-            if (column && visibleColumns[column.id] === false) {
-              return null;
-            }
-
-            return (
-              <div key={key} className='truncate'>
-                <span className='text-neutral-400'>{displayName}:</span> {String(value)}
-              </div>
-            );
-          })}
+        <div className='font-medium text-neutral-800 truncate'>
+          {primaryValue || `Item ${item.id}`}
         </div>
+        {secondaryFields.length > 0 && (
+          <div className='mt-1 flex flex-wrap gap-x-4 gap-y-1'>
+            {secondaryFields.map(([key, value]) => {
+              // Find column definition to get proper name
+              const column = tableColumns.find((col: any) => {
+                return col.id === key;
+              });
+              const displayName = column?.name || key;
+
+              // Check if this column should be visible
+              if (column && visibleColumns[column.id] === false) {
+                return null;
+              }
+
+              return (
+                <div key={key} className='text-xs text-neutral-500 truncate flex items-center'>
+                  <span className='w-2 h-2 bg-neutral-200 rounded-full mr-1.5 flex-shrink-0'></span>
+                  <span className='font-medium text-neutral-600'>{displayName}:</span>
+                  <span className='ml-1'>{String(value)}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </>
     );
   };
@@ -1688,19 +1707,36 @@ const DeliverableContentTab = ({
                 <>
                   <DatabaseModalHeader />
 
-                  <div className='mb-4'>
+                  <div className='mb-4 relative'>
+                    <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
+                      <svg
+                        xmlns='http://www.w3.org/2000/svg'
+                        className='h-4 w-4 text-neutral-400'
+                        fill='none'
+                        viewBox='0 0 24 24'
+                        stroke='currentColor'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
+                        />
+                      </svg>
+                    </div>
                     <Input
                       type='text'
-                      placeholder={`Search items...`}
+                      placeholder='Search items...'
                       value={dbSearchTerm}
                       onChange={(e) => {
                         return setDbSearchTerm(e.target.value);
                       }}
+                      className='pl-10 pr-4 py-2 border-neutral-200 focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50'
                     />
                   </div>
 
                   {databaseItems.length > 0 ? (
-                    <div className='grid grid-cols-1 gap-2'>
+                    <div className='grid grid-cols-1 gap-2.5 min-h-[200px] max-h-[400px] overflow-y-auto pr-1'>
                       {databaseItems
                         .filter((item: any) => {
                           // Search in all string values
@@ -1715,30 +1751,37 @@ const DeliverableContentTab = ({
                           return (
                             <div
                               key={item.id}
-                              className={`p-3 border rounded-md flex items-center gap-3 cursor-pointer hover:bg-neutral-50 transition-colors ${
-                                dbSelectedItem?.id === item.id ? 'bg-blue-50 border-blue-200' : ''
+                              className={`p-3.5 border rounded-lg flex items-start gap-3 cursor-pointer hover:bg-neutral-50 transition-colors ${
+                                dbSelectedItem?.id === item.id
+                                  ? 'bg-blue-50 border-blue-200 shadow-sm'
+                                  : 'border-neutral-200'
                               }`}
                               onClick={() => {
                                 return setDbSelectedItem(item);
                               }}
                             >
+                              {dbSelectedItem?.id === item.id ? (
+                                <div className='mt-1 h-5 w-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0'>
+                                  <Check className='h-3 w-3 text-white' />
+                                </div>
+                              ) : (
+                                <div className='mt-1 h-5 w-5 border-2 border-neutral-200 rounded-full flex-shrink-0'></div>
+                              )}
                               <div className='flex-1 min-w-0'>
                                 <DisplayItemDetails item={item} />
                               </div>
-                              {dbSelectedItem?.id === item.id && (
-                                <div className='h-5 w-5 bg-blue-500 rounded-full flex items-center justify-center'>
-                                  <Check className='h-3 w-3 text-white' />
-                                </div>
-                              )}
                             </div>
                           );
                         })}
                     </div>
                   ) : (
-                    <div className='text-center py-6 text-neutral-500'>
-                      <Database className='h-8 w-8 mx-auto mb-2 text-neutral-300' />
-                      <p>No records found in this table.</p>
-                      <p className='text-xs mt-1'>Try selecting a different database.</p>
+                    <div className='text-center py-10 bg-neutral-50 rounded-lg border border-dashed border-neutral-200'>
+                      <Database className='h-10 w-10 mx-auto text-neutral-300 mb-3' />
+                      <p className='text-neutral-700 font-medium mb-1'>No records found</p>
+                      <p className='text-neutral-500 text-sm max-w-xs mx-auto'>
+                        This table doesn&apos;t contain any records yet. Try selecting a different
+                        database.
+                      </p>
                     </div>
                   )}
                 </>
