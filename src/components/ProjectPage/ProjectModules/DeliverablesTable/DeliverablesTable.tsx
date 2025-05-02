@@ -32,8 +32,6 @@ import { cn } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
 import {
-  ChevronDown,
-  ChevronUp,
   DollarSign,
   FileText,
   Maximize2,
@@ -498,7 +496,6 @@ const DeliverablesTable = () => {
   }
 
   const getDeliverableTypeColor = (type: string) => {
-    console.log('🚀 type:', type);
     switch (type) {
       case 'service':
         return 'bg-purple-500/10 text-purple-500';
@@ -511,7 +508,7 @@ const DeliverablesTable = () => {
       case 'physical':
         return 'bg-red-500/10 text-red-500';
       default:
-        return 'bg-blue-500/10 text-blue-500';
+        return 'bg-fuchsia-500/10 text-fuchsia-500';
     }
   };
 
@@ -641,7 +638,7 @@ const DeliverablesTable = () => {
                         <Badge
                           variant='secondary'
                           className={cn(
-                            'text-xs font-normal py-0.5 px-2',
+                            'text-xs font-normal py-0.5 px-2 rounded',
                             getDeliverableTypeColor(deliverable.deliverableType),
                           )}
                         >
@@ -657,23 +654,6 @@ const DeliverablesTable = () => {
                       </TableCell>
                       <TableCell className='py-2.5'>
                         <div className='flex items-center gap-1 dropdown-action'>
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              return toggleRowExpansion(deliverable._id);
-                            }}
-                            className='h-7 w-7 p-0'
-                            aria-label={isExpanded ? 'Hide details' : 'Show details'}
-                          >
-                            {isExpanded ? (
-                              <ChevronUp className='h-3.5 w-3.5 text-neutral-600' />
-                            ) : (
-                              <ChevronDown className='h-3.5 w-3.5 text-neutral-600' />
-                            )}
-                          </Button>
-
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
