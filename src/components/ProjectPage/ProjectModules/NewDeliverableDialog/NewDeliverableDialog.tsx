@@ -12,7 +12,7 @@ import ReviewTab from './Tabs/ReviewTab';
 
 // Import the context provider
 import { useProject } from '@/contexts/ProjectContext';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DeliverableFormProvider, useDeliverableForm } from './DeliverableFormContext';
 
 // Define the stages
@@ -42,6 +42,18 @@ const fetchDeliverable = async (id: string) => {
   if (!id) return null;
   const response = await newRequest.get(`/deliverables/${id}`);
   return response.data.data || null;
+};
+
+// Create a new deliverable
+const createDeliverable = async (formData: FormData) => {
+  const response = await newRequest.post('/deliverables', formData);
+  return response.data.data;
+};
+
+// Update an existing deliverable
+const updateDeliverable = async ({ id, formData }: { id: string; formData: FormData }) => {
+  const response = await newRequest.put(`/deliverables/${id}`, formData);
+  return response.data.data;
 };
 
 /**
@@ -88,10 +100,10 @@ const DeliverableDialogContent = ({
 
   const [currentStage, setCurrentStage] = useState(STAGES[0].value);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
   const { project } = useProject();
   const isEditMode = !!deliverableId;
+  const queryClient = useQueryClient();
 
   // Fetch deliverable data if in edit mode
   const { data: existingDeliverable, isLoading: isLoadingDeliverable } = useQuery({
@@ -101,6 +113,36 @@ const DeliverableDialogContent = ({
     },
     enabled: isEditMode,
   });
+
+  // Create mutation
+  const createMutation = useMutation({
+    mutationFn: createDeliverable,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deliverables'] });
+      setHasUnsavedChanges(false);
+      onClose();
+    },
+    onError: (error) => {
+      console.error('Error creating deliverable:', error);
+    },
+  });
+
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: updateDeliverable,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deliverables'] });
+      queryClient.invalidateQueries({ queryKey: ['deliverable', deliverableId] });
+      setHasUnsavedChanges(false);
+      onClose();
+    },
+    onError: (error) => {
+      console.error('Error updating deliverable:', error);
+    },
+  });
+
+  // Check if either mutation is in progress
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   // Populate form with existing data when in edit mode
   useEffect(() => {
@@ -180,7 +222,6 @@ const DeliverableDialogContent = ({
   const handleSubmit = async () => {
     if (!validateCurrentStage()) return;
 
-    setIsSubmitting(true);
     try {
       // Create a FormData object for the HTTP request
       const requestFormData = new FormData();
@@ -244,22 +285,13 @@ const DeliverableDialogContent = ({
       requestFormData.append('data', JSON.stringify(finalPayload));
 
       // Send the request as FormData - either POST for new or PUT for update
-      let response;
-      if (isEditMode) {
-        response = await newRequest.put(`/deliverables/${deliverableId}`, requestFormData);
-        console.log('Updated deliverable:', response.data);
+      if (isEditMode && deliverableId) {
+        updateMutation.mutate({ id: deliverableId, formData: requestFormData });
       } else {
-        response = await newRequest.post('/deliverables', requestFormData);
-        console.log('Created deliverable:', response.data);
+        createMutation.mutate(requestFormData);
       }
-
-      setHasUnsavedChanges(false);
-      onClose();
     } catch (error) {
-      console.error(`Error ${isEditMode ? 'updating' : 'submitting'} deliverable:`, error);
-      // Handle submission error
-    } finally {
-      setIsSubmitting(false);
+      console.error(`Error preparing ${isEditMode ? 'update' : 'create'} data:`, error);
     }
   };
 
