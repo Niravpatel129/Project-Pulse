@@ -2,31 +2,76 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { ChevronLeft, ChevronRight, FileText, ListChecks, Menu, Settings, X } from 'lucide-react';
+import {
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Database,
+  Download,
+  FileText,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  List,
+  ListChecks,
+  Menu,
+  MoveDown,
+  MoveUp,
+  Quote as QuoteIcon,
+  SeparatorHorizontal,
+  Settings,
+  Square,
+  Trash2,
+  Type,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 
 // Define the stages
 const STAGES = [
   {
     id: 1,
-    title: 'Basic Info',
-    value: 'basic-info',
+    title: 'Basic Details',
+    value: 'general-info',
     icon: <FileText className='mr-2 opacity-70' size={15} aria-hidden='true' />,
   },
   {
     id: 2,
-    title: 'Details',
-    value: 'details',
+    title: 'Invoice Content',
+    value: 'custom-fields',
     icon: <Settings className='mr-2 opacity-70' size={15} aria-hidden='true' />,
   },
   {
     id: 3,
-    title: 'Review',
-    value: 'review',
+    title: 'Review & Save',
+    value: 'review-notes',
     icon: <ListChecks className='mr-2 opacity-70' size={15} aria-hidden='true' />,
   },
+];
+
+// Define custom field types
+const FIELD_TYPES = [
+  { id: 'heading', label: 'Heading', icon: <Type className='mr-2' size={16} /> },
+  { id: 'subheading', label: 'Subheading', icon: <Type className='mr-2' size={14} /> },
+  { id: 'paragraph', label: 'Paragraph', icon: <FileText className='mr-2' size={16} /> },
+  { id: 'text', label: 'Text', icon: <FileText className='mr-2' size={16} /> },
+  { id: 'list', label: 'List', icon: <List className='mr-2' size={16} /> },
+  { id: 'image', label: 'Image', icon: <ImageIcon className='mr-2' size={16} /> },
+  { id: 'quote', label: 'Quote', icon: <QuoteIcon className='mr-2' size={16} /> },
+  { id: 'callout', label: 'Callout', icon: <AlertCircle className='mr-2' size={16} /> },
+  { id: 'database', label: 'Database Item', icon: <Database className='mr-2' size={16} /> },
+  { id: 'button', label: 'Button', icon: <Square className='mr-2' size={16} /> },
+  { id: 'download', label: 'Download Button', icon: <Download className='mr-2' size={16} /> },
+  { id: 'link', label: 'Link', icon: <LinkIcon className='mr-2' size={16} /> },
+  { id: 'separator', label: 'Separator', icon: <SeparatorHorizontal className='mr-2' size={16} /> },
 ];
 
 const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
@@ -35,11 +80,17 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    dueDate: '',
-    priority: 'Medium',
-    assignee: '',
-    notes: '',
+    price: '',
+    deliverableType: 'digital',
+    availabilityDate: '',
+    customFields: [],
+    teamNotes: '',
+    customDeliverableType: '',
   });
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
 
   // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -47,10 +98,101 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
     setFormData((prev) => {
       return { ...prev, [name]: value };
     });
+
+    // Clear error when field is edited
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+
+    setHasUnsavedChanges(true);
+  };
+
+  // Handle select changes
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData((prev) => {
+      return { ...prev, [name]: value };
+    });
+
+    // Clear error when field is changed
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+
+    setHasUnsavedChanges(true);
+  };
+
+  // Add custom field
+  const addCustomField = (type: string) => {
+    const newField = {
+      id: Date.now().toString(),
+      type,
+      label: `New ${type}`,
+      content: '',
+    };
+
+    setFormData((prev) => {
+      return { ...prev, customFields: [...prev.customFields, newField] };
+    });
+
+    setHasUnsavedChanges(true);
+  };
+
+  // Remove custom field
+  const removeCustomField = (id: string) => {
+    setFormData((prev) => {
+      return {
+        ...prev,
+        customFields: prev.customFields.filter((field: any) => {
+          return field.id !== id;
+        }),
+      };
+    });
+
+    setHasUnsavedChanges(true);
+  };
+
+  // Move field up in the order
+  const moveFieldUp = (index: number) => {
+    if (index === 0) return; // Can't move up if already at the top
+
+    setFormData((prev) => {
+      const newFields = [...prev.customFields];
+      const temp = newFields[index];
+      newFields[index] = newFields[index - 1];
+      newFields[index - 1] = temp;
+      return { ...prev, customFields: newFields };
+    });
+
+    setHasUnsavedChanges(true);
+  };
+
+  // Move field down in the order
+  const moveFieldDown = (index: number) => {
+    setFormData((prev) => {
+      if (index === prev.customFields.length - 1) return prev; // Can't move down if already at the bottom
+
+      const newFields = [...prev.customFields];
+      const temp = newFields[index];
+      newFields[index] = newFields[index + 1];
+      newFields[index + 1] = temp;
+      return { ...prev, customFields: newFields };
+    });
+
+    setHasUnsavedChanges(true);
   };
 
   // Navigate to next stage
   const handleNext = () => {
+    if (!validateCurrentStage()) return;
+
     const currentIndex = STAGES.findIndex((stage) => {
       return stage.value === currentStage;
     });
@@ -82,9 +224,53 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
   };
 
   // Handle form submission
-  const handleSubmit = () => {
-    console.log('Submitted data:', formData);
+  const handleSubmit = async () => {
+    if (!validateCurrentStage()) return;
+
+    setIsSubmitting(true);
+    try {
+      // Simulate API call with timeout
+      await new Promise((resolve) => {
+        return setTimeout(resolve, 1000);
+      });
+      console.log('Submitted data:', formData);
+      setHasUnsavedChanges(false);
+      onClose();
+    } catch (error) {
+      console.error('Error submitting deliverable:', error);
+      // Handle submission error
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle dialog close
+  const handleClose = () => {
+    if (hasUnsavedChanges) {
+      setShowUnsavedWarning(true);
+    } else {
+      onClose();
+    }
+  };
+
+  // Confirm discard changes
+  const confirmDiscard = () => {
+    setShowUnsavedWarning(false);
     onClose();
+  };
+
+  // Update field label or content
+  const updateFieldProperty = (id: string, property: string, value: string) => {
+    setFormData((prev) => {
+      return {
+        ...prev,
+        customFields: prev.customFields.map((field: any) => {
+          return field.id === id ? { ...field, [property]: value } : field;
+        }),
+      };
+    });
+
+    setHasUnsavedChanges(true);
   };
 
   // Get current stage title
@@ -95,119 +281,178 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
     return stage ? stage.title : '';
   };
 
+  // Validate form based on current stage
+  const validateCurrentStage = () => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (currentStage === 'general-info') {
+      if (!formData.name.trim()) {
+        newErrors.name = 'Deliverable name is required';
+      }
+
+      if (!formData.price.trim()) {
+        newErrors.price = 'Price is required';
+      } else if (!/^\$?\d+(\.\d{1,2})?$/.test(formData.price.trim())) {
+        newErrors.price = 'Please enter a valid price';
+      }
+
+      if (!formData.availabilityDate) {
+        newErrors.availabilityDate = 'Availability date is required';
+      }
+    } else if (currentStage === 'custom-fields') {
+      // Add validation for custom fields if needed
+    } else if (currentStage === 'review-notes') {
+      // Add validation for review section if needed
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className='max-w-[90vw] sm:max-w-[800px] md:max-w-[900px] lg:max-w-[1000px] p-0 overflow-hidden shadow-sm border-neutral-200 transition-all duration-150 ease-in-out h-[90vh] sm:h-[600px] md:h-[650px]'>
-        <div className='flex flex-col h-full'>
-          <DialogHeader className='px-5 py-1 border-b border-neutral-100 flex flex-row items-center justify-between'>
-            <div className='flex items-center'>
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={toggleSidebar}
-                className='md:hidden mr-2'
-              >
-                <Menu size={18} />
-              </Button>
-              <DialogTitle className='text-base font-medium'>New Deliverable</DialogTitle>
-            </div>
-            <Button
-              variant='ghost'
-              size='icon'
-              onClick={onClose}
-              className='text-neutral-500 hover:text-neutral-900'
-            >
-              <X size={18} />
-            </Button>
-          </DialogHeader>
-
-          <div className='flex flex-1 overflow-hidden'>
-            <Tabs
-              value={currentStage}
-              onValueChange={setCurrentStage}
-              className='flex flex-row w-full h-full'
-            >
-              <div className='flex h-full w-full'>
-                {/* Sidebar */}
-                <TabsList
-                  className={`absolute md:relative z-10 md:z-0 bg-white flex-col gap-0.5 rounded-none bg-transparent px-3 py-4 border-r border-neutral-100 h-full justify-start transition-all duration-200
-                  ${
-                    isSidebarOpen
-                      ? 'w-48 translate-x-0'
-                      : 'w-0 -translate-x-full md:translate-x-0 md:w-14 xl:w-16'
-                  }`}
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className='max-w-[90vw] sm:max-w-[800px] md:max-w-[900px] lg:max-w-[1000px] p-0 overflow-hidden shadow-sm border-neutral-200 transition-all duration-150 ease-in-out h-[90vh] sm:h-[600px] md:h-[650px] flex flex-col'>
+        {showUnsavedWarning && (
+          <div className='absolute inset-0 bg-black/50 z-50 flex items-center justify-center p-4'>
+            <div className='bg-white rounded-md p-6 max-w-md shadow-lg'>
+              <h3 className='text-lg font-medium mb-2'>Unsaved Changes</h3>
+              <p className='text-neutral-600 mb-4'>
+                You have unsaved changes. Are you sure you want to discard them?
+              </p>
+              <div className='flex gap-2 justify-end'>
+                <Button
+                  variant='outline'
+                  onClick={() => {
+                    return setShowUnsavedWarning(false);
+                  }}
+                  className='border-neutral-200'
                 >
-                  {STAGES.map((stage) => {
-                    return (
-                      <TabsTrigger
-                        key={stage.value}
-                        value={stage.value}
-                        onClick={() => {
-                          // On mobile, clicking a tab also closes the sidebar
-                          if (window.innerWidth < 768) {
-                            setSidebarOpen(false);
-                          }
-                        }}
-                        className={`relative w-full justify-start px-3 py-2 font-normal text-neutral-600 data-[state=active]:text-neutral-900 transition-colors duration-150 
-                      hover:bg-neutral-50 data-[state=active]:bg-neutral-100/50 
-                      data-[state=active]:after:bg-neutral-900 after:absolute after:inset-y-0 after:left-0 
-                      after:w-[2px] data-[state=active]:after:opacity-100 after:opacity-0 
-                      rounded-md data-[state=active]:shadow-none whitespace-nowrap ${
-                        !isSidebarOpen ? 'md:justify-center md:px-1' : ''
-                      }`}
-                      >
-                        {stage.icon}
-                        <span className={`${!isSidebarOpen ? 'md:hidden' : ''}`}>
-                          {stage.title}
-                        </span>
-                      </TabsTrigger>
-                    );
-                  })}
+                  Cancel
+                </Button>
+                <Button
+                  variant='destructive'
+                  onClick={confirmDiscard}
+                  className='bg-red-500 hover:bg-red-600'
+                >
+                  Discard
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
-                  {/* Sidebar toggle button for desktop */}
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    onClick={toggleSidebar}
-                    className='hidden md:flex mt-auto mx-auto mb-2'
+        {/* Header (fixed) */}
+        <DialogHeader className='px-5 py-1 border-b border-neutral-100 flex flex-row items-center justify-between flex-shrink-0'>
+          <div className='flex items-center'>
+            <Button variant='ghost' size='icon' onClick={toggleSidebar} className='md:hidden mr-2'>
+              <Menu size={18} />
+            </Button>
+            <DialogTitle className='text-base font-medium'>Create Invoice Deliverable</DialogTitle>
+          </div>
+          <Button
+            variant='ghost'
+            size='icon'
+            onClick={onClose}
+            className='text-neutral-500 hover:text-neutral-900'
+          >
+            <X size={18} />
+          </Button>
+        </DialogHeader>
+
+        {/* Content (scrollable) */}
+        <div className='flex flex-1 min-h-0'>
+          <Tabs
+            value={currentStage}
+            onValueChange={setCurrentStage}
+            className='flex flex-row w-full h-full'
+          >
+            <div className='flex h-full w-full'>
+              {/* Sidebar */}
+              <TabsList
+                className={`absolute md:relative z-10 md:z-0 bg-white flex-col gap-0.5 rounded-none bg-transparent px-3 py-4 border-r border-neutral-100 h-full justify-start transition-all duration-200
+                ${
+                  isSidebarOpen
+                    ? 'w-48 translate-x-0'
+                    : 'w-0 -translate-x-full md:translate-x-0 md:w-14 xl:w-16'
+                }`}
+              >
+                {STAGES.map((stage) => {
+                  return (
+                    <TabsTrigger
+                      key={stage.value}
+                      value={stage.value}
+                      onClick={() => {
+                        // On mobile, clicking a tab also closes the sidebar
+                        if (window.innerWidth < 768) {
+                          setSidebarOpen(false);
+                        }
+                      }}
+                      className={`relative w-full justify-start px-3 py-2 font-normal text-neutral-600 data-[state=active]:text-neutral-900 transition-colors duration-150 
+                    hover:bg-neutral-50 data-[state=active]:bg-neutral-100/50 
+                    data-[state=active]:after:bg-neutral-900 after:absolute after:inset-y-0 after:left-0 
+                    after:w-[2px] data-[state=active]:after:opacity-100 after:opacity-0 
+                    rounded-md data-[state=active]:shadow-none whitespace-nowrap ${
+                      !isSidebarOpen ? 'md:justify-center md:px-1' : ''
+                    }`}
+                    >
+                      {stage.icon}
+                      <span className={`${!isSidebarOpen ? 'md:hidden' : ''}`}>{stage.title}</span>
+                    </TabsTrigger>
+                  );
+                })}
+
+                {/* Sidebar toggle button for desktop */}
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  onClick={toggleSidebar}
+                  className='hidden md:flex mt-auto mx-auto mb-2'
+                >
+                  {isSidebarOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+                </Button>
+              </TabsList>
+
+              {/* Dark overlay for mobile when sidebar is open */}
+              {isSidebarOpen && (
+                <div
+                  className='md:hidden fixed inset-0 bg-black bg-opacity-40 z-0'
+                  onClick={() => {
+                    return setSidebarOpen(false);
+                  }}
+                />
+              )}
+
+              {/* Main content area */}
+              <div className='flex-1 flex flex-col min-h-0'>
+                {/* Mobile breadcrumb */}
+                <div className='md:hidden bg-neutral-50/80 px-4 py-3 border-b border-neutral-100 flex items-center flex-shrink-0'>
+                  <span className='text-sm font-medium text-neutral-900'>
+                    {getCurrentStageTitle()}
+                  </span>
+                </div>
+
+                {/* Scrollable tab content */}
+                <div className='flex-1 overflow-y-auto'>
+                  <TabsContent
+                    value='general-info'
+                    className='p-4 sm:p-5 m-0 data-[state=inactive]:hidden'
                   >
-                    {isSidebarOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
-                  </Button>
-                </TabsList>
-
-                {/* Dark overlay for mobile when sidebar is open */}
-                {isSidebarOpen && (
-                  <div
-                    className='md:hidden fixed inset-0 bg-black bg-opacity-40 z-0'
-                    onClick={() => {
-                      return setSidebarOpen(false);
-                    }}
-                  />
-                )}
-
-                {/* Main content area */}
-                <div className='flex-1 z-0'>
-                  {/* Mobile breadcrumb */}
-                  <div className='md:hidden bg-neutral-50/80 px-4 py-3 border-b border-neutral-100 flex items-center'>
-                    <span className='text-sm font-medium text-neutral-900'>
-                      {getCurrentStageTitle()}
-                    </span>
-                  </div>
-
-                  <TabsContent value='basic-info' className='p-4 sm:p-5 m-0 h-full overflow-y-auto'>
                     <div className='space-y-5 max-w-3xl mx-auto'>
                       <div className='space-y-1'>
                         <Label htmlFor='name' className='text-sm font-medium text-neutral-700'>
-                          Deliverable Name
+                          Deliverable Name <span className='text-red-500'>*</span>
                         </Label>
                         <Input
                           id='name'
                           name='name'
                           value={formData.name}
                           onChange={handleChange}
-                          placeholder='Enter deliverable name'
-                          className='transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200'
+                          placeholder='Name of the product or service for your invoice'
+                          className={`transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200 ${
+                            errors.name ? 'border-red-500' : ''
+                          }`}
                         />
+                        {errors.name && <p className='text-xs text-red-500 mt-1'>{errors.name}</p>}
                       </div>
                       <div className='space-y-1'>
                         <Label
@@ -221,140 +466,605 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                           name='description'
                           value={formData.description}
                           onChange={handleChange}
-                          placeholder='Brief description of the deliverable'
-                          rows={4}
+                          placeholder='Describe what this deliverable includes (will appear on invoices)'
+                          rows={3}
                           className='resize-none transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200'
                         />
+                        <span className='text-xs text-neutral-500'>
+                          This description will help clients understand what they&apos;re being
+                          billed for.
+                        </span>
                       </div>
                       <div className='space-y-1'>
-                        <Label htmlFor='dueDate' className='text-sm font-medium text-neutral-700'>
-                          Due Date
+                        <Label htmlFor='price' className='text-sm font-medium text-neutral-700'>
+                          Invoice Price <span className='text-red-500'>*</span>
                         </Label>
                         <Input
-                          id='dueDate'
-                          name='dueDate'
-                          value={formData.dueDate}
+                          id='price'
+                          name='price'
+                          value={formData.price}
+                          onChange={handleChange}
+                          placeholder='Default price when added to an invoice'
+                          type='text'
+                          className={`transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200 ${
+                            errors.price ? 'border-red-500' : ''
+                          }`}
+                        />
+                        {errors.price && (
+                          <p className='text-xs text-red-500 mt-1'>{errors.price}</p>
+                        )}
+                        <span className='text-xs text-neutral-500'>
+                          You can still adjust the price when creating an invoice
+                        </span>
+                      </div>
+                      <div className='space-y-1'>
+                        <Label
+                          htmlFor='deliverableType'
+                          className='text-sm font-medium text-neutral-700'
+                        >
+                          Deliverable Type
+                        </Label>
+                        <Select
+                          value={formData.deliverableType}
+                          onValueChange={(value) => {
+                            return handleSelectChange('deliverableType', value);
+                          }}
+                        >
+                          <SelectTrigger className='w-full'>
+                            <SelectValue>
+                              {formData.deliverableType === 'digital' && 'Digital Product'}
+                              {formData.deliverableType === 'service' && 'Custom Service'}
+                              {formData.deliverableType === 'physical' && 'Physical Product'}
+                              {formData.deliverableType === 'package' && 'Package'}
+                              {formData.deliverableType === 'other' && 'Other'}
+                              {!formData.deliverableType && 'Select type'}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value='digital'>
+                              <div>
+                                <span className='font-medium'>Digital Product</span>
+                                <p className='text-xs text-neutral-500 mt-0.5'>
+                                  Downloadable files, templates, designs, or software
+                                </p>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value='service'>
+                              <div>
+                                <span className='font-medium'>Custom Service</span>
+                                <p className='text-xs text-neutral-500 mt-0.5'>
+                                  Professional service with defined scope and deliverables
+                                </p>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value='physical'>
+                              <div>
+                                <span className='font-medium'>Physical Product</span>
+                                <p className='text-xs text-neutral-500 mt-0.5'>
+                                  Tangible items that will be shipped to clients
+                                </p>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value='package'>
+                              <div>
+                                <span className='font-medium'>Package</span>
+                                <p className='text-xs text-neutral-500 mt-0.5'>
+                                  Bundle of multiple products or services offered together
+                                </p>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value='other'>
+                              <div>
+                                <span className='font-medium'>Other</span>
+                                <p className='text-xs text-neutral-500 mt-0.5'>
+                                  Custom deliverable type not listed above
+                                </p>
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {formData.deliverableType === 'other' && (
+                          <div className='mt-2'>
+                            <Input
+                              id='customDeliverableType'
+                              name='customDeliverableType'
+                              value={formData.customDeliverableType || ''}
+                              onChange={handleChange}
+                              placeholder='Specify deliverable type'
+                              className='text-sm'
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <div className='space-y-1'>
+                        <Label
+                          htmlFor='availabilityDate'
+                          className='text-sm font-medium text-neutral-700'
+                        >
+                          Available for Invoicing From <span className='text-red-500'>*</span>
+                        </Label>
+                        <Input
+                          id='availabilityDate'
+                          name='availabilityDate'
+                          value={formData.availabilityDate}
                           onChange={handleChange}
                           type='date'
-                          className='transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200'
+                          className={`transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200 ${
+                            errors.availabilityDate ? 'border-red-500' : ''
+                          }`}
                         />
+                        {errors.availabilityDate && (
+                          <p className='text-xs text-red-500 mt-1'>{errors.availabilityDate}</p>
+                        )}
+                        <span className='text-xs text-neutral-500'>
+                          Date from which this deliverable can be added to invoices
+                        </span>
                       </div>
                     </div>
                   </TabsContent>
 
-                  <TabsContent value='details' className='p-4 sm:p-5 m-0 h-full overflow-y-auto'>
+                  <TabsContent
+                    value='custom-fields'
+                    className='p-4 sm:p-5 m-0 data-[state=inactive]:hidden'
+                  >
                     <div className='space-y-5 max-w-3xl mx-auto'>
-                      <div className='space-y-1'>
-                        <Label htmlFor='priority' className='text-sm font-medium text-neutral-700'>
-                          Priority
-                        </Label>
-                        <Input
-                          id='priority'
-                          name='priority'
-                          value={formData.priority}
-                          onChange={handleChange}
-                          placeholder='Set priority level'
-                          className='transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200'
-                        />
+                      <div className='flex flex-col gap-3'>
+                        <h3 className='text-sm font-medium text-neutral-700'>
+                          Add Invoice Content
+                        </h3>
+                        <p className='text-xs text-neutral-500'>
+                          Customize how this deliverable will appear on client invoices. Add
+                          details, specifications, or any other information that helps explain the
+                          value of your work.
+                        </p>
+
+                        <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 p-4 border border-neutral-200 rounded-md bg-neutral-50'>
+                          {FIELD_TYPES.map((field) => {
+                            return (
+                              <Button
+                                key={field.id}
+                                variant='outline'
+                                className='flex items-center justify-start h-auto py-2 px-3 text-left text-sm'
+                                onClick={() => {
+                                  return addCustomField(field.id);
+                                }}
+                              >
+                                {field.icon}
+                                <span>{field.label}</span>
+                              </Button>
+                            );
+                          })}
+                        </div>
                       </div>
-                      <div className='space-y-1'>
-                        <Label htmlFor='assignee' className='text-sm font-medium text-neutral-700'>
-                          Assignee
-                        </Label>
-                        <Input
-                          id='assignee'
-                          name='assignee'
-                          value={formData.assignee}
-                          onChange={handleChange}
-                          placeholder='Assign to team member'
-                          className='transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200'
-                        />
-                      </div>
-                      <div className='space-y-1'>
-                        <Label htmlFor='notes' className='text-sm font-medium text-neutral-700'>
-                          Additional Notes
-                        </Label>
-                        <Textarea
-                          id='notes'
-                          name='notes'
-                          value={formData.notes}
-                          onChange={handleChange}
-                          placeholder='Any additional details or requirements'
-                          rows={4}
-                          className='resize-none transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200'
-                        />
+
+                      <div className='border rounded-md p-4 min-h-[200px] bg-white'>
+                        <h3 className='text-sm font-medium text-neutral-700 mb-2'>
+                          {formData.customFields.length
+                            ? 'Your Custom Fields'
+                            : 'No custom fields added yet'}
+                        </h3>
+
+                        {/* This would be replaced by actual functionality */}
+                        <div className='text-xs text-neutral-500'>
+                          {formData.customFields.length === 0 && (
+                            <p>Click on any field type above to add it to your deliverable.</p>
+                          )}
+
+                          {formData.customFields.length > 0 && (
+                            <div className='space-y-2'>
+                              {formData.customFields.map((field: any, index: number) => {
+                                return (
+                                  <div
+                                    key={field.id}
+                                    className='p-3 border border-neutral-200 rounded-md'
+                                  >
+                                    <div className='flex items-center justify-between mb-2'>
+                                      <div className='flex items-center'>
+                                        {
+                                          FIELD_TYPES.find((f) => {
+                                            return f.id === field.type;
+                                          })?.icon
+                                        }
+                                        <span className='ml-2 text-sm font-medium text-neutral-700'>
+                                          {
+                                            FIELD_TYPES.find((f) => {
+                                              return f.id === field.type;
+                                            })?.label
+                                          }{' '}
+                                          {index + 1}
+                                        </span>
+                                      </div>
+                                      <div className='flex gap-1'>
+                                        <Button
+                                          variant='ghost'
+                                          size='icon'
+                                          className='h-6 w-6'
+                                          onClick={() => {
+                                            return moveFieldUp(index);
+                                          }}
+                                          disabled={index === 0}
+                                        >
+                                          <MoveUp size={14} />
+                                        </Button>
+                                        <Button
+                                          variant='ghost'
+                                          size='icon'
+                                          className='h-6 w-6'
+                                          onClick={() => {
+                                            return moveFieldDown(index);
+                                          }}
+                                          disabled={index === formData.customFields.length - 1}
+                                        >
+                                          <MoveDown size={14} />
+                                        </Button>
+                                        <Button
+                                          variant='ghost'
+                                          size='icon'
+                                          className='h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-50'
+                                          onClick={() => {
+                                            return removeCustomField(field.id);
+                                          }}
+                                        >
+                                          <Trash2 size={14} />
+                                        </Button>
+                                      </div>
+                                    </div>
+
+                                    <div className='space-y-2'>
+                                      <div>
+                                        <Label
+                                          htmlFor={`field-${field.id}-label`}
+                                          className='text-xs'
+                                        >
+                                          Field Label
+                                        </Label>
+                                        <Input
+                                          id={`field-${field.id}-label`}
+                                          value={field.label}
+                                          onChange={(e) => {
+                                            return updateFieldProperty(
+                                              field.id,
+                                              'label',
+                                              e.target.value,
+                                            );
+                                          }}
+                                          className='text-xs h-7 mt-1'
+                                        />
+                                      </div>
+
+                                      {/* Only show content field for appropriate types */}
+                                      {[
+                                        'text',
+                                        'paragraph',
+                                        'heading',
+                                        'subheading',
+                                        'quote',
+                                      ].includes(field.type) && (
+                                        <div>
+                                          <Label
+                                            htmlFor={`field-${field.id}-content`}
+                                            className='text-xs'
+                                          >
+                                            Default Content
+                                          </Label>
+                                          {field.type === 'paragraph' || field.type === 'quote' ? (
+                                            <Textarea
+                                              id={`field-${field.id}-content`}
+                                              value={field.content}
+                                              onChange={(e) => {
+                                                return updateFieldProperty(
+                                                  field.id,
+                                                  'content',
+                                                  e.target.value,
+                                                );
+                                              }}
+                                              className='text-xs mt-1'
+                                              rows={2}
+                                            />
+                                          ) : (
+                                            <Input
+                                              id={`field-${field.id}-content`}
+                                              value={field.content}
+                                              onChange={(e) => {
+                                                return updateFieldProperty(
+                                                  field.id,
+                                                  'content',
+                                                  e.target.value,
+                                                );
+                                              }}
+                                              className='text-xs h-7 mt-1'
+                                            />
+                                          )}
+                                        </div>
+                                      )}
+
+                                      {/* Link fields get URL input */}
+                                      {(field.type === 'link' ||
+                                        field.type === 'button' ||
+                                        field.type === 'download') && (
+                                        <div>
+                                          <Label
+                                            htmlFor={`field-${field.id}-url`}
+                                            className='text-xs'
+                                          >
+                                            URL
+                                          </Label>
+                                          <Input
+                                            id={`field-${field.id}-url`}
+                                            value={field.url || ''}
+                                            onChange={(e) => {
+                                              return updateFieldProperty(
+                                                field.id,
+                                                'url',
+                                                e.target.value,
+                                              );
+                                            }}
+                                            placeholder='https://'
+                                            className='text-xs h-7 mt-1'
+                                          />
+                                        </div>
+                                      )}
+
+                                      {/* Image fields get URL input */}
+                                      {field.type === 'image' && (
+                                        <div>
+                                          <Label
+                                            htmlFor={`field-${field.id}-url`}
+                                            className='text-xs'
+                                          >
+                                            Image URL
+                                          </Label>
+                                          <Input
+                                            id={`field-${field.id}-url`}
+                                            value={field.url || ''}
+                                            onChange={(e) => {
+                                              return updateFieldProperty(
+                                                field.id,
+                                                'url',
+                                                e.target.value,
+                                              );
+                                            }}
+                                            placeholder='https://'
+                                            className='text-xs h-7 mt-1'
+                                          />
+                                          <p className='text-xs text-neutral-500 mt-1'>
+                                            Will implement file upload in the future
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </TabsContent>
 
-                  <TabsContent value='review' className='p-4 sm:p-5 m-0 h-full overflow-y-auto'>
-                    <div className='space-y-4 max-w-3xl mx-auto'>
-                      <h3 className='text-sm font-medium text-neutral-600'>Review Information</h3>
-                      <div className='space-y-3 rounded-md border border-neutral-100 p-4 bg-neutral-50/50'>
-                        <div className='flex flex-row gap-1 text-sm'>
-                          <span className='w-24 font-medium text-neutral-700'>Name:</span>
-                          <span className='text-neutral-800'>{formData.name || '—'}</span>
+                  <TabsContent
+                    value='review-notes'
+                    className='p-4 sm:p-5 m-0 data-[state=inactive]:hidden'
+                  >
+                    <div className='space-y-6 max-w-3xl mx-auto'>
+                      <div className='flex items-center justify-between mb-2'>
+                        <div>
+                          <h3 className='text-base font-medium text-neutral-800'>
+                            Deliverable Summary
+                          </h3>
+                          <p className='text-sm text-neutral-500'>
+                            Review your invoice deliverable before creating it
+                          </p>
                         </div>
-                        <div className='flex flex-col sm:flex-row gap-1 text-sm'>
-                          <span className='w-24 font-medium text-neutral-700'>Description:</span>
-                          <span className='text-neutral-800'>{formData.description || '—'}</span>
+                        <div className='px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium border border-blue-100'>
+                          Ready for Invoicing
                         </div>
-                        <div className='flex flex-row gap-1 text-sm'>
-                          <span className='w-24 font-medium text-neutral-700'>Due Date:</span>
-                          <span className='text-neutral-800'>{formData.dueDate || '—'}</span>
+                      </div>
+
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                        <div className='bg-white rounded-lg border border-neutral-200 shadow-sm overflow-hidden'>
+                          <div className='px-5 py-3 bg-neutral-50 border-b border-neutral-200'>
+                            <h4 className='text-sm font-medium text-neutral-800 flex items-center'>
+                              <FileText className='w-4 h-4 mr-2 text-neutral-500' />
+                              Basic Information
+                            </h4>
+                          </div>
+                          <div className='p-4 space-y-3'>
+                            <div className='space-y-1'>
+                              <div className='text-xs font-medium text-neutral-500'>Name</div>
+                              <div className='text-sm font-medium text-neutral-800'>
+                                {formData.name || '—'}
+                              </div>
+                            </div>
+                            <div className='space-y-1'>
+                              <div className='text-xs font-medium text-neutral-500'>
+                                Description
+                              </div>
+                              <div className='text-sm text-neutral-700'>
+                                {formData.description || '—'}
+                              </div>
+                            </div>
+                            <div className='space-y-1'>
+                              <div className='text-xs font-medium text-neutral-500'>
+                                Invoice Price
+                              </div>
+                              <div className='text-sm font-bold text-neutral-800'>
+                                {formData.price || '—'}
+                              </div>
+                            </div>
+                            <div className='space-y-1'>
+                              <div className='text-xs font-medium text-neutral-500'>Type</div>
+                              <div className='text-sm text-neutral-700'>
+                                {formData.deliverableType === 'other'
+                                  ? `Other: ${formData.customDeliverableType || 'Not specified'}`
+                                  : formData.deliverableType === 'digital'
+                                  ? 'Digital Product'
+                                  : formData.deliverableType === 'service'
+                                  ? 'Custom Service'
+                                  : formData.deliverableType === 'physical'
+                                  ? 'Physical Product'
+                                  : formData.deliverableType === 'package'
+                                  ? 'Package'
+                                  : formData.deliverableType || '—'}
+                              </div>
+                            </div>
+                            <div className='space-y-1'>
+                              <div className='text-xs font-medium text-neutral-500'>
+                                Available For Invoicing
+                              </div>
+                              <div className='text-sm text-neutral-700'>
+                                {formData.availabilityDate || '—'}
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div className='flex flex-row gap-1 text-sm'>
-                          <span className='w-24 font-medium text-neutral-700'>Priority:</span>
-                          <span className='text-neutral-800'>{formData.priority || '—'}</span>
+
+                        <div className='bg-white rounded-lg border border-neutral-200 shadow-sm overflow-hidden'>
+                          <div className='px-5 py-3 bg-neutral-50 border-b border-neutral-200'>
+                            <h4 className='text-sm font-medium text-neutral-800 flex items-center'>
+                              <Settings className='w-4 h-4 mr-2 text-neutral-500' />
+                              Invoice Content
+                              <span className='ml-2 px-2 py-0.5 bg-neutral-100 text-neutral-600 rounded-full text-xs'>
+                                {formData.customFields.length || '0'}
+                              </span>
+                            </h4>
+                          </div>
+                          <div className='p-4'>
+                            {formData.customFields.length === 0 ? (
+                              <div className='text-sm text-neutral-500 italic'>
+                                No custom content added
+                              </div>
+                            ) : (
+                              <div className='max-h-[300px] overflow-y-auto pr-2 space-y-4'>
+                                {formData.customFields.map((field: any) => {
+                                  return (
+                                    <div
+                                      key={field.id}
+                                      className='pb-3 border-b border-neutral-100 last:border-0 last:pb-0'
+                                    >
+                                      <div className='flex items-center mb-1'>
+                                        {
+                                          FIELD_TYPES.find((f) => {
+                                            return f.id === field.type;
+                                          })?.icon
+                                        }
+                                        <span className='text-sm font-medium text-neutral-700 ml-1.5'>
+                                          {field.label}
+                                        </span>
+                                      </div>
+
+                                      {field.content && (
+                                        <div className='text-sm text-neutral-600 mt-1 pl-6'>
+                                          {field.content}
+                                        </div>
+                                      )}
+
+                                      {field.url && (
+                                        <div className='text-sm text-blue-600 mt-1 pl-6 truncate'>
+                                          {field.url}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className='flex flex-row gap-1 text-sm'>
-                          <span className='w-24 font-medium text-neutral-700'>Assignee:</span>
-                          <span className='text-neutral-800'>{formData.assignee || '—'}</span>
+                      </div>
+
+                      <div className='bg-white rounded-lg border border-neutral-200 shadow-sm overflow-hidden'>
+                        <div className='px-5 py-3 bg-neutral-50 border-b border-neutral-200'>
+                          <h4 className='text-sm font-medium text-neutral-800 flex items-center'>
+                            <ListChecks className='w-4 h-4 mr-2 text-neutral-500' />
+                            Internal Notes
+                            <span className='ml-2 text-xs text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded-full'>
+                              Not shown on invoices
+                            </span>
+                          </h4>
                         </div>
-                        <div className='flex flex-col sm:flex-row gap-1 text-sm'>
-                          <span className='w-24 font-medium text-neutral-700'>Notes:</span>
-                          <span className='text-neutral-800'>{formData.notes || '—'}</span>
+                        <div className='p-4'>
+                          <Textarea
+                            id='teamNotes'
+                            name='teamNotes'
+                            value={formData.teamNotes}
+                            onChange={handleChange}
+                            placeholder='Add production requirements or other notes for your team'
+                            rows={3}
+                            className='resize-none transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200 mb-3'
+                          />
+                          <p className='text-xs text-neutral-500 mb-3'>
+                            These notes are only for your team and won&apos;t appear on client
+                            invoices.
+                          </p>
+                          <h5 className='text-xs font-medium text-neutral-600 mb-1'>
+                            Current Notes:
+                          </h5>
+                          {formData.teamNotes ? (
+                            <div className='text-sm text-neutral-700 bg-neutral-50 p-3 rounded-md border border-neutral-100'>
+                              {formData.teamNotes}
+                            </div>
+                          ) : (
+                            <div className='text-sm text-neutral-500 italic'>
+                              No internal notes added
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className='bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100 p-4 flex items-center'>
+                        <div className='bg-white p-2 rounded-full shadow-sm mr-3'>
+                          <AlertCircle className='w-5 h-5 text-blue-500' />
+                        </div>
+                        <div>
+                          <h4 className='text-sm font-medium text-blue-700'>Next Steps</h4>
+                          <p className='text-xs text-blue-600 mt-0.5'>
+                            After creating this deliverable, you can attach it to invoices from the
+                            invoice creation screen.
+                          </p>
                         </div>
                       </div>
                     </div>
                   </TabsContent>
                 </div>
               </div>
-            </Tabs>
-          </div>
+            </div>
+          </Tabs>
+        </div>
 
-          {/* Bottom Buttons */}
-          <div className='flex justify-between px-5 py-4 border-t border-neutral-100'>
-            {getCurrentStageIndex() > 0 ? (
-              <Button
-                variant='outline'
-                onClick={handleBack}
-                className='text-sm font-normal border-neutral-200 hover:bg-neutral-50 transition-colors duration-150'
-              >
-                <ChevronLeft className='mr-1.5 h-3.5 w-3.5' />
-                Back
-              </Button>
-            ) : (
-              <div></div> // Empty div to maintain flex layout
-            )}
+        {/* Footer (fixed) */}
+        <div className='flex justify-between px-5 py-4 border-t border-neutral-100 bg-white z-10 shadow-sm flex-shrink-0'>
+          {getCurrentStageIndex() > 0 ? (
+            <Button
+              variant='outline'
+              onClick={handleBack}
+              className='text-sm font-normal border-neutral-200 hover:bg-neutral-50 transition-colors duration-150'
+            >
+              <ChevronLeft className='mr-1.5 h-3.5 w-3.5' />
+              Back
+            </Button>
+          ) : (
+            <div></div> // Empty div to maintain flex layout
+          )}
 
-            {getCurrentStageIndex() < STAGES.length - 1 ? (
-              <Button
-                onClick={handleNext}
-                className='text-sm font-normal transition-colors duration-150'
-              >
-                Continue
-                <ChevronRight className='ml-1.5 h-3.5 w-3.5' />
-              </Button>
-            ) : (
-              <Button
-                onClick={handleSubmit}
-                className='text-sm font-normal transition-colors duration-150'
-              >
-                Create Deliverable
-              </Button>
-            )}
-          </div>
+          {getCurrentStageIndex() < STAGES.length - 1 ? (
+            <Button
+              onClick={handleNext}
+              className='text-sm font-normal transition-colors duration-150'
+            >
+              Continue
+              <ChevronRight className='ml-1.5 h-3.5 w-3.5' />
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className='text-sm font-normal transition-colors duration-150'
+            >
+              {isSubmitting ? 'Creating...' : 'Create Invoice Deliverable'}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
