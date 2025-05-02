@@ -148,7 +148,7 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                             setSidebarOpen(false);
                           }
                         }}
-                        className={`relative w-full justify-start px-3 py-2 text-sm font-normal text-neutral-600 data-[state=active]:text-neutral-900 transition-colors duration-150 
+                        className={`relative w-full justify-start px-3 py-2 font-normal text-neutral-600 data-[state=active]:text-neutral-900 transition-colors duration-150 
                       hover:bg-neutral-50 data-[state=active]:bg-neutral-100/50 
                       data-[state=active]:after:bg-neutral-900 after:absolute after:inset-y-0 after:left-0 
                       after:w-[2px] data-[state=active]:after:opacity-100 after:opacity-0 
