@@ -938,7 +938,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                   ) : (
                     <div>
                       <div className='flex items-center justify-between'>
-                        <div className='flex items-center gap-2'>
+                        <div className='flex items-center gap-2 text-sm text-[#020817] font-medium'>
                           <Clock size={14} className='text-gray-500' />
                           <span>{getTotalLoggedHours()} hours</span>
                         </div>
@@ -958,7 +958,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
 
                   {/* Display time entries if they exist */}
                   {localTimeEntries.length > 0 && (
-                    <div className='mt-3 space-y-2'>
+                    <div className='pt-3'>
                       <div className='text-xs text-gray-500'>Time History</div>
                       <div className='space-y-2 max-h-[200px] overflow-y-auto pr-1'>
                         {localTimeEntries.map((entry: any) => {
@@ -971,7 +971,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                                 isRemoving ? 'opacity-50' : ''
                               }`}
                             >
-                              <div className='flex justify-between items-center'>
+                              <div className='flex justify-between items-center text-sm text-[#020817] font-medium'>
                                 <span>{entry.hours} hours</span>
                                 <div className='flex items-center gap-1'>
                                   <span className='text-xs text-gray-500'>
