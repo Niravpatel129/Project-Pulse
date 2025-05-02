@@ -45,7 +45,7 @@ const STAGES = [
   },
   {
     id: 2,
-    title: 'Invoice Content',
+    title: 'Deliverable Content',
     value: 'custom-fields',
     icon: <Settings className='mr-2 opacity-70' size={15} aria-hidden='true' />,
   },
@@ -347,7 +347,7 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
             <Button variant='ghost' size='icon' onClick={toggleSidebar} className='md:hidden mr-2'>
               <Menu size={18} />
             </Button>
-            <DialogTitle className='text-base font-medium'>Create Invoice Deliverable</DialogTitle>
+            <DialogTitle className='text-base font-medium'>Create Deliverable</DialogTitle>
           </div>
           <Button
             variant='ghost'
@@ -447,7 +447,7 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                           name='name'
                           value={formData.name}
                           onChange={handleChange}
-                          placeholder='Name of the product or service for your invoice'
+                          placeholder='Name of the product or service'
                           className={`transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200 ${
                             errors.name ? 'border-red-500' : ''
                           }`}
@@ -477,14 +477,14 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                       </div>
                       <div className='space-y-1'>
                         <Label htmlFor='price' className='text-sm font-medium text-neutral-700'>
-                          Invoice Price <span className='text-red-500'>*</span>
+                          Price <span className='text-red-500'>*</span>
                         </Label>
                         <Input
                           id='price'
                           name='price'
                           value={formData.price}
                           onChange={handleChange}
-                          placeholder='Default price when added to an invoice'
+                          placeholder='Default price for this deliverable'
                           type='text'
                           className={`transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200 ${
                             errors.price ? 'border-red-500' : ''
@@ -494,7 +494,7 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                           <p className='text-xs text-red-500 mt-1'>{errors.price}</p>
                         )}
                         <span className='text-xs text-neutral-500'>
-                          You can still adjust the price when creating an invoice
+                          You can adjust the price when creating an invoice
                         </span>
                       </div>
                       <div className='space-y-1'>
@@ -581,7 +581,7 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                           htmlFor='availabilityDate'
                           className='text-sm font-medium text-neutral-700'
                         >
-                          Available for Invoicing From <span className='text-red-500'>*</span>
+                          Available From <span className='text-red-500'>*</span>
                         </Label>
                         <Input
                           id='availabilityDate'
@@ -597,7 +597,7 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                           <p className='text-xs text-red-500 mt-1'>{errors.availabilityDate}</p>
                         )}
                         <span className='text-xs text-neutral-500'>
-                          Date from which this deliverable can be added to invoices
+                          Date from which this deliverable can be used
                         </span>
                       </div>
                     </div>
@@ -609,13 +609,10 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                   >
                     <div className='space-y-5 max-w-3xl mx-auto'>
                       <div className='flex flex-col gap-3'>
-                        <h3 className='text-sm font-medium text-neutral-700'>
-                          Add Invoice Content
-                        </h3>
+                        <h3 className='text-sm font-medium text-neutral-700'>Add Content Fields</h3>
                         <p className='text-xs text-neutral-500'>
-                          Customize how this deliverable will appear on client invoices. Add
-                          details, specifications, or any other information that helps explain the
-                          value of your work.
+                          Customize how this deliverable will appear. Add details, specifications,
+                          or any other information that helps explain the value of your work.
                         </p>
 
                         <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 p-4 border border-neutral-200 rounded-md bg-neutral-50'>
@@ -854,11 +851,11 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                             Deliverable Summary
                           </h3>
                           <p className='text-sm text-neutral-500'>
-                            Review your invoice deliverable before creating it
+                            Review your deliverable before creating it
                           </p>
                         </div>
                         <div className='px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium border border-blue-100'>
-                          Ready for Invoicing
+                          Ready to Create
                         </div>
                       </div>
 
@@ -911,7 +908,7 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                             </div>
                             <div className='space-y-1'>
                               <div className='text-xs font-medium text-neutral-500'>
-                                Available For Invoicing
+                                Available From
                               </div>
                               <div className='text-sm text-neutral-700'>
                                 {formData.availabilityDate || '—'}
@@ -924,7 +921,7 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                           <div className='px-5 py-3 bg-neutral-50 border-b border-neutral-200'>
                             <h4 className='text-sm font-medium text-neutral-800 flex items-center'>
                               <Settings className='w-4 h-4 mr-2 text-neutral-500' />
-                              Invoice Content
+                              Deliverable Content
                               <span className='ml-2 px-2 py-0.5 bg-neutral-100 text-neutral-600 rounded-full text-xs'>
                                 {formData.customFields.length || '0'}
                               </span>
@@ -980,7 +977,7 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                             <ListChecks className='w-4 h-4 mr-2 text-neutral-500' />
                             Internal Notes
                             <span className='ml-2 text-xs text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded-full'>
-                              Not shown on invoices
+                              Not shown to clients
                             </span>
                           </h4>
                         </div>
@@ -995,8 +992,7 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                             className='resize-none transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200 mb-3'
                           />
                           <p className='text-xs text-neutral-500 mb-3'>
-                            These notes are only for your team and won&apos;t appear on client
-                            invoices.
+                            These notes are only for your team and won&apos;t be visible to clients.
                           </p>
                           <h5 className='text-xs font-medium text-neutral-600 mb-1'>
                             Current Notes:
@@ -1020,8 +1016,8 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                         <div>
                           <h4 className='text-sm font-medium text-blue-700'>Next Steps</h4>
                           <p className='text-xs text-blue-600 mt-0.5'>
-                            After creating this deliverable, you can attach it to invoices from the
-                            invoice creation screen.
+                            After creating this deliverable, you can attach it to invoices when
+                            billing your clients.
                           </p>
                         </div>
                       </div>
@@ -1062,7 +1058,7 @@ const NewDeliverableDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
               disabled={isSubmitting}
               className='text-sm font-normal transition-colors duration-150'
             >
-              {isSubmitting ? 'Creating...' : 'Create Invoice Deliverable'}
+              {isSubmitting ? 'Creating...' : 'Create Deliverable'}
             </Button>
           )}
         </div>
