@@ -153,24 +153,6 @@ const BasicDetailsTab = ({
           </div>
         )}
       </div>
-      <div className='space-y-1'>
-        <Label htmlFor='availabilityDate' className='text-sm font-medium text-neutral-700'>
-          Available From <span className='text-red-500'>*</span>
-        </Label>
-        <Input
-          id='availabilityDate'
-          name='availabilityDate'
-          value={formData.availabilityDate}
-          onChange={handleChange}
-          type='date'
-          className={`transition-shadow duration-150 focus:ring-1 focus:ring-neutral-200 ${
-            errors.availabilityDate ? 'border-red-500' : ''
-          }`}
-        />
-        {errors.availabilityDate && (
-          <p className='text-xs text-red-500 mt-1'>{errors.availabilityDate}</p>
-        )}
-      </div>
     </div>
   );
 };
