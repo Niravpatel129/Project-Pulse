@@ -1,6 +1,22 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -15,7 +31,17 @@ import { useProject } from '@/contexts/ProjectContext';
 import { cn } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronDown, ChevronUp, Download, Search, SortAsc, SortDesc } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  Download,
+  MoreHorizontal,
+  Pencil,
+  Search,
+  SortAsc,
+  SortDesc,
+  Trash2,
+} from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 
 interface Attachment {
@@ -80,6 +106,7 @@ const DeliverablesTable = () => {
   const { project } = useProject();
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [deliverableToDelete, setDeliverableToDelete] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<{
     key: SortKey;
     direction: SortDirection;
@@ -187,6 +214,22 @@ const DeliverablesTable = () => {
 
       default:
         return <span className='text-muted-foreground text-sm italic'>Unknown field type</span>;
+    }
+  };
+
+  const handleEdit = (deliverableId: string) => {
+    // Implement edit functionality
+    console.log('Edit deliverable:', deliverableId);
+  };
+
+  const handleDelete = async (deliverableId: string) => {
+    try {
+      await newRequest.delete(`/deliverables/${deliverableId}`);
+      refetch(); // Refresh the list after deletion
+    } catch (error) {
+      console.error('Failed to delete deliverable:', error);
+    } finally {
+      setDeliverableToDelete(null);
     }
   };
 
@@ -405,21 +448,50 @@ const DeliverablesTable = () => {
                         })}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          onClick={() => {
-                            return toggleRowExpansion(deliverable._id);
-                          }}
-                          className='h-8 w-8 p-0'
-                          aria-label={isExpanded ? 'Hide details' : 'Show details'}
-                        >
-                          {isExpanded ? (
-                            <ChevronUp className='h-4 w-4' />
-                          ) : (
-                            <ChevronDown className='h-4 w-4' />
-                          )}
-                        </Button>
+                        <div className='flex items-center gap-2'>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            onClick={() => {
+                              return toggleRowExpansion(deliverable._id);
+                            }}
+                            className='h-8 w-8 p-0'
+                            aria-label={isExpanded ? 'Hide details' : 'Show details'}
+                          >
+                            {isExpanded ? (
+                              <ChevronUp className='h-4 w-4' />
+                            ) : (
+                              <ChevronDown className='h-4 w-4' />
+                            )}
+                          </Button>
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant='ghost' size='sm' className='h-8 w-8 p-0'>
+                                <MoreHorizontal className='h-4 w-4' />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align='end'>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  return handleEdit(deliverable._id);
+                                }}
+                              >
+                                <Pencil className='mr-2 h-4 w-4' />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className='text-destructive'
+                                onClick={() => {
+                                  return setDeliverableToDelete(deliverable._id);
+                                }}
+                              >
+                                <Trash2 className='mr-2 h-4 w-4' />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
 
@@ -471,6 +543,34 @@ const DeliverablesTable = () => {
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog
+        open={!!deliverableToDelete}
+        onOpenChange={(open) => {
+          return !open && setDeliverableToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the deliverable and remove
+              it from the project.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+              onClick={() => {
+                return deliverableToDelete && handleDelete(deliverableToDelete);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
