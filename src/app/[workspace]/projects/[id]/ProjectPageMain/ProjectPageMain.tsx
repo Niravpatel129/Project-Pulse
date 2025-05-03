@@ -16,12 +16,12 @@ export default function ProjectPageMain() {
         <ProjectHeader />
         {project?.state === 'invoice-created' ? (
           <>
-            <div className='flex flex-col md:flex-row gap-6'>
+            <div className='flex flex-col md:flex-row gap-4'>
               <div className='flex-1'>
                 <ProjectInvoiceReview />
               </div>
-              <div className='w-full md:w-[350px] lg:w-[400px]'>
-                <BlockWrapper className='py-6 px-8'>
+              <div className='w-full md:w-[320px] lg:w-[360px]'>
+                <BlockWrapper className='py-5 px-6'>
                   <ProjectInvoiceStatus />
                 </BlockWrapper>
               </div>
