@@ -5,6 +5,7 @@ import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { CalendarIcon, Clock3Icon, Eye, FileCheckIcon, Package2Icon } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import TaskDetailDialog from '../ProjectKanban/TaskDetailDialog';
 import NewDeliverableDialog from '../ProjectModules/NewDeliverableDialog/NewDeliverableDialog';
 
 interface InvoiceItem {
@@ -45,6 +46,7 @@ export default function ProjectInvoiceReview() {
   const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [previewItemId, setPreviewItemId] = useState<string | null>(null);
+  const [previewTask, setPreviewTask] = useState<any | null>(null);
 
   const fetchProjectInvoice = async () => {
     if (!project?._id) return;
@@ -71,6 +73,36 @@ export default function ProjectInvoiceReview() {
   const handleClosePreview = () => {
     setPreviewItemId(null);
   };
+
+  const handleViewTask = (item: InvoiceItem) => {
+    // Convert invoice item to task format for TaskDetailDialog
+    const task = {
+      id: item.id,
+      title: item.name,
+      description: item.description,
+      columnId: 'status1', // Default column
+      labels: item.labels || [],
+      priority: 'medium',
+      storyPoints: undefined,
+      attachments: item.attachments,
+      comments: [],
+      timeEntries: [],
+      createdAt: item.createdAt || new Date().toISOString(),
+    };
+
+    setPreviewTask(task);
+  };
+
+  const handleCloseTaskPreview = () => {
+    setPreviewTask(null);
+  };
+
+  // Mock columns for TaskDetailDialog
+  const kanbanColumns = [
+    { id: 'status1', title: 'To Do', color: '#e2e8f0', order: 0 },
+    { id: 'status2', title: 'In Progress', color: '#93c5fd', order: 1 },
+    { id: 'status3', title: 'Done', color: '#86efac', order: 2 },
+  ];
 
   const columns: Column<InvoiceItem>[] = [
     {
@@ -138,23 +170,23 @@ export default function ProjectInvoiceReview() {
       key: 'actions',
       header: 'Actions',
       cell: (item) => {
-        // Only show view action for deliverable items
-        if (item.itemType !== 'task' && item._id) {
-          return (
-            <Button
-              size='sm'
-              variant='ghost'
-              onClick={() => {
-                return handleViewDeliverable(item._id as string);
-              }}
-              className='px-2 py-1 h-8'
-            >
-              <Eye className='h-4 w-4 mr-1' />
-              View
-            </Button>
-          );
-        }
-        return null;
+        return (
+          <Button
+            size='sm'
+            variant='ghost'
+            onClick={() => {
+              if (item.itemType === 'task') {
+                handleViewTask(item);
+              } else if (item._id) {
+                handleViewDeliverable(item._id);
+              }
+            }}
+            className='px-2 py-1 h-8'
+          >
+            <Eye className='h-4 w-4 mr-1' />
+            View
+          </Button>
+        );
       },
     },
   ];
@@ -245,6 +277,18 @@ export default function ProjectInvoiceReview() {
           isOpen={!!previewItemId}
           onClose={handleClosePreview}
           deliverableId={previewItemId}
+          previewMode={true}
+        />
+      )}
+
+      {/* Task Preview Dialog */}
+      {previewTask && (
+        <TaskDetailDialog
+          task={previewTask}
+          open={!!previewTask}
+          onOpenChange={handleCloseTaskPreview}
+          onTaskUpdate={() => {}} // No-op function since we're in preview mode
+          columns={kanbanColumns}
           previewMode={true}
         />
       )}

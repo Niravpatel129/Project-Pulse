@@ -72,6 +72,7 @@ interface TaskDetailDialogProps {
     timeEntry: Omit<TimeEntry, 'id' | 'user'>,
   ) => Promise<TimeEntry | null>;
   columns: Column[];
+  previewMode?: boolean;
 }
 
 // TaskDetailDialog component to display and edit task details
@@ -85,6 +86,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   onRemoveAttachment,
   onLogTime,
   columns,
+  previewMode = false,
 }) => {
   // Individual edit states for each field rather than a global edit mode
   const [editingTitle, setEditingTitle] = useState(false);
@@ -526,28 +528,30 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
           <div className='flex flex-col md:flex-row h-full overflow-hidden'>
             {/* Main content - left side */}
             <div className={`flex-1 overflow-auto p-4 md:p-6 ${!sidebarVisible ? 'pb-16' : ''}`}>
-              {/* Mobile sidebar toggle - fixed at bottom */}
-              <Button
-                variant='outline'
-                size='sm'
-                className='md:hidden fixed bottom-4 right-4 z-10 flex items-center gap-1 px-3 rounded-full shadow-md bg-white'
-                onClick={() => {
-                  return setSidebarVisible(!sidebarVisible);
-                }}
-              >
-                {sidebarVisible ? (
-                  <>
-                    Hide Details <ChevronDown size={14} />
-                  </>
-                ) : (
-                  <>
-                    Show Details <ChevronUp size={14} />
-                  </>
-                )}
-              </Button>
+              {/* Mobile sidebar toggle - fixed at bottom - hide in preview mode */}
+              {!previewMode && (
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='md:hidden fixed bottom-4 right-4 z-10 flex items-center gap-1 px-3 rounded-full shadow-md bg-white'
+                  onClick={() => {
+                    return setSidebarVisible(!sidebarVisible);
+                  }}
+                >
+                  {sidebarVisible ? (
+                    <>
+                      Hide Details <ChevronDown size={14} />
+                    </>
+                  ) : (
+                    <>
+                      Show Details <ChevronUp size={14} />
+                    </>
+                  )}
+                </Button>
+              )}
 
-              {/* Title - simplified */}
-              {editingTitle ? (
+              {/* Title - simplified, no editing in preview mode */}
+              {editingTitle && !previewMode ? (
                 <div className='mb-4 md:mb-8'>
                   <Input
                     value={editedTitle}
@@ -568,19 +572,21 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 </div>
               ) : (
                 <h2
-                  className='text-xl font-normal mb-4 md:mb-8 cursor-pointer'
+                  className={`text-xl font-normal mb-4 md:mb-8 ${
+                    previewMode ? '' : 'cursor-pointer'
+                  }`}
                   onClick={() => {
-                    return setEditingTitle(true);
+                    if (!previewMode) setEditingTitle(true);
                   }}
                 >
                   {task.title}
                 </h2>
               )}
 
-              {/* Description */}
+              {/* Description - no editing in preview mode */}
               <div className='mb-6'>
                 <div className='mb-2 text-sm text-gray-500'>Description</div>
-                {editingDescription ? (
+                {editingDescription && !previewMode ? (
                   <div className='mb-4'>
                     <Textarea
                       value={editedDescription}
@@ -605,47 +611,51 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                   </div>
                 ) : (
                   <div
-                    className='p-3 border rounded-md cursor-pointer min-h-[100px] text-sm'
+                    className={`p-3 border rounded-md ${
+                      previewMode ? '' : 'cursor-pointer'
+                    } min-h-[100px] text-sm`}
                     onClick={() => {
-                      return setEditingDescription(true);
+                      if (!previewMode) setEditingDescription(true);
                     }}
                   >
-                    {task.description || 'Add a description...'}
+                    {task.description || (previewMode ? 'No description' : 'Add a description...')}
                   </div>
                 )}
               </div>
 
-              {/* Attachments - simplified */}
+              {/* Attachments - simplified, no adding/removing in preview mode */}
               <div className='mb-4 md:mb-8'>
                 <div className='mb-3 text-sm text-gray-500 flex items-center justify-between'>
                   Attachments
-                  <div className='flex gap-2'>
-                    <input
-                      type='file'
-                      id='file-upload'
-                      className='sr-only'
-                      multiple
-                      onChange={handleFileUpload}
-                    />
-                    <label htmlFor='file-upload'>
-                      <Button variant='ghost' size='sm' className='h-7' asChild>
-                        <span>Add</span>
+                  {!previewMode && (
+                    <div className='flex gap-2'>
+                      <input
+                        type='file'
+                        id='file-upload'
+                        className='sr-only'
+                        multiple
+                        onChange={handleFileUpload}
+                      />
+                      <label htmlFor='file-upload'>
+                        <Button variant='ghost' size='sm' className='h-7' asChild>
+                          <span>Add</span>
+                        </Button>
+                      </label>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        className='h-7'
+                        onClick={() => {
+                          return setFileModalOpen(true);
+                        }}
+                      >
+                        Browse
                       </Button>
-                    </label>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      className='h-7'
-                      onClick={() => {
-                        return setFileModalOpen(true);
-                      }}
-                    >
-                      Browse
-                    </Button>
-                  </div>
+                    </div>
+                  )}
                 </div>
 
-                {showLinkInput && (
+                {showLinkInput && !previewMode && (
                   <div className='flex items-center gap-2 mb-3'>
                     <Input
                       placeholder='Paste or type a link'
@@ -699,19 +709,21 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                           {isRemoving ? (
                             <div className='h-4 w-4 ml-1 animate-spin rounded-full border-2 border-current border-t-transparent' />
                           ) : (
-                            <Button
-                              variant='ghost'
-                              size='icon'
-                              className='h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50'
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleRemoveAttachment(attachment.id);
-                              }}
-                            >
-                              <Trash2 size={14} />
-                              <span className='sr-only'>Delete attachment</span>
-                            </Button>
+                            !previewMode && (
+                              <Button
+                                variant='ghost'
+                                size='icon'
+                                className='h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50'
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleRemoveAttachment(attachment.id);
+                                }}
+                              >
+                                <Trash2 size={14} />
+                                <span className='sr-only'>Delete attachment</span>
+                              </Button>
+                            )
                           )}
                         </div>
                       );
@@ -720,41 +732,47 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 )}
               </div>
 
-              {/* Comments - simplified */}
+              {/* Comments - simplified, no adding in preview mode */}
               <div className='mb-4 md:mb-6'>
                 <div className='mb-3 text-sm text-gray-500'>Comments</div>
                 <div className='space-y-4 md:space-y-6'>
-                  <div className='flex gap-3'>
-                    <Avatar className='h-8 w-8 shrink-0'>
-                      <AvatarImage src='/avatars/03.png' alt='Your avatar' />
-                      <AvatarFallback className='flex items-center justify-center'>
-                        <User size={14} />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className='flex-1 space-y-3'>
-                      <Textarea
-                        placeholder='Add a comment...'
-                        className='resize-none min-h-[80px]'
-                        value={commentText}
-                        onChange={(e) => {
-                          return setCommentText(e.target.value);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && e.metaKey) {
-                            handleAddComment();
-                          }
-                        }}
-                      />
-                      <div className='flex justify-end'>
-                        <Button size='sm' onClick={handleAddComment} disabled={!commentText.trim()}>
-                          Comment
-                        </Button>
+                  {!previewMode && (
+                    <div className='flex gap-3'>
+                      <Avatar className='h-8 w-8 shrink-0'>
+                        <AvatarImage src='/avatars/03.png' alt='Your avatar' />
+                        <AvatarFallback className='flex items-center justify-center'>
+                          <User size={14} />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className='flex-1 space-y-3'>
+                        <Textarea
+                          placeholder='Add a comment...'
+                          className='resize-none min-h-[80px]'
+                          value={commentText}
+                          onChange={(e) => {
+                            return setCommentText(e.target.value);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && e.metaKey) {
+                              handleAddComment();
+                            }
+                          }}
+                        />
+                        <div className='flex justify-end'>
+                          <Button
+                            size='sm'
+                            onClick={handleAddComment}
+                            disabled={!commentText.trim()}
+                          >
+                            Comment
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Existing comments */}
-                  {task.comments && task.comments.length > 0 && (
+                  {task.comments && task.comments.length > 0 ? (
                     <div className='space-y-4'>
                       {task.comments.map((comment) => {
                         return (
@@ -776,12 +794,14 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                         );
                       })}
                     </div>
+                  ) : (
+                    !previewMode && <div className='text-sm text-gray-500'>No comments yet</div>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Sidebar - right side (for properties) */}
+            {/* Sidebar - right side (for properties) - simplified in preview mode */}
             <ScrollArea
               className={`w-full md:w-72 lg:w-80 h-full overflow-auto border-t md:border-t-0 md:border-l p-4 md:p-6 ${
                 sidebarVisible ? 'block' : 'hidden md:block'
@@ -791,116 +811,145 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 {/* Status (Column) */}
                 <div className='space-y-1.5'>
                   <div className='text-xs text-gray-500'>Status</div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant='outline' className='w-full justify-between' size='sm'>
-                        <div className='flex items-center'>
-                          <div
-                            className='w-2 h-2 rounded-full mr-2'
-                            style={{
-                              backgroundColor:
-                                columns.find((col) => {
-                                  return col.id === task.columnId;
-                                })?.color || '#94a3b8',
-                            }}
-                          ></div>
-                          {columns.find((col) => {
-                            return col.id === task.columnId;
-                          })?.title || 'No Status'}
-                        </div>
-                        <ChevronDown size={14} />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end' className='w-[200px]'>
-                      {columns.map((column) => {
-                        return (
-                          <DropdownMenuItem
-                            key={column.id}
-                            onClick={() => {
-                              return saveColumnId(column.id);
-                            }}
-                            className='flex items-center cursor-pointer'
-                          >
+                  {previewMode ? (
+                    <div className='flex items-center px-3 py-2 border rounded-md text-sm'>
+                      <div
+                        className='w-2 h-2 rounded-full mr-2'
+                        style={{
+                          backgroundColor:
+                            columns.find((col) => {
+                              return col.id === task.columnId;
+                            })?.color || '#94a3b8',
+                        }}
+                      ></div>
+                      {columns.find((col) => {
+                        return col.id === task.columnId;
+                      })?.title || 'No Status'}
+                    </div>
+                  ) : (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant='outline' className='w-full justify-between' size='sm'>
+                          <div className='flex items-center'>
                             <div
                               className='w-2 h-2 rounded-full mr-2'
-                              style={{ backgroundColor: column.color }}
+                              style={{
+                                backgroundColor:
+                                  columns.find((col) => {
+                                    return col.id === task.columnId;
+                                  })?.color || '#94a3b8',
+                              }}
                             ></div>
-                            {column.title}
-                          </DropdownMenuItem>
-                        );
-                      })}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                            {columns.find((col) => {
+                              return col.id === task.columnId;
+                            })?.title || 'No Status'}
+                          </div>
+                          <ChevronDown size={14} />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align='end' className='w-[200px]'>
+                        {columns.map((column) => {
+                          return (
+                            <DropdownMenuItem
+                              key={column.id}
+                              onClick={() => {
+                                return saveColumnId(column.id);
+                              }}
+                              className='flex items-center cursor-pointer'
+                            >
+                              <div
+                                className='w-2 h-2 rounded-full mr-2'
+                                style={{ backgroundColor: column.color }}
+                              ></div>
+                              {column.title}
+                            </DropdownMenuItem>
+                          );
+                        })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
 
                 {/* Due Date */}
                 <div className='space-y-1.5'>
                   <div className='text-xs text-gray-500'>Due Date</div>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={dueDate ? 'outline' : 'ghost'}
-                        className='w-full justify-start h-9 px-3'
-                        size='sm'
-                      >
-                        {dueDate ? format(dueDate, 'PPP') : 'Set due date'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className='w-auto p-0 min-w-[350px]'>
-                      <CalendarComponent
-                        mode='single'
-                        selected={dueDate || undefined}
-                        onSelect={(date) => {
-                          setDueDate(date);
-                          saveDueDate(date);
-                        }}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  {previewMode ? (
+                    <div className='px-3 py-2 border rounded-md text-sm'>
+                      {dueDate ? format(dueDate, 'PPP') : 'No due date'}
+                    </div>
+                  ) : (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={dueDate ? 'outline' : 'ghost'}
+                          className='w-full justify-start h-9 px-3'
+                          size='sm'
+                        >
+                          {dueDate ? format(dueDate, 'PPP') : 'Set due date'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className='w-auto p-0 min-w-[350px]'>
+                        <CalendarComponent
+                          mode='single'
+                          selected={dueDate || undefined}
+                          onSelect={(date) => {
+                            setDueDate(date);
+                            saveDueDate(date);
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  )}
                 </div>
 
                 {/* Priority */}
                 <div className='space-y-1.5'>
                   <div className='text-xs text-gray-500'>Priority</div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant='outline' className='w-full justify-between' size='sm'>
-                        {task.priority || 'Set priority'}
-                        <ChevronDown size={14} />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end' className='w-[200px]'>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          return savePriority('low');
-                        }}
-                      >
-                        Low
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          return savePriority('medium');
-                        }}
-                      >
-                        Medium
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          return savePriority('high');
-                        }}
-                      >
-                        High
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {previewMode ? (
+                    <div className='px-3 py-2 border rounded-md text-sm capitalize'>
+                      {task.priority || 'No priority'}
+                    </div>
+                  ) : (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant='outline' className='w-full justify-between' size='sm'>
+                          {task.priority || 'Set priority'}
+                          <ChevronDown size={14} />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align='end' className='w-[200px]'>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            return savePriority('low');
+                          }}
+                        >
+                          Low
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            return savePriority('medium');
+                          }}
+                        >
+                          Medium
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            return savePriority('high');
+                          }}
+                        >
+                          High
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
 
                 {/* Time Tracking */}
                 <div className='space-y-1.5'>
                   <div className='text-xs text-gray-500'>Time Tracking</div>
 
-                  {showTimeInput ? (
+                  {showTimeInput && !previewMode ? (
                     <div className='space-y-2 mt-2'>
                       <div className='flex items-center gap-2'>
                         <Input
@@ -968,16 +1017,18 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                           <span>{formatHours(getTotalLoggedHours())}</span>
                         </div>
                       </div>
-                      <Button
-                        variant='outline'
-                        className='w-full justify-start h-9 mt-2'
-                        size='sm'
-                        onClick={() => {
-                          return setShowTimeInput(true);
-                        }}
-                      >
-                        + Log Hours
-                      </Button>
+                      {!previewMode && (
+                        <Button
+                          variant='outline'
+                          className='w-full justify-start h-9 mt-2'
+                          size='sm'
+                          onClick={() => {
+                            return setShowTimeInput(true);
+                          }}
+                        >
+                          + Log Hours
+                        </Button>
+                      )}
                     </div>
                   )}
 
@@ -1005,19 +1056,21 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                                   {isRemoving ? (
                                     <div className='h-4 w-4 ml-1 animate-spin rounded-full border-2 border-current border-t-transparent' />
                                   ) : (
-                                    <Button
-                                      variant='ghost'
-                                      size='icon'
-                                      className='h-5 w-5 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100'
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        deleteTimeEntry(entryId);
-                                      }}
-                                    >
-                                      <Trash2 size={12} />
-                                      <span className='sr-only'>Delete time entry</span>
-                                    </Button>
+                                    !previewMode && (
+                                      <Button
+                                        variant='ghost'
+                                        size='icon'
+                                        className='h-5 w-5 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100'
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          deleteTimeEntry(entryId);
+                                        }}
+                                      >
+                                        <Trash2 size={12} />
+                                        <span className='sr-only'>Delete time entry</span>
+                                      </Button>
+                                    )
                                   )}
                                 </div>
                               </div>
@@ -1042,7 +1095,11 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 {/* Story Points */}
                 <div className='space-y-1.5'>
                   <div className='text-xs text-gray-500'>Story Points</div>
-                  {editingStoryPoints ? (
+                  {previewMode ? (
+                    <div className='px-3 py-2 border rounded-md text-sm'>
+                      {task.storyPoints !== undefined ? task.storyPoints : 'No points'}
+                    </div>
+                  ) : editingStoryPoints ? (
                     <div className='flex items-center gap-2'>
                       <Input
                         type='number'
@@ -1100,19 +1157,21 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                             className='bg-gray-100 px-2 py-1 rounded-sm text-xs flex items-center gap-1 group'
                           >
                             {label}
-                            <button
-                              className='opacity-0 group-hover:opacity-100'
-                              onClick={() => {
-                                return handleRemoveLabel(label);
-                              }}
-                            >
-                              <X size={10} />
-                            </button>
+                            {!previewMode && (
+                              <button
+                                className='opacity-0 group-hover:opacity-100'
+                                onClick={() => {
+                                  return handleRemoveLabel(label);
+                                }}
+                              >
+                                <X size={10} />
+                              </button>
+                            )}
                           </div>
                         );
                       })}
 
-                    {showLabelInput ? (
+                    {showLabelInput && !previewMode ? (
                       <div className='flex items-center gap-1 w-full'>
                         <Input
                           value={newLabelText}
@@ -1142,16 +1201,18 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                         </Button>
                       </div>
                     ) : (
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        className='h-7'
-                        onClick={() => {
-                          return setShowLabelInput(true);
-                        }}
-                      >
-                        + Add Label
-                      </Button>
+                      !previewMode && (
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='h-7'
+                          onClick={() => {
+                            return setShowLabelInput(true);
+                          }}
+                        >
+                          + Add Label
+                        </Button>
+                      )
                     )}
                   </div>
                 </div>
@@ -1161,62 +1222,64 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* File Upload Manager Modal */}
-      <FileUploadManagerModal
-        isOpen={fileModalOpen}
-        onClose={() => {
-          return setFileModalOpen(false);
-        }}
-        handleAddFileToProject={(file: any) => {
-          if (!task || !onAddAttachment) return;
+      {/* File Upload Manager Modal - don't show in preview mode */}
+      {!previewMode && (
+        <FileUploadManagerModal
+          isOpen={fileModalOpen}
+          onClose={() => {
+            return setFileModalOpen(false);
+          }}
+          handleAddFileToProject={(file: any) => {
+            if (!task || !onAddAttachment) return;
 
-          onAddAttachment(task.id, {
-            type: file.contentType.startsWith('image/') ? 'image' : 'file',
-            url: file.downloadURL,
-            title: file.originalName,
-            size: file.size,
-          });
+            onAddAttachment(task.id, {
+              type: file.contentType.startsWith('image/') ? 'image' : 'file',
+              url: file.downloadURL,
+              title: file.originalName,
+              size: file.size,
+            });
 
-          setFileModalOpen(false);
-        }}
-        initialFiles={task?.attachments?.map((attachment) => {
-          return {
-            _id: attachment.id,
-            originalName: attachment.title,
-            contentType: attachment.type === 'image' ? 'image/jpeg' : 'application/octet-stream',
-            downloadURL: attachment.url,
-            size: attachment.size || 0,
-            updatedAt: new Date().toISOString(),
-            createdAt: new Date().toISOString(),
-            storagePath: attachment.url,
-            uploadedBy: { name: 'Current User' },
-          };
-        })}
-        onDeleteFile={async (file: any) => {
-          if (!task) return false;
+            setFileModalOpen(false);
+          }}
+          initialFiles={task?.attachments?.map((attachment) => {
+            return {
+              _id: attachment.id,
+              originalName: attachment.title,
+              contentType: attachment.type === 'image' ? 'image/jpeg' : 'application/octet-stream',
+              downloadURL: attachment.url,
+              size: attachment.size || 0,
+              updatedAt: new Date().toISOString(),
+              createdAt: new Date().toISOString(),
+              storagePath: attachment.url,
+              uploadedBy: { name: 'Current User' },
+            };
+          })}
+          onDeleteFile={async (file: any) => {
+            if (!task) return false;
 
-          if (file._id && !removingAttachmentIds.includes(file._id)) {
-            if (!onRemoveAttachment) {
-              // Provide a fallback behavior when onRemoveAttachment isn't available
-              const updatedAttachments = task.attachments?.filter((attachment) => {
-                return attachment.id !== file._id;
-              });
+            if (file._id && !removingAttachmentIds.includes(file._id)) {
+              if (!onRemoveAttachment) {
+                // Provide a fallback behavior when onRemoveAttachment isn't available
+                const updatedAttachments = task.attachments?.filter((attachment) => {
+                  return attachment.id !== file._id;
+                });
 
-              onTaskUpdate({
-                ...task,
-                attachments: updatedAttachments,
-              });
+                onTaskUpdate({
+                  ...task,
+                  attachments: updatedAttachments,
+                });
 
-              toast.success('Attachment removed successfully');
+                toast.success('Attachment removed successfully');
+                return true;
+              }
+
+              await handleRemoveAttachment(file._id);
               return true;
             }
-
-            await handleRemoveAttachment(file._id);
-            return true;
-          }
-          return false;
-        }}
-      />
+            return false;
+          }}
+        />
+      )}
     </>
   );
 };
