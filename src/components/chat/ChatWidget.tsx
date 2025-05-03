@@ -49,14 +49,14 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [inputValue, setInputValue] = useState('');
   const [showMentions, setShowMentions] = useState(false);
   const [mentionFilter, setMentionFilter] = useState('');
-  const [cursorPosition, setCursorPosition] = useState(0);
   const [tables, setTables] = useState<TableInfo[]>([]);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const mentionTriggerRef = useRef<HTMLButtonElement>(null);
+  const inputValueRef = useRef('');
+  const cursorPositionRef = useRef(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -188,90 +188,91 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     setIsOpen(!isOpen);
   };
 
-  // Handle text input changes
+  // This function handles input changes without state updates that cause re-renders
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    setInputValue(value);
+    // Store value in ref instead of state
+    inputValueRef.current = e.target.value;
 
-    // Store cursor position for mention insertion
-    if (e.target.selectionStart) {
-      setCursorPosition(e.target.selectionStart);
+    // Track cursor position
+    if (e.target.selectionStart !== undefined) {
+      cursorPositionRef.current = e.target.selectionStart;
     }
 
-    // Find if cursor is right after an @ symbol
-    const beforeCursor = value.substring(0, cursorPosition);
+    // Only use state for controlling the mention dropdown UI
+    const value = e.target.value;
+    const pos = e.target.selectionStart || 0;
+    const beforeCursor = value.substring(0, pos);
     const match = beforeCursor.match(/@([^\s@]*)$/);
 
     if (match) {
+      const newFilter = match[1]?.toLowerCase() || '';
+      setMentionFilter(newFilter);
       setShowMentions(true);
-      setMentionFilter(match[1]?.toLowerCase() || '');
-    } else {
+    } else if (showMentions) {
       setShowMentions(false);
     }
   };
 
   // Handle @ button click
   const handleAtButtonClick = () => {
-    const newValue =
-      inputValue.substring(0, cursorPosition) + '@' + inputValue.substring(cursorPosition);
-    setInputValue(newValue);
+    if (!inputRef.current) return;
+
+    const selStart = inputRef.current.selectionStart || 0;
+    const selEnd = inputRef.current.selectionEnd || selStart;
+    const value = inputRef.current.value;
+
+    // Insert @ symbol at cursor
+    const newValue = value.substring(0, selStart) + '@' + value.substring(selEnd);
+
+    // Update ref and input directly without state
+    inputValueRef.current = newValue;
+    inputRef.current.value = newValue;
+
+    // Update cursor position
+    const newPosition = selStart + 1;
+    cursorPositionRef.current = newPosition;
+
+    // Focus and set cursor position
+    inputRef.current.focus();
+    inputRef.current.setSelectionRange(newPosition, newPosition);
+
+    // Show mentions dropdown (this won't affect input focus)
     setShowMentions(true);
     setMentionFilter('');
-
-    // Focus back on input and place cursor after @
-    setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-        const newPosition = cursorPosition + 1;
-        inputRef.current.setSelectionRange(newPosition, newPosition);
-        setCursorPosition(newPosition);
-      }
-    }, 0);
   };
 
   // Handle mention selection
   const handleSelectMention = (tableName: string) => {
-    // Replace the @filter with the selected table name
-    const beforeCursor = inputValue.substring(0, cursorPosition);
+    if (!inputRef.current) return;
+
+    const value = inputRef.current.value;
+    const cursorPos = cursorPositionRef.current;
+    const beforeCursor = value.substring(0, cursorPos);
     const match = beforeCursor.match(/@([^\s@]*)$/);
+
+    let newValue = '';
+    let newPosition = 0;
 
     if (match) {
       const start = beforeCursor.lastIndexOf('@');
-      const newValue =
-        inputValue.substring(0, start) + `@${tableName} ` + inputValue.substring(cursorPosition);
-
-      setInputValue(newValue);
-      setShowMentions(false);
-
-      // Set cursor position after the inserted mention
-      const newPosition = start + tableName.length + 2; // +2 for @ and space
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
-          inputRef.current.setSelectionRange(newPosition, newPosition);
-          setCursorPosition(newPosition);
-        }
-      }, 0);
+      newValue = value.substring(0, start) + `@${tableName} ` + value.substring(cursorPos);
+      newPosition = start + tableName.length + 2; // +2 for @ and space
     } else {
-      // If no match (user clicked @ button), insert at cursor
-      const newValue =
-        inputValue.substring(0, cursorPosition) +
-        `@${tableName} ` +
-        inputValue.substring(cursorPosition);
-
-      setInputValue(newValue);
-      setShowMentions(false);
-
-      // Set cursor position after the inserted mention
-      const newPosition = cursorPosition + tableName.length + 2; // +2 for @ and space
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
-          inputRef.current.setSelectionRange(newPosition, newPosition);
-          setCursorPosition(newPosition);
-        }
-      }, 0);
+      newValue = value.substring(0, cursorPos) + `@${tableName} ` + value.substring(cursorPos);
+      newPosition = cursorPos + tableName.length + 2;
     }
+
+    // Update refs and input directly
+    inputValueRef.current = newValue;
+    inputRef.current.value = newValue;
+    cursorPositionRef.current = newPosition;
+
+    // Update cursor position in the DOM
+    inputRef.current.focus();
+    inputRef.current.setSelectionRange(newPosition, newPosition);
+
+    // Close mentions dropdown
+    setShowMentions(false);
   };
 
   // Send message on Enter key
@@ -280,24 +281,14 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
       e.preventDefault();
 
       if (showMentions) {
-        // If mentions dropdown is open, pressing Enter should do nothing
-        return;
+        return; // If mentions dropdown is open, do nothing
       }
 
       handleSendMessage();
     }
 
-    // Update cursor position for mention insertion
-    if (e.key !== 'Enter' && e.key !== 'Tab') {
-      setTimeout(() => {
-        if (inputRef.current?.selectionStart) {
-          setCursorPosition(inputRef.current.selectionStart);
-        }
-      }, 0);
-    }
-
     // Close mentions dropdown on escape
-    if (e.key === 'Escape') {
+    if (e.key === 'Escape' && showMentions) {
       setShowMentions(false);
     }
   };
@@ -464,9 +455,10 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
 
   // Send message handler
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+    if (!inputRef.current) return;
 
-    const messageContent = inputValue.trim();
+    const messageContent = inputRef.current.value.trim();
+    if (!messageContent || isLoading) return;
 
     // Create user message
     const userMessage: Message = {
@@ -481,8 +473,11 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
       return [...prev, userMessage];
     });
 
-    // Clear input
-    setInputValue('');
+    // Clear input (both ref and DOM element)
+    inputValueRef.current = '';
+    inputRef.current.value = '';
+    cursorPositionRef.current = 0;
+
     setIsLoading(true);
     userScrollingRef.current = false;
     setTimeout(scrollToBottom, 50);
@@ -582,6 +577,111 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     );
   };
 
+  // Enhanced Input Area component
+  const ChatInputArea = () => {
+    return (
+      <div className='p-3 border-t'>
+        <div className='relative'>
+          {/* Text Input */}
+          <div className='flex flex-col rounded-md border bg-background overflow-hidden'>
+            <TextareaAutosize
+              ref={inputRef}
+              // Use defaultValue instead of value to make this an uncontrolled component
+              defaultValue=''
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder='Type a message...'
+              className='min-h-[56px] resize-none flex-1 px-3 pt-3 pb-9 text-sm bg-transparent border-none ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
+              disabled={isLoading}
+              maxRows={6}
+            />
+
+            {/* Controls */}
+            <div className='absolute bottom-0 left-0 right-0 p-1.5 flex items-center justify-between border-t bg-muted/50'>
+              <div className='flex items-center gap-1'>
+                {/* @ Mention Button */}
+                <Button
+                  ref={mentionTriggerRef}
+                  variant='ghost'
+                  size='icon'
+                  className='h-7 w-7 rounded-full text-muted-foreground hover:text-foreground'
+                  onClick={handleAtButtonClick}
+                  title='Mention a table'
+                >
+                  <AtSign className='h-4 w-4' />
+                </Button>
+
+                {/* Attachment Button (placeholder) */}
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='h-7 w-7 rounded-full text-muted-foreground hover:text-foreground'
+                  title='Add attachment'
+                >
+                  <Paperclip className='h-4 w-4' />
+                </Button>
+              </div>
+
+              {/* Send Button */}
+              <Button
+                onClick={handleSendMessage}
+                size='sm'
+                className={cn(
+                  'h-7 rounded-full px-3',
+                  (!inputRef.current?.value.trim() || isLoading) && 'opacity-50 cursor-not-allowed',
+                )}
+                disabled={!inputRef.current?.value.trim() || isLoading}
+              >
+                <Send className='h-3.5 w-3.5 mr-1' />
+                <span className='text-xs'>Send</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Table Mention Dropdown */}
+          {showMentions && (
+            <div className='absolute bottom-full left-0 mb-1 w-full bg-popover rounded-md border shadow-md'>
+              <Command className='rounded-lg'>
+                <CommandInput
+                  placeholder='Search tables...'
+                  value={mentionFilter}
+                  onValueChange={setMentionFilter}
+                  className='h-9'
+                />
+                <CommandEmpty>No tables found</CommandEmpty>
+                <CommandGroup className='max-h-60 overflow-auto'>
+                  {filteredTables.map((table) => {
+                    return (
+                      <CommandItem
+                        key={table.id}
+                        value={table.name}
+                        onSelect={() => {
+                          return handleSelectMention(table.name);
+                        }}
+                        className='flex items-center justify-between'
+                      >
+                        <div className='flex items-center'>
+                          <div className='bg-primary/10 text-primary p-1 rounded mr-2'>
+                            <span className='text-xs font-mono'>@{table.name}</span>
+                          </div>
+                          {table.description && (
+                            <span className='text-xs text-muted-foreground truncate max-w-[150px]'>
+                              {table.description}
+                            </span>
+                          )}
+                        </div>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </Command>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   // Chat panel content
   const ChatPanelContent = () => {
     return (
@@ -628,105 +728,8 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
           </div>
         </ScrollArea>
 
-        {/* Enhanced Input Area */}
-        <div className='p-3 border-t'>
-          <div className='relative'>
-            {/* Text Input */}
-            <div className='flex flex-col rounded-md border bg-background overflow-hidden'>
-              <TextareaAutosize
-                ref={inputRef}
-                value={inputValue}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
-                placeholder='Type a message...'
-                className='min-h-[56px] resize-none flex-1 px-3 pt-3 pb-9 text-sm bg-transparent border-none ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
-                disabled={isLoading}
-                maxRows={6}
-              />
-
-              {/* Controls */}
-              <div className='absolute bottom-0 left-0 right-0 p-1.5 flex items-center justify-between border-t bg-muted/50'>
-                <div className='flex items-center gap-1'>
-                  {/* @ Mention Button */}
-                  <Button
-                    ref={mentionTriggerRef}
-                    variant='ghost'
-                    size='icon'
-                    className='h-7 w-7 rounded-full text-muted-foreground hover:text-foreground'
-                    onClick={handleAtButtonClick}
-                    title='Mention a table'
-                  >
-                    <AtSign className='h-4 w-4' />
-                  </Button>
-
-                  {/* Attachment Button (placeholder) */}
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='h-7 w-7 rounded-full text-muted-foreground hover:text-foreground'
-                    title='Add attachment'
-                  >
-                    <Paperclip className='h-4 w-4' />
-                  </Button>
-                </div>
-
-                {/* Send Button */}
-                <Button
-                  onClick={handleSendMessage}
-                  size='sm'
-                  className={cn(
-                    'h-7 rounded-full px-3',
-                    (!inputValue.trim() || isLoading) && 'opacity-50 cursor-not-allowed',
-                  )}
-                  disabled={!inputValue.trim() || isLoading}
-                >
-                  <Send className='h-3.5 w-3.5 mr-1' />
-                  <span className='text-xs'>Send</span>
-                </Button>
-              </div>
-            </div>
-
-            {/* Table Mention Dropdown */}
-            {showMentions && (
-              <div className='absolute bottom-full left-0 mb-1 w-full bg-popover rounded-md border shadow-md'>
-                <Command className='rounded-lg'>
-                  <CommandInput
-                    placeholder='Search tables...'
-                    value={mentionFilter}
-                    onValueChange={setMentionFilter}
-                    className='h-9'
-                  />
-                  <CommandEmpty>No tables found</CommandEmpty>
-                  <CommandGroup className='max-h-60 overflow-auto'>
-                    {filteredTables.map((table) => {
-                      return (
-                        <CommandItem
-                          key={table.id}
-                          value={table.name}
-                          onSelect={() => {
-                            return handleSelectMention(table.name);
-                          }}
-                          className='flex items-center justify-between'
-                        >
-                          <div className='flex items-center'>
-                            <div className='bg-primary/10 text-primary p-1 rounded mr-2'>
-                              <span className='text-xs font-mono'>@{table.name}</span>
-                            </div>
-                            {table.description && (
-                              <span className='text-xs text-muted-foreground truncate max-w-[150px]'>
-                                {table.description}
-                              </span>
-                            )}
-                          </div>
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                </Command>
-              </div>
-            )}
-          </div>
-        </div>
+        {/* Use the custom input area component */}
+        <ChatInputArea />
       </div>
     );
   };
@@ -786,7 +789,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
           </Panel>
 
           <PanelResizeHandle
-            className='w-1.5 bg-border hover:bg-primary cursor-col-resize transition-colors'
+            className='w-[1px] bg-border hover:bg-primary cursor-col-resize transition-colors'
             style={{ pointerEvents: 'auto' }}
           />
 
