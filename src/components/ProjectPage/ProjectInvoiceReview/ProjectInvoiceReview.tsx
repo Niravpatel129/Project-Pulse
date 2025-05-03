@@ -60,61 +60,65 @@ export default function ProjectInvoiceReview() {
   }, [project?._id]);
 
   return (
-    <BlockWrapper className='py-6'>
-      <div className='space-y-8'>
-        {/* Header: Project title and date */}
-        <div className='flex justify-between items-start'>
-          <div className='space-y-1'>
-            <h1 className='text-2xl font-medium text-gray-900'>Project Review</h1>
-            <p className='text-sm text-gray-500'>Website redesign and branding</p>
+    <div>
+      <BlockWrapper className='py-6'>
+        <div className='space-y-8'>
+          {/* Header: Project title and date */}
+          <div className='flex justify-between items-start'>
+            <div className='space-y-1'>
+              <h1 className='text-2xl font-medium text-gray-900'>Project Review</h1>
+              <p className='text-sm text-gray-500'>Website redesign and branding</p>
+            </div>
+            <div className='flex items-center text-sm text-gray-500'>
+              <CalendarIcon className='mr-2 h-4 w-4' />
+              <span>April 25 - May 15, 2025</span>
+            </div>
           </div>
-          <div className='flex items-center text-sm text-gray-500'>
-            <CalendarIcon className='mr-2 h-4 w-4' />
-            <span>April 25 - May 15, 2025</span>
+
+          {/* Project metrics */}
+          <div className='grid grid-cols-3 gap-12'>
+            {/* Status */}
+            <div className='flex items-center gap-3'>
+              <div className='flex items-center justify-center w-9 h-9 rounded-full bg-gray-50'>
+                <Package2Icon className='h-4 w-4 text-gray-500' />
+              </div>
+              <div>
+                <p className='text-xs text-gray-500 mb-1'>Project Status</p>
+                <p className='text-sm font-medium text-gray-900'>Invoice Sent</p>
+              </div>
+            </div>
+
+            {/* Time */}
+            <div className='flex items-center gap-3'>
+              <div className='flex items-center justify-center w-9 h-9 rounded-full bg-gray-50'>
+                <Clock3Icon className='h-4 w-4 text-gray-500' />
+              </div>
+              <div>
+                <p className='text-xs text-gray-500 mb-1'>Time Tracked</p>
+                <p className='text-sm font-medium text-gray-900'>32 hours</p>
+              </div>
+            </div>
+
+            {/* Deliverables */}
+            <div className='flex items-center gap-3'>
+              <div className='flex items-center justify-center w-9 h-9 rounded-full bg-gray-50'>
+                <FileCheckIcon className='h-4 w-4 text-gray-500' />
+              </div>
+              <div>
+                <p className='text-xs text-gray-500 mb-1'>Deliverables</p>
+                <p className='text-sm font-medium text-gray-900'>5 completed</p>
+              </div>
+            </div>
           </div>
         </div>
+      </BlockWrapper>
 
-        {/* Project metrics */}
-        <div className='grid grid-cols-3 gap-12'>
-          {/* Status */}
-          <div className='flex items-center gap-3'>
-            <div className='flex items-center justify-center w-9 h-9 rounded-full bg-gray-50'>
-              <Package2Icon className='h-4 w-4 text-gray-500' />
-            </div>
-            <div>
-              <p className='text-xs text-gray-500 mb-1'>Project Status</p>
-              <p className='text-sm font-medium text-gray-900'>Invoice Sent</p>
-            </div>
-          </div>
-
-          {/* Time */}
-          <div className='flex items-center gap-3'>
-            <div className='flex items-center justify-center w-9 h-9 rounded-full bg-gray-50'>
-              <Clock3Icon className='h-4 w-4 text-gray-500' />
-            </div>
-            <div>
-              <p className='text-xs text-gray-500 mb-1'>Time Tracked</p>
-              <p className='text-sm font-medium text-gray-900'>32 hours</p>
-            </div>
-          </div>
-
-          {/* Deliverables */}
-          <div className='flex items-center gap-3'>
-            <div className='flex items-center justify-center w-9 h-9 rounded-full bg-gray-50'>
-              <FileCheckIcon className='h-4 w-4 text-gray-500' />
-            </div>
-            <div>
-              <p className='text-xs text-gray-500 mb-1'>Deliverables</p>
-              <p className='text-sm font-medium text-gray-900'>5 completed</p>
-            </div>
-          </div>
-        </div>
-
+      <BlockWrapper className='my-4'>
         {/* Invoice Items Table */}
         {loading ? (
-          <div className='py-8 text-center text-gray-500'>Loading invoice data...</div>
+          <div className='py-1 text-center text-gray-500'>Loading invoice data...</div>
         ) : invoiceData?.invoice?.selectedItems?.length > 0 ? (
-          <div className='mt-8'>
+          <div className=''>
             <h2 className='text-xl font-medium text-gray-900 mb-4'>Invoice Items</h2>
             <div className='overflow-x-auto'>
               <table className='min-w-full divide-y divide-gray-200'>
@@ -259,7 +263,7 @@ export default function ProjectInvoiceReview() {
         ) : (
           <div className='py-8 text-center text-gray-500'>No invoice items found</div>
         )}
-      </div>
-    </BlockWrapper>
+      </BlockWrapper>
+    </div>
   );
 }
