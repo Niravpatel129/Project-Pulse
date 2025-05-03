@@ -21,9 +21,11 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useProject } from '@/contexts/ProjectContext';
 import { cn } from '@/lib/utils';
+import { newRequest } from '@/utils/newRequest';
 import { format } from 'date-fns';
 import { CalendarIcon, DollarSign, Repeat } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface UpfrontPaymentDialogProps {
   open: boolean;
@@ -50,11 +52,26 @@ export default function UpfrontPaymentDialog({
   const [currency, setCurrency] = useState('usd');
   const [taxId, setTaxId] = useState('');
   const [showTaxId, setShowTaxId] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (!project?._id) {
+      toast.error('Project ID is missing');
+      return;
+    }
+
+    if (!amount || !dueDate) {
+      toast.error('Amount and due date are required');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
     // Here we would implement the actual payment processing
     const paymentData = {
-      amount,
+      amount: parseFloat(amount),
       dueDate,
       notes,
       paymentMethod,
@@ -64,7 +81,7 @@ export default function UpfrontPaymentDialog({
       currency,
       taxId: showTaxId ? taxId : '',
       showTaxId,
-      projectName: project.name,
+      projectId: project._id,
       paymentType,
     };
 
@@ -76,10 +93,35 @@ export default function UpfrontPaymentDialog({
       });
     }
 
-    console.log('Processing payment:', paymentData);
+    try {
+      const endpoint =
+        paymentType === 'upfront'
+          ? `/payments/request/${project._id}`
+          : `/payments/schedule/${project._id}`;
 
-    // Close the dialog
-    onOpenChange(false);
+      const response = await newRequest.post(endpoint, paymentData);
+
+      if (response.data.success) {
+        toast.success(
+          paymentType === 'upfront'
+            ? 'Payment request sent successfully!'
+            : 'Payment schedule set up successfully!',
+        );
+        onOpenChange(false);
+      } else {
+        throw new Error(response.data.message || 'Failed to process payment request');
+      }
+    } catch (err) {
+      console.error('Payment error:', err);
+      setError(
+        err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.',
+      );
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to process payment request. Please try again.',
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Calculated payment amount per installment for recurring payments
@@ -358,8 +400,12 @@ export default function UpfrontPaymentDialog({
           >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} className='font-medium'>
-            {paymentType === 'upfront' ? 'Request Payment' : 'Setup Schedule'}
+          <Button onClick={handleSubmit} className='font-medium' disabled={isLoading}>
+            {isLoading
+              ? 'Processing...'
+              : paymentType === 'upfront'
+              ? 'Request Payment'
+              : 'Setup Schedule'}
           </Button>
         </DialogFooter>
       </DialogContent>
