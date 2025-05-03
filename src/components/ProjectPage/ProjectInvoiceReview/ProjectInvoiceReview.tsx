@@ -245,8 +245,8 @@ export default function ProjectInvoiceReview() {
           <div className='grid grid-cols-3 gap-12'>
             {/* Status */}
             <div className='flex items-center gap-3'>
-              <div className='flex items-center justify-center w-9 h-9 rounded-full bg-gray-50'>
-                <Package2Icon className='h-4 w-4 text-gray-500' />
+              <div className='flex items-center justify-center w-9 h-9 rounded-full bg-amber-50'>
+                <Package2Icon className='h-4 w-4 text-amber-500' />
               </div>
               <div>
                 <p className='text-xs text-gray-500 mb-1'>Project Status</p>
@@ -258,8 +258,8 @@ export default function ProjectInvoiceReview() {
 
             {/* Time */}
             <div className='flex items-center gap-3'>
-              <div className='flex items-center justify-center w-9 h-9 rounded-full bg-gray-50'>
-                <Clock3Icon className='h-4 w-4 text-gray-500' />
+              <div className='flex items-center justify-center w-9 h-9 rounded-full bg-green-50'>
+                <Clock3Icon className='h-4 w-4 text-green-500' />
               </div>
               <div>
                 <p className='text-xs text-gray-500 mb-1'>Tasks</p>
@@ -269,8 +269,8 @@ export default function ProjectInvoiceReview() {
 
             {/* Deliverables */}
             <div className='flex items-center gap-3'>
-              <div className='flex items-center justify-center w-9 h-9 rounded-full bg-gray-50'>
-                <FileCheckIcon className='h-4 w-4 text-gray-500' />
+              <div className='flex items-center justify-center w-9 h-9 rounded-full bg-blue-50'>
+                <FileCheckIcon className='h-4 w-4 text-blue-500' />
               </div>
               <div>
                 <p className='text-xs text-gray-500 mb-1'>Deliverables</p>
