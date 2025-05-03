@@ -404,7 +404,7 @@ const InvoiceItems = ({
           <div className='py-8 text-center text-gray-500'>
             No items found.
             <p className='text-sm mt-2'>
-              If no items are showing, try refreshing the page or check your project settings.
+              If no items are showing, add a deliverable to the project.
             </p>
           </div>
         )}
@@ -481,7 +481,7 @@ const InvoiceItems = ({
           <div className='py-8 text-center text-gray-500'>
             Tasks from the project will appear here automatically.
             <p className='text-sm mt-2'>
-              If no tasks are showing, try refreshing the page or check your project settings.
+              If no tasks are showing, add a task or deliverable to the project.
             </p>
           </div>
         )}
