@@ -40,7 +40,6 @@ export default function ProjectInvoiceReview() {
   const { project } = useProject();
   const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(null);
   const [loading, setLoading] = useState(true);
-  console.log('🚀 invoiceData:', invoiceData);
 
   const fetchProjectInvoice = async () => {
     if (!project?._id) return;

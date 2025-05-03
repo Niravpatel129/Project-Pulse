@@ -396,6 +396,10 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
         }
       }
 
+      // Add itemId and itemType for MongoDB reference
+      processedItem.itemId = item._id;
+      processedItem.itemType = item.id.startsWith('task-') ? 'task' : 'deliverable';
+
       handleAddItem(processedItem);
     }
   };
@@ -408,9 +412,19 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
       return (type === 'task' ? isTask : !isTask) && !isItemSelected(item.id);
     });
 
+    // Process items to add MongoDB reference fields
+    const processedItemsToAdd = itemsToAdd.map((item) => {
+      // Create a processed item with the MongoDB reference fields
+      return {
+        ...item,
+        itemId: item._id,
+        itemType: item.id.startsWith('task-') ? 'task' : 'deliverable',
+      };
+    });
+
     // Add all items at once by updating the state directly
-    if (itemsToAdd.length > 0) {
-      setSelectedItems([...selectedItems, ...itemsToAdd]);
+    if (processedItemsToAdd.length > 0) {
+      setSelectedItems([...selectedItems, ...processedItemsToAdd]);
     }
   };
 
