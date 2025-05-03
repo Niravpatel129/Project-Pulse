@@ -1,9 +1,25 @@
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
+import { useProject } from '@/contexts/ProjectContext';
+import { newRequest } from '@/utils/newRequest';
 import { CalendarIcon, Clock3Icon, FileCheckIcon, Package2Icon } from 'lucide-react';
+import { useEffect } from 'react';
 
 export default function ProjectInvoiceReview() {
+  const { project } = useProject();
+
+  const fetchProjectInvoice = async () => {
+    if (!project?._id) return;
+    const response = await newRequest.get(`/project-invoices/${project?._id}`);
+    const data = await response.data;
+    return data;
+  };
+
+  useEffect(() => {
+    fetchProjectInvoice();
+  }, []);
+
   return (
-    <BlockWrapper className='py-6 px-8 border-b border-gray-100'>
+    <BlockWrapper className='py-6'>
       <div className='space-y-8'>
         {/* Header: Project title and date */}
         <div className='flex justify-between items-start'>

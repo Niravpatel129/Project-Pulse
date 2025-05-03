@@ -50,9 +50,7 @@ export const useInvoiceWizard = () => {
   const { project } = useProject();
   const projectId = project?._id;
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
-  const [invoiceNumber, setInvoiceNumber] = useState(
-    `INV-${Math.floor(100000 + Math.random() * 900000)}`,
-  );
+
   const [dueDate, setDueDate] = useState(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)); // 30 days from now
   const [aiSuggestions, setAiSuggestions] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | undefined>(undefined);
@@ -165,6 +163,7 @@ export const useInvoiceWizard = () => {
   }, [projectId, dueDate]);
 
   const generateInvoice = async (): Promise<InvoiceData | null> => {
+    if (!projectId) return null;
     if (selectedItems.length === 0) {
       setError('Please add at least one item to the invoice');
       return null;

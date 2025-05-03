@@ -31,6 +31,7 @@ import {
   Mail,
   Menu,
   Plus,
+  SquarePen,
   UserCircle,
   UserCog,
   Users,
@@ -795,10 +796,7 @@ export default function ProjectHeader() {
       <div className=''>
         {/* Project Banner */}
         {!isMobile && (
-          <div
-            ref={bannerRef}
-            className='w-full container mx-auto flex items-center justify-between px-0 py-3"'
-          >
+          <div ref={bannerRef} className='w-full flex items-center justify-between px-0 py-3"'>
             {isLoadingProject ? (
               <ProjectBannerSkeleton />
             ) : (
@@ -807,19 +805,20 @@ export default function ProjectHeader() {
                   <div>
                     <h1
                       className={cn(
-                        'flex items-center gap-2 text-xl sm:text-2xl font-medium capitalize cursor-pointer  hover:border-primary transition-colors',
+                        'flex items-center gap-2 text-xl sm:text-2xl font-medium capitalize cursor-pointer  hover:border-primary transition-colors group',
                         project?.isClosed && 'text-gray-500',
                       )}
                       onClick={() => {
                         return setIsEditNameModalOpen(true);
                       }}
                     >
-                      <div className='font-extrabold hover:underline underline-offset-4'>
-                        {project?.name}
+                      <div>
+                        <div className='font-bold flex gap-1 items-center justify-center'>
+                          {project?.name}
+
+                          <SquarePen className='h-4 w-4 text-black/90 opacity-0 group-hover:opacity-100 transition-opacity mt-1' />
+                        </div>
                       </div>
-                      <Badge variant='outline' className='text-xs'>
-                        {project?.isClosed ? 'Closed' : 'Active'}
-                      </Badge>
                     </h1>
                     <p className='text-xs sm:text-sm text-muted-foreground'>
                       Created on{' '}
@@ -860,7 +859,6 @@ export default function ProjectHeader() {
             )}
           </div>
         )}
-
         <Dialog open={isEditNameModalOpen} onOpenChange={setIsEditNameModalOpen}>
           <DialogContent className='sm:max-w-[425px]'>
             <DialogHeader>
@@ -897,7 +895,6 @@ export default function ProjectHeader() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
         {/* Participants Dialog */}
         <Dialog open={showParticipantsDialog} onOpenChange={setShowParticipantsDialog}>
           <DialogContent className='sm:max-w-md'>
@@ -1063,7 +1060,6 @@ export default function ProjectHeader() {
             </div>
           </DialogContent>
         </Dialog>
-
         {/* Invoice Wizard Dialog */}
         <InvoiceWizardDialog
           open={isInvoiceWizardOpen}
