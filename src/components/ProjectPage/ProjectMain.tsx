@@ -3,7 +3,7 @@
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { useProject, type Project } from '@/contexts/ProjectContext';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CalendarDays, ChartBar, CreditCard, Home, PanelsTopLeft } from 'lucide-react';
+import { CalendarDays, ChartBar, Home, PanelsTopLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
 import { Suspense } from 'react';
@@ -11,7 +11,6 @@ import ProjectActivity from './ProjectActivity';
 import ProjectHome from './ProjectHome';
 import ProjectKanban from './ProjectKanban/ProjectKanban';
 import ProjectModules from './ProjectModules/ProjectModules';
-import ProjectPayments from './ProjectPayments';
 import ProjectSchedule from './ProjectSchedule';
 import { ProjectSidebar } from './ProjectSidebar';
 import TimelineExample from './TimelineExample';
@@ -47,7 +46,7 @@ export default function ProjectMain() {
       tab: 'deliverables',
       badge: 5,
     },
-    { href: `${baseUrl}/payments`, label: 'Payments', icon: CreditCard, tab: 'payments' },
+    // { href: `${baseUrl}/payments`, label: 'Payments', icon: CreditCard, tab: 'payments' },
   ];
 
   const renderNavigationLink = ({
@@ -135,7 +134,7 @@ export default function ProjectMain() {
                   {activeTab === 'timeline' && <TimelineExample />}
                   {activeTab === 'schedule' && <ProjectSchedule />}
                   {activeTab === 'deliverables' && <ProjectModules />}
-                  {activeTab === 'payments' && <ProjectPayments />}
+                  {/* {activeTab === 'payments' && <ProjectPayments />} */}
                 </Suspense>
               </motion.div>
             </AnimatePresence>

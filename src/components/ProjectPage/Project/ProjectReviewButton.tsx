@@ -6,6 +6,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useProject } from '@/contexts/ProjectContext';
 import {
   AlertCircle,
   Ban,
@@ -21,7 +22,7 @@ import {
 } from 'lucide-react';
 import { ReactNode, useState } from 'react';
 
-type ProjectState = 'in-progress' | 'invoice-sent' | 'partial-payment' | 'completed';
+type ProjectState = 'in-progress' | 'invoice-created' | 'partial-payment' | 'completed';
 
 interface ButtonConfig {
   state: ProjectState;
@@ -41,7 +42,8 @@ interface ProjectReviewButtonProps {
 }
 
 export default function ProjectReviewButton({ openInvoiceWizard }: ProjectReviewButtonProps) {
-  const [projectState, setProjectState] = useState<ProjectState>('invoice-sent');
+  const { project } = useProject();
+  const [projectState, setProjectState] = useState<ProjectState>(project.state as ProjectState);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [selectedPaymentType, setSelectedPaymentType] = useState('recurring');
 
@@ -81,7 +83,7 @@ export default function ProjectReviewButton({ openInvoiceWizard }: ProjectReview
       ],
     },
     {
-      state: 'invoice-sent',
+      state: 'invoice-created',
       label: 'Awaiting Payment',
       icon: <AlertCircle className='h-4 w-4 mr-2' />,
       className:
@@ -159,7 +161,7 @@ export default function ProjectReviewButton({ openInvoiceWizard }: ProjectReview
           label: 'View Invoice',
           icon: <FileText className='h-4 w-4 mr-2 text-amber-500' />,
           onClick: () => {
-            return setProjectState('invoice-sent');
+            return setProjectState('invoice-created');
           },
         },
         {

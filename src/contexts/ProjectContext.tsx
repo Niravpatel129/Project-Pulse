@@ -6,6 +6,7 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useState 
 
 export interface Project {
   _id: string;
+  state: string;
   name: string;
   workspace: string;
   description: string;
