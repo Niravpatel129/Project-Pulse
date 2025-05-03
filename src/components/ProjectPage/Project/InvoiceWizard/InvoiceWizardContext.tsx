@@ -42,6 +42,14 @@ type InvoiceWizardContextType = {
   discount: number;
   setDiscount: (discount: number) => void;
 
+  // Delivery options
+  sendAutomatically: boolean;
+  setSendAutomatically: (send: boolean) => void;
+  includePaymentLink: boolean;
+  setIncludePaymentLink: (include: boolean) => void;
+  scheduleReminders: boolean;
+  setScheduleReminders: (schedule: boolean) => void;
+
   // Shipping related states - now separate
   selectedShippingMethod: any | null;
   setSelectedShippingMethod: (method: any) => void;
@@ -128,6 +136,11 @@ export const InvoiceWizardProvider = ({ children }: InvoiceWizardProviderProps) 
   const [taxId, setTaxId] = useState('');
   const [showTaxId, setShowTaxId] = useState(false);
   const [discount, setDiscount] = useState(0);
+
+  // Delivery options
+  const [sendAutomatically, setSendAutomatically] = useState(true);
+  const [includePaymentLink, setIncludePaymentLink] = useState(true);
+  const [scheduleReminders, setScheduleReminders] = useState(false);
 
   // Separate shipping state
   const [selectedShippingMethod, setSelectedShippingMethod] = useState<any | null>(null);
@@ -237,6 +250,11 @@ export const InvoiceWizardProvider = ({ children }: InvoiceWizardProviderProps) 
 
   const handleCreateInvoice = async () => {
     // For now, just console log instead of generating the invoice
+    const subtotal = calculateInvoiceSubtotal();
+    const shippingTotal = calculateShippingTotal();
+    const discountAmount = calculateDiscountAmount();
+    const total = calculateInvoiceTotal();
+
     console.log('Creating invoice with data:', {
       selectedItems,
       selectedClient,
@@ -245,6 +263,18 @@ export const InvoiceWizardProvider = ({ children }: InvoiceWizardProviderProps) 
       notes,
       taxId,
       showTaxId,
+      discount,
+      subtotal,
+      shippingTotal,
+      discountAmount,
+      total,
+      currency: invoiceSettings?.currency || 'usd',
+      selectedTax,
+      deliveryOptions: {
+        sendAutomatically,
+        includePaymentLink,
+        scheduleReminders,
+      },
       shipping: shippingItem
         ? {
             item: shippingItem,
@@ -422,6 +452,14 @@ export const InvoiceWizardProvider = ({ children }: InvoiceWizardProviderProps) 
     setShowTaxId: handleShowTaxIdChange,
     discount,
     setDiscount,
+
+    // Delivery options
+    sendAutomatically,
+    setSendAutomatically,
+    includePaymentLink,
+    setIncludePaymentLink,
+    scheduleReminders,
+    setScheduleReminders,
 
     // Invoice wizard hook values
     selectedItems,
