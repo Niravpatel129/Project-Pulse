@@ -187,7 +187,7 @@ export default function ProjectReviewButton({ openInvoiceWizard }: ProjectReview
         <DropdownMenuTrigger asChild>
           <Button variant='default' className={currentConfig.className}>
             {currentConfig.icon}
-            {currentConfig.label}
+            <span className='font-normal'>{currentConfig.label}</span>
             <ChevronDown className='h-3 w-3 ml-2 opacity-70' />
           </Button>
         </DropdownMenuTrigger>

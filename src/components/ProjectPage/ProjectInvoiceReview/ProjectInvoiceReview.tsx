@@ -1,11 +1,10 @@
-import { Button } from '@/components/ui/button';
 import { Column, DataTable } from '@/components/ui/data-table';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { CalendarIcon, Clock3Icon, Eye, FileCheckIcon, Package2Icon } from 'lucide-react';
+import { CalendarIcon, Clock3Icon, FileCheckIcon, Package2Icon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import TaskDetailDialog from '../ProjectKanban/TaskDetailDialog';
 import NewDeliverableDialog from '../ProjectModules/NewDeliverableDialog/NewDeliverableDialog';
@@ -121,6 +120,14 @@ export default function ProjectInvoiceReview() {
     setPreviewTask(null);
   };
 
+  const handleRowClick = (item: InvoiceItem) => {
+    if (item.itemType === 'task') {
+      handleViewTask(item);
+    } else if (item._id) {
+      handleViewDeliverable(item._id);
+    }
+  };
+
   console.log('🚀 invoiceData:', invoiceData);
   // Format project date range
   const formatDateRange = () => {
@@ -201,29 +208,6 @@ export default function ProjectInvoiceReview() {
       },
       sortable: true,
     },
-    {
-      key: 'actions',
-      header: 'Actions',
-      cell: (item) => {
-        return (
-          <Button
-            size='sm'
-            variant='ghost'
-            onClick={() => {
-              if (item.itemType === 'task') {
-                handleViewTask(item);
-              } else if (item._id) {
-                handleViewDeliverable(item._id);
-              }
-            }}
-            className='px-2 py-1 h-8'
-          >
-            <Eye className='h-4 w-4 mr-1' />
-            View
-          </Button>
-        );
-      },
-    },
   ];
 
   return (
@@ -300,6 +284,8 @@ export default function ProjectInvoiceReview() {
               emptyState={
                 <div className='py-8 text-center text-gray-500'>No invoice items found</div>
               }
+              onRowClick={handleRowClick}
+              className='hover:cursor-pointer'
             />
           </div>
         ) : (
