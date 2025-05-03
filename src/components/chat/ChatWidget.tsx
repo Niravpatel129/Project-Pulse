@@ -2,11 +2,10 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { newRequest, streamRequest } from '@/utils/newRequest';
-import { Maximize2, MessageCircle, Minimize2, RefreshCw, SendIcon, Trash2, X } from 'lucide-react';
+import { MessageCircle, SendIcon, Trash2, X } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import TextareaAutosize from 'react-textarea-autosize';
@@ -34,19 +33,14 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [isPolling, setIsPolling] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [isFullScreen, setIsFullScreen] = useState(false);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-  // Store accumulated content for each streaming message
   const contentAccumulatorRef = useRef<{ [key: string]: string }>({});
-  // Prevent autoscroll on user interaction
   const userScrollingRef = useRef(false);
-  // Track last message ID for scroll position restoration
   const lastMessageIdRef = useRef<string | null>(null);
 
   // Load session ID from localStorage on component mount
@@ -57,29 +51,66 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     }
   }, []);
 
-  // Auto-scroll to bottom when messages array length changes
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (messages.length > 0 && !userScrollingRef.current) {
       scrollToBottom();
     }
-    // Track the latest message for scroll restoration
     if (messages.length > 0) {
       lastMessageIdRef.current = messages[messages.length - 1].id;
     }
   }, [messages.length]);
 
-  // Scroll to bottom helper function
+  // Scroll to bottom helper
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'instant' });
     }
   }, []);
 
+  // Global styling for page shifting
   useEffect(() => {
-    scrollToBottom();
-  }, []);
+    // Apply the class-based styling when the chat is open
+    document.documentElement.style.setProperty('--content-margin-right', isOpen ? '350px' : '0px');
 
-  // Handle scroll events to detect user scrolling
+    // Create and add a style element for dynamic styles
+    const styleEl = document.createElement('style');
+    styleEl.innerHTML = `
+      .main-content {
+        transition: margin-right 0.3s ease;
+        margin-right: var(--content-margin-right, 0px);
+      }
+      
+      @media (max-width: 768px) {
+        .main-content {
+          margin-right: 0 !important;
+        }
+      }
+    `;
+    document.head.appendChild(styleEl);
+
+    // Apply the class to the main content element
+    const mainContent = document.querySelector('main');
+    if (mainContent) {
+      mainContent.classList.add('main-content');
+    }
+
+    return () => {
+      document.documentElement.style.setProperty('--content-margin-right', '0px');
+      document.head.removeChild(styleEl);
+    };
+  }, [isOpen]);
+
+  // Focus input when chat opens
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 300);
+    }
+  }, [isOpen]);
+
+  // Handle scroll events
   const handleScroll = useCallback(() => {
     if (scrollAreaRef.current) {
       const scrollArea = scrollAreaRef.current;
@@ -100,30 +131,12 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     }
   }, [handleScroll]);
 
+  // Toggle chat open/closed
   const toggleChat = () => {
     setIsOpen(!isOpen);
-    // Reset full screen when closing chat
-    if (isOpen) {
-      setIsFullScreen(false);
-    } else {
-      // Focus input when opening chat
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 0);
-      // Delay scroll to make sure the chat is fully rendered
-      setTimeout(scrollToBottom, 100);
-    }
   };
 
-  const toggleFullScreen = () => {
-    setIsFullScreen(!isFullScreen);
-    // Refocus after state change
-    setTimeout(() => {
-      inputRef.current?.focus();
-      scrollToBottom();
-    }, 100);
-  };
-
+  // Send message on Enter key
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -131,6 +144,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     }
   };
 
+  // Clear conversation history
   const clearConversation = async () => {
     if (!sessionId || isLoading) return;
 
@@ -138,7 +152,6 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
       setIsLoading(true);
       await newRequest.delete(`/ai/chat/history/${sessionId}`);
       setMessages([]);
-      // Clear content accumulator
       contentAccumulatorRef.current = {};
     } catch (error) {
       console.error('Error clearing conversation:', error);
@@ -147,20 +160,21 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     }
   };
 
+  // Stream response from AI
   const setupStreamConnection = (userMessageId: string, messageContent: string) => {
-    // Cancel any ongoing stream request
+    // Cancel ongoing requests
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
 
-    // Create a new AbortController for this request
+    // New controller for this request
     abortControllerRef.current = new AbortController();
 
-    // Initialize content accumulator for this message
+    // Initialize content accumulator
     const streamMessageId = `ai-${userMessageId}`;
     contentAccumulatorRef.current[streamMessageId] = '';
 
-    // Create empty AI message placeholder for streaming
+    // Create placeholder message
     const streamingMessage: Message = {
       id: streamMessageId,
       content: '',
@@ -169,13 +183,11 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
       isStreaming: true,
     };
 
-    // Add streaming placeholder message to state
+    // Add placeholder to messages
     setMessages((prev) => {
       return [...prev, streamingMessage];
     });
     setIsStreaming(true);
-
-    // Reset user scrolling when starting a new stream
     userScrollingRef.current = false;
 
     try {
@@ -188,30 +200,27 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
           pageContext: pageContext || null,
         },
         onStart: (data) => {
-          // Save session ID if it's new
+          // Save session ID
           if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
             setSessionId(data.sessionId);
             localStorage.setItem('chatSessionId', data.sessionId);
           }
         },
         onChunk: (data) => {
-          // Accumulate content outside of React state
+          // Accumulate content
           if (data.content) {
             contentAccumulatorRef.current[streamMessageId] += data.content;
           }
 
-          // Update DOM directly for streaming content
+          // Update DOM directly for streaming
           const streamElement = document.getElementById(`stream-content-${userMessageId}`);
           if (streamElement) {
-            // Just update the text content for streaming (simple and fast)
             streamElement.textContent = contentAccumulatorRef.current[streamMessageId];
-
-            // Scroll only if user isn't manually scrolling
             if (!userScrollingRef.current) {
               scrollToBottom();
             }
           } else {
-            // If element not found, update via React state (should only happen once)
+            // Fallback to React state update
             setMessages((prev) => {
               return prev.map((msg) => {
                 if (msg.id === streamMessageId) {
@@ -223,7 +232,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
           }
         },
         onEnd: () => {
-          // Final state update with complete message
+          // Final update with complete content
           setMessages((prev) => {
             return prev.map((msg) => {
               if (msg.id === streamMessageId) {
@@ -237,17 +246,15 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
             });
           });
 
-          // Clean up after streaming completes
           setIsStreaming(false);
           setIsLoading(false);
           abortControllerRef.current = null;
-          // Scroll to bottom after final update
           setTimeout(scrollToBottom, 50);
         },
         onError: (error) => {
           console.error('Error in stream:', error);
 
-          // Handle error during streaming
+          // Update with error message
           setMessages((prev) => {
             return prev.map((msg) => {
               if (msg.id === streamMessageId) {
@@ -267,7 +274,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
         },
       });
 
-      // Store cancel function in abortController ref
+      // Store cancel function
       if (abortControllerRef.current) {
         const originalAbort = abortControllerRef.current.abort;
         abortControllerRef.current.abort = () => {
@@ -278,6 +285,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     } catch (error) {
       console.error('Error in setupStreamConnection:', error);
 
+      // Update with error message
       setMessages((prev) => {
         return prev.map((msg) => {
           if (msg.id === streamMessageId) {
@@ -296,11 +304,13 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     }
   };
 
+  // Send message handler
   const handleSendMessage = async () => {
     if (!inputRef.current || !inputRef.current.value.trim() || isLoading) return;
 
     const messageContent = inputRef.current.value.trim();
 
+    // Create user message
     const userMessage: Message = {
       id: Date.now().toString(),
       content: messageContent,
@@ -308,24 +318,24 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
       timestamp: new Date(),
     };
 
+    // Add to messages
     setMessages((prev) => {
       return [...prev, userMessage];
     });
 
-    // Clear the input field
+    // Clear input
     inputRef.current.value = '';
     setIsLoading(true);
-
-    // Reset user scrolling when sending a new message
     userScrollingRef.current = false;
     setTimeout(scrollToBottom, 50);
 
     try {
-      // Use streaming API
+      // Stream response
       setupStreamConnection(userMessage.id, messageContent);
     } catch (error) {
       console.error('Error sending message:', error);
 
+      // Show error message
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: 'Sorry, there was an error processing your request. Please try again.',
@@ -340,21 +350,19 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     }
   };
 
-  // Optimized message rendering with memoization to prevent re-renders
+  // Message component
   const MessageItem = React.memo(({ message }: { message: Message }) => {
     const messageRef = useRef<HTMLDivElement>(null);
 
-    // Effect to highlight newly rendered messages
+    // Highlight new messages
     useEffect(() => {
       if (message.id === lastMessageIdRef.current && messageRef.current) {
-        // Add a subtle highlight animation for new messages
         messageRef.current.classList.add('new-message-highlight');
         setTimeout(() => {
           messageRef.current?.classList.remove('new-message-highlight');
         }, 1000);
       }
     }, [message.id]);
-    console.log('🚀 message.content:', message.content);
 
     return (
       <div
@@ -387,10 +395,10 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     );
   });
 
-  // Add display name to the memoized component
+  // Add display name
   MessageItem.displayName = 'MessageItem';
 
-  // Optimize message list rendering
+  // Message list component
   const MessageList = () => {
     return (
       <>
@@ -403,21 +411,35 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
             return <MessageItem key={message.id} message={message} />;
           })
         )}
-        {isPolling && (
-          <div className='flex items-center justify-center py-2'>
-            <RefreshCw className='h-4 w-4 animate-spin text-muted-foreground' />
-            <span className='ml-2 text-xs text-muted-foreground'>Processing your request...</span>
-          </div>
-        )}
         <div ref={messagesEndRef} />
       </>
     );
   };
 
-  const ChatContent = () => {
-    return (
-      <div className='shadow-lg border rounded-lg bg-background overflow-hidden h-full w-full'>
-        {/* Chat Header */}
+  return (
+    <>
+      {/* Trigger Button - only show when chat is closed */}
+      {!isOpen && (
+        <div className='fixed bottom-4 right-4 z-50'>
+          <Button
+            onClick={toggleChat}
+            variant='default'
+            size='icon'
+            className='h-12 w-12 rounded-full shadow-lg'
+          >
+            <MessageCircle />
+          </Button>
+        </div>
+      )}
+
+      {/* Chat Panel */}
+      <div
+        className={cn(
+          'fixed top-0 right-0 bottom-0 w-[350px] bg-background border-l z-40 transition-transform duration-300 ease-in-out',
+          isOpen ? 'translate-x-0' : 'translate-x-full',
+        )}
+      >
+        {/* Header */}
         <div className='bg-primary p-3 text-primary-foreground flex items-center justify-between'>
           <div className='flex items-center gap-2'>
             <Avatar className='h-8 w-8'>
@@ -434,46 +456,32 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
               variant='ghost'
               size='icon'
               className='h-7 w-7 rounded-full'
-              onClick={toggleFullScreen}
-              title={isFullScreen ? 'Exit full screen' : 'Full screen view'}
-            >
-              {isFullScreen ? <Minimize2 className='h-4 w-4' /> : <Maximize2 className='h-4 w-4' />}
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-7 w-7 rounded-full'
               onClick={clearConversation}
               disabled={!sessionId || isLoading || messages.length === 0}
               title='Clear conversation'
             >
               <Trash2 className='h-4 w-4' />
             </Button>
-            {!isFullScreen && (
-              <Button
-                variant='ghost'
-                size='icon'
-                className='h-7 w-7 rounded-full'
-                onClick={toggleChat}
-                title='Close chat'
-              >
-                <X className='h-4 w-4' />
-              </Button>
-            )}
+            <Button
+              variant='ghost'
+              size='icon'
+              className='h-7 w-7 rounded-full'
+              onClick={toggleChat}
+              title='Close chat'
+            >
+              <X className='h-4 w-4' />
+            </Button>
           </div>
         </div>
 
-        {/* Chat Messages */}
-        <ScrollArea
-          className={cn('p-3', isFullScreen ? 'h-[calc(80vh-85px)]' : 'h-96')}
-          ref={scrollAreaRef}
-        >
+        {/* Messages */}
+        <ScrollArea className='flex-1 p-3 h-[calc(100vh-120px)]' ref={scrollAreaRef}>
           <div className='flex flex-col gap-3'>
             <MessageList />
           </div>
         </ScrollArea>
 
-        {/* Chat Input */}
+        {/* Input */}
         <div className='p-3 border-t'>
           <div className='flex gap-2'>
             <TextareaAutosize
@@ -483,7 +491,6 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
               className='min-h-[40px] max-h-[120px] resize-none flex-1 px-3 py-2 text-sm rounded-md border border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
               disabled={isLoading}
               maxRows={4}
-              autoFocus={isOpen}
             />
             <Button
               onClick={handleSendMessage}
@@ -496,48 +503,8 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
           </div>
         </div>
       </div>
-    );
-  };
 
-  return (
-    <div className='fixed bottom-4 right-4 z-50'>
-      {/* Chat Button */}
-      {!isOpen && (
-        <Button
-          onClick={toggleChat}
-          variant='default'
-          size='icon'
-          className={cn(
-            'h-12 w-12 rounded-full shadow-lg transition-all duration-300',
-            isOpen && !isFullScreen && 'rotate-45 bg-destructive hover:bg-destructive/90',
-          )}
-        >
-          {isOpen && !isFullScreen ? <X /> : <MessageCircle />}
-        </Button>
-      )}
-
-      {isFullScreen ? (
-        <Dialog
-          open={isOpen}
-          onOpenChange={(open) => {
-            setIsOpen(open);
-            if (!open) setIsFullScreen(false);
-          }}
-        >
-          <DialogContent className='max-w-3xl w-[90vw] h-[85vh] p-0 border-none shadow-none overflow-hidden focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'>
-            <DialogTitle className='sr-only'>Pulse Assistant</DialogTitle>
-            <ChatContent />
-          </DialogContent>
-        </Dialog>
-      ) : (
-        isOpen && (
-          <div className='absolute bottom-2 right-0 w-80 md:w-96 rounded-lg shadow-lg overflow-hidden animate-in slide-in-from-bottom duration-300'>
-            <ChatContent />
-          </div>
-        )
-      )}
-
-      {/* Add styles for message highlight animation */}
+      {/* Styles */}
       <style jsx global>{`
         @keyframes highlight {
           0% {
@@ -551,7 +518,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
           animation: highlight 1s ease-out;
         }
 
-        /* Table styles */
+        /* Table styles for markdown content */
         .prose table {
           width: 100%;
           border-collapse: collapse;
@@ -578,8 +545,15 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
         .dark .prose thead {
           background-color: rgba(255, 255, 255, 0.05);
         }
+
+        /* For mobile devices */
+        @media (max-width: 768px) {
+          .fixed.right-0.w-[350px] {
+            width: 100%;
+          }
+        }
       `}</style>
-    </div>
+    </>
   );
 }
 
