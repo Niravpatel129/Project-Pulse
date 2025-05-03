@@ -166,7 +166,7 @@ export default function ProjectInvoiceStatus() {
 
       {/* Payment Options */}
       <div>
-        <h4 className='text-sm font-medium text-gray-700 mb-2.5'>Payment Options</h4>
+        <h4 className='text-sm font-medium text-gray-700 mb-2.5'>Available Payment Options</h4>
         <div className='space-y-2'>
           <div className='flex justify-between items-center border border-gray-200 rounded-md p-3'>
             <div className='flex items-center gap-2'>
