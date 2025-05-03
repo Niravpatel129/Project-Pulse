@@ -40,6 +40,7 @@ interface InvoiceData {
     shippingTotal: number;
     total: number;
     currency: string;
+    createdAt: string;
   };
 }
 
@@ -120,11 +121,12 @@ export default function ProjectInvoiceReview() {
     setPreviewTask(null);
   };
 
+  console.log('🚀 invoiceData:', invoiceData);
   // Format project date range
   const formatDateRange = () => {
-    if (project?.startDate && project?.targetDate) {
+    if (project?.startDate && invoiceData?.invoice?.createdAt) {
       const startDate = new Date(project.startDate);
-      const targetDate = new Date(project.targetDate);
+      const targetDate = new Date(invoiceData?.invoice?.createdAt);
       return `${format(startDate, 'MMMM d')} - ${format(targetDate, 'MMMM d, yyyy')}`;
     }
     return 'Date range not set';
