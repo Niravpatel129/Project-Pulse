@@ -134,7 +134,6 @@ export default function ProjectMain() {
                   {activeTab === 'timeline' && <TimelineExample />}
                   {activeTab === 'schedule' && <ProjectSchedule />}
                   {activeTab === 'deliverables' && <ProjectModules />}
-                  {/* {activeTab === 'payments' && <ProjectPayments />} */}
                 </Suspense>
               </motion.div>
             </AnimatePresence>
