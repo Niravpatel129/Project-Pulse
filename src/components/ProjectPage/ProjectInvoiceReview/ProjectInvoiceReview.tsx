@@ -2,21 +2,63 @@ import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { CalendarIcon, Clock3Icon, FileCheckIcon, Package2Icon } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+interface InvoiceItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  date: string;
+  type: string;
+  labels: string[];
+  quantity: number;
+  isApiData: boolean;
+  fields?: {
+    unitPrice: number;
+    quantity: number;
+    total: number;
+    linkedItems?: any[];
+  };
+  attachments?: { type: string; url: string; title: string }[];
+  createdAt: string;
+  _id?: string;
+}
+
+interface InvoiceData {
+  invoice: {
+    selectedItems: InvoiceItem[];
+    subtotal: number;
+    taxAmount: number;
+    shippingTotal: number;
+    total: number;
+    currency: string;
+  };
+}
 
 export default function ProjectInvoiceReview() {
   const { project } = useProject();
+  const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(null);
+  const [loading, setLoading] = useState(true);
+  console.log('🚀 invoiceData:', invoiceData);
 
   const fetchProjectInvoice = async () => {
     if (!project?._id) return;
-    const response = await newRequest.get(`/project-invoices/${project?._id}`);
-    const data = await response.data;
-    return data;
+    setLoading(true);
+    try {
+      const response = await newRequest.get(`/project-invoices/${project?._id}`);
+      const data = await response.data.data;
+      setInvoiceData(data);
+    } catch (error) {
+      console.error('Failed to fetch invoice data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchProjectInvoice();
-  }, []);
+  }, [project?._id]);
 
   return (
     <BlockWrapper className='py-6'>
@@ -68,6 +110,156 @@ export default function ProjectInvoiceReview() {
             </div>
           </div>
         </div>
+
+        {/* Invoice Items Table */}
+        {loading ? (
+          <div className='py-8 text-center text-gray-500'>Loading invoice data...</div>
+        ) : invoiceData?.invoice?.selectedItems?.length > 0 ? (
+          <div className='mt-8'>
+            <h2 className='text-xl font-medium text-gray-900 mb-4'>Invoice Items</h2>
+            <div className='overflow-x-auto'>
+              <table className='min-w-full divide-y divide-gray-200'>
+                <thead className='bg-gray-50'>
+                  <tr>
+                    <th
+                      scope='col'
+                      className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+                    >
+                      Name
+                    </th>
+                    <th
+                      scope='col'
+                      className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+                    >
+                      Description
+                    </th>
+                    <th
+                      scope='col'
+                      className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+                    >
+                      Date
+                    </th>
+                    <th
+                      scope='col'
+                      className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+                    >
+                      Type
+                    </th>
+                    <th
+                      scope='col'
+                      className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+                    >
+                      Labels
+                    </th>
+                    <th
+                      scope='col'
+                      className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+                    >
+                      Quantity
+                    </th>
+                    <th
+                      scope='col'
+                      className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+                    >
+                      Price
+                    </th>
+                    <th
+                      scope='col'
+                      className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+                    >
+                      Total
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className='bg-white divide-y divide-gray-200'>
+                  {invoiceData.invoice.selectedItems.map((item) => {
+                    return (
+                      <tr key={item.id}>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+                          {item.name}
+                        </td>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                          {item.description || '-'}
+                        </td>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                          {item.date}
+                        </td>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize'>
+                          {item.type}
+                        </td>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                          <div className='flex flex-wrap gap-1'>
+                            {item.labels && item.labels.length > 0
+                              ? item.labels.map((label, idx) => {
+                                  return (
+                                    <span
+                                      key={idx}
+                                      className='px-2 py-1 bg-gray-100 text-xs rounded'
+                                    >
+                                      {label}
+                                    </span>
+                                  );
+                                })
+                              : '-'}
+                          </div>
+                        </td>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                          {item.quantity}
+                        </td>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                          ${item.price.toFixed(2)}
+                        </td>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>
+                          ${(item.fields?.total || item.price * item.quantity).toFixed(2)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot className='bg-gray-50'>
+                  <tr>
+                    <td colSpan={7} className='px-6 py-4 text-right font-medium text-gray-500'>
+                      Subtotal
+                    </td>
+                    <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>
+                      ${invoiceData.invoice.subtotal.toFixed(2)}
+                    </td>
+                  </tr>
+                  {invoiceData.invoice.taxAmount > 0 && (
+                    <tr>
+                      <td colSpan={7} className='px-6 py-4 text-right font-medium text-gray-500'>
+                        Tax
+                      </td>
+                      <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>
+                        ${invoiceData.invoice.taxAmount.toFixed(2)}
+                      </td>
+                    </tr>
+                  )}
+                  {invoiceData.invoice.shippingTotal > 0 && (
+                    <tr>
+                      <td colSpan={7} className='px-6 py-4 text-right font-medium text-gray-500'>
+                        Shipping
+                      </td>
+                      <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>
+                        ${invoiceData.invoice.shippingTotal.toFixed(2)}
+                      </td>
+                    </tr>
+                  )}
+                  <tr>
+                    <td colSpan={7} className='px-6 py-4 text-right font-medium text-gray-900'>
+                      Total
+                    </td>
+                    <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>
+                      ${invoiceData.invoice.total.toFixed(2)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <div className='py-8 text-center text-gray-500'>No invoice items found</div>
+        )}
       </div>
     </BlockWrapper>
   );
