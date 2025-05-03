@@ -51,12 +51,19 @@ const InvoiceDetails = ({
   const [isCreatingTax, setIsCreatingTax] = useState(false);
   const [newTax, setNewTax] = useState({ name: '', rate: 0 });
   const [localCurrency, setLocalCurrency] = useState(invoiceSettings?.currency || 'usd');
-  const { shippingItem, discount, setDiscount, removeShipping } = useInvoiceWizardContext();
-
-  // Toggle states
-  const [sendAutomatically, setSendAutomatically] = useState(true);
-  const [includePaymentLink, setIncludePaymentLink] = useState(true);
-  const [scheduleReminders, setScheduleReminders] = useState(false);
+  const {
+    shippingItem,
+    discount,
+    setDiscount,
+    removeShipping,
+    // Get delivery options from context
+    sendAutomatically,
+    setSendAutomatically,
+    includePaymentLink,
+    setIncludePaymentLink,
+    scheduleReminders,
+    setScheduleReminders,
+  } = useInvoiceWizardContext();
 
   useEffect(() => {
     if (invoiceSettings?.currency) {
