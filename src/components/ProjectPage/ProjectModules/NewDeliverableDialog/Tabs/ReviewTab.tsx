@@ -10,7 +10,7 @@ import {
   isImageFile,
 } from './DeliverableContent/utils/file-utils';
 
-const ReviewTab = () => {
+const ReviewTab = ({ previewMode = false }: { previewMode?: boolean }) => {
   const { formData, setHasUnsavedChanges } = useDeliverableForm();
   const [previewAttachment, setPreviewAttachment] = useState<any>(null);
 
@@ -202,11 +202,11 @@ const ReviewTab = () => {
 
   useEffect(() => {
     // Set unsaved changes to false when we reach the review tab
-    if (setHasUnsavedChanges) {
+    if (setHasUnsavedChanges && !previewMode) {
       // Mark all validations as complete when reaching review stage
       setHasUnsavedChanges(false);
     }
-  }, [setHasUnsavedChanges]);
+  }, [setHasUnsavedChanges, previewMode]);
 
   return (
     <div className='max-w-4xl mx-auto flex flex-col space-y-6'>
@@ -255,31 +255,48 @@ const ReviewTab = () => {
         </div>
       </section>
 
-      {/* Content Fields */}
+      {/* Content fields summary */}
       {formData.customFields && formData.customFields.length > 0 && (
         <section className='border border-neutral-200 rounded-lg overflow-hidden'>
           <header className='bg-neutral-50 border-b border-neutral-200 px-4 py-3 flex items-center'>
             <Package className='mr-3 text-neutral-500' size={18} />
-            <h3 className='font-medium text-neutral-800'>Content Details</h3>
+            <h3 className='font-medium text-neutral-800'>Deliverable Content</h3>
           </header>
 
-          <div className='p-5 space-y-5'>
-            <div className='space-y-6'>
+          <div className='p-5'>
+            <div className='space-y-8'>
               {formData.customFields.map((field: any, index: number) => {
-                if (!hasContent(field)) return null;
                 return (
-                  <div key={field.id} className='space-y-2'>
-                    <h4 className='font-medium text-neutral-800'>
-                      {field.label || 'Untitled Field'}
+                  <div
+                    key={index}
+                    className='pb-5 border-b border-neutral-100 last:border-b-0 last:pb-0'
+                  >
+                    <h4 className='text-md font-medium text-neutral-800 mb-2'>
+                      {field.label || `Field ${index + 1}`}
                     </h4>
                     <div className='text-neutral-700'>{formatFieldContent(field)}</div>
                   </div>
                 );
               })}
-              {formData.customFields.filter(hasContent).length === 0 && (
-                <p className='text-neutral-500 italic'>No content fields added</p>
-              )}
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* Team notes */}
+      {!previewMode && (
+        <section className='border border-neutral-200 rounded-lg overflow-hidden'>
+          <header className='bg-neutral-50 border-b border-neutral-200 px-4 py-3 flex items-center'>
+            <FileText className='mr-3 text-neutral-500' size={18} />
+            <h3 className='font-medium text-neutral-800'>Team Notes</h3>
+          </header>
+
+          <div className='p-5'>
+            {formData.teamNotes ? (
+              <div className='whitespace-pre-wrap'>{formData.teamNotes}</div>
+            ) : (
+              <p className='text-neutral-500 italic'>No team notes added</p>
+            )}
           </div>
         </section>
       )}

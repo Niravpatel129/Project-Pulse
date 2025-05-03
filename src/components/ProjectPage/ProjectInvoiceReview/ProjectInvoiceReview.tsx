@@ -1,9 +1,11 @@
+import { Button } from '@/components/ui/button';
 import { Column, DataTable } from '@/components/ui/data-table';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
-import { CalendarIcon, Clock3Icon, FileCheckIcon, Package2Icon } from 'lucide-react';
+import { CalendarIcon, Clock3Icon, Eye, FileCheckIcon, Package2Icon } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import NewDeliverableDialog from '../ProjectModules/NewDeliverableDialog/NewDeliverableDialog';
 
 interface InvoiceItem {
   id: string;
@@ -42,6 +44,7 @@ export default function ProjectInvoiceReview() {
   const { project } = useProject();
   const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [previewItemId, setPreviewItemId] = useState<string | null>(null);
 
   const fetchProjectInvoice = async () => {
     if (!project?._id) return;
@@ -60,6 +63,14 @@ export default function ProjectInvoiceReview() {
   useEffect(() => {
     fetchProjectInvoice();
   }, [project?._id]);
+
+  const handleViewDeliverable = (itemId: string) => {
+    setPreviewItemId(itemId);
+  };
+
+  const handleClosePreview = () => {
+    setPreviewItemId(null);
+  };
 
   const columns: Column<InvoiceItem>[] = [
     {
@@ -115,14 +126,6 @@ export default function ProjectInvoiceReview() {
         );
       },
     },
-    // {
-    //   key: 'quantity',
-    //   header: 'Quantity',
-    //   cell: (item) => {
-    //     return item.quantity;
-    //   },
-    //   sortable: true,
-    // },
     {
       key: 'price',
       header: 'Price',
@@ -131,14 +134,29 @@ export default function ProjectInvoiceReview() {
       },
       sortable: true,
     },
-    // {
-    //   key: 'total',
-    //   header: 'Total',
-    //   cell: (item) => {
-    //     return `$${(item.fields?.total || item.price * item.quantity).toFixed(2)}`;
-    //   },
-    //   sortable: true,
-    // },
+    {
+      key: 'actions',
+      header: 'Actions',
+      cell: (item) => {
+        // Only show view action for deliverable items
+        if (item.itemType !== 'task' && item._id) {
+          return (
+            <Button
+              size='sm'
+              variant='ghost'
+              onClick={() => {
+                return handleViewDeliverable(item._id as string);
+              }}
+              className='px-2 py-1 h-8'
+            >
+              <Eye className='h-4 w-4 mr-1' />
+              View
+            </Button>
+          );
+        }
+        return null;
+      },
+    },
   ];
 
   return (
@@ -220,6 +238,16 @@ export default function ProjectInvoiceReview() {
           <div className='py-8 text-center text-gray-500'>No invoice items found</div>
         )}
       </BlockWrapper>
+
+      {/* Deliverable Preview Dialog */}
+      {previewItemId && (
+        <NewDeliverableDialog
+          isOpen={!!previewItemId}
+          onClose={handleClosePreview}
+          deliverableId={previewItemId}
+          previewMode={true}
+        />
+      )}
     </div>
   );
 }

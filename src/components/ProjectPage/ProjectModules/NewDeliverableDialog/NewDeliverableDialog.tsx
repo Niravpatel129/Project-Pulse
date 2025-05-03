@@ -66,14 +66,21 @@ const NewDeliverableDialog = ({
   isOpen,
   onClose,
   deliverableId,
+  previewMode = false,
 }: {
   isOpen: boolean;
   onClose: () => void;
   deliverableId?: string | null;
+  previewMode?: boolean;
 }) => {
   return (
     <DeliverableFormProvider>
-      <DeliverableDialogContent isOpen={isOpen} onClose={onClose} deliverableId={deliverableId} />
+      <DeliverableDialogContent
+        isOpen={isOpen}
+        onClose={onClose}
+        deliverableId={deliverableId}
+        previewMode={previewMode}
+      />
     </DeliverableFormProvider>
   );
 };
@@ -83,10 +90,12 @@ const DeliverableDialogContent = ({
   isOpen,
   onClose,
   deliverableId,
+  previewMode = false,
 }: {
   isOpen: boolean;
   onClose: () => void;
   deliverableId?: string | null;
+  previewMode?: boolean;
 }) => {
   const {
     formData,
@@ -99,7 +108,7 @@ const DeliverableDialogContent = ({
     setErrors,
   } = useDeliverableForm();
 
-  const [currentStage, setCurrentStage] = useState(STAGES[0].value);
+  const [currentStage, setCurrentStage] = useState(previewMode ? STAGES[2].value : STAGES[0].value);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
   const { project } = useProject();
@@ -486,7 +495,7 @@ const DeliverableDialogContent = ({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className='max-w-[95vw] sm:max-w-[1000px] md:max-w-[1200px] lg:max-w-[1400px] p-0 overflow-hidden shadow-sm border-neutral-200 transition-all duration-150 ease-in-out h-[95vh] sm:h-[800px] md:h-[800px] flex flex-col'>
-        {showUnsavedWarning && (
+        {showUnsavedWarning && !previewMode && (
           <div className='absolute inset-0 bg-black/50 z-50 flex items-center justify-center p-4'>
             <div className='bg-white rounded-md p-6 max-w-md shadow-lg'>
               <h3 className='text-lg font-medium mb-2'>Unsaved Changes</h3>
@@ -518,11 +527,22 @@ const DeliverableDialogContent = ({
         {/* Header (fixed) */}
         <DialogHeader className='px-5 py-1 border-b border-neutral-100 flex flex-row items-center justify-between flex-shrink-0'>
           <div className='flex items-center'>
-            <Button variant='ghost' size='icon' onClick={toggleSidebar} className='md:hidden mr-2'>
-              <Menu size={18} />
-            </Button>
+            {!previewMode && (
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={toggleSidebar}
+                className='md:hidden mr-2'
+              >
+                <Menu size={18} />
+              </Button>
+            )}
             <DialogTitle className='text-base font-medium'>
-              {isEditMode ? 'Edit Deliverable' : 'Create Deliverable'}
+              {previewMode
+                ? 'Deliverable Details'
+                : isEditMode
+                ? 'Edit Deliverable'
+                : 'Create Deliverable'}
             </DialogTitle>
           </div>
           <Button
@@ -543,53 +563,57 @@ const DeliverableDialogContent = ({
             className='flex flex-row w-full h-full'
           >
             <div className='flex h-full w-full'>
-              {/* Sidebar */}
-              <TabsList
-                className={`absolute md:relative z-10 md:z-0 bg-white flex-col gap-0.5 rounded-none bg-transparent px-3 py-4 border-r border-neutral-100 h-full justify-start transition-all duration-200
-                ${
-                  isSidebarOpen
-                    ? 'w-48 translate-x-0'
-                    : 'w-0 -translate-x-full md:translate-x-0 md:w-14 xl:w-16'
-                }`}
-              >
-                {STAGES.map((stage) => {
-                  return (
-                    <TabsTrigger
-                      key={stage.value}
-                      value={stage.value}
-                      onClick={() => {
-                        // On mobile, clicking a tab also closes the sidebar
-                        if (window.innerWidth < 768) {
-                          setSidebarOpen(false);
-                        }
-                      }}
-                      className={`relative w-full justify-start px-3 py-2 font-normal text-neutral-600 data-[state=active]:text-neutral-900 transition-colors duration-150 
-                    hover:bg-neutral-50 data-[state=active]:bg-neutral-100/50 
-                    data-[state=active]:after:bg-neutral-900 after:absolute after:inset-y-0 after:left-0 
-                    after:w-[2px] data-[state=active]:after:opacity-100 after:opacity-0 
-                    rounded-md data-[state=active]:shadow-none whitespace-nowrap ${
-                      !isSidebarOpen ? 'md:justify-center md:px-1' : ''
-                    }`}
-                    >
-                      {stage.icon}
-                      <span className={`${!isSidebarOpen ? 'md:hidden' : ''}`}>{stage.title}</span>
-                    </TabsTrigger>
-                  );
-                })}
-
-                {/* Sidebar toggle button for desktop */}
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  onClick={toggleSidebar}
-                  className='hidden md:flex mt-auto mx-auto mb-2'
+              {/* Sidebar - hide completely in preview mode */}
+              {!previewMode && (
+                <TabsList
+                  className={`absolute md:relative z-10 md:z-0 bg-white flex-col gap-0.5 rounded-none bg-transparent px-3 py-4 border-r border-neutral-100 h-full justify-start transition-all duration-200
+                  ${
+                    isSidebarOpen
+                      ? 'w-48 translate-x-0'
+                      : 'w-0 -translate-x-full md:translate-x-0 md:w-14 xl:w-16'
+                  }`}
                 >
-                  {isSidebarOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
-                </Button>
-              </TabsList>
+                  {STAGES.map((stage) => {
+                    return (
+                      <TabsTrigger
+                        key={stage.value}
+                        value={stage.value}
+                        onClick={() => {
+                          // On mobile, clicking a tab also closes the sidebar
+                          if (window.innerWidth < 768) {
+                            setSidebarOpen(false);
+                          }
+                        }}
+                        className={`relative w-full justify-start px-3 py-2 font-normal text-neutral-600 data-[state=active]:text-neutral-900 transition-colors duration-150 
+                      hover:bg-neutral-50 data-[state=active]:bg-neutral-100/50 
+                      data-[state=active]:after:bg-neutral-900 after:absolute after:inset-y-0 after:left-0 
+                      after:w-[2px] data-[state=active]:after:opacity-100 after:opacity-0 
+                      rounded-md data-[state=active]:shadow-none whitespace-nowrap ${
+                        !isSidebarOpen ? 'md:justify-center md:px-1' : ''
+                      }`}
+                      >
+                        {stage.icon}
+                        <span className={`${!isSidebarOpen ? 'md:hidden' : ''}`}>
+                          {stage.title}
+                        </span>
+                      </TabsTrigger>
+                    );
+                  })}
+
+                  {/* Sidebar toggle button for desktop */}
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    onClick={toggleSidebar}
+                    className='hidden md:flex mt-auto mx-auto mb-2'
+                  >
+                    {isSidebarOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+                  </Button>
+                </TabsList>
+              )}
 
               {/* Dark overlay for mobile when sidebar is open */}
-              {isSidebarOpen && (
+              {!previewMode && isSidebarOpen && (
                 <div
                   className='md:hidden fixed inset-0 bg-black bg-opacity-40 z-0'
                   onClick={() => {
@@ -600,34 +624,40 @@ const DeliverableDialogContent = ({
 
               {/* Main content area */}
               <div className='flex-1 flex flex-col min-h-0'>
-                {/* Mobile breadcrumb */}
-                <div className='md:hidden bg-neutral-50/80 px-4 py-3 border-b border-neutral-100 flex items-center flex-shrink-0'>
-                  <span className='text-sm font-medium text-neutral-900'>
-                    {getCurrentStageTitle()}
-                  </span>
-                </div>
+                {/* Mobile breadcrumb - hide in preview mode */}
+                {!previewMode && (
+                  <div className='md:hidden bg-neutral-50/80 px-4 py-3 border-b border-neutral-100 flex items-center flex-shrink-0'>
+                    <span className='text-sm font-medium text-neutral-900'>
+                      {getCurrentStageTitle()}
+                    </span>
+                  </div>
+                )}
 
                 {/* Scrollable tab content */}
                 <div className='flex-1 overflow-y-auto'>
-                  <TabsContent
-                    value='general-info'
-                    className='p-4 sm:p-5 m-0 data-[state=inactive]:hidden'
-                  >
-                    <BasicDetailsTab />
-                  </TabsContent>
+                  {!previewMode && (
+                    <>
+                      <TabsContent
+                        value='general-info'
+                        className='p-4 sm:p-5 m-0 data-[state=inactive]:hidden'
+                      >
+                        <BasicDetailsTab />
+                      </TabsContent>
 
-                  <TabsContent
-                    value='custom-fields'
-                    className='p-4 sm:p-5 m-0 data-[state=inactive]:hidden'
-                  >
-                    <DeliverableContentTab />
-                  </TabsContent>
+                      <TabsContent
+                        value='custom-fields'
+                        className='p-4 sm:p-5 m-0 data-[state=inactive]:hidden'
+                      >
+                        <DeliverableContentTab />
+                      </TabsContent>
+                    </>
+                  )}
 
                   <TabsContent
                     value='review-notes'
                     className='p-4 sm:p-5 m-0 data-[state=inactive]:hidden'
                   >
-                    <ReviewTab />
+                    <ReviewTab previewMode={previewMode} />
                   </TabsContent>
                 </div>
               </div>
@@ -635,43 +665,54 @@ const DeliverableDialogContent = ({
           </Tabs>
         </div>
 
-        {/* Footer (fixed) */}
+        {/* Footer (fixed) - show simplified footer in preview mode */}
         <div className='flex justify-between px-5 py-4 border-t border-neutral-100 bg-white z-10 shadow-sm flex-shrink-0'>
-          {getCurrentStageIndex() > 0 ? (
+          {previewMode ? (
             <Button
-              variant='outline'
-              onClick={handleBack}
-              className='text-sm font-normal border-neutral-200 hover:bg-neutral-50 transition-colors duration-150'
+              onClick={onClose}
+              className='ml-auto text-sm font-normal transition-colors duration-150'
             >
-              <ChevronLeft className='mr-1.5 h-3.5 w-3.5' />
-              Back
+              Close
             </Button>
           ) : (
-            <div></div> // Empty div to maintain flex layout
-          )}
+            <>
+              {getCurrentStageIndex() > 0 ? (
+                <Button
+                  variant='outline'
+                  onClick={handleBack}
+                  className='text-sm font-normal border-neutral-200 hover:bg-neutral-50 transition-colors duration-150'
+                >
+                  <ChevronLeft className='mr-1.5 h-3.5 w-3.5' />
+                  Back
+                </Button>
+              ) : (
+                <div></div> // Empty div to maintain flex layout
+              )}
 
-          {getCurrentStageIndex() < STAGES.length - 1 ? (
-            <Button
-              onClick={handleNext}
-              className='text-sm font-normal transition-colors duration-150'
-            >
-              Continue
-              <ChevronRight className='ml-1.5 h-3.5 w-3.5' />
-            </Button>
-          ) : (
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className='text-sm font-normal transition-colors duration-150'
-            >
-              {isSubmitting
-                ? isEditMode
-                  ? 'Updating...'
-                  : 'Creating...'
-                : isEditMode
-                ? 'Update Deliverable'
-                : 'Create Deliverable'}
-            </Button>
+              {getCurrentStageIndex() < STAGES.length - 1 ? (
+                <Button
+                  onClick={handleNext}
+                  className='text-sm font-normal transition-colors duration-150'
+                >
+                  Continue
+                  <ChevronRight className='ml-1.5 h-3.5 w-3.5' />
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className='text-sm font-normal transition-colors duration-150'
+                >
+                  {isSubmitting
+                    ? isEditMode
+                      ? 'Updating...'
+                      : 'Creating...'
+                    : isEditMode
+                    ? 'Update Deliverable'
+                    : 'Create Deliverable'}
+                </Button>
+              )}
+            </>
           )}
         </div>
       </DialogContent>
