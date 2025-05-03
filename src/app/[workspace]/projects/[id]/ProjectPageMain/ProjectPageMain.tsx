@@ -14,7 +14,7 @@ export default function ProjectPageMain() {
     <div>
       <div className='flex-1 flex flex-col h-full'>
         <ProjectHeader />
-        {project?.state === 'invoice-created' ? (
+        {project?.state === 'invoice-created' || project?.state === 'invoice-paid' ? (
           <>
             <div className='flex flex-col md:flex-row gap-4'>
               <div className='flex-1'>

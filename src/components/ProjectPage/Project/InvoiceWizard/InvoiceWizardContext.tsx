@@ -295,6 +295,13 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
   };
 
   const handleCreateInvoice = async () => {
+    // Check if a client is selected
+    if (!selectedClient) {
+      toast.error('Please select a client or add a new one before creating an invoice');
+      setActiveTab('client'); // Redirect to client tab
+      return;
+    }
+
     // Calculate totals
     const subtotal = calculateInvoiceSubtotal();
     const shippingTotal = calculateShippingTotal();

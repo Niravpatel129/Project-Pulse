@@ -853,6 +853,7 @@ export default function ProjectHeader() {
                     handleAddParticipant={handleAddParticipant}
                     handleAddRole={handleAddRole}
                   />
+
                   <ProjectReviewButton openInvoiceWizard={openInvoiceWizard} />
                 </div>
               </div>

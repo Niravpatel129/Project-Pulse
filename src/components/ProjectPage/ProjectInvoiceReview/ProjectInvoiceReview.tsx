@@ -128,7 +128,6 @@ export default function ProjectInvoiceReview() {
     }
   };
 
-  console.log('🚀 invoiceData:', invoiceData);
   // Format project date range
   const formatDateRange = () => {
     if (project?.startDate && invoiceData?.invoice?.createdAt) {
