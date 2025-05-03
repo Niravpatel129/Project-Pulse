@@ -87,7 +87,7 @@ export default function ProjectReviewButton({ openInvoiceWizard }: ProjectReview
       label: 'Awaiting Payment',
       icon: <AlertCircle className='h-4 w-4 mr-2' />,
       className:
-        'h-9 text-sm tracking-wide text-amber-600 bg-amber-50 hover:bg-amber-100 transition-all focus-visible:ring-0',
+        'h-9 text-sm tracking-wide text-amber-600 bg-amber-50 hover:bg-amber-100 transition-all focus-visible:ring-0 shadow-none',
       menuItems: [
         {
           label: 'Edit Project',
