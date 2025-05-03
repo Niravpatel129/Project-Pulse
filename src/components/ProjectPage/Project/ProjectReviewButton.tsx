@@ -21,6 +21,7 @@ import {
   Sparkle,
 } from 'lucide-react';
 import { ReactNode, useState } from 'react';
+import UpfrontPaymentDialog from './UpfrontPaymentDialog';
 
 type ProjectState = 'in-progress' | 'invoice-created' | 'partial-payment' | 'completed';
 
@@ -45,7 +46,9 @@ export default function ProjectReviewButton({ openInvoiceWizard }: ProjectReview
   const { project } = useProject();
   const [projectState, setProjectState] = useState<ProjectState>(project.state as ProjectState);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
-  const [selectedPaymentType, setSelectedPaymentType] = useState('recurring');
+  const [selectedPaymentType, setSelectedPaymentType] = useState<'upfront' | 'recurring'>(
+    'upfront',
+  );
 
   const buttonConfigs: ButtonConfig[] = [
     {
@@ -59,7 +62,8 @@ export default function ProjectReviewButton({ openInvoiceWizard }: ProjectReview
           label: 'Request Upfront Payment',
           icon: <DollarSign className='h-4 w-4 mr-2 text-blue-500' />,
           onClick: () => {
-            return setIsPaymentDialogOpen(true);
+            setSelectedPaymentType('upfront');
+            setIsPaymentDialogOpen(true);
           },
         },
         {
@@ -208,6 +212,12 @@ export default function ProjectReviewButton({ openInvoiceWizard }: ProjectReview
           })}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <UpfrontPaymentDialog
+        open={isPaymentDialogOpen}
+        onOpenChange={setIsPaymentDialogOpen}
+        paymentType={selectedPaymentType}
+      />
     </div>
   );
 }
