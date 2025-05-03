@@ -1,5 +1,6 @@
 import ProjectHeader from '@/components/ProjectPage/ProjectHeader';
 import ProjectInvoiceReview from '@/components/ProjectPage/ProjectInvoiceReview/ProjectInvoiceReview';
+import ProjectInvoiceStatus from '@/components/ProjectPage/ProjectInvoiceStatus/ProjectInvoiceStatus';
 import ProjectMain from '@/components/ProjectPage/ProjectMain';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { useProject } from '@/contexts/ProjectContext';
@@ -15,7 +16,16 @@ export default function ProjectPageMain() {
         <ProjectHeader />
         {project?.state === 'invoice-created' ? (
           <>
-            <ProjectInvoiceReview />
+            <div className='flex flex-col md:flex-row gap-6'>
+              <div className='flex-1'>
+                <ProjectInvoiceReview />
+              </div>
+              <div className='w-full md:w-[350px] lg:w-[400px]'>
+                <BlockWrapper className='py-6 px-8'>
+                  <ProjectInvoiceStatus />
+                </BlockWrapper>
+              </div>
+            </div>
           </>
         ) : (
           <BlockWrapper className='flex-1 overflow-auto min-h-0'>
