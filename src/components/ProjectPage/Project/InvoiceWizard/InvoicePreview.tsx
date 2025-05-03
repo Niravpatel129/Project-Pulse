@@ -324,7 +324,7 @@ const InvoicePreview = ({
             {editedItems.map((item) => {
               return (
                 <div
-                  key={item.id}
+                  key={item._id}
                   className='p-3 border rounded-md bg-white hover:bg-gray-50 transition-colors group'
                 >
                   <div className='flex justify-between items-start'>

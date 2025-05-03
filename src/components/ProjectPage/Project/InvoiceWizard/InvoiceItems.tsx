@@ -192,7 +192,7 @@ const InvoiceItems = ({
             </div>
             <div className='space-y-4'>
               {deliverableItems.map((item) => {
-                const itemId = item._id || item.id;
+                const itemId = item._id;
                 const selected = isItemSelected(item);
 
                 return (

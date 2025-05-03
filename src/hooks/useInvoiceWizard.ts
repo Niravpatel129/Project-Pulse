@@ -92,40 +92,38 @@ export const useInvoiceWizard = () => {
         const { deliverables, projectTasks } = response.data.data;
 
         // Convert deliverables to invoice items
-        const deliverableItems: InvoiceItem[] = deliverables.map(
-          (deliverable: any, index: number) => {
-            return {
-              id: `deliverable-${index}`,
-              name: deliverable.name,
-              description: deliverable.description,
-              price:
-                deliverable.fields?.unitPrice ||
-                deliverable.fields?.total / (deliverable.fields?.quantity || 1) ||
-                0,
-              date: new Date(deliverable.createdAt).toLocaleDateString(),
-              type: deliverable.labels?.some((label: string) => {
-                return ['apparel', 'physical', 'print', 'promotional'].includes(
-                  label.toLowerCase(),
-                );
-              })
-                ? 'physical'
-                : 'digital',
-              labels: deliverable.labels,
-              quantity: deliverable.fields?.quantity || 1,
-              isApiData: true,
-              // Save the original fields for reference and rendering
-              fields: deliverable.fields,
-              createdAt: deliverable.createdAt,
-              attachments: deliverable.attachments,
-            };
-          },
-        );
+        const deliverableItems: InvoiceItem[] = deliverables.map((deliverable: any) => {
+          return {
+            id: deliverable._id,
+            _id: deliverable._id,
+            itemType: 'deliverable',
+            name: deliverable.name,
+            description: deliverable.description,
+            price:
+              deliverable.fields?.unitPrice ||
+              deliverable.fields?.total / (deliverable.fields?.quantity || 1) ||
+              0,
+            date: new Date(deliverable.createdAt).toLocaleDateString(),
+            type: deliverable.labels?.some((label: string) => {
+              return ['apparel', 'physical', 'print', 'promotional'].includes(label.toLowerCase());
+            })
+              ? 'physical'
+              : 'digital',
+            labels: deliverable.labels,
+            quantity: deliverable.fields?.quantity || 1,
+            isApiData: true,
+            // Save the original fields for reference and rendering
+            fields: deliverable.fields,
+            createdAt: deliverable.createdAt,
+            attachments: deliverable.attachments,
+          };
+        });
 
         // Convert project tasks to invoice items
         const taskItems: InvoiceItem[] = projectTasks.map((task: any, index: number) => {
           return {
             _id: task._id,
-            id: `task-${index}`,
+            itemType: 'task',
             name: task.name,
             description: task.description,
             price: task.total || 0,
