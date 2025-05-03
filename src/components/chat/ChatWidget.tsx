@@ -731,19 +731,62 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     );
   };
 
-  // This wrapper component handles the resizable panel layout
+  // Update the LayoutWithPanel component to properly handle resize and content shifting
   const LayoutWithPanel = () => {
+    // Reference to track panel sizes - moved outside conditional
+    const [leftSize, setLeftSize] = useState(80);
+
+    // Handle panel resize
+    const handleResize = (sizes: number[]) => {
+      setLeftSize(sizes[0]);
+      // Apply margin to body based on right panel size
+      const rightPanelWidth = `${100 - sizes[0]}vw`;
+      document.documentElement.style.setProperty('--content-margin-right', rightPanelWidth);
+    };
+
+    // useEffect moved outside conditional
+    useEffect(() => {
+      if (!isOpen) return;
+
+      // Set initial body styles
+      const originalPaddingRight = document.body.style.paddingRight;
+      const originalOverflow = document.body.style.overflow;
+
+      // Add transition to body
+      document.body.style.transition = 'padding-right 0.2s ease';
+      document.body.style.paddingRight = `${100 - leftSize}vw`;
+      document.body.style.overflow = 'hidden auto';
+
+      // Apply to fixed elements as well
+      const styleEl = document.createElement('style');
+      styleEl.innerHTML = `
+        header.fixed, header.sticky, .fixed.top-0, nav.fixed {
+          transition: width 0.2s ease;
+          width: calc(${leftSize}vw);
+        }
+      `;
+      document.head.appendChild(styleEl);
+
+      return () => {
+        // Cleanup
+        document.body.style.paddingRight = originalPaddingRight;
+        document.body.style.overflow = originalOverflow;
+        document.body.style.transition = '';
+        document.head.removeChild(styleEl);
+      };
+    }, [leftSize, isOpen]);
+
     if (!isOpen) return null;
 
     return (
-      <div className='fixed inset-0 z-40 bg-transparent' style={{ pointerEvents: 'none' }}>
-        <PanelGroup direction='horizontal' autoSaveId='chat-panel-layout'>
-          <Panel defaultSize={80} minSize={60} style={{ pointerEvents: 'auto' }}>
-            <div className='invisible'>Content space</div>
+      <div className='fixed inset-0 z-40 pointer-events-none'>
+        <PanelGroup direction='horizontal' onLayout={handleResize} autoSaveId='chat-panel-layout'>
+          <Panel defaultSize={80} minSize={50} className='pointer-events-none'>
+            <div className='invisible h-full'>Content space</div>
           </Panel>
 
           <PanelResizeHandle
-            className='w-1 transition-colors bg-border hover:bg-primary'
+            className='w-1.5 bg-border hover:bg-primary cursor-col-resize transition-colors'
             style={{ pointerEvents: 'auto' }}
           />
 
@@ -751,8 +794,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
             defaultSize={20}
             minSize={15}
             maxSize={50}
-            className='bg-background border-l'
-            style={{ pointerEvents: 'auto' }}
+            className='bg-background border-l shadow-lg pointer-events-auto'
           >
             <ChatPanelContent />
           </Panel>
