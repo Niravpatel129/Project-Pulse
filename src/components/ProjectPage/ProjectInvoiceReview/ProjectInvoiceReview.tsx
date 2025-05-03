@@ -70,26 +70,6 @@ export default function ProjectInvoiceReview() {
     }
   };
 
-  // Fetch project stats (time tracked, deliverables, etc)
-  const { data: projectStats, isLoading: statsLoading } = useQuery({
-    queryKey: ['project-stats', project?._id],
-    queryFn: async () => {
-      try {
-        const response = await newRequest.get(`/projects/${project?._id}/stats`);
-        return response.data.data as ProjectStats;
-      } catch (error) {
-        console.error('Failed to fetch project stats:', error);
-        // Return default values if API fails
-        return {
-          timeTracked: 0,
-          deliverableCount: 0,
-          status: project?.status || 'active',
-        };
-      }
-    },
-    enabled: !!project?._id,
-  });
-
   // Fetch deliverables count separately if not available in stats
   const { data: deliverables = [] } = useQuery({
     queryKey: ['deliverables', project?._id],
@@ -102,7 +82,7 @@ export default function ProjectInvoiceReview() {
         return [];
       }
     },
-    enabled: !!project?._id && !projectStats?.deliverableCount,
+    enabled: !!project?._id,
   });
 
   useEffect(() => {
@@ -138,13 +118,6 @@ export default function ProjectInvoiceReview() {
 
   const handleCloseTaskPreview = () => {
     setPreviewTask(null);
-  };
-
-  // Format hours for display
-  const formatHours = (hours: number): string => {
-    if (hours === 0) return '0 hours';
-    if (hours === 1) return '1 hour';
-    return `${hours} hours`;
   };
 
   // Format project date range
@@ -259,7 +232,6 @@ export default function ProjectInvoiceReview() {
           <div className='flex justify-between items-start'>
             <div className='space-y-1'>
               <h1 className='text-2xl font-medium text-gray-900'>Project Review</h1>
-              <p className='text-sm text-gray-500'>{project?.name || 'Untitled Project'}</p>
             </div>
             <div className='flex items-center text-sm text-gray-500'>
               <CalendarIcon className='mr-2 h-4 w-4' />
@@ -276,10 +248,8 @@ export default function ProjectInvoiceReview() {
               </div>
               <div>
                 <p className='text-xs text-gray-500 mb-1'>Project Status</p>
-                <p className='text-sm font-medium text-gray-900'>
-                  {statsLoading
-                    ? 'Loading...'
-                    : projectStats?.status || project?.status || 'Active'}
+                <p className='text-sm font-medium text-gray-900 capitalize'>
+                  {project?.state.replace('-', ' ')}
                 </p>
               </div>
             </div>
@@ -290,10 +260,8 @@ export default function ProjectInvoiceReview() {
                 <Clock3Icon className='h-4 w-4 text-gray-500' />
               </div>
               <div>
-                <p className='text-xs text-gray-500 mb-1'>Time Tracked</p>
-                <p className='text-sm font-medium text-gray-900'>
-                  {statsLoading ? 'Loading...' : formatHours(projectStats?.timeTracked || 0)}
-                </p>
+                <p className='text-xs text-gray-500 mb-1'>Tasks</p>
+                <p className='text-sm font-medium text-gray-900'>{deliverables.length}</p>
               </div>
             </div>
 
@@ -304,11 +272,7 @@ export default function ProjectInvoiceReview() {
               </div>
               <div>
                 <p className='text-xs text-gray-500 mb-1'>Deliverables</p>
-                <p className='text-sm font-medium text-gray-900'>
-                  {statsLoading
-                    ? 'Loading...'
-                    : (projectStats?.deliverableCount || deliverables.length || 0) + ' completed'}
-                </p>
+                <p className='text-sm font-medium text-gray-900'>{deliverables.length}</p>
               </div>
             </div>
           </div>
