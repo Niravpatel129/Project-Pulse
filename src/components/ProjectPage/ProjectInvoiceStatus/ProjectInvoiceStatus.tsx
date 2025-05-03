@@ -2,7 +2,15 @@ import { Button } from '@/components/ui/button';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
 import { format } from 'date-fns';
-import { AlertCircleIcon, BuildingIcon, CheckIcon, CreditCardIcon, MailIcon } from 'lucide-react';
+import {
+  AlertCircleIcon,
+  BuildingIcon,
+  CheckIcon,
+  CreditCardIcon,
+  ExternalLink,
+  MailIcon,
+} from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 interface InvoiceResponse {
@@ -166,7 +174,12 @@ export default function ProjectInvoiceStatus() {
 
       {/* Payment Options */}
       <div>
-        <h4 className='text-sm font-medium text-gray-700 mb-2.5'>Available Payment Options</h4>
+        <div className='flex items-center gap-1 mb-2.5'>
+          <h4 className='text-sm font-medium text-gray-700 '>Available Payment Options</h4>
+          <Link href={`/payment/${invoiceData.invoice._id}`} target='_blank'>
+            <ExternalLink className='h-3 w-3 text-gray-400 cursor-pointer' />
+          </Link>
+        </div>
         <div className='space-y-2'>
           <div className='flex justify-between items-center border border-gray-200 rounded-md p-3'>
             <div className='flex items-center gap-2'>
