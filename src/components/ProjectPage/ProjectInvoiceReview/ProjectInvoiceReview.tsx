@@ -294,7 +294,7 @@ export default function ProjectInvoiceReview() {
               data={invoiceData.invoice.selectedItems}
               columns={columns}
               keyExtractor={(item) => {
-                return item.id;
+                return item._id;
               }}
               searchKeys={['name', 'description', 'type']}
               emptyState={
