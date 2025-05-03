@@ -87,6 +87,7 @@
     "react-infinite-scroll-component": "^6.1.0",
     "react-markdown": "^10.1.0",
     "react-phone-number-input": "^3.4.12",
+    "react-resizable-panels": "^3.0.1",
     "react-select": "^5.10.1",
     "react-textarea-autosize": "^8.5.9",
     "react-timezone-select": "^3.2.8",

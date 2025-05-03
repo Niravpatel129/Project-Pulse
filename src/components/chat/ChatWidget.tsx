@@ -2,12 +2,20 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from '@/components/ui/command';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { newRequest, streamRequest } from '@/utils/newRequest';
-import { MessageCircle, SendIcon, Trash2, X } from 'lucide-react';
+import { AtSign, MessageCircle, Paperclip, Send, Trash2, X } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import TextareaAutosize from 'react-textarea-autosize';
 import remarkGfm from 'remark-gfm';
 
@@ -19,11 +27,18 @@ type Message = {
   isStreaming?: boolean;
 };
 
+type TableInfo = {
+  id: string;
+  name: string;
+  description?: string;
+};
+
 type ChatWidgetProps = {
   pageContext?: {
     url?: string;
     title?: string;
     description?: string;
+    tables?: TableInfo[];
     [key: string]: any;
   };
 };
@@ -34,8 +49,14 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionFilter, setMentionFilter] = useState('');
+  const [cursorPosition, setCursorPosition] = useState(0);
+  const [tables, setTables] = useState<TableInfo[]>([]);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const mentionTriggerRef = useRef<HTMLButtonElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -49,7 +70,18 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     if (savedSessionId) {
       setSessionId(savedSessionId);
     }
-  }, []);
+
+    // Set sample tables for demo (in real app, get from pageContext)
+    const demoTables: TableInfo[] = pageContext?.tables || [
+      { id: '1', name: 'users', description: 'User accounts and profiles' },
+      { id: '2', name: 'orders', description: 'Customer orders data' },
+      { id: '3', name: 'products', description: 'Product catalog information' },
+      { id: '4', name: 'customers', description: 'Customer information' },
+      { id: '5', name: 'payments', description: 'Payment transactions' },
+      { id: '6', name: 'inventory', description: 'Product inventory' },
+    ];
+    setTables(demoTables);
+  }, [pageContext]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -76,27 +108,47 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     // Create and add a style element for dynamic styles
     const styleEl = document.createElement('style');
     styleEl.innerHTML = `
-      .main-content {
-        transition: margin-right 0.3s ease;
-        margin-right: var(--content-margin-right, 0px);
+      body {
+        transition: padding-right 0.3s ease;
+        padding-right: var(--content-margin-right, 0px);
       }
       
+      /* Target app-specific navigation elements */
+      header.fixed, 
+      header.sticky,
+      header.fixed.top-0, 
+      .fixed.top-0,
+      nav.fixed {
+        transition: width 0.3s ease;
+        width: calc(100% - var(--content-margin-right, 0px));
+      }
+      
+      /* For mobile */
       @media (max-width: 768px) {
-        .main-content {
-          margin-right: 0 !important;
+        body {
+          padding-right: 0 !important;
+        }
+        header.fixed, 
+        header.sticky,
+        header.fixed.top-0,
+        .fixed.top-0,
+        nav.fixed {
+          width: 100% !important;
         }
       }
     `;
     document.head.appendChild(styleEl);
 
-    // Apply the class to the main content element
-    const mainContent = document.querySelector('main');
-    if (mainContent) {
-      mainContent.classList.add('main-content');
+    // Apply class to body for more styling options
+    if (isOpen) {
+      document.body.classList.add('chat-open');
+    } else {
+      document.body.classList.remove('chat-open');
     }
 
     return () => {
       document.documentElement.style.setProperty('--content-margin-right', '0px');
+      document.body.classList.remove('chat-open');
       document.head.removeChild(styleEl);
     };
   }, [isOpen]);
@@ -136,11 +188,117 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     setIsOpen(!isOpen);
   };
 
+  // Handle text input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setInputValue(value);
+
+    // Store cursor position for mention insertion
+    if (e.target.selectionStart) {
+      setCursorPosition(e.target.selectionStart);
+    }
+
+    // Find if cursor is right after an @ symbol
+    const beforeCursor = value.substring(0, cursorPosition);
+    const match = beforeCursor.match(/@([^\s@]*)$/);
+
+    if (match) {
+      setShowMentions(true);
+      setMentionFilter(match[1]?.toLowerCase() || '');
+    } else {
+      setShowMentions(false);
+    }
+  };
+
+  // Handle @ button click
+  const handleAtButtonClick = () => {
+    const newValue =
+      inputValue.substring(0, cursorPosition) + '@' + inputValue.substring(cursorPosition);
+    setInputValue(newValue);
+    setShowMentions(true);
+    setMentionFilter('');
+
+    // Focus back on input and place cursor after @
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        const newPosition = cursorPosition + 1;
+        inputRef.current.setSelectionRange(newPosition, newPosition);
+        setCursorPosition(newPosition);
+      }
+    }, 0);
+  };
+
+  // Handle mention selection
+  const handleSelectMention = (tableName: string) => {
+    // Replace the @filter with the selected table name
+    const beforeCursor = inputValue.substring(0, cursorPosition);
+    const match = beforeCursor.match(/@([^\s@]*)$/);
+
+    if (match) {
+      const start = beforeCursor.lastIndexOf('@');
+      const newValue =
+        inputValue.substring(0, start) + `@${tableName} ` + inputValue.substring(cursorPosition);
+
+      setInputValue(newValue);
+      setShowMentions(false);
+
+      // Set cursor position after the inserted mention
+      const newPosition = start + tableName.length + 2; // +2 for @ and space
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          inputRef.current.setSelectionRange(newPosition, newPosition);
+          setCursorPosition(newPosition);
+        }
+      }, 0);
+    } else {
+      // If no match (user clicked @ button), insert at cursor
+      const newValue =
+        inputValue.substring(0, cursorPosition) +
+        `@${tableName} ` +
+        inputValue.substring(cursorPosition);
+
+      setInputValue(newValue);
+      setShowMentions(false);
+
+      // Set cursor position after the inserted mention
+      const newPosition = cursorPosition + tableName.length + 2; // +2 for @ and space
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          inputRef.current.setSelectionRange(newPosition, newPosition);
+          setCursorPosition(newPosition);
+        }
+      }, 0);
+    }
+  };
+
   // Send message on Enter key
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+
+      if (showMentions) {
+        // If mentions dropdown is open, pressing Enter should do nothing
+        return;
+      }
+
       handleSendMessage();
+    }
+
+    // Update cursor position for mention insertion
+    if (e.key !== 'Enter' && e.key !== 'Tab') {
+      setTimeout(() => {
+        if (inputRef.current?.selectionStart) {
+          setCursorPosition(inputRef.current.selectionStart);
+        }
+      }, 0);
+    }
+
+    // Close mentions dropdown on escape
+    if (e.key === 'Escape') {
+      setShowMentions(false);
     }
   };
 
@@ -306,9 +464,9 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
 
   // Send message handler
   const handleSendMessage = async () => {
-    if (!inputRef.current || !inputRef.current.value.trim() || isLoading) return;
+    if (!inputValue.trim() || isLoading) return;
 
-    const messageContent = inputRef.current.value.trim();
+    const messageContent = inputValue.trim();
 
     // Create user message
     const userMessage: Message = {
@@ -324,7 +482,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     });
 
     // Clear input
-    inputRef.current.value = '';
+    setInputValue('');
     setIsLoading(true);
     userScrollingRef.current = false;
     setTimeout(scrollToBottom, 50);
@@ -349,6 +507,14 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
       setIsLoading(false);
     }
   };
+
+  // Filter tables based on user input
+  const filteredTables = React.useMemo(() => {
+    if (!mentionFilter) return tables;
+    return tables.filter((table) => {
+      return table.name.toLowerCase().includes(mentionFilter.toLowerCase());
+    });
+  }, [tables, mentionFilter]);
 
   // Message component
   const MessageItem = React.memo(({ message }: { message: Message }) => {
@@ -416,29 +582,10 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     );
   };
 
-  return (
-    <>
-      {/* Trigger Button - only show when chat is closed */}
-      {!isOpen && (
-        <div className='fixed bottom-4 right-4 z-50'>
-          <Button
-            onClick={toggleChat}
-            variant='default'
-            size='icon'
-            className='h-12 w-12 rounded-full shadow-lg'
-          >
-            <MessageCircle />
-          </Button>
-        </div>
-      )}
-
-      {/* Chat Panel */}
-      <div
-        className={cn(
-          'fixed top-0 right-0 bottom-0 w-[350px] bg-background border-l z-40 transition-transform duration-300 ease-in-out',
-          isOpen ? 'translate-x-0' : 'translate-x-full',
-        )}
-      >
+  // Chat panel content
+  const ChatPanelContent = () => {
+    return (
+      <div className='flex flex-col h-full'>
         {/* Header */}
         <div className='bg-primary p-3 text-primary-foreground flex items-center justify-between'>
           <div className='flex items-center gap-2'>
@@ -475,34 +622,163 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
         </div>
 
         {/* Messages */}
-        <ScrollArea className='flex-1 p-3 h-[calc(100vh-120px)]' ref={scrollAreaRef}>
+        <ScrollArea className='flex-1 p-3' ref={scrollAreaRef}>
           <div className='flex flex-col gap-3'>
             <MessageList />
           </div>
         </ScrollArea>
 
-        {/* Input */}
+        {/* Enhanced Input Area */}
         <div className='p-3 border-t'>
-          <div className='flex gap-2'>
-            <TextareaAutosize
-              ref={inputRef}
-              onKeyDown={handleKeyDown}
-              placeholder='Type a message...'
-              className='min-h-[40px] max-h-[120px] resize-none flex-1 px-3 py-2 text-sm rounded-md border border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
-              disabled={isLoading}
-              maxRows={4}
-            />
-            <Button
-              onClick={handleSendMessage}
-              size='icon'
-              disabled={isLoading}
-              className={cn('shrink-0', isLoading && 'opacity-50 cursor-not-allowed')}
-            >
-              <SendIcon className='h-4 w-4' />
-            </Button>
+          <div className='relative'>
+            {/* Text Input */}
+            <div className='flex flex-col rounded-md border bg-background overflow-hidden'>
+              <TextareaAutosize
+                ref={inputRef}
+                value={inputValue}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder='Type a message...'
+                className='min-h-[56px] resize-none flex-1 px-3 pt-3 pb-9 text-sm bg-transparent border-none ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
+                disabled={isLoading}
+                maxRows={6}
+              />
+
+              {/* Controls */}
+              <div className='absolute bottom-0 left-0 right-0 p-1.5 flex items-center justify-between border-t bg-muted/50'>
+                <div className='flex items-center gap-1'>
+                  {/* @ Mention Button */}
+                  <Button
+                    ref={mentionTriggerRef}
+                    variant='ghost'
+                    size='icon'
+                    className='h-7 w-7 rounded-full text-muted-foreground hover:text-foreground'
+                    onClick={handleAtButtonClick}
+                    title='Mention a table'
+                  >
+                    <AtSign className='h-4 w-4' />
+                  </Button>
+
+                  {/* Attachment Button (placeholder) */}
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='h-7 w-7 rounded-full text-muted-foreground hover:text-foreground'
+                    title='Add attachment'
+                  >
+                    <Paperclip className='h-4 w-4' />
+                  </Button>
+                </div>
+
+                {/* Send Button */}
+                <Button
+                  onClick={handleSendMessage}
+                  size='sm'
+                  className={cn(
+                    'h-7 rounded-full px-3',
+                    (!inputValue.trim() || isLoading) && 'opacity-50 cursor-not-allowed',
+                  )}
+                  disabled={!inputValue.trim() || isLoading}
+                >
+                  <Send className='h-3.5 w-3.5 mr-1' />
+                  <span className='text-xs'>Send</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Table Mention Dropdown */}
+            {showMentions && (
+              <div className='absolute bottom-full left-0 mb-1 w-full bg-popover rounded-md border shadow-md'>
+                <Command className='rounded-lg'>
+                  <CommandInput
+                    placeholder='Search tables...'
+                    value={mentionFilter}
+                    onValueChange={setMentionFilter}
+                    className='h-9'
+                  />
+                  <CommandEmpty>No tables found</CommandEmpty>
+                  <CommandGroup className='max-h-60 overflow-auto'>
+                    {filteredTables.map((table) => {
+                      return (
+                        <CommandItem
+                          key={table.id}
+                          value={table.name}
+                          onSelect={() => {
+                            return handleSelectMention(table.name);
+                          }}
+                          className='flex items-center justify-between'
+                        >
+                          <div className='flex items-center'>
+                            <div className='bg-primary/10 text-primary p-1 rounded mr-2'>
+                              <span className='text-xs font-mono'>@{table.name}</span>
+                            </div>
+                            {table.description && (
+                              <span className='text-xs text-muted-foreground truncate max-w-[150px]'>
+                                {table.description}
+                              </span>
+                            )}
+                          </div>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                </Command>
+              </div>
+            )}
           </div>
         </div>
       </div>
+    );
+  };
+
+  // This wrapper component handles the resizable panel layout
+  const LayoutWithPanel = () => {
+    if (!isOpen) return null;
+
+    return (
+      <div className='fixed inset-0 z-40 bg-transparent' style={{ pointerEvents: 'none' }}>
+        <PanelGroup direction='horizontal' autoSaveId='chat-panel-layout'>
+          <Panel defaultSize={80} minSize={60} style={{ pointerEvents: 'auto' }}>
+            <div className='invisible'>Content space</div>
+          </Panel>
+
+          <PanelResizeHandle
+            className='w-1 transition-colors bg-border hover:bg-primary'
+            style={{ pointerEvents: 'auto' }}
+          />
+
+          <Panel
+            defaultSize={20}
+            minSize={15}
+            maxSize={50}
+            className='bg-background border-l'
+            style={{ pointerEvents: 'auto' }}
+          >
+            <ChatPanelContent />
+          </Panel>
+        </PanelGroup>
+      </div>
+    );
+  };
+
+  return (
+    <>
+      {/* Trigger Button - only show when chat is closed */}
+      {!isOpen && (
+        <div className='fixed bottom-4 right-4 z-50'>
+          <Button
+            onClick={toggleChat}
+            variant='default'
+            size='icon'
+            className='h-12 w-12 rounded-full shadow-lg'
+          >
+            <MessageCircle />
+          </Button>
+        </div>
+      )}
+
+      {/* Resizable Panel System */}
+      <LayoutWithPanel />
 
       {/* Styles */}
       <style jsx global>{`
@@ -544,13 +820,6 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
         }
         .dark .prose thead {
           background-color: rgba(255, 255, 255, 0.05);
-        }
-
-        /* For mobile devices */
-        @media (max-width: 768px) {
-          .fixed.right-0.w-[350px] {
-            width: 100%;
-          }
         }
       `}</style>
     </>
