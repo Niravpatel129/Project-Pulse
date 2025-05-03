@@ -295,6 +295,13 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
   };
 
   const handleCreateInvoice = async () => {
+    // Check if any items are selected
+    if (!selectedItems.length) {
+      toast.error('Please add at least one item to your invoice');
+      setActiveTab('items'); // Redirect to items tab
+      return;
+    }
+
     // Check if a client is selected
     if (!selectedClient) {
       toast.error('Please select a client or add a new one before creating an invoice');
