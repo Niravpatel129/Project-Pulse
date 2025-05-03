@@ -1,5 +1,4 @@
 import { Column, DataTable } from '@/components/ui/data-table';
-import { Table, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
@@ -13,6 +12,7 @@ interface InvoiceItem {
   price: number;
   date: string;
   type: string;
+  itemType: string;
   labels: string[];
   quantity: number;
   isApiData: boolean;
@@ -78,19 +78,23 @@ export default function ProjectInvoiceReview() {
       },
     },
     {
+      key: 'itemType',
+      header: 'Type of Item',
+      cell: (item) => {
+        return item.itemType === 'task' ? (
+          <span className='px-2 py-1 bg-red-100 text-red-800 text-xs rounded'>Task</span>
+        ) : (
+          <span className='px-2 py-1 bg-green-100 text-green-800 text-xs rounded'>Deliverable</span>
+        );
+      },
+    },
+    {
       key: 'date',
       header: 'Date',
       cell: (item) => {
         return item.date;
       },
       sortable: true,
-    },
-    {
-      key: 'type',
-      header: 'Type',
-      cell: (item) => {
-        return <span className='capitalize'>{item.type}</span>;
-      },
     },
     {
       key: 'labels',
@@ -111,30 +115,30 @@ export default function ProjectInvoiceReview() {
         );
       },
     },
-    {
-      key: 'quantity',
-      header: 'Quantity',
-      cell: (item) => {
-        return item.quantity;
-      },
-      sortable: true,
-    },
+    // {
+    //   key: 'quantity',
+    //   header: 'Quantity',
+    //   cell: (item) => {
+    //     return item.quantity;
+    //   },
+    //   sortable: true,
+    // },
     {
       key: 'price',
       header: 'Price',
       cell: (item) => {
-        return `$${item.price.toFixed(2)}`;
+        return `$${item.price.toFixed(2)} x ${item.quantity}`;
       },
       sortable: true,
     },
-    {
-      key: 'total',
-      header: 'Total',
-      cell: (item) => {
-        return `$${(item.fields?.total || item.price * item.quantity).toFixed(2)}`;
-      },
-      sortable: true,
-    },
+    // {
+    //   key: 'total',
+    //   header: 'Total',
+    //   cell: (item) => {
+    //     return `$${(item.fields?.total || item.price * item.quantity).toFixed(2)}`;
+    //   },
+    //   sortable: true,
+    // },
   ];
 
   return (
@@ -206,58 +210,11 @@ export default function ProjectInvoiceReview() {
               keyExtractor={(item) => {
                 return item.id;
               }}
-              searchable
               searchKeys={['name', 'description', 'type']}
-              pagination
-              pageSize={10}
               emptyState={
                 <div className='py-8 text-center text-gray-500'>No invoice items found</div>
               }
             />
-
-            {/* Option 2: Using basic Table components with custom footer for totals */}
-            <div className='mt-8'>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead colSpan={7} className='text-right font-medium'>
-                      Subtotal
-                    </TableHead>
-                    <TableHead className='text-right'>
-                      ${invoiceData.invoice.subtotal.toFixed(2)}
-                    </TableHead>
-                  </TableRow>
-                  {invoiceData.invoice.taxAmount > 0 && (
-                    <TableRow>
-                      <TableHead colSpan={7} className='text-right font-medium'>
-                        Tax
-                      </TableHead>
-                      <TableHead className='text-right'>
-                        ${invoiceData.invoice.taxAmount.toFixed(2)}
-                      </TableHead>
-                    </TableRow>
-                  )}
-                  {invoiceData.invoice.shippingTotal > 0 && (
-                    <TableRow>
-                      <TableHead colSpan={7} className='text-right font-medium'>
-                        Shipping
-                      </TableHead>
-                      <TableHead className='text-right'>
-                        ${invoiceData.invoice.shippingTotal.toFixed(2)}
-                      </TableHead>
-                    </TableRow>
-                  )}
-                  <TableRow className='bg-gray-50'>
-                    <TableHead colSpan={7} className='text-right font-medium text-gray-900'>
-                      Total
-                    </TableHead>
-                    <TableHead className='text-right font-medium text-gray-900'>
-                      ${invoiceData.invoice.total.toFixed(2)}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-              </Table>
-            </div>
           </div>
         ) : (
           <div className='py-8 text-center text-gray-500'>No invoice items found</div>
