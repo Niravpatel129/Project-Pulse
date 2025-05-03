@@ -374,13 +374,7 @@ const InvoicePreview = ({
             {editedItems.length === 0 && !shippingItem && (
               <div className='text-center p-4 border rounded-lg'>
                 <p className='text-muted-foreground'>No items added</p>
-                <Button
-                  variant='link'
-                  className='mt-1'
-                  onClick={() => {
-                    return setActiveTab('items');
-                  }}
-                >
+                <Button variant='link' className='mt-1' onClick={addCustomItem}>
                   Add items
                 </Button>
               </div>
