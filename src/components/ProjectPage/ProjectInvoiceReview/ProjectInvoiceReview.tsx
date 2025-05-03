@@ -3,6 +3,8 @@ import { Column, DataTable } from '@/components/ui/data-table';
 import BlockWrapper from '@/components/wrappers/BlockWrapper';
 import { useProject } from '@/contexts/ProjectContext';
 import { newRequest } from '@/utils/newRequest';
+import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
 import { CalendarIcon, Clock3Icon, Eye, FileCheckIcon, Package2Icon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import TaskDetailDialog from '../ProjectKanban/TaskDetailDialog';
@@ -41,6 +43,12 @@ interface InvoiceData {
   };
 }
 
+interface ProjectStats {
+  timeTracked: number; // hours
+  deliverableCount: number;
+  status: string;
+}
+
 export default function ProjectInvoiceReview() {
   const { project } = useProject();
   const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(null);
@@ -61,6 +69,41 @@ export default function ProjectInvoiceReview() {
       setLoading(false);
     }
   };
+
+  // Fetch project stats (time tracked, deliverables, etc)
+  const { data: projectStats, isLoading: statsLoading } = useQuery({
+    queryKey: ['project-stats', project?._id],
+    queryFn: async () => {
+      try {
+        const response = await newRequest.get(`/projects/${project?._id}/stats`);
+        return response.data.data as ProjectStats;
+      } catch (error) {
+        console.error('Failed to fetch project stats:', error);
+        // Return default values if API fails
+        return {
+          timeTracked: 0,
+          deliverableCount: 0,
+          status: project?.status || 'active',
+        };
+      }
+    },
+    enabled: !!project?._id,
+  });
+
+  // Fetch deliverables count separately if not available in stats
+  const { data: deliverables = [] } = useQuery({
+    queryKey: ['deliverables', project?._id],
+    queryFn: async () => {
+      try {
+        const response = await newRequest.get(`/deliverables/project/${project?._id}`);
+        return response.data.data || [];
+      } catch (error) {
+        console.error('Failed to fetch deliverables:', error);
+        return [];
+      }
+    },
+    enabled: !!project?._id && !projectStats?.deliverableCount,
+  });
 
   useEffect(() => {
     fetchProjectInvoice();
@@ -95,6 +138,23 @@ export default function ProjectInvoiceReview() {
 
   const handleCloseTaskPreview = () => {
     setPreviewTask(null);
+  };
+
+  // Format hours for display
+  const formatHours = (hours: number): string => {
+    if (hours === 0) return '0 hours';
+    if (hours === 1) return '1 hour';
+    return `${hours} hours`;
+  };
+
+  // Format project date range
+  const formatDateRange = () => {
+    if (project?.startDate && project?.targetDate) {
+      const startDate = new Date(project.startDate);
+      const targetDate = new Date(project.targetDate);
+      return `${format(startDate, 'MMMM d')} - ${format(targetDate, 'MMMM d, yyyy')}`;
+    }
+    return 'Date range not set';
   };
 
   // Mock columns for TaskDetailDialog
@@ -199,11 +259,11 @@ export default function ProjectInvoiceReview() {
           <div className='flex justify-between items-start'>
             <div className='space-y-1'>
               <h1 className='text-2xl font-medium text-gray-900'>Project Review</h1>
-              <p className='text-sm text-gray-500'>Website redesign and branding</p>
+              <p className='text-sm text-gray-500'>{project?.name || 'Untitled Project'}</p>
             </div>
             <div className='flex items-center text-sm text-gray-500'>
               <CalendarIcon className='mr-2 h-4 w-4' />
-              <span>April 25 - May 15, 2025</span>
+              <span>{formatDateRange()}</span>
             </div>
           </div>
 
@@ -216,7 +276,11 @@ export default function ProjectInvoiceReview() {
               </div>
               <div>
                 <p className='text-xs text-gray-500 mb-1'>Project Status</p>
-                <p className='text-sm font-medium text-gray-900'>Invoice Sent</p>
+                <p className='text-sm font-medium text-gray-900'>
+                  {statsLoading
+                    ? 'Loading...'
+                    : projectStats?.status || project?.status || 'Active'}
+                </p>
               </div>
             </div>
 
@@ -227,7 +291,9 @@ export default function ProjectInvoiceReview() {
               </div>
               <div>
                 <p className='text-xs text-gray-500 mb-1'>Time Tracked</p>
-                <p className='text-sm font-medium text-gray-900'>32 hours</p>
+                <p className='text-sm font-medium text-gray-900'>
+                  {statsLoading ? 'Loading...' : formatHours(projectStats?.timeTracked || 0)}
+                </p>
               </div>
             </div>
 
@@ -238,7 +304,11 @@ export default function ProjectInvoiceReview() {
               </div>
               <div>
                 <p className='text-xs text-gray-500 mb-1'>Deliverables</p>
-                <p className='text-sm font-medium text-gray-900'>5 completed</p>
+                <p className='text-sm font-medium text-gray-900'>
+                  {statsLoading
+                    ? 'Loading...'
+                    : (projectStats?.deliverableCount || deliverables.length || 0) + ' completed'}
+                </p>
               </div>
             </div>
           </div>

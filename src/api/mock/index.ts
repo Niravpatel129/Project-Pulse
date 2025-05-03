@@ -1,5 +1,6 @@
 import { handleInvoicesRequest } from './invoices';
 import { handleProjectFilesRequest } from './project-files';
+import { handleProjectsRequest } from './projects';
 import { handleTemplatesRequest } from './templates';
 
 // Simulate network delay (between 200-500ms)
@@ -7,9 +8,10 @@ const NETWORK_DELAY = () => {
   return Math.random() * 300 + 200;
 };
 
+// Type for API handler functions
 type ApiHandler = (
   method: string,
-  path: string,
+  url: string,
   params: Record<string, string>,
   data?: unknown,
 ) => Promise<unknown>;
@@ -27,6 +29,9 @@ const API_HANDLERS: Record<string, ApiHandler> = {
     return Promise.resolve({});
   },
   '/invoices': handleInvoicesRequest,
+  '/projects': handleProjectsRequest,
+  '/deliverables': handleProjectsRequest, // Reuse the projects handler for deliverables
+  '/project-invoices': handleProjectsRequest, // Reuse the projects handler for project invoices
 };
 
 /**
@@ -50,6 +55,9 @@ export const handleMockApiRequest = async (
 
     // Path with ID parameter (e.g. /templates/123)
     if (path.match(new RegExp(`^${pattern}/[\\w-]+$`))) return true;
+
+    // Path with nested routes (e.g. /projects/123/stats)
+    if (path.match(new RegExp(`^${pattern}/[\\w-]+/[\\w-]+$`))) return true;
 
     return false;
   });
