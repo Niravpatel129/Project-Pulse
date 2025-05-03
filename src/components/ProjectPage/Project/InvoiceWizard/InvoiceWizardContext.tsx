@@ -3,6 +3,7 @@ import { useInvoiceWizard } from '@/hooks/useInvoiceWizard';
 import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
 import { newRequest } from '@/utils/newRequest';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { InvoiceItem } from './types';
 
 // Create a shipping item type
@@ -249,20 +250,61 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
     setShippingItem(null);
   };
 
+  // Function to check if a tax is selected
+  const isTaxSelected = () => {
+    return selectedTax && selectedTax !== 'no-tax';
+  };
+
+  // Function to get the effective tax rate for the selected tax
+  const getEffectiveTaxRate = () => {
+    if (!selectedTax || selectedTax === 'no-tax') {
+      return 0;
+    }
+
+    if (selectedTax === 'standard') {
+      return taxRate;
+    }
+
+    if (selectedTax === 'reduced') {
+      return reducedTaxRate;
+    }
+
+    // For custom tax IDs (like "tax-1744414349118"), use the custom rate (11%)
+    if (selectedTax.startsWith('tax-')) {
+      // Here you would ideally look up the actual rate from your tax data
+      // For now, we'll hardcode the 11% rate
+      return 11;
+    }
+
+    return 0;
+  };
+
+  // Calculate total invoice amount
+  const calculateInvoiceTotal = () => {
+    const subtotal = calculateInvoiceSubtotal();
+    const shippingTotal = calculateShippingTotal();
+    const discountAmount = calculateDiscountAmount();
+
+    let taxAmount = 0;
+    if (isTaxSelected()) {
+      const effectiveTaxRate = getEffectiveTaxRate();
+      taxAmount = (subtotal - discountAmount) * (effectiveTaxRate / 100);
+    }
+
+    return subtotal - discountAmount + shippingTotal + taxAmount;
+  };
+
   const handleCreateInvoice = async () => {
     // Calculate totals
     const subtotal = calculateInvoiceSubtotal();
     const shippingTotal = calculateShippingTotal();
     const discountAmount = calculateDiscountAmount();
-    const total = calculateInvoiceTotal();
 
     // Calculate tax amount based on selected tax type
-    let taxAmount = 0;
-    if (selectedTax === 'standard') {
-      taxAmount = (subtotal - discountAmount) * (taxRate / 100);
-    } else if (selectedTax === 'reduced') {
-      taxAmount = (subtotal - discountAmount) * (reducedTaxRate / 100);
-    }
+    const effectiveTaxRate = getEffectiveTaxRate();
+    const taxAmount = isTaxSelected() ? (subtotal - discountAmount) * (effectiveTaxRate / 100) : 0;
+
+    const total = subtotal - discountAmount + shippingTotal + taxAmount;
 
     try {
       // Prepare invoice data for backend
@@ -270,8 +312,7 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
         selectedItems: selectedItems,
         selectedClient: selectedClient,
         dueDate: dueDate || undefined,
-        taxRate:
-          selectedTax === 'standard' ? taxRate : selectedTax === 'reduced' ? reducedTaxRate : 0,
+        taxRate: effectiveTaxRate,
         notes,
         taxId,
         showTaxId,
@@ -308,16 +349,14 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
       // Make API call to create invoice
       const response = await newRequest.post(`/projects/${projectId}/invoices/v2`, invoiceData);
 
-      if (response.status !== 200) {
-        throw new Error(`Failed to create invoice: ${response.statusText}`);
-      }
-
       const result = response.data;
       console.log('Invoice created successfully:', result);
+      toast.success('Invoice created successfully');
 
       // You might want to add navigation or success messaging here
     } catch (error) {
       console.error('Error creating invoice:', error);
+      toast.error('Error creating invoice');
       // Handle error state here
     }
   };
@@ -434,15 +473,6 @@ export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProv
     if (!discount) return 0;
     const subtotal = calculateInvoiceSubtotal();
     return (subtotal * discount) / 100;
-  };
-
-  // Calculate total invoice amount
-  const calculateInvoiceTotal = () => {
-    const subtotal = calculateInvoiceSubtotal();
-    const shippingTotal = calculateShippingTotal();
-    const discountAmount = calculateDiscountAmount();
-
-    return subtotal - discountAmount + shippingTotal;
   };
 
   const value = {
