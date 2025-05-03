@@ -1,6 +1,7 @@
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { useInvoiceWizard } from '@/hooks/useInvoiceWizard';
 import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
+import { newRequest } from '@/utils/newRequest';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { InvoiceItem } from './types';
 
@@ -105,7 +106,7 @@ interface InvoiceWizardProviderProps {
   projectId: string;
 }
 
-export const InvoiceWizardProvider = ({ children }: InvoiceWizardProviderProps) => {
+export const InvoiceWizardProvider = ({ children, projectId }: InvoiceWizardProviderProps) => {
   const {
     selectedItems,
     dueDate,
@@ -249,50 +250,76 @@ export const InvoiceWizardProvider = ({ children }: InvoiceWizardProviderProps) 
   };
 
   const handleCreateInvoice = async () => {
-    // For now, just console log instead of generating the invoice
+    // Calculate totals
     const subtotal = calculateInvoiceSubtotal();
     const shippingTotal = calculateShippingTotal();
     const discountAmount = calculateDiscountAmount();
     const total = calculateInvoiceTotal();
 
-    console.log('Creating invoice with data:', {
-      selectedItems,
-      selectedClient,
-      dueDate: dueDate ? dueDate : undefined,
-      taxRate,
-      notes,
-      taxId,
-      showTaxId,
-      discount,
-      subtotal,
-      shippingTotal,
-      discountAmount,
-      total,
-      currency: invoiceSettings?.currency || 'usd',
-      selectedTax,
-      deliveryOptions: {
-        sendAutomatically,
-        includePaymentLink,
-        scheduleReminders,
-      },
-      shipping: shippingItem
-        ? {
-            item: shippingItem,
-            address: useShippingAddress
-              ? shippingAddress
-              : selectedClient?.shippingAddress ||
-                (selectedClient?.mailingAddress
-                  ? {
-                      streetAddress1: selectedClient?.mailingAddress,
-                      city: selectedClient?.customFields?.city || '',
-                      state: selectedClient?.customFields?.state || '',
-                      postalCode: selectedClient?.customFields?.postalCode || '',
-                      country: selectedClient?.customFields?.country || '',
-                    }
-                  : null),
-          }
-        : null,
-    });
+    // Calculate tax amount based on selected tax type
+    let taxAmount = 0;
+    if (selectedTax === 'standard') {
+      taxAmount = (subtotal - discountAmount) * (taxRate / 100);
+    } else if (selectedTax === 'reduced') {
+      taxAmount = (subtotal - discountAmount) * (reducedTaxRate / 100);
+    }
+
+    try {
+      // Prepare invoice data for backend
+      const invoiceData = {
+        selectedItems: selectedItems,
+        selectedClient: selectedClient,
+        dueDate: dueDate || undefined,
+        taxRate:
+          selectedTax === 'standard' ? taxRate : selectedTax === 'reduced' ? reducedTaxRate : 0,
+        notes,
+        taxId,
+        showTaxId,
+        discount,
+        subtotal,
+        shippingTotal,
+        discountAmount,
+        total,
+        currency: invoiceSettings?.currency || 'usd',
+        selectedTax: {
+          type: selectedTax,
+          amount: taxAmount,
+        },
+        deliveryOptions: sendAutomatically ? 'email' : 'manual',
+        shipping: shippingItem
+          ? {
+              item: shippingItem,
+              address: useShippingAddress
+                ? shippingAddress
+                : selectedClient?.shippingAddress ||
+                  (selectedClient?.mailingAddress
+                    ? {
+                        streetAddress1: selectedClient?.mailingAddress,
+                        city: selectedClient?.customFields?.city || '',
+                        state: selectedClient?.customFields?.state || '',
+                        postalCode: selectedClient?.customFields?.postalCode || '',
+                        country: selectedClient?.customFields?.country || '',
+                      }
+                    : null),
+            }
+          : null,
+      };
+
+      // Make API call to create invoice
+      const response = await newRequest.post(`/projects/${projectId}/invoices/v2`, invoiceData);
+
+      if (response.status !== 200) {
+        throw new Error(`Failed to create invoice: ${response.statusText}`);
+      }
+
+      const result = response.data;
+      console.log('Invoice created successfully:', result);
+
+      // You might want to add navigation or success messaging here
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      // Handle error state here
+    }
   };
 
   // Function to check if an item is in the selectedItems array
