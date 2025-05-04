@@ -57,6 +57,9 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
   // Panel resize state - set default without localStorage for SSR
   const [panelWidth, setPanelWidth] = useState(350);
 
+  // Client-side rendering state
+  const [mounted, setMounted] = useState(false);
+
   const [isResizing, setIsResizing] = useState(false);
   const resizeStartXRef = useRef(0);
   const initialWidthRef = useRef(0);
@@ -68,6 +71,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
       if (savedWidth) {
         setPanelWidth(parseInt(savedWidth, 10));
       }
+      setMounted(true);
     }
   }, []);
 
@@ -468,239 +472,249 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
   };
 
   // Render the chat widget
+  // Only render UI elements after client-side mount to prevent hydration mismatch
   return (
     <>
-      {/* Floating trigger button - only shown when chat is closed */}
-      {!isOpen && (
-        <button
-          onClick={toggleChat}
-          className='fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors'
-          aria-label='Open chat'
-        >
-          <MessageCircle className='h-5 w-5' />
-        </button>
-      )}
+      {/* Only render chat elements after mount */}
+      {mounted && (
+        <>
+          {/* Floating trigger button - only shown when chat is closed */}
+          {!isOpen && (
+            <button
+              onClick={toggleChat}
+              className='fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors'
+              aria-label='Open chat'
+            >
+              <MessageCircle className='h-5 w-5' />
+            </button>
+          )}
 
-      {/* Chat panel */}
-      {isOpen && (
-        <div
-          className='fixed inset-0 z-50 pointer-events-none overflow-hidden'
-          aria-hidden='false'
-          style={{
-            contain: 'strict',
-            isolation: 'isolate',
-          }}
-        >
-          {/* Invisible backdrop to capture clicks outside the panel */}
-          <div
-            className='absolute inset-0 bg-transparent pointer-events-auto'
-            onClick={toggleChat}
-          />
-
-          {/* The actual chat panel */}
-          <div
-            className='absolute top-0 bottom-0 right-0 bg-background border-l shadow-lg pointer-events-auto flex flex-col'
-            style={{
-              width: `${panelWidth}px`,
-              isolation: 'isolate',
-              position: 'fixed',
-              height: '100vh',
-              zIndex: 999,
-            }}
-            onClick={(e) => {
-              return e.stopPropagation();
-            }}
-          >
-            {/* Resize handle */}
+          {/* Chat panel */}
+          {isOpen && (
             <div
-              className='absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/50 z-10'
-              onMouseDown={handleResizeStart}
-            />
-
-            {/* Header */}
-            <div className='bg-primary p-3 text-primary-foreground flex items-center justify-between shrink-0'>
-              <div className='flex items-center gap-2'>
-                <Avatar className='h-8 w-8'>
-                  <AvatarImage src='/ai-avatar.png' alt='AI Assistant' />
-                  <AvatarFallback className='bg-primary-foreground text-primary'>AI</AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className='font-medium text-sm'>
-                    {showSettingsPanel ? 'Settings' : 'Pulse Assistant'}
-                  </h3>
-                  <p className='text-xs opacity-90'>
-                    {showSettingsPanel ? 'Customize your assistant' : 'How can I help you today?'}
-                  </p>
-                </div>
-              </div>
-              <div className='flex items-center gap-1'>
-                {!showSettingsPanel && (
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='h-7 w-7 rounded-full'
-                    onClick={clearConversation}
-                    disabled={messages.length === 0 || isLoading}
-                    title='Clear conversation'
-                  >
-                    <Trash2 className='h-4 w-4' />
-                  </Button>
-                )}
-                <Button
-                  variant={showSettingsPanel ? 'secondary' : 'ghost'}
-                  size='icon'
-                  className='h-7 w-7 rounded-full'
-                  onClick={toggleSettingsPanel}
-                  title='Settings'
-                >
-                  <Settings className='h-4 w-4' />
-                </Button>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className='h-7 w-7 rounded-full'
-                  onClick={toggleChat}
-                  title='Close chat'
-                >
-                  <X className='h-4 w-4' />
-                </Button>
-              </div>
-            </div>
-
-            {/* Messages or Settings container */}
-            {showSettingsPanel ? (
-              <ChatSettings
-                onClose={() => {
-                  return setShowSettingsPanel(false);
-                }}
+              className='fixed inset-0 z-50 pointer-events-none overflow-hidden'
+              aria-hidden='false'
+              style={{
+                contain: 'strict',
+                isolation: 'isolate',
+              }}
+            >
+              {/* Invisible backdrop to capture clicks outside the panel */}
+              <div
+                className='absolute inset-0 bg-transparent pointer-events-auto'
+                onClick={toggleChat}
               />
-            ) : (
-              <>
-                {/* Messages container - using native scrolling instead of ScrollArea */}
+
+              {/* The actual chat panel */}
+              <div
+                className='absolute top-0 bottom-0 right-0 bg-background border-l shadow-lg pointer-events-auto flex flex-col'
+                style={{
+                  width: `${panelWidth}px`,
+                  isolation: 'isolate',
+                  position: 'fixed',
+                  height: '100vh',
+                  zIndex: 999,
+                }}
+                onClick={(e) => {
+                  return e.stopPropagation();
+                }}
+              >
+                {/* Resize handle */}
                 <div
-                  ref={scrollAreaRef}
-                  className='flex-1 overflow-y-auto p-3 messages-container'
-                  // Prevent touch scrolling from propagating on mobile
-                  onTouchStart={(e) => {
-                    return e.stopPropagation();
-                  }}
-                  onTouchMove={(e) => {
-                    return e.stopPropagation();
-                  }}
-                  onTouchEnd={(e) => {
-                    return e.stopPropagation();
-                  }}
-                >
-                  <div className='flex flex-col gap-3'>
-                    <MessageList />
+                  className='absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/50 z-10'
+                  onMouseDown={handleResizeStart}
+                />
+
+                {/* Header */}
+                <div className='bg-primary p-3 text-primary-foreground flex items-center justify-between shrink-0'>
+                  <div className='flex items-center gap-2'>
+                    <Avatar className='h-8 w-8'>
+                      <AvatarImage src='/ai-avatar.png' alt='AI Assistant' />
+                      <AvatarFallback className='bg-primary-foreground text-primary'>
+                        AI
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className='font-medium text-sm'>
+                        {showSettingsPanel ? 'Settings' : 'Pulse Assistant'}
+                      </h3>
+                      <p className='text-xs opacity-90'>
+                        {showSettingsPanel
+                          ? 'Customize your assistant'
+                          : 'How can I help you today?'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className='flex items-center gap-1'>
+                    {!showSettingsPanel && (
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='h-7 w-7 rounded-full'
+                        onClick={clearConversation}
+                        disabled={messages.length === 0 || isLoading}
+                        title='Clear conversation'
+                      >
+                        <Trash2 className='h-4 w-4' />
+                      </Button>
+                    )}
+                    <Button
+                      variant={showSettingsPanel ? 'secondary' : 'ghost'}
+                      size='icon'
+                      className='h-7 w-7 rounded-full'
+                      onClick={toggleSettingsPanel}
+                      title='Settings'
+                    >
+                      <Settings className='h-4 w-4' />
+                    </Button>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='h-7 w-7 rounded-full'
+                      onClick={toggleChat}
+                      title='Close chat'
+                    >
+                      <X className='h-4 w-4' />
+                    </Button>
                   </div>
                 </div>
 
-                {/* Input area */}
-                <ChatInputArea />
-              </>
-            )}
-          </div>
-        </div>
+                {/* Messages or Settings container */}
+                {showSettingsPanel ? (
+                  <ChatSettings
+                    onClose={() => {
+                      return setShowSettingsPanel(false);
+                    }}
+                  />
+                ) : (
+                  <>
+                    {/* Messages container - using native scrolling instead of ScrollArea */}
+                    <div
+                      ref={scrollAreaRef}
+                      className='flex-1 overflow-y-auto p-3 messages-container'
+                      // Prevent touch scrolling from propagating on mobile
+                      onTouchStart={(e) => {
+                        return e.stopPropagation();
+                      }}
+                      onTouchMove={(e) => {
+                        return e.stopPropagation();
+                      }}
+                      onTouchEnd={(e) => {
+                        return e.stopPropagation();
+                      }}
+                    >
+                      <div className='flex flex-col gap-3'>
+                        <MessageList />
+                      </div>
+                    </div>
+
+                    {/* Input area */}
+                    <ChatInputArea />
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Styles */}
+          <style jsx global>{`
+            /* Control body scrolling when chat is open */
+            body.chat-open {
+              /* Prevent default scrolling on the main body */
+              overflow: hidden !important;
+            }
+
+            /* Adjust fixed/sticky elements when chat is open */
+            header.fixed,
+            header.sticky,
+            .fixed.top-0,
+            nav.fixed {
+              transition: width 0.2s ease;
+            }
+
+            /* Create a full isolation barrier between chat panel and main content */
+            .fixed.inset-0.z-50 {
+              isolation: isolate;
+              contain: layout style size;
+              z-index: 9999 !important;
+            }
+
+            /* Prevent body scrolling when chat is open on mobile */
+            @media (max-width: 768px) {
+              body.chat-open {
+                position: fixed;
+                width: 100%;
+                height: 100%;
+                padding-right: 0 !important; /* Don't add padding on mobile */
+              }
+            }
+
+            /* Extreme isolation for messages container */
+            .messages-container {
+              /* Scroll isolation properties */
+              overscroll-behavior: contain;
+              -ms-overflow-style: none;
+              scrollbar-width: thin;
+
+              /* Create a new stacking context and isolate from parent */
+              isolation: isolate;
+              contain: strict;
+
+              /* Prevent touch propagation */
+              touch-action: pan-y;
+
+              /* Additional scroll properties for iOS */
+              -webkit-overflow-scrolling: touch;
+            }
+
+            /* Styling for scrollbar */
+            .messages-container::-webkit-scrollbar {
+              width: 4px;
+            }
+
+            .messages-container::-webkit-scrollbar-track {
+              background: transparent;
+            }
+
+            .messages-container::-webkit-scrollbar-thumb {
+              background-color: rgba(0, 0, 0, 0.2);
+              border-radius: 2px;
+            }
+
+            .dark .messages-container::-webkit-scrollbar-thumb {
+              background-color: rgba(255, 255, 255, 0.2);
+            }
+
+            /* Table styles for markdown content */
+            .prose table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 1em 0;
+              overflow-x: auto;
+              display: block;
+            }
+            .prose thead {
+              background-color: rgba(0, 0, 0, 0.05);
+            }
+            .prose th {
+              font-weight: 600;
+              border: 1px solid rgba(0, 0, 0, 0.2);
+              padding: 0.5em;
+            }
+            .prose td {
+              border: 1px solid rgba(0, 0, 0, 0.2);
+              padding: 0.5em;
+            }
+            .dark .prose th,
+            .dark .prose td {
+              border-color: rgba(255, 255, 255, 0.2);
+            }
+            .dark .prose thead {
+              background-color: rgba(255, 255, 255, 0.05);
+            }
+          `}</style>
+        </>
       )}
-
-      {/* Styles */}
-      <style jsx global>{`
-        /* Control body scrolling when chat is open */
-        body.chat-open {
-          /* Prevent default scrolling on the main body */
-          overflow: hidden !important;
-        }
-
-        /* Adjust fixed/sticky elements when chat is open */
-        header.fixed,
-        header.sticky,
-        .fixed.top-0,
-        nav.fixed {
-          transition: width 0.2s ease;
-        }
-
-        /* Create a full isolation barrier between chat panel and main content */
-        .fixed.inset-0.z-50 {
-          isolation: isolate;
-          contain: layout style size;
-          z-index: 9999 !important;
-        }
-
-        /* Prevent body scrolling when chat is open on mobile */
-        @media (max-width: 768px) {
-          body.chat-open {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            padding-right: 0 !important; /* Don't add padding on mobile */
-          }
-        }
-
-        /* Extreme isolation for messages container */
-        .messages-container {
-          /* Scroll isolation properties */
-          overscroll-behavior: contain;
-          -ms-overflow-style: none;
-          scrollbar-width: thin;
-
-          /* Create a new stacking context and isolate from parent */
-          isolation: isolate;
-          contain: strict;
-
-          /* Prevent touch propagation */
-          touch-action: pan-y;
-
-          /* Additional scroll properties for iOS */
-          -webkit-overflow-scrolling: touch;
-        }
-
-        /* Styling for scrollbar */
-        .messages-container::-webkit-scrollbar {
-          width: 4px;
-        }
-
-        .messages-container::-webkit-scrollbar-track {
-          background: transparent;
-        }
-
-        .messages-container::-webkit-scrollbar-thumb {
-          background-color: rgba(0, 0, 0, 0.2);
-          border-radius: 2px;
-        }
-
-        .dark .messages-container::-webkit-scrollbar-thumb {
-          background-color: rgba(255, 255, 255, 0.2);
-        }
-
-        /* Table styles for markdown content */
-        .prose table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 1em 0;
-          overflow-x: auto;
-          display: block;
-        }
-        .prose thead {
-          background-color: rgba(0, 0, 0, 0.05);
-        }
-        .prose th {
-          font-weight: 600;
-          border: 1px solid rgba(0, 0, 0, 0.2);
-          padding: 0.5em;
-        }
-        .prose td {
-          border: 1px solid rgba(0, 0, 0, 0.2);
-          padding: 0.5em;
-        }
-        .dark .prose th,
-        .dark .prose td {
-          border-color: rgba(255, 255, 255, 0.2);
-        }
-        .dark .prose thead {
-          background-color: rgba(255, 255, 255, 0.05);
-        }
-      `}</style>
     </>
   );
 }
