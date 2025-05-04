@@ -21,7 +21,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Message, PageContext, useChatWidget } from '@/hooks/useChatWidget';
 import { cn } from '@/lib/utils';
-import { MessageCircle, Send, Settings, Trash2, X } from 'lucide-react';
+import { Check, Copy, MessageCircle, Send, Settings, Trash2, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import TextareaAutosize from 'react-textarea-autosize';
@@ -268,12 +268,21 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
   // Message component
   const MessageItem = React.memo(({ message }: { message: Message }) => {
     const messageRef = useRef<HTMLDivElement>(null);
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = () => {
+      navigator.clipboard.writeText(message.content);
+      setCopied(true);
+      setTimeout(() => {
+        return setCopied(false);
+      }, 2000);
+    };
 
     return (
       <div
         ref={messageRef}
         className={cn(
-          'flex w-full max-w-[80%] gap-2 p-3 rounded-lg transition-all',
+          'flex w-full max-w-[80%] gap-2 p-3 rounded-lg transition-all relative group',
           message.sender === 'user' ? 'ml-auto bg-primary text-primary-foreground' : 'bg-muted',
         )}
       >
@@ -314,6 +323,20 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
             <p className='text-sm leading-relaxed'>{message.content}</p>
           )}
         </div>
+
+        {/* Copy button */}
+        <button
+          onClick={handleCopy}
+          className={cn(
+            'absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity',
+            'p-1 rounded-md',
+            message.sender === 'user' ? 'hover:bg-primary-foreground/20' : 'hover:bg-background/80',
+            copied ? 'text-green-500' : '',
+          )}
+          title='Copy to clipboard'
+        >
+          {copied ? <Check className='h-3.5 w-3.5' /> : <Copy className='h-3.5 w-3.5' />}
+        </button>
       </div>
     );
   });
