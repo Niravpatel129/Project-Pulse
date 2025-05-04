@@ -1,16 +1,9 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from '@/components/ui/command';
 import { PageContext, useChatWidget } from '@/hooks/useChatWidget';
 import { cn } from '@/lib/utils';
-import { MessageCircle, Send, Settings, Trash2, X } from 'lucide-react';
+import { ArrowUp, MessageCircle, Settings, Trash2, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import ChatAvatar from './ChatAvatar/ChatAvatar';
@@ -260,7 +253,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
   // Enhanced Input Area component
   const ChatInputArea = () => {
     return (
-      <div className='p-3 border-t'>
+      <div className='p-4'>
         <div className='relative'>
           {/* Selected Mentions Tags */}
           {selectedMentions.length > 0 && (
@@ -289,7 +282,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
           {/* Text Input */}
           <div
             className={cn(
-              'flex flex-col rounded-md border bg-background overflow-hidden',
+              'flex flex-col rounded-md border bg-background overflow-hidden relative',
               selectedMentions.length > 0 && 'rounded-t-none border-t-0',
             )}
           >
@@ -315,26 +308,24 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
                   setShowMentions(false);
                 }
               }}
-              placeholder={isStreaming ? 'Type to queue next message...' : 'Type a message...'}
-              className='min-h-[56px] resize-none flex-1 px-3 pt-3 pb-9 text-sm bg-transparent border-none ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
+              placeholder={isStreaming ? 'Type to queue next message...' : 'Ask anything...'}
+              className='min-h-[56px] resize-none w-full px-3 py-3 pr-[70px] text-sm bg-transparent border-none ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
               maxRows={6}
             />
 
             {/* Controls */}
-            <div className='absolute bottom-0 left-0 right-0 p-1.5 flex items-center justify-between border-t bg-muted/50'>
-              <div className='flex items-center gap-1'>
-                {isStreaming && (
-                  <Button
-                    onClick={handleStopStreaming}
-                    variant='ghost'
-                    size='sm'
-                    className='text-destructive'
-                  >
-                    <X className='h-3.5 w-3.5 mr-1' />
-                    <span className='text-xs'>Stop</span>
-                  </Button>
-                )}
-              </div>
+            <div className='absolute bottom-3 right-2 flex items-center gap-1'>
+              {isStreaming && (
+                <Button
+                  onClick={handleStopStreaming}
+                  variant='ghost'
+                  size='sm'
+                  className='text-destructive'
+                >
+                  <X className='h-3.5 w-3.5 mr-1' />
+                  <span className='text-xs'>Stop</span>
+                </Button>
+              )}
 
               {/* Send Button */}
               <Button
@@ -343,47 +334,15 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
                   handleSendMessage();
                 }}
                 size='sm'
+                className='h-8 w-8'
               >
-                <Send className='h-3.5 w-3.5 mr-1' />
-                <span className='text-xs'>{isStreaming ? 'Interrupt & Send' : 'Send'}</span>
+                <ArrowUp className='aspect-square h-10 w-10 p-0' />
               </Button>
             </div>
           </div>
-
-          {/* Table Mention Dropdown */}
-          {showMentions && (
-            <div className='absolute bottom-full left-0 mb-1 w-full bg-popover rounded-md border shadow-md'>
-              <Command className='rounded-lg'>
-                <CommandInput placeholder='Search tables...' className='h-9' />
-                <CommandEmpty>No tables found</CommandEmpty>
-                <CommandGroup className='max-h-60 overflow-auto scrollbar-hide'>
-                  {filteredTables.map((table) => {
-                    return (
-                      <CommandItem
-                        key={table.id}
-                        value={table.name}
-                        onSelect={() => {
-                          return handleSelectMention(table.name);
-                        }}
-                        className='flex items-center justify-between'
-                      >
-                        <div className='flex items-center'>
-                          <div className='bg-primary/10 text-primary p-1 rounded mr-2'>
-                            <span className='text-xs font-mono'>@{table.name}</span>
-                          </div>
-                          {table.description && (
-                            <span className='text-xs text-muted-foreground truncate max-w-[150px]'>
-                              {table.description}
-                            </span>
-                          )}
-                        </div>
-                      </CommandItem>
-                    );
-                  })}
-                </CommandGroup>
-              </Command>
-            </div>
-          )}
+        </div>
+        <div className='text-xs text-[#9b9897] text-center mt-1 font-thin'>
+          AI can make mistakes. Please double check the responses.
         </div>
       </div>
     );
