@@ -27,7 +27,14 @@ export type PageContext = {
 
 export function useChatWidget(pageContext?: PageContext) {
   // Chat state
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(() => {
+    // Try to get open state from localStorage on initial render
+    if (typeof window !== 'undefined') {
+      const savedOpenState = localStorage.getItem('chat-is-open');
+      return savedOpenState === 'true';
+    }
+    return false;
+  });
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -212,7 +219,11 @@ export function useChatWidget(pageContext?: PageContext) {
 
   // Toggle chat open/closed
   const toggleChat = useCallback(() => {
-    setIsOpen(!isOpen);
+    const newIsOpen = !isOpen;
+    setIsOpen(newIsOpen);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('chat-is-open', newIsOpen.toString());
+    }
   }, [isOpen]);
 
   // Scroll to bottom helper
