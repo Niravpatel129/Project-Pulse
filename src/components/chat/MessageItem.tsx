@@ -1,17 +1,34 @@
+'use client';
+
 import { Prose } from '@/components/ui/prose';
-import { Message } from '@/hooks/useChatWidget';
+import type { Message } from '@/hooks/useChatWidget';
 import { cn } from '@/lib/utils';
 import { Check, Copy } from 'lucide-react';
-import React, { useRef, useState } from 'react';
+import { FC, memo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-const MessageItem = React.memo(({ message }: { message: Message }) => {
-  const messageRef = useRef<HTMLDivElement>(null);
-  const [copied, setCopied] = useState(false);
+// Renders mention tags
+const Mentions: FC<{ mentions?: Message['mentions'] }> = ({ mentions = [] }) => {
+  if (!mentions.length) return null;
+  return (
+    <div className='flex flex-wrap gap-1 mb-2'>
+      {mentions.map(({ id, name }) => {
+        return (
+          <span key={id} className='px-2 py-0.5 text-xs rounded-full bg-primary-foreground/20'>
+            @{name}
+          </span>
+        );
+      })}
+    </div>
+  );
+};
 
+// Copy-to-clipboard button with feedback
+const CopyButton: FC<{ text: string }> = ({ text }) => {
+  const [copied, setCopied] = useState(false);
   const handleCopy = () => {
-    navigator.clipboard.writeText(message.content);
+    navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => {
       return setCopied(false);
@@ -19,68 +36,67 @@ const MessageItem = React.memo(({ message }: { message: Message }) => {
   };
 
   return (
-    <div
-      ref={messageRef}
+    <button
+      onClick={handleCopy}
+      title='Copy'
       className={cn(
-        'text-[16px] flex w-full max-w-[80%] gap-2 p-3 rounded-lg transition-all relative group',
-        message.sender === 'user' ? 'ml-auto bg-primary text-primary-foreground' : 'bg-muted',
+        'absolute top-2 right-2 p-1 rounded-md transition-opacity opacity-0 group-hover:opacity-100',
+        copied && 'text-green-500',
+      )}
+    >
+      {copied ? <Check className='h-3.5 w-3.5' /> : <Copy className='h-3.5 w-3.5' />}
+    </button>
+  );
+};
+
+// Renders AI message content with Markdown support
+const MessageContent: FC<{
+  content: string;
+  isStreaming?: boolean;
+  id: string;
+}> = ({ content, isStreaming, id }) => {
+  return (
+    <Prose className='max-w-full'>
+      {isStreaming ? (
+        <>
+          <div id={`stream-${id}`} className='whitespace-pre-wrap'>
+            {content}
+          </div>
+          <span className='inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse' />
+        </>
+      ) : (
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+      )}
+    </Prose>
+  );
+};
+
+// Main MessageItem component
+const MessageItem: FC<{ message: Message }> = memo(({ message }) => {
+  const { sender, content, mentions, isStreaming, id } = message;
+  const alignmentClass =
+    sender === 'user' ? 'ml-auto bg-primary text-primary-foreground' : 'bg-muted';
+
+  return (
+    <div
+      className={cn(
+        'relative group flex max-w-[80%] w-full gap-2 p-3 rounded-lg transition-all',
+        alignmentClass,
       )}
     >
       <div className='flex flex-col w-full'>
-        {/* Mentions */}
-        {message.mentions?.length > 0 && (
-          <div className='flex flex-wrap gap-1 mb-2'>
-            {message.mentions.map((m) => {
-              return (
-                <div
-                  key={m.id}
-                  className='px-2 py-0.5 text-xs rounded-full bg-primary-foreground/20 flex items-center'
-                >
-                  <span>@{m.name}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Content */}
-        {message.sender === 'ai' ? (
-          <Prose className='text-[16px]'>
-            {message.isStreaming ? (
-              <>
-                <div
-                  id={`stream-content-${message.id.replace('ai-', '')}`}
-                  className='whitespace-pre-wrap'
-                >
-                  {message.content}
-                </div>
-                <span className='inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse'></span>
-              </>
-            ) : (
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
-            )}
-          </Prose>
+        <Mentions mentions={mentions} />
+        {sender === 'ai' ? (
+          <MessageContent content={content} isStreaming={isStreaming} id={id} />
         ) : (
-          <p className='leading-relaxed'>{message.content}</p>
+          <p className='text-sm leading-relaxed'>{content}</p>
         )}
       </div>
 
-      {/* Copy button */}
-      <button
-        onClick={handleCopy}
-        title='Copy to clipboard'
-        className={cn(
-          'absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md',
-          message.sender === 'user' ? 'hover:bg-primary-foreground/20' : 'hover:bg-background/80',
-          copied ? 'text-green-500' : '',
-        )}
-      >
-        {copied ? <Check className='h-3.5 w-3.5' /> : <Copy className='h-3.5 w-3.5' />}
-      </button>
+      <CopyButton text={content} />
     </div>
   );
 });
 
 MessageItem.displayName = 'MessageItem';
-
 export default MessageItem;
