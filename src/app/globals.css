@@ -258,3 +258,8 @@
     }
   }
 }
+
+/* Radix Scroll Area */
+[data-radix-scroll-area-viewport] {
+  overscroll-behavior: contain;
+}
