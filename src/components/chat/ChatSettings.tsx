@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, RotateCcw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -27,53 +28,58 @@ interface ChatSettingsData {
 }
 
 export function ChatSettings({ onClose }: ChatSettingsProps) {
-  // Settings state
+  // React Query client
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const contextDebounceTimeout = useRef<NodeJS.Timeout | null>(null);
+  const [saveIndicator, setSaveIndicator] = useState<{ [key: string]: boolean }>({});
+
+  // Fetch chat settings
+  const { data: settings, isLoading } = useQuery({
+    queryKey: ['chatSettings'],
+    queryFn: async () => {
+      const response = await newRequest.get('/chat-settings');
+      return (
+        response.data.data || {
+          contextSettings: '',
+          webSearchEnabled: true,
+          selectedStyle: 'default',
+          selectedModel: 'gpt-4',
+          gmailConnected: false,
+        }
+      );
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to load settings. Using defaults.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Local state for form values
   const [contextSettings, setContextSettings] = useState('');
   const [webSearchEnabled, setWebSearchEnabled] = useState(true);
   const [selectedStyle, setSelectedStyle] = useState('default');
   const [selectedModel, setSelectedModel] = useState('gpt-4');
-  const [saveIndicator, setSaveIndicator] = useState<{ [key: string]: boolean }>({});
   const [gmailConnected, setGmailConnected] = useState(false);
-  const contextDebounceTimeout = useRef<NodeJS.Timeout | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const { toast } = useToast();
 
-  // Load settings on initial render
+  // Update local state when settings are loaded
   useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        setIsLoading(true);
-        const response = await newRequest.get('/chat-settings');
-        const settings = response.data.data;
+    if (settings) {
+      setContextSettings(settings.contextSettings || '');
+      setWebSearchEnabled(settings.webSearchEnabled);
+      setSelectedStyle(settings.selectedStyle || 'default');
+      setSelectedModel(settings.selectedModel || 'gpt-4');
+      setGmailConnected(settings.gmailConnected || false);
+    }
+  }, [settings]);
 
-        if (settings) {
-          setContextSettings(settings.contextSettings || '');
-          setWebSearchEnabled(settings.webSearchEnabled);
-          setSelectedStyle(settings.selectedStyle || 'default');
-          setSelectedModel(settings.selectedModel || 'gpt-4');
-          setGmailConnected(settings.gmailConnected || false);
-        }
-      } catch (error) {
-        console.error('Failed to load chat settings:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load settings. Using defaults.',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchSettings();
-  }, [toast]);
-
-  const saveSettings = async (settingName: string, newSettings?: Partial<ChatSettingsData>) => {
-    try {
-      setIsSaving(true);
-
-      const settings = {
+  // Save settings mutation
+  const { mutate: saveSettings, isPending: isSaving } = useMutation({
+    mutationFn: async (newSettings: Partial<ChatSettingsData>) => {
+      const updatedSettings = {
         contextSettings,
         webSearchEnabled,
         selectedStyle,
@@ -81,48 +87,42 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
         gmailConnected,
         ...newSettings,
       };
-
-      await newRequest.put('/chat-settings', settings);
-      showSaveIndicator(settingName);
-    } catch (error) {
-      console.error('Failed to save settings:', error);
+      await newRequest.put('/chat-settings', updatedSettings);
+      return updatedSettings;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chatSettings'] });
+    },
+    onError: () => {
       toast({
         title: 'Error',
         description: 'Failed to save settings.',
         variant: 'destructive',
       });
-    } finally {
-      setIsSaving(false);
-    }
-  };
+    },
+  });
 
-  const resetSettings = async () => {
-    try {
-      setIsLoading(true);
+  // Reset settings mutation
+  const { mutate: resetSettingsMutation, isPending: isResetting } = useMutation({
+    mutationFn: async () => {
       const response = await newRequest.delete('/chat-settings');
-      const defaultSettings = response.data.data;
-
-      setContextSettings(defaultSettings.contextSettings || '');
-      setWebSearchEnabled(defaultSettings.webSearchEnabled);
-      setSelectedStyle(defaultSettings.selectedStyle || 'default');
-      setSelectedModel(defaultSettings.selectedModel || 'gpt-4');
-      setGmailConnected(defaultSettings.gmailConnected || false);
-
+      return response.data.data;
+    },
+    onSuccess: (defaultSettings) => {
+      queryClient.invalidateQueries({ queryKey: ['chatSettings'] });
       toast({
         title: 'Success',
         description: 'Settings reset to defaults.',
       });
-    } catch (error) {
-      console.error('Failed to reset settings:', error);
+    },
+    onError: () => {
       toast({
         title: 'Error',
         description: 'Failed to reset settings.',
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+  });
 
   const showSaveIndicator = (setting: string) => {
     setSaveIndicator((prev) => {
@@ -133,6 +133,14 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
         return { ...prev, [setting]: false };
       });
     }, 2000);
+  };
+
+  const handleUpdateSetting = (settingName: string, newSettings: Partial<ChatSettingsData>) => {
+    saveSettings(newSettings, {
+      onSuccess: () => {
+        return showSaveIndicator(settingName);
+      },
+    });
   };
 
   const handleContextSettingsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -146,7 +154,7 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
 
     // Set a new timeout to save after user stops typing (500ms)
     contextDebounceTimeout.current = setTimeout(() => {
-      saveSettings('context', { contextSettings: newValue });
+      handleUpdateSetting('context', { contextSettings: newValue });
     }, 500);
   };
 
@@ -161,23 +169,23 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
 
   const handleWebSearchChange = (value: boolean) => {
     setWebSearchEnabled(value);
-    saveSettings('webSearch', { webSearchEnabled: value });
+    handleUpdateSetting('webSearch', { webSearchEnabled: value });
   };
 
   const handleStyleChange = (value: string) => {
     setSelectedStyle(value);
-    saveSettings('style', { selectedStyle: value });
+    handleUpdateSetting('style', { selectedStyle: value });
   };
 
   const handleModelChange = (value: string) => {
     setSelectedModel(value);
-    saveSettings('model', { selectedModel: value });
+    handleUpdateSetting('model', { selectedModel: value });
   };
 
   const handleGmailConnectionChange = () => {
     const newValue = !gmailConnected;
     setGmailConnected(newValue);
-    saveSettings('gmail', { gmailConnected: newValue });
+    handleUpdateSetting('gmail', { gmailConnected: newValue });
   };
 
   const SaveIndicator = ({ setting }: { setting: string }) => {
@@ -214,8 +222,10 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
             <Button
               variant='outline'
               size='sm'
-              onClick={resetSettings}
-              disabled={isSaving}
+              onClick={() => {
+                return resetSettingsMutation();
+              }}
+              disabled={isSaving || isResetting}
               className='flex items-center'
             >
               <RotateCcw className='h-4 w-4 mr-1' />
