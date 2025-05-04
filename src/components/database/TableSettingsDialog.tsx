@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { newRequest } from '@/utils/newRequest';
 import { useQueryClient } from '@tanstack/react-query';
 import { GripVertical, Settings } from 'lucide-react';
@@ -109,6 +110,7 @@ export function TableSettingsDialog({
   const [open, setOpen] = useState(false);
   const [tableName, setTableName] = useState('');
   const [columns, setColumns] = useState([]);
+  const [aiPromptGuide, setAiPromptGuide] = useState('');
   const queryClient = useQueryClient();
 
   // Configure DnD sensors
@@ -123,6 +125,7 @@ export function TableSettingsDialog({
     if (currentTableData) {
       setTableName(currentTableData.name || '');
       setColumns(currentTableData.columns || []);
+      setAiPromptGuide(currentTableData.aiPromptGuide || '');
     }
   }, [currentTableData, open]);
 
@@ -209,6 +212,23 @@ export function TableSettingsDialog({
     }
   };
 
+  const handleUpdateAiPromptGuide = async () => {
+    if (!tableId) return;
+
+    try {
+      await newRequest.put(`/tables/${tableId}/updateTable`, {
+        aiPromptGuide,
+      });
+
+      toast.success('AI Prompt Guide updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['tables'] });
+      queryClient.invalidateQueries({ queryKey: ['table', tableId] });
+    } catch (error) {
+      console.error('Failed to update AI Prompt Guide:', error);
+      toast.error('Failed to update AI Prompt Guide');
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -228,6 +248,7 @@ export function TableSettingsDialog({
           <TabsList className='mb-4'>
             <TabsTrigger value='general'>General</TabsTrigger>
             <TabsTrigger value='columns'>Columns</TabsTrigger>
+            <TabsTrigger value='ai-prompt'>AI Prompt Guide</TabsTrigger>
           </TabsList>
 
           {/* General Tab */}
@@ -289,6 +310,28 @@ export function TableSettingsDialog({
                 </div>
               </SortableContext>
             </DndContext>
+          </TabsContent>
+
+          {/* AI Prompt Guide Tab */}
+          <TabsContent value='ai-prompt' className='space-y-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='aiPromptGuide'>AI Prompt Guide</Label>
+              <div className='text-sm text-muted-foreground mb-2'>
+                Specific guidance for AI on how to interpret and respond to queries about this
+                table. Can include information about data structure, purpose, relationships to other
+                tables, and usage guidelines.
+              </div>
+              <Textarea
+                id='aiPromptGuide'
+                value={aiPromptGuide}
+                onChange={(e) => {
+                  return setAiPromptGuide(e.target.value);
+                }}
+                placeholder='Enter guidance for AI on how to interpret this table...'
+                className='min-h-[200px]'
+              />
+              <Button onClick={handleUpdateAiPromptGuide}>Save</Button>
+            </div>
           </TabsContent>
         </Tabs>
 
