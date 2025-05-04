@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
+import { TableSettingsDialog } from './TableSettingsDialog';
 import { XlsxImportDialog } from './XlsxImportDialog';
 
 interface TableToolbarProps {
@@ -33,6 +34,10 @@ interface TableToolbarProps {
   handleAddColumn: () => void;
   handleDeleteSelected: () => void;
   handleImportData?: (data: { columns: string[]; rows: any[]; sheetName?: string }) => void;
+  tableId: string;
+  currentTableData: any;
+  setColumnOrder: (order: string[]) => void;
+  renameColumn: (columnId: string, newName: string) => void;
 }
 
 export function TableToolbar({
@@ -47,9 +52,12 @@ export function TableToolbar({
   handleAddColumn,
   handleDeleteSelected,
   handleImportData,
+  tableId,
+  currentTableData,
+  setColumnOrder,
+  renameColumn,
 }: TableToolbarProps) {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-
   const handleOpenImportDialog = () => {
     setIsImportDialogOpen(true);
   };
@@ -128,7 +136,13 @@ export function TableToolbar({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-
+        {/* Table Settings Dialog */}
+        <TableSettingsDialog
+          tableId={tableId as string}
+          currentTableData={currentTableData}
+          onColumnsReordered={setColumnOrder}
+          onColumnRenamed={renameColumn}
+        />
         <div className='relative'>
           <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
           <Input

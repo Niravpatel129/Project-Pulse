@@ -531,6 +531,10 @@ export default function TablePage() {
         handleAddColumn={handleAddColumn}
         handleDeleteSelected={handleDeleteSelectedCallback}
         handleImportData={handleImportData}
+        tableId={params.tableId as string}
+        currentTableData={currentTableData}
+        setColumnOrder={setColumnOrder}
+        renameColumn={renameColumn}
       />
 
       <FilterPanel
