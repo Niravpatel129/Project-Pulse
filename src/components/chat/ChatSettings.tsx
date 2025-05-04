@@ -221,7 +221,7 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
   }
 
   return (
-    <div className='flex flex-col h-full relative'>
+    <div className='flex flex-col h-full relative bg-white'>
       <div className='flex-1 p-6 overflow-y-auto'>
         <div className='space-y-6'>
           <div className='flex justify-between items-center mb-4'>
