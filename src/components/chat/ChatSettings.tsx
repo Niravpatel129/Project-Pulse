@@ -13,7 +13,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, RotateCcw } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 
 interface ChatSettingsProps {
   onClose: () => void;
@@ -26,6 +26,49 @@ interface ChatSettingsData {
   selectedModel: string;
   gmailConnected: boolean;
 }
+
+interface ContextTextareaProps {
+  value: string;
+  onChange: (value: string) => void;
+  disabled: boolean;
+  showSaveIndicator: boolean;
+}
+
+const ContextTextarea = memo(
+  ({ value, onChange, disabled, showSaveIndicator }: ContextTextareaProps) => {
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      onChange(e.target.value);
+    };
+
+    return (
+      <div className='space-y-2'>
+        <div className='flex items-center justify-between'>
+          <Label htmlFor='panel-context'>Context Information</Label>
+          <span
+            className={`text-xs text-green-600 flex items-center transition-opacity duration-300 ${
+              showSaveIndicator ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <Check className='h-3 w-3 mr-1' /> Saved
+          </span>
+        </div>
+        <Textarea
+          id='panel-context'
+          placeholder='Enter information about your project, preferences, or any context that would help the AI assistant better understand your needs...'
+          className='h-24 text-sm resize-none'
+          value={value}
+          onChange={handleChange}
+          disabled={disabled}
+        />
+        <p className='text-xs text-muted-foreground'>
+          This context is included with every message sent to the AI.
+        </p>
+      </div>
+    );
+  },
+);
+
+ContextTextarea.displayName = 'ContextTextarea';
 
 export function ChatSettings({ onClose }: ChatSettingsProps) {
   // React Query client
@@ -43,13 +86,17 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
     queryKey: ['chatSettings'],
     queryFn: async () => {
       const response = await newRequest.get('/chat-settings');
+      console.log('🚀 response:', response);
+      setContextSettings(response.data.data.contextSettings);
+      setWebSearchEnabled(response.data.data.webSearchEnabled);
+      setSelectedStyle(response.data.data.selectedStyle);
+      setSelectedModel(response.data.data.selectedModel);
       return (
         response.data.data || {
-          contextSettings: '',
+          contextSettings: response.data.data.contextSettings,
           webSearchEnabled: true,
           selectedStyle: 'default',
           selectedModel: 'gpt-4',
-          gmailConnected: false,
         }
       );
     },
@@ -71,7 +118,6 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
   const [webSearchEnabled, setWebSearchEnabled] = useState(true);
   const [selectedStyle, setSelectedStyle] = useState('default');
   const [selectedModel, setSelectedModel] = useState('gpt-4');
-  const [gmailConnected, setGmailConnected] = useState(false);
 
   // Save settings mutation
   const { mutate: saveSettings, isPending: isSaving } = useMutation({
@@ -81,7 +127,6 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
         webSearchEnabled,
         selectedStyle,
         selectedModel,
-        gmailConnected,
         ...newSettings,
       };
       await newRequest.put('/chat-settings', updatedSettings);
@@ -140,8 +185,7 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
     });
   };
 
-  const handleContextSettingsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value;
+  const handleContextSettingsChange = (newValue: string) => {
     setContextSettings(newValue);
 
     // Clear the previous timeout if it exists
@@ -177,12 +221,6 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
   const handleModelChange = (value: string) => {
     setSelectedModel(value);
     handleUpdateSetting('model', { selectedModel: value });
-  };
-
-  const handleGmailConnectionChange = () => {
-    const newValue = !gmailConnected;
-    setGmailConnected(newValue);
-    handleUpdateSetting('gmail', { gmailConnected: newValue });
   };
 
   const SaveIndicator = ({ setting }: { setting: string }) => {
@@ -231,23 +269,12 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
           </div>
 
           {/* Context Settings */}
-          <div className='space-y-2'>
-            <div className='flex items-center justify-between'>
-              <Label htmlFor='panel-context'>Context Information</Label>
-              <SaveIndicator setting='context' />
-            </div>
-            <Textarea
-              id='panel-context'
-              placeholder='Enter information about your project, preferences, or any context that would help the AI assistant better understand your needs...'
-              className='h-24 text-sm resize-none'
-              value={contextSettings}
-              onChange={handleContextSettingsChange}
-              disabled={isSaving}
-            />
-            <p className='text-xs text-muted-foreground'>
-              This context is included with every message sent to the AI.
-            </p>
-          </div>
+          <ContextTextarea
+            value={contextSettings}
+            onChange={handleContextSettingsChange}
+            disabled={isSaving}
+            showSaveIndicator={saveIndicator['context'] || false}
+          />
 
           {/* Web Search Toggle */}
           <div className='space-y-2'>
