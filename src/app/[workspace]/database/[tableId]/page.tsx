@@ -107,6 +107,7 @@ export default function TablePage() {
     setRowOrder,
     setRecords,
     deleteColumn,
+    currentTableData,
   } = useDatabase([]);
 
   const queryClient = useQueryClient();
@@ -529,6 +530,14 @@ export default function TablePage() {
         handleAddColumn={handleAddColumn}
         handleDeleteSelected={handleDeleteSelectedCallback}
         handleImportData={handleImportData}
+        tableId={params.tableId as string}
+        currentTableData={currentTableData}
+        onColumnsReordered={(newOrder) => {
+          return setColumnOrder(newOrder);
+        }}
+        onColumnRenamed={(columnId, newName) => {
+          return renameColumn(columnId, newName);
+        }}
       />
 
       <FilterPanel
@@ -543,7 +552,6 @@ export default function TablePage() {
         removeFilter={removeFilter}
         clearFilters={clearFilters}
       />
-
       <div className='pt-1 rounded-md shadow-sm'>
         {viewMode === 'table' ? (
           <TableGrid
@@ -581,7 +589,6 @@ export default function TablePage() {
           </div>
         </div>
       </div>
-
       <PropertySheet
         isOpen={isAddColumnSheetOpen}
         onOpenChange={setIsAddColumnSheetOpen}
@@ -605,7 +612,6 @@ export default function TablePage() {
         onAddNewColumn={addNewColumn}
         getIconComponent={getIconComponent}
       />
-
       <ImportProgressOverlay />
     </div>
   );
