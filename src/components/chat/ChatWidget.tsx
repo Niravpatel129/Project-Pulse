@@ -492,7 +492,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
           {/* Chat panel */}
           {isOpen && (
             <div
-              className='fixed inset-0 z-50 pointer-events-none overflow-hidden'
+              className='fixed inset-0 z-40 pointer-events-none overflow-hidden'
               aria-hidden='false'
               style={{
                 contain: 'strict',
@@ -503,6 +503,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
               <div
                 className='absolute inset-0 bg-transparent pointer-events-auto'
                 onClick={toggleChat}
+                style={{ zIndex: -1 }}
               />
 
               {/* The actual chat panel */}
@@ -513,7 +514,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
                   isolation: 'isolate',
                   position: 'fixed',
                   height: '100vh',
-                  zIndex: 999,
+                  zIndex: 50,
                 }}
                 onClick={(e) => {
                   return e.stopPropagation();
@@ -633,10 +634,9 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
             }
 
             /* Create a full isolation barrier between chat panel and main content */
-            .fixed.inset-0.z-50 {
+            .fixed.inset-0.z-40 {
               isolation: isolate;
               contain: layout style size;
-              z-index: 9999 !important;
             }
 
             /* Prevent body scrolling when chat is open on mobile */
