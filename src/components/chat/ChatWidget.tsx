@@ -282,7 +282,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
           {/* Text Input */}
           <div
             className={cn(
-              'flex flex-col rounded-md border bg-background overflow-hidden relative',
+              'flex flex-col bg-background overflow-hidden relative border-[#e6e3e2] border-2 rounded-lg',
               selectedMentions.length > 0 && 'rounded-t-none border-t-0',
             )}
           >
