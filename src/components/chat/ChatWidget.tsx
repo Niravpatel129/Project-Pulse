@@ -887,11 +887,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
         </div>
 
         {/* Messages */}
-        <ScrollArea
-          className='flex-1 p-3 overflow-y-auto !overscroll-contain'
-          ref={scrollAreaRef}
-          style={{ overscrollBehavior: 'contain' }}
-        >
+        <ScrollArea className='flex-1 p-3 overflow-y-auto' ref={scrollAreaRef}>
           <div className='flex flex-col gap-3'>
             <MessageList />
           </div>
