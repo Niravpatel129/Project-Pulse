@@ -12,7 +12,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { newRequest, streamRequest } from '@/utils/newRequest';
-import { AtSign, MessageCircle, Paperclip, Send, Trash2, X } from 'lucide-react';
+import { MessageCircle, Send, Trash2, X } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -25,6 +25,7 @@ type Message = {
   sender: 'user' | 'ai';
   timestamp: Date;
   isStreaming?: boolean;
+  mentions?: TableInfo[];
 };
 
 type TableInfo = {
@@ -52,6 +53,8 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
   const [showMentions, setShowMentions] = useState(false);
   const [mentionFilter, setMentionFilter] = useState('');
   const [tables, setTables] = useState<TableInfo[]>([]);
+  const [selectedMentions, setSelectedMentions] = useState<TableInfo[]>([]);
+  const isSendingRef = useRef(false);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const mentionTriggerRef = useRef<HTMLButtonElement>(null);
@@ -96,7 +99,23 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
   // Scroll to bottom helper
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
+      // Save focus state
+      const activeElement = document.activeElement;
+      const selectionStart = inputRef.current?.selectionStart;
+      const selectionEnd = inputRef.current?.selectionEnd;
+
       messagesEndRef.current.scrollIntoView({ behavior: 'instant' });
+
+      // Restore focus if it was on input
+      if (activeElement === inputRef.current && inputRef.current) {
+        requestAnimationFrame(() => {
+          inputRef.current?.focus();
+          // Restore cursor position if available
+          if (selectionStart !== undefined && selectionEnd !== undefined) {
+            inputRef.current.setSelectionRange(selectionStart, selectionEnd);
+          }
+        });
+      }
     }
   }, []);
 
@@ -204,14 +223,51 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     const beforeCursor = value.substring(0, pos);
     const match = beforeCursor.match(/@([^\s@]*)$/);
 
-    if (match) {
-      const newFilter = match[1]?.toLowerCase() || '';
+    // Detect if we need to show mentions without state updates
+    const shouldShowMentions = !!match;
+    const newFilter = match ? match[1]?.toLowerCase() || '' : '';
+
+    // Only update state if something changed to minimize re-renders
+    if (shouldShowMentions !== showMentions) {
+      // Record active element before state update
+      const activeElement = document.activeElement;
+      const cursorPos = inputRef.current?.selectionStart || 0;
+
+      // Batch state updates
+      if (shouldShowMentions) {
+        setMentionFilter(newFilter);
+        setShowMentions(true);
+      } else {
+        setShowMentions(false);
+      }
+
+      // Restore focus after state update via rAF
+      requestAnimationFrame(() => {
+        if (activeElement === inputRef.current && inputRef.current) {
+          inputRef.current.focus();
+          inputRef.current.setSelectionRange(cursorPos, cursorPos);
+        }
+      });
+    } else if (shouldShowMentions && newFilter !== mentionFilter) {
+      // Just update filter if dropdown is already showing
       setMentionFilter(newFilter);
-      setShowMentions(true);
-    } else if (showMentions) {
-      setShowMentions(false);
     }
   };
+
+  // Add an effect to ensure input focus is maintained when mentions dropdown appears
+  useEffect(() => {
+    // When mentions dropdown state changes, ensure we keep focus
+    if (showMentions && inputRef.current) {
+      const cursorPos = cursorPositionRef.current;
+      // Use rAF to ensure focus happens after render is complete
+      requestAnimationFrame(() => {
+        if (inputRef.current && document.activeElement !== inputRef.current) {
+          inputRef.current.focus();
+          inputRef.current.setSelectionRange(cursorPos, cursorPos);
+        }
+      });
+    }
+  }, [showMentions]);
 
   // Handle @ button click
   const handleAtButtonClick = () => {
@@ -241,41 +297,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     setMentionFilter('');
   };
 
-  // Handle mention selection
-  const handleSelectMention = (tableName: string) => {
-    if (!inputRef.current) return;
-
-    const value = inputRef.current.value;
-    const cursorPos = cursorPositionRef.current;
-    const beforeCursor = value.substring(0, cursorPos);
-    const match = beforeCursor.match(/@([^\s@]*)$/);
-
-    let newValue = '';
-    let newPosition = 0;
-
-    if (match) {
-      const start = beforeCursor.lastIndexOf('@');
-      newValue = value.substring(0, start) + `@${tableName} ` + value.substring(cursorPos);
-      newPosition = start + tableName.length + 2; // +2 for @ and space
-    } else {
-      newValue = value.substring(0, cursorPos) + `@${tableName} ` + value.substring(cursorPos);
-      newPosition = cursorPos + tableName.length + 2;
-    }
-
-    // Update refs and input directly
-    inputValueRef.current = newValue;
-    inputRef.current.value = newValue;
-    cursorPositionRef.current = newPosition;
-
-    // Update cursor position in the DOM
-    inputRef.current.focus();
-    inputRef.current.setSelectionRange(newPosition, newPosition);
-
-    // Close mentions dropdown
-    setShowMentions(false);
-  };
-
-  // Send message on Enter key
+  // KeyDown handler for textarea
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -293,7 +315,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     }
   };
 
-  // Clear conversation history
+  // Clear conversation handler
   const clearConversation = async () => {
     if (!sessionId || isLoading) return;
 
@@ -302,6 +324,13 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
       await newRequest.delete(`/ai/chat/history/${sessionId}`);
       setMessages([]);
       contentAccumulatorRef.current = {};
+      if (inputRef.current) {
+        inputRef.current.value = '';
+        inputValueRef.current = '';
+        cursorPositionRef.current = 0;
+      }
+      setSelectedMentions([]);
+      setSessionId(null);
     } catch (error) {
       console.error('Error clearing conversation:', error);
     } finally {
@@ -310,7 +339,14 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
   };
 
   // Stream response from AI
-  const setupStreamConnection = (userMessageId: string, messageContent: string) => {
+  const setupStreamConnection = (
+    userMessageId: string,
+    messageContent: string,
+    mentionsForAPI: string[] = [],
+  ) => {
+    // Track if input had focus before we start streaming
+    const inputHadFocus = document.activeElement === inputRef.current;
+
     // Cancel ongoing requests
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -347,12 +383,18 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
           message: messageContent,
           sessionId: sessionId,
           pageContext: pageContext || null,
+          mentions: mentionsForAPI.length > 0 ? mentionsForAPI : undefined,
         },
         onStart: (data) => {
           // Save session ID
           if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
             setSessionId(data.sessionId);
             localStorage.setItem('chatSessionId', data.sessionId);
+          }
+
+          // Restore focus if input had focus before streaming
+          if (inputHadFocus && inputRef.current) {
+            inputRef.current.focus();
           }
         },
         onChunk: (data) => {
@@ -366,7 +408,15 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
           if (streamElement) {
             streamElement.textContent = contentAccumulatorRef.current[streamMessageId];
             if (!userScrollingRef.current) {
+              // Save focus state
+              const activeElement = document.activeElement;
               scrollToBottom();
+              // Restore focus if it was on the input
+              if (activeElement === inputRef.current && inputRef.current) {
+                requestAnimationFrame(() => {
+                  inputRef.current?.focus();
+                });
+              }
             }
           } else {
             // Fallback to React state update
@@ -378,8 +428,16 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
                 return msg;
               });
             });
+
+            // Restore focus if needed
+            if (inputHadFocus && inputRef.current && document.activeElement !== inputRef.current) {
+              requestAnimationFrame(() => {
+                inputRef.current?.focus();
+              });
+            }
           }
         },
+
         onEnd: () => {
           // Final update with complete content
           setMessages((prev) => {
@@ -398,7 +456,19 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
           setIsStreaming(false);
           setIsLoading(false);
           abortControllerRef.current = null;
-          setTimeout(scrollToBottom, 50);
+
+          // Save focus state before scrolling
+          const focusWasOnInput = document.activeElement === inputRef.current;
+
+          setTimeout(() => {
+            scrollToBottom();
+            // Restore focus if it was on input
+            if ((focusWasOnInput || inputHadFocus) && inputRef.current) {
+              requestAnimationFrame(() => {
+                inputRef.current?.focus();
+              });
+            }
+          }, 50);
         },
         onError: (error) => {
           console.error('Error in stream:', error);
@@ -420,6 +490,13 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
           setIsStreaming(false);
           setIsLoading(false);
           abortControllerRef.current = null;
+
+          // Restore focus if input had focus before error
+          if (inputHadFocus && inputRef.current) {
+            requestAnimationFrame(() => {
+              inputRef.current?.focus();
+            });
+          }
         },
       });
 
@@ -458,14 +535,39 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     if (!inputRef.current) return;
 
     const messageContent = inputRef.current.value.trim();
-    if (!messageContent || isLoading) return;
+    if ((!messageContent && selectedMentions.length === 0) || isSendingRef.current) return;
 
-    // Create user message
+    // If we're streaming, cancel the current stream
+    if (isStreaming && abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      // Add a note to the last AI message that it was interrupted
+      setMessages((prev) => {
+        const lastMessage = prev[prev.length - 1];
+        if (lastMessage && lastMessage.sender === 'ai' && lastMessage.isStreaming) {
+          return [
+            ...prev.slice(0, -1),
+            {
+              ...lastMessage,
+              content: lastMessage.content + '\n\n*Message interrupted*',
+              isStreaming: false,
+            },
+          ];
+        }
+        return prev;
+      });
+      setIsStreaming(false);
+    }
+
+    // Set sending flag
+    isSendingRef.current = true;
+
+    // Create user message with mentions
     const userMessage: Message = {
       id: Date.now().toString(),
       content: messageContent,
       sender: 'user',
       timestamp: new Date(),
+      mentions: selectedMentions.length > 0 ? [...selectedMentions] : undefined,
     };
 
     // Add to messages
@@ -473,18 +575,26 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
       return [...prev, userMessage];
     });
 
-    // Clear input (both ref and DOM element)
+    // Clear input and mentions
     inputValueRef.current = '';
     inputRef.current.value = '';
     cursorPositionRef.current = 0;
+    setSelectedMentions([]);
 
+    // Set loading state but allow typing
     setIsLoading(true);
     userScrollingRef.current = false;
     setTimeout(scrollToBottom, 50);
 
     try {
-      // Stream response
-      setupStreamConnection(userMessage.id, messageContent);
+      // Stream response - prepare content for API with mentions included
+      const apiMessageContent = messageContent;
+      const mentionsForAPI = selectedMentions.map((m) => {
+        return m.name;
+      });
+
+      // Stream response - modify to include mentions
+      setupStreamConnection(userMessage.id, messageContent, mentionsForAPI);
     } catch (error) {
       console.error('Error sending message:', error);
 
@@ -500,6 +610,9 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
         return [...prev, errorMessage];
       });
       setIsLoading(false);
+    } finally {
+      // Clear sending flag
+      isSendingRef.current = false;
     }
   };
 
@@ -533,25 +646,43 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
           message.sender === 'user' ? 'ml-auto bg-primary text-primary-foreground' : 'bg-muted',
         )}
       >
-        {message.sender === 'ai' ? (
-          <div className='text-sm leading-relaxed prose prose-sm dark:prose-invert prose-p:my-1 prose-pre:bg-zinc-800 prose-pre:dark:bg-zinc-900 prose-pre:p-2 prose-pre:rounded prose-code:text-xs prose-code:bg-zinc-200 prose-code:dark:bg-zinc-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[""] prose-code:after:content-[""] prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-table:border-collapse prose-table:w-full prose-td:border prose-td:p-2 prose-th:border prose-th:p-2 prose-th:bg-muted max-w-full'>
-            {message.isStreaming ? (
-              <>
-                <div
-                  id={`stream-content-${message.id.replace('ai-', '')}`}
-                  className='whitespace-pre-wrap'
-                >
-                  {message.content}
-                </div>
-                <span className='inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse'></span>
-              </>
-            ) : (
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
-            )}
-          </div>
-        ) : (
-          <p className='text-sm leading-relaxed'>{message.content}</p>
-        )}
+        <div className='flex flex-col w-full'>
+          {/* Show mentions as tags if present */}
+          {message.mentions && message.mentions.length > 0 && (
+            <div className='flex flex-wrap gap-1 mb-2'>
+              {message.mentions.map((mention) => {
+                return (
+                  <div
+                    key={mention.id}
+                    className='px-2 py-0.5 text-xs rounded-full bg-primary-foreground/20 flex items-center'
+                  >
+                    <span>@{mention.name}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {message.sender === 'ai' ? (
+            <div className='text-sm leading-relaxed prose prose-sm dark:prose-invert prose-p:my-1 prose-pre:bg-zinc-800 prose-pre:dark:bg-zinc-900 prose-pre:p-2 prose-pre:rounded prose-code:text-xs prose-code:bg-zinc-200 prose-code:dark:bg-zinc-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[""] prose-code:after:content-[""] prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-table:border-collapse prose-table:w-full prose-td:border prose-td:p-2 prose-th:border prose-th:p-2 prose-th:bg-muted max-w-full'>
+              {message.isStreaming ? (
+                <>
+                  <div
+                    id={`stream-content-${message.id.replace('ai-', '')}`}
+                    className='whitespace-pre-wrap'
+                  >
+                    {message.content}
+                  </div>
+                  <span className='inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse'></span>
+                </>
+              ) : (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+              )}
+            </div>
+          ) : (
+            <p className='text-sm leading-relaxed'>{message.content}</p>
+          )}
+        </div>
       </div>
     );
   });
@@ -582,58 +713,92 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     return (
       <div className='p-3 border-t'>
         <div className='relative'>
+          {/* Selected Mentions Tags */}
+          {selectedMentions.length > 0 && (
+            <div className='flex flex-wrap gap-1 p-2 bg-background rounded-t-md border-t border-x'>
+              {selectedMentions.map((mention) => {
+                return (
+                  <div
+                    key={mention.id}
+                    className='px-2 py-1 text-xs rounded-full bg-primary/10 flex items-center gap-1'
+                  >
+                    <span>@{mention.name}</span>
+                    <button
+                      onClick={() => {
+                        return removeMention(mention.id);
+                      }}
+                      className='h-4 w-4 rounded-full hover:bg-muted flex items-center justify-center'
+                    >
+                      <X className='h-3 w-3' />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           {/* Text Input */}
-          <div className='flex flex-col rounded-md border bg-background overflow-hidden'>
+          <div
+            className={cn(
+              'flex flex-col rounded-md border bg-background overflow-hidden',
+              selectedMentions.length > 0 && 'rounded-t-none border-t-0',
+            )}
+          >
             <TextareaAutosize
               ref={inputRef}
               // Use defaultValue instead of value to make this an uncontrolled component
               defaultValue=''
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder='Type a message...'
+              placeholder={isStreaming ? 'Type to queue next message...' : 'Type a message...'}
               className='min-h-[56px] resize-none flex-1 px-3 pt-3 pb-9 text-sm bg-transparent border-none ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
-              disabled={isLoading}
+              disabled={isSendingRef.current}
               maxRows={6}
             />
 
             {/* Controls */}
             <div className='absolute bottom-0 left-0 right-0 p-1.5 flex items-center justify-between border-t bg-muted/50'>
               <div className='flex items-center gap-1'>
-                {/* @ Mention Button */}
-                <Button
-                  ref={mentionTriggerRef}
-                  variant='ghost'
-                  size='icon'
-                  className='h-7 w-7 rounded-full text-muted-foreground hover:text-foreground'
-                  onClick={handleAtButtonClick}
-                  title='Mention a table'
-                >
-                  <AtSign className='h-4 w-4' />
-                </Button>
-
-                {/* Attachment Button (placeholder) */}
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className='h-7 w-7 rounded-full text-muted-foreground hover:text-foreground'
-                  title='Add attachment'
-                >
-                  <Paperclip className='h-4 w-4' />
-                </Button>
+                {isStreaming && (
+                  <Button
+                    onClick={() => {
+                      if (abortControllerRef.current) {
+                        abortControllerRef.current.abort();
+                        setMessages((prev) => {
+                          const lastMessage = prev[prev.length - 1];
+                          if (
+                            lastMessage &&
+                            lastMessage.sender === 'ai' &&
+                            lastMessage.isStreaming
+                          ) {
+                            return [
+                              ...prev.slice(0, -1),
+                              {
+                                ...lastMessage,
+                                content: lastMessage.content + '\n\n*Message interrupted*',
+                                isStreaming: false,
+                              },
+                            ];
+                          }
+                          return prev;
+                        });
+                        setIsStreaming(false);
+                      }
+                    }}
+                    variant='ghost'
+                    size='sm'
+                    className='text-destructive'
+                  >
+                    <X className='h-3.5 w-3.5 mr-1' />
+                    <span className='text-xs'>Stop</span>
+                  </Button>
+                )}
               </div>
 
               {/* Send Button */}
-              <Button
-                onClick={handleSendMessage}
-                size='sm'
-                className={cn(
-                  'h-7 rounded-full px-3',
-                  (!inputRef.current?.value.trim() || isLoading) && 'opacity-50 cursor-not-allowed',
-                )}
-                disabled={!inputRef.current?.value.trim() || isLoading}
-              >
+              <Button onClick={handleSendMessage} size='sm' disabled={isSendingRef.current}>
                 <Send className='h-3.5 w-3.5 mr-1' />
-                <span className='text-xs'>Send</span>
+                <span className='text-xs'>{isStreaming ? 'Interrupt & Send' : 'Send'}</span>
               </Button>
             </div>
           </div>
@@ -722,7 +887,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
         </div>
 
         {/* Messages */}
-        <ScrollArea className='flex-1 p-3' ref={scrollAreaRef}>
+        <ScrollArea className='flex-1 p-3 overflow-y-auto' ref={scrollAreaRef}>
           <div className='flex flex-col gap-3'>
             <MessageList />
           </div>
@@ -784,7 +949,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     return (
       <div className='fixed inset-0 z-40 pointer-events-none'>
         <PanelGroup direction='horizontal' onLayout={handleResize} autoSaveId='chat-panel-layout'>
-          <Panel defaultSize={80} minSize={50} className='pointer-events-none'>
+          <Panel defaultSize={50} minSize={50} className='pointer-events-none'>
             <div className='invisible h-full'>Content space</div>
           </Panel>
 
@@ -804,6 +969,43 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
         </PanelGroup>
       </div>
     );
+  };
+
+  // Handle mention selection
+  const handleSelectMention = (tableName: string) => {
+    if (!inputRef.current) return;
+
+    // Find the selected table
+    const selectedTable = tables.find((table) => {
+      return table.name === tableName;
+    });
+    if (!selectedTable) return;
+
+    // Add to selected mentions if not already there
+    if (
+      !selectedMentions.some((mention) => {
+        return mention.id === selectedTable.id;
+      })
+    ) {
+      setSelectedMentions((prev) => {
+        return [...prev, selectedTable];
+      });
+    }
+
+    // Close mentions dropdown
+    setShowMentions(false);
+
+    // Focus back on input
+    inputRef.current.focus();
+  };
+
+  // Remove a selected mention
+  const removeMention = (tableId: string) => {
+    setSelectedMentions((prev) => {
+      return prev.filter((mention) => {
+        return mention.id !== tableId;
+      });
+    });
   };
 
   return (
