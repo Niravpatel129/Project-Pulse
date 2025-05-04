@@ -57,16 +57,8 @@ const MessageContent: FC<{
 }> = ({ content, isStreaming, id }) => {
   return (
     <Prose className='max-w-full'>
-      {isStreaming ? (
-        <>
-          <div id={`stream-${id}`} className='whitespace-pre-wrap'>
-            {content}
-          </div>
-          <span className='inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse' />
-        </>
-      ) : (
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-      )}
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+      {isStreaming && <span className='inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse' />}
     </Prose>
   );
 };
