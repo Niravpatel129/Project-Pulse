@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { Check } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface ChatSettingsProps {
@@ -21,7 +22,7 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
   const [webSearchEnabled, setWebSearchEnabled] = useState(true);
   const [selectedStyle, setSelectedStyle] = useState('default');
   const [selectedModel, setSelectedModel] = useState('gpt-4');
-  const [gmailConnected, setGmailConnected] = useState(false);
+  const [saveIndicator, setSaveIndicator] = useState<{ [key: string]: boolean }>({});
 
   // Load settings on initial render
   useEffect(() => {
@@ -39,23 +40,50 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
 
       const savedModel = localStorage.getItem('chat-selected-model');
       if (savedModel) setSelectedModel(savedModel);
-
-      const savedGmailConnected = localStorage.getItem('chat-gmail-connected');
-      if (savedGmailConnected !== null) setGmailConnected(savedGmailConnected === 'true');
     }
   }, []);
 
-  const handleContextSettingsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContextSettings(e.target.value);
+  const showSaveIndicator = (setting: string) => {
+    setSaveIndicator((prev) => {
+      return { ...prev, [setting]: true };
+    });
+    setTimeout(() => {
+      setSaveIndicator((prev) => {
+        return { ...prev, [setting]: false };
+      });
+    }, 2000);
   };
 
-  const saveSettings = () => {
-    localStorage.setItem('chat-context-settings', contextSettings);
-    localStorage.setItem('chat-web-search-enabled', webSearchEnabled.toString());
-    localStorage.setItem('chat-selected-style', selectedStyle);
-    localStorage.setItem('chat-selected-model', selectedModel);
-    localStorage.setItem('chat-gmail-connected', gmailConnected.toString());
-    onClose();
+  const handleContextSettingsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setContextSettings(newValue);
+    localStorage.setItem('chat-context-settings', newValue);
+    showSaveIndicator('context');
+  };
+
+  const handleWebSearchChange = (value: boolean) => {
+    setWebSearchEnabled(value);
+    localStorage.setItem('chat-web-search-enabled', value.toString());
+    showSaveIndicator('webSearch');
+  };
+
+  const handleStyleChange = (value: string) => {
+    setSelectedStyle(value);
+    localStorage.setItem('chat-selected-style', value);
+    showSaveIndicator('style');
+  };
+
+  const handleModelChange = (value: string) => {
+    setSelectedModel(value);
+    localStorage.setItem('chat-selected-model', value);
+    showSaveIndicator('model');
+  };
+
+  const handleGmailConnectionChange = () => {
+    const newValue = !gmailConnected;
+    setGmailConnected(newValue);
+    localStorage.setItem('chat-gmail-connected', newValue.toString());
+    showSaveIndicator('gmail');
   };
 
   return (
@@ -65,13 +93,20 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
           <div>
             <h3 className='text-lg font-medium mb-1'>Assistant Settings</h3>
             <p className='text-sm text-muted-foreground mb-4'>
-              Customize how your AI assistant works
+              Customize how your AI assistant works. Changes are saved automatically.
             </p>
           </div>
 
           {/* Context Settings */}
           <div className='space-y-2'>
-            <Label htmlFor='panel-context'>Context Information</Label>
+            <div className='flex items-center justify-between'>
+              <Label htmlFor='panel-context'>Context Information</Label>
+              {saveIndicator.context && (
+                <span className='text-xs text-green-600 flex items-center'>
+                  <Check className='h-3 w-3 mr-1' /> Saved
+                </span>
+              )}
+            </div>
             <Textarea
               id='panel-context'
               placeholder='Enter information about your project, preferences, or any context that would help the AI assistant better understand your needs...'
@@ -90,11 +125,18 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
               <Label htmlFor='web-search' className='flex items-center gap-2'>
                 <span>Search the Web</span>
               </Label>
-              <Switch
-                id='web-search'
-                checked={webSearchEnabled}
-                onCheckedChange={setWebSearchEnabled}
-              />
+              <div className='flex items-center gap-2'>
+                {saveIndicator.webSearch && (
+                  <span className='text-xs text-green-600 flex items-center'>
+                    <Check className='h-3 w-3 mr-1' /> Saved
+                  </span>
+                )}
+                <Switch
+                  id='web-search'
+                  checked={webSearchEnabled}
+                  onCheckedChange={handleWebSearchChange}
+                />
+              </div>
             </div>
             <p className='text-xs text-muted-foreground'>
               Allow the assistant to search the web for real-time information.
@@ -103,8 +145,15 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
 
           {/* Style Selector */}
           <div className='space-y-2 relative z-10'>
-            <Label htmlFor='style-selector'>Use Style</Label>
-            <Select value={selectedStyle} onValueChange={setSelectedStyle}>
+            <div className='flex items-center justify-between'>
+              <Label htmlFor='style-selector'>Use Style</Label>
+              {saveIndicator.style && (
+                <span className='text-xs text-green-600 flex items-center'>
+                  <Check className='h-3 w-3 mr-1' /> Saved
+                </span>
+              )}
+            </div>
+            <Select value={selectedStyle} onValueChange={handleStyleChange}>
               <SelectTrigger id='style-selector' className='w-full'>
                 <SelectValue placeholder='Select a style' />
               </SelectTrigger>
@@ -121,31 +170,17 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
             </p>
           </div>
 
-          {/* Gmail Connection */}
-          <div className='space-y-2'>
-            <Label>Gmail Search</Label>
-            <div className='flex items-center gap-2'>
-              <Button
-                variant={gmailConnected ? 'outline' : 'default'}
-                onClick={() => {
-                  return setGmailConnected(!gmailConnected);
-                }}
-                className='w-full'
-              >
-                {gmailConnected ? 'Disconnect Gmail' : 'Connect Gmail Account'}
-              </Button>
-            </div>
-            <p className='text-xs text-muted-foreground'>
-              {gmailConnected
-                ? 'Gmail account connected. The assistant can search your emails.'
-                : 'Connect your Gmail account to enable email search capabilities.'}
-            </p>
-          </div>
-
           {/* AI Model Selection */}
           <div className='space-y-2 relative z-[9]'>
-            <Label htmlFor='model-selector'>AI Model</Label>
-            <Select value={selectedModel} onValueChange={setSelectedModel}>
+            <div className='flex items-center justify-between'>
+              <Label htmlFor='model-selector'>AI Model</Label>
+              {saveIndicator.model && (
+                <span className='text-xs text-green-600 flex items-center'>
+                  <Check className='h-3 w-3 mr-1' /> Saved
+                </span>
+              )}
+            </div>
+            <Select value={selectedModel} onValueChange={handleModelChange}>
               <SelectTrigger id='model-selector' className='w-full'>
                 <SelectValue placeholder='Select AI model' />
               </SelectTrigger>
@@ -165,8 +200,8 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
       </div>
 
       <div className='p-4 border-t mt-auto'>
-        <Button onClick={saveSettings} className='w-full'>
-          Save & Close
+        <Button onClick={onClose} className='w-full'>
+          Close
         </Button>
       </div>
     </div>
