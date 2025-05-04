@@ -60,8 +60,9 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     setShowMentions,
   } = useChatWidget(pageContext);
 
-  // Settings dialog state
+  // Settings state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [contextSettings, setContextSettings] = useState('');
 
   // Panel resize state - set default without localStorage for SSR
@@ -90,6 +91,10 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     // Save context settings to localStorage
     localStorage.setItem('chat-context-settings', contextSettings);
     setIsSettingsOpen(false);
+  };
+
+  const toggleSettingsPanel = () => {
+    setShowSettingsPanel(!showSettingsPanel);
   };
 
   // Load settings on initial render
@@ -494,6 +499,36 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     );
   };
 
+  // Settings Panel component
+  const SettingsPanel = () => {
+    return (
+      <div className='flex flex-col gap-4 p-4'>
+        <div className='grid gap-2'>
+          <Label htmlFor='panel-context'>Context Information</Label>
+          <Textarea
+            id='panel-context'
+            placeholder='Enter information you want to include in the AI prompt (e.g., project details, preferences, background information)'
+            className='h-40'
+            value={contextSettings}
+            onChange={handleContextSettingsChange}
+          />
+          <p className='text-xs text-muted-foreground'>
+            This information will be passed to the AI to provide better, more tailored responses.
+          </p>
+        </div>
+
+        <Button
+          onClick={() => {
+            localStorage.setItem('chat-context-settings', contextSettings);
+            setShowSettingsPanel(false);
+          }}
+        >
+          Save Changes
+        </Button>
+      </div>
+    );
+  };
+
   // Render the chat widget
   return (
     <>
@@ -552,28 +587,32 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
                   <AvatarFallback className='bg-primary-foreground text-primary'>AI</AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className='font-medium text-sm'>Pulse Assistant</h3>
-                  <p className='text-xs opacity-90'>How can I help you today?</p>
+                  <h3 className='font-medium text-sm'>
+                    {showSettingsPanel ? 'Settings' : 'Pulse Assistant'}
+                  </h3>
+                  <p className='text-xs opacity-90'>
+                    {showSettingsPanel ? 'Customize your assistant' : 'How can I help you today?'}
+                  </p>
                 </div>
               </div>
               <div className='flex items-center gap-1'>
+                {!showSettingsPanel && (
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='h-7 w-7 rounded-full'
+                    onClick={clearConversation}
+                    disabled={messages.length === 0 || isLoading}
+                    title='Clear conversation'
+                  >
+                    <Trash2 className='h-4 w-4' />
+                  </Button>
+                )}
                 <Button
-                  variant='ghost'
+                  variant={showSettingsPanel ? 'secondary' : 'ghost'}
                   size='icon'
                   className='h-7 w-7 rounded-full'
-                  onClick={clearConversation}
-                  disabled={messages.length === 0 || isLoading}
-                  title='Clear conversation'
-                >
-                  <Trash2 className='h-4 w-4' />
-                </Button>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className='h-7 w-7 rounded-full'
-                  onClick={() => {
-                    return setIsSettingsOpen(true);
-                  }}
+                  onClick={toggleSettingsPanel}
                   title='Settings'
                 >
                   <Settings className='h-4 w-4' />
@@ -590,33 +629,40 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
               </div>
             </div>
 
-            {/* Messages container - using native scrolling instead of ScrollArea */}
-            <div
-              ref={scrollAreaRef}
-              className='flex-1 overflow-y-auto p-3 messages-container'
-              // Prevent touch scrolling from propagating on mobile
-              onTouchStart={(e) => {
-                return e.stopPropagation();
-              }}
-              onTouchMove={(e) => {
-                return e.stopPropagation();
-              }}
-              onTouchEnd={(e) => {
-                return e.stopPropagation();
-              }}
-            >
-              <div className='flex flex-col gap-3'>
-                <MessageList />
-              </div>
-            </div>
+            {/* Messages or Settings container */}
+            {showSettingsPanel ? (
+              <SettingsPanel />
+            ) : (
+              <>
+                {/* Messages container - using native scrolling instead of ScrollArea */}
+                <div
+                  ref={scrollAreaRef}
+                  className='flex-1 overflow-y-auto p-3 messages-container'
+                  // Prevent touch scrolling from propagating on mobile
+                  onTouchStart={(e) => {
+                    return e.stopPropagation();
+                  }}
+                  onTouchMove={(e) => {
+                    return e.stopPropagation();
+                  }}
+                  onTouchEnd={(e) => {
+                    return e.stopPropagation();
+                  }}
+                >
+                  <div className='flex flex-col gap-3'>
+                    <MessageList />
+                  </div>
+                </div>
 
-            {/* Input area */}
-            <ChatInputArea />
+                {/* Input area */}
+                <ChatInputArea />
+              </>
+            )}
           </div>
         </div>
       )}
 
-      {/* Settings Dialog */}
+      {/* Settings Dialog - now used only as a fallback or for specific interactions */}
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         <DialogContent className='sm:max-w-[500px]'>
           <DialogHeader>
