@@ -13,9 +13,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Message, PageContext, useChatWidget } from '@/hooks/useChatWidget';
 import { cn } from '@/lib/utils';
 import { MessageCircle, Send, Trash2, X } from 'lucide-react';
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import TextareaAutosize from 'react-textarea-autosize';
 import remarkGfm from 'remark-gfm';
 
@@ -48,9 +47,84 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     clearConversation,
     handleSelectMention,
     removeMention,
-    handleResize,
     handleStopStreaming,
   } = useChatWidget(pageContext);
+
+  // Panel resize state
+  const [panelWidth, setPanelWidth] = useState(350);
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeStartXRef = useRef(0);
+  const initialWidthRef = useRef(0);
+
+  // Update body padding when chat panel width changes
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.paddingRight = `${panelWidth}px`;
+
+      // Update fixed elements
+      const fixedElements = document.querySelectorAll(
+        'header.fixed, header.sticky, .fixed.top-0, nav.fixed',
+      );
+      fixedElements.forEach((el) => {
+        if (el instanceof HTMLElement) {
+          el.style.width = `calc(100% - ${panelWidth}px)`;
+        }
+      });
+    } else {
+      document.body.style.paddingRight = '0px';
+
+      // Reset fixed elements
+      const fixedElements = document.querySelectorAll(
+        'header.fixed, header.sticky, .fixed.top-0, nav.fixed',
+      );
+      fixedElements.forEach((el) => {
+        if (el instanceof HTMLElement) {
+          el.style.width = '100%';
+        }
+      });
+    }
+  }, [isOpen, panelWidth]);
+
+  // Handle resize start
+  const handleResizeStart = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsResizing(true);
+    resizeStartXRef.current = e.clientX;
+    initialWidthRef.current = panelWidth;
+
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+  };
+
+  // Handle resize events
+  useEffect(() => {
+    const handleResizeMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+
+      const deltaX = resizeStartXRef.current - e.clientX;
+      const newWidth = Math.min(
+        Math.max(initialWidthRef.current + deltaX, 250),
+        window.innerWidth * 0.5,
+      );
+      setPanelWidth(newWidth);
+    };
+
+    const handleResizeEnd = () => {
+      setIsResizing(false);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+
+    if (isResizing) {
+      window.addEventListener('mousemove', handleResizeMove);
+      window.addEventListener('mouseup', handleResizeEnd);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleResizeMove);
+      window.removeEventListener('mouseup', handleResizeEnd);
+    };
+  }, [isResizing]);
 
   // Message component
   const MessageItem = React.memo(({ message }: { message: Message }) => {
@@ -293,26 +367,37 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     if (!isOpen) return null;
 
     return (
-      <div className='fixed inset-0 z-40 pointer-events-none'>
-        <PanelGroup direction='horizontal' onLayout={handleResize} autoSaveId='chat-panel-layout'>
-          <Panel defaultSize={50} minSize={50} className='pointer-events-none'>
-            <div className='invisible h-full'>Content space</div>
-          </Panel>
+      <div className='fixed inset-0 z-40 flex h-screen'>
+        <div className='relative flex flex-grow'>
+          {/* Main content area - empty but takes up space */}
+          <div className='flex-grow'></div>
 
-          <PanelResizeHandle
-            className='w-[1px] bg-border hover:bg-primary cursor-col-resize transition-colors'
-            style={{ pointerEvents: 'auto' }}
-          />
-
-          <Panel
-            defaultSize={20}
-            minSize={15}
-            maxSize={50}
-            className='bg-background border-l shadow-lg pointer-events-auto'
+          {/* Chat panel */}
+          <div
+            id='chat-panel'
+            className={cn(
+              'bg-background border-l shadow-lg h-full flex flex-col relative',
+              isResizing && 'select-none transition-none',
+            )}
+            style={{ width: `${panelWidth}px`, minWidth: '250px', maxWidth: '50vw' }}
           >
+            {/* Custom resize handle */}
+            <div
+              className={cn(
+                'absolute left-0 top-0 bottom-0 w-2 cursor-col-resize transition-colors z-10',
+                isResizing ? 'bg-primary w-3' : 'bg-border hover:bg-primary',
+              )}
+              onMouseDown={handleResizeStart}
+            ></div>
+
+            {/* Overlay when resizing */}
+            {isResizing && (
+              <div className='absolute inset-0 bg-primary/5 z-10 pointer-events-none' />
+            )}
+
             <ChatPanelContent />
-          </Panel>
-        </PanelGroup>
+          </div>
+        </div>
       </div>
     );
   };

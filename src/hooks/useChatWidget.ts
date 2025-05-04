@@ -683,10 +683,20 @@ export function useChatWidget(pageContext?: PageContext) {
 
   // Handle panel resize
   const handleResize = useCallback((sizes: number[]) => {
+    if (!sizes.length) return;
+
+    // Use the first size (left panel) to calculate right panel width
     setLeftSize(sizes[0]);
-    // Apply margin to body based on right panel size
-    const rightPanelWidth = `${100 - sizes[0]}vw`;
+
+    // Simple right panel width calculation
+    const rightPanelVw = 100 - sizes[0];
+    const rightPanelWidth = `${rightPanelVw}vw`;
+
+    // Update CSS variable for content margin
     document.documentElement.style.setProperty('--content-margin-right', rightPanelWidth);
+
+    // Direct body padding update
+    document.body.style.paddingRight = rightPanelWidth;
   }, []);
 
   // Handle stop streaming
