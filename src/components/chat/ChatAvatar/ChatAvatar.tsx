@@ -10,7 +10,7 @@ export default function GoffyFace({
   return (
     <div className='flex flex-col items-center justify-center gap-6'>
       <div
-        className={`relative w-10 h-10 rounded-sm bg-[#8470d8] shadow-lg ${
+        className={`relative w-10 h-10 rounded-sm bg-gradient-to-t from-[#444444] to-[#6f6f6f]  shadow-lg ${
           wiggle ? 'animate-wiggle' : ''
         }`}
         onAnimationEnd={() => {
