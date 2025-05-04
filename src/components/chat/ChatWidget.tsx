@@ -384,8 +384,8 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
             {/* Custom resize handle */}
             <div
               className={cn(
-                'absolute left-0 top-0 bottom-0 w-2 cursor-col-resize transition-colors z-10',
-                isResizing ? 'bg-primary w-3' : 'bg-border hover:bg-primary',
+                'absolute left-0 top-0 bottom-0 cursor-col-resize transition-colors z-10',
+                isResizing ? 'bg-primary w-px' : 'bg-border hover:bg-primary w-px',
               )}
               onMouseDown={handleResizeStart}
             ></div>
