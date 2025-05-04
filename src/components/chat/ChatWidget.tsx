@@ -1,6 +1,5 @@
 'use client';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   Command,
@@ -9,14 +8,14 @@ import {
   CommandInput,
   CommandItem,
 } from '@/components/ui/command';
-import { Message, PageContext, useChatWidget } from '@/hooks/useChatWidget';
+import { PageContext, useChatWidget } from '@/hooks/useChatWidget';
 import { cn } from '@/lib/utils';
-import { Check, Copy, MessageCircle, Send, Settings, Trash2, X } from 'lucide-react';
+import { MessageCircle, Send, Settings, Trash2, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
 import TextareaAutosize from 'react-textarea-autosize';
-import remarkGfm from 'remark-gfm';
+import ChatAvatar from './ChatAvatar/ChatAvatar';
 import ChatSettings from './ChatSettings';
+import MessageItem from './MessageItem';
 
 type ChatWidgetProps = {
   pageContext?: PageContext;
@@ -49,6 +48,8 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     removeMention,
     handleStopStreaming,
     setShowMentions,
+    wiggle,
+    setWiggle,
   } = useChatWidget(pageContext);
 
   // Settings state
@@ -237,85 +238,6 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
       });
     }
   }, [isOpen, panelWidth, isResizing]);
-
-  // Message component
-  const MessageItem = React.memo(({ message }: { message: Message }) => {
-    const messageRef = useRef<HTMLDivElement>(null);
-    const [copied, setCopied] = useState(false);
-
-    const handleCopy = () => {
-      navigator.clipboard.writeText(message.content);
-      setCopied(true);
-      setTimeout(() => {
-        return setCopied(false);
-      }, 2000);
-    };
-
-    return (
-      <div
-        ref={messageRef}
-        className={cn(
-          'flex w-full max-w-[80%] gap-2 p-3 rounded-lg transition-all relative group',
-          message.sender === 'user' ? 'ml-auto bg-primary text-primary-foreground' : 'bg-muted',
-        )}
-      >
-        <div className='flex flex-col w-full'>
-          {/* Show mentions as tags if present */}
-          {message.mentions && message.mentions.length > 0 && (
-            <div className='flex flex-wrap gap-1 mb-2'>
-              {message.mentions.map((mention) => {
-                return (
-                  <div
-                    key={mention.id}
-                    className='px-2 py-0.5 text-xs rounded-full bg-primary-foreground/20 flex items-center'
-                  >
-                    <span>@{mention.name}</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {message.sender === 'ai' ? (
-            <div className='text-sm leading-relaxed prose prose-sm dark:prose-invert prose-p:my-1 prose-pre:bg-zinc-800 prose-pre:dark:bg-zinc-900 prose-pre:p-2 prose-pre:rounded prose-code:text-xs prose-code:bg-zinc-200 prose-code:dark:bg-zinc-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[""] prose-code:after:content-[""] prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-table:border-collapse prose-table:w-full prose-td:border prose-td:p-2 prose-th:border prose-th:p-2 prose-th:bg-muted max-w-full'>
-              {message.isStreaming ? (
-                <>
-                  <div
-                    id={`stream-content-${message.id.replace('ai-', '')}`}
-                    className='whitespace-pre-wrap'
-                  >
-                    {message.content}
-                  </div>
-                  <span className='inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse'></span>
-                </>
-              ) : (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
-              )}
-            </div>
-          ) : (
-            <p className='text-sm leading-relaxed'>{message.content}</p>
-          )}
-        </div>
-
-        {/* Copy button */}
-        <button
-          onClick={handleCopy}
-          className={cn(
-            'absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity',
-            'p-1 rounded-md',
-            message.sender === 'user' ? 'hover:bg-primary-foreground/20' : 'hover:bg-background/80',
-            copied ? 'text-green-500' : '',
-          )}
-          title='Copy to clipboard'
-        >
-          {copied ? <Check className='h-3.5 w-3.5' /> : <Copy className='h-3.5 w-3.5' />}
-        </button>
-      </div>
-    );
-  });
-
-  // Add display name
-  MessageItem.displayName = 'MessageItem';
 
   // Message list component
   const MessageList = () => {
@@ -529,12 +451,8 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
                 {/* Header */}
                 <div className='bg-primary p-3 text-primary-foreground flex items-center justify-between shrink-0'>
                   <div className='flex items-center gap-2'>
-                    <Avatar className='h-8 w-8'>
-                      <AvatarImage src='/ai-avatar.png' alt='AI Assistant' />
-                      <AvatarFallback className='bg-primary-foreground text-primary'>
-                        AI
-                      </AvatarFallback>
-                    </Avatar>
+                    <ChatAvatar wiggle={wiggle} setWiggle={setWiggle} />
+
                     <div>
                       <h3 className='font-medium text-sm'>
                         {showSettingsPanel ? 'Settings' : 'Pulse Assistant'}

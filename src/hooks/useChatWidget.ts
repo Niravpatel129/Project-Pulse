@@ -27,6 +27,7 @@ export type PageContext = {
 
 export function useChatWidget(pageContext?: PageContext) {
   // Chat state
+  const [wiggle, setWiggle] = useState(false);
   const [isOpen, setIsOpen] = useState(() => {
     // Try to get open state from localStorage on initial render
     if (typeof window !== 'undefined') {
@@ -400,6 +401,7 @@ export function useChatWidget(pageContext?: PageContext) {
           },
           onStart: (data) => {
             // Save session ID
+            setWiggle(true);
             if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
               setSessionId(data.sessionId);
               localStorage.setItem('chatSessionId', data.sessionId);
@@ -457,6 +459,7 @@ export function useChatWidget(pageContext?: PageContext) {
 
           onEnd: () => {
             // Final update with complete content
+            setWiggle(false);
             setMessages((prev) => {
               return prev.map((msg) => {
                 if (msg.id === streamMessageId) {
@@ -779,6 +782,8 @@ export function useChatWidget(pageContext?: PageContext) {
     handleResize,
     handleStopStreaming,
     scrollToBottom,
+    wiggle,
+    setWiggle,
     setShowMentions,
   };
 }
