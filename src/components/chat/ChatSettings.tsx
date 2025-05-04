@@ -32,10 +32,11 @@ interface ContextTextareaProps {
   onChange: (value: string) => void;
   disabled: boolean;
   showSaveIndicator: boolean;
+  onBlur: () => void;
 }
 
 const ContextTextarea = memo(
-  ({ value, onChange, disabled, showSaveIndicator }: ContextTextareaProps) => {
+  ({ value, onChange, disabled, showSaveIndicator, onBlur }: ContextTextareaProps) => {
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       onChange(e.target.value);
     };
@@ -53,6 +54,7 @@ const ContextTextarea = memo(
           </span>
         </div>
         <Textarea
+          onBlur={onBlur}
           id='panel-context'
           placeholder='Enter information about your project, preferences, or any context that would help the AI assistant better understand your needs...'
           className='h-24 text-sm resize-none'
@@ -86,7 +88,7 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
     queryKey: ['chatSettings'],
     queryFn: async () => {
       const response = await newRequest.get('/chat-settings');
-      console.log('🚀 response:', response);
+
       setContextSettings(response.data.data.contextSettings);
       setWebSearchEnabled(response.data.data.webSearchEnabled);
       setSelectedStyle(response.data.data.selectedStyle);
@@ -193,20 +195,11 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
       clearTimeout(contextDebounceTimeout.current);
     }
 
-    // Set a new timeout to save after user stops typing (500ms)
-    contextDebounceTimeout.current = setTimeout(() => {
-      handleUpdateSetting('context', { contextSettings: newValue });
-    }, 500);
+    // // Set a new timeout to save after user stops typing (500ms)
+    // contextDebounceTimeout.current = setTimeout(() => {
+    //   handleUpdateSetting('context', { contextSettings: newValue });
+    // }, 500);
   };
-
-  // Cleanup timeout on component unmount
-  useEffect(() => {
-    return () => {
-      if (contextDebounceTimeout.current) {
-        clearTimeout(contextDebounceTimeout.current);
-      }
-    };
-  }, []);
 
   const handleWebSearchChange = (value: boolean) => {
     setWebSearchEnabled(value);
@@ -274,6 +267,9 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
             onChange={handleContextSettingsChange}
             disabled={isSaving}
             showSaveIndicator={saveIndicator['context'] || false}
+            onBlur={() => {
+              handleUpdateSetting('context', { contextSettings: contextSettings });
+            }}
           />
 
           {/* Web Search Toggle */}
