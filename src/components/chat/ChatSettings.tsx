@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -8,11 +9,21 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Check } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { newRequest } from '@/utils/newRequest';
+import { Check, RotateCcw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface ChatSettingsProps {
   onClose: () => void;
+}
+
+interface ChatSettingsData {
+  contextSettings: string;
+  webSearchEnabled: boolean;
+  selectedStyle: string;
+  selectedModel: string;
+  gmailConnected: boolean;
 }
 
 export function ChatSettings({ onClose }: ChatSettingsProps) {
@@ -24,28 +35,94 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
   const [saveIndicator, setSaveIndicator] = useState<{ [key: string]: boolean }>({});
   const [gmailConnected, setGmailConnected] = useState(false);
   const contextDebounceTimeout = useRef<NodeJS.Timeout | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
   // Load settings on initial render
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedSettings = localStorage.getItem('chat-context-settings');
-      if (savedSettings) {
-        setContextSettings(savedSettings);
+    const fetchSettings = async () => {
+      try {
+        setIsLoading(true);
+        const response = await newRequest.get('/chat-settings');
+        const settings = response.data.data;
+
+        if (settings) {
+          setContextSettings(settings.contextSettings || '');
+          setWebSearchEnabled(settings.webSearchEnabled);
+          setSelectedStyle(settings.selectedStyle || 'default');
+          setSelectedModel(settings.selectedModel || 'gpt-4');
+          setGmailConnected(settings.gmailConnected || false);
+        }
+      } catch (error) {
+        console.error('Failed to load chat settings:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load settings. Using defaults.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      const savedWebSearchEnabled = localStorage.getItem('chat-web-search-enabled');
-      if (savedWebSearchEnabled !== null) setWebSearchEnabled(savedWebSearchEnabled === 'true');
+    fetchSettings();
+  }, [toast]);
 
-      const savedStyle = localStorage.getItem('chat-selected-style');
-      if (savedStyle) setSelectedStyle(savedStyle);
+  const saveSettings = async (settingName: string, newSettings?: Partial<ChatSettingsData>) => {
+    try {
+      setIsSaving(true);
 
-      const savedModel = localStorage.getItem('chat-selected-model');
-      if (savedModel) setSelectedModel(savedModel);
+      const settings = {
+        contextSettings,
+        webSearchEnabled,
+        selectedStyle,
+        selectedModel,
+        gmailConnected,
+        ...newSettings,
+      };
 
-      const savedGmailConnected = localStorage.getItem('chat-gmail-connected');
-      if (savedGmailConnected !== null) setGmailConnected(savedGmailConnected === 'true');
+      await newRequest.put('/chat-settings', settings);
+      showSaveIndicator(settingName);
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save settings.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
     }
-  }, []);
+  };
+
+  const resetSettings = async () => {
+    try {
+      setIsLoading(true);
+      const response = await newRequest.delete('/chat-settings');
+      const defaultSettings = response.data.data;
+
+      setContextSettings(defaultSettings.contextSettings || '');
+      setWebSearchEnabled(defaultSettings.webSearchEnabled);
+      setSelectedStyle(defaultSettings.selectedStyle || 'default');
+      setSelectedModel(defaultSettings.selectedModel || 'gpt-4');
+      setGmailConnected(defaultSettings.gmailConnected || false);
+
+      toast({
+        title: 'Success',
+        description: 'Settings reset to defaults.',
+      });
+    } catch (error) {
+      console.error('Failed to reset settings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to reset settings.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const showSaveIndicator = (setting: string) => {
     setSaveIndicator((prev) => {
@@ -69,8 +146,7 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
 
     // Set a new timeout to save after user stops typing (500ms)
     contextDebounceTimeout.current = setTimeout(() => {
-      localStorage.setItem('chat-context-settings', newValue);
-      showSaveIndicator('context');
+      saveSettings('context', { contextSettings: newValue });
     }, 500);
   };
 
@@ -85,49 +161,73 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
 
   const handleWebSearchChange = (value: boolean) => {
     setWebSearchEnabled(value);
-    localStorage.setItem('chat-web-search-enabled', value.toString());
-    showSaveIndicator('webSearch');
+    saveSettings('webSearch', { webSearchEnabled: value });
   };
 
   const handleStyleChange = (value: string) => {
     setSelectedStyle(value);
-    localStorage.setItem('chat-selected-style', value);
-    showSaveIndicator('style');
+    saveSettings('style', { selectedStyle: value });
   };
 
   const handleModelChange = (value: string) => {
     setSelectedModel(value);
-    localStorage.setItem('chat-selected-model', value);
-    showSaveIndicator('model');
+    saveSettings('model', { selectedModel: value });
   };
 
   const handleGmailConnectionChange = () => {
     const newValue = !gmailConnected;
     setGmailConnected(newValue);
-    localStorage.setItem('chat-gmail-connected', newValue.toString());
-    showSaveIndicator('gmail');
+    saveSettings('gmail', { gmailConnected: newValue });
   };
+
+  const SaveIndicator = ({ setting }: { setting: string }) => {
+    return (
+      <span
+        className={`text-xs text-green-600 flex items-center transition-opacity duration-300 ${
+          saveIndicator[setting] ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <Check className='h-3 w-3 mr-1' /> Saved
+      </span>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className='flex items-center justify-center h-full p-6'>
+        <div className='animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary'></div>
+      </div>
+    );
+  }
 
   return (
     <div className='flex flex-col h-full'>
       <div className='flex-1 p-6 overflow-y-auto'>
         <div className='space-y-6'>
-          <div>
-            <h3 className='text-lg font-medium mb-1'>Assistant Settings</h3>
-            <p className='text-sm text-muted-foreground mb-4'>
-              Customize how your AI assistant works. Changes are saved automatically.
-            </p>
+          <div className='flex justify-between items-center mb-4'>
+            <div>
+              <h3 className='text-lg font-medium mb-1'>Assistant Settings</h3>
+              <p className='text-sm text-muted-foreground'>
+                Customize how your AI assistant works. Changes are saved automatically.
+              </p>
+            </div>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={resetSettings}
+              disabled={isSaving}
+              className='flex items-center'
+            >
+              <RotateCcw className='h-4 w-4 mr-1' />
+              Reset
+            </Button>
           </div>
 
           {/* Context Settings */}
           <div className='space-y-2'>
             <div className='flex items-center justify-between'>
               <Label htmlFor='panel-context'>Context Information</Label>
-              {saveIndicator.context && (
-                <span className='text-xs text-green-600 flex items-center'>
-                  <Check className='h-3 w-3 mr-1' /> Saved
-                </span>
-              )}
+              <SaveIndicator setting='context' />
             </div>
             <Textarea
               id='panel-context'
@@ -135,6 +235,7 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
               className='h-24 text-sm resize-none'
               value={contextSettings}
               onChange={handleContextSettingsChange}
+              disabled={isSaving}
             />
             <p className='text-xs text-muted-foreground'>
               This context is included with every message sent to the AI.
@@ -148,15 +249,12 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
                 <span>Search the Web</span>
               </Label>
               <div className='flex items-center gap-2'>
-                {saveIndicator.webSearch && (
-                  <span className='text-xs text-green-600 flex items-center'>
-                    <Check className='h-3 w-3 mr-1' /> Saved
-                  </span>
-                )}
+                <SaveIndicator setting='webSearch' />
                 <Switch
                   id='web-search'
                   checked={webSearchEnabled}
                   onCheckedChange={handleWebSearchChange}
+                  disabled={isSaving}
                 />
               </div>
             </div>
@@ -169,13 +267,9 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
           <div className='space-y-2 relative z-10'>
             <div className='flex items-center justify-between'>
               <Label htmlFor='style-selector'>Use Style</Label>
-              {saveIndicator.style && (
-                <span className='text-xs text-green-600 flex items-center'>
-                  <Check className='h-3 w-3 mr-1' /> Saved
-                </span>
-              )}
+              <SaveIndicator setting='style' />
             </div>
-            <Select value={selectedStyle} onValueChange={handleStyleChange}>
+            <Select value={selectedStyle} onValueChange={handleStyleChange} disabled={isSaving}>
               <SelectTrigger id='style-selector' className='w-full'>
                 <SelectValue placeholder='Select a style' />
               </SelectTrigger>
@@ -196,13 +290,9 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
           <div className='space-y-2 relative z-[9]'>
             <div className='flex items-center justify-between'>
               <Label htmlFor='model-selector'>AI Model</Label>
-              {saveIndicator.model && (
-                <span className='text-xs text-green-600 flex items-center'>
-                  <Check className='h-3 w-3 mr-1' /> Saved
-                </span>
-              )}
+              <SaveIndicator setting='model' />
             </div>
-            <Select value={selectedModel} onValueChange={handleModelChange}>
+            <Select value={selectedModel} onValueChange={handleModelChange} disabled={isSaving}>
               <SelectTrigger id='model-selector' className='w-full'>
                 <SelectValue placeholder='Select AI model' />
               </SelectTrigger>
