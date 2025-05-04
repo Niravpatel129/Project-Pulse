@@ -35,7 +35,11 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
   const [saveIndicator, setSaveIndicator] = useState<{ [key: string]: boolean }>({});
 
   // Fetch chat settings
-  const { data: settings, isLoading } = useQuery({
+  const {
+    data: settings,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['chatSettings'],
     queryFn: async () => {
       const response = await newRequest.get('/chat-settings');
@@ -49,14 +53,18 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
         }
       );
     },
-    onError: () => {
+  });
+
+  // Handle error outside of query
+  useEffect(() => {
+    if (error) {
       toast({
         title: 'Error',
         description: 'Failed to load settings. Using defaults.',
         variant: 'destructive',
       });
-    },
-  });
+    }
+  }, [error, toast]);
 
   // Local state for form values
   const [contextSettings, setContextSettings] = useState('');
@@ -64,17 +72,6 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
   const [selectedStyle, setSelectedStyle] = useState('default');
   const [selectedModel, setSelectedModel] = useState('gpt-4');
   const [gmailConnected, setGmailConnected] = useState(false);
-
-  // Update local state when settings are loaded
-  useEffect(() => {
-    if (settings) {
-      setContextSettings(settings.contextSettings || '');
-      setWebSearchEnabled(settings.webSearchEnabled);
-      setSelectedStyle(settings.selectedStyle || 'default');
-      setSelectedModel(settings.selectedModel || 'gpt-4');
-      setGmailConnected(settings.gmailConnected || false);
-    }
-  }, [settings]);
 
   // Save settings mutation
   const { mutate: saveSettings, isPending: isSaving } = useMutation({
