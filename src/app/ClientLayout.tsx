@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppProvider } from '@/contexts';
 import { LoadingProvider } from '@/contexts/LoadingContext';
+import { PageContext } from '@/hooks/useChatWidget';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { usePathname } from 'next/navigation';
 import { Tooltip as ReactTooltip } from 'react-tooltip';
@@ -19,8 +20,8 @@ export default function ClientLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const pageContext = {
-    path: pathname,
+  const pageContext: PageContext = {
+    url: pathname,
   };
 
   return (
@@ -36,7 +37,7 @@ export default function ClientLayout({
                 <main className='flex-1'>{children}</main>
 
                 {/* Chat widget */}
-                <ChatWidget />
+                <ChatWidget pageContext={pageContext} />
               </div>
             </TooltipProvider>
             <LoadingOverlay />

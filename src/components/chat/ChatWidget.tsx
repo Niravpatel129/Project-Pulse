@@ -18,7 +18,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Message, PageContext, useChatWidget } from '@/hooks/useChatWidget';
 import { cn } from '@/lib/utils';
@@ -65,6 +64,23 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [contextSettings, setContextSettings] = useState('');
 
+  // Panel resize state - set default without localStorage for SSR
+  const [panelWidth, setPanelWidth] = useState(350);
+
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeStartXRef = useRef(0);
+  const initialWidthRef = useRef(0);
+
+  // Initialize panel width from localStorage after mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedWidth = localStorage.getItem('chat-panel-width');
+      if (savedWidth) {
+        setPanelWidth(parseInt(savedWidth, 10));
+      }
+    }
+  }, []);
+
   // Handle settings changes
   const handleContextSettingsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContextSettings(e.target.value);
@@ -86,47 +102,47 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     }
   }, []);
 
-  // Panel resize state
-  const [panelWidth, setPanelWidth] = useState(() => {
-    // Try to get width from localStorage on initial render
-    if (typeof window !== 'undefined') {
-      const savedWidth = localStorage.getItem('chat-panel-width');
-      return savedWidth ? parseInt(savedWidth, 10) : 350;
-    }
-    return 350;
-  });
-  const [isResizing, setIsResizing] = useState(false);
-  const resizeStartXRef = useRef(0);
-  const initialWidthRef = useRef(0);
-
-  // Update body padding when chat panel width changes
+  // Block body scrolling when chat is open
   useEffect(() => {
     if (isOpen) {
-      document.body.style.paddingRight = `${panelWidth}px`;
+      // Save the current body overflow
+      const originalOverflow = document.body.style.overflow;
 
-      // Update fixed elements
-      const fixedElements = document.querySelectorAll(
-        'header.fixed, header.sticky, .fixed.top-0, nav.fixed',
-      );
-      fixedElements.forEach((el) => {
-        if (el instanceof HTMLElement) {
-          el.style.width = `calc(100% - ${panelWidth}px)`;
-        }
-      });
-    } else {
-      document.body.style.paddingRight = '0px';
+      // Block body scrolling
+      document.body.classList.add('chat-open');
 
-      // Reset fixed elements
-      const fixedElements = document.querySelectorAll(
-        'header.fixed, header.sticky, .fixed.top-0, nav.fixed',
-      );
-      fixedElements.forEach((el) => {
-        if (el instanceof HTMLElement) {
-          el.style.width = '100%';
-        }
-      });
+      // Restore on cleanup
+      return () => {
+        document.body.classList.remove('chat-open');
+        document.body.style.overflow = originalOverflow;
+      };
     }
-  }, [isOpen, panelWidth]);
+  }, [isOpen]);
+
+  // Implement custom scrolling for the messages container
+  useEffect(() => {
+    if (!isOpen || !scrollAreaRef.current) return;
+
+    const messagesContainer = scrollAreaRef.current;
+
+    // Custom wheel event handler
+    const handleWheel = (e: WheelEvent) => {
+      // Stop propagation immediately
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Calculate new scroll position (positive deltaY should scroll down)
+      messagesContainer.scrollTop += e.deltaY;
+    };
+
+    // Add event listeners
+    messagesContainer.addEventListener('wheel', handleWheel, { passive: false });
+
+    // Clean up
+    return () => {
+      messagesContainer.removeEventListener('wheel', handleWheel);
+    };
+  }, [isOpen, scrollAreaRef]);
 
   // Handle resize start
   const handleResizeStart = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -173,6 +189,81 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
       window.removeEventListener('mouseup', handleResizeEnd);
     };
   }, [isResizing, panelWidth]);
+
+  // Adjust layout when chat is open
+  useEffect(() => {
+    if (isOpen) {
+      // Add class to body to trigger layout adjustments
+      document.body.classList.add('chat-open');
+
+      // Add padding to body to create space for chat panel
+      document.body.style.paddingRight = `${panelWidth}px`;
+      document.body.style.transition = 'padding-right 0.2s ease';
+
+      // Adjust fixed elements
+      const fixedElements = document.querySelectorAll(
+        'header.fixed, header.sticky, .fixed.top-0, nav.fixed',
+      );
+      fixedElements.forEach((el) => {
+        if (el instanceof HTMLElement) {
+          el.style.width = `calc(100% - ${panelWidth}px)`;
+          el.style.transition = 'width 0.2s ease';
+        }
+      });
+    } else {
+      // Remove class from body
+      document.body.classList.remove('chat-open');
+
+      // Reset body padding
+      document.body.style.paddingRight = '0';
+
+      // Reset fixed elements
+      const fixedElements = document.querySelectorAll(
+        'header.fixed, header.sticky, .fixed.top-0, nav.fixed',
+      );
+      fixedElements.forEach((el) => {
+        if (el instanceof HTMLElement) {
+          el.style.width = '100%';
+        }
+      });
+    }
+
+    return () => {
+      // Clean up
+      document.body.classList.remove('chat-open');
+      document.body.style.paddingRight = '0';
+      document.body.style.transition = '';
+
+      // Reset fixed elements
+      const fixedElements = document.querySelectorAll(
+        'header.fixed, header.sticky, .fixed.top-0, nav.fixed',
+      );
+      fixedElements.forEach((el) => {
+        if (el instanceof HTMLElement) {
+          el.style.width = '100%';
+          el.style.transition = '';
+        }
+      });
+    };
+  }, [isOpen, panelWidth]);
+
+  // Update during resize
+  useEffect(() => {
+    if (isOpen && isResizing) {
+      // Update body padding
+      document.body.style.paddingRight = `${panelWidth}px`;
+
+      // Update fixed elements
+      const fixedElements = document.querySelectorAll(
+        'header.fixed, header.sticky, .fixed.top-0, nav.fixed',
+      );
+      fixedElements.forEach((el) => {
+        if (el instanceof HTMLElement) {
+          el.style.width = `calc(100% - ${panelWidth}px)`;
+        }
+      });
+    }
+  }, [isOpen, panelWidth, isResizing]);
 
   // Message component
   const MessageItem = React.memo(({ message }: { message: Message }) => {
@@ -380,127 +471,127 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     );
   };
 
-  // Chat panel content
-  const ChatPanelContent = () => {
-    return (
-      <div className='flex flex-col h-full'>
-        {/* Header */}
-        <div className='bg-primary p-3 text-primary-foreground flex items-center justify-between'>
-          <div className='flex items-center gap-2'>
-            <Avatar className='h-8 w-8'>
-              <AvatarImage src='/ai-avatar.png' alt='AI Assistant' />
-              <AvatarFallback className='bg-primary-foreground text-primary'>AI</AvatarFallback>
-            </Avatar>
-            <div>
-              <h3 className='font-medium text-sm'>Pulse Assistant</h3>
-              <p className='text-xs opacity-90'>How can I help you today?</p>
-            </div>
-          </div>
-          <div className='flex items-center gap-1'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-7 w-7 rounded-full'
-              onClick={clearConversation}
-              disabled={messages.length === 0 || isLoading}
-              title='Clear conversation'
-            >
-              <Trash2 className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-7 w-7 rounded-full'
-              onClick={() => {
-                return setIsSettingsOpen(true);
-              }}
-              title='Settings'
-            >
-              <Settings className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-7 w-7 rounded-full'
-              onClick={toggleChat}
-              title='Close chat'
-            >
-              <X className='h-4 w-4' />
-            </Button>
-          </div>
-        </div>
-
-        {/* Messages */}
-        <ScrollArea className='flex-1 p-3 overflow-y-auto' ref={scrollAreaRef}>
-          <div className='flex flex-col gap-3'>
-            <MessageList />
-          </div>
-        </ScrollArea>
-
-        {/* Use the custom input area component */}
-        <ChatInputArea />
-      </div>
-    );
-  };
-
-  // Update the LayoutWithPanel component to properly handle resize and content shifting
-  const LayoutWithPanel = () => {
-    if (!isOpen) return null;
-
-    return (
-      <div className='fixed inset-0 z-40 flex h-screen'>
-        <div className='relative flex flex-grow'>
-          {/* Main content area - empty but takes up space */}
-          <div className='flex-grow'></div>
-
-          {/* Chat panel */}
-          <div
-            id='chat-panel'
-            className={cn(
-              'bg-background border-l shadow-lg h-full flex flex-col relative',
-              isResizing && 'select-none transition-none',
-            )}
-            style={{ width: `${panelWidth}px`, minWidth: '250px', maxWidth: '50vw' }}
-          >
-            {/* Custom resize handle */}
-            <div
-              className={cn(
-                'absolute left-0 top-0 bottom-0 cursor-col-resize transition-colors z-10',
-                isResizing ? 'bg-primary w-px' : 'bg-border hover:bg-primary w-px',
-              )}
-              onMouseDown={handleResizeStart}
-            ></div>
-
-            {/* Overlay when resizing */}
-            {isResizing && (
-              <div className='absolute inset-0 bg-primary/5 z-10 pointer-events-none' />
-            )}
-
-            <ChatPanelContent />
-          </div>
-        </div>
-      </div>
-    );
-  };
-
+  // Render the chat widget
   return (
     <>
-      {/* Trigger Button - only show when chat is closed */}
+      {/* Floating trigger button - only shown when chat is closed */}
       {!isOpen && (
-        <div className='fixed bottom-4 right-4 z-50'>
-          <Button
-            onClick={toggleChat}
-            variant='default'
-            size='icon'
-            className='h-12 w-12 rounded-full shadow-lg'
-          >
-            <MessageCircle />
-          </Button>
-        </div>
+        <button
+          onClick={toggleChat}
+          className='fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors'
+          aria-label='Open chat'
+        >
+          <MessageCircle className='h-5 w-5' />
+        </button>
       )}
 
-      {/* Resizable Panel System */}
-      <LayoutWithPanel />
+      {/* Chat panel */}
+      {isOpen && (
+        <div
+          className='fixed inset-0 z-50 pointer-events-none overflow-hidden'
+          aria-hidden='false'
+          style={{
+            contain: 'strict',
+            isolation: 'isolate',
+          }}
+        >
+          {/* Invisible backdrop to capture clicks outside the panel */}
+          <div
+            className='absolute inset-0 bg-transparent pointer-events-auto'
+            onClick={toggleChat}
+          />
+
+          {/* The actual chat panel */}
+          <div
+            className='absolute top-0 bottom-0 right-0 bg-background border-l shadow-lg pointer-events-auto flex flex-col'
+            style={{
+              width: `${panelWidth}px`,
+              isolation: 'isolate',
+              position: 'fixed',
+              height: '100vh',
+              zIndex: 999,
+            }}
+            onClick={(e) => {
+              return e.stopPropagation();
+            }}
+          >
+            {/* Resize handle */}
+            <div
+              className='absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/50 z-10'
+              onMouseDown={handleResizeStart}
+            />
+
+            {/* Header */}
+            <div className='bg-primary p-3 text-primary-foreground flex items-center justify-between shrink-0'>
+              <div className='flex items-center gap-2'>
+                <Avatar className='h-8 w-8'>
+                  <AvatarImage src='/ai-avatar.png' alt='AI Assistant' />
+                  <AvatarFallback className='bg-primary-foreground text-primary'>AI</AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className='font-medium text-sm'>Pulse Assistant</h3>
+                  <p className='text-xs opacity-90'>How can I help you today?</p>
+                </div>
+              </div>
+              <div className='flex items-center gap-1'>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='h-7 w-7 rounded-full'
+                  onClick={clearConversation}
+                  disabled={messages.length === 0 || isLoading}
+                  title='Clear conversation'
+                >
+                  <Trash2 className='h-4 w-4' />
+                </Button>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='h-7 w-7 rounded-full'
+                  onClick={() => {
+                    return setIsSettingsOpen(true);
+                  }}
+                  title='Settings'
+                >
+                  <Settings className='h-4 w-4' />
+                </Button>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='h-7 w-7 rounded-full'
+                  onClick={toggleChat}
+                  title='Close chat'
+                >
+                  <X className='h-4 w-4' />
+                </Button>
+              </div>
+            </div>
+
+            {/* Messages container - using native scrolling instead of ScrollArea */}
+            <div
+              ref={scrollAreaRef}
+              className='flex-1 overflow-y-auto p-3 messages-container'
+              // Prevent touch scrolling from propagating on mobile
+              onTouchStart={(e) => {
+                return e.stopPropagation();
+              }}
+              onTouchMove={(e) => {
+                return e.stopPropagation();
+              }}
+              onTouchEnd={(e) => {
+                return e.stopPropagation();
+              }}
+            >
+              <div className='flex flex-col gap-3'>
+                <MessageList />
+              </div>
+            </div>
+
+            {/* Input area */}
+            <ChatInputArea />
+          </div>
+        </div>
+      )}
 
       {/* Settings Dialog */}
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
@@ -543,16 +634,71 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
 
       {/* Styles */}
       <style jsx global>{`
-        @keyframes highlight {
-          0% {
-            background-color: rgba(59, 130, 246, 0.2);
-          }
-          100% {
-            background-color: transparent;
+        /* Control body scrolling when chat is open */
+        body.chat-open {
+          /* Prevent default scrolling on the main body */
+          overflow: hidden !important;
+        }
+
+        /* Adjust fixed/sticky elements when chat is open */
+        header.fixed,
+        header.sticky,
+        .fixed.top-0,
+        nav.fixed {
+          transition: width 0.2s ease;
+        }
+
+        /* Create a full isolation barrier between chat panel and main content */
+        .fixed.inset-0.z-50 {
+          isolation: isolate;
+          contain: layout style size;
+          z-index: 9999 !important;
+        }
+
+        /* Prevent body scrolling when chat is open on mobile */
+        @media (max-width: 768px) {
+          body.chat-open {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            padding-right: 0 !important; /* Don't add padding on mobile */
           }
         }
-        .new-message-highlight {
-          animation: highlight 1s ease-out;
+
+        /* Extreme isolation for messages container */
+        .messages-container {
+          /* Scroll isolation properties */
+          overscroll-behavior: contain;
+          -ms-overflow-style: none;
+          scrollbar-width: thin;
+
+          /* Create a new stacking context and isolate from parent */
+          isolation: isolate;
+          contain: strict;
+
+          /* Prevent touch propagation */
+          touch-action: pan-y;
+
+          /* Additional scroll properties for iOS */
+          -webkit-overflow-scrolling: touch;
+        }
+
+        /* Styling for scrollbar */
+        .messages-container::-webkit-scrollbar {
+          width: 4px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+          background-color: rgba(0, 0, 0, 0.2);
+          border-radius: 2px;
+        }
+
+        .dark .messages-container::-webkit-scrollbar-thumb {
+          background-color: rgba(255, 255, 255, 0.2);
         }
 
         /* Table styles for markdown content */
