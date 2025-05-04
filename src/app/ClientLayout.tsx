@@ -36,7 +36,7 @@ export default function ClientLayout({
                 <main className='flex-1'>{children}</main>
 
                 {/* Chat widget */}
-                <ChatWidget pageContext={pageContext} />
+                <ChatWidget />
               </div>
             </TooltipProvider>
             <LoadingOverlay />
