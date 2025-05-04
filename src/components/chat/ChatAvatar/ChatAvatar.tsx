@@ -1,5 +1,7 @@
 'use client';
 
+import { TbRobot } from 'react-icons/tb';
+
 export default function GoffyFace({
   wiggle,
   setWiggle,
@@ -10,19 +12,14 @@ export default function GoffyFace({
   return (
     <div className='flex flex-col items-center justify-center gap-6'>
       <div
-        className={`relative w-10 h-10 rounded-sm bg-gradient-to-t from-[#444444] to-[#6f6f6f]  shadow-lg ${
+        className={`flex items-center justify-center relative w-9 h-9 rounded-sm bg-gradient-to-t from-[#444444] to-[#6f6f6f]  shadow-lg ${
           wiggle ? 'animate-wiggle' : ''
         }`}
         onAnimationEnd={() => {
           return setWiggle(false);
         }}
       >
-        {/* Eyes */}
-        <div className='absolute top-[30%] left-[25%] w-1 h-1 rounded-full bg-white'></div>
-        <div className='absolute top-[30%] right-[25%] w-1 h-1 rounded-full bg-white'></div>
-
-        {/* Mouth - :D style (wider and taller) */}
-        <div className='absolute bottom-[25%] left-1/2 -translate-x-1/2 w-4 h-2 bg-white rounded-full'></div>
+        <TbRobot className='text-white text-2xl' />
       </div>
 
       <style jsx global>{`
