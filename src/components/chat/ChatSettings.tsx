@@ -9,11 +9,11 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/use-toast';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, RotateCcw } from 'lucide-react';
 import { memo, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 interface ChatSettingsProps {
   onClose: () => void;
@@ -75,7 +75,6 @@ ContextTextarea.displayName = 'ContextTextarea';
 export function ChatSettings({ onClose }: ChatSettingsProps) {
   // React Query client
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   const contextDebounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const [saveIndicator, setSaveIndicator] = useState<{ [key: string]: boolean }>({});
 
@@ -107,13 +106,9 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
   // Handle error outside of query
   useEffect(() => {
     if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load settings. Using defaults.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to load settings. Using defaults.');
     }
-  }, [error, toast]);
+  }, [error]);
 
   // Local state for form values
   const [contextSettings, setContextSettings] = useState('');
@@ -138,11 +133,7 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
       queryClient.invalidateQueries({ queryKey: ['chatSettings'] });
     },
     onError: () => {
-      toast({
-        title: 'Error',
-        description: 'Failed to save settings.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to save settings.');
     },
   });
 
@@ -154,17 +145,10 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
     },
     onSuccess: (defaultSettings) => {
       queryClient.invalidateQueries({ queryKey: ['chatSettings'] });
-      toast({
-        title: 'Success',
-        description: 'Settings reset to defaults.',
-      });
+      toast.success('Settings reset to defaults.');
     },
     onError: () => {
-      toast({
-        title: 'Error',
-        description: 'Failed to reset settings.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to reset settings.');
     },
   });
 
@@ -237,7 +221,7 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
   }
 
   return (
-    <div className='flex flex-col h-full'>
+    <div className='flex flex-col h-full relative'>
       <div className='flex-1 p-6 overflow-y-auto'>
         <div className='space-y-6'>
           <div className='flex justify-between items-center mb-4'>
@@ -254,7 +238,7 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
                 return resetSettingsMutation();
               }}
               disabled={isSaving || isResetting}
-              className='flex items-center'
+              className='flex items-center absolute right-5 bottom-4'
             >
               <RotateCcw className='h-4 w-4 mr-1' />
               Reset
