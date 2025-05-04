@@ -22,7 +22,7 @@ const MessageItem = React.memo(({ message }: { message: Message }) => {
     <div
       ref={messageRef}
       className={cn(
-        'flex w-full max-w-[80%] gap-2 p-3 rounded-lg transition-all relative group',
+        'text-[16px] flex w-full max-w-[80%] gap-2 p-3 rounded-lg transition-all relative group',
         message.sender === 'user' ? 'ml-auto bg-primary text-primary-foreground' : 'bg-muted',
       )}
     >
@@ -45,7 +45,7 @@ const MessageItem = React.memo(({ message }: { message: Message }) => {
 
         {/* Content */}
         {message.sender === 'ai' ? (
-          <Prose>
+          <Prose className='text-[16px]'>
             {message.isStreaming ? (
               <>
                 <div
@@ -61,7 +61,7 @@ const MessageItem = React.memo(({ message }: { message: Message }) => {
             )}
           </Prose>
         ) : (
-          <p className='text-sm leading-relaxed'>{message.content}</p>
+          <p className='leading-relaxed'>{message.content}</p>
         )}
       </div>
 
