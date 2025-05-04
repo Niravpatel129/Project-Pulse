@@ -51,7 +51,14 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
   } = useChatWidget(pageContext);
 
   // Panel resize state
-  const [panelWidth, setPanelWidth] = useState(350);
+  const [panelWidth, setPanelWidth] = useState(() => {
+    // Try to get width from localStorage on initial render
+    if (typeof window !== 'undefined') {
+      const savedWidth = localStorage.getItem('chat-panel-width');
+      return savedWidth ? parseInt(savedWidth, 10) : 350;
+    }
+    return 350;
+  });
   const [isResizing, setIsResizing] = useState(false);
   const resizeStartXRef = useRef(0);
   const initialWidthRef = useRef(0);
@@ -113,6 +120,11 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
       setIsResizing(false);
       document.body.style.userSelect = '';
       document.body.style.cursor = '';
+
+      // Save width to localStorage when resizing ends
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('chat-panel-width', panelWidth.toString());
+      }
     };
 
     if (isResizing) {
@@ -124,7 +136,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
       window.removeEventListener('mousemove', handleResizeMove);
       window.removeEventListener('mouseup', handleResizeEnd);
     };
-  }, [isResizing]);
+  }, [isResizing, panelWidth]);
 
   // Message component
   const MessageItem = React.memo(({ message }: { message: Message }) => {
