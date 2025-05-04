@@ -70,6 +70,7 @@ ModuleRegistry.registerModules([
 ]);
 
 export default function TablePage() {
+  const gridRef = useRef<any>(null);
   const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
   const [showFilters, setShowFilters] = useState(false);
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
@@ -167,23 +168,21 @@ export default function TablePage() {
   const onFilterTextChange = useCallback(() => {
     if (quickFilterRef.current) {
       const filterValue = quickFilterRef.current.value || '';
-      if (document.querySelector('.ag-grid-react')) {
-        const gridApi = (document.querySelector('.ag-grid-react') as any).__agGridReact.api;
-        gridApi.setGridOption('quickFilterText', filterValue);
+      if (gridRef.current?.api) {
+        gridRef.current.api.setGridOption('quickFilterText', filterValue);
       }
     }
-  }, []);
+  }, [gridRef]);
 
   // Handler for delete selected
   const handleDeleteSelectedCallback = useCallback(() => {
-    // Use type assertion to access the __agGridReact property
-    const gridElement = document.querySelector('.ag-grid-react');
-    const gridRef = {
-      current: gridElement ? (gridElement as any).__agGridReact : null,
-    };
+    // Use the direct React ref instead of querying the DOM
+    console.log('🚀 gridRef:', gridRef);
 
-    if (params?.tableId) {
+    if (params?.tableId && gridRef.current) {
       handleDeleteSelected(gridRef, params.tableId as string, setRecords, setRowOrder, queryClient);
+    } else {
+      toast.error('Grid reference not available or no table ID');
     }
   }, [params?.tableId, setRecords, setRowOrder, queryClient]);
 
@@ -559,6 +558,7 @@ export default function TablePage() {
             params={params}
             setRecords={setRecords}
             handleRowDragEnd={handleRowDragEndCallback}
+            ref={gridRef}
           />
         ) : (
           <CardView records={records} columns={columns} toggleSelectRecord={toggleSelectRecord} />

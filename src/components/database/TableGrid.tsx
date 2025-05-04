@@ -3,7 +3,14 @@ import { handleCellValueChange } from '@/utils/cellValueHandlers';
 import { newRequest } from '@/utils/newRequest';
 import { ColDef } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import { getValueFormatter } from './CellRenderers';
 import { gridComponents, handleCellEditingStopped } from './GridComponents';
 
@@ -17,17 +24,35 @@ interface TableGridProps {
   handleRowDragEnd: (event: any) => void;
 }
 
-export function TableGrid({
-  records,
-  columnDefs,
-  defaultColDef,
-  columns,
-  params,
-  setRecords,
-  handleRowDragEnd,
-}: TableGridProps) {
+// Convert to forwardRef to expose the grid API
+export const TableGrid = forwardRef(function TableGrid(
+  {
+    records,
+    columnDefs,
+    defaultColDef,
+    columns,
+    params,
+    setRecords,
+    handleRowDragEnd,
+  }: TableGridProps,
+  ref,
+) {
   const gridRef = useRef<AgGridReact>(null);
   const [componentUpdated, setComponentUpdated] = useState(false);
+
+  // Expose the grid API to the parent component
+  useImperativeHandle(ref, () => {
+    return {
+      api: gridRef.current?.api,
+      // AG Grid has renamed columnApi to columnModel in newer versions
+      // Using any type to avoid TypeScript errors
+      columnApi: (gridRef.current as any)?.columnApi,
+      current: {
+        api: gridRef.current?.api,
+        columnApi: (gridRef.current as any)?.columnApi,
+      },
+    };
+  });
 
   // Enhance column definitions to use value formatters properly
   const enhancedColumnDefs = React.useMemo(() => {
@@ -84,6 +109,7 @@ export function TableGrid({
   return (
     <div className='' style={{ height: 'calc(100vh - 200px)', width: '100%' }}>
       <AgGridReact
+        className='ag-grid-react'
         ref={gridRef}
         rowData={records}
         columnDefs={enhancedColumnDefs}
@@ -117,4 +143,4 @@ export function TableGrid({
       />
     </div>
   );
-}
+});

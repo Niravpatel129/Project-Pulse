@@ -11,6 +11,9 @@ export const handleDeleteSelected = (
 ) => {
   // Get selected rows from AG Grid
   const selectedNodes = gridRef.current?.api.getSelectedNodes();
+  const selectedNodes2 = gridRef;
+  console.log('🚀 selectedNodes:', selectedNodes);
+  console.log('🚀 selectedNodes2:', selectedNodes2);
   if (!selectedNodes || selectedNodes.length === 0) {
     toast.error('No records selected');
     return;
