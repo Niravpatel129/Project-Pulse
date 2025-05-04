@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -10,7 +9,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Check } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface ChatSettingsProps {
   onClose: () => void;
@@ -23,6 +22,8 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
   const [selectedStyle, setSelectedStyle] = useState('default');
   const [selectedModel, setSelectedModel] = useState('gpt-4');
   const [saveIndicator, setSaveIndicator] = useState<{ [key: string]: boolean }>({});
+  const [gmailConnected, setGmailConnected] = useState(false);
+  const contextDebounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Load settings on initial render
   useEffect(() => {
@@ -40,6 +41,9 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
 
       const savedModel = localStorage.getItem('chat-selected-model');
       if (savedModel) setSelectedModel(savedModel);
+
+      const savedGmailConnected = localStorage.getItem('chat-gmail-connected');
+      if (savedGmailConnected !== null) setGmailConnected(savedGmailConnected === 'true');
     }
   }, []);
 
@@ -57,9 +61,27 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
   const handleContextSettingsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setContextSettings(newValue);
-    localStorage.setItem('chat-context-settings', newValue);
-    showSaveIndicator('context');
+
+    // Clear the previous timeout if it exists
+    if (contextDebounceTimeout.current) {
+      clearTimeout(contextDebounceTimeout.current);
+    }
+
+    // Set a new timeout to save after user stops typing (500ms)
+    contextDebounceTimeout.current = setTimeout(() => {
+      localStorage.setItem('chat-context-settings', newValue);
+      showSaveIndicator('context');
+    }, 500);
   };
+
+  // Cleanup timeout on component unmount
+  useEffect(() => {
+    return () => {
+      if (contextDebounceTimeout.current) {
+        clearTimeout(contextDebounceTimeout.current);
+      }
+    };
+  }, []);
 
   const handleWebSearchChange = (value: boolean) => {
     setWebSearchEnabled(value);
@@ -197,12 +219,6 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
             </p>
           </div>
         </div>
-      </div>
-
-      <div className='p-4 border-t mt-auto'>
-        <Button onClick={onClose} className='w-full'>
-          Close
-        </Button>
       </div>
     </div>
   );
