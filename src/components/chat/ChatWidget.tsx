@@ -9,16 +9,6 @@ import {
   CommandInput,
   CommandItem,
 } from '@/components/ui/command';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Message, PageContext, useChatWidget } from '@/hooks/useChatWidget';
 import { cn } from '@/lib/utils';
 import { Check, Copy, MessageCircle, Send, Settings, Trash2, X } from 'lucide-react';
@@ -26,6 +16,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import TextareaAutosize from 'react-textarea-autosize';
 import remarkGfm from 'remark-gfm';
+import ChatSettings from './ChatSettings';
 
 type ChatWidgetProps = {
   pageContext?: PageContext;
@@ -61,9 +52,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
   } = useChatWidget(pageContext);
 
   // Settings state
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
-  const [contextSettings, setContextSettings] = useState('');
 
   // Panel resize state - set default without localStorage for SSR
   const [panelWidth, setPanelWidth] = useState(350);
@@ -78,31 +67,6 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
       const savedWidth = localStorage.getItem('chat-panel-width');
       if (savedWidth) {
         setPanelWidth(parseInt(savedWidth, 10));
-      }
-    }
-  }, []);
-
-  // Handle settings changes
-  const handleContextSettingsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContextSettings(e.target.value);
-  };
-
-  const handleSaveSettings = () => {
-    // Save context settings to localStorage
-    localStorage.setItem('chat-context-settings', contextSettings);
-    setIsSettingsOpen(false);
-  };
-
-  const toggleSettingsPanel = () => {
-    setShowSettingsPanel(!showSettingsPanel);
-  };
-
-  // Load settings on initial render
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedSettings = localStorage.getItem('chat-context-settings');
-      if (savedSettings) {
-        setContextSettings(savedSettings);
       }
     }
   }, []);
@@ -416,7 +380,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
                     return; // If mentions dropdown is open, do nothing
                   }
 
-                  handleSendMessage(contextSettings);
+                  handleSendMessage();
                   return;
                 }
 
@@ -450,7 +414,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
               <Button
                 onClick={(e) => {
                   e.preventDefault();
-                  handleSendMessage(contextSettings);
+                  handleSendMessage();
                 }}
                 size='sm'
               >
@@ -499,34 +463,8 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     );
   };
 
-  // Settings Panel component
-  const SettingsPanel = () => {
-    return (
-      <div className='flex flex-col gap-4 p-4'>
-        <div className='grid gap-2'>
-          <Label htmlFor='panel-context'>Context Information</Label>
-          <Textarea
-            id='panel-context'
-            placeholder='Enter information you want to include in the AI prompt (e.g., project details, preferences, background information)'
-            className='h-40'
-            value={contextSettings}
-            onChange={handleContextSettingsChange}
-          />
-          <p className='text-xs text-muted-foreground'>
-            This information will be passed to the AI to provide better, more tailored responses.
-          </p>
-        </div>
-
-        <Button
-          onClick={() => {
-            localStorage.setItem('chat-context-settings', contextSettings);
-            setShowSettingsPanel(false);
-          }}
-        >
-          Save Changes
-        </Button>
-      </div>
-    );
+  const toggleSettingsPanel = () => {
+    setShowSettingsPanel(!showSettingsPanel);
   };
 
   // Render the chat widget
@@ -631,7 +569,11 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
 
             {/* Messages or Settings container */}
             {showSettingsPanel ? (
-              <SettingsPanel />
+              <ChatSettings
+                onClose={() => {
+                  return setShowSettingsPanel(false);
+                }}
+              />
             ) : (
               <>
                 {/* Messages container - using native scrolling instead of ScrollArea */}
@@ -661,45 +603,6 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
           </div>
         </div>
       )}
-
-      {/* Settings Dialog - now used only as a fallback or for specific interactions */}
-      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent className='sm:max-w-[500px]'>
-          <DialogHeader>
-            <DialogTitle>Assistant Settings</DialogTitle>
-            <DialogDescription>
-              Configure context settings to customize how the assistant responds to your queries.
-            </DialogDescription>
-          </DialogHeader>
-          <div className='grid gap-4 py-4'>
-            <div className='grid gap-2'>
-              <Label htmlFor='context'>Context Information</Label>
-              <Textarea
-                id='context'
-                placeholder='Enter information you want to include in the AI prompt (e.g., project details, preferences, background information)'
-                className='h-40'
-                value={contextSettings}
-                onChange={handleContextSettingsChange}
-              />
-              <p className='text-xs text-muted-foreground'>
-                This information will be passed to the AI to provide better, more tailored
-                responses.
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant='outline'
-              onClick={() => {
-                return setIsSettingsOpen(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSaveSettings}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Styles */}
       <style jsx global>{`
