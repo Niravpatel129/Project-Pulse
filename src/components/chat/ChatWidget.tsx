@@ -9,10 +9,20 @@ import {
   CommandInput,
   CommandItem,
 } from '@/components/ui/command';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
 import { Message, PageContext, useChatWidget } from '@/hooks/useChatWidget';
 import { cn } from '@/lib/utils';
-import { MessageCircle, Send, Trash2, X } from 'lucide-react';
+import { MessageCircle, Send, Settings, Trash2, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import TextareaAutosize from 'react-textarea-autosize';
@@ -48,7 +58,33 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
     handleSelectMention,
     removeMention,
     handleStopStreaming,
+    setShowMentions,
   } = useChatWidget(pageContext);
+
+  // Settings dialog state
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [contextSettings, setContextSettings] = useState('');
+
+  // Handle settings changes
+  const handleContextSettingsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContextSettings(e.target.value);
+  };
+
+  const handleSaveSettings = () => {
+    // Save context settings to localStorage
+    localStorage.setItem('chat-context-settings', contextSettings);
+    setIsSettingsOpen(false);
+  };
+
+  // Load settings on initial render
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedSettings = localStorage.getItem('chat-context-settings');
+      if (savedSettings) {
+        setContextSettings(savedSettings);
+      }
+    }
+  }, []);
 
   // Panel resize state
   const [panelWidth, setPanelWidth] = useState(() => {
@@ -253,7 +289,23 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
               // Use defaultValue instead of value to make this an uncontrolled component
               defaultValue=''
               onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+
+                  if (showMentions) {
+                    return; // If mentions dropdown is open, do nothing
+                  }
+
+                  handleSendMessage(contextSettings);
+                  return;
+                }
+
+                if (e.key === 'Escape' && showMentions) {
+                  e.preventDefault();
+                  setShowMentions(false);
+                }
+              }}
               placeholder={isStreaming ? 'Type to queue next message...' : 'Type a message...'}
               className='min-h-[56px] resize-none flex-1 px-3 pt-3 pb-9 text-sm bg-transparent border-none ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
               maxRows={6}
@@ -276,7 +328,13 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
               </div>
 
               {/* Send Button */}
-              <Button onClick={handleSendMessage} size='sm'>
+              <Button
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleSendMessage(contextSettings);
+                }}
+                size='sm'
+              >
                 <Send className='h-3.5 w-3.5 mr-1' />
                 <span className='text-xs'>{isStreaming ? 'Interrupt & Send' : 'Send'}</span>
               </Button>
@@ -348,6 +406,17 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
               title='Clear conversation'
             >
               <Trash2 className='h-4 w-4' />
+            </Button>
+            <Button
+              variant='ghost'
+              size='icon'
+              className='h-7 w-7 rounded-full'
+              onClick={() => {
+                return setIsSettingsOpen(true);
+              }}
+              title='Settings'
+            >
+              <Settings className='h-4 w-4' />
             </Button>
             <Button
               variant='ghost'
@@ -432,6 +501,45 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
 
       {/* Resizable Panel System */}
       <LayoutWithPanel />
+
+      {/* Settings Dialog */}
+      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <DialogContent className='sm:max-w-[500px]'>
+          <DialogHeader>
+            <DialogTitle>Assistant Settings</DialogTitle>
+            <DialogDescription>
+              Configure context settings to customize how the assistant responds to your queries.
+            </DialogDescription>
+          </DialogHeader>
+          <div className='grid gap-4 py-4'>
+            <div className='grid gap-2'>
+              <Label htmlFor='context'>Context Information</Label>
+              <Textarea
+                id='context'
+                placeholder='Enter information you want to include in the AI prompt (e.g., project details, preferences, background information)'
+                className='h-40'
+                value={contextSettings}
+                onChange={handleContextSettingsChange}
+              />
+              <p className='text-xs text-muted-foreground'>
+                This information will be passed to the AI to provide better, more tailored
+                responses.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => {
+                return setIsSettingsOpen(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveSettings}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Styles */}
       <style jsx global>{`

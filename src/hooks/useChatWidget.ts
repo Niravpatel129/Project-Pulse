@@ -18,11 +18,11 @@ export type TableInfo = {
 };
 
 export type PageContext = {
-  url?: string;
+  pageId?: string;
   title?: string;
-  description?: string;
+  url?: string;
+  content?: string;
   tables?: TableInfo[];
-  [key: string]: any;
 };
 
 export function useChatWidget(pageContext?: PageContext) {
@@ -350,7 +350,12 @@ export function useChatWidget(pageContext?: PageContext) {
 
   // Stream response from AI
   const setupStreamConnection = useCallback(
-    (userMessageId: string, messageContent: string, mentionsForAPI: string[] = []) => {
+    (
+      userMessageId: string,
+      messageContent: string,
+      mentionsForAPI: string[] = [],
+      contextSettings?: string,
+    ) => {
       // Track if input had focus before we start streaming
       const inputHadFocus = document.activeElement === inputRef.current;
 
@@ -391,6 +396,7 @@ export function useChatWidget(pageContext?: PageContext) {
             sessionId: sessionId,
             pageContext: pageContext || null,
             mentions: mentionsForAPI.length > 0 ? mentionsForAPI : undefined,
+            contextSettings: contextSettings || undefined,
           },
           onStart: (data) => {
             // Save session ID
@@ -544,90 +550,93 @@ export function useChatWidget(pageContext?: PageContext) {
   );
 
   // Send message handler
-  const handleSendMessage = useCallback(async () => {
-    if (!inputRef.current) return;
+  const handleSendMessage = useCallback(
+    async (contextSettings?: string) => {
+      if (!inputRef.current) return;
 
-    const messageContent = inputRef.current.value.trim();
-    if ((!messageContent && selectedMentions.length === 0) || isSendingRef.current) return;
+      const messageContent = inputRef.current.value.trim();
+      if ((!messageContent && selectedMentions.length === 0) || isSendingRef.current) return;
 
-    // If we're streaming, cancel the current stream
-    if (isStreaming && abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      // Add a note to the last AI message that it was interrupted
-      setMessages((prev) => {
-        const lastMessage = prev[prev.length - 1];
-        if (lastMessage && lastMessage.sender === 'ai' && lastMessage.isStreaming) {
-          return [
-            ...prev.slice(0, -1),
-            {
-              ...lastMessage,
-              content: lastMessage.content + '\n\n*Message interrupted*',
-              isStreaming: false,
-            },
-          ];
-        }
-        return prev;
-      });
-      setIsStreaming(false);
-    }
+      // If we're streaming, cancel the current stream
+      if (isStreaming && abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        // Add a note to the last AI message that it was interrupted
+        setMessages((prev) => {
+          const lastMessage = prev[prev.length - 1];
+          if (lastMessage && lastMessage.sender === 'ai' && lastMessage.isStreaming) {
+            return [
+              ...prev.slice(0, -1),
+              {
+                ...lastMessage,
+                content: lastMessage.content + '\n\n*Message interrupted*',
+                isStreaming: false,
+              },
+            ];
+          }
+          return prev;
+        });
+        setIsStreaming(false);
+      }
 
-    // Set sending flag
-    isSendingRef.current = true;
+      // Set sending flag
+      isSendingRef.current = true;
 
-    // Create user message with mentions
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: messageContent,
-      sender: 'user',
-      timestamp: new Date(),
-      mentions: selectedMentions.length > 0 ? [...selectedMentions] : undefined,
-    };
-
-    // Add to messages
-    setMessages((prev) => {
-      return [...prev, userMessage];
-    });
-
-    // Clear input and mentions
-    inputValueRef.current = '';
-    inputRef.current.value = '';
-    cursorPositionRef.current = 0;
-    setSelectedMentions([]);
-
-    // Set loading state but allow typing
-    setIsLoading(true);
-    userScrollingRef.current = false;
-    setTimeout(scrollToBottom, 50);
-
-    try {
-      // Stream response - prepare content for API with mentions included
-      const apiMessageContent = messageContent;
-      const mentionsForAPI = selectedMentions.map((m) => {
-        return m.name;
-      });
-
-      // Stream response - modify to include mentions
-      setupStreamConnection(userMessage.id, messageContent, mentionsForAPI);
-    } catch (error) {
-      console.error('Error sending message:', error);
-
-      // Show error message
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: 'Sorry, there was an error processing your request. Please try again.',
-        sender: 'ai',
+      // Create user message with mentions
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content: messageContent,
+        sender: 'user',
         timestamp: new Date(),
+        mentions: selectedMentions.length > 0 ? [...selectedMentions] : undefined,
       };
 
+      // Add to messages
       setMessages((prev) => {
-        return [...prev, errorMessage];
+        return [...prev, userMessage];
       });
-      setIsLoading(false);
-    } finally {
-      // Clear sending flag
-      isSendingRef.current = false;
-    }
-  }, [isStreaming, selectedMentions, scrollToBottom, setupStreamConnection]);
+
+      // Clear input and mentions
+      inputValueRef.current = '';
+      inputRef.current.value = '';
+      cursorPositionRef.current = 0;
+      setSelectedMentions([]);
+
+      // Set loading state but allow typing
+      setIsLoading(true);
+      userScrollingRef.current = false;
+      setTimeout(scrollToBottom, 50);
+
+      try {
+        // Stream response - prepare content for API with mentions included
+        const apiMessageContent = messageContent;
+        const mentionsForAPI = selectedMentions.map((m) => {
+          return m.name;
+        });
+
+        // Stream response - modify to include mentions
+        setupStreamConnection(userMessage.id, messageContent, mentionsForAPI, contextSettings);
+      } catch (error) {
+        console.error('Error sending message:', error);
+
+        // Show error message
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: 'Sorry, there was an error processing your request. Please try again.',
+          sender: 'ai',
+          timestamp: new Date(),
+        };
+
+        setMessages((prev) => {
+          return [...prev, errorMessage];
+        });
+        setIsLoading(false);
+      } finally {
+        // Clear sending flag
+        isSendingRef.current = false;
+      }
+    },
+    [isStreaming, selectedMentions, scrollToBottom, setupStreamConnection],
+  );
 
   // Clear conversation handler
   const clearConversation = useCallback(async () => {
@@ -770,5 +779,6 @@ export function useChatWidget(pageContext?: PageContext) {
     handleResize,
     handleStopStreaming,
     scrollToBottom,
+    setShowMentions,
   };
 }
