@@ -109,6 +109,7 @@ export default function TablePage() {
     deleteColumn,
     currentTableData,
   } = useDatabase([]);
+  console.log('🚀 currentTableData:', currentTableData);
 
   const queryClient = useQueryClient();
   const params = useParams();
@@ -530,14 +531,6 @@ export default function TablePage() {
         handleAddColumn={handleAddColumn}
         handleDeleteSelected={handleDeleteSelectedCallback}
         handleImportData={handleImportData}
-        tableId={params.tableId as string}
-        currentTableData={currentTableData}
-        onColumnsReordered={(newOrder) => {
-          return setColumnOrder(newOrder);
-        }}
-        onColumnRenamed={(columnId, newName) => {
-          return renameColumn(columnId, newName);
-        }}
       />
 
       <FilterPanel
