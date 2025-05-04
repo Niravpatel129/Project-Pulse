@@ -67,12 +67,12 @@ const MessageContent: FC<{
 const MessageItem: FC<{ message: Message }> = memo(({ message }) => {
   const { sender, content, mentions, isStreaming, id } = message;
   const alignmentClass =
-    sender === 'user' ? 'ml-auto bg-primary text-primary-foreground' : 'bg-muted';
+    sender === 'user' ? 'ml-auto bg-[#e5e4e0] text-[#292625]' : 'bg-none text-[#292625]';
 
   return (
     <div
       className={cn(
-        'relative group flex max-w-[80%] w-full gap-2 p-3 rounded-lg transition-all',
+        'relative group flex max-w-[80%] w-full gap-2 p-3 rounded-lg transition-all my-2',
         alignmentClass,
       )}
     >

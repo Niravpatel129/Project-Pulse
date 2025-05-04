@@ -356,7 +356,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
               <Command className='rounded-lg'>
                 <CommandInput placeholder='Search tables...' className='h-9' />
                 <CommandEmpty>No tables found</CommandEmpty>
-                <CommandGroup className='max-h-60 overflow-auto'>
+                <CommandGroup className='max-h-60 overflow-auto scrollbar-hide'>
                   {filteredTables.map((table) => {
                     return (
                       <CommandItem
@@ -414,7 +414,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
           {/* Chat panel */}
           {isOpen && (
             <div
-              className='fixed inset-0 z-40 pointer-events-none overflow-hidden'
+              className='fixed inset-0 z-40 pointer-events-none overflow-hidden '
               aria-hidden='false'
               style={{
                 contain: 'strict',
@@ -430,7 +430,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
 
               {/* The actual chat panel */}
               <div
-                className='absolute top-0 bottom-0 right-0 bg-background border-l shadow-lg pointer-events-auto flex flex-col'
+                className='absolute top-0 bottom-0 right-0 bg-background border-l shadow-lg pointer-events-auto flex flex-col bg-[#efeceb]'
                 style={{
                   width: `${panelWidth}px`,
                   isolation: 'isolate',
@@ -449,7 +449,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
                 />
 
                 {/* Header */}
-                <div className='bg-primary p-3 text-primary-foreground flex items-center justify-between shrink-0'>
+                <div className='bg-[#efeceb] border-b-2 border-b-[#e5e4e0] p-3 text-[#676767] flex items-center justify-between shrink-0'>
                   <div className='flex items-center gap-2'>
                     <ChatAvatar wiggle={wiggle} setWiggle={setWiggle} />
 
@@ -510,7 +510,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
                     {/* Messages container - using native scrolling instead of ScrollArea */}
                     <div
                       ref={scrollAreaRef}
-                      className='flex-1 overflow-y-auto p-3 messages-container'
+                      className='flex-1 overflow-y-auto p-3 messages-container scrollbar-hide'
                       // Prevent touch scrolling from propagating on mobile
                       onTouchStart={(e) => {
                         return e.stopPropagation();
@@ -522,7 +522,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
                         return e.stopPropagation();
                       }}
                     >
-                      <div className='flex flex-col gap-3'>
+                      <div className='flex flex-col gap-3 scrollbar-hide'>
                         <MessageList />
                       </div>
                     </div>
