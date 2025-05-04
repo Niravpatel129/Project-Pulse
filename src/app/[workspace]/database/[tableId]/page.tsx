@@ -22,6 +22,7 @@ import {
   CustomFilterModule,
   DateEditorModule,
   DateFilterModule,
+  HighlightChangesModule,
   ModuleRegistry,
   NumberEditorModule,
   NumberFilterModule,
@@ -67,6 +68,7 @@ ModuleRegistry.registerModules([
   CustomEditorModule,
   UndoRedoEditModule,
   CheckboxEditorModule,
+  HighlightChangesModule,
 ]);
 
 export default function TablePage() {

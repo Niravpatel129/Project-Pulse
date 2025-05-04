@@ -23,7 +23,8 @@ export const useAgGridConfig = (
       resizable: true,
       sortable: true,
       filter: true,
-      editable: true, // Set everything editable by default
+      editable: true,
+      enableCellChangeFlash: true,
     };
   }, []);
 

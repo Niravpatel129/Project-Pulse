@@ -140,6 +140,7 @@ export const TableGrid = forwardRef(function TableGrid(
         onRowDragEnd={handleRowDragEnd}
         suppressMoveWhenRowDragging={false}
         theme={agGridTheme}
+        undoRedoCellEditingLimit={20}
       />
     </div>
   );
