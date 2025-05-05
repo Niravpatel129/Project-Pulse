@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 import { AlertCircle, Check, FileText, Loader2, Plus, Sparkles, X } from 'lucide-react';
 import { useState } from 'react';
 import { Textarea } from './ui/textarea';
@@ -43,6 +44,7 @@ function ProjectManagement({ onClose }) {
   const [aiGeneratedItems, setAiGeneratedItems] = useState([]);
   const [selectedAiItems, setSelectedAiItems] = useState({});
   const [showAddItemForm, setShowAddItemForm] = useState(false);
+  const [currentNewItemMode, setCurrentNewItemMode] = useState('manual');
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [newItem, setNewItem] = useState({
@@ -586,9 +588,16 @@ function ProjectManagement({ onClose }) {
               <div className='flex space-x-3 mb-6'>
                 <Button
                   onClick={() => {
-                    return setShowAddItemForm(true);
+                    if (currentNewItemMode === 'manual') {
+                      return setCurrentNewItemMode(null);
+                    }
+                    return setCurrentNewItemMode('manual');
                   }}
-                  className='flex-1 flex items-center justify-center'
+                  className={cn(
+                    'flex-1 flex items-center justify-center',
+                    currentNewItemMode === 'manual' &&
+                      'bg-[#111827] text-white hover:bg-[#111827] hover:text-white',
+                  )}
                   variant='outline'
                 >
                   <Plus size={16} className='mr-2' />
@@ -596,9 +605,17 @@ function ProjectManagement({ onClose }) {
                 </Button>
                 <Button
                   onClick={() => {
-                    return setShowAiPrompt(true);
+                    // unfocus to null if it is ai already
+                    if (currentNewItemMode === 'ai') {
+                      return setCurrentNewItemMode(null);
+                    }
+                    return setCurrentNewItemMode('ai');
                   }}
-                  className='flex-1 flex items-center justify-center'
+                  className={cn(
+                    'flex-1 flex items-center justify-center',
+                    currentNewItemMode === 'ai' &&
+                      'bg-[#111827] text-white hover:bg-[#111827] hover:text-white',
+                  )}
                   variant='outline'
                 >
                   <Sparkles size={16} className='mr-2' />
@@ -607,7 +624,7 @@ function ProjectManagement({ onClose }) {
               </div>
 
               {/* Add Item Form */}
-              {showAddItemForm && (
+              {currentNewItemMode === 'manual' && (
                 <div className='border border-[#E5E7EB] rounded-lg p-4 mb-6 transition-all duration-200 ease-in-out bg-white shadow-sm'>
                   <form
                     onSubmit={editingItem ? handleUpdateItem : handleSubmitNewItem}
@@ -694,7 +711,7 @@ function ProjectManagement({ onClose }) {
               )}
 
               {/* AI Prompt Form */}
-              {showAiPrompt && (
+              {currentNewItemMode === 'ai' && (
                 <div className='border border-[#E5E7EB] rounded-lg p-4 mb-6 bg-white shadow-sm'>
                   <div className='mb-4'>
                     <label className='block text-[#111827] font-medium text-sm mb-2'>
