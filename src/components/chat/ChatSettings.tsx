@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, RotateCcw } from 'lucide-react';
+import { Check, RefreshCcw, RotateCcw } from 'lucide-react';
 import { memo, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -77,7 +77,7 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
   const queryClient = useQueryClient();
   const contextDebounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const [saveIndicator, setSaveIndicator] = useState<{ [key: string]: boolean }>({});
-
+  const [isRefreshing, setIsRefreshing] = useState(false);
   // Fetch chat settings
   const {
     data: settings,
@@ -212,6 +212,18 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
     );
   };
 
+  const handleRefreshCache = async () => {
+    setIsRefreshing(true);
+    try {
+      const response = await newRequest.post('/ai/refresh');
+      toast.success('Cache refreshed successfully.');
+    } catch (error) {
+      toast.error('Failed to refresh cache.');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className='flex items-center justify-center h-full p-6'>
@@ -242,6 +254,15 @@ export function ChatSettings({ onClose }: ChatSettingsProps) {
             >
               <RotateCcw className='h-4 w-4 mr-1' />
               Reset
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleRefreshCache}
+              disabled={isRefreshing}
+            >
+              <RefreshCcw className='h-4 w-4 mr-1' />
+              Refresh Cache
             </Button>
           </div>
 

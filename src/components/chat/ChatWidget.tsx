@@ -49,7 +49,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
 
   // Panel resize state - set default without localStorage for SSR
-  const [panelWidth, setPanelWidth] = useState(350);
+  const [panelWidth, setPanelWidth] = useState(500);
 
   // Client-side rendering state
   const [mounted, setMounted] = useState(false);
