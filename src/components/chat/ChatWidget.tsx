@@ -257,7 +257,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
         <div className='relative'>
           {/* Selected Mentions Tags */}
           {selectedMentions.length > 0 && (
-            <div className='flex flex-wrap gap-1 p-2 bg-background rounded-t-md border-t border-x'>
+            <div className='flex flex-wrap gap-1 p-2 rounded-t-md border-t border-x'>
               {selectedMentions.map((mention) => {
                 return (
                   <div
@@ -282,7 +282,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
           {/* Text Input */}
           <div
             className={cn(
-              'flex flex-col bg-background overflow-hidden relative border-[#e6e3e2] border-2 rounded-lg',
+              'flex flex-col overflow-hidden relative border-[#e6e3e2] border-2 rounded-lg',
               selectedMentions.length > 0 && 'rounded-t-none border-t-0',
             )}
           >
@@ -309,7 +309,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
                 }
               }}
               placeholder={isStreaming ? 'Type to queue next message...' : 'Ask anything...'}
-              className='min-h-[56px] resize-none w-full px-3 py-3 pr-[70px] text-sm bg-transparent border-none ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
+              className='min-h-[56px] resize-none w-full px-3 py-3 pr-[70px] text-sm bg-transparent border-none ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white'
               maxRows={6}
             />
 
@@ -389,7 +389,7 @@ export function ChatWidget({ pageContext }: ChatWidgetProps = {}) {
 
               {/* The actual chat panel */}
               <div
-                className='absolute top-0 bottom-0 right-0 bg-background border-l shadow-lg pointer-events-auto flex flex-col bg-[#efeceb]'
+                className='absolute top-0 bottom-0 right-0  border-l shadow-lg pointer-events-auto flex flex-col bg-[#efeceb]'
                 style={{
                   width: `${panelWidth}px`,
                   isolation: 'isolate',
