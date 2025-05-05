@@ -1,5 +1,6 @@
 'use client';
 
+import ProjectDialog from '@/components/ProjectDialog';
 import { motion } from 'framer-motion';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -9,6 +10,7 @@ export default function WorkspacePage() {
   const router = useRouter();
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [showProjectDialog, setShowProjectDialog] = useState(false);
   const workspace = params.workspace as string;
 
   useEffect(() => {
@@ -53,6 +55,14 @@ export default function WorkspacePage() {
 
   return (
     <div className='min-h-screen bg-gray-50'>
+      {/* New Project Dialog */}
+      <ProjectDialog
+        isOpen={showProjectDialog}
+        onClose={() => {
+          setShowProjectDialog(false);
+        }}
+      />
+
       <div className='py-8 px-4 sm:px-6 lg:px-8'>
         <div className='max-w-7xl mx-auto'>
           <div className='text-center'>
@@ -66,6 +76,34 @@ export default function WorkspacePage() {
             <p className='mt-4 text-xl text-gray-500'>
               Welcome to your workspace. Access your projects, leads, and more.
             </p>
+
+            {/* Create Project Button */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className='mt-6'
+            >
+              <button
+                onClick={() => {
+                  setShowProjectDialog(true);
+                }}
+                className='bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg shadow-md font-medium flex items-center mx-auto'
+              >
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  className='h-5 w-5 mr-2'
+                  viewBox='0 0 20 20'
+                  fill='currentColor'
+                >
+                  <path
+                    fillRule='evenodd'
+                    d='M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z'
+                    clipRule='evenodd'
+                  />
+                </svg>
+                Create Project
+              </button>
+            </motion.div>
 
             {/* PWA Installation Banner */}
             {!isInstalled && installPrompt && (
@@ -115,7 +153,7 @@ export default function WorkspacePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
                 onClick={() => {
-                  return navigateToSection('projects');
+                  navigateToSection('projects');
                 }}
                 className='bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow border border-gray-200'
               >
@@ -145,7 +183,7 @@ export default function WorkspacePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
                 onClick={() => {
-                  return navigateToSection('leads');
+                  navigateToSection('leads');
                 }}
                 className='bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow border border-gray-200'
               >
@@ -177,7 +215,7 @@ export default function WorkspacePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
                 onClick={() => {
-                  return navigateToSection('database');
+                  navigateToSection('database');
                 }}
                 className='bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow border border-gray-200'
               >
