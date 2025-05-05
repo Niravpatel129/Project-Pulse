@@ -1,397 +1,1191 @@
-import { motion } from 'framer-motion';
+'use client';
 
-interface ProjectDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { AlertCircle, Check, FileText, Loader2, Plus, Sparkles, X } from 'lucide-react';
+import { useState } from 'react';
 
-export default function ProjectDialog({ isOpen, onClose }: ProjectDialogProps) {
-  if (!isOpen) return null;
+export default function HomePage() {
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
-    <div className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center'>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className='bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto'
-      >
-        <div className='flex'>
-          {/* Left sidebar */}
-          <div className='w-[370px] bg-gray-50 p-8 pb-10 rounded-l-lg'>
-            <div className='flex items-center mb-2'>
-              <div className='w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white mr-2'>
+    <div className='flex min-h-screen items-center justify-center bg-[#FAFAFA]'>
+      <div className='text-center'>
+        <h1 className='text-3xl font-bold mb-6'>Project Management</h1>
+        <p className='text-muted-foreground mb-8 max-w-md mx-auto'>
+          Create and manage projects with items, clients, and notes all in one place.
+        </p>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button size='lg' className='gap-2'>
+              <FileText size={18} />
+              New Project
+            </Button>
+          </DialogTrigger>
+          <DialogContent className='max-w-[1200px] w-[95vw] h-[90vh] p-0 overflow-hidden'>
+            <ProjectManagement
+              onClose={() => {
+                return setDialogOpen(false);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  );
+}
+
+function ProjectManagement({ onClose }) {
+  const [activeSection, setActiveSection] = useState('items');
+  const [selectedClient, setSelectedClient] = useState('client1');
+  const [showAiPrompt, setShowAiPrompt] = useState(false);
+  const [aiGeneratedItems, setAiGeneratedItems] = useState([]);
+  const [selectedAiItems, setSelectedAiItems] = useState({});
+  const [showAddItemForm, setShowAddItemForm] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [newItem, setNewItem] = useState({
+    name: '',
+    description: '',
+    price: '',
+  });
+  const [items, setItems] = useState([
+    {
+      id: 'item1',
+      name: 'Website Design',
+      description: 'Homepage and 5 subpages',
+      price: '2,500.00',
+    },
+    { id: 'item2', name: 'Logo Design', description: '3 concepts with revisions', price: '850.00' },
+    {
+      id: 'item3',
+      name: 'Brand Guidelines',
+      description: 'Color palette and typography',
+      price: '1,200.00',
+    },
+  ]);
+  const [clients, setClients] = useState([
+    { id: 'client1', name: 'Acme Corporation', email: 'contact@acmecorp.com' },
+    { id: 'client2', name: 'Globex Industries', email: 'info@globex.com' },
+    { id: 'client3', name: 'Stark Enterprises', email: 'tony@stark.com' },
+  ]);
+  const [notes, setNotes] = useState(
+    'Project deadline is end of Q2. Client prefers minimalist design approach.',
+  );
+  const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+  const [editingItem, setEditingItem] = useState(null);
+  const [deletedItem, setDeletedItem] = useState(null);
+  const [showUndoNotification, setShowUndoNotification] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [keyboardShortcutsVisible, setKeyboardShortcutsVisible] = useState(false);
+  const [aiResponse, setAiResponse] = useState(null);
+
+  const nameInputRef = { current: null };
+  const undoTimeoutRef = { current: null };
+  const aiPromptInputRef = { current: null };
+
+  // Calculate total
+  const total = items
+    .reduce((sum, item) => {
+      return sum + Number.parseFloat(item.price.replace(/,/g, ''));
+    }, 0)
+    .toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+  // Show notification
+  const showNotification = (message, type = 'success') => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => {
+      setNotification({ show: false, message: '', type: '' });
+    }, 3000);
+  };
+
+  const handleAddItem = () => {
+    setShowAddItemForm(true);
+    setShowAiPrompt(false);
+    setTimeout(() => {
+      return nameInputRef.current?.focus();
+    }, 10);
+  };
+
+  const handleGenerateAiItems = () => {
+    if (!aiPrompt.trim()) return;
+
+    setIsGenerating(true);
+    setAiGeneratedItems([]);
+    setAiResponse(null);
+
+    // Simulate AI processing delay
+    setTimeout(() => {
+      // Mock response based on the provided JSON format
+      const mockResponse = {
+        lineItems: [
+          {
+            name: 'Red Turtle Hoodie',
+            description:
+              'Vibrant red turtle-neck style hoodie crafted from premium materials, featuring a cozy front pocket and soft inner lining for warmth. Designed for all-day comfort and style, perfect for casual wear.',
+            price: '$15.00',
+            type: 'PRODUCT',
+            reasoning:
+              "Name and color extracted from prompt. Price specified as 'something like $15'. Description generated to include color, type, and standard hoodie features.",
+          },
+          {
+            name: 'Black Regular Shirt',
+            description:
+              'Classic black t-shirt made from high-quality cotton, offering a comfortable regular fit with reinforced stitching and breathable fabric. Versatile for everyday use and layering.',
+            price: '$12.00',
+            type: 'PRODUCT',
+            reasoning:
+              "Name ('black regular shirt') and color taken from prompt. Price estimated based on typical t-shirt prices and services table reference. Description generated to match a standard product of this type.",
+          },
+          {
+            name: 'DTF',
+            description:
+              'Professional Direct to Film (DTF) printing service, using advanced technology for vibrant, detailed prints on a variety of garments. Ideal for custom apparel with lasting color and durability.',
+            price: '$10.00',
+            type: 'SERVICE',
+            reasoning:
+              "Name matched to 'DTF' from services table. Price of $10 derived from services table. Description generated based on DTF printing process.",
+          },
+          {
+            name: 'Screen',
+            description:
+              'Expert screen printing service delivering sharp, long-lasting designs on apparel. Utilizes high-quality inks and precision techniques for both single and bulk orders.',
+            price: '$14.00',
+            type: 'SERVICE',
+            reasoning:
+              "Name matched to 'Screen' from services table. Price of $14 derived from services table. Description generated based on screen printing process and standard features.",
+          },
+        ],
+        meta: {
+          processingTime: 8.584,
+          promptLength: 203,
+          timestamp: '2025-05-05T21:07:25.310Z',
+        },
+      };
+
+      setAiResponse(mockResponse);
+
+      // Convert the response to our item format for display
+      const generatedItems = mockResponse.lineItems.map((item, index) => {
+        return {
+          id: `ai-item-${Date.now()}-${index}`,
+          name: item.name,
+          description: item.description,
+          price: item.price.replace('$', ''),
+          type: item.type,
+          reasoning: item.reasoning,
+        };
+      });
+
+      setAiGeneratedItems(generatedItems);
+      setSelectedAiItems({});
+      setIsGenerating(false);
+    }, 1500);
+  };
+
+  const handleAddSelectedAiItems = () => {
+    const selectedItems = aiGeneratedItems.filter((item) => {
+      return selectedAiItems[item.id];
+    });
+
+    if (selectedItems.length === 0) {
+      showNotification('Please select at least one item', 'error');
+      return;
+    }
+
+    // Format the items to match our items array structure
+    const formattedItems = selectedItems.map((item) => {
+      return {
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        price: item.price.replace('$', ''),
+      };
+    });
+
+    setItems((prev) => {
+      return [...prev, ...formattedItems];
+    });
+    setShowAiPrompt(false);
+    setAiPrompt('');
+    setAiGeneratedItems([]);
+    setAiResponse(null);
+    setSelectedAiItems({});
+
+    showNotification(
+      `Added ${selectedItems.length} item${selectedItems.length > 1 ? 's' : ''}`,
+      'success',
+    );
+  };
+
+  const handleRemoveItem = (id, e) => {
+    if (e) {
+      e.stopPropagation();
+    }
+
+    // Store the deleted item for potential undo
+    const itemToDelete = items.find((item) => {
+      return item.id === id;
+    });
+    setDeletedItem(itemToDelete);
+
+    // Remove the item
+    setItems(
+      items.filter((item) => {
+        return item.id !== id;
+      }),
+    );
+
+    // Show undo notification
+    setShowUndoNotification(true);
+
+    // Clear any existing timeout
+    if (undoTimeoutRef.current) {
+      clearTimeout(undoTimeoutRef.current);
+    }
+
+    // Set a timeout to clear the undo option
+    undoTimeoutRef.current = setTimeout(() => {
+      setShowUndoNotification(false);
+      setDeletedItem(null);
+    }, 5000);
+
+    showNotification('Item removed', 'info');
+  };
+
+  const handleUndoDelete = () => {
+    if (deletedItem) {
+      setItems((prev) => {
+        return [...prev, deletedItem];
+      });
+      setShowUndoNotification(false);
+      setDeletedItem(null);
+      if (undoTimeoutRef.current) {
+        clearTimeout(undoTimeoutRef.current);
+      }
+      showNotification('Item restored', 'success');
+    }
+  };
+
+  const handleSubmitNewItem = (e) => {
+    e.preventDefault();
+
+    if (!newItem.name.trim()) return;
+
+    setIsSubmitting(true);
+
+    // Format price to have 2 decimal places
+    const formattedPrice = Number(newItem.price || 0).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+    // Simulate a slight delay for better UX
+    setTimeout(() => {
+      const newItemObj = {
+        id: `item${Date.now()}`,
+        name: newItem.name.trim(),
+        description: newItem.description.trim(),
+        price: formattedPrice,
+      };
+
+      setItems([...items, newItemObj]);
+      setNewItem({ name: '', description: '', price: '' });
+      setShowAddItemForm(false);
+      setIsSubmitting(false);
+      showNotification('Item added successfully');
+    }, 300);
+  };
+
+  const handleEditItem = (item) => {
+    setEditingItem(item);
+    setNewItem({
+      name: item.name,
+      description: item.description,
+      price: item.price.replace(/,/g, ''),
+    });
+  };
+
+  const handleUpdateItem = (e) => {
+    e.preventDefault();
+
+    if (!newItem.name.trim()) return;
+
+    setIsSubmitting(true);
+
+    // Format price to have 2 decimal places
+    const formattedPrice = Number(newItem.price || 0).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+    // Simulate a slight delay for better UX
+    setTimeout(() => {
+      const updatedItems = items.map((item) => {
+        return item.id === editingItem.id
+          ? {
+              ...item,
+              name: newItem.name.trim(),
+              description: newItem.description.trim(),
+              price: formattedPrice,
+            }
+          : item;
+      });
+
+      setItems(updatedItems);
+      setNewItem({ name: '', description: '', price: '' });
+      setEditingItem(null);
+      setIsSubmitting(false);
+      showNotification('Item updated successfully');
+    }, 300);
+  };
+
+  // Handle pressing Enter in the name field to move to description
+  const handleNameKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('item-description')?.focus();
+    }
+  };
+
+  // Handle pressing Enter in the description field to move to price
+  const handleDescriptionKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('item-price')?.focus();
+    }
+  };
+
+  const toggleAiItemSelection = (id) => {
+    setSelectedAiItems((prev) => {
+      return {
+        ...prev,
+        [id]: !prev[id],
+      };
+    });
+  };
+
+  return (
+    <div className='flex h-full bg-[#FAFAFA]'>
+      {/* Notification */}
+      {notification.show && (
+        <div
+          className={`fixed top-4 right-4 z-50 px-4 py-2 rounded-md shadow-md flex items-center space-x-2 transition-all duration-300 ease-in-out ${
+            notification.type === 'success'
+              ? 'bg-green-50 text-green-800 border border-green-200'
+              : notification.type === 'error'
+              ? 'bg-red-50 text-red-800 border border-red-200'
+              : 'bg-blue-50 text-blue-800 border border-blue-200'
+          }`}
+        >
+          {notification.type === 'success' && <Check size={16} className='text-green-500' />}
+          {notification.type === 'error' && <AlertCircle size={16} className='text-red-500' />}
+          {notification.type === 'info' && <AlertCircle size={16} className='text-blue-500' />}
+          <span>{notification.message}</span>
+        </div>
+      )}
+
+      {/* Undo notification */}
+      {showUndoNotification && (
+        <div className='fixed bottom-4 right-4 z-50 px-4 py-3 bg-gray-800 text-white rounded-md shadow-lg flex items-center space-x-3'>
+          <span>Item removed</span>
+          <button
+            onClick={handleUndoDelete}
+            className='text-blue-300 hover:text-blue-200 font-medium'
+          >
+            Undo
+          </button>
+          <button
+            onClick={() => {
+              return setShowUndoNotification(false);
+            }}
+            className='ml-2 text-gray-400 hover:text-gray-300'
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
+      {/* Left Sidebar */}
+      <div className='w-[300px] bg-white p-6 border-r border-[#F3F4F6] flex flex-col'>
+        <div className='mb-6'>
+          <h1 className='text-xl font-semibold mb-2 text-[#111827]'>New Project</h1>
+          <p className='text-[#4B5563] text-sm leading-5'>
+            Create new project to help manage items, clients and notes in one place.
+          </p>
+        </div>
+
+        <div className='space-y-3 flex-grow'>
+          <button
+            className={`flex items-center w-full text-left p-2 rounded-md ${
+              activeSection === 'items' ? 'bg-[#F9FAFB]' : ''
+            } hover:bg-[#F9FAFB] transition-colors`}
+            onClick={() => {
+              return setActiveSection('items');
+            }}
+          >
+            <div
+              className={`w-6 h-6 rounded-full ${
+                activeSection === 'items' ? 'bg-[#111827]' : 'border border-[#D1D5DB]'
+              } flex items-center justify-center mr-3 transition-colors`}
+            >
+              {activeSection === 'items' ? (
                 <svg
+                  width='12'
+                  height='12'
+                  viewBox='0 0 12 12'
+                  fill='none'
                   xmlns='http://www.w3.org/2000/svg'
-                  viewBox='0 0 24 24'
-                  fill='currentColor'
-                  className='w-6 h-6'
                 >
                   <path
-                    fillRule='evenodd'
-                    d='M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z'
-                    clipRule='evenodd'
+                    d='M10 3L4.5 8.5L2 6'
+                    stroke='white'
+                    strokeWidth='1.5'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
                   />
                 </svg>
-              </div>
-              <span className='font-medium'>whitespace</span>
+              ) : (
+                <span className='text-[#6B7280] text-xs'>1</span>
+              )}
             </div>
+            <span
+              className={`text-sm ${
+                activeSection === 'items' ? 'text-[#111827] font-medium' : 'text-[#6B7280]'
+              }`}
+            >
+              Items
+            </span>
+          </button>
 
-            <div className='text-right mb-8'>
-              <span className='text-gray-500 text-sm'>Save as draft</span>
+          <button
+            className={`flex items-center w-full text-left p-2 rounded-md ${
+              activeSection === 'client' ? 'bg-[#F9FAFB]' : ''
+            } hover:bg-[#F9FAFB] transition-colors`}
+            onClick={() => {
+              return setActiveSection('client');
+            }}
+          >
+            <div
+              className={`w-6 h-6 rounded-full ${
+                activeSection === 'client' ? 'bg-[#111827]' : 'border border-[#D1D5DB]'
+              } flex items-center justify-center mr-3 transition-colors`}
+            >
+              {activeSection === 'client' ? (
+                <svg
+                  width='12'
+                  height='12'
+                  viewBox='0 0 12 12'
+                  fill='none'
+                  xmlns='http://www.w3.org/2000/svg'
+                >
+                  <path
+                    d='M10 3L4.5 8.5L2 6'
+                    stroke='white'
+                    strokeWidth='1.5'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                  />
+                </svg>
+              ) : (
+                <span className='text-[#6B7280] text-xs'>2</span>
+              )}
             </div>
+            <span
+              className={`text-sm ${
+                activeSection === 'client' ? 'text-[#111827] font-medium' : 'text-[#6B7280]'
+              }`}
+            >
+              Client
+            </span>
+          </button>
 
-            <div className='border-b border-gray-200 mb-6'></div>
-
-            <h2 className='text-2xl font-bold mb-1'>New Project</h2>
-            <p className='text-gray-600 text-sm mb-10'>
-              Create new project to help researchers and teams manage their investments and research
-              outcomes all in one place.
-            </p>
-
-            <div className='space-y-4'>
-              <div className='flex items-center'>
-                <div className='flex items-center justify-center w-8 h-8 rounded-full bg-gray-900 text-white mr-3'>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    className='h-4 w-4'
-                    viewBox='0 0 20 20'
-                    fill='currentColor'
-                  >
-                    <path
-                      fillRule='evenodd'
-                      d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
-                      clipRule='evenodd'
-                    />
-                  </svg>
-                </div>
-                <span className='font-medium'>Project setup</span>
-              </div>
-              <div className='flex items-center'>
-                <div className='flex items-center justify-center w-8 h-8 rounded-full bg-white border-2 border-gray-900 text-gray-900 mr-3'>
-                  2
-                </div>
-                <span className='font-medium'>Funding details</span>
-              </div>
-              <div className='flex items-center text-gray-500'>
-                <div className='flex items-center justify-center w-8 h-8 rounded-full bg-white border-2 border-gray-200 mr-3'>
-                  3
-                </div>
-                <span className='text-gray-500'>Research team</span>
-              </div>
-              <div className='flex items-center text-gray-500'>
-                <div className='flex items-center justify-center w-8 h-8 rounded-full bg-white border-2 border-gray-200 mr-3'>
-                  4
-                </div>
-                <span className='text-gray-500'>Experiment & Timeline</span>
-              </div>
-              <div className='flex items-center text-gray-500'>
-                <div className='flex items-center justify-center w-8 h-8 rounded-full bg-white border-2 border-gray-200 mr-3'>
-                  5
-                </div>
-                <span className='text-gray-500'>Repository</span>
-              </div>
-              <div className='flex items-center text-gray-500'>
-                <div className='flex items-center justify-center w-8 h-8 rounded-full bg-white border-2 border-gray-200 mr-3'>
-                  6
-                </div>
-                <span className='text-gray-500'>Summary</span>
-              </div>
+          <button
+            className={`flex items-center w-full text-left p-2 rounded-md ${
+              activeSection === 'comments' ? 'bg-[#F9FAFB]' : ''
+            } hover:bg-[#F9FAFB] transition-colors`}
+            onClick={() => {
+              return setActiveSection('comments');
+            }}
+          >
+            <div
+              className={`w-6 h-6 rounded-full ${
+                activeSection === 'comments' ? 'bg-[#111827]' : 'border border-[#D1D5DB]'
+              } flex items-center justify-center mr-3 transition-colors`}
+            >
+              {activeSection === 'comments' ? (
+                <svg
+                  width='12'
+                  height='12'
+                  viewBox='0 0 12 12'
+                  fill='none'
+                  xmlns='http://www.w3.org/2000/svg'
+                >
+                  <path
+                    d='M10 3L4.5 8.5L2 6'
+                    stroke='white'
+                    strokeWidth='1.5'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                  />
+                </svg>
+              ) : (
+                <span className='text-[#6B7280] text-xs'>3</span>
+              )}
             </div>
+            <span
+              className={`text-sm ${
+                activeSection === 'comments' ? 'text-[#111827] font-medium' : 'text-[#6B7280]'
+              }`}
+            >
+              Comments
+            </span>
+          </button>
+        </div>
+
+        {/* Total at bottom of sidebar */}
+        <div className='mt-auto pt-6 border-t border-[#E5E7EB]'>
+          <div className='flex justify-between items-center mb-3'>
+            <span className='text-[#6B7280] text-sm'>Total</span>
+            <span className='text-[#111827] text-base font-medium'>${total}</span>
           </div>
-
-          {/* Main content */}
-          <div className='flex-1 p-8'>
-            <div className='max-w-3xl'>
-              <div className='grid grid-cols-2 gap-8 mb-12'>
-                <div>
-                  <div className='mb-1 text-gray-900'>Start date</div>
-                  <div className='relative'>
-                    <input
-                      type='text'
-                      className='w-full py-3 px-4 border border-gray-200 rounded-lg pl-10'
-                      placeholder='Select date'
-                      value='October 29, 2024'
-                      readOnly
-                    />
-                    <div className='absolute left-3 top-3 text-gray-500'>
-                      <svg
-                        xmlns='http://www.w3.org/2000/svg'
-                        className='h-5 w-5'
-                        fill='none'
-                        viewBox='0 0 24 24'
-                        stroke='currentColor'
-                      >
-                        <path
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                          strokeWidth={2}
-                          d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <div className='mb-1 text-gray-900'>Goal</div>
-                  <div className='relative'>
-                    <input
-                      type='text'
-                      className='w-full py-3 px-4 border border-gray-200 rounded-lg pl-10'
-                      placeholder='Enter amount'
-                      value='500,000.00'
-                    />
-                    <div className='absolute left-3 top-3 text-gray-500'>
-                      <svg
-                        xmlns='http://www.w3.org/2000/svg'
-                        className='h-5 w-5'
-                        viewBox='0 0 20 20'
-                        fill='currentColor'
-                      >
-                        <path d='M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z' />
-                        <path
-                          fillRule='evenodd'
-                          d='M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z'
-                          clipRule='evenodd'
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className='mb-10'>
-                <h3 className='text-lg font-medium text-gray-900 mb-1'>
-                  Is this project funded by internal resources?
-                </h3>
-                <p className='text-gray-500 text-sm mb-4'>
-                  Understanding the funding source helps manage stakeholder expectations and
-                  reporting project outcomes.
-                </p>
-
-                <div className='relative mb-3'>
-                  <div className='absolute z-10 bg-gray-900 text-white rounded text-sm p-3 -top-12 left-4 max-w-xs'>
-                    Select &apos;No&apos; if external funding is involved and
-                    <br />
-                    choose detail your sources of funding.
-                    <div className='absolute -bottom-2 left-4 w-4 h-4 bg-gray-900 rotate-45'></div>
-                  </div>
-                </div>
-
-                <div className='flex space-x-2'>
-                  <button className='py-2 px-4 bg-gray-900 text-white rounded-lg hover:bg-gray-800'>
-                    Yes
-                  </button>
-                  <button className='py-2 px-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50'>
-                    No
-                  </button>
-                </div>
-              </div>
-
-              <div className='mb-12'>
-                <h3 className='text-lg font-medium text-gray-900 mb-6'>Financing sources</h3>
-                <div className='space-y-4'>
-                  <div className='p-4 border border-gray-200 rounded-lg'>
-                    <div className='flex justify-between items-center'>
-                      <div className='flex items-center'>
-                        <svg className='mr-2 h-5 w-5 text-gray-500' fill='none' viewBox='0 0 24 24'>
-                          <path
-                            stroke='currentColor'
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            strokeWidth='2'
-                            d='M12 6.5v11M16.5 10l-4.5-4-4.5 4M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z'
-                          ></path>
-                        </svg>
-                        <span>University funds</span>
-                      </div>
-                      <div className='flex items-center space-x-4'>
-                        <div className='flex items-center space-x-1'>
-                          <span className='text-gray-500'>$</span>
-                          <span>235,000.00</span>
-                        </div>
-                        <div className='flex items-center space-x-1'>
-                          <span className='text-gray-500'>%</span>
-                          <span>22,5</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className='p-4 border border-gray-200 rounded-lg'>
-                    <div className='flex justify-between items-center mb-4'>
-                      <div className='flex items-center'>
-                        <svg className='mr-2 h-5 w-5 text-gray-500' fill='none' viewBox='0 0 24 24'>
-                          <path
-                            stroke='currentColor'
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            strokeWidth='2'
-                            d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 13a7 7 0 00-7 7h14a7 7 0 00-7-7z'
-                          ></path>
-                        </svg>
-                        <span>Private investors</span>
-                      </div>
-                      <div className='flex items-center space-x-4'>
-                        <div className='flex items-center space-x-1'>
-                          <span className='text-gray-500'>$</span>
-                          <span>125,000.00</span>
-                        </div>
-                        <div className='flex items-center space-x-1'>
-                          <span className='text-gray-500'>%</span>
-                          <span>25</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className='space-y-2'>
-                      <div className='flex justify-between items-center py-3 hover:bg-gray-50 rounded px-2'>
-                        <div className='flex items-center'>
-                          <div className='w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-800 mr-3 flex-shrink-0'>
-                            J
-                          </div>
-                          <div>
-                            <div>Jackson Adams</div>
-                            <div className='text-gray-500 text-sm'>jackson.adams@google.com</div>
-                          </div>
-                        </div>
-                        <div className='flex items-center space-x-4'>
-                          <div className='flex items-center space-x-1'>
-                            <span className='text-gray-500'>$</span>
-                            <span>5,562.50</span>
-                          </div>
-                          <div className='flex items-center space-x-1'>
-                            <span className='text-gray-500'>%</span>
-                            <span>4,45</span>
-                          </div>
-                          <button className='text-gray-400 hover:text-gray-600'>
-                            <svg
-                              xmlns='http://www.w3.org/2000/svg'
-                              className='h-5 w-5'
-                              viewBox='0 0 20 20'
-                              fill='currentColor'
-                            >
-                              <path
-                                fillRule='evenodd'
-                                d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z'
-                                clipRule='evenodd'
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className='flex justify-between items-center py-3 hover:bg-gray-50 rounded px-2'>
-                        <div className='flex items-center'>
-                          <div className='w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-800 mr-3 flex-shrink-0'>
-                            B
-                          </div>
-                          <div>
-                            <div>Benjamin Rivera</div>
-                            <div className='text-gray-500 text-sm'>benjaminr@framer.com</div>
-                          </div>
-                        </div>
-                        <div className='flex items-center space-x-4'>
-                          <div className='flex items-center space-x-1'>
-                            <span className='text-gray-500'>$</span>
-                            <span>0</span>
-                          </div>
-                          <div className='flex items-center space-x-1'>
-                            <span className='text-gray-500'>%</span>
-                            <span>0</span>
-                          </div>
-                          <button className='text-gray-400 hover:text-gray-600'>
-                            <svg
-                              xmlns='http://www.w3.org/2000/svg'
-                              className='h-5 w-5'
-                              viewBox='0 0 20 20'
-                              fill='currentColor'
-                            >
-                              <path
-                                fillRule='evenodd'
-                                d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z'
-                                clipRule='evenodd'
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className='flex justify-between items-center py-3 hover:bg-gray-50 rounded px-2'>
-                        <div className='flex items-center'>
-                          <div className='w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-800 mr-3 flex-shrink-0'>
-                            H
-                          </div>
-                          <div>
-                            <div>Harper Anderson</div>
-                            <div className='text-gray-500 text-sm'>harperanderson@rive.app</div>
-                          </div>
-                        </div>
-                        <div className='flex items-center space-x-4'>
-                          <div className='flex items-center space-x-1'>
-                            <span className='text-gray-500'>$</span>
-                            <span>0</span>
-                          </div>
-                          <div className='flex items-center space-x-1'>
-                            <span className='text-gray-500'>%</span>
-                            <span>0</span>
-                          </div>
-                          <button className='text-gray-400 hover:text-gray-600'>
-                            <svg
-                              xmlns='http://www.w3.org/2000/svg'
-                              className='h-5 w-5'
-                              viewBox='0 0 20 20'
-                              fill='currentColor'
-                            >
-                              <path
-                                fillRule='evenodd'
-                                d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z'
-                                clipRule='evenodd'
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className='flex justify-between items-center'>
-                <div className='text-sm text-gray-500'>
-                  <span className='mr-1'>press</span>
-                  <span className='px-2 py-1 bg-gray-100 rounded text-xs font-mono'>Enter↵</span>
-                </div>
-                <div className='flex items-center'>
-                  <div className='flex items-center mr-4'>
-                    <svg
-                      className='animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500'
-                      xmlns='http://www.w3.org/2000/svg'
-                      fill='none'
-                      viewBox='0 0 24 24'
-                    >
-                      <circle
-                        className='opacity-25'
-                        cx='12'
-                        cy='12'
-                        r='10'
-                        stroke='currentColor'
-                        strokeWidth='4'
-                      ></circle>
-                      <path
-                        className='opacity-75'
-                        fill='currentColor'
-                        d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-                      ></path>
-                    </svg>
-                    <span>2/6 steps</span>
-                  </div>
-                  <button className='bg-gray-900 text-white px-4 py-2 rounded-lg'>Continue</button>
-                </div>
-              </div>
-            </div>
+          <div className='flex items-center'>
+            <span className='text-[#6B7280] text-xs'>project.example.com/acme-corp</span>
           </div>
         </div>
-      </motion.div>
+      </div>
+
+      {/* Main Content */}
+      <div className='flex-1 py-6 px-8 flex flex-col h-full overflow-y-auto'>
+        {/* Items Section */}
+        {activeSection === 'items' && (
+          <div className='flex flex-col flex-grow'>
+            <div className='flex-grow mb-8'>
+              <div className='flex justify-between items-center mb-4'>
+                <h2 className='text-lg font-semibold text-[#111827]'>Project Items</h2>
+              </div>
+
+              <p className='text-[#6B7280] text-sm leading-5 mb-6'>
+                Add items to your project. Include name, description, and price for each item.
+                <button
+                  onClick={() => {
+                    return setKeyboardShortcutsVisible(true);
+                  }}
+                  className='ml-1 text-[#111827] hover:underline focus:outline-none focus:underline'
+                  aria-label='View keyboard shortcuts'
+                >
+                  View shortcuts
+                </button>
+              </p>
+
+              {/* Action Buttons */}
+              <div className='flex space-x-3 mb-6'>
+                <Button
+                  onClick={() => {
+                    return setShowAddItemForm(true);
+                  }}
+                  className='flex-1 flex items-center justify-center'
+                  variant='outline'
+                >
+                  <Plus size={16} className='mr-2' />
+                  <span>Add Item Manually</span>
+                </Button>
+                <Button
+                  onClick={() => {
+                    return setShowAiPrompt(true);
+                  }}
+                  className='flex-1 flex items-center justify-center'
+                  variant='outline'
+                >
+                  <Sparkles size={16} className='mr-2' />
+                  <span>Generate with AI</span>
+                </Button>
+              </div>
+
+              {/* Add Item Form */}
+              {showAddItemForm && (
+                <div className='border border-[#E5E7EB] rounded-lg p-4 mb-6 transition-all duration-200 ease-in-out bg-white shadow-sm'>
+                  <form
+                    onSubmit={editingItem ? handleUpdateItem : handleSubmitNewItem}
+                    className='space-y-3'
+                  >
+                    <div>
+                      <input
+                        type='text'
+                        id='item-name'
+                        ref={(el) => {
+                          nameInputRef.current = el;
+                          return undefined;
+                        }}
+                        value={newItem.name}
+                        onChange={(e) => {
+                          return setNewItem({ ...newItem, name: e.target.value });
+                        }}
+                        onKeyDown={handleNameKeyDown}
+                        placeholder='Item name'
+                        className='w-full border-b border-[#E5E7EB] pb-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-[#9CA3AF] transition-colors bg-transparent'
+                        autoFocus
+                        aria-label='Item name'
+                      />
+                    </div>
+                    <div>
+                      <textarea
+                        id='item-description'
+                        value={newItem.description}
+                        onChange={(e) => {
+                          return setNewItem({ ...newItem, description: e.target.value });
+                        }}
+                        onKeyDown={handleDescriptionKeyDown}
+                        placeholder='Item description (optional)'
+                        className='w-full border-none text-sm text-[#6B7280] outline-none resize-none min-h-[40px] placeholder:text-[#9CA3AF] bg-transparent'
+                        aria-label='Item description'
+                      />
+                    </div>
+                    <div className='flex items-center justify-between pt-1'>
+                      <div className='relative'>
+                        <span className='absolute left-0 top-[2px] text-[#6B7280]'>$</span>
+                        <input
+                          type='number'
+                          id='item-price'
+                          step='0.01'
+                          min='0'
+                          value={newItem.price}
+                          onChange={(e) => {
+                            return setNewItem({ ...newItem, price: e.target.value });
+                          }}
+                          placeholder='0.00'
+                          className='border-none text-sm text-[#111827] outline-none w-[100px] pl-3 bg-transparent'
+                          aria-label='Item price'
+                        />
+                      </div>
+                      <div className='flex space-x-3'>
+                        <button
+                          type='button'
+                          onClick={() => {
+                            setShowAddItemForm(false);
+                            setEditingItem(null);
+                            setNewItem({ name: '', description: '', price: '' });
+                          }}
+                          className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors'
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type='submit'
+                          className='bg-[#111827] text-white px-4 py-1.5 rounded-md text-sm hover:bg-[#1F2937] transition-colors flex items-center justify-center min-w-[60px]'
+                          disabled={!newItem.name.trim() || isSubmitting}
+                        >
+                          {isSubmitting ? (
+                            <Loader2 size={14} className='animate-spin' />
+                          ) : editingItem ? (
+                            'Update'
+                          ) : (
+                            'Add'
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* AI Prompt Form */}
+              {showAiPrompt && (
+                <div className='border border-[#E5E7EB] rounded-lg p-4 mb-6 bg-white shadow-sm'>
+                  <div className='mb-4'>
+                    <label className='block text-[#111827] font-medium text-sm mb-2'>
+                      Generate items with AI
+                    </label>
+                    <div className='flex'>
+                      <input
+                        type='text'
+                        ref={(el) => {
+                          aiPromptInputRef.current = el;
+                          return undefined;
+                        }}
+                        value={aiPrompt}
+                        onChange={(e) => {
+                          return setAiPrompt(e.target.value);
+                        }}
+                        placeholder='Describe what the client wants...'
+                        className='flex-1 border border-[#E5E7EB] rounded-l-md px-3 py-2 text-sm outline-none bg-transparent focus:border-[#9CA3AF] transition-colors'
+                        autoFocus
+                      />
+                      <button
+                        onClick={handleGenerateAiItems}
+                        className='bg-[#111827] text-white px-4 py-2 rounded-r-md text-sm hover:bg-[#1F2937] transition-colors flex items-center justify-center min-w-[100px]'
+                        disabled={!aiPrompt.trim() || isGenerating}
+                      >
+                        {isGenerating ? <Loader2 size={16} className='animate-spin' /> : 'Generate'}
+                      </button>
+                    </div>
+                    <p className='text-[#6B7280] text-xs mt-2'>
+                      Example: "Client needs a red turtle hoodie for $15 and a black regular shirt"
+                    </p>
+                  </div>
+
+                  {isGenerating && (
+                    <div className='flex flex-col items-center justify-center py-8'>
+                      <Loader2 size={24} className='text-[#111827] animate-spin mb-4' />
+                      <p className='text-[#6B7280] text-sm'>
+                        Generating items based on your description...
+                      </p>
+                    </div>
+                  )}
+
+                  {!isGenerating && aiGeneratedItems.length > 0 && (
+                    <div className='space-y-4'>
+                      <div className='flex justify-between items-center'>
+                        <h3 className='text-base font-medium text-[#111827]'>Generated Items</h3>
+                        <div className='flex space-x-2'>
+                          <button
+                            onClick={() => {
+                              setAiPrompt('');
+                              setAiGeneratedItems([]);
+                              setAiResponse(null);
+                            }}
+                            className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors'
+                          >
+                            Clear
+                          </button>
+                          <button
+                            onClick={handleGenerateAiItems}
+                            className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors flex items-center'
+                          >
+                            <Sparkles size={14} className='mr-1' />
+                            Regenerate
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className='space-y-3 max-h-[320px] overflow-y-auto pr-2'>
+                        {aiGeneratedItems.map((item) => {
+                          return (
+                            <div
+                              key={item.id}
+                              className={`border ${
+                                selectedAiItems[item.id] ? 'border-[#111827]' : 'border-[#E5E7EB]'
+                              } rounded-lg p-4 transition-all duration-200 ease-in-out hover:border-[#D1D5DB] bg-white cursor-pointer`}
+                              onClick={() => {
+                                return toggleAiItemSelection(item.id);
+                              }}
+                            >
+                              <div className='flex items-start'>
+                                <div
+                                  className={`w-[18px] h-[18px] rounded-[4px] border ${
+                                    selectedAiItems[item.id]
+                                      ? 'bg-[#111827] border-[#111827]'
+                                      : 'border-[#D1D5DB]'
+                                  } flex items-center justify-center mr-3 mt-[2px]`}
+                                >
+                                  {selectedAiItems[item.id] && (
+                                    <svg
+                                      width='12'
+                                      height='12'
+                                      viewBox='0 0 12 12'
+                                      fill='none'
+                                      xmlns='http://www.w3.org/2000/svg'
+                                    >
+                                      <path
+                                        d='M10 3L4.5 8.5L2 6'
+                                        stroke='white'
+                                        strokeWidth='1.5'
+                                        strokeLinecap='round'
+                                        strokeLinejoin='round'
+                                      />
+                                    </svg>
+                                  )}
+                                </div>
+                                <div className='flex-1'>
+                                  <div className='flex justify-between items-start'>
+                                    <div>
+                                      <span className='text-[#111827] text-base font-medium'>
+                                        {item.name}
+                                      </span>
+                                      <span className='ml-2 text-xs px-2 py-0.5 bg-[#F3F4F6] rounded-full'>
+                                        {item.type}
+                                      </span>
+                                    </div>
+                                    <span className='text-[#111827] text-sm font-medium'>
+                                      ${item.price}
+                                    </span>
+                                  </div>
+                                  {item.description && (
+                                    <p className='text-[#6B7280] text-sm mt-1 leading-relaxed'>
+                                      {item.description}
+                                    </p>
+                                  )}
+                                  {item.reasoning && (
+                                    <div className='mt-2 pt-2 border-t border-[#F3F4F6]'>
+                                      <p className='text-[#6B7280] text-xs italic'>
+                                        <span className='font-medium'>Reasoning:</span>{' '}
+                                        {item.reasoning}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {aiResponse?.meta && (
+                        <div className='text-[#6B7280] text-xs border-t border-[#F3F4F6] pt-2 flex justify-between'>
+                          <span>Processing time: {aiResponse.meta.processingTime.toFixed(2)}s</span>
+                          <span>
+                            Generated: {new Date(aiResponse.meta.timestamp).toLocaleTimeString()}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className='flex justify-end pt-2'>
+                        <button
+                          onClick={() => {
+                            setShowAiPrompt(false);
+                            setAiPrompt('');
+                            setAiGeneratedItems([]);
+                            setAiResponse(null);
+                          }}
+                          className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors mr-3'
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleAddSelectedAiItems}
+                          className='bg-[#111827] text-white px-4 py-2 rounded-md text-sm hover:bg-[#1F2937] transition-colors flex items-center'
+                          disabled={Object.values(selectedAiItems).filter(Boolean).length === 0}
+                        >
+                          Add{' '}
+                          {Object.values(selectedAiItems).filter(Boolean).length > 0
+                            ? `${Object.values(selectedAiItems).filter(Boolean).length} `
+                            : ''}
+                          Selected Item
+                          {Object.values(selectedAiItems).filter(Boolean).length !== 1 ? 's' : ''}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Item Cards */}
+              <div className='space-y-3'>
+                {items.map((item) => {
+                  return (
+                    <div
+                      key={item.id}
+                      className='border border-[#E5E7EB] rounded-lg p-4 transition-all duration-200 ease-in-out hover:border-[#D1D5DB] group bg-white shadow-sm hover:shadow-md hover:translate-y-[-1px]'
+                    >
+                      <div className='flex justify-between items-start'>
+                        <div className='flex items-start flex-1'>
+                          <button
+                            onClick={(e) => {
+                              return handleRemoveItem(item.id, e);
+                            }}
+                            className='mr-3 mt-1 text-[#D1D5DB] hover:text-[#6B7280] transition-colors group-hover:opacity-100 opacity-60 focus:outline-none focus:text-[#6B7280] h-5 w-5 flex items-center justify-center rounded-full hover:bg-[#F3F4F6]'
+                            aria-label={`Remove ${item.name}`}
+                          >
+                            <svg
+                              width='16'
+                              height='16'
+                              viewBox='0 0 20 20'
+                              fill='none'
+                              xmlns='http://www.w3.org/2000/svg'
+                              className='transition-transform group-hover:scale-110'
+                            >
+                              <path
+                                d='M5 10H15'
+                                stroke='currentColor'
+                                strokeWidth='1.5'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
+                            </svg>
+                          </button>
+                          <div
+                            className='flex-1 cursor-pointer group/item'
+                            onClick={() => {
+                              return handleEditItem(item);
+                            }}
+                          >
+                            <div className='flex flex-col'>
+                              <span className='text-[#111827] text-base font-medium group-hover/item:text-black transition-colors'>
+                                {item.name}
+                              </span>
+                              {item.description && (
+                                <p className='text-[#6B7280] text-sm mt-1 leading-relaxed group-hover/item:text-[#4B5563] transition-colors'>
+                                  {item.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className='flex flex-col items-end'>
+                          <span className='text-[#111827] text-sm font-medium'>${item.price}</span>
+                          <span className='text-[#9CA3AF] text-xs mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity'>
+                            Click to edit
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className='flex items-center justify-between py-4 border-t border-[#E5E7EB] mt-auto sticky bottom-0 bg-[#FAFAFA]'>
+              <Button
+                onClick={() => {
+                  setActiveSection('client');
+                  showNotification('Moved to Client section');
+                }}
+              >
+                Continue
+              </Button>
+              <div className='flex items-center text-[#6B7280] text-xs'>
+                <span>press</span>
+                <span className='mx-1 px-1 border border-[#D1D5DB] rounded text-[11px]'>Enter</span>
+                <span className='ml-0.5'>↵</span>
+              </div>
+              <div className='flex items-center'>
+                <div className='w-4 h-4 rounded-full border-2 border-[#D1D5DB] border-t-[#6B7280] animate-spin mr-2'></div>
+                <span className='text-[#6B7280] text-xs'>1/3 steps</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Client Section */}
+        {activeSection === 'client' && (
+          <div className='flex flex-col flex-grow'>
+            <div className='flex-grow mb-8'>
+              <div className='flex justify-between items-center mb-4'>
+                <h2 className='text-lg font-semibold text-[#111827]'>Select Client</h2>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => {
+                    return showNotification('Draft saved', 'success');
+                  }}
+                >
+                  Save as draft
+                </Button>
+              </div>
+              <p className='text-[#6B7280] text-sm leading-5 mb-6'>
+                Choose an existing client or create a new one for this project.
+              </p>
+
+              <div className='space-y-4'>
+                {clients.map((client) => {
+                  return (
+                    <div
+                      key={client.id}
+                      className={`border ${
+                        selectedClient === client.id ? 'border-[#111827]' : 'border-[#E5E7EB]'
+                      } rounded-md p-4 cursor-pointer hover:border-[#111827] transition-colors`}
+                      onClick={() => {
+                        setSelectedClient(client.id);
+                        showNotification(`Selected ${client.name}`, 'info');
+                      }}
+                    >
+                      <div className='flex items-center'>
+                        <div className='w-8 h-8 rounded-full bg-[#EDE9FE] flex items-center justify-center mr-3'>
+                          <span className='text-[#5B21B6] text-sm font-medium'>
+                            {client.name.charAt(0)}
+                          </span>
+                        </div>
+                        <div>
+                          <div className='text-[#111827] text-sm font-medium'>{client.name}</div>
+                          <div className='text-[#6B7280] text-xs'>{client.email}</div>
+                        </div>
+                        {selectedClient === client.id && (
+                          <div className='ml-auto w-6 h-6 rounded-full bg-[#10B981] flex items-center justify-center'>
+                            <svg
+                              width='12'
+                              height='12'
+                              viewBox='0 0 12 12'
+                              fill='none'
+                              xmlns='http://www.w3.org/2000/svg'
+                            >
+                              <path
+                                d='M10 3L4.5 8.5L2 6'
+                                stroke='white'
+                                strokeWidth='1.5'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                <button
+                  className='flex items-center border border-[#E5E7EB] rounded-md p-4 w-full hover:bg-[#F9FAFB] transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200'
+                  onClick={() => {
+                    return showNotification('Client creation coming soon', 'info');
+                  }}
+                >
+                  <svg
+                    width='20'
+                    height='20'
+                    viewBox='0 0 20 20'
+                    fill='none'
+                    xmlns='http://www.w3.org/2000/svg'
+                    className='mr-3'
+                  >
+                    <path
+                      d='M10 4.16666V15.8333M4.16667 10H15.8333'
+                      stroke='#6B7280'
+                      strokeWidth='1.5'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                    />
+                  </svg>
+                  <span className='text-[#6B7280] text-sm'>Create new client</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className='flex items-center justify-between py-4 border-t border-[#E5E7EB] mt-auto sticky bottom-0 bg-[#FAFAFA]'>
+              <Button
+                onClick={() => {
+                  setActiveSection('comments');
+                  showNotification('Moved to Comments section');
+                }}
+              >
+                Continue
+              </Button>
+              <div className='flex items-center text-[#6B7280] text-xs'>
+                <span>press</span>
+                <span className='mx-1 px-1 border border-[#D1D5DB] rounded text-[11px]'>Enter</span>
+                <span className='ml-0.5'>↵</span>
+              </div>
+              <div className='flex items-center'>
+                <div className='w-4 h-4 rounded-full border-2 border-[#D1D5DB] border-t-[#6B7280] animate-spin mr-2'></div>
+                <span className='text-[#6B7280] text-xs'>2/3 steps</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Comments Section */}
+        {activeSection === 'comments' && (
+          <div className='flex flex-col flex-grow'>
+            <div className='flex-grow mb-8'>
+              <div className='flex justify-between items-center mb-4'>
+                <h2 className='text-lg font-semibold text-[#111827]'>Project Notes</h2>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => {
+                    return showNotification('Draft saved', 'success');
+                  }}
+                >
+                  Save as draft
+                </Button>
+              </div>
+              <p className='text-[#6B7280] text-sm leading-5 mb-6'>
+                Add any additional notes or comments about this project.
+              </p>
+
+              <div className='space-y-4'>
+                <div className='border border-[#E5E7EB] rounded-md p-4'>
+                  <label className='block text-[#111827] font-medium text-sm mb-2'>
+                    Project Notes
+                  </label>
+                  <textarea
+                    className='w-full min-h-[120px] border border-[#E5E7EB] rounded-md p-3 text-sm outline-none focus:border-[#9CA3AF] transition-colors bg-transparent'
+                    value={notes}
+                    onChange={(e) => {
+                      return setNotes(e.target.value);
+                    }}
+                    placeholder='Add any notes or comments about this project...'
+                  />
+                </div>
+
+                <div className='border border-[#E5E7EB] rounded-md p-4'>
+                  <label className='block text-[#111827] font-medium text-sm mb-2'>
+                    Project Settings
+                  </label>
+
+                  <div className='space-y-3'>
+                    <div className='flex items-center'>
+                      <input
+                        type='checkbox'
+                        id='setting1'
+                        className='w-4 h-4 rounded-sm border-[#D1D5DB] mr-2'
+                      />
+                      <label htmlFor='setting1' className='text-[#111827] text-sm'>
+                        Send client notifications
+                      </label>
+                    </div>
+
+                    <div className='flex items-center'>
+                      <input
+                        type='checkbox'
+                        id='setting2'
+                        className='w-4 h-4 rounded-sm border-[#D1D5DB] mr-2'
+                        defaultChecked
+                      />
+                      <label htmlFor='setting2' className='text-[#111827] text-sm'>
+                        Track time spent on project
+                      </label>
+                    </div>
+
+                    <div className='flex items-center'>
+                      <input
+                        type='checkbox'
+                        id='setting3'
+                        className='w-4 h-4 rounded-sm border-[#D1D5DB] mr-2'
+                      />
+                      <label htmlFor='setting3' className='text-[#111827] text-sm'>
+                        Make project private
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className='flex items-center justify-between py-4 border-t border-[#E5E7EB] mt-auto sticky bottom-0 bg-[#FAFAFA]'>
+              <div className='flex gap-3'>
+                <Button variant='outline' onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    showNotification('Project completed successfully!', 'success');
+                    setTimeout(() => {
+                      return onClose();
+                    }, 1500);
+                  }}
+                >
+                  Complete Project
+                </Button>
+              </div>
+              <div className='flex items-center text-[#6B7280] text-xs'>
+                <span>press</span>
+                <span className='mx-1 px-1 border border-[#D1D5DB] rounded text-[11px]'>Enter</span>
+                <span className='ml-0.5'>↵</span>
+              </div>
+              <div className='flex items-center'>
+                <div className='w-4 h-4 rounded-full border-2 border-[#D1D5DB] border-t-[#6B7280] animate-spin mr-2'></div>
+                <span className='text-[#6B7280] text-xs'>3/3 steps</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
