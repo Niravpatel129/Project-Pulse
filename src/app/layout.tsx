@@ -169,12 +169,34 @@ export default function RootLayout({
           {`
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js').then(
+                // Get hostname and check if it's a subdomain
+                var hostname = window.location.hostname;
+                var subdomain = hostname.split('.')[0];
+                var isSubdomain = hostname !== 'localhost' && subdomain !== 'www' && subdomain !== 'pulse-app';
+                
+                // Choose the service worker URL based on whether it's a subdomain
+                var swUrl = isSubdomain ? '/api/sw' : '/sw.js';
+                
+                // Try to register the service worker with proper error handling
+                navigator.serviceWorker.register(swUrl, { 
+                  scope: '/' 
+                }).then(
                   function(registration) {
                     console.log('Service Worker registration successful with scope: ', registration.scope);
                   },
                   function(err) {
+                    // If registration fails, log the error and try to unregister existing service workers
                     console.log('Service Worker registration failed: ', err);
+                    
+                    if (err.name === 'TypeError' && err.message.includes('failed to register')) {
+                      console.log('Attempting to unregister existing service workers');
+                      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) {
+                          registration.unregister();
+                          console.log('Service worker unregistered');
+                        }
+                      });
+                    }
                   }
                 );
               });

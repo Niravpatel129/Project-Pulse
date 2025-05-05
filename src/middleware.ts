@@ -12,6 +12,12 @@ export function middleware(request: NextRequest) {
   const subdomain = hostname.split('.')[0];
   const isCustomSubdomain = !['www', 'localhost:3000', 'pulse-app'].includes(subdomain);
 
+  // Handle service worker related paths
+  if (path === '/sw.js' || path.startsWith('/workbox-')) {
+    // Don't apply subdomain redirects to service worker files
+    return NextResponse.next();
+  }
+
   // Check if user is authenticated
   // Check for auth token in cookies - our auth system stores it as 'user' cookie
   const userCookie = request.cookies.get('user')?.value;
