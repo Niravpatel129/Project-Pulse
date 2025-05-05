@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { AlertCircle, Check, FileText, Loader2, Plus, Sparkles, X } from 'lucide-react';
 import { useState } from 'react';
+import { Textarea } from './ui/textarea';
 
 export default function HomePage() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -699,9 +700,8 @@ function ProjectManagement({ onClose }) {
                     <label className='block text-[#111827] font-medium text-sm mb-2'>
                       Generate items with AI
                     </label>
-                    <div className='flex'>
-                      <input
-                        type='text'
+                    <div className='flex relative'>
+                      <Textarea
                         ref={(el) => {
                           aiPromptInputRef.current = el;
                           return undefined;
@@ -710,20 +710,22 @@ function ProjectManagement({ onClose }) {
                         onChange={(e) => {
                           return setAiPrompt(e.target.value);
                         }}
+                        rows={4}
                         placeholder='Describe what the client wants...'
                         className='flex-1 border border-[#E5E7EB] rounded-l-md px-3 py-2 text-sm outline-none bg-transparent focus:border-[#9CA3AF] transition-colors'
                         autoFocus
                       />
-                      <button
+                      <Button
                         onClick={handleGenerateAiItems}
-                        className='bg-[#111827] text-white px-4 py-2 rounded-r-md text-sm hover:bg-[#1F2937] transition-colors flex items-center justify-center min-w-[100px]'
+                        className='bg-[#111827] text-white px-4 py-2 text-sm hover:bg-[#1F2937] transition-colors flex items-center justify-center min-w-[100px] absolute right-2 bottom-2 cursor-pointer z-10'
                         disabled={!aiPrompt.trim() || isGenerating}
                       >
                         {isGenerating ? <Loader2 size={16} className='animate-spin' /> : 'Generate'}
-                      </button>
+                      </Button>
                     </div>
                     <p className='text-[#6B7280] text-xs mt-2'>
-                      Example: "Client needs a red turtle hoodie for $15 and a black regular shirt"
+                      Example: &quot;Client needs a red turtle hoodie for $15 and a black regular
+                      shirt&quot;
                     </p>
                   </div>
 

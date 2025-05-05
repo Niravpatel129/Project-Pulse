@@ -56,12 +56,7 @@ export default function WorkspacePage() {
   return (
     <div className='min-h-screen bg-gray-50'>
       {/* New Project Dialog */}
-      <ProjectDialog
-        isOpen={showProjectDialog}
-        onClose={() => {
-          setShowProjectDialog(false);
-        }}
-      />
+      <ProjectDialog />
 
       <div className='py-8 px-4 sm:px-6 lg:px-8'>
         <div className='max-w-7xl mx-auto'>
