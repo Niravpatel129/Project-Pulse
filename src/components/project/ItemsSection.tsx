@@ -38,6 +38,13 @@ type TaxRate = {
   rate: number;
 };
 
+// We don't need EnhancedItem anymore since we can use AIItem which already has the type field
+// interface EnhancedItem extends Item {
+//   type?: 'PRODUCT' | 'SERVICE';
+// }
+
+type ItemWithType = Item & { type?: string };
+
 type ItemsSectionProps = {
   items: Item[];
   setItems: (items: Item[]) => void;
@@ -205,14 +212,21 @@ export default function ItemsSection({
 
     // Format the items to match our items array structure
     const formattedItems = selectedItems.map((item) => {
+      // Format price to have 2 decimal places
+      const formattedPrice = Number(item.price || 0).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+
       return {
         id: item.id,
         name: item.name,
         description: item.description,
-        price: item.price,
+        price: formattedPrice,
         quantity: item.quantity || '1',
         currency: projectCurrency, // Use project currency
-      };
+        type: item.type,
+      } as ItemWithType;
     });
 
     setItems([...items, ...(formattedItems as Item[])]);
@@ -265,7 +279,7 @@ export default function ItemsSection({
 
     // Simulate a slight delay for better UX
     setTimeout(() => {
-      const newItemObj: ExtendedItem = {
+      const newItemObj = {
         id: `item${Date.now()}`,
         name: newItem.name.trim(),
         description: newItem.description.trim(),
@@ -276,7 +290,8 @@ export default function ItemsSection({
         discount: newItem.discount,
         taxable: newItem.taxable,
         taxName: taxRateName, // Store the tax name for reference
-      };
+        type: 'PRODUCT', // Default type for manually added items
+      } as ItemWithType;
 
       setItems([...items, newItemObj as Item]);
       setNewItem({
@@ -319,19 +334,22 @@ export default function ItemsSection({
       if (!editingItem) return;
 
       const updatedItems = items.map((item) => {
-        return item.id === editingItem.id
-          ? {
-              ...item,
-              name: newItem.name.trim(),
-              description: newItem.description.trim(),
-              price: formattedPrice,
-              quantity: newItem.quantity || '1',
-              taxRate: newItem.taxRate,
-              discount: newItem.discount,
-              taxable: newItem.taxable,
-              taxName: taxRateName, // Store the tax name for reference
-            }
-          : item;
+        if (item.id === editingItem.id) {
+          const itemWithType = editingItem as unknown as ItemWithType;
+          return {
+            ...item,
+            name: newItem.name.trim(),
+            description: newItem.description.trim(),
+            price: formattedPrice,
+            quantity: newItem.quantity || '1',
+            taxRate: newItem.taxRate,
+            discount: newItem.discount,
+            taxable: newItem.taxable,
+            taxName: taxRateName, // Store the tax name for reference
+            ...(itemWithType.type ? { type: itemWithType.type } : { type: 'PRODUCT' }),
+          } as Item;
+        }
+        return item;
       });
 
       setItems(updatedItems);
@@ -468,16 +486,25 @@ export default function ItemsSection({
 
     // Update the item
     const updatedItems = items.map((item) => {
-      return item.id === itemId
-        ? {
-            ...item,
-            name: inlineEditValues.name.trim(),
-            description: inlineEditValues.description.trim(),
-            price: formattedPrice,
-            quantity: inlineEditValues.quantity || '1',
-            currency: projectCurrency,
-          }
-        : item;
+      if (item.id === itemId) {
+        const updatedItem = {
+          ...item,
+          name: inlineEditValues.name.trim(),
+          description: inlineEditValues.description.trim(),
+          price: formattedPrice,
+          quantity: inlineEditValues.quantity || '1',
+          currency: projectCurrency,
+        } as Item;
+
+        // Preserve the type if it exists
+        const itemWithType = item as unknown as ItemWithType;
+        if (itemWithType.type) {
+          (updatedItem as ItemWithType).type = itemWithType.type;
+        }
+
+        return updatedItem;
+      }
+      return item;
     });
 
     setTimeout(() => {
@@ -719,7 +746,7 @@ export default function ItemsSection({
                       <label htmlFor='item-price' className='text-xs text-gray-500 mb-1 block'>
                         Price
                       </label>
-                      <div className='flex-1'>
+                      <div className='flex-1 relative'>
                         <Input
                           type='number'
                           id='item-price'
@@ -731,7 +758,11 @@ export default function ItemsSection({
                           }}
                           placeholder='0.00'
                           aria-label='Item price'
+                          className='pl-6'
                         />
+                        <div className='absolute top-[9px] left-3 text-gray-500'>
+                          {getCurrencySymbol(projectCurrency)}
+                        </div>
                       </div>
                     </div>
                     <div>
@@ -1152,13 +1183,18 @@ export default function ItemsSection({
                                         {item.price}
                                       </span>
                                       <span className='text-[#111827] text-sm font-medium bg-gray-50 px-2 py-0.5 rounded-full flex-shrink-0'>
-                                        {item.quantity || '1'} units
+                                        {item.quantity || '1'}{' '}
+                                        {parseInt(item.quantity || '1') === 1 ? 'unit' : 'units'}
                                       </span>
                                     </div>
                                   </div>
-                                  {item.description && (
+                                  {item.description ? (
                                     <p className='text-[#6B7280] text-sm mt-1 leading-relaxed'>
                                       {item.description}
+                                    </p>
+                                  ) : (
+                                    <p className='text-[#9CA3AF] text-sm mt-1 italic group-hover/item:text-[#6B7280] transition-colors'>
+                                      Add a description...
                                     </p>
                                   )}
                                   {item.reasoning && (
@@ -1340,21 +1376,27 @@ export default function ItemsSection({
                                 >
                                   Price
                                 </label>
-                                <Input
-                                  type='number'
-                                  id='inline-item-price'
-                                  step='0.01'
-                                  min='0'
-                                  value={inlineEditValues.price}
-                                  onChange={(e) => {
-                                    return setInlineEditValues({
-                                      ...inlineEditValues,
-                                      price: e.target.value,
-                                    });
-                                  }}
-                                  placeholder='0.00'
-                                  aria-label='Item price'
-                                />
+                                <div className='relative'>
+                                  <Input
+                                    type='number'
+                                    id='inline-item-price'
+                                    step='0.01'
+                                    min='0'
+                                    value={inlineEditValues.price}
+                                    onChange={(e) => {
+                                      return setInlineEditValues({
+                                        ...inlineEditValues,
+                                        price: e.target.value,
+                                      });
+                                    }}
+                                    placeholder='0.00'
+                                    aria-label='Item price'
+                                    className='pl-6'
+                                  />
+                                  <div className='absolute top-[9px] left-3 text-gray-500'>
+                                    {getCurrencySymbol(projectCurrency)}
+                                  </div>
+                                </div>
                               </div>
 
                               <div className='flex items-center gap-2'>
@@ -1436,6 +1478,17 @@ export default function ItemsSection({
                               )}
 
                               <div className='mt-2 flex flex-wrap items-center gap-2'>
+                                {/* Show type badge if it exists */}
+                                {(item as ItemWithType).type === 'PRODUCT' && (
+                                  <div className='text-xs text-blue-600 bg-blue-50 rounded-full py-0.5 px-2 flex items-center'>
+                                    PRODUCT
+                                  </div>
+                                )}
+                                {(item as ItemWithType).type === 'SERVICE' && (
+                                  <div className='text-xs text-purple-600 bg-purple-50 rounded-full py-0.5 px-2 flex items-center'>
+                                    SERVICE
+                                  </div>
+                                )}
                                 {item.taxable && item.taxRate > 0 && (
                                   <div className='text-xs text-blue-600 bg-blue-50 rounded-full py-0.5 px-2 flex items-center'>
                                     <svg
