@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -501,7 +502,7 @@ export default function ItemsSection({
                       <label htmlFor='item-name' className='text-xs text-gray-500 mb-1 block'>
                         Item name
                       </label>
-                      <input
+                      <Input
                         type='text'
                         id='item-name'
                         ref={nameInputRef}
@@ -543,7 +544,7 @@ export default function ItemsSection({
                         <span className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] font-medium'>
                           $
                         </span>
-                        <input
+                        <Input
                           type='number'
                           id='item-price'
                           step='0.01'
@@ -553,7 +554,7 @@ export default function ItemsSection({
                             return setNewItem({ ...newItem, price: e.target.value });
                           }}
                           placeholder='0.00'
-                          className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 pl-7 text-sm text-[#111827] outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                          className='pl-7'
                           aria-label='Item price'
                         />
                       </div>
@@ -562,7 +563,7 @@ export default function ItemsSection({
                       <label htmlFor='item-quantity' className='text-xs text-gray-500 mb-1 block'>
                         Quantity
                       </label>
-                      <input
+                      <Input
                         type='number'
                         id='item-quantity'
                         min='1'
@@ -571,7 +572,6 @@ export default function ItemsSection({
                           return setNewItem({ ...newItem, quantity: e.target.value });
                         }}
                         placeholder='1'
-                        className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm text-[#111827] outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
                         aria-label='Item quantity'
                       />
                     </div>
@@ -1020,7 +1020,7 @@ export default function ItemsSection({
                           // Inline editing form
                           <div className='space-y-2'>
                             <div>
-                              <input
+                              <Input
                                 type='text'
                                 value={inlineEditValues.name}
                                 onChange={(e) => {
@@ -1029,7 +1029,7 @@ export default function ItemsSection({
                                     name: e.target.value,
                                   });
                                 }}
-                                className='w-full border border-blue-300 rounded-lg px-3 py-1.5 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                                className='border-blue-300 focus-visible:ring-blue-100'
                                 placeholder='Item name'
                                 autoFocus
                               />
@@ -1054,8 +1054,9 @@ export default function ItemsSection({
                                 <span className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] font-medium'>
                                   $
                                 </span>
-                                <input
+                                <Input
                                   type='number'
+                                  id='item-price'
                                   step='0.01'
                                   min='0'
                                   value={inlineEditValues.price}
@@ -1065,8 +1066,9 @@ export default function ItemsSection({
                                       price: e.target.value,
                                     });
                                   }}
-                                  className='w-full border border-gray-200 rounded-lg py-1.5 px-3 pl-7 text-sm text-[#111827] outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
                                   placeholder='0.00'
+                                  className='pl-7'
+                                  aria-label='Item price'
                                 />
                               </div>
 
@@ -1074,7 +1076,7 @@ export default function ItemsSection({
                                 <span className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] font-medium'>
                                   Qty:
                                 </span>
-                                <input
+                                <Input
                                   type='number'
                                   min='1'
                                   value={inlineEditValues.quantity}
@@ -1084,7 +1086,7 @@ export default function ItemsSection({
                                       quantity: e.target.value,
                                     });
                                   }}
-                                  className='w-full border border-gray-200 rounded-lg py-1.5 px-3 pl-9 text-sm text-[#111827] outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                                  className='pl-9'
                                   placeholder='1'
                                 />
                               </div>
