@@ -44,7 +44,7 @@ function ProjectManagement({ onClose }) {
   const [aiGeneratedItems, setAiGeneratedItems] = useState([]);
   const [selectedAiItems, setSelectedAiItems] = useState({});
   const [showAddItemForm, setShowAddItemForm] = useState(false);
-  const [currentNewItemMode, setCurrentNewItemMode] = useState('manual');
+  const [currentNewItemMode, setCurrentNewItemMode] = useState();
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [newItem, setNewItem] = useState({
