@@ -315,28 +315,107 @@ export default function ItemsSection({
   };
 
   return (
-    <div className='flex flex-col h-full relative'>
-      <div className='absolute inset-0 pt-6 px-8 pb-16 overflow-y-auto'>
-        <div className='mb-8'>
-          <div className='flex justify-between items-center mb-4'>
-            <h2 className='text-xl font-semibold text-[#111827]'>Project Items</h2>
-          </div>
+    <div className='flex flex-col h-full relative bg-[#FAFAFA]'>
+      <div className='absolute inset-0 pt-4 px-6 pb-16 overflow-hidden flex'>
+        {/* Main Column - Items List */}
+        <div className='flex-1 pr-6 overflow-y-auto'>
+          <div className='mb-6'>
+            <div className='flex justify-between items-center mb-4'>
+              <h2 className='text-2xl font-bold text-[#111827] tracking-tight'>Project Items</h2>
+              <span className='px-3 py-1 bg-blue-50 text-blue-800 rounded-full text-xs font-medium'>
+                {items.length} {items.length === 1 ? 'item' : 'items'}
+              </span>
+            </div>
 
-          <p className='text-[#6B7280] text-sm leading-5 mb-6'>
-            Add items to your project. Include name, description, and price for each item.
-            <button
-              onClick={() => {
-                return setKeyboardShortcutsVisible(true);
-              }}
-              className='ml-1 text-[#111827] underline-offset-2 hover:underline focus:outline-none focus:underline'
-              aria-label='View keyboard shortcuts'
-            >
-              View shortcuts
-            </button>
-          </p>
+            <p className='text-[#6B7280] text-sm leading-5 mb-6'>
+              Add items to your project. Include name, description, and price for each item.
+              <button
+                onClick={() => {
+                  return setKeyboardShortcutsVisible(true);
+                }}
+                className='ml-1 text-blue-600 underline-offset-2 hover:underline focus:outline-none focus:underline transition-colors'
+                aria-label='View keyboard shortcuts'
+              >
+                View shortcuts
+              </button>
+            </p>
+
+            {/* Item Cards */}
+            <div className='space-y-3'>
+              {items.map((item, index) => {
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05, duration: 0.2 }}
+                    key={item.id}
+                    className='border border-[#E5E7EB] rounded-xl p-4 transition-all duration-200 ease-in-out hover:border-blue-300 group bg-white shadow-sm hover:shadow-md hover:translate-y-[-1px]'
+                  >
+                    <div className='flex justify-between items-start'>
+                      <div className='flex items-start flex-1'>
+                        <button
+                          onClick={(e) => {
+                            return handleRemoveItem(item.id, e);
+                          }}
+                          className='mr-3 mt-1 text-[#D1D5DB] hover:text-[#EF4444] transition-colors group-hover:opacity-100 opacity-0 focus:outline-none focus:text-[#EF4444] h-6 w-6 flex items-center justify-center rounded-full hover:bg-[#FEE2E2]'
+                          aria-label={`Remove ${item.name}`}
+                        >
+                          <X size={16} className='transition-transform group-hover:scale-110' />
+                        </button>
+                        <div
+                          className='flex-1 cursor-pointer group/item'
+                          onClick={() => {
+                            return handleEditItem(item);
+                          }}
+                        >
+                          <div className='flex flex-col'>
+                            <span className='text-[#111827] text-base font-semibold group-hover/item:text-black transition-colors'>
+                              {item.name}
+                            </span>
+                            {item.description && (
+                              <p className='text-[#6B7280] text-sm mt-1 leading-relaxed group-hover/item:text-[#4B5563] transition-colors'>
+                                {item.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className='flex flex-col items-end'>
+                        <span className='text-[#111827] text-sm font-medium bg-green-50 px-3 py-1 rounded-full'>
+                          ${item.price}
+                        </span>
+                        <span className='text-blue-600 text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity'>
+                          Click to edit
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+
+              {items.length === 0 && (
+                <div className='text-center p-10 border-2 border-dashed border-gray-200 rounded-xl bg-white'>
+                  <div className='flex flex-col items-center justify-center space-y-3'>
+                    <div className='rounded-full bg-blue-50 p-3'>
+                      <Plus size={24} className='text-blue-600' />
+                    </div>
+                    <h3 className='text-[#111827] font-medium'>No items yet</h3>
+                    <p className='text-[#6B7280] text-sm max-w-[300px]'>
+                      Use the panel on the right to add items manually or generate them with AI.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - Add/Generate Functionality */}
+        <div className='w-[360px] border-l border-[#E5E7EB] pl-6 overflow-y-auto'>
+          <h3 className='text-[#111827] font-semibold mb-5 px-1'>Add Items</h3>
 
           {/* Action Buttons */}
-          <div className='flex space-x-3 mb-6'>
+          <div className='flex flex-col space-y-3 mb-6'>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -346,20 +425,22 @@ export default function ItemsSection({
                         return setCurrentNewItemMode('');
                       }
                       setCurrentNewItemMode('manual');
+                      setAiGeneratedItems([]);
+                      setAiResponse(null);
                       setTimeout(() => {
                         return nameInputRef.current?.focus();
                       }, 10);
                     }}
                     className={cn(
-                      'flex-1 flex items-center justify-center transition-all duration-300',
+                      'flex items-center justify-center transition-all duration-300 h-12',
                       currentNewItemMode === 'manual'
-                        ? 'bg-[#111827] text-white hover:bg-[#2C3E50] hover:text-white shadow-md'
-                        : 'hover:bg-gray-100',
+                        ? 'bg-blue-600 text-white hover:bg-blue-700 hover:text-white shadow-md border-0'
+                        : 'hover:bg-gray-100 border-2 border-gray-200',
                     )}
                     variant='outline'
                   >
-                    <Plus size={16} className='mr-2' />
-                    <span>Add Item Manually</span>
+                    <Plus size={18} className='mr-2' />
+                    <span className='font-medium'>Add Item Manually</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -377,20 +458,22 @@ export default function ItemsSection({
                         return setCurrentNewItemMode('');
                       }
                       setCurrentNewItemMode('ai');
+                      setEditingItem(null);
+                      setNewItem({ name: '', description: '', price: '' });
                       setTimeout(() => {
                         return aiPromptInputRef.current?.focus();
                       }, 10);
                     }}
                     className={cn(
-                      'flex-1 flex items-center justify-center transition-all duration-300',
+                      'flex items-center justify-center transition-all duration-300 h-12',
                       currentNewItemMode === 'ai'
-                        ? 'bg-[#111827] text-white hover:bg-[#2C3E50] hover:text-white shadow-md'
-                        : 'hover:bg-gray-100',
+                        ? 'bg-purple-600 text-white hover:bg-purple-700 hover:text-white shadow-md border-0'
+                        : 'hover:bg-gray-100 border-2 border-gray-200',
                     )}
                     variant='outline'
                   >
-                    <Sparkles size={16} className='mr-2' />
-                    <span>Generate with AI</span>
+                    <Sparkles size={18} className='mr-2' />
+                    <span className='font-medium'>Generate with AI</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -408,14 +491,14 @@ export default function ItemsSection({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className='border border-[#E5E7EB] rounded-lg p-4 mb-6 bg-white shadow-sm hover:shadow-md transition-all duration-200'
+                className='border border-[#E5E7EB] rounded-xl p-5 mb-6 bg-white shadow-sm hover:shadow-md transition-all duration-200'
               >
                 <form
                   onSubmit={editingItem ? handleUpdateItem : handleSubmitNewItem}
-                  className='space-y-3'
+                  className='space-y-4'
                 >
                   <div>
-                    <label htmlFor='item-name' className='sr-only'>
+                    <label htmlFor='item-name' className='text-xs text-gray-500 mb-1 block'>
                       Item name
                     </label>
                     <input
@@ -427,15 +510,15 @@ export default function ItemsSection({
                         return setNewItem({ ...newItem, name: e.target.value });
                       }}
                       onKeyDown={handleNameKeyDown}
-                      placeholder='Item name'
-                      className='w-full border-b border-[#E5E7EB] pb-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-[#6B7280] transition-colors bg-transparent'
+                      placeholder='Enter item name'
+                      className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
                       autoFocus
                       aria-label='Item name'
                     />
                   </div>
                   <div>
-                    <label htmlFor='item-description' className='sr-only'>
-                      Item description
+                    <label htmlFor='item-description' className='text-xs text-gray-500 mb-1 block'>
+                      Description (optional)
                     </label>
                     <textarea
                       id='item-description'
@@ -444,17 +527,19 @@ export default function ItemsSection({
                         return setNewItem({ ...newItem, description: e.target.value });
                       }}
                       onKeyDown={handleDescriptionKeyDown}
-                      placeholder='Item description (optional)'
-                      className='w-full border-none text-sm text-[#6B7280] outline-none resize-none min-h-[40px] placeholder:text-[#9CA3AF] bg-transparent focus:ring-1 focus:ring-gray-200 rounded p-1'
+                      placeholder='Add a description'
+                      className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm text-[#6B7280] outline-none resize-none min-h-[80px] placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
                       aria-label='Item description'
                     />
                   </div>
-                  <div className='flex items-center justify-between pt-1'>
+                  <div>
+                    <label htmlFor='item-price' className='text-xs text-gray-500 mb-1 block'>
+                      Price
+                    </label>
                     <div className='relative'>
-                      <span className='absolute left-0 top-[2px] text-[#6B7280]'>$</span>
-                      <label htmlFor='item-price' className='sr-only'>
-                        Item price
-                      </label>
+                      <span className='absolute left-3 top-[11px] text-[#6B7280] font-medium'>
+                        $
+                      </span>
                       <input
                         type='number'
                         id='item-price'
@@ -465,41 +550,41 @@ export default function ItemsSection({
                           return setNewItem({ ...newItem, price: e.target.value });
                         }}
                         placeholder='0.00'
-                        className='border-none text-sm text-[#111827] outline-none w-[100px] pl-3 bg-transparent focus:ring-1 focus:ring-gray-200 rounded'
+                        className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 pl-7 text-sm text-[#111827] outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
                         aria-label='Item price'
                       />
                     </div>
-                    <div className='flex space-x-3'>
-                      <button
-                        type='button'
-                        onClick={() => {
-                          setEditingItem(null);
-                          setNewItem({ name: '', description: '', price: '' });
-                          setCurrentNewItemMode('');
-                        }}
-                        className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors px-3 py-1.5 rounded hover:bg-gray-100'
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type='submit'
-                        className={cn(
-                          'bg-[#111827] text-white px-4 py-1.5 rounded-md text-sm transition-all duration-200 flex items-center justify-center min-w-[60px]',
-                          !newItem.name.trim() || isSubmitting
-                            ? 'opacity-70 cursor-not-allowed'
-                            : 'hover:bg-[#2C3E50] hover:shadow',
-                        )}
-                        disabled={!newItem.name.trim() || isSubmitting}
-                      >
-                        {isSubmitting ? (
-                          <Loader2 size={14} className='animate-spin' />
-                        ) : editingItem ? (
-                          'Update'
-                        ) : (
-                          'Add'
-                        )}
-                      </button>
-                    </div>
+                  </div>
+                  <div className='flex items-center justify-end pt-2 space-x-3'>
+                    <button
+                      type='button'
+                      onClick={() => {
+                        setEditingItem(null);
+                        setNewItem({ name: '', description: '', price: '' });
+                        setCurrentNewItemMode('');
+                      }}
+                      className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors px-4 py-2 rounded-lg hover:bg-gray-100'
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type='submit'
+                      className={cn(
+                        'bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center min-w-[80px]',
+                        !newItem.name.trim() || isSubmitting
+                          ? 'opacity-70 cursor-not-allowed'
+                          : 'hover:bg-blue-700 hover:shadow',
+                      )}
+                      disabled={!newItem.name.trim() || isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <Loader2 size={16} className='animate-spin' />
+                      ) : editingItem ? (
+                        'Update'
+                      ) : (
+                        'Add'
+                      )}
+                    </button>
                   </div>
                 </form>
               </motion.div>
@@ -514,7 +599,7 @@ export default function ItemsSection({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className='border border-[#E5E7EB] rounded-lg p-4 mb-6 bg-white shadow-sm hover:shadow-md transition-all duration-200'
+                className='border border-[#E5E7EB] rounded-xl p-5 mb-6 bg-white shadow-sm hover:shadow-md transition-all duration-200'
               >
                 <div className='mb-4'>
                   <label className='block text-[#111827] font-medium text-sm mb-2'>
@@ -529,16 +614,16 @@ export default function ItemsSection({
                       }}
                       rows={4}
                       placeholder='Describe what the client wants...'
-                      className='flex-1 border border-[#E5E7EB] rounded-md px-3 py-2 text-sm outline-none bg-transparent focus:border-[#9CA3AF] focus:ring-1 focus:ring-gray-200 transition-colors pr-[110px]'
+                      className='flex-1 border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm outline-none bg-transparent focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-colors pr-[110px]'
                       autoFocus
                     />
                     <Button
                       onClick={handleGenerateAiItems}
                       className={cn(
-                        'bg-[#111827] text-white px-4 py-2 text-sm transition-all duration-200 flex items-center justify-center min-w-[100px] absolute right-2 bottom-2 cursor-pointer z-10 rounded',
+                        'bg-purple-600 text-white px-4 py-2 text-sm transition-all duration-200 flex items-center justify-center min-w-[100px] absolute right-2 bottom-2 cursor-pointer z-10 rounded-lg',
                         !aiPrompt.trim() || isGenerating
                           ? 'opacity-70 cursor-not-allowed'
-                          : 'hover:bg-[#2C3E50] hover:shadow',
+                          : 'hover:bg-purple-700 hover:shadow',
                       )}
                       disabled={!aiPrompt.trim() || isGenerating}
                     >
@@ -547,7 +632,7 @@ export default function ItemsSection({
                   </div>
 
                   {/* Voice and attachment controls */}
-                  <div className='flex mt-2 items-center'>
+                  <div className='flex mt-3 items-center'>
                     <div className='flex space-x-2'>
                       <TooltipProvider>
                         <Tooltip>
@@ -631,13 +716,13 @@ export default function ItemsSection({
                               exit={{ opacity: 0, y: -10 }}
                               transition={{ delay: index * 0.05 }}
                               key={attachment.id}
-                              className='flex items-center justify-between bg-gray-50 rounded px-3 py-2 text-xs hover:bg-gray-100 transition-colors'
+                              className='flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 text-xs hover:bg-gray-100 transition-colors'
                             >
                               <div className='flex items-center'>
                                 {attachment.type === 'voice' ? (
-                                  <Mic size={14} className='mr-2 text-blue-500' />
+                                  <Mic size={14} className='mr-2 text-purple-500' />
                                 ) : (
-                                  <Paperclip size={14} className='mr-2 text-blue-500' />
+                                  <Paperclip size={14} className='mr-2 text-purple-500' />
                                 )}
                                 <span className='text-gray-700'>{attachment.name}</span>
                               </div>
@@ -669,8 +754,13 @@ export default function ItemsSection({
                     animate={{ opacity: 1 }}
                     className='flex flex-col items-center justify-center py-8'
                   >
-                    <Loader2 size={24} className='text-[#111827] animate-spin mb-4' />
-                    <p className='text-[#6B7280] text-sm'>
+                    <div className='relative w-12 h-12'>
+                      <div className='absolute inset-0 flex items-center justify-center'>
+                        <Loader2 size={24} className='text-purple-600 animate-spin' />
+                      </div>
+                      <div className='absolute inset-0 animate-ping rounded-full bg-purple-200 opacity-50'></div>
+                    </div>
+                    <p className='text-[#6B7280] text-sm mt-3'>
                       Generating items based on your description...
                     </p>
                   </motion.div>
@@ -715,9 +805,9 @@ export default function ItemsSection({
                             key={item.id}
                             className={`border ${
                               selectedAiItems[item.id]
-                                ? 'border-[#111827] shadow-md'
+                                ? 'border-purple-500 ring-2 ring-purple-200'
                                 : 'border-[#E5E7EB]'
-                            } rounded-lg p-4 transition-all duration-200 ease-in-out hover:border-[#9CA3AF] bg-white cursor-pointer`}
+                            } rounded-lg p-4 transition-all duration-200 ease-in-out hover:border-purple-300 bg-white cursor-pointer shadow-sm`}
                             onClick={() => {
                               return toggleAiItemSelection(item.id);
                             }}
@@ -726,7 +816,7 @@ export default function ItemsSection({
                               <div
                                 className={`w-[18px] h-[18px] rounded-[4px] border ${
                                   selectedAiItems[item.id]
-                                    ? 'bg-[#111827] border-[#111827]'
+                                    ? 'bg-purple-600 border-purple-600'
                                     : 'border-[#D1D5DB]'
                                 } flex items-center justify-center mr-3 mt-[2px] transition-colors`}
                               >
@@ -754,11 +844,17 @@ export default function ItemsSection({
                                     <span className='text-[#111827] text-base font-medium'>
                                       {item.name}
                                     </span>
-                                    <span className='ml-2 text-xs px-2 py-0.5 bg-[#F3F4F6] rounded-full text-gray-700'>
+                                    <span
+                                      className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
+                                        item.type === 'PRODUCT'
+                                          ? 'bg-blue-50 text-blue-700'
+                                          : 'bg-purple-50 text-purple-700'
+                                      }`}
+                                    >
                                       {item.type}
                                     </span>
                                   </div>
-                                  <span className='text-[#111827] text-sm font-medium'>
+                                  <span className='text-[#111827] text-sm font-medium bg-green-50 px-2 py-0.5 rounded-full'>
                                     ${item.price}
                                   </span>
                                 </div>
@@ -806,10 +902,10 @@ export default function ItemsSection({
                       <button
                         onClick={handleAddSelectedAiItems}
                         className={cn(
-                          'bg-[#111827] text-white px-4 py-2 rounded-md text-sm transition-all duration-200 flex items-center',
+                          'bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center',
                           Object.values(selectedAiItems).filter(Boolean).length === 0
                             ? 'opacity-70 cursor-not-allowed'
-                            : 'hover:bg-[#2C3E50] hover:shadow',
+                            : 'hover:bg-purple-700 hover:shadow',
                         )}
                         disabled={Object.values(selectedAiItems).filter(Boolean).length === 0}
                       >
@@ -826,64 +922,6 @@ export default function ItemsSection({
               </motion.div>
             )}
           </AnimatePresence>
-
-          {/* Item Cards */}
-          <div className='space-y-3'>
-            {items.map((item, index) => {
-              return (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05, duration: 0.2 }}
-                  key={item.id}
-                  className='border border-[#E5E7EB] rounded-lg p-4 transition-all duration-200 ease-in-out hover:border-[#9CA3AF] group bg-white shadow-sm hover:shadow-md hover:translate-y-[-1px]'
-                >
-                  <div className='flex justify-between items-start'>
-                    <div className='flex items-start flex-1'>
-                      <button
-                        onClick={(e) => {
-                          return handleRemoveItem(item.id, e);
-                        }}
-                        className='mr-3 mt-1 text-[#D1D5DB] hover:text-[#EF4444] transition-colors group-hover:opacity-100 opacity-0 focus:outline-none focus:text-[#EF4444] h-6 w-6 flex items-center justify-center rounded-full hover:bg-[#FEE2E2]'
-                        aria-label={`Remove ${item.name}`}
-                      >
-                        <X size={16} className='transition-transform group-hover:scale-110' />
-                      </button>
-                      <div
-                        className='flex-1 cursor-pointer group/item'
-                        onClick={() => {
-                          return handleEditItem(item);
-                        }}
-                      >
-                        <div className='flex flex-col'>
-                          <span className='text-[#111827] text-base font-medium group-hover/item:text-black transition-colors'>
-                            {item.name}
-                          </span>
-                          {item.description && (
-                            <p className='text-[#6B7280] text-sm mt-1 leading-relaxed group-hover/item:text-[#4B5563] transition-colors'>
-                              {item.description}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className='flex flex-col items-end'>
-                      <span className='text-[#111827] text-sm font-medium'>${item.price}</span>
-                      <span className='text-[#9CA3AF] text-xs mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity'>
-                        Click to edit
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-
-            {items.length === 0 && (
-              <div className='text-[#6B7280] text-sm text-center p-8 border border-dashed border-gray-200 rounded-lg'>
-                No items added yet. Use the buttons above to add new items.
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
