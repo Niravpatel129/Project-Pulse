@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Loader2, Mic, Paperclip, Plus, Sparkles, X } from 'lucide-react';
+import { Check, Loader2, Mic, Paperclip, PencilLine, Plus, Sparkles, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import SectionFooter from './SectionFooter';
 import type { AIItem, Attachment, Item, Section } from './types';
@@ -42,6 +42,16 @@ export default function ItemsSection({
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [aiResponse, setAiResponse] = useState<any>(null);
   const [keyboardShortcutsVisible, setKeyboardShortcutsVisible] = useState(false);
+  const [inlineEditingItem, setInlineEditingItem] = useState<string | null>(null);
+  const [inlineEditValues, setInlineEditValues] = useState<{
+    name: string;
+    description: string;
+    price: string;
+  }>({
+    name: '',
+    description: '',
+    price: '',
+  });
 
   const nameInputRef = useRef<HTMLInputElement>(null);
   const aiPromptInputRef = useRef<HTMLTextAreaElement>(null);
@@ -312,6 +322,56 @@ export default function ItemsSection({
         return attachment.id !== id;
       }),
     );
+  };
+
+  // Function to start inline editing for an item
+  const startInlineEdit = (item: Item) => {
+    setInlineEditingItem(item.id);
+    setInlineEditValues({
+      name: item.name,
+      description: item.description,
+      price: item.price.replace(/,/g, ''),
+    });
+  };
+
+  // Function to save inline edits
+  const saveInlineEdit = (itemId: string) => {
+    if (!inlineEditValues.name.trim()) {
+      showNotification('Item name cannot be empty', 'error');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    // Format price to have 2 decimal places
+    const formattedPrice = Number(inlineEditValues.price || 0).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+    // Update the item
+    const updatedItems = items.map((item) => {
+      return item.id === itemId
+        ? {
+            ...item,
+            name: inlineEditValues.name.trim(),
+            description: inlineEditValues.description.trim(),
+            price: formattedPrice,
+          }
+        : item;
+    });
+
+    setTimeout(() => {
+      setItems(updatedItems);
+      setInlineEditingItem(null);
+      setIsSubmitting(false);
+      showNotification('Item updated successfully');
+    }, 300);
+  };
+
+  // Function to cancel inline editing
+  const cancelInlineEdit = () => {
+    setInlineEditingItem(null);
   };
 
   return (
@@ -902,6 +962,8 @@ export default function ItemsSection({
             </div>
 
             {items.map((item, index) => {
+              const isEditing = inlineEditingItem === item.id;
+
               return (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -921,31 +983,134 @@ export default function ItemsSection({
                       >
                         <X size={16} className='transition-transform group-hover:scale-110' />
                       </button>
-                      <div
-                        className='flex-1 cursor-pointer group/item'
-                        onClick={() => {
-                          return handleEditItem(item);
-                        }}
-                      >
-                        <div className='flex flex-col'>
-                          <span className='text-[#111827] text-base font-semibold group-hover/item:text-black transition-colors'>
-                            {item.name}
-                          </span>
-                          {item.description && (
-                            <p className='text-[#6B7280] text-sm mt-1 leading-relaxed group-hover/item:text-[#4B5563] transition-colors'>
-                              {item.description}
-                            </p>
-                          )}
-                        </div>
+
+                      <div className='flex-1'>
+                        {isEditing ? (
+                          // Inline editing form
+                          <div className='space-y-2'>
+                            <div>
+                              <input
+                                type='text'
+                                value={inlineEditValues.name}
+                                onChange={(e) => {
+                                  return setInlineEditValues({
+                                    ...inlineEditValues,
+                                    name: e.target.value,
+                                  });
+                                }}
+                                className='w-full border border-blue-300 rounded-lg px-3 py-1.5 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                                placeholder='Item name'
+                                autoFocus
+                              />
+                            </div>
+
+                            <div>
+                              <textarea
+                                value={inlineEditValues.description}
+                                onChange={(e) => {
+                                  return setInlineEditValues({
+                                    ...inlineEditValues,
+                                    description: e.target.value,
+                                  });
+                                }}
+                                className='w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-[#6B7280] outline-none resize-none min-h-[60px] placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                                placeholder='Add a description'
+                              />
+                            </div>
+
+                            <div className='flex items-center'>
+                              <div className='relative flex-1 max-w-[150px]'>
+                                <span className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] font-medium'>
+                                  $
+                                </span>
+                                <input
+                                  type='number'
+                                  step='0.01'
+                                  min='0'
+                                  value={inlineEditValues.price}
+                                  onChange={(e) => {
+                                    return setInlineEditValues({
+                                      ...inlineEditValues,
+                                      price: e.target.value,
+                                    });
+                                  }}
+                                  className='w-full border border-gray-200 rounded-lg py-1.5 px-3 pl-7 text-sm text-[#111827] outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                                  placeholder='0.00'
+                                />
+                              </div>
+
+                              <div className='flex space-x-2 ml-3'>
+                                <Button
+                                  onClick={() => {
+                                    return cancelInlineEdit();
+                                  }}
+                                  variant='ghost'
+                                  size='sm'
+                                  className='text-gray-500 hover:text-gray-700 hover:bg-gray-100 h-8 w-8 p-0'
+                                >
+                                  <X size={16} />
+                                </Button>
+                                <Button
+                                  onClick={() => {
+                                    return saveInlineEdit(item.id);
+                                  }}
+                                  variant='ghost'
+                                  size='sm'
+                                  className='text-green-600 hover:text-green-700 hover:bg-green-50 h-8 w-8 p-0'
+                                  disabled={isSubmitting || !inlineEditValues.name.trim()}
+                                >
+                                  {isSubmitting ? (
+                                    <Loader2 size={16} className='animate-spin' />
+                                  ) : (
+                                    <Check size={16} />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          // Display mode
+                          <div
+                            className='cursor-pointer group/item'
+                            onClick={() => {
+                              return startInlineEdit(item);
+                            }}
+                          >
+                            <div className='flex flex-col'>
+                              <span className='text-[#111827] text-base font-semibold group-hover/item:text-black transition-colors'>
+                                {item.name}
+                              </span>
+                              {item.description ? (
+                                <p className='text-[#6B7280] text-sm mt-1 leading-relaxed group-hover/item:text-[#4B5563] transition-colors'>
+                                  {item.description}
+                                </p>
+                              ) : (
+                                <p className='text-[#9CA3AF] text-sm mt-1 italic group-hover/item:text-[#6B7280] transition-colors'>
+                                  Add a description...
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className='flex flex-col items-end'>
-                      <span className='text-[#111827] text-sm font-medium bg-green-50 px-3 py-1 rounded-full'>
-                        ${item.price}
-                      </span>
-                      <span className='text-blue-600 text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity'>
-                        Click to edit
-                      </span>
+                      {!isEditing && (
+                        <>
+                          <span className='text-[#111827] text-sm font-medium bg-green-50 px-3 py-1 rounded-full'>
+                            ${item.price}
+                          </span>
+                          <button
+                            onClick={() => {
+                              return startInlineEdit(item);
+                            }}
+                            className='text-blue-600 text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:underline'
+                          >
+                            <PencilLine size={12} />
+                            Edit
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </motion.div>
