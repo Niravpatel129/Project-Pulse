@@ -460,19 +460,6 @@ export default function ItemsSection({
             Add items to your project. Include name, description, and price for each item.
           </p>
 
-          <p className='text-[#6B7280] text-sm leading-5 mb-6'>
-            Add items to your project. Include name, description, and price for each item.
-            <button
-              onClick={() => {
-                return setKeyboardShortcutsVisible(true);
-              }}
-              className='ml-1 text-blue-600 underline-offset-2 hover:underline focus:outline-none focus:underline transition-colors'
-              aria-label='View keyboard shortcuts'
-            >
-              View shortcuts
-            </button>
-          </p>
-
           {/* Action Buttons */}
           <div className='flex space-x-3 mb-6'>
             <TooltipProvider>
