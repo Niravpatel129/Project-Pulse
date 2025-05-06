@@ -22,11 +22,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  Check,
   Hash,
   Loader2,
   Mic,
@@ -38,6 +41,7 @@ import {
   X,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { toast } from 'sonner';
 import SectionFooter from './SectionFooter';
 import type { AIItem, Attachment, ExtendedItem, Item, Section } from './types';
 
@@ -70,9 +74,18 @@ export default function ItemsSection({
   handleRemoveItem,
   projectCurrency,
 }: ItemsSectionProps) {
-  // Dummy notification function since notification system was removed
-  const showNotification = (message: string, type?: string) => {
-    console.log(`[${type || 'info'}] ${message}`);
+  // Replace dummy notification function with toast
+  const showNotification = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    switch (type) {
+      case 'success':
+        toast.success(message);
+        break;
+      case 'error':
+        toast.error(message);
+        break;
+      default:
+        toast(message);
+    }
   };
 
   const [currentNewItemMode, setCurrentNewItemMode] = useState('');
@@ -80,6 +93,7 @@ export default function ItemsSection({
   const [aiGeneratedItems, setAiGeneratedItems] = useState<AIItem[]>([]);
   const [selectedAiItems, setSelectedAiItems] = useState<Record<string, boolean>>({});
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isAiResultsModalOpen, setIsAiResultsModalOpen] = useState(false);
   const [newItem, setNewItem] = useState({
     name: '',
     description: '',
@@ -109,6 +123,12 @@ export default function ItemsSection({
     name: '',
     rate: 0,
   });
+  const [addAnother, setAddAnother] = useState(false);
+  const [batchEditSettings, setBatchEditSettings] = useState({
+    taxRateId: 'standard',
+    discount: 0,
+    taxable: true,
+  });
 
   const nameInputRef = useRef<HTMLInputElement>(null);
   const aiPromptInputRef = useRef<HTMLTextAreaElement>(null);
@@ -120,6 +140,7 @@ export default function ItemsSection({
     setIsGenerating(true);
     setAiGeneratedItems([]);
     setAiResponse(null);
+    setIsAiResultsModalOpen(true);
 
     // Simulate AI processing delay
     setTimeout(() => {
@@ -191,7 +212,12 @@ export default function ItemsSection({
       });
 
       setAiGeneratedItems(generatedItems);
-      setSelectedAiItems({});
+      // Auto-select all items by default
+      const allSelected = generatedItems.reduce((acc, item) => {
+        acc[item.id] = true;
+        return acc;
+      }, {} as Record<string, boolean>);
+      setSelectedAiItems(allSelected);
       setIsGenerating(false);
     }, 1500);
   };
@@ -205,6 +231,28 @@ export default function ItemsSection({
       showNotification('Please select at least one item', 'error');
       return;
     }
+
+    // If multiple items selected, open batch edit modal for tax and discount
+    if (selectedItems.length > 1) {
+      setIsAiResultsModalOpen(true);
+      return;
+    }
+
+    // For single item, proceed directly
+    addSelectedItemsToProject(selectedItems);
+  };
+
+  // New function to actually add the items after potentially configuring them
+  const addSelectedItemsToProject = (
+    selectedItems: AIItem[],
+    settings?: typeof batchEditSettings,
+  ) => {
+    // Get the selected tax rate for display purposes
+    const selectedTax = taxRates.find((tax) => {
+      return tax.id === (settings?.taxRateId || selectedTaxRateId);
+    });
+    const taxRateName = selectedTax ? selectedTax.name : '';
+    const taxRate = selectedTax ? selectedTax.rate : 0;
 
     // Format the items to match our items array structure
     const formattedItems = selectedItems.map((item) => {
@@ -222,6 +270,10 @@ export default function ItemsSection({
         quantity: item.quantity || '1',
         currency: projectCurrency, // Use project currency
         type: item.type,
+        taxRate: taxRate,
+        discount: settings?.discount || 0,
+        taxable: settings?.taxable !== undefined ? settings?.taxable : true,
+        taxName: taxRateName,
       } as ItemWithType;
     });
 
@@ -230,6 +282,14 @@ export default function ItemsSection({
     setAiGeneratedItems([]);
     setAiResponse(null);
     setSelectedAiItems({});
+    setIsAiResultsModalOpen(false);
+
+    // Show success notification
+    toast.success(
+      `${formattedItems.length} ${
+        formattedItems.length === 1 ? 'item' : 'items'
+      } added successfully`,
+    );
   };
 
   const handleEditItem = (item: ExtendedItem) => {
@@ -295,7 +355,30 @@ export default function ItemsSection({
       } as ItemWithType;
 
       setItems([...items, newItemObj as Item]);
-      resetFormState();
+
+      if (addAnother) {
+        // Just reset the form but keep the modal open
+        setNewItem({
+          name: '',
+          description: '',
+          price: '',
+          quantity: '1',
+          currency: 'USD',
+          taxRate: newItem.taxRate, // Keep the same tax rate for next item
+          discount: newItem.discount, // Keep the same discount for next item
+          taxable: newItem.taxable, // Keep the same taxable setting for next item
+        });
+        setIsSubmitting(false);
+        // Focus back on the name input for quick entry
+        setTimeout(() => {
+          nameInputRef.current?.focus();
+        }, 10);
+        showNotification('Item added successfully. Add another item.', 'success');
+      } else {
+        // Reset form state completely and close the modal
+        resetFormState();
+        showNotification('Item added successfully', 'success');
+      }
     }, 300);
   };
 
@@ -343,7 +426,7 @@ export default function ItemsSection({
 
       setItems(updatedItems);
       resetFormState();
-      showNotification('Item updated successfully');
+      showNotification('Item updated successfully', 'success');
     }, 300);
   };
 
@@ -629,10 +712,34 @@ export default function ItemsSection({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.25 }}
-                  className='border border-[#E5E7EB] rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200 w-full'
+                  className='border border-[#E5E7EB] rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200 w-full relative'
                 >
+                  {/* Close button in top-right corner */}
+                  <button
+                    type='button'
+                    onClick={() => {
+                      setEditingItem(null);
+                      setNewItem({
+                        name: '',
+                        description: '',
+                        price: '',
+                        quantity: '1',
+                        currency: 'USD',
+                        taxRate: 0,
+                        discount: 0,
+                        taxable: true,
+                      });
+                      setCurrentNewItemMode('');
+                    }}
+                    className='absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors'
+                  >
+                    <X size={18} />
+                  </button>
+
                   <form
-                    onSubmit={editingItem ? handleUpdateItem : handleSubmitNewItem}
+                    onSubmit={(e) => {
+                      return e.preventDefault();
+                    }}
                     className='space-y-4'
                   >
                     <div>
@@ -795,31 +902,35 @@ export default function ItemsSection({
                         />
                       </div>
                     </div>
-                    <div className='flex items-center justify-end pt-2 space-x-3'>
+                    <div className='flex items-center justify-between pt-4'>
+                      {/* Create More toggle */}
+                      {!editingItem && (
+                        <div className='flex items-center space-x-2'>
+                          <Switch
+                            id='create-more'
+                            checked={addAnother}
+                            onCheckedChange={setAddAnother}
+                          />
+                          <Label
+                            htmlFor='create-more'
+                            className='text-sm text-gray-600 cursor-pointer'
+                          >
+                            Create more
+                          </Label>
+                        </div>
+                      )}
+
+                      {/* Spacer when editing */}
+                      {editingItem && <div></div>}
+
+                      {/* Action button */}
                       <button
                         type='button'
-                        onClick={() => {
-                          setEditingItem(null);
-                          setNewItem({
-                            name: '',
-                            description: '',
-                            price: '',
-                            quantity: '1',
-                            currency: 'USD',
-                            taxRate: 0,
-                            discount: 0,
-                            taxable: true,
-                          });
-                          setCurrentNewItemMode('');
+                        onClick={(e) => {
+                          return editingItem ? handleUpdateItem(e) : handleSubmitNewItem(e);
                         }}
-                        className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors px-4 py-2 rounded-lg hover:bg-gray-100'
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type='submit'
                         className={cn(
-                          'bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center min-w-[80px]',
+                          'bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center min-w-[100px]',
                           !newItem.name.trim() || isSubmitting
                             ? 'opacity-70 cursor-not-allowed'
                             : 'hover:bg-blue-700 hover:shadow',
@@ -831,7 +942,7 @@ export default function ItemsSection({
                         ) : editingItem ? (
                           'Update'
                         ) : (
-                          'Add'
+                          'Add Item'
                         )}
                       </button>
                     </div>
@@ -1010,189 +1121,6 @@ export default function ItemsSection({
                       <p className='text-[#6B7280] text-sm mt-3'>
                         Generating items based on your description...
                       </p>
-                    </motion.div>
-                  )}
-
-                  {!isGenerating && aiGeneratedItems.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className='space-y-4'
-                    >
-                      <div className='flex justify-between items-center'>
-                        <h3 className='text-base font-medium text-[#111827]'>Generated Items</h3>
-                        <div className='flex space-x-2'>
-                          <button
-                            onClick={() => {
-                              setAiPrompt('');
-                              setAiGeneratedItems([]);
-                              setAiResponse(null);
-                            }}
-                            className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors px-2 py-1 rounded hover:bg-gray-100'
-                          >
-                            Clear
-                          </button>
-                          <button
-                            onClick={handleGenerateAiItems}
-                            className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors flex items-center px-2 py-1 rounded hover:bg-gray-100'
-                          >
-                            <Sparkles size={14} className='mr-1' />
-                            Regenerate
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Changed from scrollable container to normal flow */}
-                      <div className='space-y-3'>
-                        {aiGeneratedItems.map((item, index) => {
-                          return (
-                            <motion.div
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: index * 0.05 }}
-                              key={item.id}
-                              className={`border ${
-                                selectedAiItems[item.id]
-                                  ? 'border-purple-500 ring-2 ring-purple-200'
-                                  : 'border-[#E5E7EB]'
-                              } rounded-lg p-4 transition-all duration-200 ease-in-out hover:border-purple-300 bg-white cursor-pointer shadow-sm`}
-                              onClick={() => {
-                                return toggleAiItemSelection(item.id);
-                              }}
-                            >
-                              <div className='flex items-start'>
-                                <div
-                                  className={`w-[18px] h-[18px] rounded-[4px] border flex-shrink-0 ${
-                                    selectedAiItems[item.id]
-                                      ? 'bg-purple-600 border-purple-600'
-                                      : 'border-[#D1D5DB]'
-                                  } flex items-center justify-center mr-3 mt-[2px] transition-colors`}
-                                >
-                                  {selectedAiItems[item.id] && (
-                                    <svg
-                                      width='12'
-                                      height='12'
-                                      viewBox='0 0 12 12'
-                                      fill='none'
-                                      xmlns='http://www.w3.org/2000/svg'
-                                    >
-                                      <path
-                                        d='M10 3L4.5 8.5L2 6'
-                                        stroke='white'
-                                        strokeWidth='1.5'
-                                        strokeLinecap='round'
-                                        strokeLinejoin='round'
-                                      />
-                                    </svg>
-                                  )}
-                                </div>
-                                <div className='flex-1 min-w-0'>
-                                  <div className='flex justify-between items-start flex-wrap gap-2'>
-                                    <div className='flex flex-wrap items-center gap-2'>
-                                      <span className='text-[#111827] text-base font-medium'>
-                                        {item.name}
-                                      </span>
-                                      <span
-                                        className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
-                                          item.type === 'PRODUCT'
-                                            ? 'bg-blue-50 text-blue-700'
-                                            : 'bg-purple-50 text-purple-700'
-                                        }`}
-                                      >
-                                        {item.type}
-                                      </span>
-                                    </div>
-                                    <div className='flex items-center space-x-2'>
-                                      <span className='text-[#111827] text-sm font-medium bg-green-50 px-2 py-0.5 rounded-full flex-shrink-0'>
-                                        {getCurrencySymbol(projectCurrency)}
-                                        {item.price}
-                                      </span>
-                                      <span className='text-[#111827] text-sm font-medium bg-gray-50 px-2 py-0.5 rounded-full flex-shrink-0'>
-                                        {item.quantity || '1'}{' '}
-                                        {parseInt(item.quantity || '1') === 1 ? 'unit' : 'units'}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  {item.description ? (
-                                    <p className='text-[#6B7280] text-sm mt-1 leading-relaxed'>
-                                      {item.description}
-                                    </p>
-                                  ) : (
-                                    <p className='text-[#9CA3AF] text-sm mt-1 italic group-hover/item:text-[#6B7280] transition-colors'>
-                                      Add a description...
-                                    </p>
-                                  )}
-                                  {item.reasoning && (
-                                    <div className='mt-2 pt-2 border-t border-[#F3F4F6]'>
-                                      <p className='text-[#6B7280] text-xs italic'>
-                                        <span className='font-medium'>Reasoning:</span>{' '}
-                                        {item.reasoning}
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </motion.div>
-                          );
-                        })}
-                      </div>
-
-                      {aiResponse?.meta && (
-                        <div className='text-[#6B7280] text-xs border-t border-[#F3F4F6] pt-2 flex justify-between'>
-                          <span>Processing time: {aiResponse.meta.processingTime.toFixed(2)}s</span>
-                          <span>
-                            Generated: {new Date(aiResponse.meta.timestamp).toLocaleTimeString()}
-                          </span>
-                        </div>
-                      )}
-
-                      <div className='flex justify-between pt-2'>
-                        <Button
-                          onClick={() => {
-                            setSelectedAiItems(
-                              aiGeneratedItems.reduce((acc, item) => {
-                                acc[item.id] = true;
-                                return acc;
-                              }, {} as Record<string, boolean>),
-                            );
-                          }}
-                          className='text-purple-600 hover:text-purple-700 border border-purple-200 hover:bg-purple-50 text-sm'
-                          variant='outline'
-                        >
-                          Select All
-                        </Button>
-
-                        <div className='flex'>
-                          <button
-                            onClick={() => {
-                              setAiPrompt('');
-                              setAiGeneratedItems([]);
-                              setAiResponse(null);
-                              setCurrentNewItemMode('');
-                            }}
-                            className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors mr-3 px-3 py-1.5 rounded hover:bg-gray-100'
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={handleAddSelectedAiItems}
-                            className={cn(
-                              'bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center',
-                              Object.values(selectedAiItems).filter(Boolean).length === 0
-                                ? 'opacity-70 cursor-not-allowed'
-                                : 'hover:bg-purple-700 hover:shadow',
-                            )}
-                            disabled={Object.values(selectedAiItems).filter(Boolean).length === 0}
-                          >
-                            Add{' '}
-                            {Object.values(selectedAiItems).filter(Boolean).length > 0
-                              ? `${Object.values(selectedAiItems).filter(Boolean).length} `
-                              : ''}
-                            Selected Item
-                            {Object.values(selectedAiItems).filter(Boolean).length !== 1 ? 's' : ''}
-                          </button>
-                        </div>
-                      </div>
                     </motion.div>
                   )}
                 </motion.div>
@@ -1447,12 +1375,305 @@ export default function ItemsSection({
             </Button>
             <Button
               type='button'
-              onClick={handleAddTaxRate}
-              disabled={!newTaxRate.name.trim()}
+              onClick={() => {
+                handleAddTaxRate();
+                setIsNewTaxRateDialogOpen(false);
+              }}
               className='bg-purple-600 hover:bg-purple-700 text-white'
             >
               <Plus size={16} className='mr-2' />
               Add Tax Rate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Generated Items Results Modal */}
+      <Dialog
+        open={isAiResultsModalOpen}
+        onOpenChange={(open) => {
+          if (!open && !isGenerating) {
+            setIsAiResultsModalOpen(false);
+          }
+        }}
+      >
+        <DialogContent className='sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col'>
+          <DialogHeader>
+            <DialogTitle className='flex items-center text-lg font-semibold'>
+              <div className='mr-2 p-1.5 bg-purple-100 rounded-full'>
+                <Sparkles size={18} className='text-purple-600' />
+              </div>
+              AI Generated Items
+            </DialogTitle>
+            <DialogDescription>Review and select items to add to your project</DialogDescription>
+          </DialogHeader>
+
+          {isGenerating ? (
+            <div className='flex flex-col items-center justify-center py-12'>
+              <div className='relative w-16 h-16'>
+                <div className='absolute inset-0 flex items-center justify-center'>
+                  <Loader2 size={32} className='text-purple-600 animate-spin' />
+                </div>
+                <div className='absolute inset-0 animate-ping rounded-full bg-purple-200 opacity-50'></div>
+              </div>
+              <p className='text-[#6B7280] text-base mt-4'>
+                Generating items based on your description...
+              </p>
+            </div>
+          ) : (
+            <div className='overflow-y-auto flex-1 -mx-6 px-6'>
+              <div className='space-y-4 mb-6'>
+                <div className='flex justify-between items-center'>
+                  <p className='text-sm text-gray-500'>
+                    {aiGeneratedItems.length} items generated from your prompt
+                  </p>
+
+                  <div className='flex items-center gap-2'>
+                    <Button
+                      onClick={() => {
+                        setSelectedAiItems(
+                          aiGeneratedItems.reduce((acc, item) => {
+                            acc[item.id] = true;
+                            return acc;
+                          }, {} as Record<string, boolean>),
+                        );
+                      }}
+                      size='sm'
+                      variant='outline'
+                      className='text-xs h-8'
+                    >
+                      Select All
+                    </Button>
+
+                    <Button
+                      onClick={() => {
+                        setSelectedAiItems({});
+                      }}
+                      size='sm'
+                      variant='outline'
+                      className='text-xs h-8'
+                    >
+                      Deselect All
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Item List with Checkboxes */}
+                <div className='space-y-3'>
+                  {aiGeneratedItems.map((item, index) => {
+                    return (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        key={item.id}
+                        className={`border ${
+                          selectedAiItems[item.id]
+                            ? 'border-purple-500 ring-1 ring-purple-200'
+                            : 'border-[#E5E7EB]'
+                        } rounded-lg p-4 transition-all duration-200 ease-in-out hover:border-purple-300 bg-white cursor-pointer shadow-sm`}
+                        onClick={() => {
+                          return toggleAiItemSelection(item.id);
+                        }}
+                      >
+                        <div className='flex items-start'>
+                          <div
+                            className={`w-[18px] h-[18px] rounded-[4px] border flex-shrink-0 ${
+                              selectedAiItems[item.id]
+                                ? 'bg-purple-600 border-purple-600'
+                                : 'border-[#D1D5DB]'
+                            } flex items-center justify-center mr-3 mt-[2px] transition-colors`}
+                          >
+                            {selectedAiItems[item.id] && <Check size={12} className='text-white' />}
+                          </div>
+                          <div className='flex-1 min-w-0'>
+                            <div className='flex justify-between items-start flex-wrap gap-2'>
+                              <div className='flex flex-wrap items-center gap-2'>
+                                <span className='text-[#111827] text-base font-medium'>
+                                  {item.name}
+                                </span>
+                                <span
+                                  className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
+                                    item.type === 'PRODUCT'
+                                      ? 'bg-blue-50 text-blue-700'
+                                      : 'bg-purple-50 text-purple-700'
+                                  }`}
+                                >
+                                  {item.type}
+                                </span>
+                              </div>
+                              <div className='flex items-center space-x-2'>
+                                <span className='text-[#111827] text-sm font-medium bg-green-50 px-2 py-0.5 rounded-full flex-shrink-0'>
+                                  {getCurrencySymbol(projectCurrency)}
+                                  {item.price}
+                                </span>
+                                <span className='text-[#111827] text-sm font-medium bg-gray-50 px-2 py-0.5 rounded-full flex-shrink-0'>
+                                  {item.quantity || '1'}{' '}
+                                  {parseInt(item.quantity || '1') === 1 ? 'unit' : 'units'}
+                                </span>
+                              </div>
+                            </div>
+                            {item.description ? (
+                              <p className='text-[#6B7280] text-sm mt-1 leading-relaxed'>
+                                {item.description}
+                              </p>
+                            ) : (
+                              <p className='text-[#9CA3AF] text-sm mt-1 italic group-hover/item:text-[#6B7280] transition-colors'>
+                                Add a description...
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!isGenerating && (
+            <>
+              <Separator />
+              <div className='py-4'>
+                <div className='flex flex-col space-y-4'>
+                  <h3 className='text-sm font-medium'>Configuration</h3>
+
+                  <div className='grid grid-cols-2 gap-4'>
+                    <div className='space-y-2'>
+                      <Label htmlFor='modal-tax-rate' className='text-xs text-gray-500'>
+                        Tax Rate
+                      </Label>
+                      <Select
+                        value={batchEditSettings.taxRateId}
+                        onValueChange={(value) => {
+                          if (value === 'add-new') {
+                            setIsNewTaxRateDialogOpen(true);
+                            return;
+                          }
+                          setBatchEditSettings({
+                            ...batchEditSettings,
+                            taxRateId: value,
+                          });
+                        }}
+                      >
+                        <SelectTrigger className='w-full h-9 text-sm'>
+                          <SelectValue placeholder='Select tax rate' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel className='text-xs font-medium text-gray-500'>
+                              Available Tax Rates
+                            </SelectLabel>
+                            {taxRates.map((taxRate) => {
+                              return (
+                                <SelectItem
+                                  key={taxRate.id}
+                                  value={taxRate.id}
+                                  className={
+                                    batchEditSettings.taxRateId === taxRate.id ? 'bg-blue-50' : ''
+                                  }
+                                >
+                                  <div className='flex justify-between w-full items-center'>
+                                    <div className='flex items-center'>
+                                      <span>{taxRate.name}</span>
+                                    </div>
+                                    <span className='text-xs font-medium bg-blue-50 text-blue-600 rounded-full px-2 py-0.5 ml-2'>
+                                      {taxRate.rate}%
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectGroup>
+                          <SelectSeparator />
+                          <SelectGroup>
+                            <SelectItem value='add-new' className='text-purple-600 font-medium'>
+                              <div className='flex items-center'>
+                                <Plus size={14} className='mr-2' />
+                                Add New Tax Rate
+                              </div>
+                            </SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className='space-y-2'>
+                      <Label htmlFor='modal-discount' className='text-xs text-gray-500'>
+                        Discount (%)
+                      </Label>
+                      <Input
+                        id='modal-discount'
+                        type='number'
+                        min='0'
+                        max='100'
+                        value={batchEditSettings.discount}
+                        onChange={(e) => {
+                          setBatchEditSettings({
+                            ...batchEditSettings,
+                            discount: Number(e.target.value),
+                          });
+                        }}
+                        className='h-9 text-sm'
+                      />
+                    </div>
+                  </div>
+
+                  <div className='flex items-center space-x-2 mt-2'>
+                    <Switch
+                      id='modal-taxable'
+                      checked={batchEditSettings.taxable}
+                      onCheckedChange={(checked) => {
+                        setBatchEditSettings({
+                          ...batchEditSettings,
+                          taxable: checked,
+                        });
+                      }}
+                    />
+                    <Label htmlFor='modal-taxable' className='text-sm cursor-pointer'>
+                      Items are taxable
+                    </Label>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          <DialogFooter className='space-x-2'>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={() => {
+                setIsAiResultsModalOpen(false);
+                setAiPrompt('');
+              }}
+              disabled={isGenerating}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              type='button'
+              onClick={() => {
+                const selectedItems = aiGeneratedItems.filter((item) => {
+                  return selectedAiItems[item.id];
+                });
+
+                if (selectedItems.length === 0) {
+                  toast.error('Please select at least one item');
+                  return;
+                }
+
+                addSelectedItemsToProject(selectedItems, batchEditSettings);
+                setIsAiResultsModalOpen(false);
+                setCurrentNewItemMode('');
+              }}
+              disabled={isGenerating || Object.values(selectedAiItems).filter(Boolean).length === 0}
+              className='bg-purple-600 hover:bg-purple-700 text-white'
+            >
+              Add {Object.values(selectedAiItems).filter(Boolean).length}{' '}
+              {Object.values(selectedAiItems).filter(Boolean).length === 1 ? 'Item' : 'Items'}
             </Button>
           </DialogFooter>
         </DialogContent>
