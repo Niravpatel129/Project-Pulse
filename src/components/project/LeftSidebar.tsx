@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Section } from './types';
 
 type LeftSidebarProps = {
@@ -15,6 +16,8 @@ type LeftSidebarProps = {
   total: string;
   currency: string;
   onCurrencyChange: (currency: string) => void;
+  totalTax?: string;
+  totalDiscount?: string;
 };
 
 export default function LeftSidebar({
@@ -23,6 +26,8 @@ export default function LeftSidebar({
   total,
   currency = 'USD',
   onCurrencyChange,
+  totalTax = '0.00',
+  totalDiscount = '0.00',
 }: LeftSidebarProps) {
   // Function to get currency symbol
   const getCurrencySymbol = (currency: string) => {
@@ -42,6 +47,23 @@ export default function LeftSidebar({
 
   return (
     <div className='w-[300px] bg-white p-6 border-r border-[#F3F4F6] flex flex-col'>
+      {/* Custom style to fix select spacing */}
+      <style jsx global>{`
+        .compact-select [data-radix-select-trigger] {
+          gap: 0 !important;
+        }
+        .compact-select [data-radix-select-trigger] > span {
+          margin-right: 0 !important;
+          padding-right: 0 !important;
+        }
+        .compact-select [data-radix-select-trigger] > svg {
+          margin-left: 0 !important;
+          margin-right: 0 !important;
+          width: 10px !important;
+          height: 10px !important;
+        }
+      `}</style>
+
       <div className='mb-6'>
         <h1 className='text-xl font-semibold mb-2 text-[#111827]'>New Project</h1>
         <p className='text-[#4B5563] text-sm leading-5'>
@@ -224,21 +246,61 @@ export default function LeftSidebar({
         <div className='flex justify-between items-center mb-3'>
           <span className='text-[#6B7280] text-sm'>Total</span>
           <div className='flex items-center gap-1'>
-            <span className='text-[#111827] text-base font-medium'>
-              {getCurrencySymbol(currency)}
-              {total}
-            </span>
-            <Select value={currency} onValueChange={onCurrencyChange}>
-              <SelectTrigger className='w-[70px] h-7 text-xs border-none shadow-none px-1 focus:ring-0'>
-                <SelectValue placeholder='USD' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='USD'>USD</SelectItem>
-                <SelectItem value='CAD'>CAD</SelectItem>
-                <SelectItem value='EUR'>EUR</SelectItem>
-                <SelectItem value='GBP'>GBP</SelectItem>
-              </SelectContent>
-            </Select>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className='text-[#111827] text-base font-medium border-b border-dashed border-gray-400 cursor-help'>
+                    {getCurrencySymbol(currency)}
+                    {total}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className='bg-white text-gray-900 border border-gray-200 shadow-md rounded-md p-3'>
+                  <div className='space-y-2 w-[180px]'>
+                    <div className='flex justify-between items-center'>
+                      <span className='text-[#6B7280] text-xs'>Subtotal</span>
+                      <span className='text-[#111827] text-xs font-medium'>
+                        {getCurrencySymbol(currency)}
+                        {total}
+                      </span>
+                    </div>
+                    <div className='flex justify-between items-center'>
+                      <span className='text-[#6B7280] text-xs'>Tax</span>
+                      <span className='text-[#111827] text-xs font-medium'>
+                        {getCurrencySymbol(currency)}
+                        {totalTax}
+                      </span>
+                    </div>
+                    <div className='flex justify-between items-center'>
+                      <span className='text-[#6B7280] text-xs'>Discount</span>
+                      <span className='text-green-600 text-xs font-medium'>
+                        -{getCurrencySymbol(currency)}
+                        {totalDiscount}
+                      </span>
+                    </div>
+                    <div className='pt-1 border-t border-gray-200 flex justify-between items-center'>
+                      <span className='text-[#111827] text-xs font-medium'>Total</span>
+                      <span className='text-[#111827] text-xs font-bold'>
+                        {getCurrencySymbol(currency)}
+                        {total}
+                      </span>
+                    </div>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <div className='compact-select'>
+              <Select value={currency} onValueChange={onCurrencyChange}>
+                <SelectTrigger className='w-[50px] h-7 text-xs border-none shadow-none px-1 focus:ring-0'>
+                  <SelectValue placeholder='USD' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='USD'>USD</SelectItem>
+                  <SelectItem value='CAD'>CAD</SelectItem>
+                  <SelectItem value='EUR'>EUR</SelectItem>
+                  <SelectItem value='GBP'>GBP</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
