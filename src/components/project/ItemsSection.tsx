@@ -407,445 +407,454 @@ export default function ItemsSection({
             </TooltipProvider>
           </div>
 
-          {/* Add Item Form */}
-          <AnimatePresence>
-            {currentNewItemMode === 'manual' && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className='border border-[#E5E7EB] rounded-xl p-5 mb-6 bg-white shadow-sm hover:shadow-md transition-all duration-200 max-w-2xl'
-              >
-                <form
-                  onSubmit={editingItem ? handleUpdateItem : handleSubmitNewItem}
-                  className='space-y-4'
+          {/* Form Container - Fixed height to prevent layout shift */}
+          <div
+            className={cn(
+              'relative transition-all duration-300',
+              currentNewItemMode ? 'mb-8 min-h-[330px]' : 'min-h-0 mb-0',
+            )}
+          >
+            {/* Add Item Form */}
+            <AnimatePresence mode='wait'>
+              {currentNewItemMode === 'manual' && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                  className='border border-[#E5E7EB] rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200 max-w-2xl absolute inset-0'
                 >
-                  <div>
-                    <label htmlFor='item-name' className='text-xs text-gray-500 mb-1 block'>
-                      Item name
-                    </label>
-                    <input
-                      type='text'
-                      id='item-name'
-                      ref={nameInputRef}
-                      value={newItem.name}
-                      onChange={(e) => {
-                        return setNewItem({ ...newItem, name: e.target.value });
-                      }}
-                      onKeyDown={handleNameKeyDown}
-                      placeholder='Enter item name'
-                      className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
-                      autoFocus
-                      aria-label='Item name'
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor='item-description' className='text-xs text-gray-500 mb-1 block'>
-                      Description (optional)
-                    </label>
-                    <textarea
-                      id='item-description'
-                      value={newItem.description}
-                      onChange={(e) => {
-                        return setNewItem({ ...newItem, description: e.target.value });
-                      }}
-                      onKeyDown={handleDescriptionKeyDown}
-                      placeholder='Add a description'
-                      className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm text-[#6B7280] outline-none resize-none min-h-[80px] placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
-                      aria-label='Item description'
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor='item-price' className='text-xs text-gray-500 mb-1 block'>
-                      Price
-                    </label>
-                    <div className='relative'>
-                      <span className='absolute left-3 top-[11px] text-[#6B7280] font-medium'>
-                        $
-                      </span>
+                  <form
+                    onSubmit={editingItem ? handleUpdateItem : handleSubmitNewItem}
+                    className='space-y-4'
+                  >
+                    <div>
+                      <label htmlFor='item-name' className='text-xs text-gray-500 mb-1 block'>
+                        Item name
+                      </label>
                       <input
-                        type='number'
-                        id='item-price'
-                        step='0.01'
-                        min='0'
-                        value={newItem.price}
+                        type='text'
+                        id='item-name'
+                        ref={nameInputRef}
+                        value={newItem.name}
                         onChange={(e) => {
-                          return setNewItem({ ...newItem, price: e.target.value });
+                          return setNewItem({ ...newItem, name: e.target.value });
                         }}
-                        placeholder='0.00'
-                        className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 pl-7 text-sm text-[#111827] outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
-                        aria-label='Item price'
+                        onKeyDown={handleNameKeyDown}
+                        placeholder='Enter item name'
+                        className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                        autoFocus
+                        aria-label='Item name'
                       />
                     </div>
-                  </div>
-                  <div className='flex items-center justify-end pt-2 space-x-3'>
-                    <button
-                      type='button'
-                      onClick={() => {
-                        setEditingItem(null);
-                        setNewItem({ name: '', description: '', price: '' });
-                        setCurrentNewItemMode('');
-                      }}
-                      className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors px-4 py-2 rounded-lg hover:bg-gray-100'
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type='submit'
-                      className={cn(
-                        'bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center min-w-[80px]',
-                        !newItem.name.trim() || isSubmitting
-                          ? 'opacity-70 cursor-not-allowed'
-                          : 'hover:bg-blue-700 hover:shadow',
-                      )}
-                      disabled={!newItem.name.trim() || isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <Loader2 size={16} className='animate-spin' />
-                      ) : editingItem ? (
-                        'Update'
-                      ) : (
-                        'Add'
-                      )}
-                    </button>
-                  </div>
-                </form>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* AI Prompt Form */}
-          <AnimatePresence>
-            {currentNewItemMode === 'ai' && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className='border border-[#E5E7EB] rounded-xl p-5 mb-6 bg-white shadow-sm hover:shadow-md transition-all duration-200'
-              >
-                <div className='mb-4'>
-                  <label className='block text-[#111827] font-medium text-sm mb-2'>
-                    Generate items with AI
-                  </label>
-                  <div className='flex relative'>
-                    <Textarea
-                      ref={aiPromptInputRef}
-                      value={aiPrompt}
-                      onChange={(e) => {
-                        return setAiPrompt(e.target.value);
-                      }}
-                      rows={4}
-                      placeholder='Describe what the client wants...'
-                      className='flex-1 border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm outline-none bg-transparent focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-colors pr-[110px]'
-                      autoFocus
-                    />
-                    <Button
-                      onClick={handleGenerateAiItems}
-                      className={cn(
-                        'bg-purple-600 text-white px-4 py-2 text-sm transition-all duration-200 flex items-center justify-center min-w-[100px] absolute right-2 bottom-2 cursor-pointer z-10 rounded-lg',
-                        !aiPrompt.trim() || isGenerating
-                          ? 'opacity-70 cursor-not-allowed'
-                          : 'hover:bg-purple-700 hover:shadow',
-                      )}
-                      disabled={!aiPrompt.trim() || isGenerating}
-                    >
-                      {isGenerating ? <Loader2 size={16} className='animate-spin' /> : 'Generate'}
-                    </Button>
-                  </div>
-
-                  {/* Voice and attachment controls */}
-                  <div className='flex mt-3 items-center'>
-                    <div className='flex space-x-2'>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={toggleRecording}
-                              className={`p-2 rounded-full flex items-center justify-center transition-all duration-200 ${
-                                isRecording
-                                  ? 'bg-red-100 text-red-600 shadow-sm'
-                                  : 'bg-gray-100 text-gray-600'
-                              } hover:bg-gray-200`}
-                              title={isRecording ? 'Stop recording' : 'Record voice note'}
-                              aria-label={isRecording ? 'Stop recording' : 'Record voice note'}
-                            >
-                              <Mic size={16} className={isRecording ? 'animate-pulse' : ''} />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{isRecording ? 'Stop recording' : 'Record voice note'}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <label className='p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-200 cursor-pointer flex items-center justify-center'>
-                              <Paperclip size={16} />
-                              <input
-                                type='file'
-                                multiple
-                                className='hidden'
-                                onChange={handleFileAttachment}
-                                accept='image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                                aria-label='Attach files'
-                              />
-                            </label>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Attach files</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-
-                    {isRecording && (
-                      <motion.div
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className='ml-2 flex items-center'
+                    <div>
+                      <label
+                        htmlFor='item-description'
+                        className='text-xs text-gray-500 mb-1 block'
                       >
-                        <div className='w-2 h-2 rounded-full bg-red-500 mr-2 animate-pulse'></div>
-                        <span className='text-xs text-gray-500'>
-                          Recording {recordingDuration}s
+                        Description (optional)
+                      </label>
+                      <textarea
+                        id='item-description'
+                        value={newItem.description}
+                        onChange={(e) => {
+                          return setNewItem({ ...newItem, description: e.target.value });
+                        }}
+                        onKeyDown={handleDescriptionKeyDown}
+                        placeholder='Add a description'
+                        className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm text-[#6B7280] outline-none resize-none min-h-[80px] placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                        aria-label='Item description'
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor='item-price' className='text-xs text-gray-500 mb-1 block'>
+                        Price
+                      </label>
+                      <div className='relative'>
+                        <span className='absolute left-3 top-[11px] text-[#6B7280] font-medium'>
+                          $
                         </span>
-                      </motion.div>
-                    )}
-
-                    <div className='flex-1'></div>
-
-                    <div className='text-xs text-gray-500'>
-                      {attachments.length > 0 &&
-                        `${attachments.length} attachment${attachments.length !== 1 ? 's' : ''}`}
+                        <input
+                          type='number'
+                          id='item-price'
+                          step='0.01'
+                          min='0'
+                          value={newItem.price}
+                          onChange={(e) => {
+                            return setNewItem({ ...newItem, price: e.target.value });
+                          }}
+                          placeholder='0.00'
+                          className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 pl-7 text-sm text-[#111827] outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                          aria-label='Item price'
+                        />
+                      </div>
                     </div>
+                    <div className='flex items-center justify-end pt-2 space-x-3'>
+                      <button
+                        type='button'
+                        onClick={() => {
+                          setEditingItem(null);
+                          setNewItem({ name: '', description: '', price: '' });
+                          setCurrentNewItemMode('');
+                        }}
+                        className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors px-4 py-2 rounded-lg hover:bg-gray-100'
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type='submit'
+                        className={cn(
+                          'bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center min-w-[80px]',
+                          !newItem.name.trim() || isSubmitting
+                            ? 'opacity-70 cursor-not-allowed'
+                            : 'hover:bg-blue-700 hover:shadow',
+                        )}
+                        disabled={!newItem.name.trim() || isSubmitting}
+                      >
+                        {isSubmitting ? (
+                          <Loader2 size={16} className='animate-spin' />
+                        ) : editingItem ? (
+                          'Update'
+                        ) : (
+                          'Add'
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </motion.div>
+              )}
+
+              {/* AI Prompt Form */}
+              {currentNewItemMode === 'ai' && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                  className='border border-[#E5E7EB] rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200 absolute inset-0'
+                >
+                  <div className='mb-4'>
+                    <label className='block text-[#111827] font-medium text-sm mb-2'>
+                      Generate items with AI
+                    </label>
+                    <div className='flex relative'>
+                      <Textarea
+                        ref={aiPromptInputRef}
+                        value={aiPrompt}
+                        onChange={(e) => {
+                          return setAiPrompt(e.target.value);
+                        }}
+                        rows={4}
+                        placeholder='Describe what the client wants...'
+                        className='flex-1 border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm outline-none bg-transparent focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-colors pr-[110px]'
+                        autoFocus
+                      />
+                      <Button
+                        onClick={handleGenerateAiItems}
+                        className={cn(
+                          'bg-purple-600 text-white px-4 py-2 text-sm transition-all duration-200 flex items-center justify-center min-w-[100px] absolute right-2 bottom-2 cursor-pointer z-10 rounded-lg',
+                          !aiPrompt.trim() || isGenerating
+                            ? 'opacity-70 cursor-not-allowed'
+                            : 'hover:bg-purple-700 hover:shadow',
+                        )}
+                        disabled={!aiPrompt.trim() || isGenerating}
+                      >
+                        {isGenerating ? <Loader2 size={16} className='animate-spin' /> : 'Generate'}
+                      </Button>
+                    </div>
+
+                    {/* Voice and attachment controls */}
+                    <div className='flex mt-3 items-center'>
+                      <div className='flex space-x-2'>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={toggleRecording}
+                                className={`p-2 rounded-full flex items-center justify-center transition-all duration-200 ${
+                                  isRecording
+                                    ? 'bg-red-100 text-red-600 shadow-sm'
+                                    : 'bg-gray-100 text-gray-600'
+                                } hover:bg-gray-200`}
+                                title={isRecording ? 'Stop recording' : 'Record voice note'}
+                                aria-label={isRecording ? 'Stop recording' : 'Record voice note'}
+                              >
+                                <Mic size={16} className={isRecording ? 'animate-pulse' : ''} />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{isRecording ? 'Stop recording' : 'Record voice note'}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <label className='p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-200 cursor-pointer flex items-center justify-center'>
+                                <Paperclip size={16} />
+                                <input
+                                  type='file'
+                                  multiple
+                                  className='hidden'
+                                  onChange={handleFileAttachment}
+                                  accept='image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                                  aria-label='Attach files'
+                                />
+                              </label>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Attach files</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+
+                      {isRecording && (
+                        <motion.div
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className='ml-2 flex items-center'
+                        >
+                          <div className='w-2 h-2 rounded-full bg-red-500 mr-2 animate-pulse'></div>
+                          <span className='text-xs text-gray-500'>
+                            Recording {recordingDuration}s
+                          </span>
+                        </motion.div>
+                      )}
+
+                      <div className='flex-1'></div>
+
+                      <div className='text-xs text-gray-500'>
+                        {attachments.length > 0 &&
+                          `${attachments.length} attachment${attachments.length !== 1 ? 's' : ''}`}
+                      </div>
+                    </div>
+
+                    {/* Attachments display */}
+                    <AnimatePresence>
+                      {attachments.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className='mt-3 space-y-2 border-t border-gray-100 pt-2'
+                        >
+                          {attachments.map((attachment, index) => {
+                            return (
+                              <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ delay: index * 0.05 }}
+                                key={attachment.id}
+                                className='flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 text-xs hover:bg-gray-100 transition-colors'
+                              >
+                                <div className='flex items-center'>
+                                  {attachment.type === 'voice' ? (
+                                    <Mic size={14} className='mr-2 text-purple-500' />
+                                  ) : (
+                                    <Paperclip size={14} className='mr-2 text-purple-500' />
+                                  )}
+                                  <span className='text-gray-700'>{attachment.name}</span>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    return removeAttachment(attachment.id);
+                                  }}
+                                  className='text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full p-1 transition-colors'
+                                  aria-label={`Remove attachment ${attachment.name}`}
+                                >
+                                  <X size={14} />
+                                </button>
+                              </motion.div>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <p className='text-[#6B7280] text-xs mt-2 italic'>
+                      Example: &quot;Client needs a red turtle hoodie for $15 and a black regular
+                      shirt&quot;
+                    </p>
                   </div>
 
-                  {/* Attachments display */}
-                  <AnimatePresence>
-                    {attachments.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className='mt-3 space-y-2 border-t border-gray-100 pt-2'
-                      >
-                        {attachments.map((attachment, index) => {
+                  {isGenerating && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className='flex flex-col items-center justify-center py-8'
+                    >
+                      <div className='relative w-12 h-12'>
+                        <div className='absolute inset-0 flex items-center justify-center'>
+                          <Loader2 size={24} className='text-purple-600 animate-spin' />
+                        </div>
+                        <div className='absolute inset-0 animate-ping rounded-full bg-purple-200 opacity-50'></div>
+                      </div>
+                      <p className='text-[#6B7280] text-sm mt-3'>
+                        Generating items based on your description...
+                      </p>
+                    </motion.div>
+                  )}
+
+                  {!isGenerating && aiGeneratedItems.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className='space-y-4'
+                    >
+                      <div className='flex justify-between items-center'>
+                        <h3 className='text-base font-medium text-[#111827]'>Generated Items</h3>
+                        <div className='flex space-x-2'>
+                          <button
+                            onClick={() => {
+                              setAiPrompt('');
+                              setAiGeneratedItems([]);
+                              setAiResponse(null);
+                            }}
+                            className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors px-2 py-1 rounded hover:bg-gray-100'
+                          >
+                            Clear
+                          </button>
+                          <button
+                            onClick={handleGenerateAiItems}
+                            className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors flex items-center px-2 py-1 rounded hover:bg-gray-100'
+                          >
+                            <Sparkles size={14} className='mr-1' />
+                            Regenerate
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className='space-y-3 max-h-[320px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100'>
+                        {aiGeneratedItems.map((item, index) => {
                           return (
                             <motion.div
-                              initial={{ opacity: 0, y: -10 }}
+                              initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -10 }}
                               transition={{ delay: index * 0.05 }}
-                              key={attachment.id}
-                              className='flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 text-xs hover:bg-gray-100 transition-colors'
+                              key={item.id}
+                              className={`border ${
+                                selectedAiItems[item.id]
+                                  ? 'border-purple-500 ring-2 ring-purple-200'
+                                  : 'border-[#E5E7EB]'
+                              } rounded-lg p-4 transition-all duration-200 ease-in-out hover:border-purple-300 bg-white cursor-pointer shadow-sm`}
+                              onClick={() => {
+                                return toggleAiItemSelection(item.id);
+                              }}
                             >
-                              <div className='flex items-center'>
-                                {attachment.type === 'voice' ? (
-                                  <Mic size={14} className='mr-2 text-purple-500' />
-                                ) : (
-                                  <Paperclip size={14} className='mr-2 text-purple-500' />
-                                )}
-                                <span className='text-gray-700'>{attachment.name}</span>
+                              <div className='flex items-start'>
+                                <div
+                                  className={`w-[18px] h-[18px] rounded-[4px] border ${
+                                    selectedAiItems[item.id]
+                                      ? 'bg-purple-600 border-purple-600'
+                                      : 'border-[#D1D5DB]'
+                                  } flex items-center justify-center mr-3 mt-[2px] transition-colors`}
+                                >
+                                  {selectedAiItems[item.id] && (
+                                    <svg
+                                      width='12'
+                                      height='12'
+                                      viewBox='0 0 12 12'
+                                      fill='none'
+                                      xmlns='http://www.w3.org/2000/svg'
+                                    >
+                                      <path
+                                        d='M10 3L4.5 8.5L2 6'
+                                        stroke='white'
+                                        strokeWidth='1.5'
+                                        strokeLinecap='round'
+                                        strokeLinejoin='round'
+                                      />
+                                    </svg>
+                                  )}
+                                </div>
+                                <div className='flex-1'>
+                                  <div className='flex justify-between items-start'>
+                                    <div>
+                                      <span className='text-[#111827] text-base font-medium'>
+                                        {item.name}
+                                      </span>
+                                      <span
+                                        className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
+                                          item.type === 'PRODUCT'
+                                            ? 'bg-blue-50 text-blue-700'
+                                            : 'bg-purple-50 text-purple-700'
+                                        }`}
+                                      >
+                                        {item.type}
+                                      </span>
+                                    </div>
+                                    <span className='text-[#111827] text-sm font-medium bg-green-50 px-2 py-0.5 rounded-full'>
+                                      ${item.price}
+                                    </span>
+                                  </div>
+                                  {item.description && (
+                                    <p className='text-[#6B7280] text-sm mt-1 leading-relaxed'>
+                                      {item.description}
+                                    </p>
+                                  )}
+                                  {item.reasoning && (
+                                    <div className='mt-2 pt-2 border-t border-[#F3F4F6]'>
+                                      <p className='text-[#6B7280] text-xs italic'>
+                                        <span className='font-medium'>Reasoning:</span>{' '}
+                                        {item.reasoning}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                              <button
-                                onClick={() => {
-                                  return removeAttachment(attachment.id);
-                                }}
-                                className='text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full p-1 transition-colors'
-                                aria-label={`Remove attachment ${attachment.name}`}
-                              >
-                                <X size={14} />
-                              </button>
                             </motion.div>
                           );
                         })}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  <p className='text-[#6B7280] text-xs mt-2 italic'>
-                    Example: &quot;Client needs a red turtle hoodie for $15 and a black regular
-                    shirt&quot;
-                  </p>
-                </div>
-
-                {isGenerating && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className='flex flex-col items-center justify-center py-8'
-                  >
-                    <div className='relative w-12 h-12'>
-                      <div className='absolute inset-0 flex items-center justify-center'>
-                        <Loader2 size={24} className='text-purple-600 animate-spin' />
                       </div>
-                      <div className='absolute inset-0 animate-ping rounded-full bg-purple-200 opacity-50'></div>
-                    </div>
-                    <p className='text-[#6B7280] text-sm mt-3'>
-                      Generating items based on your description...
-                    </p>
-                  </motion.div>
-                )}
 
-                {!isGenerating && aiGeneratedItems.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className='space-y-4'
-                  >
-                    <div className='flex justify-between items-center'>
-                      <h3 className='text-base font-medium text-[#111827]'>Generated Items</h3>
-                      <div className='flex space-x-2'>
+                      {aiResponse?.meta && (
+                        <div className='text-[#6B7280] text-xs border-t border-[#F3F4F6] pt-2 flex justify-between'>
+                          <span>Processing time: {aiResponse.meta.processingTime.toFixed(2)}s</span>
+                          <span>
+                            Generated: {new Date(aiResponse.meta.timestamp).toLocaleTimeString()}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className='flex justify-end pt-2'>
                         <button
                           onClick={() => {
                             setAiPrompt('');
                             setAiGeneratedItems([]);
                             setAiResponse(null);
+                            setCurrentNewItemMode('');
                           }}
-                          className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors px-2 py-1 rounded hover:bg-gray-100'
+                          className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors mr-3 px-3 py-1.5 rounded hover:bg-gray-100'
                         >
-                          Clear
+                          Cancel
                         </button>
                         <button
-                          onClick={handleGenerateAiItems}
-                          className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors flex items-center px-2 py-1 rounded hover:bg-gray-100'
+                          onClick={handleAddSelectedAiItems}
+                          className={cn(
+                            'bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center',
+                            Object.values(selectedAiItems).filter(Boolean).length === 0
+                              ? 'opacity-70 cursor-not-allowed'
+                              : 'hover:bg-purple-700 hover:shadow',
+                          )}
+                          disabled={Object.values(selectedAiItems).filter(Boolean).length === 0}
                         >
-                          <Sparkles size={14} className='mr-1' />
-                          Regenerate
+                          Add{' '}
+                          {Object.values(selectedAiItems).filter(Boolean).length > 0
+                            ? `${Object.values(selectedAiItems).filter(Boolean).length} `
+                            : ''}
+                          Selected Item
+                          {Object.values(selectedAiItems).filter(Boolean).length !== 1 ? 's' : ''}
                         </button>
                       </div>
-                    </div>
-
-                    <div className='space-y-3 max-h-[320px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100'>
-                      {aiGeneratedItems.map((item, index) => {
-                        return (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                            key={item.id}
-                            className={`border ${
-                              selectedAiItems[item.id]
-                                ? 'border-purple-500 ring-2 ring-purple-200'
-                                : 'border-[#E5E7EB]'
-                            } rounded-lg p-4 transition-all duration-200 ease-in-out hover:border-purple-300 bg-white cursor-pointer shadow-sm`}
-                            onClick={() => {
-                              return toggleAiItemSelection(item.id);
-                            }}
-                          >
-                            <div className='flex items-start'>
-                              <div
-                                className={`w-[18px] h-[18px] rounded-[4px] border ${
-                                  selectedAiItems[item.id]
-                                    ? 'bg-purple-600 border-purple-600'
-                                    : 'border-[#D1D5DB]'
-                                } flex items-center justify-center mr-3 mt-[2px] transition-colors`}
-                              >
-                                {selectedAiItems[item.id] && (
-                                  <svg
-                                    width='12'
-                                    height='12'
-                                    viewBox='0 0 12 12'
-                                    fill='none'
-                                    xmlns='http://www.w3.org/2000/svg'
-                                  >
-                                    <path
-                                      d='M10 3L4.5 8.5L2 6'
-                                      stroke='white'
-                                      strokeWidth='1.5'
-                                      strokeLinecap='round'
-                                      strokeLinejoin='round'
-                                    />
-                                  </svg>
-                                )}
-                              </div>
-                              <div className='flex-1'>
-                                <div className='flex justify-between items-start'>
-                                  <div>
-                                    <span className='text-[#111827] text-base font-medium'>
-                                      {item.name}
-                                    </span>
-                                    <span
-                                      className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
-                                        item.type === 'PRODUCT'
-                                          ? 'bg-blue-50 text-blue-700'
-                                          : 'bg-purple-50 text-purple-700'
-                                      }`}
-                                    >
-                                      {item.type}
-                                    </span>
-                                  </div>
-                                  <span className='text-[#111827] text-sm font-medium bg-green-50 px-2 py-0.5 rounded-full'>
-                                    ${item.price}
-                                  </span>
-                                </div>
-                                {item.description && (
-                                  <p className='text-[#6B7280] text-sm mt-1 leading-relaxed'>
-                                    {item.description}
-                                  </p>
-                                )}
-                                {item.reasoning && (
-                                  <div className='mt-2 pt-2 border-t border-[#F3F4F6]'>
-                                    <p className='text-[#6B7280] text-xs italic'>
-                                      <span className='font-medium'>Reasoning:</span>{' '}
-                                      {item.reasoning}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-
-                    {aiResponse?.meta && (
-                      <div className='text-[#6B7280] text-xs border-t border-[#F3F4F6] pt-2 flex justify-between'>
-                        <span>Processing time: {aiResponse.meta.processingTime.toFixed(2)}s</span>
-                        <span>
-                          Generated: {new Date(aiResponse.meta.timestamp).toLocaleTimeString()}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className='flex justify-end pt-2'>
-                      <button
-                        onClick={() => {
-                          setAiPrompt('');
-                          setAiGeneratedItems([]);
-                          setAiResponse(null);
-                          setCurrentNewItemMode('');
-                        }}
-                        className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors mr-3 px-3 py-1.5 rounded hover:bg-gray-100'
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleAddSelectedAiItems}
-                        className={cn(
-                          'bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center',
-                          Object.values(selectedAiItems).filter(Boolean).length === 0
-                            ? 'opacity-70 cursor-not-allowed'
-                            : 'hover:bg-purple-700 hover:shadow',
-                        )}
-                        disabled={Object.values(selectedAiItems).filter(Boolean).length === 0}
-                      >
-                        Add{' '}
-                        {Object.values(selectedAiItems).filter(Boolean).length > 0
-                          ? `${Object.values(selectedAiItems).filter(Boolean).length} `
-                          : ''}
-                        Selected Item
-                        {Object.values(selectedAiItems).filter(Boolean).length !== 1 ? 's' : ''}
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+                    </motion.div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Item Cards */}
           <div className='space-y-3'>
