@@ -744,7 +744,7 @@ export default function ItemsSection({
                     </div>
                     <div>
                       <label htmlFor='item-price' className='text-xs text-gray-500 mb-1 block'>
-                        Price
+                        Price ({projectCurrency})
                       </label>
                       <div className='flex-1 relative'>
                         <Input
@@ -758,11 +758,8 @@ export default function ItemsSection({
                           }}
                           placeholder='0.00'
                           aria-label='Item price'
-                          className='pl-6'
+                          className=''
                         />
-                        <div className='absolute top-[9px] left-3 text-gray-500'>
-                          {getCurrencySymbol(projectCurrency)}
-                        </div>
                       </div>
                     </div>
                     <div>
@@ -828,9 +825,6 @@ export default function ItemsSection({
                                   >
                                     <div className='flex justify-between w-full items-center'>
                                       <div className='flex items-center'>
-                                        {selectedTaxRateId === taxRate.id && (
-                                          <Check size={14} className='mr-2 text-blue-600' />
-                                        )}
                                         <span>{taxRate.name}</span>
                                       </div>
                                       <span className='text-xs font-medium bg-blue-50 text-blue-600 rounded-full px-2 py-0.5 ml-2'>
@@ -1374,7 +1368,7 @@ export default function ItemsSection({
                                   htmlFor='inline-item-price'
                                   className='text-xs text-gray-500 mb-1 block'
                                 >
-                                  Price
+                                  Price ({projectCurrency})
                                 </label>
                                 <div className='relative'>
                                   <Input
