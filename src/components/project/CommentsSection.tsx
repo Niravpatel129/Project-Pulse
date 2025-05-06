@@ -1,12 +1,14 @@
 'use client';
 
 import SectionFooter from './SectionFooter';
+import { Section } from './types';
 
 type CommentsSectionProps = {
   notes: string;
   setNotes: (notes: string) => void;
   showNotification: (message: string, type?: string) => void;
   onClose: () => void;
+  setActiveSection: React.Dispatch<React.SetStateAction<Section>>;
 };
 
 export default function CommentsSection({
@@ -14,6 +16,7 @@ export default function CommentsSection({
   setNotes,
   showNotification,
   onClose,
+  setActiveSection,
 }: CommentsSectionProps) {
   return (
     <div className='flex flex-col h-full relative'>
@@ -87,14 +90,11 @@ export default function CommentsSection({
       {/* Footer */}
       <SectionFooter
         onContinue={() => {
-          showNotification('Project completed successfully!', 'success');
-          setTimeout(() => {
-            return onClose();
-          }, 1500);
+          setActiveSection('invoice');
+          showNotification('Moved to Invoice section');
         }}
         currentSection={3}
-        totalSections={3}
-        customContinueLabel='Complete Project'
+        totalSections={4}
         onCancel={onClose}
       />
     </div>

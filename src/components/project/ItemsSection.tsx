@@ -1,7 +1,9 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -39,6 +41,9 @@ export default function ItemsSection({
     price: '',
     quantity: '1',
     currency: 'USD',
+    taxRate: 0,
+    discount: 0,
+    taxable: true,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingItem, setEditingItem] = useState<ExtendedItem | null>(null);
@@ -203,10 +208,22 @@ export default function ItemsSection({
         price: formattedPrice,
         quantity: newItem.quantity || '1',
         currency: projectCurrency,
+        taxRate: newItem.taxRate,
+        discount: newItem.discount,
+        taxable: newItem.taxable,
       };
 
       setItems([...items, newItemObj as Item]);
-      setNewItem({ name: '', description: '', price: '', quantity: '1', currency: 'USD' });
+      setNewItem({
+        name: '',
+        description: '',
+        price: '',
+        quantity: '1',
+        currency: 'USD',
+        taxRate: 0,
+        discount: 0,
+        taxable: true,
+      });
       setIsSubmitting(false);
       showNotification('Item added successfully');
     }, 300);
@@ -218,8 +235,11 @@ export default function ItemsSection({
       name: item.name,
       description: item.description,
       price: item.price.replace(/,/g, ''),
-      quantity: item.quantity || '1',
+      quantity: item.quantity,
       currency: item.currency || 'USD',
+      taxRate: item.taxRate || 0,
+      discount: item.discount || 0,
+      taxable: item.taxable !== undefined ? item.taxable : true,
     });
     setCurrentNewItemMode('manual');
   };
@@ -249,14 +269,26 @@ export default function ItemsSection({
               description: newItem.description.trim(),
               price: formattedPrice,
               quantity: newItem.quantity || '1',
-              currency: projectCurrency,
+              taxRate: newItem.taxRate,
+              discount: newItem.discount,
+              taxable: newItem.taxable,
             }
           : item;
       });
 
       setItems(updatedItems);
-      setNewItem({ name: '', description: '', price: '', quantity: '1', currency: 'USD' });
       setEditingItem(null);
+      setCurrentNewItemMode('');
+      setNewItem({
+        name: '',
+        description: '',
+        price: '',
+        quantity: '1',
+        currency: 'USD',
+        taxRate: 0,
+        discount: 0,
+        taxable: true,
+      });
       setIsSubmitting(false);
       showNotification('Item updated successfully');
     }, 300);
@@ -492,6 +524,9 @@ export default function ItemsSection({
                         price: '',
                         quantity: '1',
                         currency: 'USD',
+                        taxRate: 0,
+                        discount: 0,
+                        taxable: true,
                       });
                       setTimeout(() => {
                         return aiPromptInputRef.current?.focus();
@@ -610,6 +645,58 @@ export default function ItemsSection({
                         aria-label='Item quantity'
                       />
                     </div>
+                    <div className='mb-4'>
+                      <Label htmlFor='taxable' className='flex items-center'>
+                        <Checkbox
+                          id='taxable'
+                          checked={newItem.taxable}
+                          onCheckedChange={(checked) => {
+                            setNewItem({
+                              ...newItem,
+                              taxable: checked as boolean,
+                            });
+                          }}
+                          className='mr-2'
+                        />
+                        <span>Item is taxable</span>
+                      </Label>
+                    </div>
+                    <div className='grid grid-cols-2 gap-3 mb-4'>
+                      <div>
+                        <Label htmlFor='tax-rate'>Tax Rate (%)</Label>
+                        <Input
+                          id='tax-rate'
+                          type='number'
+                          min='0'
+                          max='100'
+                          step='0.1'
+                          value={newItem.taxRate}
+                          onChange={(e) => {
+                            setNewItem({
+                              ...newItem,
+                              taxRate: Number(e.target.value),
+                            });
+                          }}
+                          disabled={!newItem.taxable}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor='discount'>Discount (%)</Label>
+                        <Input
+                          id='discount'
+                          type='number'
+                          min='0'
+                          max='100'
+                          value={newItem.discount}
+                          onChange={(e) => {
+                            setNewItem({
+                              ...newItem,
+                              discount: Number(e.target.value),
+                            });
+                          }}
+                        />
+                      </div>
+                    </div>
                     <div className='flex items-center justify-end pt-2 space-x-3'>
                       <button
                         type='button'
@@ -621,6 +708,9 @@ export default function ItemsSection({
                             price: '',
                             quantity: '1',
                             currency: 'USD',
+                            taxRate: 0,
+                            discount: 0,
+                            taxable: true,
                           });
                           setCurrentNewItemMode('');
                         }}
@@ -1243,7 +1333,7 @@ export default function ItemsSection({
           showNotification('Moved to Client section');
         }}
         currentSection={1}
-        totalSections={3}
+        totalSections={4}
       />
     </div>
   );

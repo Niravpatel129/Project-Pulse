@@ -8,6 +8,7 @@ type SectionFooterProps = {
   totalSections: number;
   customContinueLabel?: string;
   onCancel?: () => void;
+  isLastSection?: boolean;
 };
 
 export default function SectionFooter({
@@ -16,6 +17,7 @@ export default function SectionFooter({
   totalSections,
   customContinueLabel,
   onCancel,
+  isLastSection = false,
 }: SectionFooterProps) {
   return (
     <div className='absolute bottom-0 left-0 right-0 flex items-center justify-between py-4 border-t border-[#E5E7EB] px-8 bg-[#FAFAFA] z-10'>
@@ -25,7 +27,9 @@ export default function SectionFooter({
             Cancel
           </Button>
         )}
-        <Button onClick={onContinue}>{customContinueLabel || 'Continue'}</Button>
+        <Button onClick={onContinue}>
+          {isLastSection ? 'Finish' : customContinueLabel || 'Continue'}
+        </Button>
       </div>
       <div className='flex items-center text-[#6B7280] text-xs'>
         <span>press</span>

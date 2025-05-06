@@ -175,6 +175,48 @@ export default function LeftSidebar({
             Comments
           </span>
         </button>
+
+        <button
+          className={`flex items-center w-full text-left p-2 rounded-md ${
+            activeSection === 'invoice' ? 'bg-[#F9FAFB]' : ''
+          } hover:bg-[#F9FAFB] transition-colors`}
+          onClick={() => {
+            return setActiveSection('invoice');
+          }}
+        >
+          <div
+            className={`w-6 h-6 rounded-full ${
+              activeSection === 'invoice' ? 'bg-[#111827]' : 'border border-[#D1D5DB]'
+            } flex items-center justify-center mr-3 transition-colors`}
+          >
+            {activeSection === 'invoice' ? (
+              <svg
+                width='12'
+                height='12'
+                viewBox='0 0 12 12'
+                fill='none'
+                xmlns='http://www.w3.org/2000/svg'
+              >
+                <path
+                  d='M10 3L4.5 8.5L2 6'
+                  stroke='white'
+                  strokeWidth='1.5'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                />
+              </svg>
+            ) : (
+              <span className='text-[#6B7280] text-xs'>4</span>
+            )}
+          </div>
+          <span
+            className={`text-sm ${
+              activeSection === 'invoice' ? 'text-[#111827] font-medium' : 'text-[#6B7280]'
+            }`}
+          >
+            Invoice
+          </span>
+        </button>
       </div>
 
       {/* Total at bottom of sidebar */}

@@ -3,8 +3,11 @@ export type Item = {
   name: string;
   description: string;
   price: string;
-  quantity?: string;
+  quantity: string;
   currency?: string;
+  taxRate?: number;
+  taxable?: boolean;
+  discount?: number;
 };
 
 export type ExtendedItem = Item;
@@ -13,6 +16,16 @@ export type Client = {
   id: string;
   name: string;
   email: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    postalCode?: string;
+  };
+  phone?: string;
+  taxId?: string;
+  customFields?: Record<string, string>;
 };
 
 export type AIItem = Item & {
@@ -37,4 +50,15 @@ export type Notification = {
   type: NotificationType;
 };
 
-export type Section = 'items' | 'client' | 'comments';
+export type Section = 'items' | 'client' | 'comments' | 'invoice';
+
+export type InvoiceSettings = {
+  requireDeposit: boolean;
+  depositPercentage: number;
+  defaultTaxRate: number;
+  taxId?: string;
+  paymentTerms?: string;
+  invoiceNotes?: string;
+  allowDiscount: boolean;
+  defaultDiscountRate?: number;
+};
