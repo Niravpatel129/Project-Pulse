@@ -632,98 +632,99 @@ export default function ItemsSection({
           </p>
 
           {/* Action Buttons */}
-          <div className='flex space-x-3 mb-6'>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={() => {
-                      if (currentNewItemMode === 'manual') {
-                        return setCurrentNewItemMode('');
-                      }
-                      setCurrentNewItemMode('manual');
-                      setAiGeneratedItems([]);
-                      setAiResponse(null);
+          {items.length > 0 && (
+            <div className='flex space-x-3 mb-6'>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => {
+                        if (currentNewItemMode === 'manual') {
+                          return setCurrentNewItemMode('');
+                        }
+                        setCurrentNewItemMode('manual');
+                        setAiGeneratedItems([]);
+                        setAiResponse(null);
 
-                      // Get the currently selected tax rate
-                      const selectedTax = taxRates.find((tax) => {
-                        return tax.id === selectedTaxRateId;
-                      });
-                      if (selectedTax) {
-                        setNewItem((prev) => {
-                          return {
-                            ...prev,
-                            taxRate: selectedTax.rate,
-                          };
+                        // Get the currently selected tax rate
+                        const selectedTax = taxRates.find((tax) => {
+                          return tax.id === selectedTaxRateId;
                         });
-                      }
+                        if (selectedTax) {
+                          setNewItem((prev) => {
+                            return {
+                              ...prev,
+                              taxRate: selectedTax.rate,
+                            };
+                          });
+                        }
 
-                      setTimeout(() => {
-                        return nameInputRef.current?.focus();
-                      }, 10);
-                    }}
-                    className={cn(
-                      'flex items-center justify-center transition-all duration-300 h-11',
-                      currentNewItemMode === 'manual'
-                        ? 'bg-blue-600 text-white hover:bg-blue-700 hover:text-white shadow-md border-0'
-                        : 'hover:bg-gray-100 border-2 border-gray-200',
-                    )}
-                    variant='outline'
-                  >
-                    <Plus size={18} className='mr-2' />
-                    <span className='font-medium'>Add Item Manually</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Create a new item with a name, description, and price</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                        setTimeout(() => {
+                          return nameInputRef.current?.focus();
+                        }, 10);
+                      }}
+                      className={cn(
+                        'flex items-center justify-center transition-all duration-300 h-11',
+                        currentNewItemMode === 'manual'
+                          ? 'bg-blue-600 text-white hover:bg-blue-700 hover:text-white shadow-md border-0'
+                          : 'hover:bg-gray-100 border-2 border-gray-200',
+                      )}
+                      variant='outline'
+                    >
+                      <Plus size={18} className='mr-2' />
+                      <span className='font-medium'>Add Item Manually</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Create a new item with a name, description, and price</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
 
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={() => {
-                      if (currentNewItemMode === 'ai') {
-                        return setCurrentNewItemMode('');
-                      }
-                      setCurrentNewItemMode('ai');
-                      setEditingItem(null);
-                      setAiPromptError(''); // Clear any previous errors
-                      setNewItem({
-                        name: '',
-                        description: '',
-                        price: '',
-                        quantity: '1',
-                        currency: 'USD',
-                        taxRate: 0,
-                        discount: 0,
-                        taxable: true,
-                      });
-                      setTimeout(() => {
-                        return aiPromptInputRef.current?.focus();
-                      }, 10);
-                    }}
-                    className={cn(
-                      'flex items-center justify-center transition-all duration-300 h-11',
-                      currentNewItemMode === 'ai'
-                        ? 'bg-purple-600 text-white hover:bg-purple-700 hover:text-white shadow-md border-0'
-                        : 'hover:bg-gray-100 border-2 border-gray-200',
-                    )}
-                    variant='outline'
-                  >
-                    <Sparkles size={18} className='mr-2' />
-                    <span className='font-medium'>Generate with AI</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Describe what you need and let AI generate items for you</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => {
+                        if (currentNewItemMode === 'ai') {
+                          return setCurrentNewItemMode('');
+                        }
+                        setCurrentNewItemMode('ai');
+                        setEditingItem(null);
+                        setAiPromptError(''); // Clear any previous errors
+                        setNewItem({
+                          name: '',
+                          description: '',
+                          price: '',
+                          quantity: '1',
+                          currency: 'USD',
+                          taxRate: 0,
+                          discount: 0,
+                          taxable: true,
+                        });
+                        setTimeout(() => {
+                          return aiPromptInputRef.current?.focus();
+                        }, 10);
+                      }}
+                      className={cn(
+                        'flex items-center justify-center transition-all duration-300 h-11',
+                        currentNewItemMode === 'ai'
+                          ? 'bg-purple-600 text-white hover:bg-purple-700 hover:text-white shadow-md border-0'
+                          : 'hover:bg-gray-100 border-2 border-gray-200',
+                      )}
+                      variant='outline'
+                    >
+                      <Sparkles size={18} className='mr-2' />
+                      <span className='font-medium'>Generate with AI</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Describe what you need and let AI generate items for you</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          )}
           {/* Form Container - Removing fixed height to prevent excess whitespace */}
           <div
             className={cn(
