@@ -407,11 +407,11 @@ export default function ItemsSection({
             </TooltipProvider>
           </div>
 
-          {/* Form Container - Fixed height to prevent layout shift */}
+          {/* Form Container - Removing fixed height to prevent excess whitespace */}
           <div
             className={cn(
               'relative transition-all duration-300',
-              currentNewItemMode ? 'mb-8 min-h-[360px]' : 'min-h-0 mb-0',
+              currentNewItemMode ? 'mb-8' : 'min-h-0 mb-0',
             )}
           >
             {/* Add Item Form */}
@@ -422,7 +422,7 @@ export default function ItemsSection({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.25 }}
-                  className='border border-[#E5E7EB] rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200 w-full absolute inset-0'
+                  className='border border-[#E5E7EB] rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200 w-full'
                 >
                   <form
                     onSubmit={editingItem ? handleUpdateItem : handleSubmitNewItem}
@@ -531,7 +531,7 @@ export default function ItemsSection({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.25 }}
-                  className='border border-[#E5E7EB] rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200 absolute inset-0'
+                  className='border border-[#E5E7EB] rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200'
                 >
                   <div className='mb-4'>
                     <label className='block text-[#111827] font-medium text-sm mb-2'>
@@ -727,7 +727,8 @@ export default function ItemsSection({
                         </div>
                       </div>
 
-                      <div className='space-y-3 max-h-[320px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100'>
+                      {/* Changed from scrollable container to normal flow */}
+                      <div className='space-y-3'>
                         {aiGeneratedItems.map((item, index) => {
                           return (
                             <motion.div
@@ -746,7 +747,7 @@ export default function ItemsSection({
                             >
                               <div className='flex items-start'>
                                 <div
-                                  className={`w-[18px] h-[18px] rounded-[4px] border ${
+                                  className={`w-[18px] h-[18px] rounded-[4px] border flex-shrink-0 ${
                                     selectedAiItems[item.id]
                                       ? 'bg-purple-600 border-purple-600'
                                       : 'border-[#D1D5DB]'
@@ -770,14 +771,14 @@ export default function ItemsSection({
                                     </svg>
                                   )}
                                 </div>
-                                <div className='flex-1'>
-                                  <div className='flex justify-between items-start'>
-                                    <div>
+                                <div className='flex-1 min-w-0'>
+                                  <div className='flex justify-between items-start flex-wrap gap-2'>
+                                    <div className='flex flex-wrap items-center gap-2'>
                                       <span className='text-[#111827] text-base font-medium'>
                                         {item.name}
                                       </span>
                                       <span
-                                        className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
+                                        className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
                                           item.type === 'PRODUCT'
                                             ? 'bg-blue-50 text-blue-700'
                                             : 'bg-purple-50 text-purple-700'
@@ -786,7 +787,7 @@ export default function ItemsSection({
                                         {item.type}
                                       </span>
                                     </div>
-                                    <span className='text-[#111827] text-sm font-medium bg-green-50 px-2 py-0.5 rounded-full'>
+                                    <span className='text-[#111827] text-sm font-medium bg-green-50 px-2 py-0.5 rounded-full flex-shrink-0'>
                                       ${item.price}
                                     </span>
                                   </div>
@@ -819,35 +820,52 @@ export default function ItemsSection({
                         </div>
                       )}
 
-                      <div className='flex justify-end pt-2'>
-                        <button
+                      <div className='flex justify-between pt-2'>
+                        <Button
                           onClick={() => {
-                            setAiPrompt('');
-                            setAiGeneratedItems([]);
-                            setAiResponse(null);
-                            setCurrentNewItemMode('');
+                            setSelectedAiItems(
+                              aiGeneratedItems.reduce((acc, item) => {
+                                acc[item.id] = true;
+                                return acc;
+                              }, {} as Record<string, boolean>),
+                            );
                           }}
-                          className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors mr-3 px-3 py-1.5 rounded hover:bg-gray-100'
+                          className='text-purple-600 hover:text-purple-700 border border-purple-200 hover:bg-purple-50 text-sm'
+                          variant='outline'
                         >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleAddSelectedAiItems}
-                          className={cn(
-                            'bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center',
-                            Object.values(selectedAiItems).filter(Boolean).length === 0
-                              ? 'opacity-70 cursor-not-allowed'
-                              : 'hover:bg-purple-700 hover:shadow',
-                          )}
-                          disabled={Object.values(selectedAiItems).filter(Boolean).length === 0}
-                        >
-                          Add{' '}
-                          {Object.values(selectedAiItems).filter(Boolean).length > 0
-                            ? `${Object.values(selectedAiItems).filter(Boolean).length} `
-                            : ''}
-                          Selected Item
-                          {Object.values(selectedAiItems).filter(Boolean).length !== 1 ? 's' : ''}
-                        </button>
+                          Select All
+                        </Button>
+
+                        <div className='flex'>
+                          <button
+                            onClick={() => {
+                              setAiPrompt('');
+                              setAiGeneratedItems([]);
+                              setAiResponse(null);
+                              setCurrentNewItemMode('');
+                            }}
+                            className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors mr-3 px-3 py-1.5 rounded hover:bg-gray-100'
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleAddSelectedAiItems}
+                            className={cn(
+                              'bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center',
+                              Object.values(selectedAiItems).filter(Boolean).length === 0
+                                ? 'opacity-70 cursor-not-allowed'
+                                : 'hover:bg-purple-700 hover:shadow',
+                            )}
+                            disabled={Object.values(selectedAiItems).filter(Boolean).length === 0}
+                          >
+                            Add{' '}
+                            {Object.values(selectedAiItems).filter(Boolean).length > 0
+                              ? `${Object.values(selectedAiItems).filter(Boolean).length} `
+                              : ''}
+                            Selected Item
+                            {Object.values(selectedAiItems).filter(Boolean).length !== 1 ? 's' : ''}
+                          </button>
+                        </div>
                       </div>
                     </motion.div>
                   )}
