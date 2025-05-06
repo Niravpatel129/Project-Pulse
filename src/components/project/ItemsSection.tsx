@@ -27,7 +27,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Check,
   Hash,
   Loader2,
   Mic,
@@ -98,20 +97,6 @@ export default function ItemsSection({
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [aiResponse, setAiResponse] = useState<any>(null);
   const [keyboardShortcutsVisible, setKeyboardShortcutsVisible] = useState(false);
-  const [inlineEditingItem, setInlineEditingItem] = useState<string | null>(null);
-  const [inlineEditValues, setInlineEditValues] = useState<{
-    name: string;
-    description: string;
-    price: string;
-    quantity: string;
-    currency: string;
-  }>({
-    name: '',
-    description: '',
-    price: '',
-    quantity: '1',
-    currency: 'USD',
-  });
   // Add tax rates state
   const [taxRates, setTaxRates] = useState<TaxRate[]>([
     { id: 'standard', name: 'Standard Rate', rate: 20 },
@@ -267,6 +252,11 @@ export default function ItemsSection({
       taxable: item.taxable !== undefined ? item.taxable : true,
     });
     setCurrentNewItemMode('manual');
+
+    // Focus on the name input after switching to edit mode
+    setTimeout(() => {
+      nameInputRef.current?.focus();
+    }, 10);
   };
 
   const handleSubmitNewItem = (e: React.FormEvent) => {
@@ -305,19 +295,7 @@ export default function ItemsSection({
       } as ItemWithType;
 
       setItems([...items, newItemObj as Item]);
-      setNewItem({
-        name: '',
-        description: '',
-        price: '',
-        quantity: '1',
-        currency: 'USD',
-        taxRate: 0,
-        discount: 0,
-        taxable: true,
-      });
-      // Reset the selected tax rate to standard
-      setSelectedTaxRateId('standard');
-      setIsSubmitting(false);
+      resetFormState();
     }, 300);
   };
 
@@ -364,23 +342,28 @@ export default function ItemsSection({
       });
 
       setItems(updatedItems);
-      setEditingItem(null);
-      setCurrentNewItemMode('');
-      setNewItem({
-        name: '',
-        description: '',
-        price: '',
-        quantity: '1',
-        currency: 'USD',
-        taxRate: 0,
-        discount: 0,
-        taxable: true,
-      });
-      // Reset the selected tax rate to standard
-      setSelectedTaxRateId('standard');
-      setIsSubmitting(false);
+      resetFormState();
       showNotification('Item updated successfully');
     }, 300);
+  };
+
+  // New helper function to reset form state
+  const resetFormState = () => {
+    setEditingItem(null);
+    setCurrentNewItemMode('');
+    setNewItem({
+      name: '',
+      description: '',
+      price: '',
+      quantity: '1',
+      currency: 'USD',
+      taxRate: 0,
+      discount: 0,
+      taxable: true,
+    });
+    // Reset the selected tax rate to standard
+    setSelectedTaxRateId('standard');
+    setIsSubmitting(false);
   };
 
   // Handle pressing Enter in the name field to move to description
@@ -466,69 +449,6 @@ export default function ItemsSection({
         return attachment.id !== id;
       }),
     );
-  };
-
-  // Function to start inline editing for an item
-  const startInlineEdit = (item: ExtendedItem) => {
-    setInlineEditingItem(item.id);
-    setInlineEditValues({
-      name: item.name,
-      description: item.description,
-      price: item.price.replace(/,/g, ''),
-      quantity: item.quantity || '1',
-      currency: item.currency || 'USD',
-    });
-  };
-
-  // Function to save inline edits
-  const saveInlineEdit = (itemId: string) => {
-    if (!inlineEditValues.name.trim()) {
-      showNotification('Item name cannot be empty', 'error');
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    // Format price to have 2 decimal places
-    const formattedPrice = Number(inlineEditValues.price || 0).toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-
-    // Update the item
-    const updatedItems = items.map((item) => {
-      if (item.id === itemId) {
-        const updatedItem = {
-          ...item,
-          name: inlineEditValues.name.trim(),
-          description: inlineEditValues.description.trim(),
-          price: formattedPrice,
-          quantity: inlineEditValues.quantity || '1',
-          currency: projectCurrency,
-        } as Item;
-
-        // Preserve the type if it exists
-        const itemWithType = item as unknown as ItemWithType;
-        if (itemWithType.type) {
-          (updatedItem as ItemWithType).type = itemWithType.type;
-        }
-
-        return updatedItem;
-      }
-      return item;
-    });
-
-    setTimeout(() => {
-      setItems(updatedItems);
-      setInlineEditingItem(null);
-      setIsSubmitting(false);
-      showNotification('Item updated successfully');
-    }, 300);
-  };
-
-  // Function to cancel inline editing
-  const cancelInlineEdit = () => {
-    setInlineEditingItem(null);
   };
 
   // Function to get currency symbol
@@ -1315,7 +1235,6 @@ export default function ItemsSection({
             </div>
 
             {items.map((item, index) => {
-              const isEditing = inlineEditingItem === item.id;
               const itemTotal =
                 parseFloat(item.price.replace(/,/g, '')) * parseFloat(item.quantity || '1');
 
@@ -1330,210 +1249,87 @@ export default function ItemsSection({
                   <div className='flex justify-between items-start'>
                     <div className='flex items-start flex-1'>
                       <div className='flex-1'>
-                        {isEditing ? (
-                          // Inline editing form
-                          <div className='space-y-2'>
-                            <div>
-                              <Input
-                                type='text'
-                                value={inlineEditValues.name}
-                                onChange={(e) => {
-                                  return setInlineEditValues({
-                                    ...inlineEditValues,
-                                    name: e.target.value,
-                                  });
-                                }}
-                                className='border-blue-300 focus-visible:ring-blue-100'
-                                placeholder='Item name'
-                                autoFocus
-                              />
-                            </div>
-
-                            <div>
-                              <Textarea
-                                value={inlineEditValues.description}
-                                onChange={(e) => {
-                                  return setInlineEditValues({
-                                    ...inlineEditValues,
-                                    description: e.target.value,
-                                  });
-                                }}
-                                className='min-h-[60px] resize-none border-gray-200'
-                                placeholder='Add a description'
-                              />
-                            </div>
-
-                            <div className='flex items-center space-x-3'>
-                              <div className='flex-1'>
-                                <label
-                                  htmlFor='inline-item-price'
-                                  className='text-xs text-gray-500 mb-1 block'
-                                >
-                                  Price ({projectCurrency})
-                                </label>
-                                <div className='relative'>
-                                  <Input
-                                    type='number'
-                                    id='inline-item-price'
-                                    step='0.01'
-                                    min='0'
-                                    value={inlineEditValues.price}
-                                    onChange={(e) => {
-                                      return setInlineEditValues({
-                                        ...inlineEditValues,
-                                        price: e.target.value,
-                                      });
-                                    }}
-                                    placeholder='0.00'
-                                    aria-label='Item price'
-                                    className='pl-6'
-                                  />
-                                  <div className='absolute top-[9px] left-3 text-gray-500'>
-                                    {getCurrencySymbol(projectCurrency)}
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className='flex items-center gap-2'>
-                                <Input
-                                  type='number'
-                                  min='1'
-                                  value={inlineEditValues.quantity}
-                                  onChange={(e) => {
-                                    return setInlineEditValues({
-                                      ...inlineEditValues,
-                                      quantity: e.target.value,
-                                    });
-                                  }}
-                                  className='w-[70px]'
-                                  placeholder='1'
-                                />
-                                <span className='text-xs text-gray-500 whitespace-nowrap'>
-                                  units
+                        {/* Display mode */}
+                        <div className='group/item'>
+                          <div className='flex flex-col'>
+                            <div className='flex items-center'>
+                              <span className='text-[#111827] text-base font-semibold group-hover/item:text-black transition-colors'>
+                                {item.name}
+                              </span>
+                              {parseInt(item.quantity) > 1 && (
+                                <span className='ml-2 text-xs font-medium bg-gray-100 text-gray-600 rounded-full px-2 py-0.5'>
+                                  {item.quantity}x
                                 </span>
-                              </div>
-
-                              <div className='flex space-x-2 ml-3'>
-                                <Button
-                                  onClick={() => {
-                                    return cancelInlineEdit();
-                                  }}
-                                  variant='ghost'
-                                  size='sm'
-                                  className='text-gray-500 hover:text-gray-700 hover:bg-gray-100 h-8 w-8 p-0'
-                                >
-                                  <X size={16} />
-                                </Button>
-                                <Button
-                                  onClick={() => {
-                                    return saveInlineEdit(item.id);
-                                  }}
-                                  variant='ghost'
-                                  size='sm'
-                                  className='text-green-600 hover:text-green-700 hover:bg-green-50 h-8 w-8 p-0'
-                                  disabled={isSubmitting || !inlineEditValues.name.trim()}
-                                >
-                                  {isSubmitting ? (
-                                    <Loader2 size={16} className='animate-spin' />
-                                  ) : (
-                                    <Check size={16} />
-                                  )}
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          // Display mode
-                          <div
-                            className='cursor-pointer group/item'
-                            onClick={() => {
-                              return startInlineEdit(item as ExtendedItem);
-                            }}
-                          >
-                            <div className='flex flex-col'>
-                              <div className='flex items-center'>
-                                <span className='text-[#111827] text-base font-semibold group-hover/item:text-black transition-colors'>
-                                  {item.name}
-                                </span>
-                                {parseInt(item.quantity) > 1 && (
-                                  <span className='ml-2 text-xs font-medium bg-gray-100 text-gray-600 rounded-full px-2 py-0.5'>
-                                    {item.quantity}x
-                                  </span>
-                                )}
-                              </div>
-
-                              {item.description ? (
-                                <p className='text-[#6B7280] text-sm mt-1 leading-relaxed group-hover/item:text-[#4B5563] transition-colors'>
-                                  {item.description}
-                                </p>
-                              ) : (
-                                <p className='text-[#9CA3AF] text-sm mt-1 italic group-hover/item:text-[#6B7280] transition-colors'>
-                                  Add a description...
-                                </p>
                               )}
+                            </div>
 
-                              <div className='mt-2 flex flex-wrap items-center gap-2'>
-                                {item.taxable && item.taxRate > 0 && (
-                                  <div className='text-xs text-blue-600 bg-blue-50 rounded-full py-0.5 px-2 flex items-center'>
-                                    <Hash size={10} className='mr-1' />
-                                    {item.taxName || 'Tax'}: {item.taxRate}%
-                                  </div>
-                                )}
-                                {item.discount > 0 && (
-                                  <div className='text-xs text-green-600 bg-green-50 rounded-full py-0.5 px-2 flex items-center'>
-                                    <Scissors size={10} className='mr-1' />
-                                    Discount: {item.discount}%
-                                  </div>
-                                )}
-                              </div>
+                            {item.description ? (
+                              <p className='text-[#6B7280] text-sm mt-1 leading-relaxed group-hover/item:text-[#4B5563] transition-colors'>
+                                {item.description}
+                              </p>
+                            ) : (
+                              <p className='text-[#9CA3AF] text-sm mt-1 italic group-hover/item:text-[#6B7280] transition-colors'>
+                                Add a description...
+                              </p>
+                            )}
+
+                            <div className='mt-2 flex flex-wrap items-center gap-2'>
+                              {item.taxable && item.taxRate > 0 && (
+                                <div className='text-xs text-blue-600 bg-blue-50 rounded-full py-0.5 px-2 flex items-center'>
+                                  <Hash size={10} className='mr-1' />
+                                  {item.taxName || 'Tax'}: {item.taxRate}%
+                                </div>
+                              )}
+                              {item.discount > 0 && (
+                                <div className='text-xs text-green-600 bg-green-50 rounded-full py-0.5 px-2 flex items-center'>
+                                  <Scissors size={10} className='mr-1' />
+                                  Discount: {item.discount}%
+                                </div>
+                              )}
                             </div>
                           </div>
-                        )}
+                        </div>
                       </div>
                     </div>
                     <div className='flex flex-col items-end'>
-                      {!isEditing && (
-                        <>
-                          <div className='flex flex-col items-end'>
-                            <div className='flex items-center space-x-1'>
-                              <span className='text-[#111827] text-sm font-medium'>
-                                {getCurrencySymbol(projectCurrency)}
-                                {item.price}
-                              </span>
-                              {parseInt(item.quantity) > 1 && (
-                                <span className='text-gray-400 text-xs'>× {item.quantity}</span>
-                              )}
-                            </div>
+                      <div className='flex flex-col items-end'>
+                        <div className='flex items-center space-x-1'>
+                          <span className='text-[#111827] text-sm font-medium'>
+                            {getCurrencySymbol(projectCurrency)}
+                            {item.price}
+                          </span>
+                          {parseInt(item.quantity) > 1 && (
+                            <span className='text-gray-400 text-xs'>× {item.quantity}</span>
+                          )}
+                        </div>
 
-                            {parseInt(item.quantity) > 1 && (
-                              <span className='text-gray-600 text-xs font-medium mt-1'>
-                                {getCurrencySymbol(projectCurrency)}
-                                {calculateItemTotal(item.price, item.quantity)} total
-                              </span>
-                            )}
-                          </div>
-                          <div className='flex flex-col items-end gap-2 mt-2'>
-                            <button
-                              onClick={() => {
-                                return startInlineEdit(item as ExtendedItem);
-                              }}
-                              className='text-blue-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:underline'
-                            >
-                              <PencilLine size={12} />
-                              Edit
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                return handleRemoveItem(item.id, e);
-                              }}
-                              className='text-red-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:underline'
-                            >
-                              <X size={12} />
-                              Delete
-                            </button>
-                          </div>
-                        </>
-                      )}
+                        {parseInt(item.quantity) > 1 && (
+                          <span className='text-gray-600 text-xs font-medium mt-1'>
+                            {getCurrencySymbol(projectCurrency)}
+                            {calculateItemTotal(item.price, item.quantity)} total
+                          </span>
+                        )}
+                      </div>
+                      <div className='flex flex-col items-end gap-2 mt-2'>
+                        <button
+                          onClick={() => {
+                            return handleEditItem(item as ExtendedItem);
+                          }}
+                          className='text-blue-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:underline'
+                        >
+                          <PencilLine size={12} />
+                          Edit
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            return handleRemoveItem(item.id, e);
+                          }}
+                          className='text-red-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:underline'
+                        >
+                          <X size={12} />
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
