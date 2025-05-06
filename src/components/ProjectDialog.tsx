@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { FileText } from 'lucide-react';
 import { useState } from 'react';
 import ProjectManagement from './project/ProjectManagement';
@@ -24,6 +24,7 @@ export default function ProjectDialog() {
             </Button>
           </DialogTrigger>
           <DialogContent className='max-w-[1200px] w-[95vw] h-[90vh] p-0 overflow-hidden'>
+            <DialogTitle className='sr-only'>Project Management</DialogTitle>
             <ProjectManagement
               onClose={() => {
                 return setDialogOpen(false);
