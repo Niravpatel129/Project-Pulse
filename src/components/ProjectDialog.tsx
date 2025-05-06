@@ -40,11 +40,9 @@ export default function HomePage() {
 function ProjectManagement({ onClose }) {
   const [activeSection, setActiveSection] = useState('items');
   const [selectedClient, setSelectedClient] = useState('client1');
-  const [showAiPrompt, setShowAiPrompt] = useState(false);
   const [aiGeneratedItems, setAiGeneratedItems] = useState([]);
   const [selectedAiItems, setSelectedAiItems] = useState({});
-  const [showAddItemForm, setShowAddItemForm] = useState(false);
-  const [currentNewItemMode, setCurrentNewItemMode] = useState();
+  const [currentNewItemMode, setCurrentNewItemMode] = useState('');
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [newItem, setNewItem] = useState({
@@ -52,21 +50,7 @@ function ProjectManagement({ onClose }) {
     description: '',
     price: '',
   });
-  const [items, setItems] = useState([
-    {
-      id: 'item1',
-      name: 'Website Design',
-      description: 'Homepage and 5 subpages',
-      price: '2,500.00',
-    },
-    { id: 'item2', name: 'Logo Design', description: '3 concepts with revisions', price: '850.00' },
-    {
-      id: 'item3',
-      name: 'Brand Guidelines',
-      description: 'Color palette and typography',
-      price: '1,200.00',
-    },
-  ]);
+  const [items, setItems] = useState([]);
   const [clients, setClients] = useState([
     { id: 'client1', name: 'Acme Corporation', email: 'contact@acmecorp.com' },
     { id: 'client2', name: 'Globex Industries', email: 'info@globex.com' },
@@ -106,8 +90,6 @@ function ProjectManagement({ onClose }) {
   };
 
   const handleAddItem = () => {
-    setShowAddItemForm(true);
-    setShowAiPrompt(false);
     setTimeout(() => {
       return nameInputRef.current?.focus();
     }, 10);
@@ -212,7 +194,6 @@ function ProjectManagement({ onClose }) {
     setItems((prev) => {
       return [...prev, ...formattedItems];
     });
-    setShowAiPrompt(false);
     setAiPrompt('');
     setAiGeneratedItems([]);
     setAiResponse(null);
@@ -297,7 +278,6 @@ function ProjectManagement({ onClose }) {
 
       setItems([...items, newItemObj]);
       setNewItem({ name: '', description: '', price: '' });
-      setShowAddItemForm(false);
       setIsSubmitting(false);
       showNotification('Item added successfully');
     }, 300);
@@ -683,8 +663,7 @@ function ProjectManagement({ onClose }) {
                           <button
                             type='button'
                             onClick={() => {
-                              setShowAddItemForm(false);
-                              setEditingItem(null);
+                              setEditingItem('');
                               setNewItem({ name: '', description: '', price: '' });
                             }}
                             className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors'
@@ -870,10 +849,9 @@ function ProjectManagement({ onClose }) {
                         <div className='flex justify-end pt-2'>
                           <button
                             onClick={() => {
-                              setShowAiPrompt(false);
                               setAiPrompt('');
                               setAiGeneratedItems([]);
-                              setAiResponse(null);
+                              setAiResponse('');
                             }}
                             className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors mr-3'
                           >
@@ -961,6 +939,10 @@ function ProjectManagement({ onClose }) {
                       </div>
                     );
                   })}
+
+                  {items.length === 0 && (
+                    <div className='text-[#6B7280] text-sm text-center'>No items added yet</div>
+                  )}
                 </div>
               </div>
             </div>
