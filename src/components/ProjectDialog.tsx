@@ -564,8 +564,8 @@ function ProjectManagement({ onClose }) {
       {/* Main Content */}
       <div className='flex-1 flex flex-col h-full overflow-hidden'>
         {activeSection === 'items' && (
-          <div className='flex flex-col h-full'>
-            <div className='flex-1 py-6 px-8 overflow-y-auto'>
+          <div className='flex flex-col h-full relative'>
+            <div className='absolute inset-0 pt-6 px-8 pb-16 overflow-y-auto'>
               <div className='mb-8'>
                 <div className='flex justify-between items-center mb-4'>
                   <h2 className='text-lg font-semibold text-[#111827]'>Project Items</h2>
@@ -966,7 +966,7 @@ function ProjectManagement({ onClose }) {
             </div>
 
             {/* Footer */}
-            <div className='flex items-center justify-between py-4 border-t border-[#E5E7EB] px-8 bg-[#FAFAFA] z-10'>
+            <div className='absolute bottom-0 left-0 right-0 flex items-center justify-between py-4 border-t border-[#E5E7EB] px-8 bg-[#FAFAFA] z-10'>
               <Button
                 onClick={() => {
                   setActiveSection('client');
@@ -990,8 +990,8 @@ function ProjectManagement({ onClose }) {
 
         {/* Client Section */}
         {activeSection === 'client' && (
-          <div className='flex flex-col h-full'>
-            <div className='flex-1 py-6 px-8 overflow-y-auto'>
+          <div className='flex flex-col h-full relative'>
+            <div className='absolute inset-0 pt-6 px-8 pb-16 overflow-y-auto'>
               <div className='mb-8'>
                 <div className='flex justify-between items-center mb-4'>
                   <h2 className='text-lg font-semibold text-[#111827]'>Select Client</h2>
@@ -1085,7 +1085,7 @@ function ProjectManagement({ onClose }) {
             </div>
 
             {/* Footer */}
-            <div className='flex items-center justify-between py-4 border-t border-[#E5E7EB] px-8 bg-[#FAFAFA] z-10'>
+            <div className='absolute bottom-0 left-0 right-0 flex items-center justify-between py-4 border-t border-[#E5E7EB] px-8 bg-[#FAFAFA] z-10'>
               <Button
                 onClick={() => {
                   setActiveSection('comments');
@@ -1109,8 +1109,8 @@ function ProjectManagement({ onClose }) {
 
         {/* Comments Section */}
         {activeSection === 'comments' && (
-          <div className='flex flex-col h-full'>
-            <div className='flex-1 py-6 px-8 overflow-y-auto'>
+          <div className='flex flex-col h-full relative'>
+            <div className='absolute inset-0 pt-6 px-8 pb-16 overflow-y-auto'>
               <div className='mb-8'>
                 <div className='flex justify-between items-center mb-4'>
                   <h2 className='text-lg font-semibold text-[#111827]'>Project Notes</h2>
@@ -1189,7 +1189,7 @@ function ProjectManagement({ onClose }) {
             </div>
 
             {/* Footer */}
-            <div className='flex items-center justify-between py-4 border-t border-[#E5E7EB] px-8 bg-[#FAFAFA] z-10'>
+            <div className='absolute bottom-0 left-0 right-0 flex items-center justify-between py-4 border-t border-[#E5E7EB] px-8 bg-[#FAFAFA] z-10'>
               <div className='flex gap-3'>
                 <Button variant='outline' onClick={onClose}>
                   Cancel
