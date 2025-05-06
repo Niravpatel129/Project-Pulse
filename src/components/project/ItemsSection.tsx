@@ -1462,17 +1462,6 @@ export default function ItemsSection({
                               )}
 
                               <div className='mt-2 flex flex-wrap items-center gap-2'>
-                                {/* Show type badge if it exists */}
-                                {(item as ItemWithType).type === 'PRODUCT' && (
-                                  <div className='text-xs text-blue-600 bg-blue-50 rounded-full py-0.5 px-2 flex items-center'>
-                                    PRODUCT
-                                  </div>
-                                )}
-                                {(item as ItemWithType).type === 'SERVICE' && (
-                                  <div className='text-xs text-purple-600 bg-purple-50 rounded-full py-0.5 px-2 flex items-center'>
-                                    SERVICE
-                                  </div>
-                                )}
                                 {item.taxable && item.taxRate > 0 && (
                                   <div className='text-xs text-blue-600 bg-blue-50 rounded-full py-0.5 px-2 flex items-center'>
                                     <svg
