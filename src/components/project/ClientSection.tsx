@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import SectionFooter from './SectionFooter';
 import { Client, Section } from './types';
 
@@ -25,15 +24,6 @@ export default function ClientSection({
         <div className='mb-8'>
           <div className='flex justify-between items-center mb-4'>
             <h2 className='text-lg font-semibold text-[#111827]'>Select Client</h2>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => {
-                return showNotification('Draft saved', 'success');
-              }}
-            >
-              Save as draft
-            </Button>
           </div>
           <p className='text-[#6B7280] text-sm leading-5 mb-6'>
             Choose an existing client or create a new one for this project.

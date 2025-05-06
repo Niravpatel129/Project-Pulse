@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import SectionFooter from './SectionFooter';
 
 type CommentsSectionProps = {
@@ -22,15 +21,6 @@ export default function CommentsSection({
         <div className='mb-8'>
           <div className='flex justify-between items-center mb-4'>
             <h2 className='text-lg font-semibold text-[#111827]'>Project Notes</h2>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => {
-                return showNotification('Draft saved', 'success');
-              }}
-            >
-              Save as draft
-            </Button>
           </div>
           <p className='text-[#6B7280] text-sm leading-5 mb-6'>
             Add any additional notes or comments about this project.

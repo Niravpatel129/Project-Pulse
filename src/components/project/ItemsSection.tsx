@@ -385,14 +385,14 @@ export default function ItemsSection({
 
   return (
     <div className='flex flex-col h-full relative bg-[#FAFAFA]'>
-      <div className='absolute inset-0 pt-4 px-6 pb-16 overflow-y-auto'>
+      <div className='absolute inset-0 pt-6 px-8 pb-16 overflow-y-auto'>
         <div className='mb-6'>
           <div className='flex justify-between items-center mb-4'>
-            <h2 className='text-2xl font-bold text-[#111827] tracking-tight'>Project Items</h2>
-            <span className='px-3 py-1 bg-blue-50 text-blue-800 rounded-full text-xs font-medium'>
-              {items.length} {items.length === 1 ? 'item' : 'items'}
-            </span>
+            <h2 className='text-lg font-semibold text-[#111827]'>Items</h2>
           </div>
+          <p className='text-[#6B7280] text-sm leading-5 mb-6'>
+            Add items to your project. Include name, description, and price for each item.
+          </p>
 
           <p className='text-[#6B7280] text-sm leading-5 mb-6'>
             Add items to your project. Include name, description, and price for each item.
