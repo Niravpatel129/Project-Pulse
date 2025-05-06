@@ -1318,16 +1318,6 @@ export default function ItemsSection({
                 >
                   <div className='flex justify-between items-start'>
                     <div className='flex items-start flex-1'>
-                      <button
-                        onClick={(e) => {
-                          return handleRemoveItem(item.id, e);
-                        }}
-                        className='mr-3 mt-1 text-[#D1D5DB] hover:text-[#EF4444] transition-colors group-hover:opacity-100 opacity-0 focus:outline-none focus:text-[#EF4444] h-6 w-6 flex items-center justify-center rounded-full hover:bg-[#FEE2E2]'
-                        aria-label={`Remove ${item.name}`}
-                      >
-                        <X size={16} className='transition-transform group-hover:scale-110' />
-                      </button>
-
                       <div className='flex-1'>
                         {isEditing ? (
                           // Inline editing form
@@ -1559,15 +1549,26 @@ export default function ItemsSection({
                               </span>
                             )}
                           </div>
-                          <button
-                            onClick={() => {
-                              return startInlineEdit(item as ExtendedItem);
-                            }}
-                            className='text-blue-600 text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:underline'
-                          >
-                            <PencilLine size={12} />
-                            Edit
-                          </button>
+                          <div className='flex flex-col items-end gap-2 mt-2'>
+                            <button
+                              onClick={() => {
+                                return startInlineEdit(item as ExtendedItem);
+                              }}
+                              className='text-blue-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:underline'
+                            >
+                              <PencilLine size={12} />
+                              Edit
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                return handleRemoveItem(item.id, e);
+                              }}
+                              className='text-red-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:underline'
+                            >
+                              <X size={12} />
+                              Delete
+                            </button>
+                          </div>
                         </>
                       )}
                     </div>
