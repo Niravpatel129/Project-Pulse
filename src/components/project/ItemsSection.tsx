@@ -90,6 +90,7 @@ export default function ItemsSection({
 
   const [currentNewItemMode, setCurrentNewItemMode] = useState('');
   const [aiPrompt, setAiPrompt] = useState('');
+  const [aiPromptError, setAiPromptError] = useState('');
   const [aiGeneratedItems, setAiGeneratedItems] = useState<AIItem[]>([]);
   const [selectedAiItems, setSelectedAiItems] = useState<Record<string, boolean>>({});
   const [isGenerating, setIsGenerating] = useState(false);
@@ -140,7 +141,7 @@ export default function ItemsSection({
     setIsGenerating(true);
     setAiGeneratedItems([]);
     setAiResponse(null);
-    setIsAiResultsModalOpen(true);
+    setAiPromptError(''); // Clear any previous errors
 
     // Simulate AI processing delay
     setTimeout(() => {
@@ -192,32 +193,54 @@ export default function ItemsSection({
           processingTime: 8.584,
           promptLength: 203,
           timestamp: '2025-05-05T21:07:25.310Z',
+          feedbackMessage:
+            'Successfully generated 4 items for your project based on your description.',
         },
       };
 
+      // Simulate successful case (comment/uncomment to test error case)
+      // Uncomment the line below to test the error case
+      // mockResponse.lineItems = [];
+
       setAiResponse(mockResponse);
 
-      // Convert the response to our item format for display
-      const generatedItems = mockResponse.lineItems.map((item, index) => {
-        return {
-          id: `ai-item-${Date.now()}-${index}`,
-          name: item.name,
-          description: item.description,
-          price: item.price,
-          quantity: '1',
-          type: item.type,
-          reasoning: item.reasoning,
-          currency: projectCurrency,
-        };
-      });
+      if (mockResponse.lineItems && mockResponse.lineItems.length > 0) {
+        // Convert the response to our item format for display
+        const generatedItems = mockResponse.lineItems.map((item, index) => {
+          return {
+            id: `ai-item-${Date.now()}-${index}`,
+            name: item.name,
+            description: item.description,
+            price: item.price,
+            quantity: '1',
+            type: item.type,
+            reasoning: item.reasoning,
+            currency: projectCurrency,
+          };
+        });
 
-      setAiGeneratedItems(generatedItems);
-      // Auto-select all items by default
-      const allSelected = generatedItems.reduce((acc, item) => {
-        acc[item.id] = true;
-        return acc;
-      }, {} as Record<string, boolean>);
-      setSelectedAiItems(allSelected);
+        setAiGeneratedItems(generatedItems);
+        // Auto-select all items by default
+        const allSelected = generatedItems.reduce((acc, item) => {
+          acc[item.id] = true;
+          return acc;
+        }, {} as Record<string, boolean>);
+        setSelectedAiItems(allSelected);
+        setIsAiResultsModalOpen(true); // Only open modal if we have items
+
+        // Show success toast if there's a feedback message
+        if (mockResponse.meta?.feedbackMessage) {
+          toast.success(mockResponse.meta.feedbackMessage);
+        }
+      } else {
+        // Handle case where AI couldn't generate any items
+        const errorMessage =
+          mockResponse.meta?.feedbackMessage ||
+          'Unable to generate items from your description. Please try again with more details.';
+        setAiPromptError(errorMessage);
+        toast.error(errorMessage);
+      }
+
       setIsGenerating(false);
     }, 1500);
   };
@@ -444,6 +467,9 @@ export default function ItemsSection({
       discount: 0,
       taxable: true,
     });
+    // Reset AI-related state
+    setAiPromptError('');
+    setAiPrompt('');
     // Reset the selected tax rate to standard
     setSelectedTaxRateId('standard');
     setIsSubmitting(false);
@@ -664,6 +690,7 @@ export default function ItemsSection({
                       }
                       setCurrentNewItemMode('ai');
                       setEditingItem(null);
+                      setAiPromptError(''); // Clear any previous errors
                       setNewItem({
                         name: '',
                         description: '',
@@ -968,11 +995,16 @@ export default function ItemsSection({
                         ref={aiPromptInputRef}
                         value={aiPrompt}
                         onChange={(e) => {
-                          return setAiPrompt(e.target.value);
+                          setAiPrompt(e.target.value);
+                          if (aiPromptError) setAiPromptError(''); // Clear error when user edits prompt
                         }}
                         rows={4}
                         placeholder='Describe what the client wants...'
-                        className='flex-1 border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm outline-none bg-transparent focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-colors pr-[110px]'
+                        className={`flex-1 border ${
+                          aiPromptError
+                            ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
+                            : 'border-[#E5E7EB] focus:border-purple-400 focus:ring-purple-100'
+                        } rounded-lg px-3 py-2 text-sm outline-none bg-transparent transition-colors pr-[110px]`}
                         autoFocus
                       />
                       <Button
@@ -988,6 +1020,23 @@ export default function ItemsSection({
                         {isGenerating ? <Loader2 size={16} className='animate-spin' /> : 'Generate'}
                       </Button>
                     </div>
+
+                    {/* Error message display */}
+                    {aiPromptError && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className='mt-2 text-sm text-red-500 bg-red-50 p-2 rounded-md border border-red-100'
+                      >
+                        <div className='flex items-start'>
+                          <X size={16} className='mr-1 mt-0.5 flex-shrink-0' />
+                          <span>{aiPromptError}</span>
+                        </div>
+                        <p className='mt-1 text-xs text-red-500 pl-5'>
+                          Try adding more specific details about items, prices, or quantities.
+                        </p>
+                      </motion.div>
+                    )}
 
                     {/* Voice and attachment controls */}
                     <div className='flex mt-3 items-center'>
@@ -1394,6 +1443,15 @@ export default function ItemsSection({
         onOpenChange={(open) => {
           if (!open && !isGenerating) {
             setIsAiResultsModalOpen(false);
+            if (!open) {
+              // When dialog closes and it wasn't from an error, clean up AI state
+              if (aiGeneratedItems.length > 0) {
+                setAiPrompt('');
+                setAiPromptError('');
+                setAiGeneratedItems([]);
+                setAiResponse(null);
+              }
+            }
           }
         }}
       >
@@ -1647,6 +1705,7 @@ export default function ItemsSection({
               onClick={() => {
                 setIsAiResultsModalOpen(false);
                 setAiPrompt('');
+                setAiPromptError('');
               }}
               disabled={isGenerating}
             >
