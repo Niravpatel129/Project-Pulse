@@ -349,8 +349,9 @@ export default function ItemsSection({
 
     setIsSubmitting(true);
 
-    // Format price to have 2 decimal places
-    const formattedPrice = Number(newItem.price || 0).toLocaleString('en-US', {
+    // Format price correctly - ensure it's a number first
+    const numericPrice = newItem.price ? parseFloat(newItem.price) : 0;
+    const formattedPrice = numericPrice.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
@@ -412,8 +413,9 @@ export default function ItemsSection({
 
     setIsSubmitting(true);
 
-    // Format price to have 2 decimal places
-    const formattedPrice = Number(newItem.price || 0).toLocaleString('en-US', {
+    // Format price correctly - ensure it's a number first
+    const numericPrice = newItem.price ? parseFloat(newItem.price) : 0;
+    const formattedPrice = numericPrice.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
@@ -814,13 +816,13 @@ export default function ItemsSection({
                       </label>
                       <div className='flex-1 relative'>
                         <Input
-                          type='number'
+                          type='text'
                           id='item-price'
-                          step='0.01'
-                          min='0'
                           value={newItem.price}
                           onChange={(e) => {
-                            return setNewItem({ ...newItem, price: e.target.value });
+                            // Allow only numbers and decimal point
+                            const value = e.target.value.replace(/[^0-9.]/g, '');
+                            setNewItem({ ...newItem, price: value });
                           }}
                           placeholder='0.00'
                           aria-label='Item price'
