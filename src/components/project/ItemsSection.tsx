@@ -316,106 +316,30 @@ export default function ItemsSection({
 
   return (
     <div className='flex flex-col h-full relative bg-[#FAFAFA]'>
-      <div className='absolute inset-0 pt-4 px-6 pb-16 overflow-hidden flex'>
-        {/* Main Column - Items List */}
-        <div className='flex-1 pr-6 overflow-y-auto'>
-          <div className='mb-6'>
-            <div className='flex justify-between items-center mb-4'>
-              <h2 className='text-2xl font-bold text-[#111827] tracking-tight'>Project Items</h2>
-              <span className='px-3 py-1 bg-blue-50 text-blue-800 rounded-full text-xs font-medium'>
-                {items.length} {items.length === 1 ? 'item' : 'items'}
-              </span>
-            </div>
-
-            <p className='text-[#6B7280] text-sm leading-5 mb-6'>
-              Add items to your project. Include name, description, and price for each item.
-              <button
-                onClick={() => {
-                  return setKeyboardShortcutsVisible(true);
-                }}
-                className='ml-1 text-blue-600 underline-offset-2 hover:underline focus:outline-none focus:underline transition-colors'
-                aria-label='View keyboard shortcuts'
-              >
-                View shortcuts
-              </button>
-            </p>
-
-            {/* Item Cards */}
-            <div className='space-y-3'>
-              {items.map((item, index) => {
-                return (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05, duration: 0.2 }}
-                    key={item.id}
-                    className='border border-[#E5E7EB] rounded-xl p-4 transition-all duration-200 ease-in-out hover:border-blue-300 group bg-white shadow-sm hover:shadow-md hover:translate-y-[-1px]'
-                  >
-                    <div className='flex justify-between items-start'>
-                      <div className='flex items-start flex-1'>
-                        <button
-                          onClick={(e) => {
-                            return handleRemoveItem(item.id, e);
-                          }}
-                          className='mr-3 mt-1 text-[#D1D5DB] hover:text-[#EF4444] transition-colors group-hover:opacity-100 opacity-0 focus:outline-none focus:text-[#EF4444] h-6 w-6 flex items-center justify-center rounded-full hover:bg-[#FEE2E2]'
-                          aria-label={`Remove ${item.name}`}
-                        >
-                          <X size={16} className='transition-transform group-hover:scale-110' />
-                        </button>
-                        <div
-                          className='flex-1 cursor-pointer group/item'
-                          onClick={() => {
-                            return handleEditItem(item);
-                          }}
-                        >
-                          <div className='flex flex-col'>
-                            <span className='text-[#111827] text-base font-semibold group-hover/item:text-black transition-colors'>
-                              {item.name}
-                            </span>
-                            {item.description && (
-                              <p className='text-[#6B7280] text-sm mt-1 leading-relaxed group-hover/item:text-[#4B5563] transition-colors'>
-                                {item.description}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className='flex flex-col items-end'>
-                        <span className='text-[#111827] text-sm font-medium bg-green-50 px-3 py-1 rounded-full'>
-                          ${item.price}
-                        </span>
-                        <span className='text-blue-600 text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity'>
-                          Click to edit
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-
-              {items.length === 0 && (
-                <div className='text-center p-10 border-2 border-dashed border-gray-200 rounded-xl bg-white'>
-                  <div className='flex flex-col items-center justify-center space-y-3'>
-                    <div className='rounded-full bg-blue-50 p-3'>
-                      <Plus size={24} className='text-blue-600' />
-                    </div>
-                    <h3 className='text-[#111827] font-medium'>No items yet</h3>
-                    <p className='text-[#6B7280] text-sm max-w-[300px]'>
-                      Use the panel on the right to add items manually or generate them with AI.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
+      <div className='absolute inset-0 pt-4 px-6 pb-16 overflow-y-auto'>
+        <div className='mb-6'>
+          <div className='flex justify-between items-center mb-4'>
+            <h2 className='text-2xl font-bold text-[#111827] tracking-tight'>Project Items</h2>
+            <span className='px-3 py-1 bg-blue-50 text-blue-800 rounded-full text-xs font-medium'>
+              {items.length} {items.length === 1 ? 'item' : 'items'}
+            </span>
           </div>
-        </div>
 
-        {/* Right Column - Add/Generate Functionality */}
-        <div className='w-[360px] border-l border-[#E5E7EB] pl-6 overflow-y-auto'>
-          <h3 className='text-[#111827] font-semibold mb-5 px-1'>Add Items</h3>
+          <p className='text-[#6B7280] text-sm leading-5 mb-6'>
+            Add items to your project. Include name, description, and price for each item.
+            <button
+              onClick={() => {
+                return setKeyboardShortcutsVisible(true);
+              }}
+              className='ml-1 text-blue-600 underline-offset-2 hover:underline focus:outline-none focus:underline transition-colors'
+              aria-label='View keyboard shortcuts'
+            >
+              View shortcuts
+            </button>
+          </p>
 
           {/* Action Buttons */}
-          <div className='flex flex-col space-y-3 mb-6'>
+          <div className='flex space-x-3 mb-6'>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -432,7 +356,7 @@ export default function ItemsSection({
                       }, 10);
                     }}
                     className={cn(
-                      'flex items-center justify-center transition-all duration-300 h-12',
+                      'flex items-center justify-center transition-all duration-300 h-11',
                       currentNewItemMode === 'manual'
                         ? 'bg-blue-600 text-white hover:bg-blue-700 hover:text-white shadow-md border-0'
                         : 'hover:bg-gray-100 border-2 border-gray-200',
@@ -465,7 +389,7 @@ export default function ItemsSection({
                       }, 10);
                     }}
                     className={cn(
-                      'flex items-center justify-center transition-all duration-300 h-12',
+                      'flex items-center justify-center transition-all duration-300 h-11',
                       currentNewItemMode === 'ai'
                         ? 'bg-purple-600 text-white hover:bg-purple-700 hover:text-white shadow-md border-0'
                         : 'hover:bg-gray-100 border-2 border-gray-200',
@@ -491,7 +415,7 @@ export default function ItemsSection({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className='border border-[#E5E7EB] rounded-xl p-5 mb-6 bg-white shadow-sm hover:shadow-md transition-all duration-200'
+                className='border border-[#E5E7EB] rounded-xl p-5 mb-6 bg-white shadow-sm hover:shadow-md transition-all duration-200 max-w-2xl'
               >
                 <form
                   onSubmit={editingItem ? handleUpdateItem : handleSubmitNewItem}
@@ -922,6 +846,99 @@ export default function ItemsSection({
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Item Cards */}
+          <div className='space-y-3'>
+            <div className='flex items-center mb-3'>
+              <h3 className='text-lg font-semibold text-[#111827]'>
+                {items.length > 0 ? 'Your Items' : ''}
+              </h3>
+              {items.length > 0 && (
+                <div className='ml-auto flex space-x-2'>
+                  <Button
+                    onClick={() => {
+                      if (currentNewItemMode === 'manual') {
+                        return setCurrentNewItemMode('');
+                      }
+                      setCurrentNewItemMode('manual');
+                      setAiGeneratedItems([]);
+                      setAiResponse(null);
+                    }}
+                    className='bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs py-1 px-3 rounded-full h-auto'
+                    variant='ghost'
+                  >
+                    <Plus size={14} className='mr-1' />
+                    Add more
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {items.map((item, index) => {
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05, duration: 0.2 }}
+                  key={item.id}
+                  className='border border-[#E5E7EB] rounded-xl p-4 transition-all duration-200 ease-in-out hover:border-blue-300 group bg-white shadow-sm hover:shadow-md hover:translate-y-[-1px]'
+                >
+                  <div className='flex justify-between items-start'>
+                    <div className='flex items-start flex-1'>
+                      <button
+                        onClick={(e) => {
+                          return handleRemoveItem(item.id, e);
+                        }}
+                        className='mr-3 mt-1 text-[#D1D5DB] hover:text-[#EF4444] transition-colors group-hover:opacity-100 opacity-0 focus:outline-none focus:text-[#EF4444] h-6 w-6 flex items-center justify-center rounded-full hover:bg-[#FEE2E2]'
+                        aria-label={`Remove ${item.name}`}
+                      >
+                        <X size={16} className='transition-transform group-hover:scale-110' />
+                      </button>
+                      <div
+                        className='flex-1 cursor-pointer group/item'
+                        onClick={() => {
+                          return handleEditItem(item);
+                        }}
+                      >
+                        <div className='flex flex-col'>
+                          <span className='text-[#111827] text-base font-semibold group-hover/item:text-black transition-colors'>
+                            {item.name}
+                          </span>
+                          {item.description && (
+                            <p className='text-[#6B7280] text-sm mt-1 leading-relaxed group-hover/item:text-[#4B5563] transition-colors'>
+                              {item.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className='flex flex-col items-end'>
+                      <span className='text-[#111827] text-sm font-medium bg-green-50 px-3 py-1 rounded-full'>
+                        ${item.price}
+                      </span>
+                      <span className='text-blue-600 text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity'>
+                        Click to edit
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+
+            {items.length === 0 && (
+              <div className='text-center p-10 border-2 border-dashed border-gray-200 rounded-xl bg-white'>
+                <div className='flex flex-col items-center justify-center space-y-3'>
+                  <div className='rounded-full bg-blue-50 p-3'>
+                    <Plus size={24} className='text-blue-600' />
+                  </div>
+                  <h3 className='text-[#111827] font-medium'>No items yet</h3>
+                  <p className='text-[#6B7280] text-sm max-w-[300px]'>
+                    Use the buttons above to add items manually or generate them with AI.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
