@@ -3,7 +3,17 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { AlertCircle, Check, FileText, Loader2, Plus, Sparkles, X } from 'lucide-react';
+import {
+  AlertCircle,
+  Check,
+  FileText,
+  Loader2,
+  Mic,
+  Paperclip,
+  Plus,
+  Sparkles,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { Textarea } from './ui/textarea';
 
@@ -65,6 +75,9 @@ function ProjectManagement({ onClose }) {
   const [showUndoNotification, setShowUndoNotification] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [keyboardShortcutsVisible, setKeyboardShortcutsVisible] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [attachments, setAttachments] = useState([]);
   const [aiResponse, setAiResponse] = useState(null);
 
   const nameInputRef = { current: null };
@@ -349,6 +362,66 @@ function ProjectManagement({ onClose }) {
         [id]: !prev[id],
       };
     });
+  };
+
+  // Simulate recording start/stop
+  const toggleRecording = () => {
+    if (isRecording) {
+      // Stop recording and attach the voice note
+      setIsRecording(false);
+      const newAttachment = {
+        id: `voice-${Date.now()}`,
+        type: 'voice',
+        name: `Voice note (${recordingDuration}s)`,
+        timestamp: new Date().toISOString(),
+      };
+      setAttachments([...attachments, newAttachment]);
+      setRecordingDuration(0);
+      showNotification('Voice note added', 'success');
+    } else {
+      // Start recording
+      setIsRecording(true);
+      // Start duration counter
+      const intervalId = setInterval(() => {
+        setRecordingDuration((prev) => {
+          return prev + 1;
+        });
+      }, 1000);
+
+      // Store interval ID for cleanup
+      return () => {
+        return clearInterval(intervalId);
+      };
+    }
+  };
+
+  const handleFileAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = e.target.files;
+    if (fileList && fileList.length > 0) {
+      // Properly type each file when we create the array
+      const filesArray = Array.from(fileList) as File[];
+
+      const newAttachments = filesArray.map((file) => {
+        return {
+          id: `file-${Date.now()}-${file.name}`,
+          type: 'file',
+          name: file.name,
+          size: file.size,
+          timestamp: new Date().toISOString(),
+        };
+      });
+
+      setAttachments([...attachments, ...newAttachments]);
+      showNotification(`${fileList.length} file(s) attached`, 'success');
+    }
+  };
+
+  const removeAttachment = (id) => {
+    setAttachments(
+      attachments.filter((attachment) => {
+        return attachment.id !== id;
+      }),
+    );
   };
 
   return (
@@ -723,6 +796,82 @@ function ProjectManagement({ onClose }) {
                           )}
                         </Button>
                       </div>
+
+                      {/* Voice and attachment controls */}
+                      <div className='flex mt-2 items-center'>
+                        <div className='flex space-x-2'>
+                          <button
+                            onClick={toggleRecording}
+                            className={`p-2 rounded-full flex items-center justify-center ${
+                              isRecording ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'
+                            } hover:bg-gray-200 transition-colors`}
+                            title={isRecording ? 'Stop recording' : 'Record voice note'}
+                          >
+                            <Mic size={16} className={isRecording ? 'animate-pulse' : ''} />
+                          </button>
+
+                          <label className='p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer flex items-center justify-center'>
+                            <Paperclip size={16} />
+                            <input
+                              type='file'
+                              multiple
+                              className='hidden'
+                              onChange={handleFileAttachment}
+                              accept='image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                            />
+                          </label>
+                        </div>
+
+                        {isRecording && (
+                          <div className='ml-2 flex items-center'>
+                            <div className='w-2 h-2 rounded-full bg-red-500 mr-2 animate-pulse'></div>
+                            <span className='text-xs text-gray-500'>
+                              Recording {recordingDuration}s
+                            </span>
+                          </div>
+                        )}
+
+                        <div className='flex-1'></div>
+
+                        <div className='text-xs text-gray-500'>
+                          {attachments.length > 0 &&
+                            `${attachments.length} attachment${
+                              attachments.length !== 1 ? 's' : ''
+                            }`}
+                        </div>
+                      </div>
+
+                      {/* Attachments display */}
+                      {attachments.length > 0 && (
+                        <div className='mt-3 space-y-2 border-t border-gray-100 pt-2'>
+                          {attachments.map((attachment) => {
+                            return (
+                              <div
+                                key={attachment.id}
+                                className='flex items-center justify-between bg-gray-50 rounded px-3 py-2 text-xs'
+                              >
+                                <div className='flex items-center'>
+                                  {attachment.type === 'voice' ? (
+                                    <Mic size={14} className='mr-2 text-blue-500' />
+                                  ) : (
+                                    <Paperclip size={14} className='mr-2 text-blue-500' />
+                                  )}
+                                  <span className='text-gray-700'>{attachment.name}</span>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    return removeAttachment(attachment.id);
+                                  }}
+                                  className='text-gray-400 hover:text-gray-600'
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
                       <p className='text-[#6B7280] text-xs mt-2'>
                         Example: &quot;Client needs a red turtle hoodie for $15 and a black regular
                         shirt&quot;
