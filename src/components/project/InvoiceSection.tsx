@@ -310,27 +310,15 @@ export default function InvoiceSection({
   const WorkspaceTaxSettingsCard = () => {
     // Local state for tax settings to prevent re-renders during typing
     const [localTaxSettings, setLocalTaxSettings] = useState({
-      defaultTaxRate: workspaceTaxSettings.defaultTaxRate,
       taxId: workspaceTaxSettings.taxId || '',
     });
 
     // Update local state only if props change (not during user input)
     useEffect(() => {
       setLocalTaxSettings({
-        defaultTaxRate: workspaceTaxSettings.defaultTaxRate,
         taxId: workspaceTaxSettings.taxId || '',
       });
-    }, [workspaceTaxSettings]);
-
-    const handleLocalTaxRateChange = (value: number) => {
-      // Only update local state
-      setLocalTaxSettings((prev) => {
-        return {
-          ...prev,
-          defaultTaxRate: value,
-        };
-      });
-    };
+    }, [workspaceTaxSettings.taxId]);
 
     const handleLocalTaxIdChange = (value: string) => {
       // Only update local state
@@ -344,11 +332,11 @@ export default function InvoiceSection({
 
     // Only update parent state on blur
     const handleTaxSettingsBlur = () => {
-      if (
-        localTaxSettings.defaultTaxRate !== workspaceTaxSettings.defaultTaxRate ||
-        localTaxSettings.taxId !== workspaceTaxSettings.taxId
-      ) {
-        handleWorkspaceTaxSettingsChange(localTaxSettings);
+      if (localTaxSettings.taxId !== workspaceTaxSettings.taxId) {
+        handleWorkspaceTaxSettingsChange({
+          ...workspaceTaxSettings,
+          taxId: localTaxSettings.taxId,
+        });
       }
     };
 
@@ -363,28 +351,9 @@ export default function InvoiceSection({
           </p>
         </div>
 
-        <div className='mb-4'>
-          <Label htmlFor='tax-rate' className='block mb-1'>
-            Tax Rate (%)
-          </Label>
-          <Input
-            id='tax-rate'
-            type='number'
-            value={localTaxSettings.defaultTaxRate}
-            onChange={(e) => {
-              return handleLocalTaxRateChange(Number(e.target.value));
-            }}
-            onBlur={handleTaxSettingsBlur}
-            className='w-full'
-            min='0'
-            max='100'
-            step='0.1'
-          />
-        </div>
-
         <div>
           <Label htmlFor='tax-id' className='block mb-1'>
-            Tax ID (Optional)
+            Tax ID / VAT Number
           </Label>
           <Input
             id='tax-id'
