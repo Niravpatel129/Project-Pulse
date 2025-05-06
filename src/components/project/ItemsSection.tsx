@@ -411,7 +411,7 @@ export default function ItemsSection({
           <div
             className={cn(
               'relative transition-all duration-300',
-              currentNewItemMode ? 'mb-8 min-h-[330px]' : 'min-h-0 mb-0',
+              currentNewItemMode ? 'mb-8 min-h-[360px]' : 'min-h-0 mb-0',
             )}
           >
             {/* Add Item Form */}
@@ -422,7 +422,7 @@ export default function ItemsSection({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.25 }}
-                  className='border border-[#E5E7EB] rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200 max-w-2xl absolute inset-0'
+                  className='border border-[#E5E7EB] rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200 w-full absolute inset-0'
                 >
                   <form
                     onSubmit={editingItem ? handleUpdateItem : handleSubmitNewItem}
@@ -471,7 +471,7 @@ export default function ItemsSection({
                         Price
                       </label>
                       <div className='relative'>
-                        <span className='absolute left-3 top-[11px] text-[#6B7280] font-medium'>
+                        <span className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] font-medium'>
                           $
                         </span>
                         <input
