@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import SectionFooter from './SectionFooter';
 import { Client, InvoiceSettings, Item } from './types';
 
@@ -40,20 +40,26 @@ function StatefulInput({
 }) {
   // Internal state that won't cause parent re-renders
   const [value, setValue] = useState(initialValue);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const firstRender = useRef(true);
 
-  // Update internal state if initialValue changes from parent
+  // Only update local state if the initialValue prop changes
   useEffect(() => {
-    setValue(initialValue);
+    if (!firstRender.current) {
+      setValue(initialValue);
+    }
+    firstRender.current = false;
   }, [initialValue]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = type === 'number' ? Number(e.target.value) : e.target.value;
-
-    // Update local state immediately to keep input responsive
+    // Only update local state during typing, don't trigger parent updates
     setValue(newValue);
+  };
 
-    // Update parent component immediately
-    onValueChange(newValue);
+  // Only trigger parent updates when input loses focus
+  const handleBlur = () => {
+    onValueChange(value);
   };
 
   return (
@@ -65,9 +71,11 @@ function StatefulInput({
       )}
       <Input
         id={id}
+        ref={inputRef}
         type={type}
         value={value}
         onChange={handleChange}
+        onBlur={handleBlur}
         className={className}
         placeholder={placeholder}
         min={min}
@@ -98,20 +106,26 @@ function StatefulTextarea({
 }) {
   // Internal state that won't cause parent re-renders
   const [value, setValue] = useState(initialValue);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const firstRender = useRef(true);
 
-  // Update internal state if initialValue changes from parent
+  // Only update local state if the initialValue prop changes
   useEffect(() => {
-    setValue(initialValue);
+    if (!firstRender.current) {
+      setValue(initialValue);
+    }
+    firstRender.current = false;
   }, [initialValue]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
-
-    // Update local state immediately to keep input responsive
+    // Only update local state during typing, don't trigger parent updates
     setValue(newValue);
+  };
 
-    // Update parent component immediately
-    onValueChange(newValue);
+  // Only trigger parent updates when input loses focus
+  const handleBlur = () => {
+    onValueChange(value);
   };
 
   return (
@@ -123,8 +137,10 @@ function StatefulTextarea({
       )}
       <Textarea
         id={id}
+        ref={textareaRef}
         value={value}
         onChange={handleChange}
+        onBlur={handleBlur}
         className={`${className} ${height ? height : ''}`}
         placeholder={placeholder}
       />
@@ -292,6 +308,50 @@ export default function InvoiceSection({
   };
 
   const WorkspaceTaxSettingsCard = () => {
+    // Local state for tax settings to prevent re-renders during typing
+    const [localTaxSettings, setLocalTaxSettings] = useState({
+      defaultTaxRate: workspaceTaxSettings.defaultTaxRate,
+      taxId: workspaceTaxSettings.taxId || '',
+    });
+
+    // Update local state only if props change (not during user input)
+    useEffect(() => {
+      setLocalTaxSettings({
+        defaultTaxRate: workspaceTaxSettings.defaultTaxRate,
+        taxId: workspaceTaxSettings.taxId || '',
+      });
+    }, [workspaceTaxSettings]);
+
+    const handleLocalTaxRateChange = (value: number) => {
+      // Only update local state
+      setLocalTaxSettings((prev) => {
+        return {
+          ...prev,
+          defaultTaxRate: value,
+        };
+      });
+    };
+
+    const handleLocalTaxIdChange = (value: string) => {
+      // Only update local state
+      setLocalTaxSettings((prev) => {
+        return {
+          ...prev,
+          taxId: value,
+        };
+      });
+    };
+
+    // Only update parent state on blur
+    const handleTaxSettingsBlur = () => {
+      if (
+        localTaxSettings.defaultTaxRate !== workspaceTaxSettings.defaultTaxRate ||
+        localTaxSettings.taxId !== workspaceTaxSettings.taxId
+      ) {
+        handleWorkspaceTaxSettingsChange(localTaxSettings);
+      }
+    };
+
     return (
       <div className='border border-[#E5E7EB] rounded-md p-4'>
         <h3 className='text-sm font-medium text-[#111827] mb-3'>Workspace Tax Settings</h3>
@@ -304,13 +364,18 @@ export default function InvoiceSection({
         </div>
 
         <div className='mb-4'>
-          <StatefulInput
+          <Label htmlFor='tax-rate' className='block mb-1'>
+            Tax Rate (%)
+          </Label>
+          <Input
             id='tax-rate'
             type='number'
-            initialValue={workspaceTaxSettings.defaultTaxRate}
-            onValueChange={handleTaxRateChange}
+            value={localTaxSettings.defaultTaxRate}
+            onChange={(e) => {
+              return handleLocalTaxRateChange(Number(e.target.value));
+            }}
+            onBlur={handleTaxSettingsBlur}
             className='w-full'
-            label='Tax Rate (%)'
             min='0'
             max='100'
             step='0.1'
@@ -318,12 +383,17 @@ export default function InvoiceSection({
         </div>
 
         <div>
-          <StatefulInput
+          <Label htmlFor='tax-id' className='block mb-1'>
+            Tax ID (Optional)
+          </Label>
+          <Input
             id='tax-id'
-            initialValue={workspaceTaxSettings.taxId || ''}
-            onValueChange={handleTaxIdChange}
+            value={localTaxSettings.taxId}
+            onChange={(e) => {
+              return handleLocalTaxIdChange(e.target.value);
+            }}
+            onBlur={handleTaxSettingsBlur}
             className='w-full'
-            label='Tax ID (Optional)'
             placeholder='e.g. VAT123456789'
           />
         </div>
