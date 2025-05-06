@@ -162,7 +162,6 @@ type InvoiceSectionProps = {
   onWorkspaceTaxSettingsChange: (settings: { defaultTaxRate: number; taxId: string }) => void;
   dueDate: Date | null;
   setDueDate: (date: Date | null) => void;
-  showNotification: (message: string, type?: string) => void;
   onClose: () => void;
 };
 
@@ -177,11 +176,9 @@ export default function InvoiceSection({
   onWorkspaceTaxSettingsChange,
   dueDate,
   setDueDate,
-  showNotification,
   onClose,
 }: InvoiceSectionProps) {
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
-  const [fakeInput, setFakeInput] = useState('');
 
   // Calculate subtotal
   const subtotal = items.reduce((sum, item) => {
@@ -245,40 +242,34 @@ export default function InvoiceSection({
     });
   };
 
-  const handleTaxRateChange = (value: number) => {
-    handleWorkspaceTaxSettingsChange({
-      defaultTaxRate: value,
-    });
-  };
-
-  const handleTaxIdChange = (value: string) => {
-    handleWorkspaceTaxSettingsChange({
-      taxId: value as string,
-    });
-  };
-
   const handleGenerateInvoice = async () => {
-    // Validate that we have items and client
     if (items.length === 0) {
-      showNotification('Please add at least one item before generating an invoice', 'error');
       return;
     }
 
     setIsGeneratingInvoice(true);
 
     try {
-      // Here you would normally make an API call to create an invoice with Stripe
-      // This is a simulated delay to mimic that process
+      // Simulate API call delay
       await new Promise((resolve) => {
-        return setTimeout(resolve, 2000);
+        return setTimeout(resolve, 1500);
       });
 
-      showNotification('Invoice generated successfully! Ready to send to client.', 'success');
+      // In a real app, this would make an API request to generate the invoice
+      console.log('Invoice Details:', {
+        items,
+        client,
+        projectCurrency,
+        notes,
+        invoiceSettings,
+        workspaceTaxSettings,
+        dueDate,
+      });
 
-      // In a real implementation, you would redirect to a Stripe invoice page or show invoice details
+      setIsGeneratingInvoice(false);
+      onClose();
     } catch (error) {
-      showNotification('Failed to generate invoice. Please try again.', 'error');
-    } finally {
+      console.error('Error generating invoice:', error);
       setIsGeneratingInvoice(false);
     }
   };
@@ -646,15 +637,6 @@ export default function InvoiceSection({
           <p className='text-[#6B7280] text-sm leading-5 mb-6'>
             Configure invoice details and payment options before generating.
           </p>
-          <Input
-            type='text'
-            placeholder='Invoice Number'
-            className='w-full mb-8'
-            value={fakeInput}
-            onChange={(e) => {
-              setFakeInput(e.target.value);
-            }}
-          />
 
           <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-8'>
             {/* Left Column */}

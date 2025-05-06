@@ -6,8 +6,7 @@ import CommentsSection from './CommentsSection';
 import InvoiceSection from './InvoiceSection';
 import ItemsSection from './ItemsSection';
 import LeftSidebar from './LeftSidebar';
-import NotificationSystem from './NotificationSystem';
-import { Client, InvoiceSettings, Item, Notification, Section } from './types';
+import { Client, InvoiceSettings, Item, Section } from './types';
 
 type ProjectManagementProps = {
   onClose: () => void;
@@ -18,11 +17,6 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
   const [selectedClient, setSelectedClient] = useState('client1');
   const [deletedItem, setDeletedItem] = useState<Item | null>(null);
   const [showUndoNotification, setShowUndoNotification] = useState(false);
-  const [notification, setNotification] = useState<Notification>({
-    show: false,
-    message: '',
-    type: 'success',
-  });
   const [items, setItems] = useState<Item[]>([]);
   const [projectCurrency, setProjectCurrency] = useState('USD');
   const [clients, setClients] = useState<Client[]>([
@@ -87,7 +81,6 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
         };
       });
       setItems(updatedItems);
-      showNotification(`Currency changed to ${newCurrency}`);
     }
   };
 
@@ -102,14 +95,6 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
-
-  // Show notification
-  const showNotification = (message: string, type = 'success') => {
-    setNotification({ show: true, message, type: type as 'success' | 'error' | 'info' });
-    setTimeout(() => {
-      setNotification({ show: false, message: '', type: 'success' });
-    }, 3000);
-  };
 
   const handleRemoveItem = (id: string, e?: React.MouseEvent) => {
     if (e) {
@@ -145,8 +130,6 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
       setShowUndoNotification(false);
       setDeletedItem(null);
     }, 5000);
-
-    showNotification('Item removed', 'info');
   };
 
   const handleUndoDelete = () => {
@@ -159,21 +142,11 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
       if (undoTimeoutRef.current) {
         clearTimeout(undoTimeoutRef.current);
       }
-      showNotification('Item restored', 'success');
     }
   };
 
   return (
     <div className='flex h-full bg-[#FAFAFA]'>
-      {/* Notification System */}
-      <NotificationSystem
-        notification={notification}
-        showUndoNotification={showUndoNotification}
-        setShowUndoNotification={setShowUndoNotification}
-        handleUndoDelete={handleUndoDelete}
-      />
-
-      {/* Left Sidebar */}
       <LeftSidebar
         activeSection={activeSection}
         setActiveSection={setActiveSection}
@@ -188,7 +161,6 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
           <ItemsSection
             items={items}
             setItems={setItems}
-            showNotification={showNotification}
             setActiveSection={setActiveSection}
             handleRemoveItem={handleRemoveItem}
             projectCurrency={projectCurrency}
@@ -200,7 +172,6 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
             clients={clients}
             selectedClient={selectedClient}
             setSelectedClient={setSelectedClient}
-            showNotification={showNotification}
             setActiveSection={setActiveSection}
           />
         )}
@@ -209,7 +180,6 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
           <CommentsSection
             notes={notes}
             setNotes={setNotes}
-            showNotification={showNotification}
             onClose={onClose}
             setActiveSection={setActiveSection}
           />
@@ -231,7 +201,6 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
             onWorkspaceTaxSettingsChange={handleWorkspaceTaxSettingsChange}
             dueDate={dueDate}
             setDueDate={setDueDate}
-            showNotification={showNotification}
             onClose={onClose}
           />
         )}

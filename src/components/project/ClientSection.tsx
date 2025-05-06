@@ -11,7 +11,6 @@ type ClientSectionProps = {
   clients: Client[];
   selectedClient: string;
   setSelectedClient: (clientId: string) => void;
-  showNotification: (message: string, type?: string) => void;
   setActiveSection: React.Dispatch<React.SetStateAction<Section>>;
 };
 
@@ -19,7 +18,6 @@ export default function ClientSection({
   clients,
   selectedClient,
   setSelectedClient,
-  showNotification,
   setActiveSection,
 }: ClientSectionProps) {
   const [isCreatingClient, setIsCreatingClient] = useState(false);
@@ -42,7 +40,6 @@ export default function ClientSection({
 
   const handleCreateClient = () => {
     if (!newClient.name || !newClient.email) {
-      showNotification('Client name and email are required', 'error');
       return;
     }
 
@@ -59,7 +56,6 @@ export default function ClientSection({
 
     // Add client to the list and select it
     // In a real app, this would likely be an API call
-    showNotification(`Client ${newClient.name} created successfully`, 'success');
     setSelectedClient(clientId);
     setIsCreatingClient(false);
     setNewClient({
@@ -93,13 +89,11 @@ export default function ClientSection({
 
   const handleUpdateClient = () => {
     if (!newClient.name || !newClient.email) {
-      showNotification('Client name and email are required', 'error');
       return;
     }
 
     // Update client in the list
     // In a real app, this would likely be an API call
-    showNotification(`Client ${newClient.name} updated successfully`, 'success');
     setIsEditingClient(false);
     setEditClientId(null);
     setNewClient({
@@ -337,7 +331,6 @@ export default function ClientSection({
                     } rounded-md p-4 cursor-pointer hover:border-[#111827] transition-colors`}
                     onClick={() => {
                       setSelectedClient(client.id);
-                      showNotification(`Selected ${client.name}`, 'info');
                     }}
                   >
                     <div className='flex items-center justify-between'>
@@ -413,7 +406,6 @@ export default function ClientSection({
       <SectionFooter
         onContinue={() => {
           setActiveSection('comments');
-          showNotification('Moved to Comments section');
         }}
         currentSection={2}
         totalSections={4}

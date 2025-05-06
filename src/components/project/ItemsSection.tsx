@@ -2,8 +2,26 @@
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -13,10 +31,16 @@ import { useRef, useState } from 'react';
 import SectionFooter from './SectionFooter';
 import type { AIItem, Attachment, ExtendedItem, Item, Section } from './types';
 
+// Define a TaxRate type
+type TaxRate = {
+  id: string;
+  name: string;
+  rate: number;
+};
+
 type ItemsSectionProps = {
   items: Item[];
   setItems: (items: Item[]) => void;
-  showNotification: (message: string, type?: string) => void;
   setActiveSection: React.Dispatch<React.SetStateAction<Section>>;
   handleRemoveItem: (id: string, e?: React.MouseEvent) => void;
   projectCurrency: string;
@@ -25,11 +49,15 @@ type ItemsSectionProps = {
 export default function ItemsSection({
   items,
   setItems,
-  showNotification,
   setActiveSection,
   handleRemoveItem,
   projectCurrency,
 }: ItemsSectionProps) {
+  // Dummy notification function since notification system was removed
+  const showNotification = (message: string, type?: string) => {
+    console.log(`[${type || 'info'}] ${message}`);
+  };
+
   const [currentNewItemMode, setCurrentNewItemMode] = useState('');
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiGeneratedItems, setAiGeneratedItems] = useState<AIItem[]>([]);
@@ -66,9 +94,22 @@ export default function ItemsSection({
     quantity: '1',
     currency: 'USD',
   });
+  // Add tax rates state
+  const [taxRates, setTaxRates] = useState<TaxRate[]>([
+    { id: 'standard', name: 'Standard Rate', rate: 20 },
+    { id: 'reduced', name: 'Reduced Rate', rate: 5 },
+    { id: 'zero', name: 'Zero Rate', rate: 0 },
+  ]);
+  const [selectedTaxRateId, setSelectedTaxRateId] = useState<string>('standard');
+  const [isNewTaxRateDialogOpen, setIsNewTaxRateDialogOpen] = useState(false);
+  const [newTaxRate, setNewTaxRate] = useState<{ name: string; rate: number }>({
+    name: '',
+    rate: 0,
+  });
 
   const nameInputRef = useRef<HTMLInputElement>(null);
   const aiPromptInputRef = useRef<HTMLTextAreaElement>(null);
+  const newTaxNameInputRef = useRef<HTMLInputElement>(null);
 
   const handleGenerateAiItems = () => {
     if (!aiPrompt.trim()) return;
@@ -179,11 +220,28 @@ export default function ItemsSection({
     setAiGeneratedItems([]);
     setAiResponse(null);
     setSelectedAiItems({});
+  };
 
-    showNotification(
-      `Added ${selectedItems.length} item${selectedItems.length > 1 ? 's' : ''}`,
-      'success',
-    );
+  const handleEditItem = (item: ExtendedItem) => {
+    setEditingItem(item);
+    // Find the tax rate that matches the item's tax rate, or default to standard
+    const matchingTaxRate = taxRates.find((tax) => {
+      return tax.rate === item.taxRate;
+    });
+    const taxRateId = matchingTaxRate ? matchingTaxRate.id : 'standard';
+    setSelectedTaxRateId(taxRateId);
+
+    setNewItem({
+      name: item.name,
+      description: item.description,
+      price: item.price.replace(/,/g, ''),
+      quantity: item.quantity,
+      currency: item.currency || 'USD',
+      taxRate: item.taxRate || 0,
+      discount: item.discount || 0,
+      taxable: item.taxable !== undefined ? item.taxable : true,
+    });
+    setCurrentNewItemMode('manual');
   };
 
   const handleSubmitNewItem = (e: React.FormEvent) => {
@@ -199,6 +257,12 @@ export default function ItemsSection({
       maximumFractionDigits: 2,
     });
 
+    // Get the selected tax rate for display purposes
+    const selectedTax = taxRates.find((tax) => {
+      return tax.id === selectedTaxRateId;
+    });
+    const taxRateName = selectedTax ? selectedTax.name : '';
+
     // Simulate a slight delay for better UX
     setTimeout(() => {
       const newItemObj: ExtendedItem = {
@@ -211,6 +275,7 @@ export default function ItemsSection({
         taxRate: newItem.taxRate,
         discount: newItem.discount,
         taxable: newItem.taxable,
+        taxName: taxRateName, // Store the tax name for reference
       };
 
       setItems([...items, newItemObj as Item]);
@@ -224,24 +289,10 @@ export default function ItemsSection({
         discount: 0,
         taxable: true,
       });
+      // Reset the selected tax rate to standard
+      setSelectedTaxRateId('standard');
       setIsSubmitting(false);
-      showNotification('Item added successfully');
     }, 300);
-  };
-
-  const handleEditItem = (item: ExtendedItem) => {
-    setEditingItem(item);
-    setNewItem({
-      name: item.name,
-      description: item.description,
-      price: item.price.replace(/,/g, ''),
-      quantity: item.quantity,
-      currency: item.currency || 'USD',
-      taxRate: item.taxRate || 0,
-      discount: item.discount || 0,
-      taxable: item.taxable !== undefined ? item.taxable : true,
-    });
-    setCurrentNewItemMode('manual');
   };
 
   const handleUpdateItem = (e: React.FormEvent) => {
@@ -256,6 +307,12 @@ export default function ItemsSection({
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
+
+    // Get the selected tax rate for display purposes
+    const selectedTax = taxRates.find((tax) => {
+      return tax.id === selectedTaxRateId;
+    });
+    const taxRateName = selectedTax ? selectedTax.name : '';
 
     // Simulate a slight delay for better UX
     setTimeout(() => {
@@ -272,6 +329,7 @@ export default function ItemsSection({
               taxRate: newItem.taxRate,
               discount: newItem.discount,
               taxable: newItem.taxable,
+              taxName: taxRateName, // Store the tax name for reference
             }
           : item;
       });
@@ -289,6 +347,8 @@ export default function ItemsSection({
         discount: 0,
         taxable: true,
       });
+      // Reset the selected tax rate to standard
+      setSelectedTaxRateId('standard');
       setIsSubmitting(false);
       showNotification('Item updated successfully');
     }, 300);
@@ -449,6 +509,50 @@ export default function ItemsSection({
     }
   };
 
+  // Function to add a new tax rate
+  const handleAddTaxRate = () => {
+    if (!newTaxRate.name.trim()) {
+      showNotification('Tax rate name is required', 'error');
+      return;
+    }
+
+    const taxRateId = `tax-${Date.now()}`;
+    const newTaxRateObj: TaxRate = {
+      id: taxRateId,
+      name: newTaxRate.name.trim(),
+      rate: newTaxRate.rate,
+    };
+
+    setTaxRates([...taxRates, newTaxRateObj]);
+    setSelectedTaxRateId(taxRateId);
+    setNewTaxRate({ name: '', rate: 0 });
+    setIsNewTaxRateDialogOpen(false);
+    showNotification(`Tax rate "${newTaxRate.name}" added successfully`);
+  };
+
+  // Function to set the tax rate in the new item from selected tax rate ID
+  const updateItemTaxRate = (taxRateId: string) => {
+    setSelectedTaxRateId(taxRateId);
+    const selectedRate = taxRates.find((tax) => {
+      return tax.id === taxRateId;
+    });
+    if (selectedRate) {
+      setNewItem({ ...newItem, taxRate: selectedRate.rate });
+    }
+  };
+
+  // Add this utility function near the other utility functions
+  const calculateItemTotal = (price: string, quantity: string): string => {
+    const numPrice = parseFloat(price.replace(/,/g, ''));
+    const numQuantity = parseFloat(quantity || '1');
+    const total = numPrice * numQuantity;
+
+    return total.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
   return (
     <div className='flex flex-col h-full relative bg-[#FAFAFA]'>
       <div className='absolute inset-0 pt-6 px-8 pb-16 overflow-y-auto'>
@@ -473,6 +577,20 @@ export default function ItemsSection({
                       setCurrentNewItemMode('manual');
                       setAiGeneratedItems([]);
                       setAiResponse(null);
+
+                      // Get the currently selected tax rate
+                      const selectedTax = taxRates.find((tax) => {
+                        return tax.id === selectedTaxRateId;
+                      });
+                      if (selectedTax) {
+                        setNewItem((prev) => {
+                          return {
+                            ...prev,
+                            taxRate: selectedTax.rate,
+                          };
+                        });
+                      }
+
                       setTimeout(() => {
                         return nameInputRef.current?.focus();
                       }, 10);
@@ -650,22 +768,59 @@ export default function ItemsSection({
                     </div>
                     <div className='grid grid-cols-2 gap-3 mb-4'>
                       <div>
-                        <Label htmlFor='tax-rate'>Tax Rate (%)</Label>
-                        <Input
-                          id='tax-rate'
-                          type='number'
-                          min='0'
-                          max='100'
-                          step='0.1'
-                          value={newItem.taxRate}
-                          onChange={(e) => {
-                            setNewItem({
-                              ...newItem,
-                              taxRate: Number(e.target.value),
-                            });
+                        <Label htmlFor='tax-rate'>Tax Rate</Label>
+                        <Select
+                          value={selectedTaxRateId}
+                          onValueChange={(value) => {
+                            if (value === 'add-new') {
+                              setIsNewTaxRateDialogOpen(true);
+                              return;
+                            }
+                            updateItemTaxRate(value);
                           }}
                           disabled={!newItem.taxable}
-                        />
+                        >
+                          <SelectTrigger className='w-full'>
+                            <SelectValue placeholder='Select tax rate' />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectLabel className='text-sm font-medium text-gray-500'>
+                                Available Tax Rates
+                              </SelectLabel>
+                              {taxRates.map((taxRate) => {
+                                return (
+                                  <SelectItem
+                                    key={taxRate.id}
+                                    value={taxRate.id}
+                                    className={selectedTaxRateId === taxRate.id ? 'bg-blue-50' : ''}
+                                  >
+                                    <div className='flex justify-between w-full items-center'>
+                                      <div className='flex items-center'>
+                                        {selectedTaxRateId === taxRate.id && (
+                                          <Check size={14} className='mr-2 text-blue-600' />
+                                        )}
+                                        <span>{taxRate.name}</span>
+                                      </div>
+                                      <span className='text-xs font-medium bg-blue-50 text-blue-600 rounded-full px-2 py-0.5 ml-2'>
+                                        {taxRate.rate}%
+                                      </span>
+                                    </div>
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectGroup>
+                            <SelectSeparator />
+                            <SelectGroup>
+                              <SelectItem value='add-new' className='text-purple-600 font-medium'>
+                                <div className='flex items-center'>
+                                  <Plus size={14} className='mr-2' />
+                                  Add New Tax Rate
+                                </div>
+                              </SelectItem>
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label htmlFor='discount'>Discount (%)</Label>
@@ -1086,9 +1241,16 @@ export default function ItemsSection({
 
           {/* Item Cards */}
           <div className='space-y-3'>
-            <div className='flex items-center mb-3'>
+            <div className='flex items-center mb-4'>
               <h3 className='text-lg font-semibold text-[#111827]'>
-                {items.length > 0 ? 'Your Items' : ''}
+                {items.length > 0 ? (
+                  <>
+                    Your Items{' '}
+                    <span className='ml-2 text-sm font-normal text-gray-500'>({items.length})</span>
+                  </>
+                ) : (
+                  ''
+                )}
               </h3>
               {items.length > 0 && (
                 <div className='ml-auto flex space-x-2'>
@@ -1101,7 +1263,7 @@ export default function ItemsSection({
                       setAiGeneratedItems([]);
                       setAiResponse(null);
                     }}
-                    className='bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs py-1 px-3 rounded-full h-auto'
+                    className='bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs py-1 px-3 rounded-full h-auto transition-colors duration-200'
                     variant='ghost'
                   >
                     <Plus size={14} className='mr-1' />
@@ -1113,6 +1275,8 @@ export default function ItemsSection({
 
             {items.map((item, index) => {
               const isEditing = inlineEditingItem === item.id;
+              const itemTotal =
+                parseFloat(item.price.replace(/,/g, '')) * parseFloat(item.quantity || '1');
 
               return (
                 <motion.div
@@ -1250,9 +1414,17 @@ export default function ItemsSection({
                             }}
                           >
                             <div className='flex flex-col'>
-                              <span className='text-[#111827] text-base font-semibold group-hover/item:text-black transition-colors'>
-                                {item.name}
-                              </span>
+                              <div className='flex items-center'>
+                                <span className='text-[#111827] text-base font-semibold group-hover/item:text-black transition-colors'>
+                                  {item.name}
+                                </span>
+                                {parseInt(item.quantity) > 1 && (
+                                  <span className='ml-2 text-xs font-medium bg-gray-100 text-gray-600 rounded-full px-2 py-0.5'>
+                                    {item.quantity}x
+                                  </span>
+                                )}
+                              </div>
+
                               {item.description ? (
                                 <p className='text-[#6B7280] text-sm mt-1 leading-relaxed group-hover/item:text-[#4B5563] transition-colors'>
                                   {item.description}
@@ -1262,6 +1434,58 @@ export default function ItemsSection({
                                   Add a description...
                                 </p>
                               )}
+
+                              <div className='mt-2 flex flex-wrap items-center gap-2'>
+                                {item.taxable && item.taxRate > 0 && (
+                                  <div className='text-xs text-blue-600 bg-blue-50 rounded-full py-0.5 px-2 flex items-center'>
+                                    <svg
+                                      width='10'
+                                      height='10'
+                                      viewBox='0 0 24 24'
+                                      fill='none'
+                                      xmlns='http://www.w3.org/2000/svg'
+                                      className='mr-1'
+                                    >
+                                      <path
+                                        d='M19.25 19.25L4.75 4.75'
+                                        stroke='currentColor'
+                                        strokeWidth='1.5'
+                                        strokeLinecap='round'
+                                        strokeLinejoin='round'
+                                      />
+                                      <path
+                                        d='M19.25 4.75L4.75 19.25'
+                                        stroke='currentColor'
+                                        strokeWidth='1.5'
+                                        strokeLinecap='round'
+                                        strokeLinejoin='round'
+                                      />
+                                    </svg>
+                                    {item.taxName || 'Tax'}: {item.taxRate}%
+                                  </div>
+                                )}
+                                {item.discount > 0 && (
+                                  <div className='text-xs text-green-600 bg-green-50 rounded-full py-0.5 px-2 flex items-center'>
+                                    <svg
+                                      width='10'
+                                      height='10'
+                                      viewBox='0 0 24 24'
+                                      fill='none'
+                                      xmlns='http://www.w3.org/2000/svg'
+                                      className='mr-1'
+                                    >
+                                      <path
+                                        d='M19.25 12L4.75 12'
+                                        stroke='currentColor'
+                                        strokeWidth='1.5'
+                                        strokeLinecap='round'
+                                        strokeLinejoin='round'
+                                      />
+                                    </svg>
+                                    Discount: {item.discount}%
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         )}
@@ -1270,14 +1494,23 @@ export default function ItemsSection({
                     <div className='flex flex-col items-end'>
                       {!isEditing && (
                         <>
-                          <div className='flex flex-col items-end space-y-1'>
-                            <span className='text-[#111827] text-sm font-medium bg-green-50 px-3 py-1 rounded-full'>
-                              {getCurrencySymbol(projectCurrency)}
-                              {item.price}
-                            </span>
-                            <span className='text-[#111827] text-sm font-medium bg-gray-50 px-3 py-1 rounded-full'>
-                              {item.quantity || '1'} units
-                            </span>
+                          <div className='flex flex-col items-end'>
+                            <div className='flex items-center space-x-1'>
+                              <span className='text-[#111827] text-sm font-medium'>
+                                {getCurrencySymbol(projectCurrency)}
+                                {item.price}
+                              </span>
+                              {parseInt(item.quantity) > 1 && (
+                                <span className='text-gray-400 text-xs'>× {item.quantity}</span>
+                              )}
+                            </div>
+
+                            {parseInt(item.quantity) > 1 && (
+                              <span className='text-gray-600 text-xs font-medium mt-1'>
+                                {getCurrencySymbol(projectCurrency)}
+                                {calculateItemTotal(item.price, item.quantity)} total
+                              </span>
+                            )}
                           </div>
                           <button
                             onClick={() => {
@@ -1297,21 +1530,126 @@ export default function ItemsSection({
             })}
 
             {items.length === 0 && (
-              <div className='text-center p-10 border-2 border-dashed border-gray-200 rounded-xl bg-white'>
+              <div className='text-center p-8 border-2 border-dashed border-gray-200 rounded-xl bg-white transition-all duration-200 hover:border-blue-200 group'>
                 <div className='flex flex-col items-center justify-center space-y-3'>
-                  <div className='rounded-full bg-blue-50 p-3'>
-                    <Plus size={24} className='text-blue-600' />
+                  <div className='rounded-full bg-blue-50 p-3 group-hover:bg-blue-100 transition-colors duration-200'>
+                    <Plus size={22} className='text-blue-600' />
                   </div>
-                  <h3 className='text-[#111827] font-medium'>No items yet</h3>
-                  <p className='text-[#6B7280] text-sm max-w-[300px]'>
-                    Use the buttons above to add items manually or generate them with AI.
+                  <h3 className='text-[#111827] font-medium group-hover:text-blue-700 transition-colors duration-200'>
+                    No items yet
+                  </h3>
+                  <p className='text-[#6B7280] text-sm max-w-[320px] leading-relaxed'>
+                    Create items manually or generate them with AI to add to your project.
                   </p>
+                  <div className='flex gap-3 mt-2'>
+                    <Button
+                      onClick={() => {
+                        setCurrentNewItemMode('manual');
+                        setTimeout(() => {
+                          return nameInputRef.current?.focus();
+                        }, 10);
+                      }}
+                      className='bg-blue-600 hover:bg-blue-700 text-white'
+                      size='sm'
+                    >
+                      <Plus size={16} className='mr-2' />
+                      Add Item Manually
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setCurrentNewItemMode('ai');
+                        setTimeout(() => {
+                          return aiPromptInputRef.current?.focus();
+                        }, 10);
+                      }}
+                      className='bg-purple-600 hover:bg-purple-700 text-white'
+                      size='sm'
+                    >
+                      <Sparkles size={16} className='mr-2' />
+                      Generate with AI
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Tax Rate Dialog */}
+      <Dialog open={isNewTaxRateDialogOpen} onOpenChange={setIsNewTaxRateDialogOpen}>
+        <DialogContent className='sm:max-w-[425px]'>
+          <DialogHeader>
+            <DialogTitle className='flex items-center text-lg font-semibold'>
+              <div className='mr-2 p-1.5 bg-purple-100 rounded-full'>
+                <Plus size={18} className='text-purple-600' />
+              </div>
+              New Tax Rate
+            </DialogTitle>
+            <DialogDescription>Create a new tax rate to apply to your items.</DialogDescription>
+          </DialogHeader>
+          <div className='grid gap-5 py-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='tax-name' className='text-sm font-medium'>
+                Tax Name
+              </Label>
+              <Input
+                id='tax-name'
+                ref={newTaxNameInputRef}
+                value={newTaxRate.name}
+                onChange={(e) => {
+                  return setNewTaxRate({ ...newTaxRate, name: e.target.value });
+                }}
+                className='w-full'
+                placeholder='e.g. GST, VAT, Sales Tax'
+                autoFocus
+              />
+              <p className='text-xs text-gray-500'>Enter a descriptive name for this tax rate</p>
+            </div>
+            <div className='space-y-2'>
+              <Label htmlFor='tax-percentage' className='text-sm font-medium'>
+                Rate (%)
+              </Label>
+              <Input
+                id='tax-percentage'
+                type='number'
+                min='0'
+                max='100'
+                step='0.1'
+                value={newTaxRate.rate}
+                onChange={(e) => {
+                  return setNewTaxRate({ ...newTaxRate, rate: parseFloat(e.target.value) });
+                }}
+                className='w-full'
+                placeholder='e.g. 7.5'
+              />
+              <p className='text-xs text-gray-500'>
+                Enter the percentage rate without the % symbol
+              </p>
+            </div>
+          </div>
+          <DialogFooter className='flex space-x-2 justify-end'>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={() => {
+                return setIsNewTaxRateDialogOpen(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type='button'
+              onClick={handleAddTaxRate}
+              disabled={!newTaxRate.name.trim()}
+              className='bg-purple-600 hover:bg-purple-700 text-white'
+            >
+              <Plus size={16} className='mr-2' />
+              Add Tax Rate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Footer */}
       <SectionFooter

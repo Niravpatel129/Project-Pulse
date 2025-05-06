@@ -8,6 +8,7 @@ export type Item = {
   taxRate?: number;
   taxable?: boolean;
   discount?: number;
+  taxName?: string;
 };
 
 export type ExtendedItem = Item;

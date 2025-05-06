@@ -6,7 +6,6 @@ import { Section } from './types';
 type CommentsSectionProps = {
   notes: string;
   setNotes: (notes: string) => void;
-  showNotification: (message: string, type?: string) => void;
   onClose: () => void;
   setActiveSection: React.Dispatch<React.SetStateAction<Section>>;
 };
@@ -14,7 +13,6 @@ type CommentsSectionProps = {
 export default function CommentsSection({
   notes,
   setNotes,
-  showNotification,
   onClose,
   setActiveSection,
 }: CommentsSectionProps) {
@@ -91,7 +89,6 @@ export default function CommentsSection({
       <SectionFooter
         onContinue={() => {
           setActiveSection('invoice');
-          showNotification('Moved to Invoice section');
         }}
         currentSection={3}
         totalSections={4}
