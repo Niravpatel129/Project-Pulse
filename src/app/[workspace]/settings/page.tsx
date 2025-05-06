@@ -24,10 +24,11 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, ImageIcon, Mail, Settings, Users, XCircle } from 'lucide-react';
+import { CreditCard, Edit, ImageIcon, Mail, Settings, Users, XCircle } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -76,6 +77,7 @@ export default function SettingsPage() {
   const [editRole, setEditRole] = useState('');
 
   const { teamMembers, isLoading: isLoadingTeam, invitations } = useTeamMembers();
+  const { workspace, connectStripe, disconnectStripe } = useWorkspace();
 
   // Filter out members who have pending invitations
   const activeTeamMembers = teamMembers.filter((member) => {
@@ -399,6 +401,14 @@ export default function SettingsPage() {
                 <Users className='mr-2 h-4 w-4' />
                 Team
               </TabsTrigger>
+              <TabsTrigger value='billing' className='data-[state=active]:bg-white'>
+                <CreditCard className='mr-2 h-4 w-4' />
+                Billing
+              </TabsTrigger>
+              <TabsTrigger value='integrations' className='data-[state=active]:bg-white'>
+                <ImageIcon className='mr-2 h-4 w-4' />
+                Integrations
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -601,7 +611,10 @@ export default function SettingsPage() {
                             <div className='flex items-center gap-4'>
                               <Avatar>
                                 <AvatarImage
-                                  src={member?.user?.avatar ||`https://avatar.vercel.sh/${member.user.email}`}
+                                  src={
+                                    member?.user?.avatar ||
+                                    `https://avatar.vercel.sh/${member.user.email}`
+                                  }
                                 />
                                 <AvatarFallback>
                                   {getInitials(member.user.name || member.user.email)}
@@ -797,6 +810,86 @@ export default function SettingsPage() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value='billing' className='p-6'>
+            {/* ... existing code ... */}
+          </TabsContent>
+
+          <TabsContent value='integrations' className='p-6'>
+            <div className='space-y-6'>
+              <div>
+                <h2 className='text-xl font-semibold mb-4'>Payment Integrations</h2>
+                <Card>
+                  <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                    <div>
+                      <CardTitle className='text-base'>Stripe Connect</CardTitle>
+                      <CardDescription>
+                        Connect your workspace to Stripe to process payments and invoices
+                      </CardDescription>
+                    </div>
+                    {workspace?.stripeConnected ? (
+                      <Badge className='bg-green-100 text-green-800 hover:bg-green-100'>
+                        Connected
+                      </Badge>
+                    ) : (
+                      <Badge variant='outline'>Not Connected</Badge>
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    <div className='flex items-center justify-between py-2'>
+                      <div className='flex items-center space-x-4'>
+                        <div className='bg-purple-100 p-2 rounded-full'>
+                          <CreditCard className='h-5 w-5 text-purple-600' />
+                        </div>
+                        <div>
+                          {workspace?.stripeConnected ? (
+                            <div className='space-y-1'>
+                              <p className='text-sm font-medium'>Stripe Account Connected</p>
+                              <p className='text-xs text-muted-foreground'>
+                                Account ID: {workspace?.stripeAccountId}
+                              </p>
+                            </div>
+                          ) : (
+                            <p className='text-sm'>
+                              Connect your Stripe account to start accepting payments
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {workspace?.stripeConnected ? (
+                        <Button variant='outline' onClick={disconnectStripe}>
+                          Disconnect
+                        </Button>
+                      ) : (
+                        <Button onClick={connectStripe}>Connect Stripe</Button>
+                      )}
+                    </div>
+
+                    {workspace?.stripeConnected && (
+                      <div className='mt-4 bg-gray-50 rounded-md p-3'>
+                        <h3 className='text-sm font-medium mb-2'>Payment Features Enabled</h3>
+                        <ul className='text-xs space-y-1 text-gray-600'>
+                          <li className='flex items-center'>
+                            <div className='h-3 w-3 rounded-full bg-green-500 mr-2'></div>
+                            Invoice payments
+                          </li>
+                          <li className='flex items-center'>
+                            <div className='h-3 w-3 rounded-full bg-green-500 mr-2'></div>
+                            Subscription billing
+                          </li>
+                          <li className='flex items-center'>
+                            <div className='h-3 w-3 rounded-full bg-green-500 mr-2'></div>
+                            Automatic payouts
+                          </li>
+                        </ul>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
