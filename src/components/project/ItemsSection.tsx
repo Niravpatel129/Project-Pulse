@@ -34,6 +34,7 @@ export default function ItemsSection({
     name: '',
     description: '',
     price: '',
+    quantity: '1',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
@@ -47,10 +48,12 @@ export default function ItemsSection({
     name: string;
     description: string;
     price: string;
+    quantity: string;
   }>({
     name: '',
     description: '',
     price: '',
+    quantity: '1',
   });
 
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -149,6 +152,7 @@ export default function ItemsSection({
         name: item.name,
         description: item.description,
         price: item.price.replace('$', ''),
+        quantity: item.quantity || '1',
       };
     });
 
@@ -184,10 +188,11 @@ export default function ItemsSection({
         name: newItem.name.trim(),
         description: newItem.description.trim(),
         price: formattedPrice,
+        quantity: newItem.quantity || '1',
       };
 
       setItems([...items, newItemObj]);
-      setNewItem({ name: '', description: '', price: '' });
+      setNewItem({ name: '', description: '', price: '', quantity: '1' });
       setIsSubmitting(false);
       showNotification('Item added successfully');
     }, 300);
@@ -199,6 +204,7 @@ export default function ItemsSection({
       name: item.name,
       description: item.description,
       price: item.price.replace(/,/g, ''),
+      quantity: item.quantity || '1',
     });
     setCurrentNewItemMode('manual');
   };
@@ -227,12 +233,13 @@ export default function ItemsSection({
               name: newItem.name.trim(),
               description: newItem.description.trim(),
               price: formattedPrice,
+              quantity: newItem.quantity || '1',
             }
           : item;
       });
 
       setItems(updatedItems);
-      setNewItem({ name: '', description: '', price: '' });
+      setNewItem({ name: '', description: '', price: '', quantity: '1' });
       setEditingItem(null);
       setIsSubmitting(false);
       showNotification('Item updated successfully');
@@ -331,6 +338,7 @@ export default function ItemsSection({
       name: item.name,
       description: item.description,
       price: item.price.replace(/,/g, ''),
+      quantity: item.quantity || '1',
     });
   };
 
@@ -357,6 +365,7 @@ export default function ItemsSection({
             name: inlineEditValues.name.trim(),
             description: inlineEditValues.description.trim(),
             price: formattedPrice,
+            quantity: inlineEditValues.quantity || '1',
           }
         : item;
     });
@@ -443,7 +452,7 @@ export default function ItemsSection({
                       }
                       setCurrentNewItemMode('ai');
                       setEditingItem(null);
-                      setNewItem({ name: '', description: '', price: '' });
+                      setNewItem({ name: '', description: '', price: '', quantity: '1' });
                       setTimeout(() => {
                         return aiPromptInputRef.current?.focus();
                       }, 10);
@@ -549,12 +558,29 @@ export default function ItemsSection({
                         />
                       </div>
                     </div>
+                    <div>
+                      <label htmlFor='item-quantity' className='text-xs text-gray-500 mb-1 block'>
+                        Quantity
+                      </label>
+                      <input
+                        type='number'
+                        id='item-quantity'
+                        min='1'
+                        value={newItem.quantity}
+                        onChange={(e) => {
+                          return setNewItem({ ...newItem, quantity: e.target.value });
+                        }}
+                        placeholder='1'
+                        className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm text-[#111827] outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                        aria-label='Item quantity'
+                      />
+                    </div>
                     <div className='flex items-center justify-end pt-2 space-x-3'>
                       <button
                         type='button'
                         onClick={() => {
                           setEditingItem(null);
-                          setNewItem({ name: '', description: '', price: '' });
+                          setNewItem({ name: '', description: '', price: '', quantity: '1' });
                           setCurrentNewItemMode('');
                         }}
                         className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors px-4 py-2 rounded-lg hover:bg-gray-100'
@@ -847,9 +873,14 @@ export default function ItemsSection({
                                         {item.type}
                                       </span>
                                     </div>
-                                    <span className='text-[#111827] text-sm font-medium bg-green-50 px-2 py-0.5 rounded-full flex-shrink-0'>
-                                      ${item.price}
-                                    </span>
+                                    <div className='flex items-center space-x-2'>
+                                      <span className='text-[#111827] text-sm font-medium bg-green-50 px-2 py-0.5 rounded-full flex-shrink-0'>
+                                        ${item.price}
+                                      </span>
+                                      <span className='text-[#111827] text-sm font-medium bg-gray-50 px-2 py-0.5 rounded-full flex-shrink-0'>
+                                        Qty: {item.quantity || '1'}
+                                      </span>
+                                    </div>
                                   </div>
                                   {item.description && (
                                     <p className='text-[#6B7280] text-sm mt-1 leading-relaxed'>
@@ -1018,8 +1049,8 @@ export default function ItemsSection({
                               />
                             </div>
 
-                            <div className='flex items-center'>
-                              <div className='relative flex-1 max-w-[150px]'>
+                            <div className='flex items-center space-x-3'>
+                              <div className='relative flex-1 max-w-[120px]'>
                                 <span className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] font-medium'>
                                   $
                                 </span>
@@ -1036,6 +1067,25 @@ export default function ItemsSection({
                                   }}
                                   className='w-full border border-gray-200 rounded-lg py-1.5 px-3 pl-7 text-sm text-[#111827] outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
                                   placeholder='0.00'
+                                />
+                              </div>
+
+                              <div className='relative flex-1 max-w-[100px]'>
+                                <span className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] font-medium'>
+                                  Qty:
+                                </span>
+                                <input
+                                  type='number'
+                                  min='1'
+                                  value={inlineEditValues.quantity}
+                                  onChange={(e) => {
+                                    return setInlineEditValues({
+                                      ...inlineEditValues,
+                                      quantity: e.target.value,
+                                    });
+                                  }}
+                                  className='w-full border border-gray-200 rounded-lg py-1.5 px-3 pl-9 text-sm text-[#111827] outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                                  placeholder='1'
                                 />
                               </div>
 
@@ -1097,9 +1147,14 @@ export default function ItemsSection({
                     <div className='flex flex-col items-end'>
                       {!isEditing && (
                         <>
-                          <span className='text-[#111827] text-sm font-medium bg-green-50 px-3 py-1 rounded-full'>
-                            ${item.price}
-                          </span>
+                          <div className='flex flex-col items-end space-y-1'>
+                            <span className='text-[#111827] text-sm font-medium bg-green-50 px-3 py-1 rounded-full'>
+                              ${item.price}
+                            </span>
+                            <span className='text-[#111827] text-sm font-medium bg-gray-50 px-3 py-1 rounded-full'>
+                              Qty: {item.quantity || '1'}
+                            </span>
+                          </div>
                           <button
                             onClick={() => {
                               return startInlineEdit(item);
