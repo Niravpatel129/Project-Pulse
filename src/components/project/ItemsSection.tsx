@@ -9,7 +9,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Check, Loader2, Mic, Paperclip, PencilLine, Plus, Sparkles, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import SectionFooter from './SectionFooter';
-import type { AIItem, Attachment, Item, Section } from './types';
+import type { AIItem, Attachment, ExtendedItem, Item, Section } from './types';
 
 type ItemsSectionProps = {
   items: Item[];
@@ -17,6 +17,7 @@ type ItemsSectionProps = {
   showNotification: (message: string, type?: string) => void;
   setActiveSection: React.Dispatch<React.SetStateAction<Section>>;
   handleRemoveItem: (id: string, e?: React.MouseEvent) => void;
+  projectCurrency: string;
 };
 
 export default function ItemsSection({
@@ -25,6 +26,7 @@ export default function ItemsSection({
   showNotification,
   setActiveSection,
   handleRemoveItem,
+  projectCurrency,
 }: ItemsSectionProps) {
   const [currentNewItemMode, setCurrentNewItemMode] = useState('');
   const [aiPrompt, setAiPrompt] = useState('');
@@ -36,9 +38,10 @@ export default function ItemsSection({
     description: '',
     price: '',
     quantity: '1',
+    currency: 'USD',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [editingItem, setEditingItem] = useState<ExtendedItem | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -50,11 +53,13 @@ export default function ItemsSection({
     description: string;
     price: string;
     quantity: string;
+    currency: string;
   }>({
     name: '',
     description: '',
     price: '',
     quantity: '1',
+    currency: 'USD',
   });
 
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -76,8 +81,9 @@ export default function ItemsSection({
             name: 'Red Turtle Hoodie',
             description:
               'Vibrant red turtle-neck style hoodie crafted from premium materials, featuring a cozy front pocket and soft inner lining for warmth. Designed for all-day comfort and style, perfect for casual wear.',
-            price: '$15.00',
+            price: '15.00',
             type: 'PRODUCT',
+            currency: projectCurrency,
             reasoning:
               "Name and color extracted from prompt. Price specified as 'something like $15'. Description generated to include color, type, and standard hoodie features.",
           },
@@ -85,8 +91,9 @@ export default function ItemsSection({
             name: 'Black Regular Shirt',
             description:
               'Classic black t-shirt made from high-quality cotton, offering a comfortable regular fit with reinforced stitching and breathable fabric. Versatile for everyday use and layering.',
-            price: '$12.00',
+            price: '12.00',
             type: 'PRODUCT',
+            currency: projectCurrency,
             reasoning:
               "Name ('black regular shirt') and color taken from prompt. Price estimated based on typical t-shirt prices and services table reference. Description generated to match a standard product of this type.",
           },
@@ -94,8 +101,9 @@ export default function ItemsSection({
             name: 'DTF',
             description:
               'Professional Direct to Film (DTF) printing service, using advanced technology for vibrant, detailed prints on a variety of garments. Ideal for custom apparel with lasting color and durability.',
-            price: '$10.00',
+            price: '10.00',
             type: 'SERVICE',
+            currency: projectCurrency,
             reasoning:
               "Name matched to 'DTF' from services table. Price of $10 derived from services table. Description generated based on DTF printing process.",
           },
@@ -103,8 +111,9 @@ export default function ItemsSection({
             name: 'Screen',
             description:
               'Expert screen printing service delivering sharp, long-lasting designs on apparel. Utilizes high-quality inks and precision techniques for both single and bulk orders.',
-            price: '$14.00',
+            price: '14.00',
             type: 'SERVICE',
+            currency: projectCurrency,
             reasoning:
               "Name matched to 'Screen' from services table. Price of $14 derived from services table. Description generated based on screen printing process and standard features.",
           },
@@ -124,9 +133,11 @@ export default function ItemsSection({
           id: `ai-item-${Date.now()}-${index}`,
           name: item.name,
           description: item.description,
-          price: item.price.replace('$', ''),
+          price: item.price,
+          quantity: '1',
           type: item.type,
           reasoning: item.reasoning,
+          currency: projectCurrency,
         };
       });
 
@@ -152,12 +163,13 @@ export default function ItemsSection({
         id: item.id,
         name: item.name,
         description: item.description,
-        price: item.price.replace('$', ''),
+        price: item.price,
         quantity: item.quantity || '1',
+        currency: projectCurrency, // Use project currency
       };
     });
 
-    setItems([...items, ...formattedItems]);
+    setItems([...items, ...(formattedItems as Item[])]);
     setAiPrompt('');
     setAiGeneratedItems([]);
     setAiResponse(null);
@@ -184,28 +196,30 @@ export default function ItemsSection({
 
     // Simulate a slight delay for better UX
     setTimeout(() => {
-      const newItemObj = {
+      const newItemObj: ExtendedItem = {
         id: `item${Date.now()}`,
         name: newItem.name.trim(),
         description: newItem.description.trim(),
         price: formattedPrice,
         quantity: newItem.quantity || '1',
+        currency: projectCurrency,
       };
 
-      setItems([...items, newItemObj]);
-      setNewItem({ name: '', description: '', price: '', quantity: '1' });
+      setItems([...items, newItemObj as Item]);
+      setNewItem({ name: '', description: '', price: '', quantity: '1', currency: 'USD' });
       setIsSubmitting(false);
       showNotification('Item added successfully');
     }, 300);
   };
 
-  const handleEditItem = (item: Item) => {
+  const handleEditItem = (item: ExtendedItem) => {
     setEditingItem(item);
     setNewItem({
       name: item.name,
       description: item.description,
       price: item.price.replace(/,/g, ''),
       quantity: item.quantity || '1',
+      currency: item.currency || 'USD',
     });
     setCurrentNewItemMode('manual');
   };
@@ -235,12 +249,13 @@ export default function ItemsSection({
               description: newItem.description.trim(),
               price: formattedPrice,
               quantity: newItem.quantity || '1',
+              currency: projectCurrency,
             }
           : item;
       });
 
       setItems(updatedItems);
-      setNewItem({ name: '', description: '', price: '', quantity: '1' });
+      setNewItem({ name: '', description: '', price: '', quantity: '1', currency: 'USD' });
       setEditingItem(null);
       setIsSubmitting(false);
       showNotification('Item updated successfully');
@@ -333,13 +348,14 @@ export default function ItemsSection({
   };
 
   // Function to start inline editing for an item
-  const startInlineEdit = (item: Item) => {
+  const startInlineEdit = (item: ExtendedItem) => {
     setInlineEditingItem(item.id);
     setInlineEditValues({
       name: item.name,
       description: item.description,
       price: item.price.replace(/,/g, ''),
       quantity: item.quantity || '1',
+      currency: item.currency || 'USD',
     });
   };
 
@@ -367,6 +383,7 @@ export default function ItemsSection({
             description: inlineEditValues.description.trim(),
             price: formattedPrice,
             quantity: inlineEditValues.quantity || '1',
+            currency: projectCurrency,
           }
         : item;
     });
@@ -382,6 +399,22 @@ export default function ItemsSection({
   // Function to cancel inline editing
   const cancelInlineEdit = () => {
     setInlineEditingItem(null);
+  };
+
+  // Function to get currency symbol
+  const getCurrencySymbol = (currency: string) => {
+    switch (currency) {
+      case 'USD':
+        return '$';
+      case 'CAD':
+        return 'C$';
+      case 'EUR':
+        return '€';
+      case 'GBP':
+        return '£';
+      default:
+        return currency;
+    }
   };
 
   return (
@@ -453,7 +486,13 @@ export default function ItemsSection({
                       }
                       setCurrentNewItemMode('ai');
                       setEditingItem(null);
-                      setNewItem({ name: '', description: '', price: '', quantity: '1' });
+                      setNewItem({
+                        name: '',
+                        description: '',
+                        price: '',
+                        quantity: '1',
+                        currency: 'USD',
+                      });
                       setTimeout(() => {
                         return aiPromptInputRef.current?.focus();
                       }, 10);
@@ -524,7 +563,7 @@ export default function ItemsSection({
                       >
                         Description (optional)
                       </label>
-                      <textarea
+                      <Textarea
                         id='item-description'
                         value={newItem.description}
                         onChange={(e) => {
@@ -532,7 +571,7 @@ export default function ItemsSection({
                         }}
                         onKeyDown={handleDescriptionKeyDown}
                         placeholder='Add a description'
-                        className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm text-[#6B7280] outline-none resize-none min-h-[80px] placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                        className='min-h-[80px] resize-none'
                         aria-label='Item description'
                       />
                     </div>
@@ -540,10 +579,7 @@ export default function ItemsSection({
                       <label htmlFor='item-price' className='text-xs text-gray-500 mb-1 block'>
                         Price
                       </label>
-                      <div className='relative'>
-                        <span className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] font-medium'>
-                          $
-                        </span>
+                      <div className='flex-1'>
                         <Input
                           type='number'
                           id='item-price'
@@ -554,7 +590,6 @@ export default function ItemsSection({
                             return setNewItem({ ...newItem, price: e.target.value });
                           }}
                           placeholder='0.00'
-                          className='pl-7'
                           aria-label='Item price'
                         />
                       </div>
@@ -580,7 +615,13 @@ export default function ItemsSection({
                         type='button'
                         onClick={() => {
                           setEditingItem(null);
-                          setNewItem({ name: '', description: '', price: '', quantity: '1' });
+                          setNewItem({
+                            name: '',
+                            description: '',
+                            price: '',
+                            quantity: '1',
+                            currency: 'USD',
+                          });
                           setCurrentNewItemMode('');
                         }}
                         className='text-[#6B7280] text-sm hover:text-[#111827] transition-colors px-4 py-2 rounded-lg hover:bg-gray-100'
@@ -679,7 +720,7 @@ export default function ItemsSection({
                             <TooltipTrigger asChild>
                               <label className='p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-200 cursor-pointer flex items-center justify-center'>
                                 <Paperclip size={16} />
-                                <input
+                                <Input
                                   type='file'
                                   multiple
                                   className='hidden'
@@ -875,10 +916,11 @@ export default function ItemsSection({
                                     </div>
                                     <div className='flex items-center space-x-2'>
                                       <span className='text-[#111827] text-sm font-medium bg-green-50 px-2 py-0.5 rounded-full flex-shrink-0'>
-                                        ${item.price}
+                                        {getCurrencySymbol(projectCurrency)}
+                                        {item.price}
                                       </span>
                                       <span className='text-[#111827] text-sm font-medium bg-gray-50 px-2 py-0.5 rounded-full flex-shrink-0'>
-                                        Qty: {item.quantity || '1'}
+                                        {item.quantity || '1'} units
                                       </span>
                                     </div>
                                   </div>
@@ -1036,7 +1078,7 @@ export default function ItemsSection({
                             </div>
 
                             <div>
-                              <textarea
+                              <Textarea
                                 value={inlineEditValues.description}
                                 onChange={(e) => {
                                   return setInlineEditValues({
@@ -1044,19 +1086,22 @@ export default function ItemsSection({
                                     description: e.target.value,
                                   });
                                 }}
-                                className='w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-[#6B7280] outline-none resize-none min-h-[60px] placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                                className='min-h-[60px] resize-none border-gray-200'
                                 placeholder='Add a description'
                               />
                             </div>
 
                             <div className='flex items-center space-x-3'>
-                              <div className='relative flex-1 max-w-[120px]'>
-                                <span className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] font-medium'>
-                                  $
-                                </span>
+                              <div className='flex-1'>
+                                <label
+                                  htmlFor='inline-item-price'
+                                  className='text-xs text-gray-500 mb-1 block'
+                                >
+                                  Price
+                                </label>
                                 <Input
                                   type='number'
-                                  id='item-price'
+                                  id='inline-item-price'
                                   step='0.01'
                                   min='0'
                                   value={inlineEditValues.price}
@@ -1067,15 +1112,11 @@ export default function ItemsSection({
                                     });
                                   }}
                                   placeholder='0.00'
-                                  className='pl-7'
                                   aria-label='Item price'
                                 />
                               </div>
 
-                              <div className='relative flex-1 max-w-[100px]'>
-                                <span className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] font-medium'>
-                                  Qty:
-                                </span>
+                              <div className='flex items-center gap-2'>
                                 <Input
                                   type='number'
                                   min='1'
@@ -1086,9 +1127,12 @@ export default function ItemsSection({
                                       quantity: e.target.value,
                                     });
                                   }}
-                                  className='pl-9'
+                                  className='w-[70px]'
                                   placeholder='1'
                                 />
+                                <span className='text-xs text-gray-500 whitespace-nowrap'>
+                                  units
+                                </span>
                               </div>
 
                               <div className='flex space-x-2 ml-3'>
@@ -1125,7 +1169,7 @@ export default function ItemsSection({
                           <div
                             className='cursor-pointer group/item'
                             onClick={() => {
-                              return startInlineEdit(item);
+                              return startInlineEdit(item as ExtendedItem);
                             }}
                           >
                             <div className='flex flex-col'>
@@ -1151,15 +1195,16 @@ export default function ItemsSection({
                         <>
                           <div className='flex flex-col items-end space-y-1'>
                             <span className='text-[#111827] text-sm font-medium bg-green-50 px-3 py-1 rounded-full'>
-                              ${item.price}
+                              {getCurrencySymbol(projectCurrency)}
+                              {item.price}
                             </span>
                             <span className='text-[#111827] text-sm font-medium bg-gray-50 px-3 py-1 rounded-full'>
-                              Qty: {item.quantity || '1'}
+                              {item.quantity || '1'} units
                             </span>
                           </div>
                           <button
                             onClick={() => {
-                              return startInlineEdit(item);
+                              return startInlineEdit(item as ExtendedItem);
                             }}
                             className='text-blue-600 text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:underline'
                           >

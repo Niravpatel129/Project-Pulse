@@ -1,14 +1,45 @@
 'use client';
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Section } from './types';
 
 type LeftSidebarProps = {
   activeSection: Section;
   setActiveSection: (section: Section) => void;
   total: string;
+  currency: string;
+  onCurrencyChange: (currency: string) => void;
 };
 
-export default function LeftSidebar({ activeSection, setActiveSection, total }: LeftSidebarProps) {
+export default function LeftSidebar({
+  activeSection,
+  setActiveSection,
+  total,
+  currency = 'USD',
+  onCurrencyChange,
+}: LeftSidebarProps) {
+  // Function to get currency symbol
+  const getCurrencySymbol = (currency: string) => {
+    switch (currency) {
+      case 'USD':
+        return '$';
+      case 'CAD':
+        return 'C$';
+      case 'EUR':
+        return '€';
+      case 'GBP':
+        return '£';
+      default:
+        return currency;
+    }
+  };
+
   return (
     <div className='w-[300px] bg-white p-6 border-r border-[#F3F4F6] flex flex-col'>
       <div className='mb-6'>
@@ -150,10 +181,23 @@ export default function LeftSidebar({ activeSection, setActiveSection, total }: 
       <div className='mt-auto pt-6 border-t border-[#E5E7EB]'>
         <div className='flex justify-between items-center mb-3'>
           <span className='text-[#6B7280] text-sm'>Total</span>
-          <span className='text-[#111827] text-base font-medium'>${total}</span>
-        </div>
-        <div className='flex items-center'>
-          <span className='text-[#6B7280] text-xs'>project.example.com/acme-corp</span>
+          <div className='flex items-center gap-1'>
+            <span className='text-[#111827] text-base font-medium'>
+              {getCurrencySymbol(currency)}
+              {total}
+            </span>
+            <Select value={currency} onValueChange={onCurrencyChange}>
+              <SelectTrigger className='w-[70px] h-7 text-xs border-none shadow-none px-1 focus:ring-0'>
+                <SelectValue placeholder='USD' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='USD'>USD</SelectItem>
+                <SelectItem value='CAD'>CAD</SelectItem>
+                <SelectItem value='EUR'>EUR</SelectItem>
+                <SelectItem value='GBP'>GBP</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
     </div>

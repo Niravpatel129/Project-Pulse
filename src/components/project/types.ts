@@ -4,7 +4,10 @@ export type Item = {
   description: string;
   price: string;
   quantity?: string;
+  currency?: string;
 };
+
+export type ExtendedItem = Item;
 
 export type Client = {
   id: string;
@@ -15,6 +18,7 @@ export type Client = {
 export type AIItem = Item & {
   type: string;
   reasoning: string;
+  currency?: string;
 };
 
 export type Attachment = {

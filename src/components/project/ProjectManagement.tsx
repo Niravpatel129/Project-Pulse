@@ -23,6 +23,7 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
     type: 'success',
   });
   const [items, setItems] = useState<Item[]>([]);
+  const [projectCurrency, setProjectCurrency] = useState('USD');
   const [clients, setClients] = useState<Client[]>([
     { id: 'client1', name: 'Acme Corporation', email: 'contact@acmecorp.com' },
     { id: 'client2', name: 'Globex Industries', email: 'info@globex.com' },
@@ -33,6 +34,23 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
   );
 
   const undoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Handle currency change
+  const handleCurrencyChange = (newCurrency: string) => {
+    setProjectCurrency(newCurrency);
+
+    // Update all items to use the new currency
+    if (items.length > 0) {
+      const updatedItems = items.map((item) => {
+        return {
+          ...item,
+          currency: newCurrency,
+        };
+      });
+      setItems(updatedItems);
+      showNotification(`Currency changed to ${newCurrency}`);
+    }
+  };
 
   // Calculate total
   const total = items
@@ -119,6 +137,8 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
         activeSection={activeSection}
         setActiveSection={setActiveSection}
         total={total}
+        currency={projectCurrency}
+        onCurrencyChange={handleCurrencyChange}
       />
 
       {/* Main Content */}
@@ -130,6 +150,7 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
             showNotification={showNotification}
             setActiveSection={setActiveSection}
             handleRemoveItem={handleRemoveItem}
+            projectCurrency={projectCurrency}
           />
         )}
 
