@@ -26,7 +26,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, Loader2, Mic, Paperclip, PencilLine, Plus, Sparkles, X } from 'lucide-react';
+import {
+  Check,
+  Hash,
+  Loader2,
+  Mic,
+  Paperclip,
+  PencilLine,
+  Plus,
+  Scissors,
+  Sparkles,
+  X,
+} from 'lucide-react';
 import { useRef, useState } from 'react';
 import SectionFooter from './SectionFooter';
 import type { AIItem, Attachment, ExtendedItem, Item, Section } from './types';
@@ -1464,50 +1475,13 @@ export default function ItemsSection({
                               <div className='mt-2 flex flex-wrap items-center gap-2'>
                                 {item.taxable && item.taxRate > 0 && (
                                   <div className='text-xs text-blue-600 bg-blue-50 rounded-full py-0.5 px-2 flex items-center'>
-                                    <svg
-                                      width='10'
-                                      height='10'
-                                      viewBox='0 0 24 24'
-                                      fill='none'
-                                      xmlns='http://www.w3.org/2000/svg'
-                                      className='mr-1'
-                                    >
-                                      <path
-                                        d='M19.25 19.25L4.75 4.75'
-                                        stroke='currentColor'
-                                        strokeWidth='1.5'
-                                        strokeLinecap='round'
-                                        strokeLinejoin='round'
-                                      />
-                                      <path
-                                        d='M19.25 4.75L4.75 19.25'
-                                        stroke='currentColor'
-                                        strokeWidth='1.5'
-                                        strokeLinecap='round'
-                                        strokeLinejoin='round'
-                                      />
-                                    </svg>
+                                    <Hash size={10} className='mr-1' />
                                     {item.taxName || 'Tax'}: {item.taxRate}%
                                   </div>
                                 )}
                                 {item.discount > 0 && (
                                   <div className='text-xs text-green-600 bg-green-50 rounded-full py-0.5 px-2 flex items-center'>
-                                    <svg
-                                      width='10'
-                                      height='10'
-                                      viewBox='0 0 24 24'
-                                      fill='none'
-                                      xmlns='http://www.w3.org/2000/svg'
-                                      className='mr-1'
-                                    >
-                                      <path
-                                        d='M19.25 12L4.75 12'
-                                        stroke='currentColor'
-                                        strokeWidth='1.5'
-                                        strokeLinecap='round'
-                                        strokeLinejoin='round'
-                                      />
-                                    </svg>
+                                    <Scissors size={10} className='mr-1' />
                                     Discount: {item.discount}%
                                   </div>
                                 )}
