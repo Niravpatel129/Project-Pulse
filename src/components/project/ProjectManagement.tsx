@@ -14,16 +14,12 @@ type ProjectManagementProps = {
 
 export default function ProjectManagement({ onClose }: ProjectManagementProps) {
   const [activeSection, setActiveSection] = useState<Section>('items');
-  const [selectedClient, setSelectedClient] = useState('client1');
+  const [selectedClient, setSelectedClient] = useState('');
   const [deletedItem, setDeletedItem] = useState<Item | null>(null);
   const [showUndoNotification, setShowUndoNotification] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
   const [projectCurrency, setProjectCurrency] = useState('USD');
-  const [clients, setClients] = useState<Client[]>([
-    { id: 'client1', name: 'Acme Corporation', email: 'contact@acmecorp.com' },
-    { id: 'client2', name: 'Globex Industries', email: 'info@globex.com' },
-    { id: 'client3', name: 'Stark Enterprises', email: 'tony@stark.com' },
-  ]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [notes, setNotes] = useState(
     'Project deadline is end of Q2. Client prefers minimalist design approach.',
   );
