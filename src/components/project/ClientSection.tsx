@@ -56,7 +56,24 @@ export default function ClientSection({
       country: '',
       postalCode: '',
     },
+    shippingAddress: {
+      street: '',
+      city: '',
+      state: '',
+      country: '',
+      postalCode: '',
+    },
+    contact: {
+      firstName: '',
+      lastName: '',
+    },
     taxId: '',
+    accountNumber: '',
+    fax: '',
+    mobile: '',
+    tollFree: '',
+    website: '',
+    internalNotes: '',
     customFields: {},
   });
   const [isEditingClient, setIsEditingClient] = useState(false);
@@ -87,7 +104,24 @@ export default function ClientSection({
         country: '',
         postalCode: '',
       },
+      shippingAddress: {
+        street: '',
+        city: '',
+        state: '',
+        country: '',
+        postalCode: '',
+      },
+      contact: {
+        firstName: '',
+        lastName: '',
+      },
       taxId: '',
+      accountNumber: '',
+      fax: '',
+      mobile: '',
+      tollFree: '',
+      website: '',
+      internalNotes: '',
       customFields: {},
     });
     setActiveTab('contact');
@@ -110,7 +144,15 @@ export default function ClientSection({
       email: newClient.email,
       phone: newClient.phone,
       address: newClient.address,
+      shippingAddress: newClient.shippingAddress,
+      contact: newClient.contact,
       taxId: newClient.taxId,
+      accountNumber: newClient.accountNumber,
+      fax: newClient.fax,
+      mobile: newClient.mobile,
+      tollFree: newClient.tollFree,
+      website: newClient.website,
+      internalNotes: newClient.internalNotes,
       customFields: newClient.customFields,
     };
 
@@ -129,7 +171,15 @@ export default function ClientSection({
       email: client.email,
       phone: client.phone,
       address: client.address,
+      shippingAddress: client.shippingAddress,
+      contact: client.contact,
       taxId: client.taxId,
+      accountNumber: client.accountNumber,
+      fax: client.fax,
+      mobile: client.mobile,
+      tollFree: client.tollFree,
+      website: client.website,
+      internalNotes: client.internalNotes,
       customFields: client.customFields,
     });
     setEditClientId(client.id);
@@ -149,7 +199,15 @@ export default function ClientSection({
           email: newClient.email,
           phone: newClient.phone,
           address: newClient.address,
+          shippingAddress: newClient.shippingAddress,
+          contact: newClient.contact,
           taxId: newClient.taxId,
+          accountNumber: newClient.accountNumber,
+          fax: newClient.fax,
+          mobile: newClient.mobile,
+          tollFree: newClient.tollFree,
+          website: newClient.website,
+          internalNotes: newClient.internalNotes,
           customFields: newClient.customFields,
         };
       }
@@ -585,8 +643,26 @@ export default function ClientSection({
                               Contact
                             </Label>
                             <div className='grid grid-cols-2 gap-2'>
-                              <Input placeholder='First name' className='italic' />
-                              <Input placeholder='Last name' className='italic' />
+                              <Input
+                                placeholder='First name'
+                                value={newClient.contact?.firstName || ''}
+                                onChange={(e) => {
+                                  return setNewClient({
+                                    ...newClient,
+                                    contact: { ...newClient.contact, firstName: e.target.value },
+                                  });
+                                }}
+                              />
+                              <Input
+                                placeholder='Last name'
+                                value={newClient.contact?.lastName || ''}
+                                onChange={(e) => {
+                                  return setNewClient({
+                                    ...newClient,
+                                    contact: { ...newClient.contact, lastName: e.target.value },
+                                  });
+                                }}
+                              />
                             </div>
                           </div>
                         </div>
@@ -601,15 +677,69 @@ export default function ClientSection({
                           Billing address
                         </Label>
                         <div className='space-y-2'>
-                          <Input placeholder='Address line 1' className='italic' />
-                          <Input placeholder='Address line 2' className='italic' />
+                          <Input
+                            placeholder='Address line 1'
+                            value={newClient.address?.street || ''}
+                            onChange={(e) => {
+                              return setNewClient({
+                                ...newClient,
+                                address: { ...newClient.address, street: e.target.value },
+                              });
+                            }}
+                          />
+                          <Input
+                            placeholder='Address line 2'
+                            value={newClient.address?.street2 || ''}
+                            onChange={(e) => {
+                              return setNewClient({
+                                ...newClient,
+                                address: { ...newClient.address, street2: e.target.value },
+                              });
+                            }}
+                          />
                           <div className='grid grid-cols-2 gap-2'>
-                            <Input placeholder='City' className='italic' />
-                            <Input placeholder='Postal/ZIP code' className='italic' />
+                            <Input
+                              placeholder='City'
+                              value={newClient.address?.city || ''}
+                              onChange={(e) => {
+                                return setNewClient({
+                                  ...newClient,
+                                  address: { ...newClient.address, city: e.target.value },
+                                });
+                              }}
+                            />
+                            <Input
+                              placeholder='Postal/ZIP code'
+                              value={newClient.address?.postalCode || ''}
+                              onChange={(e) => {
+                                return setNewClient({
+                                  ...newClient,
+                                  address: { ...newClient.address, postalCode: e.target.value },
+                                });
+                              }}
+                            />
                           </div>
                           <div className='grid grid-cols-2 gap-2'>
-                            <Input placeholder='Country' className='italic' />
-                            <Input placeholder='Province/State' className='italic' />
+                            <Input
+                              placeholder='Country'
+                              value={newClient.address?.country || ''}
+                              onChange={(e) => {
+                                return setNewClient({
+                                  ...newClient,
+                                  address: { ...newClient.address, country: e.target.value },
+                                });
+                              }}
+                            />
+                            <Input
+                              placeholder='Province/State'
+                              value={newClient.address?.state || ''}
+                              onChange={(e) => {
+                                return setNewClient({
+                                  ...newClient,
+                                  address: { ...newClient.address, state: e.target.value },
+                                });
+                              }}
+                            />
                           </div>
                         </div>
                       </div>
@@ -638,15 +768,87 @@ export default function ClientSection({
                         </div>
                         {!shippingSameAsBilling && (
                           <div className='space-y-2'>
-                            <Input placeholder='Address line 1' className='italic' />
-                            <Input placeholder='Address line 2' className='italic' />
+                            <Input
+                              placeholder='Address line 1'
+                              value={newClient.shippingAddress?.street || ''}
+                              onChange={(e) => {
+                                return setNewClient({
+                                  ...newClient,
+                                  shippingAddress: {
+                                    ...newClient.shippingAddress,
+                                    street: e.target.value,
+                                  },
+                                });
+                              }}
+                            />
+                            <Input
+                              placeholder='Address line 2'
+                              value={newClient.shippingAddress?.street2 || ''}
+                              onChange={(e) => {
+                                return setNewClient({
+                                  ...newClient,
+                                  shippingAddress: {
+                                    ...newClient.shippingAddress,
+                                    street2: e.target.value,
+                                  },
+                                });
+                              }}
+                            />
                             <div className='grid grid-cols-2 gap-2'>
-                              <Input placeholder='City' className='italic' />
-                              <Input placeholder='Postal/ZIP code' className='italic' />
+                              <Input
+                                placeholder='City'
+                                value={newClient.shippingAddress?.city || ''}
+                                onChange={(e) => {
+                                  return setNewClient({
+                                    ...newClient,
+                                    shippingAddress: {
+                                      ...newClient.shippingAddress,
+                                      city: e.target.value,
+                                    },
+                                  });
+                                }}
+                              />
+                              <Input
+                                placeholder='Postal/ZIP code'
+                                value={newClient.shippingAddress?.postalCode || ''}
+                                onChange={(e) => {
+                                  return setNewClient({
+                                    ...newClient,
+                                    shippingAddress: {
+                                      ...newClient.shippingAddress,
+                                      postalCode: e.target.value,
+                                    },
+                                  });
+                                }}
+                              />
                             </div>
                             <div className='grid grid-cols-2 gap-2'>
-                              <Input placeholder='Country' className='italic' />
-                              <Input placeholder='Province/State' className='italic' />
+                              <Input
+                                placeholder='Country'
+                                value={newClient.shippingAddress?.country || ''}
+                                onChange={(e) => {
+                                  return setNewClient({
+                                    ...newClient,
+                                    shippingAddress: {
+                                      ...newClient.shippingAddress,
+                                      country: e.target.value,
+                                    },
+                                  });
+                                }}
+                              />
+                              <Input
+                                placeholder='Province/State'
+                                value={newClient.shippingAddress?.state || ''}
+                                onChange={(e) => {
+                                  return setNewClient({
+                                    ...newClient,
+                                    shippingAddress: {
+                                      ...newClient.shippingAddress,
+                                      state: e.target.value,
+                                    },
+                                  });
+                                }}
+                              />
                             </div>
                           </div>
                         )}
@@ -662,31 +864,71 @@ export default function ClientSection({
                             <Label className='block mb-1 text-sm font-medium text-gray-700'>
                               Account number
                             </Label>
-                            <Input className='w-full' />
+                            <Input
+                              value={newClient.accountNumber || ''}
+                              onChange={(e) => {
+                                return setNewClient({
+                                  ...newClient,
+                                  accountNumber: e.target.value,
+                                });
+                              }}
+                            />
                           </div>
                           <div>
                             <Label className='block mb-1 text-sm font-medium text-gray-700'>
                               Fax
                             </Label>
-                            <Input className='w-full' />
+                            <Input
+                              value={newClient.fax || ''}
+                              onChange={(e) => {
+                                return setNewClient({
+                                  ...newClient,
+                                  fax: e.target.value,
+                                });
+                              }}
+                            />
                           </div>
                           <div>
                             <Label className='block mb-1 text-sm font-medium text-gray-700'>
                               Mobile
                             </Label>
-                            <Input className='w-full' />
+                            <Input
+                              value={newClient.mobile || ''}
+                              onChange={(e) => {
+                                return setNewClient({
+                                  ...newClient,
+                                  mobile: e.target.value,
+                                });
+                              }}
+                            />
                           </div>
                           <div>
                             <Label className='block mb-1 text-sm font-medium text-gray-700'>
                               Toll-free
                             </Label>
-                            <Input className='w-full' />
+                            <Input
+                              value={newClient.tollFree || ''}
+                              onChange={(e) => {
+                                return setNewClient({
+                                  ...newClient,
+                                  tollFree: e.target.value,
+                                });
+                              }}
+                            />
                           </div>
                           <div className='col-span-2'>
                             <Label className='block mb-1 text-sm font-medium text-gray-700'>
                               Website
                             </Label>
-                            <Input className='w-full' />
+                            <Input
+                              value={newClient.website || ''}
+                              onChange={(e) => {
+                                return setNewClient({
+                                  ...newClient,
+                                  website: e.target.value,
+                                });
+                              }}
+                            />
                           </div>
                         </div>
                         <div className='mt-5'>
@@ -694,6 +936,13 @@ export default function ClientSection({
                             Internal notes
                           </Label>
                           <textarea
+                            value={newClient.internalNotes || ''}
+                            onChange={(e) => {
+                              return setNewClient({
+                                ...newClient,
+                                internalNotes: e.target.value,
+                              });
+                            }}
                             placeholder='Notes entered here will not be visible to your customer'
                             className='italic w-full rounded-lg border border-gray-200 px-3 py-2 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 text-sm resize-y bg-gray-50'
                           />

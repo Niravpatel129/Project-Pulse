@@ -19,13 +19,32 @@ export type Client = {
   email: string;
   address?: {
     street?: string;
+    street2?: string;
     city?: string;
     state?: string;
     country?: string;
     postalCode?: string;
   };
+  shippingAddress?: {
+    street?: string;
+    street2?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    postalCode?: string;
+  };
+  contact?: {
+    firstName?: string;
+    lastName?: string;
+  };
   phone?: string;
   taxId?: string;
+  accountNumber?: string;
+  fax?: string;
+  mobile?: string;
+  tollFree?: string;
+  website?: string;
+  internalNotes?: string;
   customFields?: Record<string, string>;
 };
 
