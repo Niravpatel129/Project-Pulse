@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertCircle } from 'lucide-react';
+import { useState } from 'react';
 import { Section } from './types';
 
 type LeftSidebarProps = {
@@ -32,6 +33,15 @@ export default function LeftSidebar({
   totalDiscount = '0.00',
   clientSelected = false,
 }: LeftSidebarProps) {
+  const [hasAttemptedToLeave, setHasAttemptedToLeave] = useState(false);
+
+  const handleSectionChange = (section: Section) => {
+    if (activeSection === 'client' && !clientSelected) {
+      setHasAttemptedToLeave(true);
+    }
+    setActiveSection(section);
+  };
+
   // Function to get currency symbol
   const getCurrencySymbol = (currency: string) => {
     switch (currency) {
@@ -80,7 +90,7 @@ export default function LeftSidebar({
             activeSection === 'items' ? 'bg-[#F9FAFB]' : ''
           } hover:bg-[#F9FAFB] transition-colors`}
           onClick={() => {
-            return setActiveSection('items');
+            return handleSectionChange('items');
           }}
         >
           <div
@@ -123,7 +133,7 @@ export default function LeftSidebar({
               activeSection === 'client' ? 'bg-[#F9FAFB]' : ''
             } hover:bg-[#F9FAFB] transition-colors`}
             onClick={() => {
-              return setActiveSection('client');
+              return handleSectionChange('client');
             }}
           >
             <div
@@ -159,16 +169,36 @@ export default function LeftSidebar({
               Client
             </span>
 
-            {!clientSelected && (
+            {!clientSelected && hasAttemptedToLeave && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className='absolute right-2 top-1/2 transform -translate-y-1/2'>
-                      <AlertCircle className='h-4 w-4 text-amber-500' />
+                      <AlertCircle className='h-4 w-4 text-amber-500 animate-pulse' />
                     </div>
                   </TooltipTrigger>
-                  <TooltipContent side='right'>
-                    <p className='text-xs'>Client selection required</p>
+                  <TooltipContent
+                    side='right'
+                    className='bg-white text-gray-900 border border-amber-200 shadow-md rounded-md p-3 max-w-[250px]'
+                  >
+                    <div className='space-y-2'>
+                      <div className='flex items-start gap-2'>
+                        <AlertCircle className='h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0' />
+                        <div>
+                          <p className='text-sm font-medium text-gray-900 mb-1'>Client Required</p>
+                          <p className='text-xs text-gray-600'>
+                            You need to select or create a client before proceeding to the next
+                            section. This information is required for generating invoices.
+                          </p>
+                        </div>
+                      </div>
+                      <div className='pt-2 border-t border-amber-100'>
+                        <p className='text-xs text-amber-600'>
+                          Click the &quot;Add Client&quot; button or select an existing client to
+                          continue.
+                        </p>
+                      </div>
+                    </div>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -181,7 +211,7 @@ export default function LeftSidebar({
             activeSection === 'comments' ? 'bg-[#F9FAFB]' : ''
           } hover:bg-[#F9FAFB] transition-colors`}
           onClick={() => {
-            return setActiveSection('comments');
+            return handleSectionChange('comments');
           }}
         >
           <div
@@ -223,7 +253,7 @@ export default function LeftSidebar({
             activeSection === 'invoice' ? 'bg-[#F9FAFB]' : ''
           } hover:bg-[#F9FAFB] transition-colors`}
           onClick={() => {
-            return setActiveSection('invoice');
+            return handleSectionChange('invoice');
           }}
         >
           <div
