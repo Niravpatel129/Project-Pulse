@@ -67,6 +67,7 @@ export default function ClientSection({
   const [shippingSameAsBilling, setShippingSameAsBilling] = useState(true);
   const tabContentRef = useRef<HTMLDivElement>(null);
   const [tabContentHeight, setTabContentHeight] = useState<number | undefined>(undefined);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   useLayoutEffect(() => {
     if (tabContentRef.current) {
@@ -211,6 +212,21 @@ export default function ClientSection({
         return a.id !== attachment.id;
       }),
     );
+  };
+
+  const validateEmail = (email: string) => {
+    if (!email) return true; // Empty email is valid since it's optional
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleEmailBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const email = e.target.value;
+    if (!validateEmail(email)) {
+      setEmailError('Please enter a valid email address');
+    } else {
+      setEmailError(null);
+    }
   };
 
   return (
@@ -515,15 +531,22 @@ export default function ClientSection({
                                         return f !== 'email';
                                       }),
                                     );
+                                    if (emailError) setEmailError(null);
                                   }}
+                                  onBlur={handleEmailBlur}
                                   placeholder=''
-                                  className={
-                                    aiGeneratedFields.includes('email') ? 'pl-8 w-full' : 'w-full'
-                                  }
+                                  className={`${
+                                    aiGeneratedFields.includes('email') ? 'pl-8 ' : ''
+                                  }w-full ${emailError ? 'border-red-500 focus:ring-red-200' : ''}`}
                                 />
                                 {aiGeneratedFields.includes('email') && (
                                   <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
                                 )}
+                                <div className='h-5 mt-1'>
+                                  {emailError && (
+                                    <p className='text-sm text-red-500'>{emailError}</p>
+                                  )}
+                                </div>
                               </div>
                             </div>
                             <div>
