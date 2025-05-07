@@ -379,7 +379,22 @@ export default function ClientSection({
                           <div className='flex justify-between items-start'>
                             <div>
                               <h3 className='font-medium text-gray-900'>{client.name}</h3>
-                              <p className='text-sm text-gray-500'>{client.email}</p>
+                              {client.email ? (
+                                <p className='text-sm text-gray-500'>{client.email}</p>
+                              ) : (
+                                <Button
+                                  variant='ghost'
+                                  size='sm'
+                                  className='text-sm text-blue-600 hover:text-blue-700 p-0 h-auto'
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditClient(client);
+                                    setActiveTab('contact');
+                                  }}
+                                >
+                                  + Add Email
+                                </Button>
+                              )}
                               {client.phone && (
                                 <p className='text-sm text-gray-500 mt-1'>{client.phone}</p>
                               )}
