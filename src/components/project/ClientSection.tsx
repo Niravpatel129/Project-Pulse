@@ -1001,7 +1001,7 @@ export default function ClientSection({
       {/* Footer */}
       <SectionFooter
         onContinue={() => {
-          return setActiveSection('comments');
+          return setActiveSection('invoice');
         }}
         currentSection={2}
         totalSections={4}

@@ -227,9 +227,6 @@ export default function InvoiceSection({
 
     try {
       // Simulate API call delay
-      await new Promise((resolve) => {
-        return setTimeout(resolve, 1500);
-      });
 
       // In a real app, this would make an API request to generate the invoice
       console.log('Invoice Details:', {
@@ -241,8 +238,8 @@ export default function InvoiceSection({
         dueDate,
       });
 
-      setIsGeneratingInvoice(false);
-      onClose();
+      // setIsGeneratingInvoice(false);
+      // onClose();
     } catch (error) {
       console.error('Error generating invoice:', error);
       setIsGeneratingInvoice(false);

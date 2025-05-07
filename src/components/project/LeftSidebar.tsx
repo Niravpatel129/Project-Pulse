@@ -39,7 +39,6 @@ export default function LeftSidebar({
 }: LeftSidebarProps) {
   const [hasAttemptedToLeave, setHasAttemptedToLeave] = useState(false);
   const [visitedSections, setVisitedSections] = useState<Set<Section>>(new Set(['items']));
-  console.log('🚀 items:', items);
 
   // Update visited sections when activeSection changes
   useEffect(() => {
