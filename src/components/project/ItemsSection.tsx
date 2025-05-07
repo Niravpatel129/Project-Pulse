@@ -1023,37 +1023,43 @@ export default function ItemsSection({
 
           {/* Item Cards */}
           <div className='space-y-3'>
-            <div className='flex items-center mb-4'>
-              <h3 className='text-lg font-semibold text-[#111827]'>
-                {items.length > 0 ? (
-                  <>
-                    Your Items{' '}
-                    <span className='ml-2 text-sm font-normal text-gray-500'>({items.length})</span>
-                  </>
-                ) : (
-                  ''
-                )}
-              </h3>
-              {items.length > 0 && (
-                <div className='ml-auto flex space-x-2'>
-                  <Button
-                    onClick={() => {
-                      if (currentNewItemMode === 'manual') {
-                        return setCurrentNewItemMode('');
-                      }
-                      setCurrentNewItemMode('manual');
-                      setAiGeneratedItems([]);
-                      setAiResponse(null);
-                    }}
-                    className='bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs py-1 px-3 rounded-full h-auto transition-colors duration-200'
-                    variant='ghost'
-                  >
-                    <Plus size={14} className='mr-1' />
-                    Add more
-                  </Button>
+            {items.length > 0 && (
+              <>
+                <div className='flex items-center mb-4'>
+                  <h3 className='text-lg font-semibold text-[#111827]'>
+                    {items.length > 0 ? (
+                      <>
+                        Your Items{' '}
+                        <span className='ml-2 text-sm font-normal text-gray-500'>
+                          ({items.length})
+                        </span>
+                      </>
+                    ) : (
+                      ''
+                    )}
+                  </h3>
+                  {items.length > 0 && (
+                    <div className='ml-auto flex space-x-2'>
+                      <Button
+                        onClick={() => {
+                          if (currentNewItemMode === 'manual') {
+                            return setCurrentNewItemMode('');
+                          }
+                          setCurrentNewItemMode('manual');
+                          setAiGeneratedItems([]);
+                          setAiResponse(null);
+                        }}
+                        className='bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs py-1 px-3 rounded-full h-auto transition-colors duration-200'
+                        variant='ghost'
+                      >
+                        <Plus size={14} className='mr-1' />
+                        Add more
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </>
+            )}
 
             {items.length === 0 ? (
               <div className='bg-white rounded-xl border border-gray-200 p-6'>
@@ -1572,7 +1578,6 @@ export default function ItemsSection({
       <SectionFooter
         onContinue={() => {
           setActiveSection('client');
-          showNotification('Moved to Client section');
         }}
         currentSection={1}
         totalSections={4}

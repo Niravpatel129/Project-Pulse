@@ -33,9 +33,8 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
     taxId: workspaceTaxSettings.taxId, // Initialize from workspace settings
     allowDiscount: true,
     defaultDiscountRate: 0,
-    paymentTerms: 'Payment due within 30 days',
-    invoiceNotes: 'Thank you for your business!',
-    teamNotes: 'Project deadline is end of Q2. Client prefers minimalist design approach.',
+    invoiceNotes: '',
+    teamNotes: '',
   });
 
   const [dueDate, setDueDate] = useState<Date | null>(
