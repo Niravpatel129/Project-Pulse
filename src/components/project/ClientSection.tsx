@@ -98,7 +98,7 @@ export default function ClientSection({
   };
 
   const handleCreateClient = () => {
-    if (!newClient.name || !newClient.email) {
+    if (!newClient.name) {
       return;
     }
 
@@ -136,7 +136,7 @@ export default function ClientSection({
   };
 
   const handleUpdateClient = () => {
-    if (!newClient.name || !newClient.email || !editClientId) {
+    if (!newClient.name || !editClientId) {
       return;
     }
 
@@ -447,9 +447,9 @@ export default function ClientSection({
                 <div ref={tabContentRef}>
                   {/* Contact Tab */}
                   {activeTab === 'contact' && (
-                    <TabsContent value='contact' className='space-y-4 block'>
+                    <TabsContent value='contact' className='space-y-6 block'>
                       <div className='p-1'>
-                        <div className='grid grid-cols-2 gap-4'>
+                        <div className='space-y-5'>
                           <div>
                             <Label
                               htmlFor='client-name-modal'
@@ -479,80 +479,77 @@ export default function ClientSection({
                                 <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
                               )}
                             </div>
-                            {/* Error message example */}
-                            {/* <p className='text-xs text-red-600 mt-1'>Enter a value.</p> */}
                           </div>
-                          <div></div>
-                        </div>
-                        <div className='grid grid-cols-2 gap-4'>
-                          <div>
-                            <Label
-                              htmlFor='client-email-modal'
-                              className='block mb-1 text-sm font-medium text-gray-700'
-                            >
-                              Email
-                            </Label>
-                            <div className='relative'>
-                              <Input
-                                id='client-email-modal'
-                                type='email'
-                                value={newClient.email || ''}
-                                onChange={(e) => {
-                                  setNewClient({ ...newClient, email: e.target.value });
-                                  setAiGeneratedFields(
-                                    aiGeneratedFields.filter((f) => {
-                                      return f !== 'email';
-                                    }),
-                                  );
-                                }}
-                                placeholder=''
-                                className={
-                                  aiGeneratedFields.includes('email') ? 'pl-8 w-full' : 'w-full'
-                                }
-                              />
-                              {aiGeneratedFields.includes('email') && (
-                                <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
-                              )}
+                          <div className='grid grid-cols-2 gap-5'>
+                            <div>
+                              <Label
+                                htmlFor='client-email-modal'
+                                className='block mb-1 text-sm font-medium text-gray-700'
+                              >
+                                Email
+                              </Label>
+                              <div className='relative'>
+                                <Input
+                                  id='client-email-modal'
+                                  type='email'
+                                  value={newClient.email || ''}
+                                  onChange={(e) => {
+                                    setNewClient({ ...newClient, email: e.target.value });
+                                    setAiGeneratedFields(
+                                      aiGeneratedFields.filter((f) => {
+                                        return f !== 'email';
+                                      }),
+                                    );
+                                  }}
+                                  placeholder=''
+                                  className={
+                                    aiGeneratedFields.includes('email') ? 'pl-8 w-full' : 'w-full'
+                                  }
+                                />
+                                {aiGeneratedFields.includes('email') && (
+                                  <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
+                                )}
+                              </div>
+                            </div>
+                            <div>
+                              <Label
+                                htmlFor='client-phone-modal'
+                                className='block mb-1 text-sm font-medium text-gray-700'
+                              >
+                                Phone
+                              </Label>
+                              <div className='relative'>
+                                <Input
+                                  id='client-phone-modal'
+                                  type='tel'
+                                  value={newClient.phone || ''}
+                                  onChange={(e) => {
+                                    setNewClient({ ...newClient, phone: e.target.value });
+                                    setAiGeneratedFields(
+                                      aiGeneratedFields.filter((f) => {
+                                        return f !== 'phone';
+                                      }),
+                                    );
+                                  }}
+                                  placeholder=''
+                                  className={
+                                    aiGeneratedFields.includes('phone') ? 'pl-8 w-full' : 'w-full'
+                                  }
+                                />
+                                {aiGeneratedFields.includes('phone') && (
+                                  <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
+                                )}
+                              </div>
                             </div>
                           </div>
                           <div>
-                            <Label
-                              htmlFor='client-phone-modal'
-                              className='block mb-1 text-sm font-medium text-gray-700'
-                            >
-                              Phone
+                            <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                              Contact
                             </Label>
-                            <div className='relative'>
-                              <Input
-                                id='client-phone-modal'
-                                type='tel'
-                                value={newClient.phone || ''}
-                                onChange={(e) => {
-                                  setNewClient({ ...newClient, phone: e.target.value });
-                                  setAiGeneratedFields(
-                                    aiGeneratedFields.filter((f) => {
-                                      return f !== 'phone';
-                                    }),
-                                  );
-                                }}
-                                placeholder=''
-                                className={
-                                  aiGeneratedFields.includes('phone') ? 'pl-8 w-full' : 'w-full'
-                                }
-                              />
-                              {aiGeneratedFields.includes('phone') && (
-                                <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
-                              )}
+                            <div className='grid grid-cols-2 gap-2'>
+                              <Input placeholder='First name' className='italic' />
+                              <Input placeholder='Last name' className='italic' />
                             </div>
-                          </div>
-                        </div>
-                        <div>
-                          <Label className='block mb-1 text-sm font-medium text-gray-700'>
-                            Contact
-                          </Label>
-                          <div className='grid grid-cols-2 gap-2'>
-                            <Input placeholder='First name' className='italic' />
-                            <Input placeholder='Last name' className='italic' />
                           </div>
                         </div>
                       </div>
@@ -684,7 +681,7 @@ export default function ClientSection({
             <Button
               onClick={isEditingClient ? handleUpdateClient : handleCreateClient}
               className='bg-blue-600 hover:bg-blue-700 text-white'
-              disabled={!newClient.name || !newClient.email}
+              disabled={!newClient.name}
             >
               {isEditingClient ? 'Update Client' : 'Add Client'}
             </Button>
