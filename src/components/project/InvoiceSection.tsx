@@ -349,51 +349,6 @@ export default function InvoiceSection({
                         </Popover>
                       </div>
 
-                      {/* Discount Option */}
-                      <div>
-                        <div className='flex items-center justify-between mb-2'>
-                          <div>
-                            <Label
-                              htmlFor='allow-discount'
-                              className='block text-sm font-medium text-[#111827]'
-                            >
-                              Enable Discount
-                            </Label>
-                            <p className='text-xs text-[#6B7280]'>
-                              Apply a discount to this project&apos;s invoices
-                            </p>
-                          </div>
-                          <Switch
-                            id='allow-discount'
-                            checked={invoiceSettings.allowDiscount}
-                            onCheckedChange={(checked) => {
-                              handleInvoiceSettingsChange({
-                                allowDiscount: checked,
-                              });
-                            }}
-                          />
-                        </div>
-
-                        {invoiceSettings.allowDiscount && (
-                          <div className='pl-4 border-l-2 border-gray-200 mt-2'>
-                            <StatefulInput
-                              id='discount-rate'
-                              type='number'
-                              initialValue={invoiceSettings.defaultDiscountRate || 0}
-                              onValueChange={(value) => {
-                                handleInvoiceSettingsChange({
-                                  defaultDiscountRate: value as number,
-                                });
-                              }}
-                              className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
-                              label='Discount Rate (%)'
-                              min='0'
-                              max='100'
-                            />
-                          </div>
-                        )}
-                      </div>
-
                       {/* Deposit Options */}
                       <div>
                         <div className='flex items-center justify-between mb-2'>
