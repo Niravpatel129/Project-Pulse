@@ -1,5 +1,11 @@
 'use client';
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
@@ -179,6 +185,7 @@ export default function InvoiceSection({
   onClose,
 }: InvoiceSectionProps) {
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
+  const [openAccordionItems, setOpenAccordionItems] = useState<string[]>(['client-info']);
 
   // Calculate subtotal
   const subtotal = items.reduce((sum, item) => {
@@ -274,252 +281,6 @@ export default function InvoiceSection({
     }
   };
 
-  // Section components for better organization
-  const ClientInformationCard = () => {
-    return (
-      <div className='border border-[#E5E7EB] rounded-md p-4'>
-        <h3 className='text-sm font-medium text-[#111827] mb-3'>Client Information</h3>
-        <div className='bg-[#F9FAFB] p-3 rounded-md'>
-          <div className='font-medium'>{client.name}</div>
-          <div className='text-sm text-[#6B7280]'>{client.email}</div>
-          {client.phone && <div className='text-sm text-[#6B7280]'>{client.phone}</div>}
-          {client.address && client.address.street && (
-            <div className='text-sm text-[#6B7280] mt-2'>
-              <div>{client.address.street}</div>
-              <div>
-                {client.address.city}
-                {client.address.state && `, ${client.address.state}`} {client.address.postalCode}
-              </div>
-              {client.address.country && <div>{client.address.country}</div>}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const WorkspaceTaxSettingsCard = () => {
-    // Local state for tax settings to prevent re-renders during typing
-    const [localTaxSettings, setLocalTaxSettings] = useState({
-      taxId: workspaceTaxSettings.taxId || '',
-    });
-
-    // Update local state only if props change (not during user input)
-    useEffect(() => {
-      setLocalTaxSettings({
-        taxId: workspaceTaxSettings.taxId || '',
-      });
-    }, [workspaceTaxSettings.taxId]);
-
-    const handleLocalTaxIdChange = (value: string) => {
-      // Only update local state
-      setLocalTaxSettings((prev) => {
-        return {
-          ...prev,
-          taxId: value,
-        };
-      });
-    };
-
-    // Only update parent state on blur
-    const handleTaxSettingsBlur = () => {
-      if (localTaxSettings.taxId !== workspaceTaxSettings.taxId) {
-        handleWorkspaceTaxSettingsChange({
-          ...workspaceTaxSettings,
-          taxId: localTaxSettings.taxId,
-        });
-      }
-    };
-
-    return (
-      <div className='border border-[#E5E7EB] rounded-md p-4'>
-        <h3 className='text-sm font-medium text-[#111827] mb-3'>Workspace Tax Settings</h3>
-
-        <div className='bg-blue-50 border border-blue-100 rounded-md p-3 mb-4'>
-          <p className='text-sm text-blue-800'>
-            <span className='font-medium'>Note:</span> These tax settings apply to all projects in
-            your workspace.
-          </p>
-        </div>
-
-        <div>
-          <Label htmlFor='tax-id' className='block mb-1'>
-            Tax ID / VAT Number
-          </Label>
-          <Input
-            id='tax-id'
-            value={localTaxSettings.taxId}
-            onChange={(e) => {
-              return handleLocalTaxIdChange(e.target.value);
-            }}
-            onBlur={handleTaxSettingsBlur}
-            className='w-full'
-            placeholder='e.g. VAT123456789'
-          />
-        </div>
-      </div>
-    );
-  };
-
-  const ProjectSettingsCard = () => {
-    return (
-      <div className='border border-[#E5E7EB] rounded-md p-4'>
-        <h3 className='text-sm font-medium text-[#111827] mb-3'>Project Invoice Settings</h3>
-
-        <div className='space-y-4'>
-          {/* Payment Terms */}
-          <div>
-            <StatefulInput
-              id='payment-terms'
-              initialValue={invoiceSettings.paymentTerms || ''}
-              onValueChange={(value) => {
-                handleInvoiceSettingsChange({
-                  paymentTerms: value as string,
-                });
-              }}
-              className='w-full'
-              label='Payment Terms'
-              placeholder='e.g. Net 30'
-            />
-          </div>
-
-          {/* Due Date */}
-          <div>
-            <Label htmlFor='due-date' className='block mb-1'>
-              Due Date
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={'outline'}
-                  className={cn(
-                    'w-full justify-start text-left font-normal',
-                    !dueDate && 'text-muted-foreground',
-                  )}
-                >
-                  <CalendarIcon className='mr-2 h-4 w-4' />
-                  {dueDate ? format(dueDate, 'PPP') : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className='w-auto p-0' align='start'>
-                <Calendar
-                  mode='single'
-                  selected={dueDate || undefined}
-                  onSelect={(date) => {
-                    setDueDate(date);
-                  }}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* Discount Option */}
-          <div>
-            <div className='flex items-center justify-between mb-2'>
-              <div>
-                <Label htmlFor='allow-discount' className='block'>
-                  Enable Discount
-                </Label>
-                <p className='text-xs text-[#6B7280]'>
-                  Apply a discount to this project&apos;s invoices
-                </p>
-              </div>
-              <Switch
-                id='allow-discount'
-                checked={invoiceSettings.allowDiscount}
-                onCheckedChange={(checked) => {
-                  handleInvoiceSettingsChange({
-                    allowDiscount: checked,
-                  });
-                }}
-              />
-            </div>
-
-            {invoiceSettings.allowDiscount && (
-              <div className='pl-4 border-l-2 border-gray-200 mt-2'>
-                <StatefulInput
-                  id='discount-rate'
-                  type='number'
-                  initialValue={invoiceSettings.defaultDiscountRate || 0}
-                  onValueChange={(value) => {
-                    handleInvoiceSettingsChange({
-                      defaultDiscountRate: value as number,
-                    });
-                  }}
-                  className='w-full'
-                  label='Discount Rate (%)'
-                  min='0'
-                  max='100'
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Deposit Options */}
-          <div>
-            <div className='flex items-center justify-between mb-2'>
-              <div>
-                <Label htmlFor='require-deposit' className='block'>
-                  Require Deposit
-                </Label>
-                <p className='text-xs text-[#6B7280]'>Allow client to pay a deposit upfront</p>
-              </div>
-              <Switch
-                id='require-deposit'
-                checked={invoiceSettings.requireDeposit}
-                onCheckedChange={(checked) => {
-                  handleInvoiceSettingsChange({
-                    requireDeposit: checked,
-                  });
-                }}
-              />
-            </div>
-
-            {invoiceSettings.requireDeposit && (
-              <div className='pl-4 border-l-2 border-gray-200 mt-2'>
-                <StatefulInput
-                  id='deposit-percentage'
-                  type='number'
-                  initialValue={invoiceSettings.depositPercentage}
-                  onValueChange={(value) => {
-                    handleInvoiceSettingsChange({
-                      depositPercentage: value as number,
-                    });
-                  }}
-                  className='w-full'
-                  label='Deposit Percentage (%)'
-                  min='1'
-                  max='100'
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const InvoiceNotesCard = () => {
-    return (
-      <div className='border border-[#E5E7EB] rounded-md p-4'>
-        <StatefulTextarea
-          id='invoice-notes'
-          initialValue={invoiceSettings.invoiceNotes || ''}
-          onValueChange={(value) => {
-            handleInvoiceSettingsChange({
-              invoiceNotes: value,
-            });
-          }}
-          className='w-full'
-          height='h-20'
-          label='Invoice Notes'
-          placeholder='Add any additional notes to include on the invoice...'
-        />
-      </div>
-    );
-  };
-
   return (
     <div className='flex flex-col h-full relative'>
       <div className='absolute inset-0 pt-6 px-8 pb-16 overflow-y-auto'>
@@ -531,18 +292,208 @@ export default function InvoiceSection({
             Configure invoice details and payment options before generating.
           </p>
 
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-8'>
-            {/* Left Column */}
-            <div className='space-y-6'>
-              <WorkspaceTaxSettingsCard />
-              <ProjectSettingsCard />
-            </div>
+          <Accordion
+            type='multiple'
+            value={openAccordionItems}
+            onValueChange={setOpenAccordionItems}
+            className='w-full space-y-4'
+          >
+            {/* Invoice Settings Section */}
+            <AccordionItem
+              value='invoice-settings'
+              className='border border-[#E5E7EB] rounded-md px-4'
+            >
+              <AccordionTrigger className='text-sm font-medium text-[#111827] py-4'>
+                Invoice Settings
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className='space-y-6'>
+                  {/* Workspace Tax Settings */}
+                  <div>
+                    <div className='bg-blue-50 border border-blue-100 rounded-md p-3 mb-4'>
+                      <p className='text-sm text-blue-800'>
+                        <span className='font-medium'>Note:</span> These tax settings apply to all
+                        projects in your workspace.
+                      </p>
+                    </div>
 
-            {/* Right Column */}
-            <div className='space-y-6'>
-              <InvoiceNotesCard />
-            </div>
-          </div>
+                    <div>
+                      <Label htmlFor='tax-id' className='block mb-1'>
+                        Tax ID / VAT Number
+                      </Label>
+                      <Input
+                        id='tax-id'
+                        value={workspaceTaxSettings.taxId || ''}
+                        onChange={(e) => {
+                          handleWorkspaceTaxSettingsChange({
+                            taxId: e.target.value,
+                          });
+                        }}
+                        className='w-full'
+                        placeholder='e.g. VAT123456789'
+                      />
+                    </div>
+                  </div>
+
+                  {/* Project Settings */}
+                  <div className='space-y-4'>
+                    {/* Payment Terms */}
+                    <div>
+                      <StatefulInput
+                        id='payment-terms'
+                        initialValue={invoiceSettings.paymentTerms || ''}
+                        onValueChange={(value) => {
+                          handleInvoiceSettingsChange({
+                            paymentTerms: value as string,
+                          });
+                        }}
+                        className='w-full'
+                        label='Payment Terms'
+                        placeholder='e.g. Net 30'
+                      />
+                    </div>
+
+                    {/* Due Date */}
+                    <div>
+                      <Label htmlFor='due-date' className='block mb-1'>
+                        Due Date
+                      </Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={'outline'}
+                            className={cn(
+                              'w-full justify-start text-left font-normal',
+                              !dueDate && 'text-muted-foreground',
+                            )}
+                          >
+                            <CalendarIcon className='mr-2 h-4 w-4' />
+                            {dueDate ? format(dueDate, 'PPP') : <span>Pick a date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className='w-auto p-0' align='start'>
+                          <Calendar
+                            mode='single'
+                            selected={dueDate || undefined}
+                            onSelect={(date) => {
+                              setDueDate(date);
+                            }}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    {/* Discount Option */}
+                    <div>
+                      <div className='flex items-center justify-between mb-2'>
+                        <div>
+                          <Label htmlFor='allow-discount' className='block'>
+                            Enable Discount
+                          </Label>
+                          <p className='text-xs text-[#6B7280]'>
+                            Apply a discount to this project&apos;s invoices
+                          </p>
+                        </div>
+                        <Switch
+                          id='allow-discount'
+                          checked={invoiceSettings.allowDiscount}
+                          onCheckedChange={(checked) => {
+                            handleInvoiceSettingsChange({
+                              allowDiscount: checked,
+                            });
+                          }}
+                        />
+                      </div>
+
+                      {invoiceSettings.allowDiscount && (
+                        <div className='pl-4 border-l-2 border-gray-200 mt-2'>
+                          <StatefulInput
+                            id='discount-rate'
+                            type='number'
+                            initialValue={invoiceSettings.defaultDiscountRate || 0}
+                            onValueChange={(value) => {
+                              handleInvoiceSettingsChange({
+                                defaultDiscountRate: value as number,
+                              });
+                            }}
+                            className='w-full'
+                            label='Discount Rate (%)'
+                            min='0'
+                            max='100'
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Deposit Options */}
+                    <div>
+                      <div className='flex items-center justify-between mb-2'>
+                        <div>
+                          <Label htmlFor='require-deposit' className='block'>
+                            Require Deposit
+                          </Label>
+                          <p className='text-xs text-[#6B7280]'>
+                            Allow client to pay a deposit upfront
+                          </p>
+                        </div>
+                        <Switch
+                          id='require-deposit'
+                          checked={invoiceSettings.requireDeposit}
+                          onCheckedChange={(checked) => {
+                            handleInvoiceSettingsChange({
+                              requireDeposit: checked,
+                            });
+                          }}
+                        />
+                      </div>
+
+                      {invoiceSettings.requireDeposit && (
+                        <div className='pl-4 border-l-2 border-gray-200 mt-2'>
+                          <StatefulInput
+                            id='deposit-percentage'
+                            type='number'
+                            initialValue={invoiceSettings.depositPercentage}
+                            onValueChange={(value) => {
+                              handleInvoiceSettingsChange({
+                                depositPercentage: value as number,
+                              });
+                            }}
+                            className='w-full'
+                            label='Deposit Percentage (%)'
+                            min='1'
+                            max='100'
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Notes Section */}
+            <AccordionItem value='notes' className='border border-[#E5E7EB] rounded-md px-4'>
+              <AccordionTrigger className='text-sm font-medium text-[#111827] py-4'>
+                Notes & Additional Information
+              </AccordionTrigger>
+              <AccordionContent>
+                <StatefulTextarea
+                  id='invoice-notes'
+                  initialValue={invoiceSettings.invoiceNotes || ''}
+                  onValueChange={(value) => {
+                    handleInvoiceSettingsChange({
+                      invoiceNotes: value,
+                    });
+                  }}
+                  className='w-full'
+                  height='h-20'
+                  label='Invoice Notes'
+                  placeholder='Add any additional notes to include on the invoice...'
+                />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </div>
 
