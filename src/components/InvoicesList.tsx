@@ -106,7 +106,7 @@ function CreateInvoiceDialog() {
       </DialogTrigger>
       <DialogContent className='max-w-[90vw] h-[90vh] p-0'>
         <DialogTitle className='sr-only'>Create New Invoice</DialogTitle>
-        <ProjectManagement onClose={handleClose} />
+        <ProjectManagement onClose={handleClose} initialStatus='draft' />
       </DialogContent>
     </Dialog>
   );

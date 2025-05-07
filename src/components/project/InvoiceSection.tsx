@@ -187,20 +187,18 @@ export default function InvoiceSection({
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
   const [openAccordionItems, setOpenAccordionItems] = useState<string[]>(['client-info']);
 
-  // Calculate subtotal
+  // Calculate totals
   const subtotal = items.reduce((sum, item) => {
-    return sum + Number.parseFloat(item.price.replace(/,/g, '')) * Number.parseFloat(item.quantity);
+    const quantity = Number.parseFloat(item.quantity);
+    const price = Number.parseFloat(item.price.replace(/,/g, ''));
+    return sum + quantity * price;
   }, 0);
 
-  // Calculate discount if enabled
   const discountAmount = invoiceSettings.allowDiscount
     ? (subtotal * (invoiceSettings.defaultDiscountRate || 0)) / 100
     : 0;
 
-  // Calculate tax
   const taxAmount = ((subtotal - discountAmount) * workspaceTaxSettings.defaultTaxRate) / 100;
-
-  // Calculate total
   const total = subtotal - discountAmount + taxAmount;
 
   // Custom handlers to preserve scroll position
@@ -218,6 +216,63 @@ export default function InvoiceSection({
       ...workspaceTaxSettings,
       ...newSettings,
     });
+  };
+
+  const handleSaveAsDraft = async () => {
+    if (items.length === 0) {
+      toast.error('Please add at least one item to the invoice');
+      return;
+    }
+
+    setIsGeneratingInvoice(true);
+
+    try {
+      // Prepare invoice data
+      const invoiceData = {
+        clientId: client._id,
+        items: items.map((item) => {
+          return {
+            name: item.name,
+            description: item.description,
+            quantity: Number.parseFloat(item.quantity),
+            price: Number.parseFloat(item.price.replace(/,/g, '')),
+            discount: invoiceSettings.allowDiscount ? invoiceSettings.defaultDiscountRate : 0,
+            tax: workspaceTaxSettings.defaultTaxRate,
+          };
+        }),
+        dueDate: dueDate?.toISOString(),
+        taxRate: workspaceTaxSettings.defaultTaxRate,
+        taxId: workspaceTaxSettings.taxId || '',
+        showTaxId: !!workspaceTaxSettings.taxId,
+        notes: invoiceSettings.invoiceNotes || '',
+        teamNotes: invoiceSettings.teamNotes || '',
+        currency: projectCurrency.toUpperCase(),
+        deliveryOptions: 'email',
+        requireDeposit: invoiceSettings.requireDeposit,
+        depositPercentage: invoiceSettings.depositPercentage,
+        discount: invoiceSettings.allowDiscount ? invoiceSettings.defaultDiscountRate : 0,
+        discountAmount: discountAmount,
+        subtotal: subtotal,
+        taxAmount: taxAmount,
+        total: total,
+        status: 'draft',
+      };
+
+      // Make API call to create invoice
+      const response = await newRequest.post('/invoices', invoiceData);
+
+      if (response.data.status === 'success') {
+        toast.success('Invoice saved as draft');
+        onClose();
+      } else {
+        throw new Error(response.data.message || 'Failed to save invoice as draft');
+      }
+    } catch (error: any) {
+      console.error('Error saving invoice as draft:', error);
+      toast.error(error.message || 'Failed to save invoice as draft');
+    } finally {
+      setIsGeneratingInvoice(false);
+    }
   };
 
   const handleGenerateInvoice = async () => {
@@ -257,6 +312,7 @@ export default function InvoiceSection({
         subtotal: subtotal,
         taxAmount: taxAmount,
         total: total,
+        status: 'sent',
       };
 
       // Make API call to create invoice
@@ -478,6 +534,11 @@ export default function InvoiceSection({
         customContinueLabel={isGeneratingInvoice ? 'Generating...' : 'Generate Invoice'}
         onCancel={onClose}
         isLastSection={true}
+        secondaryAction={{
+          label: isGeneratingInvoice ? 'Saving...' : 'Save as Draft',
+          onClick: handleSaveAsDraft,
+          disabled: isGeneratingInvoice,
+        }}
       />
     </div>
   );

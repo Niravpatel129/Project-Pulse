@@ -13,6 +13,11 @@ type SectionFooterProps = {
   isLastSection?: boolean;
   isDisabled?: boolean;
   disabledTooltip?: string;
+  secondaryAction?: {
+    label: string;
+    onClick: () => void;
+    disabled?: boolean;
+  };
 };
 
 export default function SectionFooter({
@@ -24,6 +29,7 @@ export default function SectionFooter({
   isLastSection = false,
   isDisabled = false,
   disabledTooltip = 'Complete required fields to continue',
+  secondaryAction,
 }: SectionFooterProps) {
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
@@ -65,6 +71,15 @@ export default function SectionFooter({
         {onCancel && (
           <Button variant='outline' onClick={onCancel}>
             Cancel
+          </Button>
+        )}
+        {secondaryAction && (
+          <Button
+            variant='outline'
+            onClick={secondaryAction.onClick}
+            disabled={secondaryAction.disabled}
+          >
+            {secondaryAction.label}
           </Button>
         )}
         <TooltipProvider>

@@ -10,9 +10,13 @@ import { InvoiceSettings, Item, Section } from './types';
 
 type ProjectManagementProps = {
   onClose: () => void;
+  initialStatus?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
 };
 
-export default function ProjectManagement({ onClose }: ProjectManagementProps) {
+export default function ProjectManagement({
+  onClose,
+  initialStatus = 'draft',
+}: ProjectManagementProps) {
   const [activeSection, setActiveSection] = useState<Section>('items');
   const [selectedClient, setSelectedClient] = useState('');
   const [items, setItems] = useState<Item[]>([]);
