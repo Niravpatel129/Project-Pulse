@@ -334,8 +334,8 @@ export default function InvoiceSection({
                       </div>
 
                       {/* Deposit Options */}
-                      <div>
-                        <div className='flex items-center justify-between mb-2'>
+                      <div className='space-y-4'>
+                        <div className='flex items-center justify-between'>
                           <div>
                             <Label
                               htmlFor='require-deposit'
@@ -359,7 +359,7 @@ export default function InvoiceSection({
                         </div>
 
                         {invoiceSettings.requireDeposit && (
-                          <div className='pl-4 border-l-2 border-gray-200 mt-2'>
+                          <div className='space-y-3'>
                             <StatefulInput
                               id='deposit-percentage'
                               type='text'
@@ -373,16 +373,18 @@ export default function InvoiceSection({
                                 }
                               }}
                               className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
-                              label='Deposit Percentage (%)'
+                              label='Deposit Percentage'
                               placeholder='0'
                             />
-                            <p className='text-xs text-[#6B7280] mt-1'>
-                              Total deposit:{' '}
-                              {((total * (invoiceSettings.depositPercentage || 0)) / 100).toFixed(
-                                2,
-                              )}{' '}
-                              {projectCurrency}
-                            </p>
+                            <div className='flex items-center justify-between text-sm'>
+                              <span className='text-gray-600'>Total deposit:</span>
+                              <span className='font-medium'>
+                                {((total * (invoiceSettings.depositPercentage || 0)) / 100).toFixed(
+                                  2,
+                                )}{' '}
+                                {projectCurrency}
+                              </span>
+                            </div>
                           </div>
                         )}
                       </div>
