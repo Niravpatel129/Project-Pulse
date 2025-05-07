@@ -399,8 +399,9 @@ export default function ClientSection({
               {isEditingClient ? 'Edit Client' : 'Add New Client'}
             </DialogTitle>
             <p className='text-sm text-gray-500 mt-1'>
-              This information will be used on the invoice. Required fields are marked with an
-              asterisk (*).
+              {isEditingClient
+                ? 'Update your client information below. Required fields are marked with an asterisk (*).'
+                : 'Fill in your client information below. Required fields are marked with an asterisk (*).'}
             </p>
           </DialogHeader>
 
@@ -425,15 +426,21 @@ export default function ClientSection({
                   >
                     Client Name <span className='text-red-500'>*</span>
                   </Label>
-                  <Input
-                    id='client-name-modal'
-                    value={newClient.name}
-                    onChange={(e) => {
-                      return setNewClient({ ...newClient, name: e.target.value });
-                    }}
-                    placeholder='Enter client name'
-                    required
-                  />
+                  <div className='relative'>
+                    <Input
+                      id='client-name-modal'
+                      value={newClient.name}
+                      onChange={(e) => {
+                        return setNewClient({ ...newClient, name: e.target.value });
+                      }}
+                      placeholder='Enter client name'
+                      required
+                      className={!isEditingClient && newClient.name ? 'pl-8' : ''}
+                    />
+                    {!isEditingClient && newClient.name && (
+                      <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
+                    )}
+                  </div>
                 </div>
                 <div>
                   <Label
@@ -442,16 +449,22 @@ export default function ClientSection({
                   >
                     Email <span className='text-red-500'>*</span>
                   </Label>
-                  <Input
-                    id='client-email-modal'
-                    type='email'
-                    value={newClient.email || ''}
-                    onChange={(e) => {
-                      return setNewClient({ ...newClient, email: e.target.value });
-                    }}
-                    placeholder='e.g. contact@acmecorp.com'
-                    required
-                  />
+                  <div className='relative'>
+                    <Input
+                      id='client-email-modal'
+                      type='email'
+                      value={newClient.email || ''}
+                      onChange={(e) => {
+                        return setNewClient({ ...newClient, email: e.target.value });
+                      }}
+                      placeholder='e.g. contact@acmecorp.com'
+                      required
+                      className={!isEditingClient && newClient.email ? 'pl-8' : ''}
+                    />
+                    {!isEditingClient && newClient.email && (
+                      <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -462,15 +475,21 @@ export default function ClientSection({
                 >
                   Phone Number
                 </Label>
-                <Input
-                  id='client-phone-modal'
-                  type='tel'
-                  value={newClient.phone || ''}
-                  onChange={(e) => {
-                    return setNewClient({ ...newClient, phone: e.target.value });
-                  }}
-                  placeholder='e.g. +1 (555) 123-4567'
-                />
+                <div className='relative'>
+                  <Input
+                    id='client-phone-modal'
+                    type='tel'
+                    value={newClient.phone || ''}
+                    onChange={(e) => {
+                      return setNewClient({ ...newClient, phone: e.target.value });
+                    }}
+                    placeholder='e.g. +1 (555) 123-4567'
+                    className={!isEditingClient && newClient.phone ? 'pl-8' : ''}
+                  />
+                  {!isEditingClient && newClient.phone && (
+                    <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
+                  )}
+                </div>
               </div>
 
               <div>
@@ -480,14 +499,20 @@ export default function ClientSection({
                 >
                   Tax ID / VAT Number
                 </Label>
-                <Input
-                  id='client-tax-id-modal'
-                  value={newClient.taxId || ''}
-                  onChange={(e) => {
-                    return setNewClient({ ...newClient, taxId: e.target.value });
-                  }}
-                  placeholder='e.g. VAT123456789'
-                />
+                <div className='relative'>
+                  <Input
+                    id='client-tax-id-modal'
+                    value={newClient.taxId || ''}
+                    onChange={(e) => {
+                      return setNewClient({ ...newClient, taxId: e.target.value });
+                    }}
+                    placeholder='e.g. VAT123456789'
+                    className={!isEditingClient && newClient.taxId ? 'pl-8' : ''}
+                  />
+                  {!isEditingClient && newClient.taxId && (
+                    <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
+                  )}
+                </div>
               </div>
             </TabsContent>
 
@@ -500,17 +525,23 @@ export default function ClientSection({
                   >
                     Street Address
                   </Label>
-                  <Input
-                    id='client-street-modal'
-                    value={newClient.address?.street || ''}
-                    onChange={(e) => {
-                      return setNewClient({
-                        ...newClient,
-                        address: { ...newClient.address, street: e.target.value },
-                      });
-                    }}
-                    placeholder='e.g. 123 Main St.'
-                  />
+                  <div className='relative'>
+                    <Input
+                      id='client-street-modal'
+                      value={newClient.address?.street || ''}
+                      onChange={(e) => {
+                        return setNewClient({
+                          ...newClient,
+                          address: { ...newClient.address, street: e.target.value },
+                        });
+                      }}
+                      placeholder='e.g. 123 Main St.'
+                      className={!isEditingClient && newClient.address?.street ? 'pl-8' : ''}
+                    />
+                    {!isEditingClient && newClient.address?.street && (
+                      <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
+                    )}
+                  </div>
                 </div>
                 <div className='grid grid-cols-2 gap-3'>
                   <div>
@@ -520,17 +551,23 @@ export default function ClientSection({
                     >
                       City
                     </Label>
-                    <Input
-                      id='client-city-modal'
-                      value={newClient.address?.city || ''}
-                      onChange={(e) => {
-                        return setNewClient({
-                          ...newClient,
-                          address: { ...newClient.address, city: e.target.value },
-                        });
-                      }}
-                      placeholder='e.g. New York'
-                    />
+                    <div className='relative'>
+                      <Input
+                        id='client-city-modal'
+                        value={newClient.address?.city || ''}
+                        onChange={(e) => {
+                          return setNewClient({
+                            ...newClient,
+                            address: { ...newClient.address, city: e.target.value },
+                          });
+                        }}
+                        placeholder='e.g. New York'
+                        className={!isEditingClient && newClient.address?.city ? 'pl-8' : ''}
+                      />
+                      {!isEditingClient && newClient.address?.city && (
+                        <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
+                      )}
+                    </div>
                   </div>
                   <div>
                     <Label
@@ -539,17 +576,23 @@ export default function ClientSection({
                     >
                       State / Province
                     </Label>
-                    <Input
-                      id='client-state-modal'
-                      value={newClient.address?.state || ''}
-                      onChange={(e) => {
-                        return setNewClient({
-                          ...newClient,
-                          address: { ...newClient.address, state: e.target.value },
-                        });
-                      }}
-                      placeholder='e.g. NY'
-                    />
+                    <div className='relative'>
+                      <Input
+                        id='client-state-modal'
+                        value={newClient.address?.state || ''}
+                        onChange={(e) => {
+                          return setNewClient({
+                            ...newClient,
+                            address: { ...newClient.address, state: e.target.value },
+                          });
+                        }}
+                        placeholder='e.g. NY'
+                        className={!isEditingClient && newClient.address?.state ? 'pl-8' : ''}
+                      />
+                      {!isEditingClient && newClient.address?.state && (
+                        <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className='grid grid-cols-2 gap-3'>
@@ -560,17 +603,23 @@ export default function ClientSection({
                     >
                       Postal Code
                     </Label>
-                    <Input
-                      id='client-postal-code-modal'
-                      value={newClient.address?.postalCode || ''}
-                      onChange={(e) => {
-                        return setNewClient({
-                          ...newClient,
-                          address: { ...newClient.address, postalCode: e.target.value },
-                        });
-                      }}
-                      placeholder='e.g. 10001'
-                    />
+                    <div className='relative'>
+                      <Input
+                        id='client-postal-code-modal'
+                        value={newClient.address?.postalCode || ''}
+                        onChange={(e) => {
+                          return setNewClient({
+                            ...newClient,
+                            address: { ...newClient.address, postalCode: e.target.value },
+                          });
+                        }}
+                        placeholder='e.g. 10001'
+                        className={!isEditingClient && newClient.address?.postalCode ? 'pl-8' : ''}
+                      />
+                      {!isEditingClient && newClient.address?.postalCode && (
+                        <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
+                      )}
+                    </div>
                   </div>
                   <div>
                     <Label
@@ -579,17 +628,23 @@ export default function ClientSection({
                     >
                       Country
                     </Label>
-                    <Input
-                      id='client-country-modal'
-                      value={newClient.address?.country || ''}
-                      onChange={(e) => {
-                        return setNewClient({
-                          ...newClient,
-                          address: { ...newClient.address, country: e.target.value },
-                        });
-                      }}
-                      placeholder='e.g. USA'
-                    />
+                    <div className='relative'>
+                      <Input
+                        id='client-country-modal'
+                        value={newClient.address?.country || ''}
+                        onChange={(e) => {
+                          return setNewClient({
+                            ...newClient,
+                            address: { ...newClient.address, country: e.target.value },
+                          });
+                        }}
+                        placeholder='e.g. USA'
+                        className={!isEditingClient && newClient.address?.country ? 'pl-8' : ''}
+                      />
+                      {!isEditingClient && newClient.address?.country && (
+                        <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
