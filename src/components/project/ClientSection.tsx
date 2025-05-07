@@ -268,7 +268,9 @@ export default function ClientSection({
                   exampleText='Example: "Acme Corp, a tech company in San Francisco, contact email is contact@acmecorp.com, phone is 555-123-4567"'
                   attachments={attachments}
                   onAttachmentAdd={setAttachments}
-                  onAttachmentRemove={removeAttachment}
+                  onAttachmentRemove={(id: any) => {
+                    removeAttachment(id);
+                  }}
                 />
               </AICard>
             ) : (

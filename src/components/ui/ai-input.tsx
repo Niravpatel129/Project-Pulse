@@ -7,20 +7,23 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Loader2, Mic, Paperclip, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 
-export type Attachment = {
+export interface Attachment {
   id: string;
   type: 'file' | 'voice';
   name: string;
   size?: number;
   timestamp: string;
-};
+  url?: string;
+  duration?: number;
+  mimeType?: string;
+}
 
 interface AIInputProps {
   value: string;
   onChange: (value: string) => void;
   onGenerate: () => void;
-  isGenerating: boolean;
-  error?: string;
+  isGenerating?: boolean;
+  error?: string | null;
   placeholder?: string;
   exampleText?: string;
   className?: string;
@@ -34,9 +37,9 @@ export default function AIInput({
   value,
   onChange,
   onGenerate,
-  isGenerating,
-  error,
-  placeholder = 'Describe what you need...',
+  isGenerating = false,
+  error = null,
+  placeholder = 'Type your message...',
   exampleText,
   className,
   attachments = [],
@@ -47,53 +50,62 @@ export default function AIInput({
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const aiPromptInputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const toggleRecording = () => {
     if (isRecording) {
-      // Stop recording and attach the voice note
+      // Stop recording
       setIsRecording(false);
-      const newAttachment = {
-        id: `voice-${Date.now()}`,
-        type: 'voice',
-        name: `Voice note (${recordingDuration}s)`,
-        timestamp: new Date().toISOString(),
-      };
-      onAttachmentAdd?.([...attachments, newAttachment]);
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+      }
+      if (onAttachmentAdd) {
+        const newAttachment: Attachment = {
+          id: `voice-${Date.now()}`,
+          type: 'voice',
+          name: `Voice note (${recordingDuration}s)`,
+          timestamp: new Date().toISOString(),
+          duration: recordingDuration,
+        };
+        onAttachmentAdd([...attachments, newAttachment]);
+      }
       setRecordingDuration(0);
     } else {
       // Start recording
       setIsRecording(true);
-      // Start duration counter
-      const intervalId = setInterval(() => {
+      recordingIntervalRef.current = setInterval(() => {
         setRecordingDuration((prev) => {
           return prev + 1;
         });
       }, 1000);
-
-      // Store interval ID for cleanup
-      return () => {
-        return clearInterval(intervalId);
-      };
     }
   };
 
-  const handleFileAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fileList = e.target.files;
-    if (fileList && fileList.length > 0) {
-      const filesArray = Array.from(fileList) as File[];
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || !onAttachmentAdd) return;
 
-      const newAttachments = filesArray.map((file) => {
-        return {
-          id: `file-${Date.now()}-${file.name}`,
-          type: 'file',
-          name: file.name,
-          size: file.size,
-          timestamp: new Date().toISOString(),
-        };
-      });
+    const newAttachments: Attachment[] = Array.from(files).map((file) => {
+      return {
+        id: `file-${Date.now()}-${file.name}`,
+        type: 'file',
+        name: file.name,
+        size: file.size,
+        timestamp: new Date().toISOString(),
+        mimeType: file.type,
+      };
+    });
 
-      onAttachmentAdd?.([...attachments, ...newAttachments]);
+    onAttachmentAdd([...attachments, ...newAttachments]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
+  };
+
+  const removeAttachment = (id: string) => {
+    if (!onAttachmentRemove) return;
+    onAttachmentRemove(id);
   };
 
   return (
@@ -107,34 +119,56 @@ export default function AIInput({
           <X size={18} />
         </button>
       )}
-      <div className='flex relative'>
+      <div className='relative'>
         <Textarea
           ref={aiPromptInputRef}
           value={value}
           onChange={(e) => {
             return onChange(e.target.value);
           }}
-          rows={4}
           placeholder={placeholder}
           className={cn(
-            'flex-1 border rounded-lg px-3 py-2 text-sm outline-none bg-transparent transition-colors pr-[110px]',
-            error
-              ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
-              : 'border-[#E5E7EB] focus:border-purple-400 focus:ring-purple-100',
+            'min-h-[100px] resize-none pr-24',
+            error && 'border-red-500 focus-visible:ring-red-500',
           )}
         />
-        <Button
-          onClick={onGenerate}
-          className={cn(
-            'bg-purple-600 text-white px-4 py-2 text-sm transition-all duration-200 flex items-center justify-center min-w-[100px] absolute right-2 bottom-2 cursor-pointer z-10 rounded-lg',
-            !value.trim() || isGenerating
-              ? 'opacity-70 cursor-not-allowed'
-              : 'hover:bg-purple-700 hover:shadow',
-          )}
-          disabled={!value.trim() || isGenerating}
-        >
-          {isGenerating ? <Loader2 size={16} className='animate-spin' /> : 'Generate'}
-        </Button>
+        <div className='absolute bottom-2 right-2 flex items-center gap-2'>
+          <input
+            type='file'
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            className='hidden'
+            multiple
+          />
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            onClick={() => {
+              return fileInputRef.current?.click();
+            }}
+            className='h-8 w-8'
+          >
+            <Paperclip className='h-4 w-4' />
+          </Button>
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            onClick={toggleRecording}
+            className={cn('h-8 w-8', isRecording && 'text-red-500')}
+          >
+            <Mic className='h-4 w-4' />
+          </Button>
+          <Button
+            type='button'
+            onClick={onGenerate}
+            disabled={!value.trim() || isGenerating}
+            className='h-8'
+          >
+            {isGenerating ? <Loader2 className='h-4 w-4 animate-spin' /> : 'Generate'}
+          </Button>
+        </div>
       </div>
 
       {/* Error message display */}
@@ -186,7 +220,7 @@ export default function AIInput({
                     type='file'
                     multiple
                     className='hidden'
-                    onChange={handleFileAttachment}
+                    onChange={handleFileSelect}
                     accept='image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                     aria-label='Attach files'
                   />
@@ -247,12 +281,12 @@ export default function AIInput({
                   </div>
                   <button
                     onClick={() => {
-                      return onAttachmentRemove?.(attachment.id);
+                      return removeAttachment(attachment.id);
                     }}
                     className='text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full p-1 transition-colors'
                     aria-label={`Remove attachment ${attachment.name}`}
                   >
-                    <X size={14} />
+                    <X size={16} />
                   </button>
                 </motion.div>
               );
@@ -260,8 +294,6 @@ export default function AIInput({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {exampleText && <p className='text-[#6B7280] text-xs mt-2 italic'>{exampleText}</p>}
     </div>
   );
 }
