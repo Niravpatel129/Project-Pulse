@@ -542,11 +542,11 @@ export default function ClientSection({
                                 {aiGeneratedFields.includes('email') && (
                                   <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
                                 )}
-                                <div className='h-5 mt-1'>
-                                  {emailError && (
-                                    <p className='text-sm text-red-500'>{emailError}</p>
-                                  )}
-                                </div>
+                                {emailError && (
+                                  <p className='absolute -bottom-5 left-0 text-xs text-red-400'>
+                                    {emailError}
+                                  </p>
+                                )}
                               </div>
                             </div>
                             <div>
