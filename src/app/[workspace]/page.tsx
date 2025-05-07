@@ -1,7 +1,6 @@
 'use client';
 
 import InvoicesList from '@/components/InvoicesList';
-import ProjectDialog from '@/components/ProjectDialog';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -54,12 +53,12 @@ export default function WorkspacePage() {
   };
 
   return (
-    <div className='min-h-screen bg-gray-50'>
+    <div className='min-h-screen bg-white'>
       <div className='container mx-auto px-4 py-8'>
         <InvoicesList />
       </div>
       {/* New Project Dialog */}
-      <ProjectDialog />
+      {/* <ProjectDialog /> */}
     </div>
   );
 }

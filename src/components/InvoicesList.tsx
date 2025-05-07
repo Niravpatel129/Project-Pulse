@@ -1,9 +1,34 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { newRequest } from '@/utils/newRequest';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
-import { Plus, RefreshCw, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -149,176 +174,119 @@ export default function InvoicesList() {
   };
 
   return (
-    <div className='min-h-screen bg-gray-50/50'>
-      <div className='max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-12 py-10'>
-        {/* Main White Container */}
-        <div className='bg-white rounded-2xl shadow-sm border border-gray-100/50'>
-          {/* Header Section */}
-          <div className='px-8 py-8 border-b border-gray-100/50'>
+    <div className='max-w-[1600px]'>
+      <div className='px-8 py-8'>
+        <div className='flex justify-between items-center'>
+          <div>
             <h1 className='text-3xl font-semibold text-gray-900 mb-3'>Invoices</h1>
-            <p className='text-base text-gray-500'>Manage and track your invoices</p>
           </div>
+          <Button
+            variant='outline'
+            className='bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 px-5 py-2.5 rounded-xl flex items-center gap-2.5 transition-all duration-200 shadow-sm hover:shadow'
+            onClick={() => {
+              return router.push('/invoices/new');
+            }}
+          >
+            <Plus className='w-4 h-4' />
+            Create an invoice
+          </Button>
+        </div>
+      </div>
 
-          {/* Main Content Grid */}
-          <div className='p-8'>
-            <div className='grid grid-cols-12 gap-8'>
-              {/* Left Column - Summary Cards */}
-              <div className='col-span-12 lg:col-span-8 space-y-8'>
-                {/* Summary Cards Grid */}
-                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5'>
-                  {[
-                    { label: 'Overdue', value: overdue, suffix: currency },
-                    { label: 'Due within next 30 days', value: dueSoon, suffix: currency },
-                    { label: 'Average time to get paid', value: avgTime, suffix: 'days' },
-                    {
-                      label: 'Upcoming payout',
-                      value: payout,
-                      suffix: lastUpdated,
-                      icon: RefreshCw,
-                    },
-                  ].map((card, index) => {
-                    return (
-                      <motion.div
-                        key={card.label}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.1 }}
-                        className='bg-gray-50/50 rounded-xl p-6 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100/50 hover:shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] transition-all duration-200'
-                      >
-                        <div className='flex flex-col gap-2'>
-                          <span className='text-sm font-medium text-gray-500 tracking-wide'>
-                            {card.label}
-                          </span>
-                          <span className='text-2xl font-semibold text-gray-900 tracking-tight'>
-                            {formatValue(card.value, card.suffix)}
-                          </span>
-                          {card.icon ? (
-                            <div className='flex items-center gap-2 text-xs text-gray-400'>
-                              <card.icon className='w-3.5 h-3.5' />
-                              <span>Updated {card.suffix}</span>
-                            </div>
-                          ) : (
-                            <span className='text-xs text-gray-400'>{card.suffix}</span>
-                          )}
-                        </div>
-                      </motion.div>
-                    );
-                  })}
+      <div className='p-8'>
+        <div className='grid grid-cols-12 gap-8'>
+          <div className='col-span-12 lg:col-span-8'>
+            {/* Action Bar */}
+            <div className='flex justify-end items-center'></div>
+
+            {/* Error Banner */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className='bg-red-50/50 border-l-4 border-red-500 text-red-800 px-5 py-4 rounded-xl flex items-center gap-3'
+              >
+                <span className='font-medium text-lg'>!</span>
+                <span className='text-sm'>{error}</span>
+                <button
+                  className='ml-auto text-red-400 hover:text-red-600 transition-colors duration-200'
+                  onClick={() => {
+                    return setError(null);
+                  }}
+                >
+                  &times;
+                </button>
+              </motion.div>
+            )}
+
+            {/* Filters */}
+            <div className=' bg-white rounded-xl border border-gray-100/50'>
+              <div className='flex items-center gap-4'>
+                <div className='relative flex-1'>
+                  <Search className='absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
+                  <Input
+                    type='text'
+                    className='w-full pl-11 pr-4 py-2.5'
+                    placeholder='Search invoices...'
+                  />
                 </div>
+                {[
+                  { label: 'All customers', type: 'select' },
+                  { label: 'All statuses', type: 'select' },
+                  { label: 'From', type: 'date' },
+                  { label: 'To', type: 'date' },
+                ].map((filter) => {
+                  return filter.type === 'select' ? (
+                    <Select key={filter.label}>
+                      <SelectTrigger className='w-[140px]'>
+                        <SelectValue placeholder={filter.label} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={filter.label}>{filter.label}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      key={filter.label}
+                      type='date'
+                      className='w-[140px]'
+                      placeholder={filter.label}
+                    />
+                  );
+                })}
+              </div>
+            </div>
 
-                {/* Action Bar */}
-                <div className='flex justify-between items-center'>
-                  <div className='flex gap-4'>
-                    <Button
-                      className='bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 px-5 py-2.5 rounded-xl flex items-center gap-2.5 transition-all duration-200 shadow-sm hover:shadow'
-                      onClick={() => {
-                        return router.push('/invoices/new');
-                      }}
-                    >
-                      <Plus className='w-4 h-4' />
-                      Create an invoice
-                    </Button>
-                  </div>
-                </div>
+            {/* Tabs */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className='my-8'>
+              <TabsList>
+                {statusTabs.map((tab) => {
+                  return (
+                    <TabsTrigger key={tab.key} value={tab.key} className='px-5 py-2.5'>
+                      {tab.label}
+                      {tab.key !== 'all' && (
+                        <span className='ml-2 text-xs font-medium bg-gray-100/50 px-2.5 py-1 rounded-full'>
+                          {tab.key === 'unpaid' ? unpaidCount : draftCount}
+                        </span>
+                      )}
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
+            </Tabs>
 
-                {/* Error Banner */}
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className='bg-red-50/50 border-l-4 border-red-500 text-red-800 px-5 py-4 rounded-xl flex items-center gap-3'
-                  >
-                    <span className='font-medium text-lg'>!</span>
-                    <span className='text-sm'>{error}</span>
-                    <button
-                      className='ml-auto text-red-400 hover:text-red-600 transition-colors duration-200'
-                      onClick={() => {
-                        return setError(null);
-                      }}
-                    >
-                      &times;
-                    </button>
-                  </motion.div>
-                )}
-
-                {/* Filters */}
-                <div className='bg-gray-50/50 rounded-xl p-5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100/50'>
-                  <div className='flex flex-wrap gap-5 items-center'>
-                    <div className='flex-1 min-w-[240px]'>
-                      <div className='relative'>
-                        <Search className='absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
-                        <input
-                          type='text'
-                          className='w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 bg-white'
-                          placeholder='Search invoices...'
-                        />
-                      </div>
-                    </div>
-                    <div className='flex gap-4'>
-                      {[
-                        { label: 'All customers', type: 'select' },
-                        { label: 'All statuses', type: 'select' },
-                        { label: 'From', type: 'date' },
-                        { label: 'To', type: 'date' },
-                      ].map((filter) => {
-                        return filter.type === 'select' ? (
-                          <select
-                            key={filter.label}
-                            className='border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 min-w-[140px] bg-white'
-                          >
-                            <option>{filter.label}</option>
-                          </select>
-                        ) : (
-                          <input
-                            key={filter.label}
-                            type='date'
-                            className='border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 min-w-[140px] bg-white'
-                            placeholder={filter.label}
-                          />
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tabs */}
-                <div className='flex gap-3 items-center border-b border-gray-200 pb-3'>
-                  {statusTabs.map((tab) => {
-                    return (
-                      <button
-                        key={tab.key}
-                        className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                          activeTab === tab.key
-                            ? 'bg-blue-50/50 text-blue-700'
-                            : 'text-gray-600 hover:bg-gray-50/50'
-                        }`}
-                        onClick={() => {
-                          return setActiveTab(tab.key);
-                        }}
-                      >
-                        {tab.label}
-                        {tab.key !== 'all' && (
-                          <span className='ml-2 text-xs font-medium bg-gray-100/50 px-2.5 py-1 rounded-full'>
-                            {tab.key === 'unpaid' ? unpaidCount : draftCount}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Invoice Table or Empty State */}
-                {loading ? (
-                  <div className='p-10 text-center text-gray-500 bg-gray-50/50 rounded-xl shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100/50'>
-                    Loading invoices...
-                  </div>
-                ) : filteredInvoices.length === 0 ? (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className='flex flex-col items-center justify-center py-20 gap-6 bg-gray-50/50 rounded-xl shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100/50'
-                  >
+            {/* Invoice Table or Empty State */}
+            {loading ? (
+              <Card>
+                <CardContent className='p-10 text-center text-gray-500'>
+                  Loading invoices...
+                </CardContent>
+              </Card>
+            ) : filteredInvoices.length === 0 ? (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <Card>
+                  <CardContent className='flex flex-col items-center justify-center py-20 gap-6'>
                     <div className='text-xl font-medium text-gray-700 tracking-tight'>
                       Ready to get paid? Approve your draft invoice.
                     </div>
@@ -328,190 +296,198 @@ export default function InvoicesList() {
                         onClick={() => {
                           return router.push('/invoices/new');
                         }}
-                        className='rounded-xl border-gray-200 hover:bg-gray-50 transition-all duration-200 px-5 py-2.5'
                       >
                         Create a new invoice
                       </Button>
-                      <Button
-                        variant='outline'
-                        className='rounded-xl border-gray-200 hover:bg-gray-50 transition-all duration-200 px-5 py-2.5'
-                      >
-                        View drafts
-                      </Button>
+                      <Button variant='outline'>View drafts</Button>
                     </div>
-                  </motion.div>
-                ) : (
-                  <div className='bg-gray-50/50 rounded-xl shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100/50 overflow-hidden'>
-                    <div className='overflow-x-auto'>
-                      <table className='min-w-full divide-y divide-gray-200'>
-                        <thead className='bg-white/50'>
-                          <tr>
-                            {['Status', 'Date', 'Number', 'Customer', 'Amount due', 'Actions'].map(
-                              (header) => {
-                                return (
-                                  <th
-                                    key={header}
-                                    className='px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-                                  >
-                                    {header}
-                                  </th>
-                                );
-                              },
-                            )}
-                          </tr>
-                        </thead>
-                        <tbody className='bg-white divide-y divide-gray-200'>
-                          {paginatedInvoices.map((invoice) => {
-                            return (
-                              <motion.tr
-                                key={invoice._id}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className='hover:bg-gray-50/50 cursor-pointer transition-all duration-200'
-                                onClick={() => {
-                                  return router.push(`/invoice/${invoice._id}`);
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ) : (
+              <Card>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Number</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead className='text-right'>Amount due</TableHead>
+                      <TableHead className='text-right'>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedInvoices.map((invoice) => {
+                      return (
+                        <TableRow
+                          key={invoice._id}
+                          className='hover:bg-gray-50/50 cursor-pointer transition-all duration-200'
+                          onClick={() => {
+                            return router.push(`/invoice/${invoice._id}`);
+                          }}
+                        >
+                          <TableCell className='align-middle'>
+                            {getStatusBadge(invoice.status)}
+                          </TableCell>
+                          <TableCell className='align-middle'>
+                            {format(new Date(invoice.dueDate), 'MMM d, yyyy')}
+                          </TableCell>
+                          <TableCell className='font-medium align-middle'>
+                            {invoice.invoiceNumber}
+                          </TableCell>
+                          <TableCell className='align-middle'>
+                            {invoice.client?.name || '—'}
+                          </TableCell>
+                          <TableCell className='font-medium text-right align-middle'>
+                            {formatCurrency(invoice.total, invoice.currency)}
+                          </TableCell>
+                          <TableCell className='text-right align-middle px-0'>
+                            <div className='flex justify-end items-center gap-2'>
+                              <Button
+                                size='sm'
+                                variant='ghost'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  router.push(`/invoice/${invoice._id}`);
                                 }}
+                                className='font-bold text-blue-600 hover:bg-transparent hover:text-blue-700 focus:ring-0 focus:outline-none shadow-none border-none px-0'
                               >
-                                <td className='px-6 py-4 whitespace-nowrap'>
-                                  {getStatusBadge(invoice.status)}
-                                </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-600'>
-                                  {format(new Date(invoice.dueDate), 'MMM d, yyyy')}
-                                </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>
-                                  {invoice.invoiceNumber}
-                                </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-600'>
-                                  {invoice.client?.name || '—'}
-                                </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>
-                                  {formatCurrency(invoice.total, invoice.currency)}
-                                </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-right'>
+                                Approve
+                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
                                   <Button
-                                    size='sm'
-                                    variant='link'
+                                    size='icon'
+                                    variant='ghost'
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      router.push(`/invoice/${invoice._id}`);
                                     }}
-                                    className='text-blue-600 hover:text-blue-800 transition-colors duration-200'
+                                    aria-label='More actions'
+                                    className='border border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-700 focus:ring-0 focus:outline-none shadow-none p-0 w-8 h-8 rounded-full flex items-center justify-center'
                                   >
-                                    Approve
+                                    <svg
+                                      width='18'
+                                      height='18'
+                                      viewBox='0 0 20 20'
+                                      fill='currentColor'
+                                      xmlns='http://www.w3.org/2000/svg'
+                                    >
+                                      <path d='M5 8L10 13L15 8H5Z' fill='currentColor' />
+                                    </svg>
                                   </Button>
-                                </td>
-                              </motion.tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align='end'>
+                                  <DropdownMenuItem>View</DropdownMenuItem>
+                                  <DropdownMenuItem>Edit</DropdownMenuItem>
+                                  <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem>Send invoice</DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem>Export as PDF</DropdownMenuItem>
+                                  <DropdownMenuItem>Print</DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem className='text-red-600'>
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
 
-                    {/* Pagination Controls */}
-                    <div className='flex items-center justify-between px-6 py-5 border-t bg-white/50'>
-                      <div className='flex items-center gap-3'>
-                        <span className='text-sm text-gray-600'>Show:</span>
-                        <select
-                          className='border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 bg-white'
-                          value={perPage}
-                          onChange={(e) => {
-                            setPerPage(Number(e.target.value));
-                            setCurrentPage(1);
-                          }}
-                        >
-                          {[10, 25, 50, 100].map((n) => {
-                            return (
-                              <option key={n} value={n}>
-                                {n}
-                              </option>
-                            );
-                          })}
-                        </select>
-                        <span className='text-sm text-gray-600'>per page</span>
-                      </div>
-                      <div className='flex items-center gap-3'>
-                        <button
-                          className='px-4 py-2 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-transparent transition-all duration-200 bg-white'
-                          onClick={() => {
-                            return setCurrentPage((p) => {
-                              return Math.max(1, p - 1);
-                            });
-                          }}
-                          disabled={currentPage === 1}
-                        >
-                          Previous
-                        </button>
-                        <span className='text-sm text-gray-600'>
-                          Page {currentPage} of {totalPages === 0 ? 1 : totalPages}
-                        </span>
-                        <button
-                          className='px-4 py-2 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-transparent transition-all duration-200 bg-white'
-                          onClick={() => {
-                            return setCurrentPage((p) => {
-                              return Math.min(totalPages, p + 1);
-                            });
-                          }}
-                          disabled={currentPage === totalPages || totalPages === 0}
-                        >
-                          Next
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Right Column - Quick Actions & Stats */}
-              <div className='col-span-12 lg:col-span-4 space-y-8'>
-                <div className='bg-gray-50/50 rounded-xl p-6 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100/50'>
-                  <h2 className='text-lg font-semibold text-gray-900 mb-5'>Quick Actions</h2>
-                  <div className='space-y-4'>
-                    <Button
-                      className='w-full justify-start bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 px-5 py-2.5 rounded-xl flex items-center gap-3 transition-all duration-200'
-                      onClick={() => {
-                        return router.push('/invoices/new');
+                {/* Pagination Controls */}
+                <div className='flex items-center justify-between px-6 py-5 border-t bg-white/50'>
+                  <div className='flex items-center gap-3'>
+                    <span className='text-sm text-gray-600'>Show:</span>
+                    <Select
+                      value={perPage.toString()}
+                      onValueChange={(value) => {
+                        setPerPage(Number(value));
+                        setCurrentPage(1);
                       }}
                     >
-                      <Plus className='w-4 h-4' />
-                      New Invoice
+                      <SelectTrigger className='w-[100px]'>
+                        <SelectValue placeholder='Select' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[10, 25, 50, 100].map((n) => {
+                          return (
+                            <SelectItem key={n} value={n.toString()}>
+                              {n}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    <span className='text-sm text-gray-600'>per page</span>
+                  </div>
+                  <div className='flex items-center gap-3'>
+                    <Button
+                      variant='outline'
+                      onClick={() => {
+                        return setCurrentPage((p) => {
+                          return Math.max(1, p - 1);
+                        });
+                      }}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
                     </Button>
-                    <Button className='w-full justify-start bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 px-5 py-2.5 rounded-xl flex items-center gap-3 transition-all duration-200'>
-                      <RefreshCw className='w-4 h-4' />
-                      Refresh List
+                    <span className='text-sm text-gray-600'>
+                      Page {currentPage} of {totalPages === 0 ? 1 : totalPages}
+                    </span>
+                    <Button
+                      variant='outline'
+                      onClick={() => {
+                        return setCurrentPage((p) => {
+                          return Math.min(totalPages, p + 1);
+                        });
+                      }}
+                      disabled={currentPage === totalPages || totalPages === 0}
+                    >
+                      Next
                     </Button>
                   </div>
                 </div>
+              </Card>
+            )}
+          </div>
 
-                <div className='bg-gray-50/50 rounded-xl p-6 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100/50'>
-                  <h2 className='text-lg font-semibold text-gray-900 mb-5'>Recent Activity</h2>
-                  <div className='space-y-5'>
-                    <div className='flex items-start gap-4'>
-                      <div className='w-2 h-2 rounded-full bg-blue-500 mt-2'></div>
-                      <div>
-                        <p className='text-sm font-medium text-gray-900'>
-                          New invoice #1234 created
-                        </p>
-                        <p className='text-xs text-gray-500 mt-1'>2 hours ago</p>
-                      </div>
-                    </div>
-                    <div className='flex items-start gap-4'>
-                      <div className='w-2 h-2 rounded-full bg-green-500 mt-2'></div>
-                      <div>
-                        <p className='text-sm font-medium text-gray-900'>Invoice #1233 paid</p>
-                        <p className='text-xs text-gray-500 mt-1'>5 hours ago</p>
-                      </div>
-                    </div>
-                    <div className='flex items-start gap-4'>
-                      <div className='w-2 h-2 rounded-full bg-yellow-500 mt-2'></div>
-                      <div>
-                        <p className='text-sm font-medium text-gray-900'>Invoice #1232 overdue</p>
-                        <p className='text-xs text-gray-500 mt-1'>1 day ago</p>
-                      </div>
-                    </div>
+          {/* Right Column - Recent Activity */}
+          <div className='col-span-12 lg:col-span-4 space-y-0'>
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+              </CardHeader>
+              <CardContent className='space-y-5'>
+                <div className='flex items-start gap-4'>
+                  <div className='w-2 h-2 rounded-full bg-blue-500 mt-2'></div>
+                  <div>
+                    <p className='text-sm font-medium text-gray-900'>New invoice #1234 created</p>
+                    <p className='text-xs text-gray-500 mt-1'>2 hours ago</p>
                   </div>
                 </div>
-              </div>
-            </div>
+                <div className='flex items-start gap-4'>
+                  <div className='w-2 h-2 rounded-full bg-green-500 mt-2'></div>
+                  <div>
+                    <p className='text-sm font-medium text-gray-900'>Invoice #1233 paid</p>
+                    <p className='text-xs text-gray-500 mt-1'>5 hours ago</p>
+                  </div>
+                </div>
+                <div className='flex items-start gap-4'>
+                  <div className='w-2 h-2 rounded-full bg-yellow-500 mt-2'></div>
+                  <div>
+                    <p className='text-sm font-medium text-gray-900'>Invoice #1232 overdue</p>
+                    <p className='text-xs text-gray-500 mt-1'>1 day ago</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
