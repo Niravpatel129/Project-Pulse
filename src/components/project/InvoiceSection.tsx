@@ -305,9 +305,9 @@ export default function InvoiceSection({
                       {/* Due Date */}
                       <div>
                         <Label htmlFor='due-date' className='text-xs text-gray-500 mb-1 block'>
-                          Due Date
+                          Payment Due
                         </Label>
-                        <Popover>
+                        <Popover modal>
                           <PopoverTrigger asChild>
                             <Button
                               variant={'outline'}
@@ -320,7 +320,7 @@ export default function InvoiceSection({
                               {dueDate ? format(dueDate, 'PPP') : <span>Pick a date</span>}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className='w-auto p-0' align='start'>
+                          <PopoverContent className='w-auto p-0 min-w-[350px]' align='start'>
                             <Calendar
                               mode='single'
                               selected={dueDate || undefined}
