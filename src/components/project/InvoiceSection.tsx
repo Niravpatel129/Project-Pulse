@@ -203,35 +203,6 @@ export default function InvoiceSection({
   // Calculate total
   const total = subtotal - discountAmount + taxAmount;
 
-  // Calculate deposit amount if enabled
-  const depositAmount = invoiceSettings.requireDeposit
-    ? (total * invoiceSettings.depositPercentage) / 100
-    : 0;
-
-  // Function to get currency symbol
-  const getCurrencySymbol = (currency: string) => {
-    switch (currency) {
-      case 'USD':
-        return '$';
-      case 'CAD':
-        return 'C$';
-      case 'EUR':
-        return '€';
-      case 'GBP':
-        return '£';
-      default:
-        return currency;
-    }
-  };
-
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return amount.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
-
   // Custom handlers to preserve scroll position
   const handleInvoiceSettingsChange = (newSettings: Partial<InvoiceSettings>) => {
     // Update settings
