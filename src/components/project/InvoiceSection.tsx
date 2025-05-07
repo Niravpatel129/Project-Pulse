@@ -278,164 +278,166 @@ export default function InvoiceSection({
                 Invoice Settings
               </AccordionTrigger>
               <AccordionContent>
-                <div className='space-y-6'>
-                  {/* Workspace Tax Settings */}
-                  <div>
+                <div className='p-1'>
+                  <div className='space-y-6'>
+                    {/* Workspace Tax Settings */}
                     <div>
-                      <Label htmlFor='tax-id' className='text-xs text-gray-500 mb-1 block'>
-                        Tax ID / VAT Number
-                      </Label>
-                      <Input
-                        id='tax-id'
-                        value={workspaceTaxSettings.taxId || ''}
-                        onChange={(e) => {
-                          handleWorkspaceTaxSettingsChange({
-                            taxId: e.target.value,
-                          });
-                        }}
-                        className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
-                        placeholder='e.g. VAT123456789'
-                      />
-                    </div>
-                  </div>
-
-                  {/* Project Settings */}
-                  <div className='space-y-4'>
-                    {/* Payment Terms */}
-                    <div>
-                      <StatefulInput
-                        id='payment-terms'
-                        initialValue={invoiceSettings.paymentTerms || ''}
-                        onValueChange={(value) => {
-                          handleInvoiceSettingsChange({
-                            paymentTerms: value as string,
-                          });
-                        }}
-                        className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
-                        label='Payment Terms'
-                        placeholder='e.g. Net 30'
-                      />
-                    </div>
-
-                    {/* Due Date */}
-                    <div>
-                      <Label htmlFor='due-date' className='text-xs text-gray-500 mb-1 block'>
-                        Due Date
-                      </Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={'outline'}
-                            className={cn(
-                              'w-full justify-start text-left font-normal border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none hover:border-blue-400 hover:ring-2 hover:ring-blue-100 transition-colors',
-                              !dueDate && 'text-[#9CA3AF]',
-                            )}
-                          >
-                            <CalendarIcon className='mr-2 h-4 w-4' />
-                            {dueDate ? format(dueDate, 'PPP') : <span>Pick a date</span>}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className='w-auto p-0' align='start'>
-                          <Calendar
-                            mode='single'
-                            selected={dueDate || undefined}
-                            onSelect={(date) => {
-                              setDueDate(date);
-                            }}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-
-                    {/* Discount Option */}
-                    <div>
-                      <div className='flex items-center justify-between mb-2'>
-                        <div>
-                          <Label
-                            htmlFor='allow-discount'
-                            className='block text-sm font-medium text-[#111827]'
-                          >
-                            Enable Discount
-                          </Label>
-                          <p className='text-xs text-[#6B7280]'>
-                            Apply a discount to this project&apos;s invoices
-                          </p>
-                        </div>
-                        <Switch
-                          id='allow-discount'
-                          checked={invoiceSettings.allowDiscount}
-                          onCheckedChange={(checked) => {
-                            handleInvoiceSettingsChange({
-                              allowDiscount: checked,
+                      <div>
+                        <Label htmlFor='tax-id' className='text-xs text-gray-500 mb-1 block'>
+                          Tax ID / VAT Number
+                        </Label>
+                        <Input
+                          id='tax-id'
+                          value={workspaceTaxSettings.taxId || ''}
+                          onChange={(e) => {
+                            handleWorkspaceTaxSettingsChange({
+                              taxId: e.target.value,
                             });
                           }}
+                          className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                          placeholder='e.g. VAT123456789'
+                        />
+                      </div>
+                    </div>
+
+                    {/* Project Settings */}
+                    <div className='space-y-4'>
+                      {/* Payment Terms */}
+                      <div>
+                        <StatefulInput
+                          id='payment-terms'
+                          initialValue={invoiceSettings.paymentTerms || ''}
+                          onValueChange={(value) => {
+                            handleInvoiceSettingsChange({
+                              paymentTerms: value as string,
+                            });
+                          }}
+                          className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                          label='Payment Terms'
+                          placeholder='e.g. Net 30'
                         />
                       </div>
 
-                      {invoiceSettings.allowDiscount && (
-                        <div className='pl-4 border-l-2 border-gray-200 mt-2'>
-                          <StatefulInput
-                            id='discount-rate'
-                            type='number'
-                            initialValue={invoiceSettings.defaultDiscountRate || 0}
-                            onValueChange={(value) => {
-                              handleInvoiceSettingsChange({
-                                defaultDiscountRate: value as number,
-                              });
-                            }}
-                            className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
-                            label='Discount Rate (%)'
-                            min='0'
-                            max='100'
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Deposit Options */}
-                    <div>
-                      <div className='flex items-center justify-between mb-2'>
-                        <div>
-                          <Label
-                            htmlFor='require-deposit'
-                            className='block text-sm font-medium text-[#111827]'
-                          >
-                            Require Deposit
-                          </Label>
-                          <p className='text-xs text-[#6B7280]'>
-                            Allow client to pay a deposit upfront
-                          </p>
-                        </div>
-                        <Switch
-                          id='require-deposit'
-                          checked={invoiceSettings.requireDeposit}
-                          onCheckedChange={(checked) => {
-                            handleInvoiceSettingsChange({
-                              requireDeposit: checked,
-                            });
-                          }}
-                        />
+                      {/* Due Date */}
+                      <div>
+                        <Label htmlFor='due-date' className='text-xs text-gray-500 mb-1 block'>
+                          Due Date
+                        </Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={'outline'}
+                              className={cn(
+                                'w-full justify-start text-left font-normal border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none hover:border-blue-400 hover:ring-2 hover:ring-blue-100 transition-colors',
+                                !dueDate && 'text-[#9CA3AF]',
+                              )}
+                            >
+                              <CalendarIcon className='mr-2 h-4 w-4' />
+                              {dueDate ? format(dueDate, 'PPP') : <span>Pick a date</span>}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className='w-auto p-0' align='start'>
+                            <Calendar
+                              mode='single'
+                              selected={dueDate || undefined}
+                              onSelect={(date) => {
+                                setDueDate(date);
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
                       </div>
 
-                      {invoiceSettings.requireDeposit && (
-                        <div className='pl-4 border-l-2 border-gray-200 mt-2'>
-                          <StatefulInput
-                            id='deposit-percentage'
-                            type='number'
-                            initialValue={invoiceSettings.depositPercentage}
-                            onValueChange={(value) => {
+                      {/* Discount Option */}
+                      <div>
+                        <div className='flex items-center justify-between mb-2'>
+                          <div>
+                            <Label
+                              htmlFor='allow-discount'
+                              className='block text-sm font-medium text-[#111827]'
+                            >
+                              Enable Discount
+                            </Label>
+                            <p className='text-xs text-[#6B7280]'>
+                              Apply a discount to this project&apos;s invoices
+                            </p>
+                          </div>
+                          <Switch
+                            id='allow-discount'
+                            checked={invoiceSettings.allowDiscount}
+                            onCheckedChange={(checked) => {
                               handleInvoiceSettingsChange({
-                                depositPercentage: value as number,
+                                allowDiscount: checked,
                               });
                             }}
-                            className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
-                            label='Deposit Percentage (%)'
-                            min='1'
-                            max='100'
                           />
                         </div>
-                      )}
+
+                        {invoiceSettings.allowDiscount && (
+                          <div className='pl-4 border-l-2 border-gray-200 mt-2'>
+                            <StatefulInput
+                              id='discount-rate'
+                              type='number'
+                              initialValue={invoiceSettings.defaultDiscountRate || 0}
+                              onValueChange={(value) => {
+                                handleInvoiceSettingsChange({
+                                  defaultDiscountRate: value as number,
+                                });
+                              }}
+                              className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                              label='Discount Rate (%)'
+                              min='0'
+                              max='100'
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Deposit Options */}
+                      <div>
+                        <div className='flex items-center justify-between mb-2'>
+                          <div>
+                            <Label
+                              htmlFor='require-deposit'
+                              className='block text-sm font-medium text-[#111827]'
+                            >
+                              Require Deposit
+                            </Label>
+                            <p className='text-xs text-[#6B7280]'>
+                              Allow client to pay a deposit upfront
+                            </p>
+                          </div>
+                          <Switch
+                            id='require-deposit'
+                            checked={invoiceSettings.requireDeposit}
+                            onCheckedChange={(checked) => {
+                              handleInvoiceSettingsChange({
+                                requireDeposit: checked,
+                              });
+                            }}
+                          />
+                        </div>
+
+                        {invoiceSettings.requireDeposit && (
+                          <div className='pl-4 border-l-2 border-gray-200 mt-2'>
+                            <StatefulInput
+                              id='deposit-percentage'
+                              type='number'
+                              initialValue={invoiceSettings.depositPercentage}
+                              onValueChange={(value) => {
+                                handleInvoiceSettingsChange({
+                                  depositPercentage: value as number,
+                                });
+                              }}
+                              className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                              label='Deposit Percentage (%)'
+                              min='1'
+                              max='100'
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -451,19 +453,21 @@ export default function InvoiceSection({
                 Notes & Additional Information
               </AccordionTrigger>
               <AccordionContent>
-                <StatefulTextarea
-                  id='invoice-notes'
-                  initialValue={invoiceSettings.invoiceNotes || ''}
-                  onValueChange={(value) => {
-                    handleInvoiceSettingsChange({
-                      invoiceNotes: value,
-                    });
-                  }}
-                  className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
-                  height='h-20'
-                  label='Invoice Notes'
-                  placeholder='Add any additional notes to include on the invoice...'
-                />
+                <div className='p-1'>
+                  <StatefulTextarea
+                    id='invoice-notes'
+                    initialValue={invoiceSettings.invoiceNotes || ''}
+                    onValueChange={(value) => {
+                      handleInvoiceSettingsChange({
+                        invoiceNotes: value,
+                      });
+                    }}
+                    className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                    height='h-20'
+                    label='Invoice Notes'
+                    placeholder='Add any additional notes to include on the invoice...'
+                  />
+                </div>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
