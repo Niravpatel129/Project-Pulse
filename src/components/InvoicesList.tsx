@@ -291,19 +291,53 @@ export default function InvoicesList() {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <Card>
                   <CardContent className='flex flex-col items-center justify-center py-20 gap-6'>
-                    <div className='text-2xl font-semibold text-gray-800 tracking-tight'>
-                      Ready to get paid? Approve your draft invoice.
+                    <div className='w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center'>
+                      <svg
+                        className='w-8 h-8 text-blue-600'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                        xmlns='http://www.w3.org/2000/svg'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+                        />
+                      </svg>
+                    </div>
+                    <div className='text-center space-y-2'>
+                      <h3 className='text-2xl font-semibold text-gray-900 tracking-tight'>
+                        No invoices found
+                      </h3>
+                      <p className='text-base text-gray-600 max-w-md'>
+                        {activeTab === 'all'
+                          ? "Get started by creating your first invoice. It's quick and easy!"
+                          : activeTab === 'unpaid'
+                          ? "You don't have any unpaid invoices at the moment."
+                          : "You don't have any draft invoices. Create one to get started!"}
+                      </p>
                     </div>
                     <div className='flex gap-4'>
                       <Button
-                        variant='outline'
                         onClick={() => {
                           return router.push('/invoices/new');
                         }}
+                        className='bg-blue-600 hover:bg-blue-700 text-white'
                       >
-                        Create a new invoice
+                        Create new invoice
                       </Button>
-                      <Button variant='outline'>View drafts</Button>
+                      {activeTab !== 'all' && (
+                        <Button
+                          variant='outline'
+                          onClick={() => {
+                            return setActiveTab('all');
+                          }}
+                        >
+                          View all invoices
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
