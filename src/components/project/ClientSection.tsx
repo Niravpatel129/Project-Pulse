@@ -63,6 +63,7 @@ export default function ClientSection({
   const [editClientId, setEditClientId] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [aiGeneratedFields, setAiGeneratedFields] = useState<string[]>([]);
 
   const resetClientForm = () => {
     setNewClient({
@@ -84,6 +85,7 @@ export default function ClientSection({
     setEditClientId(null);
     setAttachments([]);
     setAiError(null);
+    setAiGeneratedFields([]);
   };
 
   const handleCreateClient = () => {
@@ -169,6 +171,17 @@ export default function ClientSection({
         customFields: {},
       };
       setNewClient(aiGeneratedClient);
+      setAiGeneratedFields([
+        'name',
+        'email',
+        'phone',
+        'address.street',
+        'address.city',
+        'address.state',
+        'address.country',
+        'address.postalCode',
+        'taxId',
+      ]);
       setClientModalOpen(true);
       setShowAiInput(false);
       setIsAiGenerating(false);
@@ -436,13 +449,18 @@ export default function ClientSection({
                       id='client-name-modal'
                       value={newClient.name}
                       onChange={(e) => {
-                        return setNewClient({ ...newClient, name: e.target.value });
+                        setNewClient({ ...newClient, name: e.target.value });
+                        setAiGeneratedFields(
+                          aiGeneratedFields.filter((f) => {
+                            return f !== 'name';
+                          }),
+                        );
                       }}
                       placeholder='Business or person'
                       required
-                      className={!isEditingClient && newClient.name ? 'pl-8' : ''}
+                      className={aiGeneratedFields.includes('name') ? 'pl-8' : ''}
                     />
-                    {!isEditingClient && newClient.name && (
+                    {aiGeneratedFields.includes('name') && (
                       <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
                     )}
                   </div>
@@ -465,12 +483,17 @@ export default function ClientSection({
                       type='email'
                       value={newClient.email || ''}
                       onChange={(e) => {
-                        return setNewClient({ ...newClient, email: e.target.value });
+                        setNewClient({ ...newClient, email: e.target.value });
+                        setAiGeneratedFields(
+                          aiGeneratedFields.filter((f) => {
+                            return f !== 'email';
+                          }),
+                        );
                       }}
                       placeholder=''
-                      className={!isEditingClient && newClient.email ? 'pl-8' : ''}
+                      className={aiGeneratedFields.includes('email') ? 'pl-8' : ''}
                     />
-                    {!isEditingClient && newClient.email && (
+                    {aiGeneratedFields.includes('email') && (
                       <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
                     )}
                   </div>
@@ -488,12 +511,17 @@ export default function ClientSection({
                       type='tel'
                       value={newClient.phone || ''}
                       onChange={(e) => {
-                        return setNewClient({ ...newClient, phone: e.target.value });
+                        setNewClient({ ...newClient, phone: e.target.value });
+                        setAiGeneratedFields(
+                          aiGeneratedFields.filter((f) => {
+                            return f !== 'phone';
+                          }),
+                        );
                       }}
                       placeholder=''
-                      className={!isEditingClient && newClient.phone ? 'pl-8' : ''}
+                      className={aiGeneratedFields.includes('phone') ? 'pl-8' : ''}
                     />
-                    {!isEditingClient && newClient.phone && (
+                    {aiGeneratedFields.includes('phone') && (
                       <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
                     )}
                   </div>
@@ -579,9 +607,9 @@ export default function ClientSection({
                 <Label className='block mb-1 text-sm font-medium text-gray-700'>
                   Internal notes
                 </Label>
-                <Input
+                <textarea
                   placeholder='Notes entered here will not be visible to your customer'
-                  className='italic'
+                  className='italic w-full rounded-lg border border-gray-300 px-3 py-2 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 text-sm resize-y'
                 />
               </div>
             </TabsContent>
