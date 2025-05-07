@@ -38,7 +38,9 @@ export default function ClientSection({
   setActiveSection,
 }: ClientSectionProps) {
   const [clientModalOpen, setClientModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'basic' | 'billing'>('basic');
+  const [activeTab, setActiveTab] = useState<'contact' | 'billing' | 'shipping' | 'more'>(
+    'contact',
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [aiInput, setAiInput] = useState('');
   const [isAiGenerating, setIsAiGenerating] = useState(false);
@@ -77,7 +79,7 @@ export default function ClientSection({
       taxId: '',
       customFields: {},
     });
-    setActiveTab('basic');
+    setActiveTab('contact');
     setIsEditingClient(false);
     setEditClientId(null);
     setAttachments([]);
@@ -412,19 +414,22 @@ export default function ClientSection({
             }}
             className='mt-4'
           >
-            <TabsList className='grid grid-cols-2 mb-6'>
-              <TabsTrigger value='basic'>Basic Info</TabsTrigger>
-              <TabsTrigger value='billing'>Billing Address</TabsTrigger>
+            <TabsList className='grid grid-cols-4 mb-6'>
+              <TabsTrigger value='contact'>Contact</TabsTrigger>
+              <TabsTrigger value='billing'>Billing</TabsTrigger>
+              <TabsTrigger value='shipping'>Shipping</TabsTrigger>
+              <TabsTrigger value='more'>More</TabsTrigger>
             </TabsList>
 
-            <TabsContent value='basic' className='space-y-4'>
+            {/* Contact Tab */}
+            <TabsContent value='contact' className='space-y-4'>
               <div className='grid grid-cols-2 gap-4'>
                 <div>
                   <Label
                     htmlFor='client-name-modal'
                     className='block mb-1 text-sm font-medium text-gray-700'
                   >
-                    Client Name <span className='text-red-500'>*</span>
+                    Customer <span className='text-red-500'>*</span>
                   </Label>
                   <div className='relative'>
                     <Input
@@ -433,7 +438,7 @@ export default function ClientSection({
                       onChange={(e) => {
                         return setNewClient({ ...newClient, name: e.target.value });
                       }}
-                      placeholder='Enter client name'
+                      placeholder='Business or person'
                       required
                       className={!isEditingClient && newClient.name ? 'pl-8' : ''}
                     />
@@ -441,13 +446,18 @@ export default function ClientSection({
                       <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
                     )}
                   </div>
+                  {/* Error message example */}
+                  {/* <p className='text-xs text-red-600 mt-1'>Enter a value.</p> */}
                 </div>
+                <div></div>
+              </div>
+              <div className='grid grid-cols-2 gap-4'>
                 <div>
                   <Label
                     htmlFor='client-email-modal'
                     className='block mb-1 text-sm font-medium text-gray-700'
                   >
-                    Email <span className='text-red-500'>*</span>
+                    Email
                   </Label>
                   <div className='relative'>
                     <Input
@@ -457,8 +467,7 @@ export default function ClientSection({
                       onChange={(e) => {
                         return setNewClient({ ...newClient, email: e.target.value });
                       }}
-                      placeholder='e.g. contact@acmecorp.com'
-                      required
+                      placeholder=''
                       className={!isEditingClient && newClient.email ? 'pl-8' : ''}
                     />
                     {!isEditingClient && newClient.email && (
@@ -466,187 +475,114 @@ export default function ClientSection({
                     )}
                   </div>
                 </div>
-              </div>
-
-              <div>
-                <Label
-                  htmlFor='client-phone-modal'
-                  className='block mb-1 text-sm font-medium text-gray-700'
-                >
-                  Phone Number
-                </Label>
-                <div className='relative'>
-                  <Input
-                    id='client-phone-modal'
-                    type='tel'
-                    value={newClient.phone || ''}
-                    onChange={(e) => {
-                      return setNewClient({ ...newClient, phone: e.target.value });
-                    }}
-                    placeholder='e.g. +1 (555) 123-4567'
-                    className={!isEditingClient && newClient.phone ? 'pl-8' : ''}
-                  />
-                  {!isEditingClient && newClient.phone && (
-                    <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <Label
-                  htmlFor='client-tax-id-modal'
-                  className='block mb-1 text-sm font-medium text-gray-700'
-                >
-                  Tax ID / VAT Number
-                </Label>
-                <div className='relative'>
-                  <Input
-                    id='client-tax-id-modal'
-                    value={newClient.taxId || ''}
-                    onChange={(e) => {
-                      return setNewClient({ ...newClient, taxId: e.target.value });
-                    }}
-                    placeholder='e.g. VAT123456789'
-                    className={!isEditingClient && newClient.taxId ? 'pl-8' : ''}
-                  />
-                  {!isEditingClient && newClient.taxId && (
-                    <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
-                  )}
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value='billing' className='space-y-4'>
-              <div className='space-y-3'>
                 <div>
                   <Label
-                    htmlFor='client-street-modal'
+                    htmlFor='client-phone-modal'
                     className='block mb-1 text-sm font-medium text-gray-700'
                   >
-                    Street Address
+                    Phone
                   </Label>
                   <div className='relative'>
                     <Input
-                      id='client-street-modal'
-                      value={newClient.address?.street || ''}
+                      id='client-phone-modal'
+                      type='tel'
+                      value={newClient.phone || ''}
                       onChange={(e) => {
-                        return setNewClient({
-                          ...newClient,
-                          address: { ...newClient.address, street: e.target.value },
-                        });
+                        return setNewClient({ ...newClient, phone: e.target.value });
                       }}
-                      placeholder='e.g. 123 Main St.'
-                      className={!isEditingClient && newClient.address?.street ? 'pl-8' : ''}
+                      placeholder=''
+                      className={!isEditingClient && newClient.phone ? 'pl-8' : ''}
                     />
-                    {!isEditingClient && newClient.address?.street && (
+                    {!isEditingClient && newClient.phone && (
                       <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
                     )}
                   </div>
                 </div>
-                <div className='grid grid-cols-2 gap-3'>
-                  <div>
-                    <Label
-                      htmlFor='client-city-modal'
-                      className='block mb-1 text-sm font-medium text-gray-700'
-                    >
-                      City
-                    </Label>
-                    <div className='relative'>
-                      <Input
-                        id='client-city-modal'
-                        value={newClient.address?.city || ''}
-                        onChange={(e) => {
-                          return setNewClient({
-                            ...newClient,
-                            address: { ...newClient.address, city: e.target.value },
-                          });
-                        }}
-                        placeholder='e.g. New York'
-                        className={!isEditingClient && newClient.address?.city ? 'pl-8' : ''}
-                      />
-                      {!isEditingClient && newClient.address?.city && (
-                        <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
-                      )}
-                    </div>
+              </div>
+              <div>
+                <Label className='block mb-1 text-sm font-medium text-gray-700'>Contact</Label>
+                <div className='grid grid-cols-2 gap-2'>
+                  <Input placeholder='First name' className='italic' />
+                  <Input placeholder='Last name' className='italic' />
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Billing Tab */}
+            <TabsContent value='billing' className='space-y-4'>
+              <div>
+                <Label className='block mb-1 text-sm font-medium text-gray-700'>Currency</Label>
+                <Input placeholder='Select a currency...' className='italic' />
+              </div>
+              <div>
+                <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                  Billing address
+                </Label>
+                <div className='space-y-2'>
+                  <Input placeholder='Address line 1' className='italic' />
+                  <Input placeholder='Address line 2' className='italic' />
+                  <div className='grid grid-cols-2 gap-2'>
+                    <Input placeholder='City' className='italic' />
+                    <Input placeholder='Postal/ZIP code' className='italic' />
                   </div>
-                  <div>
-                    <Label
-                      htmlFor='client-state-modal'
-                      className='block mb-1 text-sm font-medium text-gray-700'
-                    >
-                      State / Province
-                    </Label>
-                    <div className='relative'>
-                      <Input
-                        id='client-state-modal'
-                        value={newClient.address?.state || ''}
-                        onChange={(e) => {
-                          return setNewClient({
-                            ...newClient,
-                            address: { ...newClient.address, state: e.target.value },
-                          });
-                        }}
-                        placeholder='e.g. NY'
-                        className={!isEditingClient && newClient.address?.state ? 'pl-8' : ''}
-                      />
-                      {!isEditingClient && newClient.address?.state && (
-                        <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
-                      )}
-                    </div>
+                  <div className='grid grid-cols-2 gap-2'>
+                    <Input placeholder='Country' className='italic' />
+                    <Input placeholder='Province/State' className='italic' />
                   </div>
                 </div>
-                <div className='grid grid-cols-2 gap-3'>
-                  <div>
-                    <Label
-                      htmlFor='client-postal-code-modal'
-                      className='block mb-1 text-sm font-medium text-gray-700'
-                    >
-                      Postal Code
-                    </Label>
-                    <div className='relative'>
-                      <Input
-                        id='client-postal-code-modal'
-                        value={newClient.address?.postalCode || ''}
-                        onChange={(e) => {
-                          return setNewClient({
-                            ...newClient,
-                            address: { ...newClient.address, postalCode: e.target.value },
-                          });
-                        }}
-                        placeholder='e.g. 10001'
-                        className={!isEditingClient && newClient.address?.postalCode ? 'pl-8' : ''}
-                      />
-                      {!isEditingClient && newClient.address?.postalCode && (
-                        <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <Label
-                      htmlFor='client-country-modal'
-                      className='block mb-1 text-sm font-medium text-gray-700'
-                    >
-                      Country
-                    </Label>
-                    <div className='relative'>
-                      <Input
-                        id='client-country-modal'
-                        value={newClient.address?.country || ''}
-                        onChange={(e) => {
-                          return setNewClient({
-                            ...newClient,
-                            address: { ...newClient.address, country: e.target.value },
-                          });
-                        }}
-                        placeholder='e.g. USA'
-                        className={!isEditingClient && newClient.address?.country ? 'pl-8' : ''}
-                      />
-                      {!isEditingClient && newClient.address?.country && (
-                        <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
-                      )}
-                    </div>
-                  </div>
+              </div>
+            </TabsContent>
+
+            {/* Shipping Tab */}
+            <TabsContent value='shipping' className='space-y-4'>
+              <div>
+                <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                  Shipping address
+                </Label>
+                <div className='flex items-center gap-2 mb-2'>
+                  <input type='checkbox' className='accent-blue-600 w-4 h-4' id='same-as-billing' />
+                  <Label htmlFor='same-as-billing' className='text-gray-700'>
+                    Same as billing address
+                  </Label>
                 </div>
+                {/* Optionally, add shipping address fields here if not same as billing */}
+              </div>
+            </TabsContent>
+
+            {/* More Tab */}
+            <TabsContent value='more' className='space-y-4'>
+              <div className='grid grid-cols-2 gap-4'>
+                <div>
+                  <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                    Account number
+                  </Label>
+                  <Input />
+                </div>
+                <div>
+                  <Label className='block mb-1 text-sm font-medium text-gray-700'>Fax</Label>
+                  <Input />
+                </div>
+                <div>
+                  <Label className='block mb-1 text-sm font-medium text-gray-700'>Mobile</Label>
+                  <Input />
+                </div>
+                <div>
+                  <Label className='block mb-1 text-sm font-medium text-gray-700'>Toll-free</Label>
+                  <Input />
+                </div>
+                <div>
+                  <Label className='block mb-1 text-sm font-medium text-gray-700'>Website</Label>
+                  <Input />
+                </div>
+              </div>
+              <div>
+                <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                  Internal notes
+                </Label>
+                <Input
+                  placeholder='Notes entered here will not be visible to your customer'
+                  className='italic'
+                />
               </div>
             </TabsContent>
           </Tabs>
