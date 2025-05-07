@@ -362,23 +362,26 @@ export default function InvoiceSection({
                           <div className='pl-4 border-l-2 border-gray-200 mt-2'>
                             <StatefulInput
                               id='deposit-percentage'
-                              type='number'
-                              initialValue={invoiceSettings.depositPercentage}
+                              type='text'
+                              initialValue={invoiceSettings.depositPercentage || ''}
                               onValueChange={(value) => {
-                                handleInvoiceSettingsChange({
-                                  depositPercentage: value as number,
-                                });
+                                const numValue = value === '' ? 0 : Number(value);
+                                if (!isNaN(numValue)) {
+                                  handleInvoiceSettingsChange({
+                                    depositPercentage: numValue,
+                                  });
+                                }
                               }}
                               className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
                               label='Deposit Percentage (%)'
-                              min='1'
-                              max='100'
+                              placeholder='0'
                             />
                             <p className='text-xs text-[#6B7280] mt-1'>
-                              Total deposit: {projectCurrency}{' '}
+                              Total deposit:{' '}
                               {((total * (invoiceSettings.depositPercentage || 0)) / 100).toFixed(
                                 2,
-                              )}
+                              )}{' '}
+                              {projectCurrency}
                             </p>
                           </div>
                         )}
