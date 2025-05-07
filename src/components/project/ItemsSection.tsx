@@ -1055,147 +1055,136 @@ export default function ItemsSection({
               )}
             </div>
 
-            {items.map((item, index) => {
-              const itemTotal =
-                parseFloat(item.price.replace(/,/g, '')) * parseFloat(item.quantity || '1');
+            {items.length === 0 ? (
+              <div className='bg-white rounded-xl border border-gray-200 p-6'>
+                <div className='text-center py-0 px-4'>
+                  <h3 className='mt-2 text-xl font-semibold text-gray-900 mb-3'>
+                    Add Your First Item
+                  </h3>
+                  <p className='text-gray-500 mb-8 max-w-md mx-auto'>
+                    Get started by adding your first item. Choose from two convenient options:
+                  </p>
 
-              return (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05, duration: 0.2 }}
-                  key={item.id}
-                  className='border border-[#E5E7EB] rounded-xl p-4 transition-all duration-200 ease-in-out hover:border-blue-300 group bg-white shadow-sm hover:shadow-md hover:translate-y-[-1px]'
-                >
-                  <div className='flex justify-between items-start'>
-                    <div
-                      className='flex items-start flex-1 cursor-pointer'
-                      onClick={() => {
-                        return handleEditItem(item as ExtendedItem);
-                      }}
-                    >
-                      <div className='flex-1'>
-                        {/* Display mode */}
-                        <div className='group/item'>
-                          <div className='flex flex-col'>
-                            <div className='flex items-center'>
-                              <span className='text-[#111827] text-base font-semibold group-hover/item:text-black transition-colors'>
-                                {item.name}
-                              </span>
-                              {parseInt(item.quantity) > 1 && (
-                                <span className='ml-2 text-xs font-medium bg-gray-100 text-gray-600 rounded-full px-2 py-0.5'>
-                                  {item.quantity}x
+                  <div className='grid grid-cols-2 gap-6 max-w-2xl mx-auto'>
+                    <div className='bg-white p-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors flex flex-col'>
+                      <div className='relative'>
+                        <div className='absolute inset-0 bg-gradient-to-r from-blue-100 to-blue-50 blur-xl opacity-50 rounded-full'></div>
+                        <div className='bg-blue-50 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 relative'>
+                          <Plus className='w-6 h-6 text-blue-600' />
+                        </div>
+                      </div>
+                      <h4 className='font-medium text-gray-900 mb-2'>Manual Entry</h4>
+                      <p className='text-sm text-gray-500 mb-4 flex-grow'>
+                        Perfect for when you have all the item details ready. Enter information
+                        directly into our organized form.
+                      </p>
+                      <Button
+                        onClick={() => {
+                          setCurrentNewItemMode('manual');
+                          setTimeout(() => {
+                            return nameInputRef.current?.focus();
+                          }, 10);
+                        }}
+                        className='w-full bg-gray-900 hover:bg-gray-800 text-white'
+                      >
+                        Add Manually
+                      </Button>
+                    </div>
+
+                    <div className='bg-white p-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors flex flex-col'>
+                      <div className='relative'>
+                        <div className='absolute inset-0 bg-gradient-to-r from-purple-100 to-purple-50 blur-xl opacity-50 rounded-full'></div>
+                        <div className='bg-purple-50 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 relative'>
+                          <Sparkles className='w-6 h-6 text-purple-600' />
+                        </div>
+                      </div>
+                      <h4 className='font-medium text-gray-900 mb-2'>AI-Powered</h4>
+                      <p className='text-sm text-gray-500 mb-4 flex-grow'>
+                        Let AI help you create items. Just describe what you need in natural
+                        language.
+                      </p>
+                      <Button
+                        onClick={() => {
+                          setCurrentNewItemMode('ai');
+                          setTimeout(() => {
+                            return aiPromptInputRef.current?.focus();
+                          }, 10);
+                        }}
+                        className='w-full bg-gray-900 hover:bg-gray-800 text-white'
+                      >
+                        Use AI Assistant
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              items.map((item, index) => {
+                const itemTotal =
+                  parseFloat(item.price.replace(/,/g, '')) * parseFloat(item.quantity || '1');
+
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05, duration: 0.2 }}
+                    key={item.id}
+                    className='border border-[#E5E7EB] rounded-xl p-4 transition-all duration-200 ease-in-out hover:border-blue-300 group bg-white shadow-sm hover:shadow-md hover:translate-y-[-1px]'
+                  >
+                    <div className='flex justify-between items-start'>
+                      <div
+                        className='flex items-start flex-1 cursor-pointer'
+                        onClick={() => {
+                          return handleEditItem(item as ExtendedItem);
+                        }}
+                      >
+                        <div className='flex-1'>
+                          {/* Display mode */}
+                          <div className='group/item'>
+                            <div className='flex flex-col'>
+                              <div className='flex items-center'>
+                                <span className='text-[#111827] text-base font-semibold group-hover/item:text-black transition-colors'>
+                                  {item.name}
                                 </span>
-                              )}
-                            </div>
+                                {parseInt(item.quantity) > 1 && (
+                                  <span className='ml-2 text-xs font-medium bg-gray-100 text-gray-600 rounded-full px-2 py-0.5'>
+                                    {item.quantity}x
+                                  </span>
+                                )}
+                              </div>
 
-                            {item.description ? (
-                              <p className='text-[#6B7280] text-sm mt-1 leading-relaxed group-hover/item:text-[#4B5563] transition-colors'>
-                                {item.description}
-                              </p>
-                            ) : (
-                              <p className='text-[#9CA3AF] text-sm mt-1 italic group-hover/item:text-[#6B7280] transition-colors'>
-                                Add a description...
-                              </p>
-                            )}
+                              {item.description ? (
+                                <p className='text-[#6B7280] text-sm mt-1 leading-relaxed group-hover/item:text-[#4B5563] transition-colors'>
+                                  {item.description}
+                                </p>
+                              ) : (
+                                <p className='text-[#9CA3AF] text-sm mt-1 italic group-hover/item:text-[#6B7280] transition-colors'>
+                                  Add a description...
+                                </p>
+                              )}
 
-                            <div className='mt-2 flex flex-wrap items-center gap-2'>
-                              {item.taxable && item.taxRate > 0 && (
-                                <div className='text-xs text-blue-600 bg-blue-50 rounded-full py-0.5 px-2 flex items-center'>
-                                  <Hash size={10} className='mr-1' />
-                                  {item.taxName || 'Tax'}: {item.taxRate}%
-                                </div>
-                              )}
-                              {item.discount > 0 && (
-                                <div className='text-xs text-green-600 bg-green-50 rounded-full py-0.5 px-2 flex items-center'>
-                                  <Scissors size={10} className='mr-1' />
-                                  Discount: {item.discount}%
-                                </div>
-                              )}
+                              <div className='mt-2 flex flex-wrap items-center gap-2'>
+                                {item.taxable && item.taxRate > 0 && (
+                                  <div className='text-xs text-blue-600 bg-blue-50 rounded-full py-0.5 px-2 flex items-center'>
+                                    <Hash size={10} className='mr-1' />
+                                    {item.taxName || 'Tax'}: {item.taxRate}%
+                                  </div>
+                                )}
+                                {item.discount > 0 && (
+                                  <div className='text-xs text-green-600 bg-green-50 rounded-full py-0.5 px-2 flex items-center'>
+                                    <Scissors size={10} className='mr-1' />
+                                    Discount: {item.discount}%
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div className='flex flex-col items-end'>
-                      <div className='flex flex-col items-end'>
-                        <div className='flex items-center space-x-1'>
-                          <span className='text-[#111827] text-sm font-medium'>
-                            {getCurrencySymbol(projectCurrency)}
-                            {item.price}
-                          </span>
-                          {parseInt(item.quantity) > 1 && (
-                            <span className='text-gray-400 text-xs'>× {item.quantity}</span>
-                          )}
-                        </div>
-
-                        {parseInt(item.quantity) > 1 && (
-                          <span className='text-gray-600 text-xs font-medium mt-1'>
-                            {getCurrencySymbol(projectCurrency)}
-                            {calculateItemTotal(item.price, item.quantity)} total
-                          </span>
-                        )}
-                      </div>
-                      <div className='flex flex-col items-end gap-2 mt-2'>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation(); // Prevent card click when clicking delete
-                            return handleRemoveItem(item.id, e);
-                          }}
-                          className='text-red-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:underline'
-                        >
-                          <X size={12} />
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-
-            {items.length === 0 && (
-              <div className='text-center p-8 border-2 border-dashed border-gray-200 rounded-xl bg-white transition-all duration-200 hover:border-blue-200 group'>
-                <div className='flex flex-col items-center justify-center space-y-3'>
-                  <div className='rounded-full bg-blue-50 p-3 group-hover:bg-blue-100 transition-colors duration-200'>
-                    <Plus size={22} className='text-blue-600' />
-                  </div>
-                  <h3 className='text-[#111827] font-medium group-hover:text-blue-700 transition-colors duration-200'>
-                    No items yet
-                  </h3>
-                  <p className='text-[#6B7280] text-sm max-w-[320px] leading-relaxed'>
-                    Create items manually or generate them with AI to add to your project.
-                  </p>
-                  <div className='flex gap-3 mt-2'>
-                    <Button
-                      onClick={() => {
-                        setCurrentNewItemMode('manual');
-                        setTimeout(() => {
-                          return nameInputRef.current?.focus();
-                        }, 10);
-                      }}
-                      className='bg-blue-600 hover:bg-blue-700 text-white'
-                      size='sm'
-                    >
-                      <Plus size={16} className='mr-2' />
-                      Add Item Manually
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setCurrentNewItemMode('ai');
-                        setTimeout(() => {
-                          return aiPromptInputRef.current?.focus();
-                        }, 10);
-                      }}
-                      className='bg-purple-600 hover:bg-purple-700 text-white'
-                      size='sm'
-                    >
-                      <Sparkles size={16} className='mr-2' />
-                      Quick Add With AI
-                    </Button>
-                  </div>
-                </div>
-              </div>
+                  </motion.div>
+                );
+              })
             )}
           </div>
         </div>
