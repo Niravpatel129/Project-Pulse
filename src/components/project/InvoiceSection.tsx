@@ -500,113 +500,6 @@ export default function InvoiceSection({
     );
   };
 
-  const InvoiceItemsCard = () => {
-    return (
-      <div className='border border-[#E5E7EB] rounded-md p-4'>
-        <h3 className='text-sm font-medium text-[#111827] mb-3'>Invoice Items</h3>
-        <div className='max-h-[300px] overflow-y-auto'>
-          {items.length > 0 ? (
-            <table className='w-full text-sm'>
-              <thead className='text-xs text-[#6B7280]'>
-                <tr className='border-b border-[#E5E7EB]'>
-                  <th className='text-left py-2 font-medium'>Item</th>
-                  <th className='text-right py-2 font-medium'>Qty</th>
-                  <th className='text-right py-2 font-medium'>Price</th>
-                  <th className='text-right py-2 font-medium'>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((item) => {
-                  const itemTotal =
-                    Number.parseFloat(item.price.replace(/,/g, '')) *
-                    Number.parseFloat(item.quantity);
-                  return (
-                    <tr key={item.id} className='border-b border-[#E5E7EB]'>
-                      <td className='py-2'>
-                        <div>{item.name}</div>
-                        {item.description && (
-                          <div className='text-xs text-[#6B7280]'>{item.description}</div>
-                        )}
-                      </td>
-                      <td className='text-right py-2'>{item.quantity}</td>
-                      <td className='text-right py-2'>
-                        {getCurrencySymbol(projectCurrency)}
-                        {item.price}
-                      </td>
-                      <td className='text-right py-2'>
-                        {getCurrencySymbol(projectCurrency)}
-                        {formatCurrency(itemTotal)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          ) : (
-            <div className='text-center py-6 text-[#6B7280]'>
-              No items added to this invoice yet.
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const InvoiceSummaryCard = () => {
-    return (
-      <div className='border border-[#E5E7EB] rounded-md p-4'>
-        <h3 className='text-sm font-medium text-[#111827] mb-3'>Invoice Summary</h3>
-        <div className='space-y-2'>
-          <div className='flex justify-between'>
-            <span className='text-[#6B7280]'>Subtotal</span>
-            <span>
-              {getCurrencySymbol(projectCurrency)}
-              {formatCurrency(subtotal)}
-            </span>
-          </div>
-
-          {invoiceSettings.allowDiscount && (
-            <div className='flex justify-between'>
-              <span className='text-[#6B7280]'>
-                Discount ({invoiceSettings.defaultDiscountRate || 0}%)
-              </span>
-              <span className='text-red-500'>
-                -{getCurrencySymbol(projectCurrency)}
-                {formatCurrency(discountAmount)}
-              </span>
-            </div>
-          )}
-
-          <div className='flex justify-between'>
-            <span className='text-[#6B7280]'>Tax ({workspaceTaxSettings.defaultTaxRate}%)</span>
-            <span>
-              {getCurrencySymbol(projectCurrency)}
-              {formatCurrency(taxAmount)}
-            </span>
-          </div>
-
-          <div className='flex justify-between pt-2 border-t border-[#E5E7EB] font-medium'>
-            <span>Total</span>
-            <span>
-              {getCurrencySymbol(projectCurrency)}
-              {formatCurrency(total)}
-            </span>
-          </div>
-
-          {invoiceSettings.requireDeposit && (
-            <div className='flex justify-between pt-4 border-t border-[#E5E7EB] mt-4'>
-              <span className='text-[#6B7280]'>Deposit ({invoiceSettings.depositPercentage}%)</span>
-              <span className='font-medium'>
-                {getCurrencySymbol(projectCurrency)}
-                {formatCurrency(depositAmount)}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   const InvoiceNotesCard = () => {
     return (
       <div className='border border-[#E5E7EB] rounded-md p-4'>
@@ -647,7 +540,6 @@ export default function InvoiceSection({
 
             {/* Right Column */}
             <div className='space-y-6'>
-              <InvoiceSummaryCard />
               <InvoiceNotesCard />
             </div>
           </div>
