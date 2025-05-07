@@ -14,9 +14,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { newRequest } from '@/utils/newRequest';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import SectionFooter from './SectionFooter';
 import { Client, InvoiceSettings, Item } from './types';
 
@@ -220,28 +222,56 @@ export default function InvoiceSection({
 
   const handleGenerateInvoice = async () => {
     if (items.length === 0) {
+      toast.error('Please add at least one item to the invoice');
       return;
     }
 
     setIsGeneratingInvoice(true);
 
     try {
-      // Simulate API call delay
+      // Prepare invoice data
+      const invoiceData = {
+        clientId: client._id,
+        items: items.map((item) => {
+          return {
+            name: item.name,
+            description: item.description,
+            quantity: Number.parseFloat(item.quantity),
+            price: Number.parseFloat(item.price.replace(/,/g, '')),
+            discount: invoiceSettings.allowDiscount ? invoiceSettings.defaultDiscountRate : 0,
+            tax: workspaceTaxSettings.defaultTaxRate,
+          };
+        }),
+        dueDate: dueDate?.toISOString(),
+        taxRate: workspaceTaxSettings.defaultTaxRate,
+        taxId: workspaceTaxSettings.taxId || '',
+        showTaxId: !!workspaceTaxSettings.taxId,
+        notes: invoiceSettings.invoiceNotes || '',
+        teamNotes: invoiceSettings.teamNotes || '',
+        currency: projectCurrency.toUpperCase(),
+        deliveryOptions: 'email',
+        requireDeposit: invoiceSettings.requireDeposit,
+        depositPercentage: invoiceSettings.depositPercentage,
+        discount: invoiceSettings.allowDiscount ? invoiceSettings.defaultDiscountRate : 0,
+        discountAmount: discountAmount,
+        subtotal: subtotal,
+        taxAmount: taxAmount,
+        total: total,
+      };
 
-      // In a real app, this would make an API request to generate the invoice
-      console.log('Invoice Details:', {
-        items,
-        client,
-        projectCurrency,
-        invoiceSettings,
-        workspaceTaxSettings,
-        dueDate,
-      });
+      // Make API call to create invoice
+      const response = await newRequest.post('/invoices', invoiceData);
 
-      // setIsGeneratingInvoice(false);
-      // onClose();
-    } catch (error) {
+      if (response.data.status === 'success') {
+        toast.success('Invoice created successfully');
+        onClose();
+      } else {
+        throw new Error(response.data.message || 'Failed to create invoice');
+      }
+    } catch (error: any) {
       console.error('Error generating invoice:', error);
+      toast.error(error.message || 'Failed to create invoice');
+    } finally {
       setIsGeneratingInvoice(false);
     }
   };
