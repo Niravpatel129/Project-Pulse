@@ -374,6 +374,12 @@ export default function InvoiceSection({
                               min='1'
                               max='100'
                             />
+                            <p className='text-xs text-[#6B7280] mt-1'>
+                              Total deposit: {projectCurrency}{' '}
+                              {((total * (invoiceSettings.depositPercentage || 0)) / 100).toFixed(
+                                2,
+                              )}
+                            </p>
                           </div>
                         )}
                       </div>
