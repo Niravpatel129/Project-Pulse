@@ -1,11 +1,12 @@
 'use client';
 
+import { useClients } from '@/hooks/useClients';
 import { useRef, useState } from 'react';
 import ClientSection from './ClientSection';
 import InvoiceSection from './InvoiceSection';
 import ItemsSection from './ItemsSection';
 import LeftSidebar from './LeftSidebar';
-import { Client, InvoiceSettings, Item, Section } from './types';
+import { InvoiceSettings, Item, Section } from './types';
 
 type ProjectManagementProps = {
   onClose: () => void;
@@ -16,7 +17,7 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
   const [selectedClient, setSelectedClient] = useState('');
   const [items, setItems] = useState<Item[]>([]);
   const [projectCurrency, setProjectCurrency] = useState('USD');
-  const [clients, setClients] = useState<Client[]>([]);
+  const { clients } = useClients();
 
   // Workspace tax settings would normally be loaded from a global state or context
   // For demo purposes, we're initializing with default values
@@ -143,7 +144,7 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
             items={items}
             client={
               clients.find((c) => {
-                return c.id === selectedClient;
+                return c._id === selectedClient;
               })!
             }
             projectCurrency={projectCurrency}
