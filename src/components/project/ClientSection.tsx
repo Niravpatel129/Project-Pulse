@@ -203,50 +203,52 @@ export default function ClientSection({
 
           {/* Search and client list */}
           <div className='bg-white rounded-xl border border-gray-200 p-6'>
-            <div className='flex gap-2 mb-4'>
-              <div className='relative flex-1'>
-                <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
-                <Input
-                  type='text'
-                  placeholder='Search clients...'
-                  value={searchQuery}
-                  onChange={(e) => {
-                    return setSearchQuery(e.target.value);
-                  }}
-                  className='pl-10'
-                />
+            {clients.length > 0 && (
+              <div className='flex gap-2 mb-4'>
+                <div className='relative flex-1'>
+                  <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
+                  <Input
+                    type='text'
+                    placeholder='Search clients...'
+                    value={searchQuery}
+                    onChange={(e) => {
+                      return setSearchQuery(e.target.value);
+                    }}
+                    className='pl-10'
+                  />
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button className='bg-gray-900 hover:bg-gray-800 text-white whitespace-nowrap border border-gray-700 shadow-sm'>
+                      <Plus className='w-4 h-4 mr-2' />
+                      Add Client
+                      <ChevronDown className='w-4 h-4 ml-2' />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align='end' className='w-[200px]'>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        resetClientForm();
+                        setClientModalOpen(true);
+                      }}
+                      className='cursor-pointer'
+                    >
+                      <Plus className='w-4 h-4 mr-2' />
+                      Manual Entry
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        return setShowAiInput(true);
+                      }}
+                      className='cursor-pointer'
+                    >
+                      <Sparkles className='w-4 h-4 mr-2' />
+                      AI-Powered
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className='bg-gray-900 hover:bg-gray-800 text-white whitespace-nowrap border border-gray-700 shadow-sm'>
-                    <Plus className='w-4 h-4 mr-2' />
-                    Add Client
-                    <ChevronDown className='w-4 h-4 ml-2' />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align='end' className='w-[200px]'>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      resetClientForm();
-                      setClientModalOpen(true);
-                    }}
-                    className='cursor-pointer'
-                  >
-                    <Plus className='w-4 h-4 mr-2' />
-                    Manual Entry
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      return setShowAiInput(true);
-                    }}
-                    className='cursor-pointer'
-                  >
-                    <Sparkles className='w-4 h-4 mr-2' />
-                    AI-Powered
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            )}
 
             {showAiInput ? (
               <AICard
@@ -276,25 +278,70 @@ export default function ClientSection({
             ) : (
               <>
                 {filteredClients.length === 0 ? (
-                  <div className='text-center py-8'>
-                    <div className='bg-gray-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4'>
-                      <User className='w-8 h-8 text-gray-400' />
+                  <div className='text-center py-0 px-4'>
+                    <div className='relative'>
+                      <div className='absolute inset-0 bg-gradient-to-r from-gray-100 to-gray-50 blur-xl opacity-50 rounded-full'></div>
+                      <div className='bg-gray-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 relative'>
+                        <User className='w-10 h-10 text-gray-400' />
+                      </div>
                     </div>
-                    <h3 className='text-lg font-medium text-gray-900 mb-2'>No clients found</h3>
-                    <p className='text-gray-500 mb-4'>
+                    <h3 className='text-xl font-semibold text-gray-900 mb-3'>
+                      Add Your First Client
+                    </h3>
+                    <p className='text-gray-500 mb-8 max-w-md mx-auto'>
                       {searchQuery
                         ? 'No clients match your search. Try a different search term or add a new client.'
-                        : "You haven't added any clients yet. Add your first client to get started."}
+                        : 'Get started by adding your first client. Choose from two convenient options:'}
                     </p>
-                    <Button
-                      onClick={() => {
-                        return setShowAiInput(true);
-                      }}
-                      className='bg-gray-900 hover:bg-gray-800 text-white'
-                    >
-                      <Sparkles className='w-4 h-4 mr-2' />
-                      Add Client with AI
-                    </Button>
+
+                    {!searchQuery && (
+                      <div className='grid grid-cols-2 gap-6 max-w-2xl mx-auto'>
+                        <div className='bg-white p-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors flex flex-col'>
+                          <div className='relative'>
+                            <div className='absolute inset-0 bg-gradient-to-r from-blue-100 to-blue-50 blur-xl opacity-50 rounded-full'></div>
+                            <div className='bg-blue-50 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 relative'>
+                              <Plus className='w-6 h-6 text-blue-600' />
+                            </div>
+                          </div>
+                          <h4 className='font-medium text-gray-900 mb-2'>Manual Entry</h4>
+                          <p className='text-sm text-gray-500 mb-4 flex-grow'>
+                            Perfect for when you have all the client details ready. Enter
+                            information directly into our organized form.
+                          </p>
+                          <Button
+                            onClick={() => {
+                              resetClientForm();
+                              setClientModalOpen(true);
+                            }}
+                            className='w-full bg-gray-900 hover:bg-gray-800 text-white'
+                          >
+                            Add Manually
+                          </Button>
+                        </div>
+
+                        <div className='bg-white p-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors flex flex-col'>
+                          <div className='relative'>
+                            <div className='absolute inset-0 bg-gradient-to-r from-purple-100 to-purple-50 blur-xl opacity-50 rounded-full'></div>
+                            <div className='bg-purple-50 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 relative'>
+                              <Sparkles className='w-6 h-6 text-purple-600' />
+                            </div>
+                          </div>
+                          <h4 className='font-medium text-gray-900 mb-2'>AI-Powered</h4>
+                          <p className='text-sm text-gray-500 mb-4 flex-grow'>
+                            Let AI help you create a client profile. Just describe your client in
+                            natural language.
+                          </p>
+                          <Button
+                            onClick={() => {
+                              return setShowAiInput(true);
+                            }}
+                            className='w-full bg-gray-900 hover:bg-gray-800 text-white'
+                          >
+                            Use AI Assistant
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className='space-y-3'>
