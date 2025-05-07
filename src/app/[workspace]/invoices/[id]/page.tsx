@@ -1,10 +1,11 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ClipboardList, CreditCard } from 'lucide-react';
+import { ChevronLeft, ClipboardList, CreditCard } from 'lucide-react';
+import Link from 'next/link';
 import { ClientWorkTab } from './components/ClientWorkTab';
 import { Invoice } from './components/Invoice';
 import { InvoiceTab } from './components/InvoiceTab';
 
-export default function page() {
+export default function Page() {
   // Mock invoice data
   const invoice = {
     id: 1,
@@ -30,8 +31,14 @@ export default function page() {
   return (
     <div className='bg-gray-50 min-h-screen'>
       <div className='max-w-[1200px] mx-auto py-10 px-4'>
+        <div className='flex items-center gap-2 mb-6'>
+          <Link href='/invoices' className='text-gray-400 hover:text-gray-600'>
+            <ChevronLeft className='w-5 h-5' />
+          </Link>
+          <span className='text-gray-900 font-medium'>Invoice #{invoice.id}</span>
+        </div>
         <Tabs defaultValue='invoice' className='w-full'>
-          <TabsList className='mb-6'>
+          <TabsList>
             <TabsTrigger value='invoice' className='flex items-center gap-2'>
               <CreditCard className='w-4 h-4' />
               Invoice
