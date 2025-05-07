@@ -31,7 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, Hash, Loader2, PencilLine, Plus, Scissors, Sparkles, X } from 'lucide-react';
+import { Check, Hash, Loader2, Plus, Scissors, Sparkles, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import SectionFooter from './SectionFooter';
@@ -708,7 +708,7 @@ export default function ItemsSection({
                       variant='outline'
                     >
                       <Sparkles size={18} className='mr-2' />
-                      <span className='font-medium'>Generate with AI</span>
+                      <span className='font-medium'>Quick Add With AI</span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -1068,7 +1068,12 @@ export default function ItemsSection({
                   className='border border-[#E5E7EB] rounded-xl p-4 transition-all duration-200 ease-in-out hover:border-blue-300 group bg-white shadow-sm hover:shadow-md hover:translate-y-[-1px]'
                 >
                   <div className='flex justify-between items-start'>
-                    <div className='flex items-start flex-1'>
+                    <div
+                      className='flex items-start flex-1 cursor-pointer'
+                      onClick={() => {
+                        return handleEditItem(item as ExtendedItem);
+                      }}
+                    >
                       <div className='flex-1'>
                         {/* Display mode */}
                         <div className='group/item'>
@@ -1133,16 +1138,8 @@ export default function ItemsSection({
                       </div>
                       <div className='flex flex-col items-end gap-2 mt-2'>
                         <button
-                          onClick={() => {
-                            return handleEditItem(item as ExtendedItem);
-                          }}
-                          className='text-blue-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:underline'
-                        >
-                          <PencilLine size={12} />
-                          Edit
-                        </button>
-                        <button
                           onClick={(e) => {
+                            e.stopPropagation(); // Prevent card click when clicking delete
                             return handleRemoveItem(item.id, e);
                           }}
                           className='text-red-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 hover:underline'
@@ -1194,7 +1191,7 @@ export default function ItemsSection({
                       size='sm'
                     >
                       <Sparkles size={16} className='mr-2' />
-                      Generate with AI
+                      Quick Add With AI
                     </Button>
                   </div>
                 </div>

@@ -158,7 +158,6 @@ type InvoiceSectionProps = {
   items: Item[];
   client: Client;
   projectCurrency: string;
-  notes: string;
   invoiceSettings: InvoiceSettings;
   setInvoiceSettings: (settings: InvoiceSettings) => void;
   workspaceTaxSettings: {
@@ -175,7 +174,6 @@ export default function InvoiceSection({
   items,
   client,
   projectCurrency,
-  notes,
   invoiceSettings,
   setInvoiceSettings,
   workspaceTaxSettings,
@@ -238,7 +236,6 @@ export default function InvoiceSection({
         items,
         client,
         projectCurrency,
-        notes,
         invoiceSettings,
         workspaceTaxSettings,
         dueDate,
@@ -403,20 +400,42 @@ export default function InvoiceSection({
                 Notes & Additional Information
               </AccordionTrigger>
               <AccordionContent>
-                <div className='p-1'>
-                  <StatefulTextarea
-                    id='invoice-notes'
-                    initialValue={invoiceSettings.invoiceNotes || ''}
-                    onValueChange={(value) => {
-                      handleInvoiceSettingsChange({
-                        invoiceNotes: value,
-                      });
-                    }}
-                    className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
-                    height='h-20'
-                    label='Invoice Notes & Terms'
-                    placeholder='Add any additional notes to include on the invoice...'
-                  />
+                <div className='p-1 space-y-6'>
+                  <div>
+                    <StatefulTextarea
+                      id='invoice-notes'
+                      initialValue={invoiceSettings.invoiceNotes || ''}
+                      onValueChange={(value) => {
+                        handleInvoiceSettingsChange({
+                          invoiceNotes: value,
+                        });
+                      }}
+                      className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                      height='h-20'
+                      label='Invoice Notes & Terms'
+                      placeholder='Add any additional notes to include on the invoice...'
+                    />
+                  </div>
+
+                  <div>
+                    <StatefulTextarea
+                      id='team-notes'
+                      initialValue={invoiceSettings.teamNotes || ''}
+                      onValueChange={(value) => {
+                        handleInvoiceSettingsChange({
+                          teamNotes: value,
+                        });
+                      }}
+                      className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
+                      height='h-20'
+                      label='Team Notes (Private)'
+                      placeholder='Add private notes for the team...'
+                    />
+                    <p className='text-xs text-gray-500 mt-1'>
+                      These notes are only visible to your team and will not be included in the
+                      invoice.
+                    </p>
+                  </div>
                 </div>
               </AccordionContent>
             </AccordionItem>

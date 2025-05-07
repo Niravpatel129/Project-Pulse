@@ -2,7 +2,6 @@
 
 import { useRef, useState } from 'react';
 import ClientSection from './ClientSection';
-import CommentsSection from './CommentsSection';
 import InvoiceSection from './InvoiceSection';
 import ItemsSection from './ItemsSection';
 import LeftSidebar from './LeftSidebar';
@@ -20,9 +19,6 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
   const [items, setItems] = useState<Item[]>([]);
   const [projectCurrency, setProjectCurrency] = useState('USD');
   const [clients, setClients] = useState<Client[]>([]);
-  const [notes, setNotes] = useState(
-    'Project deadline is end of Q2. Client prefers minimalist design approach.',
-  );
 
   // Workspace tax settings would normally be loaded from a global state or context
   // For demo purposes, we're initializing with default values
@@ -41,6 +37,7 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
     defaultDiscountRate: 0,
     paymentTerms: 'Payment due within 30 days',
     invoiceNotes: 'Thank you for your business!',
+    teamNotes: 'Project deadline is end of Q2. Client prefers minimalist design approach.',
   });
 
   const [dueDate, setDueDate] = useState<Date | null>(
@@ -151,7 +148,6 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
         onCurrencyChange={handleCurrencyChange}
         clientSelected={!!selectedClient}
         items={items}
-        hasComments={notes.length > 0}
         hasInvoice={!!invoiceSettings}
       />
 
@@ -176,15 +172,6 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
           />
         )}
 
-        {activeSection === 'comments' && (
-          <CommentsSection
-            notes={notes}
-            setNotes={setNotes}
-            onClose={onClose}
-            setActiveSection={setActiveSection}
-          />
-        )}
-
         {activeSection === 'invoice' && (
           <InvoiceSection
             items={items}
@@ -194,7 +181,6 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
               })!
             }
             projectCurrency={projectCurrency}
-            notes={notes}
             invoiceSettings={invoiceSettings}
             setInvoiceSettings={setInvoiceSettings}
             workspaceTaxSettings={workspaceTaxSettings}

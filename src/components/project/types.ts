@@ -72,7 +72,7 @@ export type Notification = {
   type: NotificationType;
 };
 
-export type Section = 'items' | 'client' | 'comments' | 'invoice';
+export type Section = 'items' | 'client' | 'invoice';
 
 export type InvoiceSettings = {
   requireDeposit: boolean;
@@ -81,6 +81,7 @@ export type InvoiceSettings = {
   taxId?: string;
   paymentTerms?: string;
   invoiceNotes?: string;
+  teamNotes?: string;
   allowDiscount: boolean;
   defaultDiscountRate?: number;
 };

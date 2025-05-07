@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useEffect } from 'react';
 
 type SectionFooterProps = {
   onContinue: () => void;
@@ -24,6 +25,29 @@ export default function SectionFooter({
   isDisabled = false,
   disabledTooltip = 'Complete required fields to continue',
 }: SectionFooterProps) {
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      const activeElement = document.activeElement;
+      const isInput =
+        activeElement instanceof HTMLInputElement ||
+        activeElement instanceof HTMLTextAreaElement ||
+        activeElement?.getAttribute('contenteditable') === 'true';
+
+      if (isInput) return;
+
+      if (event.key === 'Enter' && !isDisabled) {
+        onContinue();
+      } else if (event.key === 'Escape' && onCancel) {
+        onCancel();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+      return window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [onContinue, onCancel, isDisabled]);
+
   return (
     <div className='absolute bottom-0 left-0 right-0 flex items-center justify-between py-4 border-t border-[#E5E7EB] px-8 bg-[#FAFAFA] z-10'>
       <div className='flex items-center'>
