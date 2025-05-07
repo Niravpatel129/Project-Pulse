@@ -14,8 +14,6 @@ type ProjectManagementProps = {
 export default function ProjectManagement({ onClose }: ProjectManagementProps) {
   const [activeSection, setActiveSection] = useState<Section>('items');
   const [selectedClient, setSelectedClient] = useState('');
-  const [deletedItem, setDeletedItem] = useState<Item | null>(null);
-  const [showUndoNotification, setShowUndoNotification] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
   const [projectCurrency, setProjectCurrency] = useState('USD');
   const [clients, setClients] = useState<Client[]>([]);
@@ -99,43 +97,12 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
       return item.id === id;
     });
 
-    if (itemToDelete) {
-      setDeletedItem(itemToDelete);
-    }
-
     // Remove the item
     setItems(
       items.filter((item) => {
         return item.id !== id;
       }),
     );
-
-    // Show undo notification
-    setShowUndoNotification(true);
-
-    // Clear any existing timeout
-    if (undoTimeoutRef.current) {
-      clearTimeout(undoTimeoutRef.current);
-    }
-
-    // Set a timeout to clear the undo option
-    undoTimeoutRef.current = setTimeout(() => {
-      setShowUndoNotification(false);
-      setDeletedItem(null);
-    }, 5000);
-  };
-
-  const handleUndoDelete = () => {
-    if (deletedItem) {
-      setItems((prev) => {
-        return [...prev, deletedItem];
-      });
-      setShowUndoNotification(false);
-      setDeletedItem(null);
-      if (undoTimeoutRef.current) {
-        clearTimeout(undoTimeoutRef.current);
-      }
-    }
   };
 
   return (
