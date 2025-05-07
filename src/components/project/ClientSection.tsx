@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChevronDown, Plus, Search, Sparkles, User } from 'lucide-react';
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import SectionFooter from './SectionFooter';
 import { Client, Section } from './types';
 
@@ -64,6 +64,15 @@ export default function ClientSection({
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiGeneratedFields, setAiGeneratedFields] = useState<string[]>([]);
+  const [shippingSameAsBilling, setShippingSameAsBilling] = useState(true);
+  const tabContentRef = useRef<HTMLDivElement>(null);
+  const [tabContentHeight, setTabContentHeight] = useState<number | undefined>(undefined);
+
+  useLayoutEffect(() => {
+    if (tabContentRef.current) {
+      setTabContentHeight(tabContentRef.current.scrollHeight);
+    }
+  }, [activeTab, clientModalOpen]);
 
   const resetClientForm = () => {
     setNewClient({
@@ -433,186 +442,227 @@ export default function ClientSection({
               <TabsTrigger value='shipping'>Shipping</TabsTrigger>
               <TabsTrigger value='more'>More</TabsTrigger>
             </TabsList>
-
-            {/* Contact Tab */}
-            <TabsContent value='contact' className='space-y-4'>
-              <div className='grid grid-cols-2 gap-4'>
-                <div>
-                  <Label
-                    htmlFor='client-name-modal'
-                    className='block mb-1 text-sm font-medium text-gray-700'
-                  >
-                    Customer <span className='text-red-500'>*</span>
-                  </Label>
-                  <div className='relative'>
-                    <Input
-                      id='client-name-modal'
-                      value={newClient.name}
-                      onChange={(e) => {
-                        setNewClient({ ...newClient, name: e.target.value });
-                        setAiGeneratedFields(
-                          aiGeneratedFields.filter((f) => {
-                            return f !== 'name';
-                          }),
-                        );
-                      }}
-                      placeholder='Business or person'
-                      required
-                      className={aiGeneratedFields.includes('name') ? 'pl-8' : ''}
-                    />
-                    {aiGeneratedFields.includes('name') && (
-                      <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
-                    )}
-                  </div>
-                  {/* Error message example */}
-                  {/* <p className='text-xs text-red-600 mt-1'>Enter a value.</p> */}
-                </div>
-                <div></div>
+            <div
+              style={{
+                height: tabContentHeight,
+                transition: 'height 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
+              className='relative overflow-hidden'
+            >
+              <div ref={tabContentRef}>
+                {/* Contact Tab */}
+                {activeTab === 'contact' && (
+                  <TabsContent value='contact' className='space-y-4 block'>
+                    <div className='grid grid-cols-2 gap-4'>
+                      <div>
+                        <Label
+                          htmlFor='client-name-modal'
+                          className='block mb-1 text-sm font-medium text-gray-700'
+                        >
+                          Customer <span className='text-red-500'>*</span>
+                        </Label>
+                        <div className='relative'>
+                          <Input
+                            id='client-name-modal'
+                            value={newClient.name}
+                            onChange={(e) => {
+                              setNewClient({ ...newClient, name: e.target.value });
+                              setAiGeneratedFields(
+                                aiGeneratedFields.filter((f) => {
+                                  return f !== 'name';
+                                }),
+                              );
+                            }}
+                            placeholder='Business or person'
+                            required
+                            className={
+                              (aiGeneratedFields.includes('name') ? 'pl-8 ' : '') + 'w-full'
+                            }
+                          />
+                          {aiGeneratedFields.includes('name') && (
+                            <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
+                          )}
+                        </div>
+                        {/* Error message example */}
+                        {/* <p className='text-xs text-red-600 mt-1'>Enter a value.</p> */}
+                      </div>
+                      <div></div>
+                    </div>
+                    <div className='grid grid-cols-2 gap-4'>
+                      <div>
+                        <Label
+                          htmlFor='client-email-modal'
+                          className='block mb-1 text-sm font-medium text-gray-700'
+                        >
+                          Email
+                        </Label>
+                        <div className='relative'>
+                          <Input
+                            id='client-email-modal'
+                            type='email'
+                            value={newClient.email || ''}
+                            onChange={(e) => {
+                              setNewClient({ ...newClient, email: e.target.value });
+                              setAiGeneratedFields(
+                                aiGeneratedFields.filter((f) => {
+                                  return f !== 'email';
+                                }),
+                              );
+                            }}
+                            placeholder=''
+                            className={aiGeneratedFields.includes('email') ? 'pl-8' : ''}
+                          />
+                          {aiGeneratedFields.includes('email') && (
+                            <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <Label
+                          htmlFor='client-phone-modal'
+                          className='block mb-1 text-sm font-medium text-gray-700'
+                        >
+                          Phone
+                        </Label>
+                        <div className='relative'>
+                          <Input
+                            id='client-phone-modal'
+                            type='tel'
+                            value={newClient.phone || ''}
+                            onChange={(e) => {
+                              setNewClient({ ...newClient, phone: e.target.value });
+                              setAiGeneratedFields(
+                                aiGeneratedFields.filter((f) => {
+                                  return f !== 'phone';
+                                }),
+                              );
+                            }}
+                            placeholder=''
+                            className={aiGeneratedFields.includes('phone') ? 'pl-8' : ''}
+                          />
+                          {aiGeneratedFields.includes('phone') && (
+                            <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                        Contact
+                      </Label>
+                      <div className='grid grid-cols-2 gap-2'>
+                        <Input placeholder='First name' className='italic' />
+                        <Input placeholder='Last name' className='italic' />
+                      </div>
+                    </div>
+                  </TabsContent>
+                )}
+                {/* Billing Tab */}
+                {activeTab === 'billing' && (
+                  <TabsContent value='billing' className='space-y-4 block'>
+                    <div>
+                      <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                        Billing address
+                      </Label>
+                      <div className='space-y-2'>
+                        <Input placeholder='Address line 1' className='italic' />
+                        <Input placeholder='Address line 2' className='italic' />
+                        <div className='grid grid-cols-2 gap-2'>
+                          <Input placeholder='City' className='italic' />
+                          <Input placeholder='Postal/ZIP code' className='italic' />
+                        </div>
+                        <div className='grid grid-cols-2 gap-2'>
+                          <Input placeholder='Country' className='italic' />
+                          <Input placeholder='Province/State' className='italic' />
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                )}
+                {/* Shipping Tab */}
+                {activeTab === 'shipping' && (
+                  <TabsContent value='shipping' className='space-y-4 block'>
+                    <div>
+                      <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                        Shipping address
+                      </Label>
+                      <div className='flex items-center gap-2 mb-2'>
+                        <input
+                          type='checkbox'
+                          className='accent-blue-600 w-4 h-4'
+                          id='same-as-billing'
+                          checked={shippingSameAsBilling}
+                          onChange={(e) => {
+                            return setShippingSameAsBilling(e.target.checked);
+                          }}
+                        />
+                        <Label htmlFor='same-as-billing' className='text-gray-700'>
+                          Same as billing address
+                        </Label>
+                      </div>
+                      {!shippingSameAsBilling && (
+                        <div className='space-y-2'>
+                          <Input placeholder='Address line 1' className='italic' />
+                          <Input placeholder='Address line 2' className='italic' />
+                          <div className='grid grid-cols-2 gap-2'>
+                            <Input placeholder='City' className='italic' />
+                            <Input placeholder='Postal/ZIP code' className='italic' />
+                          </div>
+                          <div className='grid grid-cols-2 gap-2'>
+                            <Input placeholder='Country' className='italic' />
+                            <Input placeholder='Province/State' className='italic' />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                )}
+                {/* More Tab */}
+                {activeTab === 'more' && (
+                  <TabsContent value='more' className='space-y-6 block'>
+                    <div className='grid grid-cols-2 gap-5'>
+                      <div>
+                        <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                          Account number
+                        </Label>
+                        <Input className='w-full' />
+                      </div>
+                      <div>
+                        <Label className='block mb-1 text-sm font-medium text-gray-700'>Fax</Label>
+                        <Input className='w-full' />
+                      </div>
+                      <div>
+                        <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                          Mobile
+                        </Label>
+                        <Input className='w-full' />
+                      </div>
+                      <div>
+                        <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                          Toll-free
+                        </Label>
+                        <Input className='w-full' />
+                      </div>
+                      <div className='col-span-2'>
+                        <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                          Website
+                        </Label>
+                        <Input className='w-full' />
+                      </div>
+                    </div>
+                    <div>
+                      <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                        Internal notes
+                      </Label>
+                      <textarea
+                        placeholder='Notes entered here will not be visible to your customer'
+                        className='italic w-full rounded-lg border border-gray-200 px-3 py-2 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 text-sm resize-y bg-gray-50'
+                      />
+                    </div>
+                  </TabsContent>
+                )}
               </div>
-              <div className='grid grid-cols-2 gap-4'>
-                <div>
-                  <Label
-                    htmlFor='client-email-modal'
-                    className='block mb-1 text-sm font-medium text-gray-700'
-                  >
-                    Email
-                  </Label>
-                  <div className='relative'>
-                    <Input
-                      id='client-email-modal'
-                      type='email'
-                      value={newClient.email || ''}
-                      onChange={(e) => {
-                        setNewClient({ ...newClient, email: e.target.value });
-                        setAiGeneratedFields(
-                          aiGeneratedFields.filter((f) => {
-                            return f !== 'email';
-                          }),
-                        );
-                      }}
-                      placeholder=''
-                      className={aiGeneratedFields.includes('email') ? 'pl-8' : ''}
-                    />
-                    {aiGeneratedFields.includes('email') && (
-                      <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <Label
-                    htmlFor='client-phone-modal'
-                    className='block mb-1 text-sm font-medium text-gray-700'
-                  >
-                    Phone
-                  </Label>
-                  <div className='relative'>
-                    <Input
-                      id='client-phone-modal'
-                      type='tel'
-                      value={newClient.phone || ''}
-                      onChange={(e) => {
-                        setNewClient({ ...newClient, phone: e.target.value });
-                        setAiGeneratedFields(
-                          aiGeneratedFields.filter((f) => {
-                            return f !== 'phone';
-                          }),
-                        );
-                      }}
-                      placeholder=''
-                      className={aiGeneratedFields.includes('phone') ? 'pl-8' : ''}
-                    />
-                    {aiGeneratedFields.includes('phone') && (
-                      <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div>
-                <Label className='block mb-1 text-sm font-medium text-gray-700'>Contact</Label>
-                <div className='grid grid-cols-2 gap-2'>
-                  <Input placeholder='First name' className='italic' />
-                  <Input placeholder='Last name' className='italic' />
-                </div>
-              </div>
-            </TabsContent>
-
-            {/* Billing Tab */}
-            <TabsContent value='billing' className='space-y-4'>
-              <div>
-                <Label className='block mb-1 text-sm font-medium text-gray-700'>Currency</Label>
-                <Input placeholder='Select a currency...' className='italic' />
-              </div>
-              <div>
-                <Label className='block mb-1 text-sm font-medium text-gray-700'>
-                  Billing address
-                </Label>
-                <div className='space-y-2'>
-                  <Input placeholder='Address line 1' className='italic' />
-                  <Input placeholder='Address line 2' className='italic' />
-                  <div className='grid grid-cols-2 gap-2'>
-                    <Input placeholder='City' className='italic' />
-                    <Input placeholder='Postal/ZIP code' className='italic' />
-                  </div>
-                  <div className='grid grid-cols-2 gap-2'>
-                    <Input placeholder='Country' className='italic' />
-                    <Input placeholder='Province/State' className='italic' />
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-
-            {/* Shipping Tab */}
-            <TabsContent value='shipping' className='space-y-4'>
-              <div>
-                <Label className='block mb-1 text-sm font-medium text-gray-700'>
-                  Shipping address
-                </Label>
-                <div className='flex items-center gap-2 mb-2'>
-                  <input type='checkbox' className='accent-blue-600 w-4 h-4' id='same-as-billing' />
-                  <Label htmlFor='same-as-billing' className='text-gray-700'>
-                    Same as billing address
-                  </Label>
-                </div>
-                {/* Optionally, add shipping address fields here if not same as billing */}
-              </div>
-            </TabsContent>
-
-            {/* More Tab */}
-            <TabsContent value='more' className='space-y-4'>
-              <div className='grid grid-cols-2 gap-4'>
-                <div>
-                  <Label className='block mb-1 text-sm font-medium text-gray-700'>
-                    Account number
-                  </Label>
-                  <Input />
-                </div>
-                <div>
-                  <Label className='block mb-1 text-sm font-medium text-gray-700'>Fax</Label>
-                  <Input />
-                </div>
-                <div>
-                  <Label className='block mb-1 text-sm font-medium text-gray-700'>Mobile</Label>
-                  <Input />
-                </div>
-                <div>
-                  <Label className='block mb-1 text-sm font-medium text-gray-700'>Toll-free</Label>
-                  <Input />
-                </div>
-                <div>
-                  <Label className='block mb-1 text-sm font-medium text-gray-700'>Website</Label>
-                  <Input />
-                </div>
-              </div>
-              <div>
-                <Label className='block mb-1 text-sm font-medium text-gray-700'>
-                  Internal notes
-                </Label>
-                <textarea
-                  placeholder='Notes entered here will not be visible to your customer'
-                  className='italic w-full rounded-lg border border-gray-300 px-3 py-2 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 text-sm resize-y'
-                />
-              </div>
-            </TabsContent>
+            </div>
           </Tabs>
 
           <DialogFooter className='mt-6'>
