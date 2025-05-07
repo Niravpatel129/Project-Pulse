@@ -45,7 +45,7 @@ export function useClients() {
     queryKey: ['clients'],
     queryFn: async () => {
       try {
-        const response = await newRequest.get('/workspaces/clients');
+        const response = await newRequest.get('/clients');
         return response.data;
       } catch (err) {
         console.error('Failed to fetch clients:', err);

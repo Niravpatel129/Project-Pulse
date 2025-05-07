@@ -13,31 +13,37 @@ export type Item = {
 
 export type ExtendedItem = Item;
 
-export type Client = {
-  id: string;
-  name: string;
-  email: string;
+export interface Client {
+  _id: string;
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  workspace: string;
+  isActive: boolean;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+  phone?: string;
   address?: {
     street?: string;
-    street2?: string;
     city?: string;
     state?: string;
+    zip?: string;
     country?: string;
-    postalCode?: string;
   };
   shippingAddress?: {
     street?: string;
-    street2?: string;
     city?: string;
     state?: string;
+    zip?: string;
     country?: string;
-    postalCode?: string;
   };
   contact?: {
     firstName?: string;
     lastName?: string;
   };
-  phone?: string;
   taxId?: string;
   accountNumber?: string;
   fax?: string;
@@ -45,8 +51,8 @@ export type Client = {
   tollFree?: string;
   website?: string;
   internalNotes?: string;
-  customFields?: Record<string, string>;
-};
+  customFields?: Record<string, any>;
+}
 
 export type AIItem = Item & {
   type: string;
@@ -72,7 +78,7 @@ export type Notification = {
   type: NotificationType;
 };
 
-export type Section = 'items' | 'client' | 'invoice';
+export type Section = 'client' | 'invoice' | 'items' | 'review';
 
 export type InvoiceSettings = {
   requireDeposit: boolean;

@@ -19,6 +19,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useClients } from '@/hooks/useClients';
+import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, Plus, Search, Sparkles, User } from 'lucide-react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import SectionFooter from './SectionFooter';
@@ -32,11 +35,13 @@ type ClientSectionProps = {
 };
 
 export default function ClientSection({
-  clients,
+  clients: propClients,
   selectedClient,
   setSelectedClient,
   setActiveSection,
 }: ClientSectionProps) {
+  const queryClient = useQueryClient();
+  const { clients: apiClients, isLoading: isLoadingClients } = useClients();
   const [clientModalOpen, setClientModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'contact' | 'billing' | 'shipping' | 'more'>(
     'contact',
@@ -46,22 +51,24 @@ export default function ClientSection({
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [showAiInput, setShowAiInput] = useState(false);
   const [newClient, setNewClient] = useState<Partial<Client>>({
-    name: '',
-    email: '',
+    user: {
+      name: '',
+      email: '',
+    } as Client['user'],
     phone: '',
     address: {
       street: '',
       city: '',
       state: '',
       country: '',
-      postalCode: '',
+      zip: '',
     },
     shippingAddress: {
       street: '',
       city: '',
       state: '',
       country: '',
-      postalCode: '',
+      zip: '',
     },
     contact: {
       firstName: '',
@@ -94,22 +101,24 @@ export default function ClientSection({
 
   const resetClientForm = () => {
     setNewClient({
-      name: '',
-      email: '',
+      user: {
+        name: '',
+        email: '',
+      } as Client['user'],
       phone: '',
       address: {
         street: '',
         city: '',
         state: '',
         country: '',
-        postalCode: '',
+        zip: '',
       },
       shippingAddress: {
         street: '',
         city: '',
         state: '',
         country: '',
-        postalCode: '',
+        zip: '',
       },
       contact: {
         firstName: '',
@@ -132,43 +141,59 @@ export default function ClientSection({
     setAiGeneratedFields([]);
   };
 
+  const createClientMutation = useMutation({
+    mutationFn: async (clientData: Partial<Client>) => {
+      const response = await newRequest.post('/clients', clientData);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      setClientModalOpen(false);
+      resetClientForm();
+    },
+  });
+
+  const updateClientMutation = useMutation({
+    mutationFn: async ({
+      clientId,
+      clientData,
+    }: {
+      clientId: string;
+      clientData: Partial<Client>;
+    }) => {
+      const response = await newRequest.put(`/clients/${clientId}`, clientData);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      setClientModalOpen(false);
+      resetClientForm();
+    },
+  });
+
   const handleCreateClient = () => {
-    if (!newClient.name) {
+    if (!newClient.user?.name) {
       return;
     }
 
-    const clientId = `client${Date.now()}`;
-    const createdClient: Client = {
-      id: clientId,
-      name: newClient.name,
-      email: newClient.email,
-      phone: newClient.phone,
-      address: newClient.address,
-      shippingAddress: newClient.shippingAddress,
-      contact: newClient.contact,
-      taxId: newClient.taxId,
-      accountNumber: newClient.accountNumber,
-      fax: newClient.fax,
-      mobile: newClient.mobile,
-      tollFree: newClient.tollFree,
-      website: newClient.website,
-      internalNotes: newClient.internalNotes,
-      customFields: newClient.customFields,
-    };
+    createClientMutation.mutate(newClient);
+  };
 
-    const updatedClients = [...clients, createdClient];
-    clients.splice(0, clients.length, ...updatedClients);
+  const handleUpdateClient = () => {
+    if (!newClient.user?.name || !editClientId) {
+      return;
+    }
 
-    setSelectedClient(clientId);
-    setClientModalOpen(false);
-    resetClientForm();
+    updateClientMutation.mutate({
+      clientId: editClientId,
+      clientData: newClient,
+    });
   };
 
   const handleEditClient = (client: Client) => {
     setIsEditingClient(true);
     setNewClient({
-      name: client.name,
-      email: client.email,
+      user: client.user,
       phone: client.phone,
       address: client.address,
       shippingAddress: client.shippingAddress,
@@ -182,41 +207,8 @@ export default function ClientSection({
       internalNotes: client.internalNotes,
       customFields: client.customFields,
     });
-    setEditClientId(client.id);
+    setEditClientId(client._id);
     setClientModalOpen(true);
-  };
-
-  const handleUpdateClient = () => {
-    if (!newClient.name || !editClientId) {
-      return;
-    }
-
-    const updatedClients = clients.map((client) => {
-      if (client.id === editClientId) {
-        return {
-          ...client,
-          name: newClient.name,
-          email: newClient.email,
-          phone: newClient.phone,
-          address: newClient.address,
-          shippingAddress: newClient.shippingAddress,
-          contact: newClient.contact,
-          taxId: newClient.taxId,
-          accountNumber: newClient.accountNumber,
-          fax: newClient.fax,
-          mobile: newClient.mobile,
-          tollFree: newClient.tollFree,
-          website: newClient.website,
-          internalNotes: newClient.internalNotes,
-          customFields: newClient.customFields,
-        };
-      }
-      return client;
-    });
-
-    clients.splice(0, clients.length, ...updatedClients);
-    setClientModalOpen(false);
-    resetClientForm();
   };
 
   const handleAiGenerate = () => {
@@ -225,29 +217,31 @@ export default function ClientSection({
     setTimeout(() => {
       // Example AI-generated data - in real app, this would come from an AI service
       const aiGeneratedClient = {
-        name: 'Acme Corporation',
-        email: 'contact@acmecorp.com',
+        user: {
+          name: 'Acme Corporation',
+          email: 'contact@acmecorp.com',
+        } as Client['user'],
         phone: '+1 (555) 123-4567',
         address: {
           street: '123 Business Ave',
           city: 'San Francisco',
           state: 'CA',
           country: 'USA',
-          postalCode: '94105',
+          zip: '94105',
         },
         taxId: 'TAX123456789',
         customFields: {},
       };
       setNewClient(aiGeneratedClient);
       setAiGeneratedFields([
-        'name',
-        'email',
+        'user.name',
+        'user.email',
         'phone',
         'address.street',
         'address.city',
         'address.state',
         'address.country',
-        'address.postalCode',
+        'address.zip',
         'taxId',
       ]);
       setClientModalOpen(true);
@@ -256,11 +250,11 @@ export default function ClientSection({
     }, 1500);
   };
 
-  const filteredClients = clients.filter((client) => {
+  const filteredClients = apiClients.filter((client) => {
     const searchLower = searchQuery.toLowerCase();
     return (
-      client.name.toLowerCase().includes(searchLower) ||
-      client.email.toLowerCase().includes(searchLower)
+      client.user.name.toLowerCase().includes(searchLower) ||
+      client.user.email.toLowerCase().includes(searchLower)
     );
   });
 
@@ -301,7 +295,7 @@ export default function ClientSection({
 
           {/* Search and client list */}
           <div className='bg-white rounded-xl border border-gray-200 p-6'>
-            {clients.length > 0 && (
+            {apiClients.length > 0 && (
               <div className='flex gap-2 mb-4'>
                 <div className='relative flex-1'>
                   <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
@@ -440,27 +434,27 @@ export default function ClientSection({
                     {filteredClients.map((client) => {
                       return (
                         <div
-                          key={client.id}
+                          key={client._id}
                           className={`p-4 rounded-lg border cursor-pointer transition-colors ${
-                            selectedClient === client.id
+                            selectedClient === client._id
                               ? 'border-blue-500 bg-blue-50'
                               : 'border-gray-200 hover:border-gray-300'
                           }`}
                           onClick={() => {
-                            return setSelectedClient(client.id);
+                            return setSelectedClient(client._id);
                           }}
                         >
                           <div className='flex justify-between items-start'>
                             <div className='space-y-1'>
-                              <h3 className='font-medium text-gray-900'>{client.name}</h3>
+                              <h3 className='font-medium text-gray-900'>{client.user.name}</h3>
                               <div className='space-y-0.5'>
                                 {client.contact?.firstName && client.contact?.lastName && (
                                   <p className='text-sm text-gray-500'>
                                     {client.contact.firstName} {client.contact.lastName}
                                   </p>
                                 )}
-                                {client.email ? (
-                                  <p className='text-sm text-gray-500'>{client.email}</p>
+                                {client.user.email ? (
+                                  <p className='text-sm text-gray-500'>{client.user.email}</p>
                                 ) : (
                                   <Button
                                     variant='ghost'
@@ -571,9 +565,12 @@ export default function ClientSection({
                             <div className='relative'>
                               <Input
                                 id='client-name-modal'
-                                value={newClient.name}
+                                value={newClient.user?.name || ''}
                                 onChange={(e) => {
-                                  setNewClient({ ...newClient, name: e.target.value });
+                                  setNewClient({
+                                    ...newClient,
+                                    user: { ...newClient.user, name: e.target.value },
+                                  });
                                   setAiGeneratedFields(
                                     aiGeneratedFields.filter((f) => {
                                       return f !== 'name';
@@ -603,9 +600,12 @@ export default function ClientSection({
                                 <Input
                                   id='client-email-modal'
                                   type='email'
-                                  value={newClient.email || ''}
+                                  value={newClient.user?.email || ''}
                                   onChange={(e) => {
-                                    setNewClient({ ...newClient, email: e.target.value });
+                                    setNewClient({
+                                      ...newClient,
+                                      user: { ...newClient.user, email: e.target.value },
+                                    });
                                     setAiGeneratedFields(
                                       aiGeneratedFields.filter((f) => {
                                         return f !== 'email';
@@ -709,16 +709,6 @@ export default function ClientSection({
                               });
                             }}
                           />
-                          <Input
-                            placeholder='Address line 2'
-                            value={newClient.address?.street2 || ''}
-                            onChange={(e) => {
-                              return setNewClient({
-                                ...newClient,
-                                address: { ...newClient.address, street2: e.target.value },
-                              });
-                            }}
-                          />
                           <div className='grid grid-cols-2 gap-2'>
                             <Input
                               placeholder='City'
@@ -732,11 +722,11 @@ export default function ClientSection({
                             />
                             <Input
                               placeholder='Postal/ZIP code'
-                              value={newClient.address?.postalCode || ''}
+                              value={newClient.address?.zip || ''}
                               onChange={(e) => {
                                 return setNewClient({
                                   ...newClient,
-                                  address: { ...newClient.address, postalCode: e.target.value },
+                                  address: { ...newClient.address, zip: e.target.value },
                                 });
                               }}
                             />
@@ -803,19 +793,6 @@ export default function ClientSection({
                                 });
                               }}
                             />
-                            <Input
-                              placeholder='Address line 2'
-                              value={newClient.shippingAddress?.street2 || ''}
-                              onChange={(e) => {
-                                return setNewClient({
-                                  ...newClient,
-                                  shippingAddress: {
-                                    ...newClient.shippingAddress,
-                                    street2: e.target.value,
-                                  },
-                                });
-                              }}
-                            />
                             <div className='grid grid-cols-2 gap-2'>
                               <Input
                                 placeholder='City'
@@ -832,13 +809,13 @@ export default function ClientSection({
                               />
                               <Input
                                 placeholder='Postal/ZIP code'
-                                value={newClient.shippingAddress?.postalCode || ''}
+                                value={newClient.shippingAddress?.zip || ''}
                                 onChange={(e) => {
                                   return setNewClient({
                                     ...newClient,
                                     shippingAddress: {
                                       ...newClient.shippingAddress,
-                                      postalCode: e.target.value,
+                                      zip: e.target.value,
                                     },
                                   });
                                 }}
@@ -990,7 +967,7 @@ export default function ClientSection({
             <Button
               onClick={isEditingClient ? handleUpdateClient : handleCreateClient}
               className='bg-blue-600 hover:bg-blue-700 text-white'
-              disabled={!newClient.name}
+              disabled={!newClient.user?.name}
             >
               {isEditingClient ? 'Update Client' : 'Add Client'}
             </Button>
