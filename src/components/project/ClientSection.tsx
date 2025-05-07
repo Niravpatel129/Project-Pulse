@@ -689,7 +689,7 @@ export default function ClientSection({
                             <Input className='w-full' />
                           </div>
                         </div>
-                        <div>
+                        <div className='mt-5'>
                           <Label className='block mb-1 text-sm font-medium text-gray-700'>
                             Internal notes
                           </Label>
