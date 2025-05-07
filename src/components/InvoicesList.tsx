@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,11 +27,13 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { newRequest } from '@/utils/newRequest';
+import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { ChevronDown, Plus, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import ProjectManagement from './project/ProjectManagement';
 
 interface InvoiceItem {
   name: string;
@@ -79,6 +82,35 @@ const statusTabs = [
   { key: 'draft', label: 'Draft' },
   { key: 'all', label: 'All invoices' },
 ];
+
+function CreateInvoiceDialog() {
+  const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const handleClose = () => {
+    setOpen(false);
+    // Invalidate invoices query to refresh the list
+    queryClient.invalidateQueries({ queryKey: ['invoices'] });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant='outline'
+          className='bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 px-5 py-2.5 rounded-xl flex items-center gap-2.5 transition-all duration-200 shadow-sm hover:shadow'
+        >
+          <Plus className='w-4 h-4' />
+          Create an invoice
+        </Button>
+      </DialogTrigger>
+      <DialogContent className='max-w-[90vw] h-[90vh] p-0'>
+        <DialogTitle className='sr-only'>Create New Invoice</DialogTitle>
+        <ProjectManagement onClose={handleClose} />
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function InvoicesList() {
   const router = useRouter();
@@ -180,16 +212,7 @@ export default function InvoicesList() {
           <div>
             <h1 className='text-4xl font-bold text-gray-900 mb-4'>Invoices</h1>
           </div>
-          <Button
-            variant='outline'
-            className='bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 px-5 py-2.5 rounded-xl flex items-center gap-2.5 transition-all duration-200 shadow-sm hover:shadow'
-            onClick={() => {
-              return router.push('/invoices/new');
-            }}
-          >
-            <Plus className='w-4 h-4' />
-            Create an invoice
-          </Button>
+          <CreateInvoiceDialog />
         </div>
       </div>
 
