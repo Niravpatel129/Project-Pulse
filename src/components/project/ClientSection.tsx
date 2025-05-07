@@ -303,13 +303,7 @@ export default function ClientSection({
               <>
                 {filteredClients.length === 0 ? (
                   <div className='text-center py-0 px-4'>
-                    <div className='relative'>
-                      <div className='absolute inset-0 bg-gradient-to-r from-gray-100 to-gray-50 blur-xl opacity-50 rounded-full'></div>
-                      <div className='bg-gray-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 relative'>
-                        <User className='w-10 h-10 text-gray-400' />
-                      </div>
-                    </div>
-                    <h3 className='text-xl font-semibold text-gray-900 mb-3'>
+                    <h3 className='mt-2 text-xl font-semibold text-gray-900 mb-3'>
                       Add Your First Client
                     </h3>
                     <p className='text-gray-500 mb-8 max-w-md mx-auto'>
