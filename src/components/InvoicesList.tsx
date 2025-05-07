@@ -365,7 +365,7 @@ export default function InvoicesList() {
                                   e.stopPropagation();
                                   router.push(`/invoice/${invoice._id}`);
                                 }}
-                                className='font-semibold text-base text-blue-600 hover:bg-transparent hover:text-blue-700 focus:ring-0 focus:outline-none shadow-none border-none px-0'
+                                className='font-semibold text-base text-blue-600 hover:bg-transparent hover:text-blue-700 focus:ring-0 focus:outline-none shadow-none border-none px-0 hover:underline'
                               >
                                 Approve
                               </Button>
