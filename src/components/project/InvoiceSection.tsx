@@ -302,22 +302,6 @@ export default function InvoiceSection({
 
                     {/* Project Settings */}
                     <div className='space-y-4'>
-                      {/* Payment Terms */}
-                      <div>
-                        <StatefulInput
-                          id='payment-terms'
-                          initialValue={invoiceSettings.paymentTerms || ''}
-                          onValueChange={(value) => {
-                            handleInvoiceSettingsChange({
-                              paymentTerms: value as string,
-                            });
-                          }}
-                          className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
-                          label='Payment Terms'
-                          placeholder='e.g. Net 30'
-                        />
-                      </div>
-
                       {/* Due Date */}
                       <div>
                         <Label htmlFor='due-date' className='text-xs text-gray-500 mb-1 block'>
@@ -419,7 +403,7 @@ export default function InvoiceSection({
                     }}
                     className='w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-base font-medium text-[#111827] outline-none placeholder:text-[#9CA3AF] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-colors'
                     height='h-20'
-                    label='Invoice Notes'
+                    label='Invoice Notes & Terms'
                     placeholder='Add any additional notes to include on the invoice...'
                   />
                 </div>
