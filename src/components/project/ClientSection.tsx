@@ -451,38 +451,60 @@ export default function ClientSection({
                           }}
                         >
                           <div className='flex justify-between items-start'>
-                            <div>
+                            <div className='space-y-1'>
                               <h3 className='font-medium text-gray-900'>{client.name}</h3>
-                              {client.email ? (
-                                <p className='text-sm text-gray-500'>{client.email}</p>
-                              ) : (
-                                <Button
-                                  variant='ghost'
-                                  size='sm'
-                                  className='text-sm text-blue-600 hover:text-blue-700 p-0 h-auto'
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditClient(client);
-                                    setActiveTab('contact');
-                                  }}
-                                >
-                                  + Add Email
-                                </Button>
-                              )}
-                              {client.phone && (
-                                <p className='text-sm text-gray-500 mt-1'>{client.phone}</p>
-                              )}
+                              <div className='space-y-0.5'>
+                                {client.contact?.firstName && client.contact?.lastName && (
+                                  <p className='text-sm text-gray-500'>
+                                    {client.contact.firstName} {client.contact.lastName}
+                                  </p>
+                                )}
+                                {client.email ? (
+                                  <p className='text-sm text-gray-500'>{client.email}</p>
+                                ) : (
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    className='text-sm text-blue-600 hover:text-blue-700 p-0 h-auto'
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEditClient(client);
+                                      setActiveTab('contact');
+                                    }}
+                                  >
+                                    + Add Email
+                                  </Button>
+                                )}
+                                {client.phone && (
+                                  <p className='text-sm text-gray-500'>{client.phone}</p>
+                                )}
+                                {client.address?.city && client.address?.country && (
+                                  <p className='text-sm text-gray-500'>
+                                    {client.address.city}, {client.address.country}
+                                  </p>
+                                )}
+                                {client.website && (
+                                  <p className='text-sm text-gray-500'>{client.website}</p>
+                                )}
+                              </div>
                             </div>
-                            <Button
-                              variant='ghost'
-                              size='sm'
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditClient(client);
-                              }}
-                            >
-                              Edit
-                            </Button>
+                            <div className='flex items-center gap-2'>
+                              {client.accountNumber && (
+                                <span className='text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded'>
+                                  #{client.accountNumber}
+                                </span>
+                              )}
+                              <Button
+                                variant='ghost'
+                                size='sm'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditClient(client);
+                                }}
+                              >
+                                Edit
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       );
