@@ -146,10 +146,13 @@ export default function ClientSection({
       const response = await newRequest.post('/clients', clientData);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
       setClientModalOpen(false);
       resetClientForm();
+      if (data._id) {
+        setSelectedClient(data._id);
+      }
     },
   });
 
