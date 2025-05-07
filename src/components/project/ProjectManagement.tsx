@@ -153,6 +153,7 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
         total={total}
         currency={projectCurrency}
         onCurrencyChange={handleCurrencyChange}
+        clientSelected={!!selectedClient}
       />
 
       {/* Main Content */}

@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type SectionFooterProps = {
   onContinue: () => void;
@@ -9,6 +10,8 @@ type SectionFooterProps = {
   customContinueLabel?: string;
   onCancel?: () => void;
   isLastSection?: boolean;
+  isDisabled?: boolean;
+  disabledTooltip?: string;
 };
 
 export default function SectionFooter({
@@ -18,6 +21,8 @@ export default function SectionFooter({
   customContinueLabel,
   onCancel,
   isLastSection = false,
+  isDisabled = false,
+  disabledTooltip = 'Complete required fields to continue',
 }: SectionFooterProps) {
   return (
     <div className='absolute bottom-0 left-0 right-0 flex items-center justify-between py-4 border-t border-[#E5E7EB] px-8 bg-[#FAFAFA] z-10'>
@@ -38,9 +43,26 @@ export default function SectionFooter({
             Cancel
           </Button>
         )}
-        <Button onClick={onContinue}>
-          {isLastSection ? 'Finish' : customContinueLabel || 'Continue'}
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <Button
+                  onClick={onContinue}
+                  disabled={isDisabled}
+                  className={isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
+                >
+                  {isLastSection ? 'Finish' : customContinueLabel || 'Continue'}
+                </Button>
+              </span>
+            </TooltipTrigger>
+            {isDisabled && (
+              <TooltipContent side='top'>
+                <p>{disabledTooltip}</p>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   );

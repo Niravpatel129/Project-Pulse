@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { AlertCircle } from 'lucide-react';
 import { Section } from './types';
 
 type LeftSidebarProps = {
@@ -18,6 +19,7 @@ type LeftSidebarProps = {
   onCurrencyChange: (currency: string) => void;
   totalTax?: string;
   totalDiscount?: string;
+  clientSelected?: boolean;
 };
 
 export default function LeftSidebar({
@@ -28,6 +30,7 @@ export default function LeftSidebar({
   onCurrencyChange,
   totalTax = '0.00',
   totalDiscount = '0.00',
+  clientSelected = false,
 }: LeftSidebarProps) {
   // Function to get currency symbol
   const getCurrencySymbol = (currency: string) => {
@@ -114,47 +117,64 @@ export default function LeftSidebar({
           </span>
         </button>
 
-        <button
-          className={`flex items-center w-full text-left p-2 rounded-md ${
-            activeSection === 'client' ? 'bg-[#F9FAFB]' : ''
-          } hover:bg-[#F9FAFB] transition-colors`}
-          onClick={() => {
-            return setActiveSection('client');
-          }}
-        >
-          <div
-            className={`w-6 h-6 rounded-full ${
-              activeSection === 'client' ? 'bg-[#111827]' : 'border border-[#D1D5DB]'
-            } flex items-center justify-center mr-3 transition-colors`}
+        <div className='relative'>
+          <button
+            className={`flex items-center w-full text-left p-2 rounded-md ${
+              activeSection === 'client' ? 'bg-[#F9FAFB]' : ''
+            } hover:bg-[#F9FAFB] transition-colors`}
+            onClick={() => {
+              return setActiveSection('client');
+            }}
           >
-            {activeSection === 'client' ? (
-              <svg
-                width='12'
-                height='12'
-                viewBox='0 0 12 12'
-                fill='none'
-                xmlns='http://www.w3.org/2000/svg'
-              >
-                <path
-                  d='M10 3L4.5 8.5L2 6'
-                  stroke='white'
-                  strokeWidth='1.5'
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                />
-              </svg>
-            ) : (
-              <span className='text-[#6B7280] text-xs'>2</span>
+            <div
+              className={`w-6 h-6 rounded-full ${
+                activeSection === 'client' ? 'bg-[#111827]' : 'border border-[#D1D5DB]'
+              } flex items-center justify-center mr-3 transition-colors`}
+            >
+              {activeSection === 'client' ? (
+                <svg
+                  width='12'
+                  height='12'
+                  viewBox='0 0 12 12'
+                  fill='none'
+                  xmlns='http://www.w3.org/2000/svg'
+                >
+                  <path
+                    d='M10 3L4.5 8.5L2 6'
+                    stroke='white'
+                    strokeWidth='1.5'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                  />
+                </svg>
+              ) : (
+                <span className='text-[#6B7280] text-xs'>2</span>
+              )}
+            </div>
+            <span
+              className={`text-sm ${
+                activeSection === 'client' ? 'text-[#111827] font-medium' : 'text-[#6B7280]'
+              }`}
+            >
+              Client
+            </span>
+
+            {!clientSelected && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className='absolute right-2 top-1/2 transform -translate-y-1/2'>
+                      <AlertCircle className='h-4 w-4 text-amber-500' />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side='right'>
+                    <p className='text-xs'>Client selection required</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
-          </div>
-          <span
-            className={`text-sm ${
-              activeSection === 'client' ? 'text-[#111827] font-medium' : 'text-[#6B7280]'
-            }`}
-          >
-            Client
-          </span>
-        </button>
+          </button>
+        </div>
 
         <button
           className={`flex items-center w-full text-left p-2 rounded-md ${
