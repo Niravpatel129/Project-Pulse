@@ -28,7 +28,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { newRequest } from '@/utils/newRequest';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
-import { Plus, Search } from 'lucide-react';
+import { ChevronDown, Plus, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -178,7 +178,7 @@ export default function InvoicesList() {
       <div className='px-8 py-8'>
         <div className='flex justify-between items-center'>
           <div>
-            <h1 className='text-3xl font-semibold text-gray-900 mb-3'>Invoices</h1>
+            <h1 className='text-4xl font-bold text-gray-900 mb-4'>Invoices</h1>
           </div>
           <Button
             variant='outline'
@@ -227,7 +227,7 @@ export default function InvoicesList() {
                   <Search className='absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
                   <Input
                     type='text'
-                    className='w-full pl-11 pr-4 py-2.5'
+                    className='w-full pl-11 pr-4 py-2.5 text-base'
                     placeholder='Search invoices...'
                   />
                 </div>
@@ -263,10 +263,14 @@ export default function InvoicesList() {
               <TabsList>
                 {statusTabs.map((tab) => {
                   return (
-                    <TabsTrigger key={tab.key} value={tab.key} className='px-5 py-2.5'>
+                    <TabsTrigger
+                      key={tab.key}
+                      value={tab.key}
+                      className='px-5 py-2.5 text-base font-medium'
+                    >
                       {tab.label}
                       {tab.key !== 'all' && (
-                        <span className='ml-2 text-xs font-medium bg-gray-100/50 px-2.5 py-1 rounded-full'>
+                        <span className='ml-2 text-sm font-semibold bg-gray-100/50 px-2.5 py-1 rounded-full'>
                           {tab.key === 'unpaid' ? unpaidCount : draftCount}
                         </span>
                       )}
@@ -279,7 +283,7 @@ export default function InvoicesList() {
             {/* Invoice Table or Empty State */}
             {loading ? (
               <Card>
-                <CardContent className='p-10 text-center text-gray-500'>
+                <CardContent className='p-10 text-center text-gray-600 text-base'>
                   Loading invoices...
                 </CardContent>
               </Card>
@@ -287,7 +291,7 @@ export default function InvoicesList() {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <Card>
                   <CardContent className='flex flex-col items-center justify-center py-20 gap-6'>
-                    <div className='text-xl font-medium text-gray-700 tracking-tight'>
+                    <div className='text-2xl font-semibold text-gray-800 tracking-tight'>
                       Ready to get paid? Approve your draft invoice.
                     </div>
                     <div className='flex gap-4'>
@@ -308,13 +312,25 @@ export default function InvoicesList() {
               <Card>
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Number</TableHead>
-                      <TableHead>Customer</TableHead>
-                      <TableHead className='text-right'>Amount due</TableHead>
-                      <TableHead className='text-right'>Actions</TableHead>
+                    <TableRow className='hover:bg-transparent'>
+                      <TableHead className='text-base font-semibold text-gray-800 py-4'>
+                        Status
+                      </TableHead>
+                      <TableHead className='text-base font-semibold text-gray-800 py-4'>
+                        Date
+                      </TableHead>
+                      <TableHead className='text-base font-semibold text-gray-800 py-4'>
+                        Number
+                      </TableHead>
+                      <TableHead className='text-base font-semibold text-gray-800 py-4'>
+                        Customer
+                      </TableHead>
+                      <TableHead className='text-base font-semibold text-gray-800 py-4 text-right'>
+                        Amount due
+                      </TableHead>
+                      <TableHead className='text-base font-semibold text-gray-800 py-4 text-right'>
+                        Actions
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -327,22 +343,20 @@ export default function InvoicesList() {
                             return router.push(`/invoice/${invoice._id}`);
                           }}
                         >
-                          <TableCell className='align-middle'>
-                            {getStatusBadge(invoice.status)}
-                          </TableCell>
-                          <TableCell className='align-middle'>
+                          <TableCell className='py-4'>{getStatusBadge(invoice.status)}</TableCell>
+                          <TableCell className='text-base text-gray-700 py-4'>
                             {format(new Date(invoice.dueDate), 'MMM d, yyyy')}
                           </TableCell>
-                          <TableCell className='font-medium align-middle'>
+                          <TableCell className='text-base font-medium text-gray-900 py-4'>
                             {invoice.invoiceNumber}
                           </TableCell>
-                          <TableCell className='align-middle'>
+                          <TableCell className='text-base text-gray-700 py-4'>
                             {invoice.client?.name || '—'}
                           </TableCell>
-                          <TableCell className='font-medium text-right align-middle'>
+                          <TableCell className='text-base font-semibold text-gray-900 py-4 text-right'>
                             {formatCurrency(invoice.total, invoice.currency)}
                           </TableCell>
-                          <TableCell className='text-right align-middle px-0'>
+                          <TableCell className='text-right py-4 '>
                             <div className='flex justify-end items-center gap-2'>
                               <Button
                                 size='sm'
@@ -351,7 +365,7 @@ export default function InvoicesList() {
                                   e.stopPropagation();
                                   router.push(`/invoice/${invoice._id}`);
                                 }}
-                                className='font-bold text-blue-600 hover:bg-transparent hover:text-blue-700 focus:ring-0 focus:outline-none shadow-none border-none px-0'
+                                className='font-semibold text-base text-blue-600 hover:bg-transparent hover:text-blue-700 focus:ring-0 focus:outline-none shadow-none border-none px-0'
                               >
                                 Approve
                               </Button>
@@ -364,30 +378,34 @@ export default function InvoicesList() {
                                       e.stopPropagation();
                                     }}
                                     aria-label='More actions'
-                                    className='border border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-700 focus:ring-0 focus:outline-none shadow-none p-0 w-8 h-8 rounded-full flex items-center justify-center'
+                                    className='border border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-700 focus:ring-0 focus:outline-none shadow-none p-0 w-6 h-6 rounded-full flex items-center justify-center'
                                   >
-                                    <svg
-                                      width='18'
-                                      height='18'
-                                      viewBox='0 0 20 20'
-                                      fill='currentColor'
-                                      xmlns='http://www.w3.org/2000/svg'
-                                    >
-                                      <path d='M5 8L10 13L15 8H5Z' fill='currentColor' />
-                                    </svg>
+                                    <ChevronDown className='w-6 h-6' />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align='end'>
-                                  <DropdownMenuItem>View</DropdownMenuItem>
-                                  <DropdownMenuItem>Edit</DropdownMenuItem>
-                                  <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                                <DropdownMenuContent align='end' className='w-48'>
+                                  <DropdownMenuItem className='text-base py-2.5'>
+                                    View
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className='text-base py-2.5'>
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className='text-base py-2.5'>
+                                    Duplicate
+                                  </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem>Send invoice</DropdownMenuItem>
+                                  <DropdownMenuItem className='text-base py-2.5'>
+                                    Send invoice
+                                  </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem>Export as PDF</DropdownMenuItem>
-                                  <DropdownMenuItem>Print</DropdownMenuItem>
+                                  <DropdownMenuItem className='text-base py-2.5'>
+                                    Export as PDF
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className='text-base py-2.5'>
+                                    Print
+                                  </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem className='text-red-600'>
+                                  <DropdownMenuItem className='text-base py-2.5 text-red-600'>
                                     Delete
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -401,9 +419,9 @@ export default function InvoicesList() {
                 </Table>
 
                 {/* Pagination Controls */}
-                <div className='flex items-center justify-between px-6 py-5 border-t bg-white/50'>
-                  <div className='flex items-center gap-3'>
-                    <span className='text-sm text-gray-600'>Show:</span>
+                <div className='flex items-center justify-between px-8 py-6 border-t bg-white/50'>
+                  <div className='flex items-center gap-4'>
+                    <span className='text-base font-medium text-gray-700'>Show:</span>
                     <Select
                       value={perPage.toString()}
                       onValueChange={(value) => {
@@ -411,22 +429,22 @@ export default function InvoicesList() {
                         setCurrentPage(1);
                       }}
                     >
-                      <SelectTrigger className='w-[100px]'>
+                      <SelectTrigger className='w-[100px] text-base'>
                         <SelectValue placeholder='Select' />
                       </SelectTrigger>
                       <SelectContent>
                         {[10, 25, 50, 100].map((n) => {
                           return (
-                            <SelectItem key={n} value={n.toString()}>
+                            <SelectItem key={n} value={n.toString()} className='text-base'>
                               {n}
                             </SelectItem>
                           );
                         })}
                       </SelectContent>
                     </Select>
-                    <span className='text-sm text-gray-600'>per page</span>
+                    <span className='text-base font-medium text-gray-700'>per page</span>
                   </div>
-                  <div className='flex items-center gap-3'>
+                  <div className='flex items-center gap-4'>
                     <Button
                       variant='outline'
                       onClick={() => {
@@ -435,10 +453,11 @@ export default function InvoicesList() {
                         });
                       }}
                       disabled={currentPage === 1}
+                      className='text-base'
                     >
                       Previous
                     </Button>
-                    <span className='text-sm text-gray-600'>
+                    <span className='text-base font-medium text-gray-700'>
                       Page {currentPage} of {totalPages === 0 ? 1 : totalPages}
                     </span>
                     <Button
@@ -449,6 +468,7 @@ export default function InvoicesList() {
                         });
                       }}
                       disabled={currentPage === totalPages || totalPages === 0}
+                      className='text-base'
                     >
                       Next
                     </Button>
@@ -462,28 +482,30 @@ export default function InvoicesList() {
           <div className='col-span-12 lg:col-span-4 space-y-0'>
             <Card>
               <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
+                <CardTitle className='text-xl font-semibold text-gray-900'>
+                  Recent Activity
+                </CardTitle>
               </CardHeader>
               <CardContent className='space-y-5'>
                 <div className='flex items-start gap-4'>
                   <div className='w-2 h-2 rounded-full bg-blue-500 mt-2'></div>
                   <div>
-                    <p className='text-sm font-medium text-gray-900'>New invoice #1234 created</p>
-                    <p className='text-xs text-gray-500 mt-1'>2 hours ago</p>
+                    <p className='text-base font-medium text-gray-900'>New invoice #1234 created</p>
+                    <p className='text-sm text-gray-600 mt-1'>2 hours ago</p>
                   </div>
                 </div>
                 <div className='flex items-start gap-4'>
                   <div className='w-2 h-2 rounded-full bg-green-500 mt-2'></div>
                   <div>
-                    <p className='text-sm font-medium text-gray-900'>Invoice #1233 paid</p>
-                    <p className='text-xs text-gray-500 mt-1'>5 hours ago</p>
+                    <p className='text-base font-medium text-gray-900'>Invoice #1233 paid</p>
+                    <p className='text-sm text-gray-600 mt-1'>5 hours ago</p>
                   </div>
                 </div>
                 <div className='flex items-start gap-4'>
                   <div className='w-2 h-2 rounded-full bg-yellow-500 mt-2'></div>
                   <div>
-                    <p className='text-sm font-medium text-gray-900'>Invoice #1232 overdue</p>
-                    <p className='text-xs text-gray-500 mt-1'>1 day ago</p>
+                    <p className='text-base font-medium text-gray-900'>Invoice #1232 overdue</p>
+                    <p className='text-sm text-gray-600 mt-1'>1 day ago</p>
                   </div>
                 </div>
               </CardContent>
