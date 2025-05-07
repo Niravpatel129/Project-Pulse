@@ -9,8 +9,8 @@ import {
 } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertCircle } from 'lucide-react';
-import { useState } from 'react';
-import { Section } from './types';
+import { useEffect, useState } from 'react';
+import { Item, Section } from './types';
 
 type LeftSidebarProps = {
   activeSection: Section;
@@ -21,6 +21,9 @@ type LeftSidebarProps = {
   totalTax?: string;
   totalDiscount?: string;
   clientSelected?: boolean;
+  items?: Item[];
+  hasComments?: boolean;
+  hasInvoice?: boolean;
 };
 
 export default function LeftSidebar({
@@ -32,8 +35,20 @@ export default function LeftSidebar({
   totalTax = '0.00',
   totalDiscount = '0.00',
   clientSelected = false,
+  items = [],
+  hasComments = false,
+  hasInvoice = false,
 }: LeftSidebarProps) {
   const [hasAttemptedToLeave, setHasAttemptedToLeave] = useState(false);
+  const [visitedSections, setVisitedSections] = useState<Set<Section>>(new Set(['items']));
+  console.log('🚀 items:', items);
+
+  // Update visited sections when activeSection changes
+  useEffect(() => {
+    setVisitedSections((prev) => {
+      return new Set([...prev, activeSection]);
+    });
+  }, [activeSection]);
 
   const handleSectionChange = (section: Section) => {
     if (activeSection === 'client' && !clientSelected) {
@@ -95,7 +110,11 @@ export default function LeftSidebar({
         >
           <div
             className={`w-6 h-6 rounded-full ${
-              activeSection === 'items' ? 'bg-[#111827]' : 'border border-[#D1D5DB]'
+              activeSection === 'items'
+                ? 'bg-[#111827]'
+                : items.length > 0
+                ? 'bg-green-100 border border-green-200'
+                : 'border border-[#D1D5DB]'
             } flex items-center justify-center mr-3 transition-colors`}
           >
             {activeSection === 'items' ? (
@@ -114,17 +133,44 @@ export default function LeftSidebar({
                   strokeLinejoin='round'
                 />
               </svg>
+            ) : items.length > 0 ? (
+              <svg
+                width='12'
+                height='12'
+                viewBox='0 0 12 12'
+                fill='none'
+                xmlns='http://www.w3.org/2000/svg'
+              >
+                <path
+                  d='M10 3L4.5 8.5L2 6'
+                  stroke='#059669'
+                  strokeWidth='1.5'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                />
+              </svg>
             ) : (
               <span className='text-[#6B7280] text-xs'>1</span>
             )}
           </div>
-          <span
-            className={`text-sm ${
-              activeSection === 'items' ? 'text-[#111827] font-medium' : 'text-[#6B7280]'
-            }`}
-          >
-            Items
-          </span>
+          <div className='flex flex-col'>
+            <span
+              className={`text-sm ${
+                activeSection === 'items'
+                  ? 'text-[#111827] font-medium'
+                  : items.length > 0
+                  ? 'text-[#059669]'
+                  : 'text-[#6B7280]'
+              }`}
+            >
+              Items
+            </span>
+            {items.length > 0 && (
+              <span className='text-xs text-[#6B7280]'>
+                {items.length} {items.length === 1 ? 'item' : 'items'} added
+              </span>
+            )}
+          </div>
         </button>
 
         <div className='relative'>
@@ -138,7 +184,11 @@ export default function LeftSidebar({
           >
             <div
               className={`w-6 h-6 rounded-full ${
-                activeSection === 'client' ? 'bg-[#111827]' : 'border border-[#D1D5DB]'
+                activeSection === 'client'
+                  ? 'bg-[#111827]'
+                  : clientSelected
+                  ? 'bg-green-100 border border-green-200'
+                  : 'border border-[#D1D5DB]'
               } flex items-center justify-center mr-3 transition-colors`}
             >
               {activeSection === 'client' ? (
@@ -157,13 +207,33 @@ export default function LeftSidebar({
                     strokeLinejoin='round'
                   />
                 </svg>
+              ) : clientSelected ? (
+                <svg
+                  width='12'
+                  height='12'
+                  viewBox='0 0 12 12'
+                  fill='none'
+                  xmlns='http://www.w3.org/2000/svg'
+                >
+                  <path
+                    d='M10 3L4.5 8.5L2 6'
+                    stroke='#059669'
+                    strokeWidth='1.5'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                  />
+                </svg>
               ) : (
                 <span className='text-[#6B7280] text-xs'>2</span>
               )}
             </div>
             <span
               className={`text-sm ${
-                activeSection === 'client' ? 'text-[#111827] font-medium' : 'text-[#6B7280]'
+                activeSection === 'client'
+                  ? 'text-[#111827] font-medium'
+                  : clientSelected
+                  ? 'text-[#059669]'
+                  : 'text-[#6B7280]'
               }`}
             >
               Client
@@ -216,7 +286,11 @@ export default function LeftSidebar({
         >
           <div
             className={`w-6 h-6 rounded-full ${
-              activeSection === 'comments' ? 'bg-[#111827]' : 'border border-[#D1D5DB]'
+              activeSection === 'comments'
+                ? 'bg-[#111827]'
+                : hasComments && visitedSections.has('comments')
+                ? 'bg-green-100 border border-green-200'
+                : 'border border-[#D1D5DB]'
             } flex items-center justify-center mr-3 transition-colors`}
           >
             {activeSection === 'comments' ? (
@@ -235,13 +309,33 @@ export default function LeftSidebar({
                   strokeLinejoin='round'
                 />
               </svg>
+            ) : hasComments && visitedSections.has('comments') ? (
+              <svg
+                width='12'
+                height='12'
+                viewBox='0 0 12 12'
+                fill='none'
+                xmlns='http://www.w3.org/2000/svg'
+              >
+                <path
+                  d='M10 3L4.5 8.5L2 6'
+                  stroke='#059669'
+                  strokeWidth='1.5'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                />
+              </svg>
             ) : (
               <span className='text-[#6B7280] text-xs'>3</span>
             )}
           </div>
           <span
             className={`text-sm ${
-              activeSection === 'comments' ? 'text-[#111827] font-medium' : 'text-[#6B7280]'
+              activeSection === 'comments'
+                ? 'text-[#111827] font-medium'
+                : hasComments && visitedSections.has('comments')
+                ? 'text-[#059669]'
+                : 'text-[#6B7280]'
             }`}
           >
             Comments
@@ -258,7 +352,11 @@ export default function LeftSidebar({
         >
           <div
             className={`w-6 h-6 rounded-full ${
-              activeSection === 'invoice' ? 'bg-[#111827]' : 'border border-[#D1D5DB]'
+              activeSection === 'invoice'
+                ? 'bg-[#111827]'
+                : hasInvoice && visitedSections.has('invoice')
+                ? 'bg-green-100 border border-green-200'
+                : 'border border-[#D1D5DB]'
             } flex items-center justify-center mr-3 transition-colors`}
           >
             {activeSection === 'invoice' ? (
@@ -277,13 +375,33 @@ export default function LeftSidebar({
                   strokeLinejoin='round'
                 />
               </svg>
+            ) : hasInvoice && visitedSections.has('invoice') ? (
+              <svg
+                width='12'
+                height='12'
+                viewBox='0 0 12 12'
+                fill='none'
+                xmlns='http://www.w3.org/2000/svg'
+              >
+                <path
+                  d='M10 3L4.5 8.5L2 6'
+                  stroke='#059669'
+                  strokeWidth='1.5'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                />
+              </svg>
             ) : (
               <span className='text-[#6B7280] text-xs'>4</span>
             )}
           </div>
           <span
             className={`text-sm ${
-              activeSection === 'invoice' ? 'text-[#111827] font-medium' : 'text-[#6B7280]'
+              activeSection === 'invoice'
+                ? 'text-[#111827] font-medium'
+                : hasInvoice && visitedSections.has('invoice')
+                ? 'text-[#059669]'
+                : 'text-[#6B7280]'
             }`}
           >
             Invoice

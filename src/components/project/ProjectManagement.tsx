@@ -150,6 +150,9 @@ export default function ProjectManagement({ onClose }: ProjectManagementProps) {
         currency={projectCurrency}
         onCurrencyChange={handleCurrencyChange}
         clientSelected={!!selectedClient}
+        items={items}
+        hasComments={notes.length > 0}
+        hasInvoice={!!invoiceSettings}
       />
 
       {/* Main Content */}
