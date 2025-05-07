@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClipboardList, CreditCard } from 'lucide-react';
 import { ClientWorkTab } from './components/ClientWorkTab';
+import { Invoice } from './components/Invoice';
 import { InvoiceTab } from './components/InvoiceTab';
 
 export default function page() {
@@ -27,8 +28,8 @@ export default function page() {
   };
 
   return (
-    <div className='bg-white min-h-screen'>
-      <div className='max-w-6xl mx-auto py-10 px-4'>
+    <div className='bg-gray-50 min-h-screen'>
+      <div className='max-w-[1200px] mx-auto py-10 px-4'>
         <Tabs defaultValue='invoice' className='w-full'>
           <TabsList className='mb-6'>
             <TabsTrigger value='invoice' className='flex items-center gap-2'>
@@ -42,7 +43,15 @@ export default function page() {
           </TabsList>
 
           <TabsContent value='invoice'>
-            <InvoiceTab invoice={invoice} />
+            <div className='space-y-8'>
+              <InvoiceTab invoice={invoice} />
+              <div className='bg-white rounded-xl shadow-sm p-6'>
+                <h2 className='text-xl font-semibold text-gray-900 mb-6'>Invoice Preview</h2>
+                <div className='flex justify-center'>
+                  <Invoice invoice={invoice} />
+                </div>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value='client-work'>
