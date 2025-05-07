@@ -397,7 +397,7 @@ export default function InvoicesList() {
                           key={invoice._id}
                           className='hover:bg-gray-50/50 cursor-pointer transition-all duration-200'
                           onClick={() => {
-                            return router.push(`/invoice/${invoice._id}`);
+                            return router.push(`/invoices/${invoice._id}`);
                           }}
                         >
                           <TableCell className='py-4'>{getStatusBadge(invoice.status)}</TableCell>
