@@ -35,13 +35,15 @@ export type AIItem = Item & {
   currency?: string;
 };
 
-export type Attachment = {
+export interface Attachment {
   id: string;
-  type: string;
   name: string;
+  type: 'file' | 'voice';
+  url?: string;
   size?: number;
-  timestamp: string;
-};
+  duration?: number;
+  mimeType?: string;
+}
 
 export type NotificationType = 'success' | 'error' | 'info';
 

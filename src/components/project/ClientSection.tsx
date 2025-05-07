@@ -1,5 +1,7 @@
 'use client';
 
+import AICard from '@/components/ui/ai-card';
+import AIInput, { Attachment } from '@/components/ui/ai-input';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -8,10 +10,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User } from 'lucide-react';
+import { ChevronDown, Plus, Search, Sparkles, User } from 'lucide-react';
 import { useState } from 'react';
 import SectionFooter from './SectionFooter';
 import { Client, Section } from './types';
@@ -31,6 +39,10 @@ export default function ClientSection({
 }: ClientSectionProps) {
   const [clientModalOpen, setClientModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'billing'>('basic');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [aiInput, setAiInput] = useState('');
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [showAiInput, setShowAiInput] = useState(false);
   const [newClient, setNewClient] = useState<Partial<Client>>({
     name: '',
     email: '',
@@ -47,7 +59,8 @@ export default function ClientSection({
   });
   const [isEditingClient, setIsEditingClient] = useState(false);
   const [editClientId, setEditClientId] = useState<string | null>(null);
-  const [clientPopoverOpen, setClientPopoverOpen] = useState(false);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const resetClientForm = () => {
     setNewClient({
@@ -67,6 +80,8 @@ export default function ClientSection({
     setActiveTab('basic');
     setIsEditingClient(false);
     setEditClientId(null);
+    setAttachments([]);
+    setAiError(null);
   };
 
   const handleCreateClient = () => {
@@ -85,7 +100,6 @@ export default function ClientSection({
       customFields: newClient.customFields,
     };
 
-    // Add client to the list and select it
     const updatedClients = [...clients, createdClient];
     clients.splice(0, clients.length, ...updatedClients);
 
@@ -133,6 +147,48 @@ export default function ClientSection({
     resetClientForm();
   };
 
+  const handleAiGenerate = () => {
+    setIsAiGenerating(true);
+    // Simulate AI processing
+    setTimeout(() => {
+      // Example AI-generated data - in real app, this would come from an AI service
+      const aiGeneratedClient = {
+        name: 'Acme Corporation',
+        email: 'contact@acmecorp.com',
+        phone: '+1 (555) 123-4567',
+        address: {
+          street: '123 Business Ave',
+          city: 'San Francisco',
+          state: 'CA',
+          country: 'USA',
+          postalCode: '94105',
+        },
+        taxId: 'TAX123456789',
+        customFields: {},
+      };
+      setNewClient(aiGeneratedClient);
+      setClientModalOpen(true);
+      setShowAiInput(false);
+      setIsAiGenerating(false);
+    }, 1500);
+  };
+
+  const filteredClients = clients.filter((client) => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      client.name.toLowerCase().includes(searchLower) ||
+      client.email.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const removeAttachment = (attachment: Attachment) => {
+    setAttachments(
+      attachments.filter((a) => {
+        return a.id !== attachment.id;
+      }),
+    );
+  };
+
   return (
     <div className='flex flex-col h-full relative bg-[#FAFAFA]'>
       <div className='absolute inset-0 pt-6 px-8 pb-16 overflow-y-auto'>
@@ -141,249 +197,144 @@ export default function ClientSection({
             <h2 className='text-lg font-semibold text-[#111827]'>Client Information</h2>
           </div>
           <p className='text-[#6B7280] text-sm leading-5 mb-6'>
-            {clients.length === 0
-              ? "Let's start by adding your client's information. This will be used on the invoice."
-              : 'Select an existing client or add a new one for this project.'}
+            Select an existing client or add a new one for this project. This information will be
+            used on the invoice.
           </p>
 
-          {/* Dropdown for existing clients */}
-          {clients.length > 0 && (
-            <div className='mb-6'>
-              <Label
-                htmlFor='existing-client-select'
-                className='block mb-1 text-sm font-medium text-gray-700'
-              >
-                Select Existing Client
-              </Label>
-              <select
-                id='existing-client-select'
-                value={selectedClient}
-                onChange={(e) => {
-                  const clientId = e.target.value;
-                  setSelectedClient(clientId);
-                  if (clientId) {
-                    const client = clients.find((c) => {
-                      return c.id === clientId;
-                    });
-                    if (client) {
-                      setNewClient({
-                        name: client.name,
-                        email: client.email,
-                        phone: client.phone,
-                        address: client.address,
-                        taxId: client.taxId,
-                        customFields: client.customFields,
-                      });
-                    }
-                  } else {
-                    resetClientForm();
-                  }
-                }}
-                className='w-full border rounded px-3 py-2 text-sm'
-              >
-                <option value=''>-- New Client --</option>
-                {clients.map((client) => {
-                  return (
-                    <option key={client.id} value={client.id}>
-                      {client.name} ({client.email})
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          )}
-
-          {/* Inline client creation/edit form */}
+          {/* Search and client list */}
           <div className='bg-white rounded-xl border border-gray-200 p-6'>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (selectedClient) {
-                  handleUpdateClient();
-                } else {
-                  handleCreateClient();
-                }
-              }}
-              className='space-y-4'
-            >
-              <div className='grid grid-cols-2 gap-4'>
-                <div>
-                  <Label
-                    htmlFor='client-name-inline'
-                    className='block mb-1 text-sm font-medium text-gray-700'
-                  >
-                    Client Name <span className='text-red-500'>*</span>
-                  </Label>
-                  <Input
-                    id='client-name-inline'
-                    value={newClient.name}
-                    onChange={(e) => {
-                      return setNewClient({ ...newClient, name: e.target.value });
-                    }}
-                    placeholder='Enter client name'
-                    required
-                  />
-                </div>
-                <div>
-                  <Label
-                    htmlFor='client-email-inline'
-                    className='block mb-1 text-sm font-medium text-gray-700'
-                  >
-                    Email <span className='text-red-500'>*</span>
-                  </Label>
-                  <Input
-                    id='client-email-inline'
-                    type='email'
-                    value={newClient.email || ''}
-                    onChange={(e) => {
-                      return setNewClient({ ...newClient, email: e.target.value });
-                    }}
-                    placeholder='e.g. contact@client.com'
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <Label
-                  htmlFor='client-phone-inline'
-                  className='block mb-1 text-sm font-medium text-gray-700'
-                >
-                  Phone Number
-                </Label>
+            <div className='flex gap-2 mb-4'>
+              <div className='relative flex-1'>
+                <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
                 <Input
-                  id='client-phone-inline'
-                  type='tel'
-                  value={newClient.phone || ''}
+                  type='text'
+                  placeholder='Search clients...'
+                  value={searchQuery}
                   onChange={(e) => {
-                    return setNewClient({ ...newClient, phone: e.target.value });
+                    return setSearchQuery(e.target.value);
                   }}
-                  placeholder='e.g. +1 (555) 123-4567'
+                  className='pl-10'
                 />
               </div>
-              <div>
-                <Label
-                  htmlFor='client-tax-id-inline'
-                  className='block mb-1 text-sm font-medium text-gray-700'
-                >
-                  Tax ID / VAT Number
-                </Label>
-                <Input
-                  id='client-tax-id-inline'
-                  value={newClient.taxId || ''}
-                  onChange={(e) => {
-                    return setNewClient({ ...newClient, taxId: e.target.value });
-                  }}
-                  placeholder='e.g. VAT123456789'
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className='bg-gray-900 hover:bg-gray-800 text-white whitespace-nowrap border border-gray-700 shadow-sm'>
+                    <Plus className='w-4 h-4 mr-2' />
+                    Add Client
+                    <ChevronDown className='w-4 h-4 ml-2' />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end' className='w-[200px]'>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      resetClientForm();
+                      setClientModalOpen(true);
+                    }}
+                    className='cursor-pointer'
+                  >
+                    <Plus className='w-4 h-4 mr-2' />
+                    Manual Entry
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      return setShowAiInput(true);
+                    }}
+                    className='cursor-pointer'
+                  >
+                    <Sparkles className='w-4 h-4 mr-2' />
+                    AI-Powered
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {showAiInput ? (
+              <AICard
+                title='AI-Powered Client Creation'
+                onClose={() => {
+                  setShowAiInput(false);
+                  setAiInput('');
+                  setAttachments([]);
+                  setAiError(null);
+                }}
+              >
+                <AIInput
+                  value={aiInput}
+                  onChange={setAiInput}
+                  onGenerate={handleAiGenerate}
+                  isGenerating={isAiGenerating}
+                  error={aiError}
+                  placeholder='Describe your client in natural language...'
+                  exampleText='Example: "Acme Corp, a tech company in San Francisco, contact email is contact@acmecorp.com, phone is 555-123-4567"'
+                  attachments={attachments}
+                  onAttachmentAdd={setAttachments}
+                  onAttachmentRemove={removeAttachment}
                 />
-              </div>
-              {/* Address fields */}
-              <div className='grid grid-cols-2 gap-3'>
-                <div>
-                  <Label
-                    htmlFor='client-street-inline'
-                    className='block mb-1 text-sm font-medium text-gray-700'
-                  >
-                    Street Address
-                  </Label>
-                  <Input
-                    id='client-street-inline'
-                    value={newClient.address?.street || ''}
-                    onChange={(e) => {
-                      return setNewClient({
-                        ...newClient,
-                        address: { ...newClient.address, street: e.target.value },
-                      });
-                    }}
-                    placeholder='e.g. 123 Main St.'
-                  />
-                </div>
-                <div>
-                  <Label
-                    htmlFor='client-city-inline'
-                    className='block mb-1 text-sm font-medium text-gray-700'
-                  >
-                    City
-                  </Label>
-                  <Input
-                    id='client-city-inline'
-                    value={newClient.address?.city || ''}
-                    onChange={(e) => {
-                      return setNewClient({
-                        ...newClient,
-                        address: { ...newClient.address, city: e.target.value },
-                      });
-                    }}
-                    placeholder='e.g. New York'
-                  />
-                </div>
-                <div>
-                  <Label
-                    htmlFor='client-state-inline'
-                    className='block mb-1 text-sm font-medium text-gray-700'
-                  >
-                    State / Province
-                  </Label>
-                  <Input
-                    id='client-state-inline'
-                    value={newClient.address?.state || ''}
-                    onChange={(e) => {
-                      return setNewClient({
-                        ...newClient,
-                        address: { ...newClient.address, state: e.target.value },
-                      });
-                    }}
-                    placeholder='e.g. NY'
-                  />
-                </div>
-                <div>
-                  <Label
-                    htmlFor='client-postal-code-inline'
-                    className='block mb-1 text-sm font-medium text-gray-700'
-                  >
-                    Postal Code
-                  </Label>
-                  <Input
-                    id='client-postal-code-inline'
-                    value={newClient.address?.postalCode || ''}
-                    onChange={(e) => {
-                      return setNewClient({
-                        ...newClient,
-                        address: { ...newClient.address, postalCode: e.target.value },
-                      });
-                    }}
-                    placeholder='e.g. 10001'
-                  />
-                </div>
-                <div>
-                  <Label
-                    htmlFor='client-country-inline'
-                    className='block mb-1 text-sm font-medium text-gray-700'
-                  >
-                    Country
-                  </Label>
-                  <Input
-                    id='client-country-inline'
-                    value={newClient.address?.country || ''}
-                    onChange={(e) => {
-                      return setNewClient({
-                        ...newClient,
-                        address: { ...newClient.address, country: e.target.value },
-                      });
-                    }}
-                    placeholder='e.g. USA'
-                  />
-                </div>
-              </div>
-              <div className='flex justify-end mt-6'>
-                <Button
-                  type='submit'
-                  className='bg-blue-600 hover:bg-blue-700 text-white px-8'
-                  disabled={!newClient.name || !newClient.email}
-                >
-                  {selectedClient ? 'Update Client' : 'Add Client'}
-                </Button>
-              </div>
-            </form>
+              </AICard>
+            ) : (
+              <>
+                {filteredClients.length === 0 ? (
+                  <div className='text-center py-8'>
+                    <div className='bg-gray-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4'>
+                      <User className='w-8 h-8 text-gray-400' />
+                    </div>
+                    <h3 className='text-lg font-medium text-gray-900 mb-2'>No clients found</h3>
+                    <p className='text-gray-500 mb-4'>
+                      {searchQuery
+                        ? 'No clients match your search. Try a different search term or add a new client.'
+                        : "You haven't added any clients yet. Add your first client to get started."}
+                    </p>
+                    <Button
+                      onClick={() => {
+                        return setShowAiInput(true);
+                      }}
+                      className='bg-gray-900 hover:bg-gray-800 text-white'
+                    >
+                      <Sparkles className='w-4 h-4 mr-2' />
+                      Add Client with AI
+                    </Button>
+                  </div>
+                ) : (
+                  <div className='space-y-3'>
+                    {filteredClients.map((client) => {
+                      return (
+                        <div
+                          key={client.id}
+                          className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                            selectedClient === client.id
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                          onClick={() => {
+                            return setSelectedClient(client.id);
+                          }}
+                        >
+                          <div className='flex justify-between items-start'>
+                            <div>
+                              <h3 className='font-medium text-gray-900'>{client.name}</h3>
+                              <p className='text-sm text-gray-500'>{client.email}</p>
+                              {client.phone && (
+                                <p className='text-sm text-gray-500 mt-1'>{client.phone}</p>
+                              )}
+                            </div>
+                            <Button
+                              variant='ghost'
+                              size='sm'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditClient(client);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -396,20 +347,18 @@ export default function ClientSection({
               <div className='mr-2 p-1.5 bg-blue-100 rounded-full'>
                 <User size={18} className='text-blue-600' />
               </div>
-              {isEditingClient ? 'Edit Client' : 'Add Client Information'}
+              {isEditingClient ? 'Edit Client' : 'Add New Client'}
             </DialogTitle>
-            {!isEditingClient && (
-              <p className='text-sm text-gray-500 mt-1'>
-                This information will be used on the invoice. Required fields are marked with an
-                asterisk (*).
-              </p>
-            )}
+            <p className='text-sm text-gray-500 mt-1'>
+              This information will be used on the invoice. Required fields are marked with an
+              asterisk (*).
+            </p>
           </DialogHeader>
 
           <Tabs
             value={activeTab}
             onValueChange={(value) => {
-              setActiveTab(value as any);
+              return setActiveTab(value as any);
             }}
             className='mt-4'
           >
@@ -431,7 +380,7 @@ export default function ClientSection({
                     id='client-name-modal'
                     value={newClient.name}
                     onChange={(e) => {
-                      setNewClient({ ...newClient, name: e.target.value });
+                      return setNewClient({ ...newClient, name: e.target.value });
                     }}
                     placeholder='Enter client name'
                     required
@@ -449,7 +398,7 @@ export default function ClientSection({
                     type='email'
                     value={newClient.email || ''}
                     onChange={(e) => {
-                      setNewClient({ ...newClient, email: e.target.value });
+                      return setNewClient({ ...newClient, email: e.target.value });
                     }}
                     placeholder='e.g. contact@acmecorp.com'
                     required
@@ -469,7 +418,7 @@ export default function ClientSection({
                   type='tel'
                   value={newClient.phone || ''}
                   onChange={(e) => {
-                    setNewClient({ ...newClient, phone: e.target.value });
+                    return setNewClient({ ...newClient, phone: e.target.value });
                   }}
                   placeholder='e.g. +1 (555) 123-4567'
                 />
@@ -486,7 +435,7 @@ export default function ClientSection({
                   id='client-tax-id-modal'
                   value={newClient.taxId || ''}
                   onChange={(e) => {
-                    setNewClient({ ...newClient, taxId: e.target.value });
+                    return setNewClient({ ...newClient, taxId: e.target.value });
                   }}
                   placeholder='e.g. VAT123456789'
                 />
@@ -506,7 +455,7 @@ export default function ClientSection({
                     id='client-street-modal'
                     value={newClient.address?.street || ''}
                     onChange={(e) => {
-                      setNewClient({
+                      return setNewClient({
                         ...newClient,
                         address: { ...newClient.address, street: e.target.value },
                       });
@@ -526,7 +475,7 @@ export default function ClientSection({
                       id='client-city-modal'
                       value={newClient.address?.city || ''}
                       onChange={(e) => {
-                        setNewClient({
+                        return setNewClient({
                           ...newClient,
                           address: { ...newClient.address, city: e.target.value },
                         });
@@ -545,7 +494,7 @@ export default function ClientSection({
                       id='client-state-modal'
                       value={newClient.address?.state || ''}
                       onChange={(e) => {
-                        setNewClient({
+                        return setNewClient({
                           ...newClient,
                           address: { ...newClient.address, state: e.target.value },
                         });
@@ -566,7 +515,7 @@ export default function ClientSection({
                       id='client-postal-code-modal'
                       value={newClient.address?.postalCode || ''}
                       onChange={(e) => {
-                        setNewClient({
+                        return setNewClient({
                           ...newClient,
                           address: { ...newClient.address, postalCode: e.target.value },
                         });
@@ -585,7 +534,7 @@ export default function ClientSection({
                       id='client-country-modal'
                       value={newClient.address?.country || ''}
                       onChange={(e) => {
-                        setNewClient({
+                        return setNewClient({
                           ...newClient,
                           address: { ...newClient.address, country: e.target.value },
                         });
@@ -622,7 +571,7 @@ export default function ClientSection({
       {/* Footer */}
       <SectionFooter
         onContinue={() => {
-          setActiveSection('comments');
+          return setActiveSection('comments');
         }}
         currentSection={2}
         totalSections={4}

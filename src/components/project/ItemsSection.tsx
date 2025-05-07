@@ -1,5 +1,8 @@
 'use client';
 
+import AICard from '@/components/ui/ai-card';
+import type { Attachment } from '@/components/ui/ai-input';
+import AIInput from '@/components/ui/ai-input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -28,22 +31,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  Check,
-  Hash,
-  Loader2,
-  Mic,
-  Paperclip,
-  PencilLine,
-  Plus,
-  Scissors,
-  Sparkles,
-  X,
-} from 'lucide-react';
+import { Check, Hash, Loader2, PencilLine, Plus, Scissors, Sparkles, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import SectionFooter from './SectionFooter';
-import type { AIItem, Attachment, ExtendedItem, Item, Section } from './types';
+import type { AIItem, ExtendedItem, Item, Section } from './types';
 
 // Define a TaxRate type
 type TaxRate = {
@@ -507,7 +499,7 @@ export default function ItemsSection({
     if (isRecording) {
       // Stop recording and attach the voice note
       setIsRecording(false);
-      const newAttachment = {
+      const newAttachment: Attachment = {
         id: `voice-${Date.now()}`,
         type: 'voice',
         name: `Voice note (${recordingDuration}s)`,
@@ -536,10 +528,9 @@ export default function ItemsSection({
   const handleFileAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = e.target.files;
     if (fileList && fileList.length > 0) {
-      // Properly type each file when we create the array
       const filesArray = Array.from(fileList) as File[];
 
-      const newAttachments = filesArray.map((file) => {
+      const newAttachments: Attachment[] = filesArray.map((file) => {
         return {
           id: `file-${Date.now()}-${file.name}`,
           type: 'file',
@@ -982,181 +973,31 @@ export default function ItemsSection({
 
               {/* AI Prompt Form */}
               {currentNewItemMode === 'ai' && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.25 }}
-                  className='border border-[#E5E7EB] rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200'
+                <AICard
+                  className='animate-in fade-in slide-in-from-top-2 duration-200'
+                  title='Generate items with AI'
+                  onClose={() => {
+                    setCurrentNewItemMode('');
+                    setAiPrompt('');
+                    setAttachments([]);
+                    setAiPromptError(null);
+                  }}
                 >
-                  <div className='mb-4'>
-                    <label className='block text-[#111827] font-medium text-sm mb-2'>
-                      Generate items with AI
-                    </label>
-                    <div className='flex relative'>
-                      <Textarea
-                        ref={aiPromptInputRef}
-                        value={aiPrompt}
-                        onChange={(e) => {
-                          setAiPrompt(e.target.value);
-                          if (aiPromptError) setAiPromptError(''); // Clear error when user edits prompt
-                        }}
-                        rows={4}
-                        placeholder='Describe what the client wants...'
-                        className={`flex-1 border ${
-                          aiPromptError
-                            ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
-                            : 'border-[#E5E7EB] focus:border-purple-400 focus:ring-purple-100'
-                        } rounded-lg px-3 py-2 text-sm outline-none bg-transparent transition-colors pr-[110px]`}
-                        autoFocus
-                      />
-                      <Button
-                        onClick={handleGenerateAiItems}
-                        className={cn(
-                          'bg-purple-600 text-white px-4 py-2 text-sm transition-all duration-200 flex items-center justify-center min-w-[100px] absolute right-2 bottom-2 cursor-pointer z-10 rounded-lg',
-                          !aiPrompt.trim() || isGenerating
-                            ? 'opacity-70 cursor-not-allowed'
-                            : 'hover:bg-purple-700 hover:shadow',
-                        )}
-                        disabled={!aiPrompt.trim() || isGenerating}
-                      >
-                        {isGenerating ? <Loader2 size={16} className='animate-spin' /> : 'Generate'}
-                      </Button>
-                    </div>
-
-                    {/* Error message display */}
-                    {aiPromptError && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className='mt-2 text-sm text-red-500 bg-red-50 p-2 rounded-md border border-red-100'
-                      >
-                        <div className='flex items-start'>
-                          <X size={16} className='mr-1 mt-0.5 flex-shrink-0' />
-                          <span>{aiPromptError}</span>
-                        </div>
-                        <p className='mt-1 text-xs text-red-500 pl-5'>
-                          Try adding more specific details about items, prices, or quantities.
-                        </p>
-                      </motion.div>
-                    )}
-
-                    {/* Voice and attachment controls */}
-                    <div className='flex mt-3 items-center'>
-                      <div className='flex space-x-2'>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={toggleRecording}
-                                className={`p-2 rounded-full flex items-center justify-center transition-all duration-200 ${
-                                  isRecording
-                                    ? 'bg-red-100 text-red-600 shadow-sm'
-                                    : 'bg-gray-100 text-gray-600'
-                                } hover:bg-gray-200`}
-                                title={isRecording ? 'Stop recording' : 'Record voice note'}
-                                aria-label={isRecording ? 'Stop recording' : 'Record voice note'}
-                              >
-                                <Mic size={16} className={isRecording ? 'animate-pulse' : ''} />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{isRecording ? 'Stop recording' : 'Record voice note'}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <label className='p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-200 cursor-pointer flex items-center justify-center'>
-                                <Paperclip size={16} />
-                                <Input
-                                  type='file'
-                                  multiple
-                                  className='hidden'
-                                  onChange={handleFileAttachment}
-                                  accept='image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                                  aria-label='Attach files'
-                                />
-                              </label>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Attach files</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-
-                      {isRecording && (
-                        <motion.div
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          className='ml-2 flex items-center'
-                        >
-                          <div className='w-2 h-2 rounded-full bg-red-500 mr-2 animate-pulse'></div>
-                          <span className='text-xs text-gray-500'>
-                            Recording {recordingDuration}s
-                          </span>
-                        </motion.div>
-                      )}
-
-                      <div className='flex-1'></div>
-
-                      <div className='text-xs text-gray-500'>
-                        {attachments.length > 0 &&
-                          `${attachments.length} attachment${attachments.length !== 1 ? 's' : ''}`}
-                      </div>
-                    </div>
-
-                    {/* Attachments display */}
-                    <AnimatePresence>
-                      {attachments.length > 0 && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className='mt-3 space-y-2 border-t border-gray-100 pt-2'
-                        >
-                          {attachments.map((attachment, index) => {
-                            return (
-                              <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                transition={{ delay: index * 0.05 }}
-                                key={attachment.id}
-                                className='flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 text-xs hover:bg-gray-100 transition-colors'
-                              >
-                                <div className='flex items-center'>
-                                  {attachment.type === 'voice' ? (
-                                    <Mic size={14} className='mr-2 text-purple-500' />
-                                  ) : (
-                                    <Paperclip size={14} className='mr-2 text-purple-500' />
-                                  )}
-                                  <span className='text-gray-700'>{attachment.name}</span>
-                                </div>
-                                <button
-                                  onClick={() => {
-                                    return removeAttachment(attachment.id);
-                                  }}
-                                  className='text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full p-1 transition-colors'
-                                  aria-label={`Remove attachment ${attachment.name}`}
-                                >
-                                  <X size={14} />
-                                </button>
-                              </motion.div>
-                            );
-                          })}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    <p className='text-[#6B7280] text-xs mt-2 italic'>
-                      Example: &quot;Client needs a red turtle hoodie for $15 and a black regular
-                      shirt&quot;
-                    </p>
-                  </div>
+                  <AIInput
+                    value={aiPrompt}
+                    onChange={(value) => {
+                      setAiPrompt(value);
+                      setAiPromptError(null);
+                    }}
+                    onGenerate={handleGenerateAiItems}
+                    isGenerating={isGenerating}
+                    error={aiPromptError}
+                    placeholder='Describe the items you want to add...'
+                    exampleText='Example: "Add 5 hours of web development at $150/hour, 2 hours of design at $120/hour, and a $500 software license fee"'
+                    attachments={attachments}
+                    onAttachmentAdd={setAttachments}
+                    onAttachmentRemove={removeAttachment}
+                  />
 
                   {isGenerating && (
                     <motion.div
@@ -1175,7 +1016,7 @@ export default function ItemsSection({
                       </p>
                     </motion.div>
                   )}
-                </motion.div>
+                </AICard>
               )}
             </AnimatePresence>
           </div>
