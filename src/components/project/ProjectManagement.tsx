@@ -54,6 +54,7 @@ export default function ProjectManagement({
 }: ProjectManagementProps) {
   const [activeSection, setActiveSection] = useState<Section>('items');
   const [selectedClient, setSelectedClient] = useState(existingInvoice?.client?._id || '');
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
   const [items, setItems] = useState<Item[]>(
     existingInvoice?.items.map((item) => {
       return {
@@ -162,7 +163,7 @@ export default function ProjectManagement({
   };
 
   return (
-    <div className='flex h-full '>
+    <div className='flex h-full'>
       <LeftSidebar
         activeSection={activeSection}
         setActiveSection={setActiveSection}
@@ -175,7 +176,7 @@ export default function ProjectManagement({
       />
 
       {/* Main Content */}
-      <div className='flex-1 flex flex-col h-full overflow-hidden'>
+      <div className='flex-1 flex flex-col h-full overflow-hidden relative'>
         {activeSection === 'items' && (
           <ItemsSection
             items={items}
@@ -214,10 +215,49 @@ export default function ProjectManagement({
             existingInvoice={existingInvoice}
           />
         )}
+
+        {/* Floating button to reopen sidebar */}
+        {!isRightSidebarOpen && (
+          <button
+            onClick={() => {
+              return setIsRightSidebarOpen(true);
+            }}
+            className='absolute right-4 top-4 bg-white border border-[#E5E7EB] rounded-full p-2 shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2 text-sm text-[#6B7280] hover:text-[#111827]'
+          >
+            <svg
+              width='16'
+              height='16'
+              viewBox='0 0 16 16'
+              fill='none'
+              xmlns='http://www.w3.org/2000/svg'
+            >
+              <path
+                d='M6 12L10 8L6 4'
+                stroke='currentColor'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+              />
+            </svg>
+            <span>Show Details</span>
+          </button>
+        )}
       </div>
 
-      {/* Right Sidebar */}
-      <RightSidebar />
+      {/* Right Sidebar with Toggle */}
+      <div
+        className={`relative transition-all duration-300 ${
+          isRightSidebarOpen ? 'w-[350px]' : 'w-0'
+        }`}
+      >
+        <div
+          className={`h-full transition-all duration-300 ${
+            isRightSidebarOpen ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <RightSidebar />
+        </div>
+      </div>
     </div>
   );
 }
