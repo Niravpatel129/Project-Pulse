@@ -4,6 +4,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -12,13 +20,43 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { CheckCircle2, CreditCard, Info, MoreHorizontal, Send } from 'lucide-react';
+import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  CheckCircle2,
+  CreditCard,
+  DownloadCloud,
+  Info,
+  Link as LinkIcon,
+  MoreHorizontal,
+  Send,
+} from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface InvoiceTabProps {
   invoice: Invoice;
 }
 
 export function InvoiceTab({ invoice }: InvoiceTabProps) {
+  const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const markAsSentMutation = useMutation({
+    mutationFn: async () => {
+      // Assuming the API expects a PATCH or PUT to /invoices/:id with status: 'sent'
+      await newRequest.put(`/invoices/${invoice.id}`, { status: 'sent' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries();
+      toast.success('Invoice marked as sent');
+      setIsSendDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to mark invoice as sent');
+    },
+  });
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'paid':
@@ -157,7 +195,14 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
               )}
             </div>
             <div className='ml-auto'>
-              <Button size='sm'>Resend invoice</Button>
+              <Button
+                size='sm'
+                onClick={() => {
+                  return setIsSendDialogOpen(true);
+                }}
+              >
+                {invoice.status === 'sent' ? 'Resend invoice' : 'Send invoice'}
+              </Button>
             </div>
           </div>
           <Separator />
@@ -185,6 +230,65 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isSendDialogOpen} onOpenChange={setIsSendDialogOpen}>
+        <DialogContent className='sm:max-w-[700px]'>
+          <DialogHeader>
+            <DialogTitle>Send Invoice</DialogTitle>
+            <DialogDescription>
+              Share invoice #{invoice.invoiceNumber} with {invoice.clientName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className='py-6'>
+            <div className='grid grid-cols-2 gap-6'>
+              <div
+                className='cursor-pointer border rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-primary group'
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                }}
+              >
+                <LinkIcon className='h-8 w-8 mb-4 text-blue-600 group-hover:text-blue-700' />
+                <div className='font-bold text-lg mb-1 text-center'>Copy link</div>
+                <div className='text-center text-muted-foreground text-base'>
+                  A link to your invoice with all details included
+                </div>
+              </div>
+              <div
+                className='cursor-pointer border rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-primary group'
+                onClick={() => {
+                  // TODO: Implement download PDF functionality
+                }}
+              >
+                <DownloadCloud className='h-8 w-8 mb-4 text-blue-600 group-hover:text-blue-700' />
+                <div className='font-bold text-lg mb-1 text-center'>Download PDF</div>
+                <div className='text-center text-muted-foreground text-base'>
+                  Your invoice all in one document
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => {
+                return setIsSendDialogOpen(false);
+              }}
+            >
+              {invoice.status === 'sent' ? 'Close' : 'Cancel'}
+            </Button>
+            {invoice.status !== 'sent' && (
+              <Button
+                onClick={() => {
+                  return markAsSentMutation.mutate();
+                }}
+                disabled={markAsSentMutation.isPending}
+              >
+                {markAsSentMutation.isPending ? 'Marking...' : 'Mark invoice as sent'}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
