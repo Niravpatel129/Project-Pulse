@@ -1,28 +1,65 @@
 'use client';
 
+interface ClientAddress {
+  street: string;
+  city: string;
+  state: string;
+  country: string;
+  zip: string;
+}
+
+interface Client {
+  name: string;
+  email: string;
+  phone: string;
+  address: ClientAddress;
+  shippingAddress: ClientAddress;
+  taxId: string;
+  website: string;
+}
+
+interface InvoiceItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  discount: number;
+  tax: number;
+}
+
+interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  clientName: string;
+  clientId: string;
+  client?: Client | null;
+  status: 'paid' | 'draft' | 'sent' | 'overdue' | 'cancelled';
+  items: InvoiceItem[];
+  subtotal: number;
+  discount: number;
+  tax: number;
+  total: number;
+  dueDate: string;
+  issueDate: string;
+  createdAt: string;
+  updatedAt: string;
+  notes: string;
+  terms: string;
+  paymentMethod: string;
+  paymentDate: string | null;
+  currency: string;
+  createdBy: string;
+  requireDeposit: boolean;
+  depositPercentage: number;
+  teamNotes: string;
+}
+
 interface InvoiceProps {
-  invoice: {
-    id: number;
-    status: string;
-    customer: string;
-    amountDue: number;
-    dueDaysAgo: number;
-    createdAt: string;
-    lastSent: string;
-    isOnlinePayments: boolean;
-  };
+  invoice: Invoice;
 }
 
 export function Invoice({ invoice }: InvoiceProps) {
-  // Example item for demonstration
-  const items = [
-    {
-      description: 'Professional Services',
-      quantity: 1,
-      price: invoice.amountDue,
-      amount: invoice.amountDue,
-    },
-  ];
   return (
     <div
       className='bg-white rounded-lg border border-gray-200 shadow-sm invoice-paper'
@@ -66,24 +103,60 @@ export function Invoice({ invoice }: InvoiceProps) {
       {/* Info Section */}
       <div className='flex justify-between items-start border-t border-b border-gray-200 py-6 mb-8'>
         <div>
-          <div className='text-gray-500 text-sm mb-1'>Bill to</div>
-          <div className='font-semibold text-lg text-gray-900'>{invoice.customer}</div>
+          <div className='flex justify-between'>
+            <div>
+              <h3 className='text-sm font-medium text-gray-900'>Bill To</h3>
+              <div className='mt-2 text-sm text-gray-500'>
+                <p>{invoice.clientName}</p>
+                {invoice.client && (
+                  <>
+                    {invoice.client.address.street && <p>{invoice.client.address.street}</p>}
+                    {(invoice.client.address.city ||
+                      invoice.client.address.state ||
+                      invoice.client.address.zip) && (
+                      <p>
+                        {[
+                          invoice.client.address.city,
+                          invoice.client.address.state,
+                          invoice.client.address.zip,
+                        ]
+                          .filter(Boolean)
+                          .join(', ')}
+                      </p>
+                    )}
+                    {invoice.client.address.country && <p>{invoice.client.address.country}</p>}
+                    {invoice.client.phone && <p className='mt-1'>{invoice.client.phone}</p>}
+                    {invoice.client.email && <p>{invoice.client.email}</p>}
+                    {invoice.client.taxId && <p className='mt-1'>Tax ID: {invoice.client.taxId}</p>}
+                  </>
+                )}
+              </div>
+            </div>
+            <div className='text-right'>
+              <h3 className='text-sm font-medium text-gray-900'>Invoice Details</h3>
+              <div className='mt-2 text-sm text-gray-500'>
+                <p>Invoice #{invoice.invoiceNumber}</p>
+                <p>Issue Date: {new Date(invoice.issueDate).toLocaleDateString()}</p>
+                <p>Due Date: {new Date(invoice.dueDate).toLocaleDateString()}</p>
+              </div>
+            </div>
+          </div>
         </div>
         <div className='text-right space-y-1 text-sm'>
           <div>
             <span className='font-semibold text-gray-900'>Invoice Number:</span>{' '}
-            <span className='ml-2'>{invoice.id}</span>
+            <span className='ml-2'>{invoice.invoiceNumber}</span>
           </div>
           <div>
             <span className='font-semibold text-gray-900'>Invoice Date:</span>{' '}
-            <span className='ml-2'>{invoice.createdAt}</span>
+            <span className='ml-2'>{new Date(invoice.issueDate).toLocaleDateString()}</span>
           </div>
           <div>
             <span className='font-semibold text-gray-900'>Payment Due:</span>{' '}
-            <span className='ml-2'>{invoice.createdAt}</span>
+            <span className='ml-2'>{new Date(invoice.dueDate).toLocaleDateString()}</span>
           </div>
           <div className='bg-gray-100 rounded px-2 py-1 mt-2 inline-block font-semibold text-gray-700'>
-            Amount Due (CAD): <span className='text-black'>${invoice.amountDue.toFixed(2)}</span>
+            Amount Due (CAD): <span className='text-black'>${invoice.total.toFixed(2)}</span>
           </div>
         </div>
       </div>
@@ -100,13 +173,13 @@ export function Invoice({ invoice }: InvoiceProps) {
             </tr>
           </thead>
           <tbody>
-            {items.map((item, idx) => {
+            {invoice.items.map((item) => {
               return (
-                <tr key={idx} className='border-t border-gray-200 bg-white'>
+                <tr key={item.id} className='border-t border-gray-200 bg-white'>
                   <td className='py-3 px-4'>{item.description}</td>
                   <td className='py-3 px-4 text-center'>{item.quantity}</td>
-                  <td className='py-3 px-4 text-right'>${item.price.toFixed(2)}</td>
-                  <td className='py-3 px-4 text-right'>${item.amount.toFixed(2)}</td>
+                  <td className='py-3 px-4 text-right'>${item.unitPrice.toFixed(2)}</td>
+                  <td className='py-3 px-4 text-right'>${item.total.toFixed(2)}</td>
                 </tr>
               );
             })}
@@ -118,20 +191,52 @@ export function Invoice({ invoice }: InvoiceProps) {
       <div className='flex flex-col items-end'>
         <div className='w-full max-w-md'>
           <div className='flex justify-between py-2 text-base'>
-            <span className='font-semibold text-gray-700'>Total:</span>
-            <span className='font-semibold text-gray-900'>${invoice.amountDue.toFixed(2)}</span>
+            <span className='font-semibold text-gray-700'>Subtotal:</span>
+            <span className='font-semibold text-gray-900'>${invoice.subtotal.toFixed(2)}</span>
           </div>
-          {/* Example payment row, can be dynamic */}
-          <div className='flex justify-between py-2 text-sm text-gray-500 border-b border-gray-200'>
-            <span>Payment on {invoice.createdAt} using cash:</span>
-            <span>${invoice.amountDue.toFixed(2)}</span>
-          </div>
+          {invoice.discount > 0 && (
+            <div className='flex justify-between py-2 text-sm text-gray-500'>
+              <span>Discount:</span>
+              <span>-${invoice.discount.toFixed(2)}</span>
+            </div>
+          )}
+          {invoice.tax > 0 && (
+            <div className='flex justify-between py-2 text-sm text-gray-500'>
+              <span>Tax:</span>
+              <span>${invoice.tax.toFixed(2)}</span>
+            </div>
+          )}
+          {invoice.paymentDate && (
+            <div className='flex justify-between py-2 text-sm text-gray-500 border-b border-gray-200'>
+              <span>
+                Payment on {new Date(invoice.paymentDate).toLocaleDateString()} using{' '}
+                {invoice.paymentMethod}:
+              </span>
+              <span>${invoice.total.toFixed(2)}</span>
+            </div>
+          )}
           <div className='flex justify-between py-4 text-lg font-bold'>
             <span>Amount Due (CAD):</span>
-            <span>${(0).toFixed(2)}</span>
+            <span>${(invoice.status === 'paid' ? 0 : invoice.total).toFixed(2)}</span>
           </div>
         </div>
       </div>
+
+      {/* Notes Section */}
+      {invoice.notes && (
+        <div className='mt-8 pt-8 border-t border-gray-200'>
+          <h3 className='font-semibold text-gray-900 mb-2'>Notes</h3>
+          <p className='text-gray-600 text-sm'>{invoice.notes}</p>
+        </div>
+      )}
+
+      {/* Terms Section */}
+      {invoice.terms && (
+        <div className='mt-4'>
+          <h3 className='font-semibold text-gray-900 mb-2'>Terms</h3>
+          <p className='text-gray-600 text-sm'>{invoice.terms}</p>
+        </div>
+      )}
     </div>
   );
 }

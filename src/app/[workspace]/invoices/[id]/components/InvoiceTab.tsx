@@ -1,3 +1,4 @@
+import { Invoice } from '@/api/models';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,31 +15,47 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { CheckCircle2, CreditCard, Info, MoreHorizontal, Send } from 'lucide-react';
 
 interface InvoiceTabProps {
-  invoice: {
-    id: number;
-    status: string;
-    customer: string;
-    amountDue: number;
-    dueDaysAgo: number;
-    createdAt: string;
-    lastSent: string;
-    isOnlinePayments: boolean;
-  };
+  invoice: Invoice;
 }
 
 export function InvoiceTab({ invoice }: InvoiceTabProps) {
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'paid':
+        return 'default';
+      case 'overdue':
+        return 'destructive';
+      case 'sent':
+        return 'secondary';
+      case 'draft':
+        return 'outline';
+      default:
+        return 'default';
+    }
+  };
+
+  const getDueDaysAgo = (dueDate: string) => {
+    const due = new Date(dueDate);
+    const now = new Date();
+    const diffTime = now.getTime() - due.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const dueDaysAgo = getDueDaysAgo(invoice.dueDate);
+
   return (
     <>
       {/* Header */}
       <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6'>
         <div>
-          <h1 className='text-2xl font-bold mb-1'>Invoice #{invoice.id}</h1>
+          <h1 className='text-2xl font-bold mb-1'>Invoice #{invoice.invoiceNumber}</h1>
           <div className='flex items-center gap-2'>
-            <Badge variant='destructive'>{invoice.status}</Badge>
+            <Badge variant={getStatusColor(invoice.status)}>{invoice.status}</Badge>
             <span className='text-muted-foreground text-sm'>
               Customer:{' '}
               <span className='text-primary font-medium cursor-pointer underline underline-offset-2'>
-                {invoice.customer}
+                {invoice.clientName}
               </span>
               <TooltipProvider>
                 <Tooltip>
@@ -55,14 +72,8 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
           <div className='flex items-center gap-4'>
             <div className='flex items-center gap-1'>
               <span className='text-sm font-medium'>Online Payments</span>
-              <Switch checked={invoice.isOnlinePayments} disabled className='scale-90' />
-              <span
-                className={`ml-1 text-xs font-semibold ${
-                  invoice.isOnlinePayments ? 'text-green-600' : 'text-red-600'
-                }`}
-              >
-                {invoice.isOnlinePayments ? 'ON' : 'OFF'}
-              </span>
+              <Switch checked={false} disabled className='scale-90' />
+              <span className='ml-1 text-xs font-semibold text-red-600'>OFF</span>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -81,9 +92,9 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
             </Button>
           </div>
           <div className='flex items-center gap-6 mt-2'>
-            <div className='text-lg font-semibold'>${invoice.amountDue.toFixed(2)}</div>
+            <div className='text-lg font-semibold'>${invoice.total.toFixed(2)}</div>
             <div className='text-sm text-muted-foreground'>
-              Due <span className='font-medium'>{invoice.dueDaysAgo} days ago</span>
+              Due <span className='font-medium'>{dueDaysAgo} days ago</span>
             </div>
           </div>
         </div>
@@ -101,7 +112,8 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
             <div>
               <div className='font-medium'>Create</div>
               <div className='text-sm text-muted-foreground'>
-                Created: <span className='font-mono'>on {invoice.createdAt}</span>
+                Created:{' '}
+                <span className='font-mono'>on {new Date(invoice.createdAt).toLocaleString()}</span>
               </div>
             </div>
             <div className='ml-auto'>
@@ -119,25 +131,30 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
             <div>
               <div className='font-medium'>Send</div>
               <div className='text-sm text-muted-foreground'>
-                Last sent: <span className='font-mono'>Marked as sent {invoice.lastSent}.</span>{' '}
+                Last sent:{' '}
+                <span className='font-mono'>
+                  Marked as sent {new Date(invoice.updatedAt).toLocaleString()}.
+                </span>{' '}
                 <span className='text-primary cursor-pointer underline underline-offset-2'>
                   Edit date
                 </span>
               </div>
-              <div className='mt-2'>
-                <Alert className='p-2 bg-muted/50 border-0'>
-                  <AlertDescription>
-                    <span className='font-semibold'>
-                      Overdue invoices are{' '}
-                      <span className='text-primary'>3x more likely to get paid</span>
-                    </span>{' '}
-                    when you send reminders.{' '}
-                    <span className='text-primary cursor-pointer underline underline-offset-2'>
-                      Schedule reminders.
-                    </span>
-                  </AlertDescription>
-                </Alert>
-              </div>
+              {invoice.status === 'overdue' && (
+                <div className='mt-2'>
+                  <Alert className='p-2 bg-muted/50 border-0'>
+                    <AlertDescription>
+                      <span className='font-semibold'>
+                        Overdue invoices are{' '}
+                        <span className='text-primary'>3x more likely to get paid</span>
+                      </span>{' '}
+                      when you send reminders.{' '}
+                      <span className='text-primary cursor-pointer underline underline-offset-2'>
+                        Schedule reminders.
+                      </span>
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
             </div>
             <div className='ml-auto'>
               <Button size='sm'>Resend invoice</Button>
@@ -152,14 +169,14 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
             <div>
               <div className='font-medium'>Manage payments</div>
               <div className='text-sm text-muted-foreground'>
-                Amount due: <span className='font-mono'>${invoice.amountDue.toFixed(2)}</span> —{' '}
+                Amount due: <span className='font-mono'>${invoice.total.toFixed(2)}</span> —{' '}
                 <span className='text-primary cursor-pointer underline underline-offset-2'>
                   Record a payment
                 </span>{' '}
                 manually
               </div>
               <div className='text-sm mt-1'>
-                Status: <span className='font-medium'>Your invoice is awaiting payment</span>
+                Status: <span className='font-medium'>Your invoice is {invoice.status}</span>
               </div>
             </div>
             <div className='ml-auto'>
