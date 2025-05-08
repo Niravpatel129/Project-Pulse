@@ -50,8 +50,42 @@ interface Invoice {
   invoiceNumber: string;
   client: {
     _id: string;
-    name: string;
-    email: string;
+    user: {
+      name: string;
+      email: string;
+    };
+    workspace: string;
+    isActive: boolean;
+    notes: string;
+    createdAt: string;
+    updatedAt: string;
+    phone?: string;
+    address?: {
+      street?: string;
+      city?: string;
+      state?: string;
+      zip?: string;
+      country?: string;
+    };
+    shippingAddress?: {
+      street?: string;
+      city?: string;
+      state?: string;
+      zip?: string;
+      country?: string;
+    };
+    contact?: {
+      firstName?: string;
+      lastName?: string;
+    };
+    taxId?: string;
+    accountNumber?: string;
+    fax?: string;
+    mobile?: string;
+    tollFree?: string;
+    website?: string;
+    internalNotes?: string;
+    customFields?: Record<string, any>;
   } | null;
   project?: {
     _id: string;
@@ -71,10 +105,23 @@ interface Invoice {
   createdAt: string;
 }
 
+interface Activity {
+  _id: string;
+  type: 'created' | 'paid' | 'overdue' | 'updated';
+  invoiceNumber: string;
+  timestamp: string;
+  description: string;
+}
+
 interface ApiResponse {
   status: string;
   results: number;
   data: Invoice[];
+}
+
+interface ActivitiesResponse {
+  status: string;
+  data: Activity[];
 }
 
 const statusTabs = [
@@ -115,6 +162,7 @@ function CreateInvoiceDialog() {
 export default function InvoicesList() {
   const router = useRouter();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [error, setError] = useState<string | null>(null);
@@ -122,18 +170,23 @@ export default function InvoicesList() {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    const fetchInvoices = async () => {
+    const fetchData = async () => {
       try {
-        const response = await newRequest.get<ApiResponse>('/invoices');
-        setInvoices(response.data.data || []);
+        const [invoicesResponse, activitiesResponse] = await Promise.all([
+          newRequest.get<ApiResponse>('/invoices'),
+          newRequest.get<ActivitiesResponse>('/invoices/activities'),
+        ]);
+        setInvoices(invoicesResponse.data.data || []);
+        setActivities(activitiesResponse.data.data || []);
       } catch (error) {
-        console.error('Failed to fetch invoices:', error);
+        console.error('Failed to fetch data:', error);
         setInvoices([]);
+        setActivities([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchInvoices();
+    fetchData();
   }, []);
 
   // Placeholder stats
@@ -408,7 +461,7 @@ export default function InvoicesList() {
                             {invoice.invoiceNumber}
                           </TableCell>
                           <TableCell className='text-base text-gray-700 py-4'>
-                            {invoice.client?.name || '—'}
+                            {invoice.client?.user?.name || '—'}
                           </TableCell>
                           <TableCell className='text-base font-semibold text-gray-900 py-4 text-right'>
                             {formatCurrency(invoice.total, invoice.currency)}
@@ -544,27 +597,40 @@ export default function InvoicesList() {
                 </CardTitle>
               </CardHeader>
               <CardContent className='space-y-5'>
-                <div className='flex items-start gap-4'>
-                  <div className='w-2 h-2 rounded-full bg-blue-500 mt-2'></div>
-                  <div>
-                    <p className='text-base font-medium text-gray-900'>New invoice #1234 created</p>
-                    <p className='text-sm text-gray-600 mt-1'>2 hours ago</p>
-                  </div>
-                </div>
-                <div className='flex items-start gap-4'>
-                  <div className='w-2 h-2 rounded-full bg-green-500 mt-2'></div>
-                  <div>
-                    <p className='text-base font-medium text-gray-900'>Invoice #1233 paid</p>
-                    <p className='text-sm text-gray-600 mt-1'>5 hours ago</p>
-                  </div>
-                </div>
-                <div className='flex items-start gap-4'>
-                  <div className='w-2 h-2 rounded-full bg-yellow-500 mt-2'></div>
-                  <div>
-                    <p className='text-base font-medium text-gray-900'>Invoice #1232 overdue</p>
-                    <p className='text-sm text-gray-600 mt-1'>1 day ago</p>
-                  </div>
-                </div>
+                {activities.length === 0 ? (
+                  <p className='text-base text-gray-600'>No recent activities</p>
+                ) : (
+                  activities.map((activity) => {
+                    const getActivityColor = (type: Activity['type']) => {
+                      switch (type) {
+                        case 'created':
+                          return 'bg-blue-500';
+                        case 'paid':
+                          return 'bg-green-500';
+                        case 'overdue':
+                          return 'bg-yellow-500';
+                        default:
+                          return 'bg-gray-500';
+                      }
+                    };
+
+                    return (
+                      <div key={activity._id} className='flex items-start gap-4'>
+                        <div
+                          className={`w-2 h-2 rounded-full ${getActivityColor(activity.type)} mt-2`}
+                        ></div>
+                        <div>
+                          <p className='text-base font-medium text-gray-900'>
+                            {activity.description}
+                          </p>
+                          <p className='text-sm text-gray-600 mt-1'>
+                            {format(new Date(activity.timestamp), 'MMM d, yyyy h:mm a')}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </CardContent>
             </Card>
           </div>
