@@ -47,7 +47,7 @@ import {
   MoreHorizontal,
   Send,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface Payment {
@@ -90,6 +90,21 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
   const queryClient = useQueryClient();
   const { data: invoiceSettings } = useInvoiceSettings();
   const updateInvoiceSettings = useUpdateInvoiceSettings();
+
+  // Business settings state
+  const [businessName, setBusinessName] = useState('');
+  const [businessAddress, setBusinessAddress] = useState('');
+  const [businessNotes, setBusinessNotes] = useState('');
+
+  // Initialize business settings from invoice settings when available
+  useEffect(() => {
+    if (invoiceSettings) {
+      // TODO: Initialize from proper fields when backend is ready
+      setBusinessName('');
+      setBusinessAddress('');
+      setBusinessNotes('');
+    }
+  }, [invoiceSettings]);
 
   const markAsSentMutation = useMutation({
     mutationFn: async () => {
@@ -934,8 +949,29 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
           </DialogHeader>
           <div className='space-y-6 py-4'>
             <div>
+              <Label>Company Name</Label>
+              <Input
+                value={businessName}
+                onChange={(e) => {
+                  return setBusinessName(e.target.value);
+                }}
+                placeholder='Your company name'
+              />
+            </div>
+            <div>
+              <Label>Business Address</Label>
+              <Textarea
+                value={businessAddress}
+                onChange={(e) => {
+                  return setBusinessAddress(e.target.value);
+                }}
+                placeholder='Enter your business address'
+                className='h-20'
+              />
+            </div>
+            <div className='space-y-2'>
               <Label>Tax ID / VAT Number</Label>
-              <div className='flex items-center gap-2'>
+              <div className='space-y-2'>
                 <Input
                   value={invoiceSettings?.taxId || ''}
                   onChange={(e) => {
@@ -946,9 +982,6 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                   placeholder='Enter your tax ID'
                 />
                 <div className='flex items-center gap-2'>
-                  <Label htmlFor='showTaxId' className='text-sm'>
-                    Show on invoice
-                  </Label>
                   <Switch
                     id='showTaxId'
                     checked={invoiceSettings?.showTaxId}
@@ -958,6 +991,9 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                       });
                     }}
                   />
+                  <Label htmlFor='showTaxId' className='text-sm text-muted-foreground'>
+                    Show tax ID on invoices
+                  </Label>
                 </div>
               </div>
             </div>
@@ -977,38 +1013,15 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
               </div>
             </div>
             <div>
-              <Label>Brand Color</Label>
-              <div className='flex items-center gap-2'>
-                <Input
-                  type='color'
-                  value={invoiceSettings?.brandColor || '#000000'}
-                  onChange={(e) => {
-                    updateInvoiceSettings.mutate({
-                      settings: { ...invoiceSettings, brandColor: e.target.value },
-                    });
-                  }}
-                  className='w-20 h-10 p-1'
-                />
-                <span className='text-sm text-muted-foreground'>Used for invoice styling</span>
-              </div>
-            </div>
-            <div>
-              <Label>Accent Color</Label>
-              <div className='flex items-center gap-2'>
-                <Input
-                  type='color'
-                  value={invoiceSettings?.accentColor || '#000000'}
-                  onChange={(e) => {
-                    updateInvoiceSettings.mutate({
-                      settings: { ...invoiceSettings, accentColor: e.target.value },
-                    });
-                  }}
-                  className='w-20 h-10 p-1'
-                />
-                <span className='text-sm text-muted-foreground'>
-                  Used for highlights and accents
-                </span>
-              </div>
+              <Label>Default Invoice Notes</Label>
+              <Textarea
+                value={businessNotes}
+                onChange={(e) => {
+                  return setBusinessNotes(e.target.value);
+                }}
+                placeholder='Add default notes to appear on all invoices'
+                className='h-20'
+              />
             </div>
           </div>
           <DialogFooter>
@@ -1018,7 +1031,21 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                 return setIsBusinessSettingsOpen(false);
               }}
             >
-              Close
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                // TODO: Update backend with new fields
+                updateInvoiceSettings.mutate({
+                  settings: {
+                    ...invoiceSettings,
+                    // Add new fields when backend is ready
+                  },
+                });
+                setIsBusinessSettingsOpen(false);
+              }}
+            >
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
