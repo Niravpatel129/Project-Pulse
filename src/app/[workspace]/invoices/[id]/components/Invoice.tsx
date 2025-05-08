@@ -1,6 +1,7 @@
 'use client';
 
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
+import Image from 'next/image';
 
 interface ClientAddress {
   street: string;
@@ -93,7 +94,18 @@ export function Invoice({ invoice }: InvoiceProps) {
       `}</style>
       {/* Header */}
       <div className='flex justify-between items-start mb-10'>
-        <div></div>
+        <div>
+          {invoiceSettings?.logo && (
+            <Image
+              unoptimized
+              width={100}
+              height={100}
+              src={invoiceSettings.logo}
+              alt='Company Logo'
+              className='h-16 w-auto object-contain'
+            />
+          )}
+        </div>
         <div className='text-right'>
           <h1 className='text-4xl font-semibold tracking-tight text-gray-900'>INVOICE</h1>
           <div className='mt-2'>
