@@ -10,6 +10,7 @@ interface InvoiceSettings {
   logo?: string;
   businessName?: string;
   businessAddress?: string;
+  businessNotes?: string;
   taxes?: Array<{
     id: string;
     name: string;
@@ -23,6 +24,9 @@ interface InvoiceSettings {
     estimatedDays: string;
   }>;
   currency?: string;
+  bankName?: string;
+  bankAccount?: string;
+  bankRouting?: string;
 }
 
 interface ApiResponse {

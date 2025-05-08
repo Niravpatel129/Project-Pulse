@@ -8,10 +8,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { DownloadCloud, Link as LinkIcon } from 'lucide-react';
-import { useRef } from 'react';
+import {
+  Check,
+  CheckCircle2,
+  Copy,
+  CreditCard,
+  DownloadCloud,
+  Link as LinkIcon,
+} from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'unpaid' | 'open';
@@ -43,12 +53,24 @@ interface Invoice {
     logo: string | null;
     currency: string;
   };
+  total: number;
+  remainingBalance?: number;
+  payments?: Array<{
+    _id: string;
+    amount: number;
+    date: string;
+    method: string;
+    memo?: string;
+    status?: string;
+  }>;
 }
 
 interface SendInvoiceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   invoice: Invoice;
+  onSend: () => void;
+  paymentUrl?: string;
 }
 
 // Utility function to transform invoice data for PDF generation
@@ -130,10 +152,32 @@ export function transformInvoiceForPDF(invoice: Invoice) {
   };
 }
 
-export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDialogProps) {
+export function SendInvoiceDialog({
+  open,
+  onOpenChange,
+  invoice,
+  onSend,
+  paymentUrl,
+}: SendInvoiceDialogProps) {
+  const [emailContent, setEmailContent] = useState('');
+  const [copied, setCopied] = useState(false);
+  const { data: invoiceSettings } = useInvoiceSettings();
   const queryClient = useQueryClient();
+  const params = useParams();
   const isPaid = invoice.status === 'paid';
   const invoiceRef = useRef<HTMLDivElement>(null);
+  const remainingBalance = invoice.remainingBalance ?? invoice.total;
+  const totalPaid = invoice.total - remainingBalance;
+
+  const handleCopyLink = () => {
+    if (paymentUrl) {
+      navigator.clipboard.writeText(paymentUrl);
+      setCopied(true);
+      setTimeout(() => {
+        return setCopied(false);
+      }, 2000);
+    }
+  };
 
   const handleDownloadPDF = async () => {
     if (typeof window === 'undefined') return;
@@ -219,41 +263,90 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
           </DialogDescription>
         </DialogHeader>
         <div className='py-6'>
-          <div className='grid grid-cols-2 gap-6'>
-            <div
-              className='cursor-pointer border rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-primary group bg-blue-50'
-              onClick={() => {
-                if (typeof window !== 'undefined') {
-                  const invoiceUrl = window.location.href;
-
-                  // Try using the Clipboard API first
-                  if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(invoiceUrl);
-                  } else {
-                    // Fallback for browsers that don't support clipboard API
-                    const textArea = document.createElement('textarea');
-                    textArea.value = invoiceUrl;
-                    document.body.appendChild(textArea);
-                    textArea.select();
-                    try {
-                      document.execCommand('copy');
-                    } catch (err) {
-                      console.error('Failed to copy text: ', err);
-                    }
-                    document.body.removeChild(textArea);
-                  }
-
-                  window.open(invoiceUrl, '_blank');
-                  toast.success('Invoice link copied!');
-                }
-              }}
-            >
-              <LinkIcon className='h-8 w-8 mb-4 text-blue-600 group-hover:text-blue-700' />
-              <div className='font-bold text-lg mb-1 text-center'>Copy link</div>
-              <div className='text-center text-muted-foreground text-base'>
-                A link to your invoice with all details included
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+            {/* Payment Status */}
+            <div className='border rounded-2xl p-6'>
+              <h3 className='font-semibold text-lg mb-4'>Payment Status</h3>
+              <div className='space-y-4'>
+                <div className='flex justify-between items-center'>
+                  <span className='text-gray-600'>Total Amount:</span>
+                  <span className='font-medium'>${invoice.total.toFixed(2)}</span>
+                </div>
+                {totalPaid > 0 && (
+                  <div className='flex justify-between items-center'>
+                    <span className='text-gray-600'>Amount Paid:</span>
+                    <span className='font-medium text-green-600'>${totalPaid.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className='flex justify-between items-center pt-2 border-t'>
+                  <span className='font-semibold'>Remaining Balance:</span>
+                  <span className='font-semibold'>${remainingBalance.toFixed(2)}</span>
+                </div>
               </div>
             </div>
+
+            {/* Payment Options */}
+            <div className='border rounded-2xl p-6'>
+              <h3 className='font-semibold text-lg mb-4'>Payment Options</h3>
+              <div className='space-y-4'>
+                <div className='flex items-center gap-2'>
+                  <div className='w-8 h-8 rounded-full bg-green-100 flex items-center justify-center'>
+                    <CheckCircle2 className='w-5 h-5 text-green-600' />
+                  </div>
+                  <div>
+                    <div className='font-medium'>Online Payment</div>
+                    <div className='text-sm text-gray-500'>
+                      Pay securely with credit card or bank transfer
+                    </div>
+                    {!isPaid && (
+                      <div className='mt-2 flex items-center gap-2'>
+                        <Input value={paymentUrl} readOnly className='text-sm bg-gray-50' />
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={handleCopyLink}
+                          className='shrink-0'
+                        >
+                          {copied ? (
+                            <Check className='h-4 w-4 text-green-600' />
+                          ) : (
+                            <Copy className='h-4 w-4' />
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <div className='w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center'>
+                    <CreditCard className='w-5 h-5 text-blue-600' />
+                  </div>
+                  <div>
+                    <div className='font-medium'>Bank Transfer</div>
+                    <div className='text-sm text-gray-500'>
+                      Direct bank transfer details included in invoice
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Share Options */}
+            <div
+              className='cursor-pointer border rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-primary group bg-indigo-50'
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                toast.success('Invoice link copied!');
+              }}
+            >
+              <LinkIcon className='h-8 w-8 mb-4 text-indigo-600 group-hover:text-indigo-700' />
+              <div className='font-bold text-lg mb-1 text-center'>Copy link</div>
+              <div className='text-center text-muted-foreground text-base'>
+                Share a link to this invoice
+              </div>
+            </div>
+
+            {/* Download PDF */}
             <div
               className='cursor-pointer border rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-primary group bg-indigo-50'
               onClick={handleDownloadPDF}

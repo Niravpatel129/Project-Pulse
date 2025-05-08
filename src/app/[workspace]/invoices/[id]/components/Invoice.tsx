@@ -2,6 +2,7 @@
 
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import Image from 'next/image';
+import { useParams } from 'next/navigation';
 
 interface ClientAddress {
   street: string;
@@ -57,14 +58,27 @@ interface Invoice {
   requireDeposit: boolean;
   depositPercentage: number;
   teamNotes: string;
+  payments?: Array<{
+    _id: string;
+    amount: number;
+    date: string;
+    method: string;
+    memo?: string;
+    status?: string;
+  }>;
+  remainingBalance?: number;
 }
 
 interface InvoiceProps {
   invoice: Invoice;
+  paymentUrl?: string;
 }
 
-export function Invoice({ invoice }: InvoiceProps) {
+export function Invoice({ invoice, paymentUrl }: InvoiceProps) {
   const { data: invoiceSettings } = useInvoiceSettings();
+  const params = useParams();
+  const remainingBalance = invoice.remainingBalance ?? invoice.total;
+  const totalPaid = invoice.total - remainingBalance;
 
   return (
     <div
@@ -170,10 +184,38 @@ export function Invoice({ invoice }: InvoiceProps) {
             <span className='ml-2'>{new Date(invoice.dueDate).toLocaleDateString()}</span>
           </div>
           <div className='bg-gray-100 rounded px-2 py-1 mt-2 inline-block font-semibold text-gray-700'>
-            Amount Due (CAD): <span className='text-black'>${invoice.total.toFixed(2)}</span>
+            Amount Due ({invoiceSettings?.currency || 'CAD'}):{' '}
+            <span className='text-black'>${remainingBalance.toFixed(2)}</span>
           </div>
         </div>
       </div>
+
+      {/* Payment Status */}
+      {invoice.payments && invoice.payments.length > 0 && (
+        <div className='mb-8 p-4 bg-gray-50 rounded-lg'>
+          <h3 className='font-semibold text-gray-900 mb-2'>Payment Status</h3>
+          <div className='space-y-2'>
+            {invoice.payments.map((payment) => {
+              return (
+                <div key={payment._id} className='flex justify-between items-center text-sm'>
+                  <div>
+                    <span className='font-medium'>
+                      {new Date(payment.date).toLocaleDateString()}
+                    </span>
+                    <span className='text-gray-500 ml-2'>via {payment.method}</span>
+                    {payment.memo && <span className='text-gray-500 ml-2'>- {payment.memo}</span>}
+                  </div>
+                  <div className='font-medium'>${payment.amount.toFixed(2)}</div>
+                </div>
+              );
+            })}
+            <div className='pt-2 border-t border-gray-200 flex justify-between items-center font-medium'>
+              <span>Total Paid:</span>
+              <span>${totalPaid.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Items Table */}
       <div className='rounded-lg overflow-hidden border border-gray-200 mb-8'>
@@ -220,24 +262,71 @@ export function Invoice({ invoice }: InvoiceProps) {
               <span>${invoice.tax.toFixed(2)}</span>
             </div>
           )}
-          {invoice.paymentDate && (
+          {totalPaid > 0 && (
             <div className='flex justify-between py-2 text-sm text-gray-500 border-b border-gray-200'>
-              <span>Payment on {new Date(invoice.paymentDate).toLocaleDateString()}:</span>
-              <span>${invoice.total.toFixed(2)}</span>
+              <span>Total Paid:</span>
+              <span>${totalPaid.toFixed(2)}</span>
             </div>
           )}
           <div className='flex justify-between py-4 text-lg font-bold'>
-            <span>Amount Due (CAD):</span>
-            <span>${(invoice.status === 'paid' ? 0 : invoice.total).toFixed(2)}</span>
+            <span>Amount Due ({invoiceSettings?.currency || 'CAD'}):</span>
+            <span>${remainingBalance.toFixed(2)}</span>
           </div>
         </div>
       </div>
 
-      {/* Notes Section */}
-      {invoice.notes && (
-        <div className='mt-8 pt-8 border-t border-gray-200'>
+      {/* Payment Instructions */}
+      {invoice.status !== 'paid' && (
+        <div className='mt-8 border-t border-gray-200 pt-6'>
+          <h3 className='font-semibold text-gray-900 mb-2'>Payment Instructions</h3>
+          <div className='space-y-4 text-sm text-gray-600'>
+            {/* Online Payment */}
+            {paymentUrl && (
+              <div>
+                <p className='font-medium text-gray-800 mb-1'>Pay Online</p>
+                <p>Click the link below to pay this invoice online:</p>
+                <a
+                  href={paymentUrl}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='text-blue-600 hover:text-blue-800 underline'
+                >
+                  {paymentUrl}
+                </a>
+              </div>
+            )}
+
+            {/* Bank Transfer */}
+            {invoiceSettings?.bankName && invoiceSettings?.bankAccount && (
+              <div>
+                <p className='font-medium text-gray-800 mb-1'>Bank Transfer</p>
+                <div className='grid grid-cols-2 gap-x-4 gap-y-2'>
+                  <div>Bank Name:</div>
+                  <div>{invoiceSettings.bankName}</div>
+                  <div>Account Number:</div>
+                  <div>{invoiceSettings.bankAccount}</div>
+                  {invoiceSettings.bankRouting && (
+                    <>
+                      <div>Routing Number:</div>
+                      <div>{invoiceSettings.bankRouting}</div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Notes */}
+      {(invoice.notes || invoiceSettings?.businessNotes) && (
+        <div className='mt-8 border-t border-gray-200 pt-6'>
           <h3 className='font-semibold text-gray-900 mb-2'>Notes</h3>
-          <p className='text-gray-600 text-sm'>{invoice.notes}</p>
+          <div className='text-sm text-gray-600 whitespace-pre-line'>
+            {invoice.notes}
+            {invoice.notes && invoiceSettings?.businessNotes && <br />}
+            {invoiceSettings?.businessNotes}
+          </div>
         </div>
       )}
     </div>
