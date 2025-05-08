@@ -1,3 +1,4 @@
+import { Invoice } from '@/app/[workspace]/invoices/[id]/components/Invoice';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -10,7 +11,10 @@ import {
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DownloadCloud, Link as LinkIcon } from 'lucide-react';
+import { useRef } from 'react';
 import { toast } from 'sonner';
+
+type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'unpaid' | 'open';
 
 interface Invoice {
   _id: string;
@@ -22,7 +26,7 @@ interface Invoice {
       email: string;
     };
   } | null;
-  status: string;
+  status: InvoiceStatus;
   items: Array<{
     name: string;
     description: string;
@@ -50,6 +54,128 @@ interface SendInvoiceDialogProps {
 export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDialogProps) {
   const queryClient = useQueryClient();
   const isPaid = invoice.status === 'paid';
+  const invoiceRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadPDF = async () => {
+    if (typeof window === 'undefined') return;
+    if (!invoiceRef.current) return;
+
+    try {
+      // Dynamically import html2pdf only on the client side
+      const html2pdf = (await import('html2pdf.js')).default;
+
+      const element = invoiceRef.current;
+      const opt = {
+        margin: 0,
+        filename: `invoice-${invoice.invoiceNumber}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          letterRendering: true,
+        },
+        jsPDF: {
+          unit: 'in',
+          format: 'letter',
+          orientation: 'portrait',
+          compress: true,
+        },
+      };
+
+      // Clone the element to avoid modifying the original
+      const clonedElement = element.cloneNode(true) as HTMLElement;
+      // Remove any transform/scale styles that might affect the PDF
+      clonedElement.style.transform = 'none';
+      clonedElement.style.margin = '0';
+      clonedElement.style.padding = '0';
+
+      await html2pdf().set(opt).from(clonedElement).save();
+      toast.success('PDF downloaded successfully');
+    } catch (error) {
+      toast.error('Failed to download PDF');
+      console.error('PDF download error:', error);
+    }
+  };
+
+  // Transform invoice data to match Invoice component's expected format
+  const transformInvoiceForPDF = () => {
+    // Calculate item totals first
+    const itemsWithTotals = invoice.items.map((item, index) => {
+      const itemTotal = item.price * item.quantity;
+      return {
+        id: `item-${index}`,
+        name: item.name,
+        description: item.description,
+        quantity: item.quantity,
+        price: item.price,
+        discount: item.discount,
+        tax: item.tax,
+        total: itemTotal,
+      };
+    });
+
+    // Calculate summary totals
+    const subtotal = itemsWithTotals.reduce((sum, item) => {
+      return sum + item.total;
+    }, 0);
+    const discount = itemsWithTotals.reduce((sum, item) => {
+      return sum + (item.discount || 0);
+    }, 0);
+    // Calculate tax as percentage of subtotal
+    const taxRate = invoice.items[0]?.tax || 0; // Get tax rate from first item
+    const tax = (subtotal - discount) * (taxRate / 100);
+    const total = subtotal - discount + tax;
+
+    return {
+      _id: invoice._id,
+      id: invoice._id,
+      invoiceNumber: invoice.invoiceNumber,
+      clientName: invoice.client?.user?.name || '',
+      clientId: invoice.client?._id || '',
+      status: invoice.status as InvoiceStatus,
+      items: itemsWithTotals,
+      subtotal,
+      discount,
+      tax,
+      total,
+      dueDate: new Date().toISOString(),
+      issueDate: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      notes: '',
+      terms: '',
+      paymentMethod: '',
+      paymentDate: null,
+      currency: invoice.businessInfo?.currency || 'CAD',
+      createdBy: '',
+      requireDeposit: false,
+      depositPercentage: 0,
+      teamNotes: '',
+      client: {
+        name: invoice.client?.user?.name || '',
+        email: invoice.client?.user?.email || '',
+        phone: '',
+        address: {
+          street: '',
+          city: '',
+          state: '',
+          country: '',
+          zip: '',
+        },
+        shippingAddress: {
+          street: '',
+          city: '',
+          state: '',
+          country: '',
+          zip: '',
+        },
+        taxId: '',
+        website: '',
+      },
+      businessInfo: invoice.businessInfo,
+    };
+  };
 
   const markAsSentMutation = useMutation({
     mutationFn: async () => {
@@ -97,8 +223,29 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
             <div
               className='cursor-pointer border rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-primary group bg-blue-50'
               onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-                toast.success('Invoice link copied!');
+                if (typeof window !== 'undefined') {
+                  const invoiceUrl = window.location.href;
+
+                  // Try using the Clipboard API first
+                  if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(invoiceUrl);
+                  } else {
+                    // Fallback for browsers that don't support clipboard API
+                    const textArea = document.createElement('textarea');
+                    textArea.value = invoiceUrl;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try {
+                      document.execCommand('copy');
+                    } catch (err) {
+                      console.error('Failed to copy text: ', err);
+                    }
+                    document.body.removeChild(textArea);
+                  }
+
+                  window.open(invoiceUrl, '_blank');
+                  toast.success('Invoice link copied!');
+                }
               }}
             >
               <LinkIcon className='h-8 w-8 mb-4 text-blue-600 group-hover:text-blue-700' />
@@ -109,9 +256,7 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
             </div>
             <div
               className='cursor-pointer border rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-primary group bg-indigo-50'
-              onClick={() => {
-                window.open(`/api/invoices/${invoice._id}/pdf`, '_blank');
-              }}
+              onClick={handleDownloadPDF}
             >
               <DownloadCloud className='h-8 w-8 mb-4 text-indigo-600 group-hover:text-indigo-700' />
               <div className='font-bold text-lg mb-1 text-center'>Download PDF</div>
@@ -144,6 +289,24 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
           )}
         </DialogFooter>
       </DialogContent>
+
+      {/* Hidden Invoice component for PDF generation */}
+      <div className='hidden'>
+        <div
+          ref={invoiceRef}
+          style={{
+            transform: 'none',
+            margin: 0,
+            padding: 0,
+            width: '100%',
+            maxWidth: 'none',
+            border: 'none',
+            boxShadow: 'none',
+          }}
+        >
+          <Invoice invoice={transformInvoiceForPDF()} />
+        </div>
+      </div>
     </Dialog>
   );
 }
