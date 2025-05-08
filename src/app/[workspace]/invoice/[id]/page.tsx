@@ -322,7 +322,7 @@ export default function InvoicePage() {
 
       {/* Invoice Details Modal */}
       <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
-        <DialogContent className='max-w-4xl w-[90vw] h-[90vh] p-0 flex flex-col'>
+        <DialogContent className='max-w-4xl w-[90vw] h-[90vh] p-0 flex flex-col overflow-hidden'>
           <DialogHeader className='p-6 border-b'>
             <div className='flex justify-between items-center'>
               <DialogTitle className='text-xl font-semibold'>

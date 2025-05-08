@@ -6,6 +6,7 @@ import ClientSection from './ClientSection';
 import InvoiceSection from './InvoiceSection';
 import ItemsSection from './ItemsSection';
 import LeftSidebar from './LeftSidebar';
+import RightSidebar from './RightSidebar';
 import { InvoiceSettings, Item, Section } from './types';
 
 type ProjectManagementProps = {
@@ -161,7 +162,7 @@ export default function ProjectManagement({
   };
 
   return (
-    <div className='flex h-full bg-[#FAFAFA]'>
+    <div className='flex h-full '>
       <LeftSidebar
         activeSection={activeSection}
         setActiveSection={setActiveSection}
@@ -214,6 +215,9 @@ export default function ProjectManagement({
           />
         )}
       </div>
+
+      {/* Right Sidebar */}
+      <RightSidebar />
     </div>
   );
 }

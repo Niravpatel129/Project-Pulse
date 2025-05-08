@@ -116,7 +116,7 @@ export default function LeftSidebar({
   };
 
   return (
-    <div className='w-[300px] bg-white p-6 border-r border-[#F3F4F6] flex flex-col'>
+    <div className='w-[300px] bg-white p-6 border-r border-[#F3F4F6] flex flex-col rounded-none'>
       {/* Custom style to fix select spacing */}
       <style jsx global>{`
         .compact-select [data-radix-select-trigger] {
