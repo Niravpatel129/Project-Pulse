@@ -51,6 +51,85 @@ interface SendInvoiceDialogProps {
   invoice: Invoice;
 }
 
+// Utility function to transform invoice data for PDF generation
+export function transformInvoiceForPDF(invoice: Invoice) {
+  // Calculate item totals first
+  const itemsWithTotals = invoice.items.map((item, index) => {
+    const itemTotal = item.price * item.quantity;
+    return {
+      id: `item-${index}`,
+      name: item.name,
+      description: item.description,
+      quantity: item.quantity,
+      price: item.price,
+      discount: item.discount,
+      tax: item.tax,
+      total: itemTotal,
+    };
+  });
+
+  // Calculate summary totals
+  const subtotal = itemsWithTotals.reduce((sum, item) => {
+    return sum + item.total;
+  }, 0);
+  const discount = itemsWithTotals.reduce((sum, item) => {
+    return sum + (item.discount || 0);
+  }, 0);
+  // Calculate tax as percentage of subtotal
+  const taxRate = invoice.items[0]?.tax || 0; // Get tax rate from first item
+  const tax = (subtotal - discount) * (taxRate / 100);
+  const total = subtotal - discount + tax;
+
+  return {
+    _id: invoice._id,
+    id: invoice._id,
+    invoiceNumber: invoice.invoiceNumber,
+    clientName: invoice.client?.user?.name || '',
+    clientId: invoice.client?._id || '',
+    status: invoice.status as InvoiceStatus,
+    items: itemsWithTotals,
+    subtotal,
+    discount,
+    tax,
+    total,
+    dueDate: new Date().toISOString(),
+    issueDate: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    notes: '',
+    terms: '',
+    paymentMethod: '',
+    paymentDate: null,
+    currency: invoice.businessInfo?.currency || 'CAD',
+    createdBy: '',
+    requireDeposit: false,
+    depositPercentage: 0,
+    teamNotes: '',
+    client: {
+      name: invoice.client?.user?.name || '',
+      email: invoice.client?.user?.email || '',
+      phone: '',
+      address: {
+        street: '',
+        city: '',
+        state: '',
+        country: '',
+        zip: '',
+      },
+      shippingAddress: {
+        street: '',
+        city: '',
+        state: '',
+        country: '',
+        zip: '',
+      },
+      taxId: '',
+      website: '',
+    },
+    businessInfo: invoice.businessInfo,
+  };
+}
+
 export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDialogProps) {
   const queryClient = useQueryClient();
   const isPaid = invoice.status === 'paid';
@@ -96,85 +175,6 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
       toast.error('Failed to download PDF');
       console.error('PDF download error:', error);
     }
-  };
-
-  // Transform invoice data to match Invoice component's expected format
-  const transformInvoiceForPDF = () => {
-    // Calculate item totals first
-    const itemsWithTotals = invoice.items.map((item, index) => {
-      const itemTotal = item.price * item.quantity;
-      return {
-        id: `item-${index}`,
-        name: item.name,
-        description: item.description,
-        quantity: item.quantity,
-        price: item.price,
-        discount: item.discount,
-        tax: item.tax,
-        total: itemTotal,
-      };
-    });
-
-    // Calculate summary totals
-    const subtotal = itemsWithTotals.reduce((sum, item) => {
-      return sum + item.total;
-    }, 0);
-    const discount = itemsWithTotals.reduce((sum, item) => {
-      return sum + (item.discount || 0);
-    }, 0);
-    // Calculate tax as percentage of subtotal
-    const taxRate = invoice.items[0]?.tax || 0; // Get tax rate from first item
-    const tax = (subtotal - discount) * (taxRate / 100);
-    const total = subtotal - discount + tax;
-
-    return {
-      _id: invoice._id,
-      id: invoice._id,
-      invoiceNumber: invoice.invoiceNumber,
-      clientName: invoice.client?.user?.name || '',
-      clientId: invoice.client?._id || '',
-      status: invoice.status as InvoiceStatus,
-      items: itemsWithTotals,
-      subtotal,
-      discount,
-      tax,
-      total,
-      dueDate: new Date().toISOString(),
-      issueDate: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      notes: '',
-      terms: '',
-      paymentMethod: '',
-      paymentDate: null,
-      currency: invoice.businessInfo?.currency || 'CAD',
-      createdBy: '',
-      requireDeposit: false,
-      depositPercentage: 0,
-      teamNotes: '',
-      client: {
-        name: invoice.client?.user?.name || '',
-        email: invoice.client?.user?.email || '',
-        phone: '',
-        address: {
-          street: '',
-          city: '',
-          state: '',
-          country: '',
-          zip: '',
-        },
-        shippingAddress: {
-          street: '',
-          city: '',
-          state: '',
-          country: '',
-          zip: '',
-        },
-        taxId: '',
-        website: '',
-      },
-      businessInfo: invoice.businessInfo,
-    };
   };
 
   const markAsSentMutation = useMutation({
@@ -304,7 +304,7 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
             boxShadow: 'none',
           }}
         >
-          <Invoice invoice={transformInvoiceForPDF()} />
+          <Invoice invoice={transformInvoiceForPDF(invoice)} />
         </div>
       </div>
     </Dialog>
