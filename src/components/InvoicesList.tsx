@@ -35,12 +35,12 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { newRequest } from '@/utils/newRequest';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { ChevronDown, DownloadCloud, LinkIcon, Plus, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import ProjectManagement from './project/ProjectManagement';
 
@@ -113,7 +113,6 @@ function CreateInvoiceDialog() {
 
   const handleClose = () => {
     setOpen(false);
-    // Invalidate invoices query to refresh the list
     queryClient.invalidateQueries({ queryKey: ['invoices'] });
   };
 
@@ -139,24 +138,48 @@ function CreateInvoiceDialog() {
 export default function InvoicesList() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
   const [activeTab, setActiveTab] = useState('all');
   const [perPage, setPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
-  const [activities, setActivities] = useState<Activity[]>([]);
   const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+
+  // Fetch invoices with React Query
+  const {
+    data: invoicesData,
+    isLoading: isLoadingInvoices,
+    error: invoicesError,
+  } = useQuery({
+    queryKey: ['invoices', activeTab, searchQuery, dateRange],
+    queryFn: async () => {
+      const params: Record<string, string> = {};
+      if (activeTab !== 'all') params.status = activeTab;
+      if (searchQuery) params.search = searchQuery;
+      if (dateRange.from) params.from = dateRange.from;
+      if (dateRange.to) params.to = dateRange.to;
+
+      const response = await newRequest.get<ApiResponse>('/invoices', { params });
+      return response.data.data;
+    },
+  });
+
+  // Fetch activities with React Query
+  const { data: activities = [] } = useQuery({
+    queryKey: ['invoice-activities'],
+    queryFn: async () => {
+      const response = await newRequest.get<ActivitiesResponse>('/invoices/activities');
+      return response.data.data;
+    },
+  });
 
   const markAsSentMutation = useMutation({
     mutationFn: async (invoiceId: string) => {
       await newRequest.put(`/invoices/${invoiceId}`, { status: 'sent' });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries();
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
       toast.success('Invoice marked as sent');
       setIsSendDialogOpen(false);
       setSelectedInvoice(null);
@@ -171,7 +194,7 @@ export default function InvoicesList() {
       await newRequest.put(`/invoices/${invoiceId}`, { status: 'open' });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries();
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
       toast.success('Invoice approved');
     },
     onError: (error: any) => {
@@ -179,116 +202,64 @@ export default function InvoicesList() {
     },
   });
 
-  // Load initial data
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const [invoicesResponse, activitiesResponse] = await Promise.all([
-          newRequest.get<ApiResponse>('/invoices'),
-          newRequest.get<ActivitiesResponse>('/invoices/activities'),
-        ]);
-        setInvoices(invoicesResponse.data.data || []);
-        setActivities(activitiesResponse.data.data || []);
-      } catch (error) {
-        console.error('Failed to fetch data:', error);
-        setError(error instanceof Error ? error : new Error('Failed to fetch data'));
-        setInvoices([]);
-        setActivities([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const deleteInvoiceMutation = useMutation({
+    mutationFn: async (invoiceId: string) => {
+      await newRequest.delete(`/invoices/${invoiceId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      toast.success('Invoice deleted successfully');
+    },
+    onError: () => {
+      toast.error('Failed to delete invoice');
+    },
+  });
 
-    fetchData();
-  }, []);
+  const markAsPaidMutation = useMutation({
+    mutationFn: async (invoiceId: string) => {
+      const response = await newRequest.post(`/invoices/${invoiceId}/paid`, {
+        paymentDate: new Date().toISOString(),
+        paymentMethod: 'bank_transfer',
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      toast.success('Invoice marked as paid');
+    },
+    onError: () => {
+      toast.error('Failed to mark invoice as paid');
+    },
+  });
 
   // Handle search
-  const handleSearch = async (query: string) => {
+  const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setIsLoading(true);
-    try {
-      const response = await newRequest.get<ApiResponse>('/invoices', {
-        params: { search: query },
-      });
-      setInvoices(response.data.data || []);
-    } catch (error) {
-      toast.error('Failed to search invoices');
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   // Handle status filter
-  const handleStatusChange = async (status: string) => {
+  const handleStatusChange = (status: string) => {
     setActiveTab(status);
-    setIsLoading(true);
-    try {
-      const response = await newRequest.get<ApiResponse>('/invoices', {
-        params: { status: status === 'all' ? undefined : status },
-      });
-      setInvoices(response.data.data || []);
-    } catch (error) {
-      toast.error('Failed to filter invoices');
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   // Handle date range filter
-  const handleDateRangeChange = async (field: 'from' | 'to', value: string) => {
-    const newDateRange = { ...dateRange, [field]: value };
-    setDateRange(newDateRange);
-    if (newDateRange.from && newDateRange.to) {
-      setIsLoading(true);
-      try {
-        const response = await newRequest.get<ApiResponse>('/invoices', {
-          params: { from: newDateRange.from, to: newDateRange.to },
-        });
-        setInvoices(response.data.data || []);
-      } catch (error) {
-        toast.error('Failed to filter invoices by date');
-      } finally {
-        setIsLoading(false);
-      }
-    }
+  const handleDateRangeChange = (field: 'from' | 'to', value: string) => {
+    setDateRange((prev) => {
+      return { ...prev, [field]: value };
+    });
   };
 
   // Handle invoice actions
   const handleDeleteInvoice = async (invoiceId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (window.confirm('Are you sure you want to delete this invoice?')) {
-      try {
-        await newRequest.delete(`/invoices/${invoiceId}`);
-        setInvoices((prev) => {
-          return prev.filter((inv) => {
-            return inv._id !== invoiceId;
-          });
-        });
-        toast.success('Invoice deleted successfully');
-      } catch (error) {
-        toast.error('Failed to delete invoice');
-      }
+      deleteInvoiceMutation.mutate(invoiceId);
     }
   };
 
   const handleMarkAsPaid = async (invoiceId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    try {
-      const response = await newRequest.post(`/invoices/${invoiceId}/paid`, {
-        paymentDate: new Date().toISOString(),
-        paymentMethod: 'bank_transfer',
-      });
-      setInvoices((prev) => {
-        return prev.map((inv) => {
-          return inv._id === invoiceId ? response.data : inv;
-        });
-      });
-      toast.success('Invoice marked as paid');
-    } catch (error) {
-      toast.error('Failed to mark invoice as paid');
-    }
+    markAsPaidMutation.mutate(invoiceId);
   };
 
   const handleSendInvoice = (invoice: Invoice, e: React.MouseEvent) => {
@@ -298,7 +269,7 @@ export default function InvoicesList() {
   };
 
   // Filtered invoices for tab
-  const filteredInvoices = invoices || [];
+  const filteredInvoices = invoicesData || [];
 
   // Pagination logic
   const totalPages = Math.ceil((filteredInvoices?.length || 0) / perPage);
@@ -357,7 +328,7 @@ export default function InvoicesList() {
         <div className='grid grid-cols-12 gap-8'>
           <div className='col-span-12 lg:col-span-8'>
             {/* Error Banner */}
-            {error && (
+            {invoicesError && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -365,7 +336,9 @@ export default function InvoicesList() {
                 className='bg-red-50/50 border-l-4 border-red-500 text-red-800 px-5 py-4 rounded-xl flex items-center gap-3'
               >
                 <span className='font-medium text-lg'>!</span>
-                <span className='text-sm'>{error.message}</span>
+                <span className='text-sm'>
+                  {invoicesError instanceof Error ? invoicesError.message : 'An error occurred'}
+                </span>
                 <button
                   className='ml-auto text-red-400 hover:text-red-600 transition-colors duration-200'
                   onClick={() => {
@@ -429,7 +402,7 @@ export default function InvoicesList() {
             <Tabs value={activeTab} onValueChange={handleStatusChange} className='my-8'>
               <TabsList>
                 {statusTabs.map((tab) => {
-                  const count = (invoices || []).filter((inv) => {
+                  const count = (invoicesData || []).filter((inv) => {
                     return tab.key === 'all' ? true : inv.status === tab.key;
                   }).length;
                   return (
@@ -451,7 +424,7 @@ export default function InvoicesList() {
             </Tabs>
 
             {/* Invoice Table or Empty State */}
-            {isLoading ? (
+            {isLoadingInvoices ? (
               <Card>
                 <CardContent className='p-10 text-center text-gray-600 text-base'>
                   Loading invoices...
