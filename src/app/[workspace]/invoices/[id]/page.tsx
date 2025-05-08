@@ -137,7 +137,7 @@ export default function Page() {
       <div className='bg-gray-50 min-h-screen'>
         <div className='max-w-[1200px] mx-auto py-10 px-4'>
           <div className='flex items-center gap-2 mb-6'>
-            <Link href='/invoices' className='text-gray-400 hover:text-gray-600'>
+            <Link href='/' className='text-gray-400 hover:text-gray-600'>
               <ChevronLeft className='w-5 h-5' />
             </Link>
             <span className='text-red-500'>Error loading invoice</span>
@@ -199,7 +199,7 @@ export default function Page() {
     <div className='bg-gray-50 min-h-screen'>
       <div className='max-w-[1200px] mx-auto py-10 px-4'>
         <div className='flex items-center gap-2 mb-6'>
-          <Link href='/invoices' className='text-gray-400 hover:text-gray-600'>
+          <Link href='/' className='text-gray-400 hover:text-gray-600'>
             <ChevronLeft className='w-5 h-5' />
           </Link>
           <span className='text-gray-900 font-medium'>Invoice #{invoice.invoiceNumber}</span>

@@ -125,9 +125,6 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                 <DropdownMenuItem>Download PDF</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant='outline' size='sm'>
-              Create another invoice
-            </Button>
           </div>
           <div className='flex items-center gap-6 mt-2'>
             <div className='text-lg font-semibold'>${invoice.total.toFixed(2)}</div>
