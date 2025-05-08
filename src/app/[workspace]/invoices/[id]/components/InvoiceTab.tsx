@@ -33,6 +33,8 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
+import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -77,6 +79,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
   const [isEditPaymentDialogOpen, setIsEditPaymentDialogOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [isBusinessSettingsOpen, setIsBusinessSettingsOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
@@ -85,6 +88,8 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
   const [paymentMemo, setPaymentMemo] = useState('');
   const [amountTouched, setAmountTouched] = useState(false);
   const queryClient = useQueryClient();
+  const { data: invoiceSettings } = useInvoiceSettings();
+  const updateInvoiceSettings = useUpdateInvoiceSettings();
 
   const markAsSentMutation = useMutation({
     mutationFn: async () => {
@@ -281,6 +286,27 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                 </TooltipProvider>
               </span>
             </div>
+            <div className='flex flex-col'>
+              <span className='text-xs text-muted-foreground font-medium mb-0.5'>Business</span>
+              <span className='text-muted-foreground text-sm'>
+                <span className='text-primary font-medium cursor-pointer underline underline-offset-2'>
+                  {invoiceSettings?.taxId ? 'Your Business' : 'Set Up Business'}
+                </span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info
+                        className='inline ml-1 w-4 h-4 text-muted-foreground align-middle cursor-pointer'
+                        onClick={() => {
+                          return setIsBusinessSettingsOpen(true);
+                        }}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent>Business settings</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </span>
+            </div>
           </div>
         </div>
         <div className='flex flex-col items-end gap-2'>
@@ -294,6 +320,15 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
               />
               <span className='ml-1 text-xs font-semibold text-green-600'>CONNECTED</span>
             </div>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => {
+                return setIsBusinessSettingsOpen(true);
+              }}
+            >
+              Business Settings
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant='outline' size='sm' className='px-3'>
@@ -883,6 +918,107 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
               disabled={deletePaymentMutation.isPending}
             >
               {deletePaymentMutation.isPending ? 'Deleting...' : 'Delete Payment'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Business Settings Dialog */}
+      <Dialog open={isBusinessSettingsOpen} onOpenChange={setIsBusinessSettingsOpen}>
+        <DialogContent className='sm:max-w-[600px]'>
+          <DialogHeader>
+            <DialogTitle>Business Settings</DialogTitle>
+            <DialogDescription>
+              Update your business information that appears on invoices
+            </DialogDescription>
+          </DialogHeader>
+          <div className='space-y-6 py-4'>
+            <div>
+              <Label>Tax ID / VAT Number</Label>
+              <div className='flex items-center gap-2'>
+                <Input
+                  value={invoiceSettings?.taxId || ''}
+                  onChange={(e) => {
+                    updateInvoiceSettings.mutate({
+                      settings: { ...invoiceSettings, taxId: e.target.value },
+                    });
+                  }}
+                  placeholder='Enter your tax ID'
+                />
+                <div className='flex items-center gap-2'>
+                  <Label htmlFor='showTaxId' className='text-sm'>
+                    Show on invoice
+                  </Label>
+                  <Switch
+                    id='showTaxId'
+                    checked={invoiceSettings?.showTaxId}
+                    onCheckedChange={(checked) => {
+                      updateInvoiceSettings.mutate({
+                        settings: { ...invoiceSettings, showTaxId: checked },
+                      });
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+            <div>
+              <Label>Business Logo</Label>
+              <div className='flex items-center gap-4'>
+                {invoiceSettings?.logo && (
+                  <img
+                    src={invoiceSettings.logo}
+                    alt='Business logo'
+                    className='w-16 h-16 object-contain border rounded'
+                  />
+                )}
+                <Button variant='outline' size='sm'>
+                  Upload Logo
+                </Button>
+              </div>
+            </div>
+            <div>
+              <Label>Brand Color</Label>
+              <div className='flex items-center gap-2'>
+                <Input
+                  type='color'
+                  value={invoiceSettings?.brandColor || '#000000'}
+                  onChange={(e) => {
+                    updateInvoiceSettings.mutate({
+                      settings: { ...invoiceSettings, brandColor: e.target.value },
+                    });
+                  }}
+                  className='w-20 h-10 p-1'
+                />
+                <span className='text-sm text-muted-foreground'>Used for invoice styling</span>
+              </div>
+            </div>
+            <div>
+              <Label>Accent Color</Label>
+              <div className='flex items-center gap-2'>
+                <Input
+                  type='color'
+                  value={invoiceSettings?.accentColor || '#000000'}
+                  onChange={(e) => {
+                    updateInvoiceSettings.mutate({
+                      settings: { ...invoiceSettings, accentColor: e.target.value },
+                    });
+                  }}
+                  className='w-20 h-10 p-1'
+                />
+                <span className='text-sm text-muted-foreground'>
+                  Used for highlights and accents
+                </span>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => {
+                return setIsBusinessSettingsOpen(false);
+              }}
+            >
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
