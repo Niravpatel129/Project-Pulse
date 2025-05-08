@@ -223,9 +223,22 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
   const getDueDaysAgo = (dueDate: string) => {
     const due = new Date(dueDate);
     const now = new Date();
-    const diffTime = now.getTime() - due.getTime();
+
+    // Reset time part to compare dates only
+    const dueDateOnly = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+    const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const diffTime = Math.abs(todayOnly.getTime() - dueDateOnly.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+
+    if (diffDays === 0) return 'today';
+    if (todayOnly > dueDateOnly) {
+      if (diffDays === 1) return 'yesterday';
+      return `${diffDays} days ago`;
+    } else {
+      if (diffDays === 1) return 'tomorrow';
+      return `in ${diffDays} days`;
+    }
   };
 
   const dueDaysAgo = getDueDaysAgo(invoice.dueDate);
@@ -365,7 +378,9 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
             <div className='flex flex-col items-end'>
               <span className='text-xs text-muted-foreground font-medium mb-0.5'>Due Date</span>
               <div className='text-sm text-muted-foreground'>
-                Due <span className='font-medium'>{dueDaysAgo} days ago</span>
+                {getDueDaysAgo(invoice.dueDate) === 'today'
+                  ? 'Today'
+                  : `Due ${getDueDaysAgo(invoice.dueDate)}`}
               </div>
             </div>
           </div>
