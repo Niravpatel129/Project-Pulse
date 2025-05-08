@@ -169,8 +169,8 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
         <CardContent className='py-6'>
           {/* Create Step */}
           <div className='flex items-center gap-4 mb-8'>
-            <div className='rounded-full bg-primary/10 p-2'>
-              <CheckCircle2 className='w-6 h-6 text-primary' />
+            <div className='rounded-full bg-green-100 p-2'>
+              <CheckCircle2 className='w-6 h-6 text-green-600' />
             </div>
             <div>
               <div className='font-medium'>Create</div>
@@ -188,8 +188,8 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
           <Separator />
           {/* Send Step */}
           <div className='flex items-center gap-4 my-8'>
-            <div className='rounded-full bg-primary/10 p-2'>
-              <Send className='w-6 h-6 text-primary' />
+            <div className='rounded-full bg-blue-100 p-2'>
+              <Send className='w-6 h-6 text-blue-600' />
             </div>
             <div>
               <div className='font-medium'>Send</div>
@@ -222,6 +222,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
             <div className='ml-auto'>
               <Button
                 size='sm'
+                variant={invoice.status === 'sent' ? 'outline' : 'default'}
                 onClick={() => {
                   return setIsSendDialogOpen(true);
                 }}
@@ -233,8 +234,8 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
           <Separator />
           {/* Manage Payments Step */}
           <div className='flex items-center gap-4 mt-8'>
-            <div className='rounded-full bg-primary/10 p-2'>
-              <CreditCard className='w-6 h-6 text-primary' />
+            <div className='rounded-full bg-purple-100 p-2'>
+              <CreditCard className='w-6 h-6 text-purple-600' />
             </div>
             <div>
               <div className='font-medium'>Manage payments</div>
@@ -264,7 +265,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
           <div className='py-6'>
             <div className='grid grid-cols-2 gap-6'>
               <div
-                className='cursor-pointer border rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-primary group'
+                className='cursor-pointer border rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-primary group bg-blue-50'
                 onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
                 }}
@@ -276,12 +277,12 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                 </div>
               </div>
               <div
-                className='cursor-pointer border rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-primary group'
+                className='cursor-pointer border rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-primary group bg-indigo-50'
                 onClick={() => {
                   // TODO: Implement download PDF functionality
                 }}
               >
-                <DownloadCloud className='h-8 w-8 mb-4 text-blue-600 group-hover:text-blue-700' />
+                <DownloadCloud className='h-8 w-8 mb-4 text-indigo-600 group-hover:text-indigo-700' />
                 <div className='font-bold text-lg mb-1 text-center'>Download PDF</div>
                 <div className='text-center text-muted-foreground text-base'>
                   Your invoice all in one document
