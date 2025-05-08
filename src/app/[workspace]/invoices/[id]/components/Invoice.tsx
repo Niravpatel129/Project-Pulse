@@ -24,10 +24,10 @@ interface Client {
 interface InvoiceItem {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   quantity: number;
   price: number;
-  total: number;
+  total?: number;
   discount: number;
   tax: number;
 }
@@ -38,7 +38,7 @@ interface Invoice {
   clientName: string;
   clientId: string;
   client?: Client | null;
-  status: 'paid' | 'draft' | 'sent' | 'overdue' | 'cancelled';
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'unpaid' | 'open';
   items: InvoiceItem[];
   subtotal: number;
   discount: number;
@@ -193,7 +193,7 @@ export function Invoice({ invoice }: InvoiceProps) {
                   <td className='py-3 px-4'>{item.name}</td>
                   <td className='py-3 px-4 text-center'>{item.quantity}</td>
                   <td className='py-3 px-4 text-right'>${item.price.toFixed(2)}</td>
-                  <td className='py-3 px-4 text-right'>${item.total.toFixed(2)}</td>
+                  <td className='py-3 px-4 text-right'>${item.total?.toFixed(2) || 'N/A'}</td>
                 </tr>
               );
             })}

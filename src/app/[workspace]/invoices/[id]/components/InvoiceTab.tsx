@@ -38,6 +38,7 @@ import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import html2pdf from 'html2pdf.js';
 import {
   CalendarIcon,
   CheckCircle2,
@@ -47,9 +48,10 @@ import {
   MoreHorizontal,
   Send,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { BusinessSettings } from './BusinessSettings';
+import { Invoice } from './Invoice';
 
 interface Payment {
   _id: string;
@@ -206,6 +208,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
   const queryClient = useQueryClient();
   const { data: invoiceSettings } = useInvoiceSettings();
   const updateInvoiceSettings = useUpdateInvoiceSettings();
+  const invoiceRef = useRef<HTMLDivElement>(null);
 
   const markAsSentMutation = useMutation({
     mutationFn: async () => {
@@ -458,6 +461,44 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
     };
   };
 
+  const handleDownloadPDF = async () => {
+    if (!invoiceRef.current) return;
+
+    const element = invoiceRef.current;
+    const opt = {
+      margin: 0,
+      filename: `invoice-${invoice.invoiceNumber}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        letterRendering: true,
+      },
+      jsPDF: {
+        unit: 'in',
+        format: 'letter',
+        orientation: 'portrait',
+        compress: true,
+      },
+    };
+
+    try {
+      // Clone the element to avoid modifying the original
+      const clonedElement = element.cloneNode(true) as HTMLElement;
+      // Remove any transform/scale styles that might affect the PDF
+      clonedElement.style.transform = 'none';
+      clonedElement.style.margin = '0';
+      clonedElement.style.padding = '0';
+
+      await html2pdf().set(opt).from(clonedElement).save();
+      toast.success('PDF downloaded successfully');
+    } catch (error) {
+      toast.error('Failed to download PDF');
+      console.error('PDF download error:', error);
+    }
+  };
+
   return (
     <>
       {/* Header */}
@@ -556,7 +597,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem>Delete</DropdownMenuItem>
-                <DropdownMenuItem>Download PDF</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDownloadPDF}>Download PDF</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -1164,6 +1205,24 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Hidden Invoice component for PDF generation */}
+      <div className='hidden'>
+        <div
+          ref={invoiceRef}
+          style={{
+            transform: 'none',
+            margin: 0,
+            padding: 0,
+            width: '100%',
+            maxWidth: 'none',
+            border: 'none',
+            boxShadow: 'none',
+          }}
+        >
+          <Invoice invoice={invoice} />
+        </div>
+      </div>
     </>
   );
 }
