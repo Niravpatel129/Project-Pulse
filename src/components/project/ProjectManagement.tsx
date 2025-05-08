@@ -32,6 +32,7 @@ type ProjectManagementProps = {
     status: string;
     dueDate: string;
     notes?: string;
+    teamNotes?: string;
     currency: string;
     taxRate: number;
     taxId?: string;
@@ -60,6 +61,11 @@ export default function ProjectManagement({
         description: item.description,
         quantity: item.quantity.toString(),
         price: item.price.toString(),
+        tax: item.tax || 0,
+        taxRate: item.tax || 0,
+        taxable: true,
+        discount: item.discount || 0,
+        currency: existingInvoice.currency,
       };
     }) || [],
   );
@@ -82,7 +88,7 @@ export default function ProjectManagement({
     allowDiscount: true,
     defaultDiscountRate: existingInvoice?.discount || 0,
     invoiceNotes: existingInvoice?.notes || '',
-    teamNotes: '',
+    teamNotes: existingInvoice?.teamNotes || '',
   });
 
   const [dueDate, setDueDate] = useState<Date | null>(

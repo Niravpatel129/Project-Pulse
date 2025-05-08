@@ -68,12 +68,13 @@ type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'unpa
 
 interface InvoiceItem {
   id: string;
-  description: string;
+  name: string;
+  description?: string;
   quantity: number;
-  unitPrice: number;
-  total: number;
+  price: number;
   discount: number;
   tax: number;
+  total?: number;
 }
 
 interface InvoiceClient {
@@ -105,7 +106,16 @@ interface ExtendedInvoice {
   clientName: string;
   clientId: string;
   status: InvoiceStatus;
-  items: InvoiceItem[];
+  items: Array<{
+    id: string;
+    name: string;
+    description?: string;
+    quantity: number;
+    price: number;
+    discount: number;
+    tax: number;
+    total?: number;
+  }>;
   subtotal: number;
   discount: number;
   tax: number;
@@ -158,6 +168,7 @@ type ProjectManagementInvoice = {
   discountAmount: number;
   subtotal: number;
   taxAmount: number;
+  teamNotes?: string;
 };
 
 interface InvoiceTabProps {
@@ -382,6 +393,16 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
           }
         : null,
       status: invoice.status,
+      items: invoice.items.map((item) => {
+        return {
+          name: item.name,
+          description: item.description || item.name,
+          quantity: item.quantity,
+          price: item.price,
+          discount: item.discount || 0,
+          tax: item.tax || 0,
+        };
+      }),
     };
   };
 
@@ -398,10 +419,10 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
       },
       items: invoice.items.map((item) => {
         return {
-          name: item.description,
-          description: item.description,
+          name: item.name,
+          description: item.description || item.name,
           quantity: item.quantity,
-          price: item.unitPrice,
+          price: item.price,
           discount: item.discount || 0,
           tax: item.tax || 0,
         };
@@ -420,6 +441,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
       discountAmount: invoice.discount || 0,
       subtotal: invoice.subtotal,
       taxAmount: invoice.tax || 0,
+      teamNotes: invoice.teamNotes || '',
     };
   };
 
@@ -559,7 +581,13 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
               </div>
             </div>
             <div className='ml-auto'>
-              <Button variant='outline' size='sm'>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => {
+                  return setIsEditInvoiceOpen(true);
+                }}
+              >
                 Edit invoice
               </Button>
             </div>

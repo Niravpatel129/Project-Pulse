@@ -15,6 +15,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
+import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -219,7 +220,7 @@ export default function InvoiceSection({
 }: InvoiceSectionProps) {
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
   const [openAccordionItems, setOpenAccordionItems] = useState<string[]>(['client-info']);
-
+  const queryClient = useQueryClient();
   // Calculate totals
   const subtotal = items.reduce((sum, item) => {
     const quantity = Number.parseFloat(item.quantity);
@@ -367,6 +368,9 @@ export default function InvoiceSection({
       console.error('Error creating invoice:', error);
       toast.error(error.message || 'Failed to create invoice');
     } finally {
+      // invalidate the invoices query
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['invoice', existingInvoice?._id] });
       setIsGeneratingInvoice(false);
     }
   };

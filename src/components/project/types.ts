@@ -2,9 +2,10 @@ export type Item = {
   id: string;
   name: string;
   description: string;
-  price: string;
   quantity: string;
+  price: string;
   currency?: string;
+  tax?: number;
   taxRate?: number;
   taxable?: boolean;
   discount?: number;
@@ -78,7 +79,7 @@ export type Notification = {
   type: NotificationType;
 };
 
-export type Section = 'client' | 'invoice' | 'items' | 'review';
+export type Section = 'items' | 'client' | 'invoice';
 
 export type InvoiceSettings = {
   requireDeposit: boolean;

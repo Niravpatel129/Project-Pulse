@@ -20,9 +20,10 @@ interface Client {
 
 interface InvoiceItem {
   id: string;
+  name: string;
   description: string;
   quantity: number;
-  unitPrice: number;
+  price: number;
   total: number;
   discount: number;
   tax: number;
@@ -168,9 +169,9 @@ export function Invoice({ invoice }: InvoiceProps) {
             {invoice.items.map((item) => {
               return (
                 <tr key={item.id} className='border-t border-gray-200 bg-white'>
-                  <td className='py-3 px-4'>{item.description}</td>
+                  <td className='py-3 px-4'>{item.name}</td>
                   <td className='py-3 px-4 text-center'>{item.quantity}</td>
-                  <td className='py-3 px-4 text-right'>${item.unitPrice.toFixed(2)}</td>
+                  <td className='py-3 px-4 text-right'>${item.price.toFixed(2)}</td>
                   <td className='py-3 px-4 text-right'>${item.total.toFixed(2)}</td>
                 </tr>
               );

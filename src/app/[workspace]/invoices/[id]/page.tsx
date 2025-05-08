@@ -54,10 +54,12 @@ interface Client {
 
 interface InvoiceItem {
   _id: string;
+  id: string;
   name: string;
   description: string;
   quantity: number;
   price: number;
+  total: number;
   discount: number;
   tax: number;
 }
@@ -158,9 +160,10 @@ export default function Page() {
     items: response.data.items.map((item) => {
       return {
         id: item._id,
+        name: item.name,
         description: item.description,
         quantity: item.quantity,
-        unitPrice: item.price,
+        price: item.price,
         total: item.price * item.quantity,
         discount: item.discount,
         tax: item.tax,
