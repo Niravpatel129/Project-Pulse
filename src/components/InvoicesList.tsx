@@ -33,16 +33,17 @@ import { motion } from 'framer-motion';
 import { ChevronDown, Plus, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import ProjectManagement from './project/ProjectManagement';
 
 interface InvoiceItem {
+  _id: string;
   name: string;
   description: string;
   quantity: number;
   price: number;
   discount: number;
   tax: number;
-  _id: string;
 }
 
 interface Invoice {
@@ -54,38 +55,6 @@ interface Invoice {
       name: string;
       email: string;
     };
-    workspace: string;
-    isActive: boolean;
-    notes: string;
-    createdAt: string;
-    updatedAt: string;
-    phone?: string;
-    address?: {
-      street?: string;
-      city?: string;
-      state?: string;
-      zip?: string;
-      country?: string;
-    };
-    shippingAddress?: {
-      street?: string;
-      city?: string;
-      state?: string;
-      zip?: string;
-      country?: string;
-    };
-    contact?: {
-      firstName?: string;
-      lastName?: string;
-    };
-    taxId?: string;
-    accountNumber?: string;
-    fax?: string;
-    mobile?: string;
-    tollFree?: string;
-    website?: string;
-    internalNotes?: string;
-    customFields?: Record<string, any>;
   } | null;
   project?: {
     _id: string;
@@ -94,9 +63,9 @@ interface Invoice {
   };
   items: InvoiceItem[];
   total: number;
-  status: string;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'unpaid';
   dueDate: string;
-  notes: string;
+  notes?: string;
   currency: string;
   createdBy: {
     _id: string;
@@ -161,16 +130,22 @@ function CreateInvoiceDialog() {
 
 export default function InvoicesList() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   const [activeTab, setActiveTab] = useState('all');
-  const [error, setError] = useState<string | null>(null);
   const [perPage, setPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateRange, setDateRange] = useState({ from: '', to: '' });
+  const [activities, setActivities] = useState<Activity[]>([]);
 
+  // Load initial data
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
       try {
         const [invoicesResponse, activitiesResponse] = await Promise.all([
           newRequest.get<ApiResponse>('/invoices'),
@@ -180,46 +155,128 @@ export default function InvoicesList() {
         setActivities(activitiesResponse.data.data || []);
       } catch (error) {
         console.error('Failed to fetch data:', error);
+        setError(error instanceof Error ? error : new Error('Failed to fetch data'));
         setInvoices([]);
         setActivities([]);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
+
     fetchData();
   }, []);
 
-  // Placeholder stats
-  const overdue = 0;
-  const dueSoon = 0;
-  const avgTime = 0;
-  const payout = 'None';
-  const currency = 'CAD';
-  const lastUpdated = '11 minutes ago';
+  // Handle search
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    setIsLoading(true);
+    try {
+      const response = await newRequest.get<ApiResponse>('/invoices', {
+        params: { search: query },
+      });
+      setInvoices(response.data.data || []);
+    } catch (error) {
+      toast.error('Failed to search invoices');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  // Tab counts
-  const unpaidCount = invoices.filter((inv) => {
-    return inv.status === 'unpaid';
-  }).length;
-  const draftCount = invoices.filter((inv) => {
-    return inv.status === 'draft';
-  }).length;
+  // Handle status filter
+  const handleStatusChange = async (status: string) => {
+    setActiveTab(status);
+    setIsLoading(true);
+    try {
+      const response = await newRequest.get<ApiResponse>('/invoices', {
+        params: { status: status === 'all' ? undefined : status },
+      });
+      setInvoices(response.data.data || []);
+    } catch (error) {
+      toast.error('Failed to filter invoices');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle date range filter
+  const handleDateRangeChange = async (field: 'from' | 'to', value: string) => {
+    const newDateRange = { ...dateRange, [field]: value };
+    setDateRange(newDateRange);
+    if (newDateRange.from && newDateRange.to) {
+      setIsLoading(true);
+      try {
+        const response = await newRequest.get<ApiResponse>('/invoices', {
+          params: { from: newDateRange.from, to: newDateRange.to },
+        });
+        setInvoices(response.data.data || []);
+      } catch (error) {
+        toast.error('Failed to filter invoices by date');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  // Handle invoice actions
+  const handleDeleteInvoice = async (invoiceId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('Are you sure you want to delete this invoice?')) {
+      try {
+        await newRequest.delete(`/invoices/${invoiceId}`);
+        setInvoices((prev) => {
+          return prev.filter((inv) => {
+            return inv._id !== invoiceId;
+          });
+        });
+        toast.success('Invoice deleted successfully');
+      } catch (error) {
+        toast.error('Failed to delete invoice');
+      }
+    }
+  };
+
+  const handleMarkAsPaid = async (invoiceId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const response = await newRequest.post(`/invoices/${invoiceId}/paid`, {
+        paymentDate: new Date().toISOString(),
+        paymentMethod: 'bank_transfer',
+      });
+      setInvoices((prev) => {
+        return prev.map((inv) => {
+          return inv._id === invoiceId ? response.data : inv;
+        });
+      });
+      toast.success('Invoice marked as paid');
+    } catch (error) {
+      toast.error('Failed to mark invoice as paid');
+    }
+  };
+
+  const handleSendInvoice = async (invoiceId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const invoice = invoices.find((inv) => {
+        return inv._id === invoiceId;
+      });
+      if (!invoice) throw new Error('Invoice not found');
+
+      await newRequest.post(`/invoices/${invoiceId}/send`, {
+        to: invoice.client?.user.name || '',
+        subject: `Invoice ${invoice.invoiceNumber} from ${invoice.client?.user.name || ''}`,
+        message: 'Please find attached your invoice for the services provided.',
+      });
+      toast.success('Invoice sent successfully');
+    } catch (error) {
+      toast.error('Failed to send invoice');
+    }
+  };
 
   // Filtered invoices for tab
-  const filteredInvoices =
-    activeTab === 'all'
-      ? invoices
-      : invoices.filter((inv) => {
-          return activeTab === 'unpaid' ? inv.status === 'unpaid' : inv.status === 'draft';
-        });
-
-  // Example error for demo
-  useEffect(() => {
-    // setError('Oops! There was an issue with approving your draft. Please try again.');
-  }, []);
+  const filteredInvoices = invoices || [];
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredInvoices.length / perPage);
+  const totalPages = Math.ceil((filteredInvoices?.length || 0) / perPage);
   const paginatedInvoices = filteredInvoices.slice(
     (currentPage - 1) * perPage,
     currentPage * perPage,
@@ -232,6 +289,7 @@ export default function InvoicesList() {
       paid: 'bg-green-100 text-green-800',
       overdue: 'bg-red-100 text-red-800',
       cancelled: 'bg-gray-100 text-gray-800',
+      unpaid: 'bg-yellow-100 text-yellow-800',
     };
     return (
       <Badge className={statusColors[status as keyof typeof statusColors] || 'bg-gray-100'}>
@@ -272,9 +330,6 @@ export default function InvoicesList() {
       <div className='p-8'>
         <div className='grid grid-cols-12 gap-8'>
           <div className='col-span-12 lg:col-span-8'>
-            {/* Action Bar */}
-            <div className='flex justify-end items-center'></div>
-
             {/* Error Banner */}
             {error && (
               <motion.div
@@ -284,11 +339,11 @@ export default function InvoicesList() {
                 className='bg-red-50/50 border-l-4 border-red-500 text-red-800 px-5 py-4 rounded-xl flex items-center gap-3'
               >
                 <span className='font-medium text-lg'>!</span>
-                <span className='text-sm'>{error}</span>
+                <span className='text-sm'>{error.message}</span>
                 <button
                   className='ml-auto text-red-400 hover:text-red-600 transition-colors duration-200'
                   onClick={() => {
-                    return setError(null);
+                    return handleStatusChange('all');
                   }}
                 >
                   &times;
@@ -297,7 +352,7 @@ export default function InvoicesList() {
             )}
 
             {/* Filters */}
-            <div className=' bg-white rounded-xl border border-gray-100/50'>
+            <div className='bg-white rounded-xl border border-gray-100/50'>
               <div className='flex items-center gap-4'>
                 <div className='relative flex-1'>
                   <Search className='absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
@@ -305,39 +360,52 @@ export default function InvoicesList() {
                     type='text'
                     className='w-full pl-11 pr-4 py-2.5 text-base'
                     placeholder='Search invoices...'
+                    value={searchQuery}
+                    onChange={(e) => {
+                      return handleSearch(e.target.value);
+                    }}
                   />
                 </div>
-                {[
-                  { label: 'All customers', type: 'select' },
-                  { label: 'All statuses', type: 'select' },
-                  { label: 'From', type: 'date' },
-                  { label: 'To', type: 'date' },
-                ].map((filter) => {
-                  return filter.type === 'select' ? (
-                    <Select key={filter.label}>
-                      <SelectTrigger className='w-[140px]'>
-                        <SelectValue placeholder={filter.label} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={filter.label}>{filter.label}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Input
-                      key={filter.label}
-                      type='date'
-                      className='w-[140px]'
-                      placeholder={filter.label}
-                    />
-                  );
-                })}
+                <Select value={activeTab} onValueChange={handleStatusChange}>
+                  <SelectTrigger className='w-[140px]'>
+                    <SelectValue placeholder='All statuses' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='all'>All statuses</SelectItem>
+                    <SelectItem value='unpaid'>Unpaid</SelectItem>
+                    <SelectItem value='draft'>Draft</SelectItem>
+                    <SelectItem value='paid'>Paid</SelectItem>
+                    <SelectItem value='overdue'>Overdue</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  type='date'
+                  className='w-[140px]'
+                  placeholder='From'
+                  value={dateRange.from}
+                  onChange={(e) => {
+                    return handleDateRangeChange('from', e.target.value);
+                  }}
+                />
+                <Input
+                  type='date'
+                  className='w-[140px]'
+                  placeholder='To'
+                  value={dateRange.to}
+                  onChange={(e) => {
+                    return handleDateRangeChange('to', e.target.value);
+                  }}
+                />
               </div>
             </div>
 
             {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className='my-8'>
+            <Tabs value={activeTab} onValueChange={handleStatusChange} className='my-8'>
               <TabsList>
                 {statusTabs.map((tab) => {
+                  const count = (invoices || []).filter((inv) => {
+                    return tab.key === 'all' ? true : inv.status === tab.key;
+                  }).length;
                   return (
                     <TabsTrigger
                       key={tab.key}
@@ -347,7 +415,7 @@ export default function InvoicesList() {
                       {tab.label}
                       {tab.key !== 'all' && (
                         <span className='ml-2 text-sm font-semibold bg-gray-100/50 px-2.5 py-1 rounded-full'>
-                          {tab.key === 'unpaid' ? unpaidCount : draftCount}
+                          {count}
                         </span>
                       )}
                     </TabsTrigger>
@@ -357,13 +425,13 @@ export default function InvoicesList() {
             </Tabs>
 
             {/* Invoice Table or Empty State */}
-            {loading ? (
+            {isLoading ? (
               <Card>
                 <CardContent className='p-10 text-center text-gray-600 text-base'>
                   Loading invoices...
                 </CardContent>
               </Card>
-            ) : filteredInvoices.length === 0 ? (
+            ) : !filteredInvoices || filteredInvoices.length === 0 ? (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <Card>
                   <CardContent className='flex flex-col items-center justify-center py-20 gap-6'>
@@ -408,7 +476,7 @@ export default function InvoicesList() {
                         <Button
                           variant='outline'
                           onClick={() => {
-                            return setActiveTab('all');
+                            return handleStatusChange('all');
                           }}
                         >
                           View all invoices
@@ -461,31 +529,32 @@ export default function InvoicesList() {
                             {invoice.invoiceNumber}
                           </TableCell>
                           <TableCell className='text-base text-gray-700 py-4'>
-                            {invoice.client?.user?.name || '—'}
+                            {invoice.client?.user.name || invoice.project?.name || '—'}
                           </TableCell>
                           <TableCell className='text-base font-semibold text-gray-900 py-4 text-right'>
                             {formatCurrency(invoice.total, invoice.currency)}
                           </TableCell>
-                          <TableCell className='text-right py-4 '>
+                          <TableCell className='text-right py-4'>
                             <div className='flex justify-end items-center gap-2'>
-                              <Button
-                                size='sm'
-                                variant='ghost'
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  router.push(`/invoice/${invoice._id}`);
-                                }}
-                                className='font-semibold text-base text-blue-600 hover:bg-transparent hover:text-blue-700 focus:ring-0 focus:outline-none shadow-none border-none px-0 hover:underline'
-                              >
-                                Approve
-                              </Button>
+                              {invoice.status === 'unpaid' && (
+                                <Button
+                                  size='sm'
+                                  variant='ghost'
+                                  onClick={(e) => {
+                                    return handleMarkAsPaid(invoice._id, e);
+                                  }}
+                                  className='font-semibold text-base text-blue-600 hover:bg-transparent hover:text-blue-700 focus:ring-0 focus:outline-none shadow-none border-none px-0 hover:underline'
+                                >
+                                  Mark as paid
+                                </Button>
+                              )}
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button
                                     size='icon'
                                     variant='ghost'
                                     onClick={(e) => {
-                                      e.stopPropagation();
+                                      return e.stopPropagation();
                                     }}
                                     aria-label='More actions'
                                     className='border border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-700 focus:ring-0 focus:outline-none shadow-none p-0 w-6 h-6 rounded-full flex items-center justify-center'
@@ -494,28 +563,68 @@ export default function InvoicesList() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align='end' className='w-48'>
-                                  <DropdownMenuItem className='text-base py-2.5'>
+                                  <DropdownMenuItem
+                                    className='text-base py-2.5'
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      router.push(`/invoices/${invoice._id}`);
+                                    }}
+                                  >
                                     View
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem className='text-base py-2.5'>
+                                  <DropdownMenuItem
+                                    className='text-base py-2.5'
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      router.push(`/invoices/${invoice._id}/edit`);
+                                    }}
+                                  >
                                     Edit
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem className='text-base py-2.5'>
+                                  <DropdownMenuItem
+                                    className='text-base py-2.5'
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      router.push(`/invoices/new?duplicate=${invoice._id}`);
+                                    }}
+                                  >
                                     Duplicate
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem className='text-base py-2.5'>
+                                  <DropdownMenuItem
+                                    className='text-base py-2.5'
+                                    onClick={(e) => {
+                                      return handleSendInvoice(invoice._id, e);
+                                    }}
+                                  >
                                     Send invoice
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem className='text-base py-2.5'>
+                                  <DropdownMenuItem
+                                    className='text-base py-2.5'
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      window.open(`/api/invoices/${invoice._id}/pdf`, '_blank');
+                                    }}
+                                  >
                                     Export as PDF
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem className='text-base py-2.5'>
+                                  <DropdownMenuItem
+                                    className='text-base py-2.5'
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      window.print();
+                                    }}
+                                  >
                                     Print
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem className='text-base py-2.5 text-red-600'>
+                                  <DropdownMenuItem
+                                    className='text-base py-2.5 text-red-600'
+                                    onClick={(e) => {
+                                      return handleDeleteInvoice(invoice._id, e);
+                                    }}
+                                  >
                                     Delete
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>

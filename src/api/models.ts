@@ -245,7 +245,7 @@ export interface Invoice {
   clientName: string;
   issueDate: string;
   dueDate: string;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'unpaid';
   items: Array<{
     id: string;
     description: string;
@@ -267,6 +267,7 @@ export interface Invoice {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+  currency?: string;
 }
 
 /**
