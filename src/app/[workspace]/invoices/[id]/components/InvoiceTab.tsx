@@ -1,4 +1,5 @@
 import { Invoice } from '@/api/models';
+import { SendInvoiceDialog } from '@/components/invoice/SendInvoiceDialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -39,7 +40,6 @@ import {
   CalendarIcon,
   CheckCircle2,
   CreditCard,
-  DownloadCloud,
   Info,
   Link as LinkIcon,
   MoreHorizontal,
@@ -535,64 +535,11 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
         </CardContent>
       </Card>
 
-      <Dialog open={isSendDialogOpen} onOpenChange={setIsSendDialogOpen}>
-        <DialogContent className='sm:max-w-[700px]'>
-          <DialogHeader>
-            <DialogTitle>Send Invoice</DialogTitle>
-            <DialogDescription>
-              Share invoice #{invoice.invoiceNumber} with {invoice.clientName}
-            </DialogDescription>
-          </DialogHeader>
-          <div className='py-6'>
-            <div className='grid grid-cols-2 gap-6'>
-              <div
-                className='cursor-pointer border rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-primary group bg-blue-50'
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                }}
-              >
-                <LinkIcon className='h-8 w-8 mb-4 text-blue-600 group-hover:text-blue-700' />
-                <div className='font-bold text-lg mb-1 text-center'>Copy link</div>
-                <div className='text-center text-muted-foreground text-base'>
-                  A link to your invoice with all details included
-                </div>
-              </div>
-              <div
-                className='cursor-pointer border rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-primary group bg-indigo-50'
-                onClick={() => {
-                  // TODO: Implement download PDF functionality
-                }}
-              >
-                <DownloadCloud className='h-8 w-8 mb-4 text-indigo-600 group-hover:text-indigo-700' />
-                <div className='font-bold text-lg mb-1 text-center'>Download PDF</div>
-                <div className='text-center text-muted-foreground text-base'>
-                  Your invoice all in one document
-                </div>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant='outline'
-              onClick={() => {
-                return setIsSendDialogOpen(false);
-              }}
-            >
-              {invoice.status === 'sent' ? 'Close' : 'Cancel'}
-            </Button>
-            {invoice.status !== 'sent' && (
-              <Button
-                onClick={() => {
-                  return markAsSentMutation.mutate();
-                }}
-                disabled={markAsSentMutation.isPending}
-              >
-                {markAsSentMutation.isPending ? 'Marking...' : 'Mark invoice as sent'}
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SendInvoiceDialog
+        open={isSendDialogOpen}
+        onOpenChange={setIsSendDialogOpen}
+        invoice={invoice}
+      />
 
       <Dialog
         open={isPaymentDialogOpen}

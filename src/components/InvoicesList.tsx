@@ -27,13 +27,14 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { newRequest } from '@/utils/newRequest';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { ChevronDown, Plus, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { SendInvoiceDialog } from './invoice/SendInvoiceDialog';
 import ProjectManagement from './project/ProjectManagement';
 
 interface InvoiceItem {
@@ -140,6 +141,23 @@ export default function InvoicesList() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+
+  const markAsSentMutation = useMutation({
+    mutationFn: async (invoiceId: string) => {
+      await newRequest.put(`/invoices/${invoiceId}`, { status: 'sent' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries();
+      toast.success('Invoice marked as sent');
+      setIsSendDialogOpen(false);
+      setSelectedInvoice(null);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to mark invoice as sent');
+    },
+  });
 
   // Load initial data
   useEffect(() => {
@@ -253,23 +271,10 @@ export default function InvoicesList() {
     }
   };
 
-  const handleSendInvoice = async (invoiceId: string, e: React.MouseEvent) => {
+  const handleSendInvoice = (invoice: Invoice, e: React.MouseEvent) => {
     e.stopPropagation();
-    try {
-      const invoice = invoices.find((inv) => {
-        return inv._id === invoiceId;
-      });
-      if (!invoice) throw new Error('Invoice not found');
-
-      await newRequest.post(`/invoices/${invoiceId}/send`, {
-        to: invoice.client?.user.name || '',
-        subject: `Invoice ${invoice.invoiceNumber} from ${invoice.client?.user.name || ''}`,
-        message: 'Please find attached your invoice for the services provided.',
-      });
-      toast.success('Invoice sent successfully');
-    } catch (error) {
-      toast.error('Failed to send invoice');
-    }
+    setSelectedInvoice(invoice);
+    setIsSendDialogOpen(true);
   };
 
   // Filtered invoices for tab
@@ -594,7 +599,7 @@ export default function InvoicesList() {
                                   <DropdownMenuItem
                                     className='text-base py-2.5'
                                     onClick={(e) => {
-                                      return handleSendInvoice(invoice._id, e);
+                                      return handleSendInvoice(invoice, e);
                                     }}
                                   >
                                     Send invoice
@@ -745,6 +750,14 @@ export default function InvoicesList() {
           </div>
         </div>
       </div>
+
+      {selectedInvoice && (
+        <SendInvoiceDialog
+          open={isSendDialogOpen}
+          onOpenChange={setIsSendDialogOpen}
+          invoice={selectedInvoice}
+        />
+      )}
     </div>
   );
 }
