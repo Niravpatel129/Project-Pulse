@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Send, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 
@@ -39,43 +40,53 @@ export default function RightSidebar() {
   };
 
   return (
-    <div className='h-full bg-white border-l border-[#F3F4F6] flex flex-col'>
+    <div className='h-full bg-white border-l border-neutral-100 flex flex-col'>
       {/* Header */}
-      <div className='p-4 border-b border-[#F3F4F6]'>
-        <div className='flex items-center gap-2'>
-          <Sparkles className='w-5 h-5 text-purple-600' />
-          <h2 className='text-xl font-bold text-[#111827] tracking-tight'>AI Assistant</h2>
+      <div className='px-6 py-4 border-b border-neutral-100'>
+        <div className='flex items-center gap-2.5'>
+          <Sparkles className='w-4 h-4 text-purple-500' />
+          <h2 className='text-base font-medium text-neutral-900 tracking-tight'>AI Assistant</h2>
         </div>
       </div>
 
       {/* Chat Messages */}
       <ScrollArea className='flex-1'>
-        <div className='p-4 space-y-6'>
-          {messages.map((message) => {
-            return (
-              <div key={message.id}>
-                {message.role === 'assistant' ? (
-                  <div className='text-[15px] text-[#111827] leading-relaxed font-medium'>
-                    {message.content}
-                  </div>
-                ) : (
-                  <div className='flex items-start gap-3 justify-end'>
-                    <div className='max-w-[80%] rounded-lg p-3.5 bg-blue-50 text-[#111827]'>
-                      <p className='text-[15px] font-medium'>{message.content}</p>
-                      <p className='text-xs text-[#6B7280] mt-1.5 font-medium'>
-                        {message.timestamp.toLocaleTimeString()}
+        <div className='px-5 py-4 space-y-4'>
+          <AnimatePresence>
+            {messages.map((message) => {
+              return (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className={message.role === 'assistant' ? 'max-w-[85%]' : 'max-w-[85%] ml-auto'}
+                >
+                  {message.role === 'assistant' ? (
+                    <div className='text-sm text-neutral-800 leading-relaxed bg-neutral-50 rounded-lg px-4 py-3'>
+                      {message.content}
+                    </div>
+                  ) : (
+                    <div className='rounded-lg px-4 py-3 bg-purple-50 text-neutral-800 shadow-sm'>
+                      <p className='text-sm leading-relaxed'>{message.content}</p>
+                      <p className='text-xs text-neutral-500 mt-1.5'>
+                        {message.timestamp.toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
                       </p>
                     </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  )}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
         </div>
       </ScrollArea>
 
       {/* Input Area */}
-      <div className='p-4'>
+      <div className='p-4 border-t border-neutral-100'>
         <div className='relative'>
           <textarea
             value={input}
@@ -86,14 +97,14 @@ export default function RightSidebar() {
               return e.key === 'Enter' && !e.shiftKey && handleSend();
             }}
             placeholder='Type your message...'
-            className='w-full px-4 py-3 text-[15px] border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[80px] resize-none font-medium placeholder:text-[#9CA3AF]'
+            className='w-full px-4 py-3 text-sm border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 min-h-[72px] resize-none transition-colors duration-200 placeholder:text-neutral-400'
           />
           <Button
             onClick={handleSend}
-            className='absolute bottom-2 right-2 bg-purple-600 hover:bg-purple-700'
+            className='absolute bottom-2 right-2 bg-purple-500 hover:bg-purple-600 transition-colors duration-200'
             size='icon'
           >
-            <Send className='w-4 h-4' />
+            <Send className='w-3.5 h-3.5' />
           </Button>
         </div>
       </div>
