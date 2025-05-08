@@ -224,7 +224,7 @@ export default function Page() {
             <div className='space-y-8'>
               <InvoiceTab invoice={invoice} />
               <div className='bg-white rounded-xl shadow-sm p-6'>
-                <h2 className='text-xl font-semibold text-gray-900 mb-6'>Invoice Preview</h2>
+                <h2 className='text-xl font-semibold text-gray-900 mb-20'>Invoice Preview</h2>
                 <div className='flex justify-center'>
                   <Invoice invoice={invoice} />
                 </div>

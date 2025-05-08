@@ -228,14 +228,6 @@ export function Invoice({ invoice }: InvoiceProps) {
           <p className='text-gray-600 text-sm'>{invoice.notes}</p>
         </div>
       )}
-
-      {/* Terms Section */}
-      {invoice.terms && (
-        <div className='mt-4'>
-          <h3 className='font-semibold text-gray-900 mb-2'>Terms</h3>
-          <p className='text-gray-600 text-sm'>{invoice.terms}</p>
-        </div>
-      )}
     </div>
   );
 }
