@@ -60,7 +60,7 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
                 This invoice has already been paid. You can still share the invoice details.
               </span>
             ) : (
-              `Share invoice #${invoice.invoiceNumber} with ${invoice.client?.user.name}`
+              `Share invoice #${invoice?.invoiceNumber} with ${invoice?.client?.user?.name}`
             )}
           </DialogDescription>
         </DialogHeader>

@@ -1,7 +1,15 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,11 +38,10 @@ import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
-import { ChevronDown, Plus, Search } from 'lucide-react';
+import { ChevronDown, DownloadCloud, LinkIcon, Plus, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { SendInvoiceDialog } from './invoice/SendInvoiceDialog';
 import ProjectManagement from './project/ProjectManagement';
 
 interface InvoiceItem {
@@ -553,87 +560,181 @@ export default function InvoicesList() {
                                   Mark as paid
                                 </Button>
                               )}
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    size='icon'
-                                    variant='ghost'
-                                    onClick={(e) => {
-                                      return e.stopPropagation();
-                                    }}
-                                    aria-label='More actions'
-                                    className='border border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-700 focus:ring-0 focus:outline-none shadow-none p-0 w-6 h-6 rounded-full flex items-center justify-center'
-                                  >
-                                    <ChevronDown className='w-6 h-6' />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align='end' className='w-48'>
-                                  <DropdownMenuItem
-                                    className='text-base py-2.5'
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      router.push(`/invoices/${invoice._id}`);
-                                    }}
-                                  >
-                                    View
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className='text-base py-2.5'
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      router.push(`/invoices/${invoice._id}/edit`);
-                                    }}
-                                  >
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className='text-base py-2.5'
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      router.push(`/invoices/new?duplicate=${invoice._id}`);
-                                    }}
-                                  >
-                                    Duplicate
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    className='text-base py-2.5'
-                                    onClick={(e) => {
-                                      return handleSendInvoice(invoice, e);
-                                    }}
-                                  >
-                                    Send invoice
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    className='text-base py-2.5'
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      window.open(`/api/invoices/${invoice._id}/pdf`, '_blank');
-                                    }}
-                                  >
-                                    Export as PDF
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className='text-base py-2.5'
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      window.print();
-                                    }}
-                                  >
-                                    Print
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    className='text-base py-2.5 text-red-600'
-                                    onClick={(e) => {
-                                      return handleDeleteInvoice(invoice._id, e);
-                                    }}
-                                  >
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              <Dialog
+                                open={isSendDialogOpen && selectedInvoice?._id === invoice._id}
+                                onOpenChange={(open) => {
+                                  setIsSendDialogOpen(open);
+                                  if (!open) {
+                                    setSelectedInvoice(null);
+                                  }
+                                }}
+                              >
+                                <DropdownMenu modal={false}>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      size='icon'
+                                      variant='ghost'
+                                      onClick={(e) => {
+                                        return e.stopPropagation();
+                                      }}
+                                      aria-label='More actions'
+                                      className='border border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-700 focus:ring-0 focus:outline-none shadow-none p-0 w-6 h-6 rounded-full flex items-center justify-center'
+                                    >
+                                      <ChevronDown className='w-6 h-6' />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align='end' className='w-48'>
+                                    <DropdownMenuItem
+                                      className='text-base py-2.5'
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        router.push(`/invoices/${invoice._id}`);
+                                      }}
+                                    >
+                                      View
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className='text-base py-2.5'
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        router.push(`/invoices/${invoice._id}/edit`);
+                                      }}
+                                    >
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className='text-base py-2.5'
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        router.push(`/invoices/new?duplicate=${invoice._id}`);
+                                      }}
+                                    >
+                                      Duplicate
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DialogTrigger asChild>
+                                      <DropdownMenuItem
+                                        className='text-base py-2.5'
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          setSelectedInvoice(invoice);
+                                          setIsSendDialogOpen(true);
+                                        }}
+                                      >
+                                        Send invoice
+                                      </DropdownMenuItem>
+                                    </DialogTrigger>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className='text-base py-2.5'
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.open(`/api/invoices/${invoice._id}/pdf`, '_blank');
+                                      }}
+                                    >
+                                      Export as PDF
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className='text-base py-2.5'
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.print();
+                                      }}
+                                    >
+                                      Print
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className='text-base py-2.5 text-red-600'
+                                      onClick={(e) => {
+                                        return handleDeleteInvoice(invoice._id, e);
+                                      }}
+                                    >
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                                <DialogContent className='sm:max-w-[700px]'>
+                                  <DialogHeader>
+                                    <DialogTitle>Send Invoice</DialogTitle>
+                                    <DialogDescription>
+                                      {invoice.status === 'paid' ? (
+                                        <span className='text-yellow-600'>
+                                          This invoice has already been paid. You can still share
+                                          the invoice details.
+                                        </span>
+                                      ) : (
+                                        `Share invoice #${invoice.invoiceNumber} with ${
+                                          invoice.client?.user?.name ||
+                                          invoice.project?.name ||
+                                          'the client'
+                                        }`
+                                      )}
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <div className='py-6'>
+                                    <div className='grid grid-cols-2 gap-6'>
+                                      <div
+                                        className='cursor-pointer border rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-primary group bg-blue-50'
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(window.location.href);
+                                          toast.success('Invoice link copied!');
+                                        }}
+                                      >
+                                        <LinkIcon className='h-8 w-8 mb-4 text-blue-600 group-hover:text-blue-700' />
+                                        <div className='font-bold text-lg mb-1 text-center'>
+                                          Copy link
+                                        </div>
+                                        <div className='text-center text-muted-foreground text-base'>
+                                          A link to your invoice with all details included
+                                        </div>
+                                      </div>
+                                      <div
+                                        className='cursor-pointer border rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-primary group bg-indigo-50'
+                                        onClick={() => {
+                                          window.open(`/api/invoices/${invoice._id}/pdf`, '_blank');
+                                        }}
+                                      >
+                                        <DownloadCloud className='h-8 w-8 mb-4 text-indigo-600 group-hover:text-indigo-700' />
+                                        <div className='font-bold text-lg mb-1 text-center'>
+                                          Download PDF
+                                        </div>
+                                        <div className='text-center text-muted-foreground text-base'>
+                                          Your invoice all in one document
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <DialogFooter>
+                                    <Button
+                                      variant='outline'
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setIsSendDialogOpen(false);
+                                      }}
+                                    >
+                                      Close
+                                    </Button>
+                                    {!invoice.status.includes('paid') &&
+                                      invoice.status !== 'sent' && (
+                                        <Button
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            return markAsSentMutation.mutate(invoice._id);
+                                          }}
+                                          disabled={markAsSentMutation.isPending}
+                                        >
+                                          {markAsSentMutation.isPending
+                                            ? 'Marking...'
+                                            : 'Mark invoice as sent'}
+                                        </Button>
+                                      )}
+                                  </DialogFooter>
+                                </DialogContent>
+                              </Dialog>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -750,14 +851,6 @@ export default function InvoicesList() {
           </div>
         </div>
       </div>
-
-      {selectedInvoice && (
-        <SendInvoiceDialog
-          open={isSendDialogOpen}
-          onOpenChange={setIsSendDialogOpen}
-          invoice={selectedInvoice}
-        />
-      )}
     </div>
   );
 }
