@@ -1,6 +1,7 @@
 'use client';
 
 import { useClients } from '@/hooks/useClients';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useRef, useState } from 'react';
 import ClientSection from './ClientSection';
 import InvoiceSection from './InvoiceSection';
@@ -53,6 +54,7 @@ export default function ProjectManagement({
   existingInvoice,
 }: ProjectManagementProps) {
   const [activeSection, setActiveSection] = useState<Section>('items');
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [selectedClient, setSelectedClient] = useState(existingInvoice?.client?._id || '');
   const [items, setItems] = useState<Item[]>(
     existingInvoice?.items.map((item) => {
@@ -162,20 +164,27 @@ export default function ProjectManagement({
   };
 
   return (
-    <div className='flex h-full'>
-      <LeftSidebar
-        activeSection={activeSection}
-        setActiveSection={setActiveSection}
-        total={total}
-        currency={projectCurrency}
-        onCurrencyChange={handleCurrencyChange}
-        clientSelected={!!selectedClient}
-        items={items}
-        hasInvoice={!!invoiceSettings}
-      />
+    <div className='flex h-full relative'>
+      {/* Desktop Left Sidebar */}
+      {!isMobile && (
+        <LeftSidebar
+          activeSection={activeSection}
+          setActiveSection={setActiveSection}
+          total={total}
+          currency={projectCurrency}
+          onCurrencyChange={handleCurrencyChange}
+          clientSelected={!!selectedClient}
+          items={items}
+          hasInvoice={!!invoiceSettings}
+        />
+      )}
 
       {/* Main Content */}
-      <div className='flex-1 flex flex-col h-full overflow-hidden relative'>
+      <div
+        className={`flex-1 flex flex-col h-full overflow-hidden relative ${
+          isMobile ? 'w-full' : ''
+        }`}
+      >
         {activeSection === 'items' && (
           <ItemsSection
             items={items}
@@ -216,10 +225,90 @@ export default function ProjectManagement({
         )}
       </div>
 
-      {/* Right Sidebar */}
-      <div className='w-[350px]'>
-        <RightSidebar />
-      </div>
+      {/* Desktop Right Sidebar */}
+      {!isMobile && (
+        <div className='w-[350px]'>
+          <RightSidebar />
+        </div>
+      )}
+
+      {/* Mobile Bottom Navigation */}
+      {isMobile && (
+        <div className='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-2 flex justify-around items-center'>
+          <button
+            onClick={() => {
+              return setActiveSection('items');
+            }}
+            className={`flex flex-col items-center p-2 ${
+              activeSection === 'items' ? 'text-blue-600' : 'text-gray-600'
+            }`}
+          >
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              className='h-6 w-6'
+              fill='none'
+              viewBox='0 0 24 24'
+              stroke='currentColor'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'
+              />
+            </svg>
+            <span className='text-xs mt-1'>Items</span>
+          </button>
+          <button
+            onClick={() => {
+              return setActiveSection('client');
+            }}
+            className={`flex flex-col items-center p-2 ${
+              activeSection === 'client' ? 'text-blue-600' : 'text-gray-600'
+            }`}
+          >
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              className='h-6 w-6'
+              fill='none'
+              viewBox='0 0 24 24'
+              stroke='currentColor'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
+              />
+            </svg>
+            <span className='text-xs mt-1'>Client</span>
+          </button>
+          <button
+            onClick={() => {
+              return setActiveSection('invoice');
+            }}
+            className={`flex flex-col items-center p-2 ${
+              activeSection === 'invoice' ? 'text-blue-600' : 'text-gray-600'
+            }`}
+          >
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              className='h-6 w-6'
+              fill='none'
+              viewBox='0 0 24 24'
+              stroke='currentColor'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+              />
+            </svg>
+            <span className='text-xs mt-1'>Invoice</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
