@@ -74,6 +74,9 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
   const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
+  const [isEditPaymentDialogOpen, setIsEditPaymentDialogOpen] = useState(false);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
   const [paymentAmount, setPaymentAmount] = useState(invoice.total.toFixed(2));
@@ -116,6 +119,45 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
     },
   });
 
+  const deletePaymentMutation = useMutation({
+    mutationFn: async (paymentId: string) => {
+      await newRequest.delete(`/invoices/${invoice.id}/payments/${paymentId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries();
+      toast.success('Payment deleted successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to delete payment');
+    },
+  });
+
+  const editPaymentMutation = useMutation({
+    mutationFn: async (paymentData: {
+      paymentId: string;
+      date: Date;
+      amount: number;
+      method: string;
+      memo: string;
+    }) => {
+      await newRequest.put(`/invoices/${invoice.id}/payments/${paymentData.paymentId}`, {
+        date: paymentData.date,
+        amount: paymentData.amount,
+        method: paymentData.method,
+        memo: paymentData.memo,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries();
+      toast.success('Payment updated successfully');
+      setIsEditPaymentDialogOpen(false);
+      setSelectedPayment(null);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to update payment');
+    },
+  });
+
   // Fetch payments for this invoice
   const {
     data: paymentData,
@@ -133,6 +175,14 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
     },
   });
   const payments = paymentData?.paymentHistory || [];
+
+  // Calculate remaining amount due
+  const calculateRemainingAmount = () => {
+    if (!paymentData) return invoice.total;
+    return paymentData.currentBalance;
+  };
+
+  const remainingAmount = calculateRemainingAmount();
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -158,6 +208,37 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
   };
 
   const dueDaysAgo = getDueDaysAgo(invoice.dueDate);
+
+  const handleEditPayment = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setPaymentDate(new Date(payment.date));
+    setPaymentAmount(payment.amount.toString());
+    setPaymentMethod(payment.method);
+    setPaymentMemo(payment.memo || '');
+    setIsEditPaymentDialogOpen(true);
+  };
+
+  const handleDeletePayment = (paymentId: string) => {
+    setSelectedPayment(
+      payments.find((p) => {
+        return p._id === paymentId;
+      }) || null,
+    );
+    setIsDeleteAlertOpen(true);
+  };
+
+  const confirmDeletePayment = () => {
+    if (selectedPayment) {
+      deletePaymentMutation.mutate(selectedPayment._id);
+      setIsDeleteAlertOpen(false);
+      setSelectedPayment(null);
+    }
+  };
+
+  const handleSendReceipt = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setIsReceiptDialogOpen(true);
+  };
 
   return (
     <>
@@ -319,7 +400,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
               <div className='text-sm text-muted-foreground'>
                 {invoice.status === 'paid' ? (
                   <>
-                    Amount due: <span className='font-mono'>(${invoice.total.toFixed(2)})</span> —{' '}
+                    Amount due: <span className='font-mono'>(${remainingAmount.toFixed(2)})</span> —{' '}
                     <span
                       className='text-primary cursor-pointer underline underline-offset-2'
                       onClick={() => {
@@ -332,7 +413,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                   </>
                 ) : (
                   <>
-                    Amount due: <span className='font-mono'>${invoice.total.toFixed(2)}</span> —{' '}
+                    Amount due: <span className='font-mono'>${remainingAmount.toFixed(2)}</span> —{' '}
                     <span
                       className='text-primary cursor-pointer underline underline-offset-2'
                       onClick={() => {
@@ -407,7 +488,9 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                             variant='link'
                             size='sm'
                             className='p-0 h-auto'
-                            onClick={() => {}}
+                            onClick={() => {
+                              return handleSendReceipt(payment);
+                            }}
                           >
                             Send a receipt
                           </Button>
@@ -416,7 +499,9 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                             variant='link'
                             size='sm'
                             className='p-0 h-auto'
-                            onClick={() => {}}
+                            onClick={() => {
+                              return handleEditPayment(payment);
+                            }}
                           >
                             Edit payment
                           </Button>
@@ -425,7 +510,9 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                             variant='link'
                             size='sm'
                             className='p-0 h-auto'
-                            onClick={() => {}}
+                            onClick={() => {
+                              return handleDeletePayment(payment._id);
+                            }}
                           >
                             Remove payment
                           </Button>
@@ -436,7 +523,9 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                                 variant='link'
                                 size='sm'
                                 className='p-0 h-auto'
-                                onClick={() => {}}
+                                onClick={() => {
+                                  return setIsPaymentDialogOpen(true);
+                                }}
                               >
                                 Add another payment
                               </Button>
@@ -681,11 +770,122 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Receipt Modal */}
+      {/* Edit Payment Dialog */}
+      <Dialog open={isEditPaymentDialogOpen} onOpenChange={setIsEditPaymentDialogOpen}>
+        <DialogContent className='sm:max-w-[450px]'>
+          <DialogHeader>
+            <DialogTitle>Edit Payment</DialogTitle>
+          </DialogHeader>
+          <form className='space-y-4'>
+            <div>
+              <Label>Date</Label>
+              <Popover modal>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant='outline'
+                    className={
+                      'w-full justify-start text-left font-normal' +
+                      (!paymentDate ? ' text-muted-foreground' : '')
+                    }
+                  >
+                    <CalendarIcon className='mr-2 h-4 w-4' />
+                    {paymentDate ? format(paymentDate, 'yyyy-MM-dd') : 'Select date'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className='w-auto p-0 min-w-[300px]' align='start'>
+                  <Calendar
+                    mode='single'
+                    selected={paymentDate}
+                    onSelect={setPaymentDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div>
+              <Label>Amount</Label>
+              <Input
+                type='number'
+                min='0'
+                step='any'
+                value={paymentAmount}
+                onChange={(e) => {
+                  setAmountTouched(true);
+                  return setPaymentAmount(e.target.value);
+                }}
+                onBlur={() => {
+                  return setAmountTouched(true);
+                }}
+                placeholder='$0.00'
+              />
+            </div>
+            <div>
+              <Label>Method</Label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger>
+                  <SelectValue placeholder='Select a payment method...' />
+                </SelectTrigger>
+                <SelectContent className='z-[100]'>
+                  <SelectItem value='credit-card'>Credit Card</SelectItem>
+                  <SelectItem value='bank-transfer'>Bank Transfer</SelectItem>
+                  <SelectItem value='cash'>Cash</SelectItem>
+                  <SelectItem value='check'>Check</SelectItem>
+                  <SelectItem value='other'>Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Memo / notes</Label>
+              <Textarea
+                value={paymentMemo}
+                onChange={(e) => {
+                  return setPaymentMemo(e.target.value);
+                }}
+                placeholder='Optional notes about this payment...'
+              />
+            </div>
+          </form>
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => {
+                setIsEditPaymentDialogOpen(false);
+                setSelectedPayment(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedPayment && paymentDate) {
+                  editPaymentMutation.mutate({
+                    paymentId: selectedPayment._id,
+                    date: paymentDate,
+                    amount: parseFloat(paymentAmount),
+                    method: paymentMethod,
+                    memo: paymentMemo,
+                  });
+                }
+              }}
+              disabled={
+                !paymentDate || !paymentAmount || !paymentMethod || editPaymentMutation.isPending
+              }
+            >
+              {editPaymentMutation.isPending ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Receipt Dialog */}
       <Dialog open={isReceiptDialogOpen} onOpenChange={setIsReceiptDialogOpen}>
         <DialogContent className='sm:max-w-[450px]'>
           <DialogHeader>
-            <DialogTitle>Send payment receipt</DialogTitle>
+            <DialogTitle>Send Payment Receipt</DialogTitle>
+            <DialogDescription>
+              Share the payment receipt for ${selectedPayment?.amount.toFixed(2)} with{' '}
+              {invoice.clientName}
+            </DialogDescription>
           </DialogHeader>
           <div className='flex flex-col items-center justify-center py-10'>
             <LinkIcon className='h-10 w-10 mb-4 text-purple-600' />
@@ -703,6 +903,51 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
               Copy link
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Payment Alert */}
+      <Dialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <DialogContent className='sm:max-w-[425px]'>
+          <DialogHeader>
+            <DialogTitle>Delete Payment</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this payment? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className='py-4'>
+            <Alert variant='destructive'>
+              <AlertDescription>
+                This will permanently delete the payment of{' '}
+                <span className='font-semibold'>${selectedPayment?.amount.toFixed(2)}</span> made on{' '}
+                {selectedPayment?.date &&
+                  new Date(selectedPayment.date).toLocaleDateString(undefined, {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                .
+              </AlertDescription>
+            </Alert>
+          </div>
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => {
+                setIsDeleteAlertOpen(false);
+                setSelectedPayment(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant='destructive'
+              onClick={confirmDeletePayment}
+              disabled={deletePaymentMutation.isPending}
+            >
+              {deletePaymentMutation.isPending ? 'Deleting...' : 'Delete Payment'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
