@@ -88,22 +88,27 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
       <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6'>
         <div>
           <h1 className='text-2xl font-bold mb-1'>Invoice #{invoice.invoiceNumber}</h1>
-          <div className='flex items-center gap-2'>
-            <Badge variant={getStatusColor(invoice.status)}>{invoice.status}</Badge>
-            <span className='text-muted-foreground text-sm'>
-              Customer:{' '}
-              <span className='text-primary font-medium cursor-pointer underline underline-offset-2'>
-                {invoice.clientName}
+          <div className='flex items-center gap-6 mt-2'>
+            <div className='flex flex-col'>
+              <span className='text-xs text-muted-foreground font-medium mb-0.5'>Status</span>
+              <Badge variant={getStatusColor(invoice.status)}>{invoice.status}</Badge>
+            </div>
+            <div className='flex flex-col'>
+              <span className='text-xs text-muted-foreground font-medium mb-0.5'>Customer</span>
+              <span className='text-muted-foreground text-sm'>
+                <span className='text-primary font-medium cursor-pointer underline underline-offset-2'>
+                  {invoice.clientName}
+                </span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className='inline ml-1 w-4 h-4 text-muted-foreground align-middle cursor-pointer' />
+                    </TooltipTrigger>
+                    <TooltipContent>Customer info</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className='inline ml-1 w-4 h-4 text-muted-foreground align-middle cursor-pointer' />
-                  </TooltipTrigger>
-                  <TooltipContent>Customer info</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </span>
+            </div>
           </div>
         </div>
         <div className='flex flex-col items-end gap-2'>
@@ -127,9 +132,15 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
             </DropdownMenu>
           </div>
           <div className='flex items-center gap-6 mt-2'>
-            <div className='text-lg font-semibold'>${invoice.total.toFixed(2)}</div>
-            <div className='text-sm text-muted-foreground'>
-              Due <span className='font-medium'>{dueDaysAgo} days ago</span>
+            <div className='flex flex-col items-end'>
+              <span className='text-xs text-muted-foreground font-medium mb-0.5'>Amount</span>
+              <div className='text-lg font-semibold'>${invoice.total.toFixed(2)}</div>
+            </div>
+            <div className='flex flex-col items-end'>
+              <span className='text-xs text-muted-foreground font-medium mb-0.5'>Due Date</span>
+              <div className='text-sm text-muted-foreground'>
+                Due <span className='font-medium'>{dueDaysAgo} days ago</span>
+              </div>
             </div>
           </div>
         </div>
