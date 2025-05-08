@@ -71,7 +71,7 @@ interface Invoice {
   };
   items: InvoiceItem[];
   total: number;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'unpaid';
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'open';
   dueDate: string;
   notes?: string;
   currency: string;
@@ -102,7 +102,7 @@ interface ActivitiesResponse {
 }
 
 const statusTabs = [
-  { key: 'unpaid', label: 'Unpaid' },
+  { key: 'open', label: 'open' },
   { key: 'draft', label: 'Draft' },
   { key: 'all', label: 'All invoices' },
 ];
@@ -163,6 +163,19 @@ export default function InvoicesList() {
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to mark invoice as sent');
+    },
+  });
+
+  const approveInvoiceMutation = useMutation({
+    mutationFn: async (invoiceId: string) => {
+      await newRequest.put(`/invoices/${invoiceId}`, { status: 'open' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries();
+      toast.success('Invoice approved');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to approve invoice');
     },
   });
 
@@ -301,7 +314,7 @@ export default function InvoicesList() {
       paid: 'bg-green-100 text-green-800',
       overdue: 'bg-red-100 text-red-800',
       cancelled: 'bg-gray-100 text-gray-800',
-      unpaid: 'bg-yellow-100 text-yellow-800',
+      open: 'bg-yellow-100 text-yellow-800',
     };
     return (
       <Badge className={statusColors[status as keyof typeof statusColors] || 'bg-gray-100'}>
@@ -384,7 +397,7 @@ export default function InvoicesList() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value='all'>All statuses</SelectItem>
-                    <SelectItem value='unpaid'>Unpaid</SelectItem>
+                    <SelectItem value='open'>open</SelectItem>
                     <SelectItem value='draft'>Draft</SelectItem>
                     <SelectItem value='paid'>Paid</SelectItem>
                     <SelectItem value='overdue'>Overdue</SelectItem>
@@ -470,8 +483,8 @@ export default function InvoicesList() {
                       <p className='text-base text-gray-600 max-w-md'>
                         {activeTab === 'all'
                           ? "Get started by creating your first invoice. It's quick and easy!"
-                          : activeTab === 'unpaid'
-                          ? "You don't have any unpaid invoices at the moment."
+                          : activeTab === 'open'
+                          ? "You don't have any open invoices at the moment."
                           : "You don't have any draft invoices. Create one to get started!"}
                       </p>
                     </div>
@@ -548,18 +561,6 @@ export default function InvoicesList() {
                           </TableCell>
                           <TableCell className='text-right py-4'>
                             <div className='flex justify-end items-center gap-2'>
-                              {invoice.status === 'unpaid' && (
-                                <Button
-                                  size='sm'
-                                  variant='ghost'
-                                  onClick={(e) => {
-                                    return handleMarkAsPaid(invoice._id, e);
-                                  }}
-                                  className='font-semibold text-base text-blue-600 hover:bg-transparent hover:text-blue-700 focus:ring-0 focus:outline-none shadow-none border-none px-0 hover:underline'
-                                >
-                                  Mark as paid
-                                </Button>
-                              )}
                               <Dialog
                                 open={isSendDialogOpen && selectedInvoice?._id === invoice._id}
                                 onOpenChange={(open) => {
@@ -611,6 +612,17 @@ export default function InvoicesList() {
                                     >
                                       Duplicate
                                     </DropdownMenuItem>
+                                    {invoice.status === 'draft' && (
+                                      <DropdownMenuItem
+                                        className='text-base py-2.5 text-green-600'
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          approveInvoiceMutation.mutate(invoice._id);
+                                        }}
+                                      >
+                                        Approve
+                                      </DropdownMenuItem>
+                                    )}
                                     <DropdownMenuSeparator />
                                     <DialogTrigger asChild>
                                       <DropdownMenuItem
