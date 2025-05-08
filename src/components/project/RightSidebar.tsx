@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Sparkles, User } from 'lucide-react';
+import { Send, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 
 interface Message {
@@ -44,29 +44,27 @@ export default function RightSidebar() {
       <div className='p-4 border-b border-[#F3F4F6]'>
         <div className='flex items-center gap-2'>
           <Sparkles className='w-5 h-5 text-purple-600' />
-          <h2 className='text-lg font-semibold text-[#111827]'>AI Assistant</h2>
+          <h2 className='text-xl font-bold text-[#111827] tracking-tight'>AI Assistant</h2>
         </div>
-        <p className='text-sm text-[#6B7280] mt-1'>Ask me anything about your project</p>
       </div>
 
       {/* Chat Messages */}
       <ScrollArea className='flex-1'>
-        <div className='p-4 space-y-4'>
+        <div className='p-4 space-y-6'>
           {messages.map((message) => {
             return (
               <div key={message.id}>
                 {message.role === 'assistant' ? (
-                  <div className='text-sm text-[#111827] leading-relaxed'>{message.content}</div>
+                  <div className='text-[15px] text-[#111827] leading-relaxed font-medium'>
+                    {message.content}
+                  </div>
                 ) : (
                   <div className='flex items-start gap-3 justify-end'>
-                    <div className='max-w-[80%] rounded-lg p-3 bg-blue-50 text-[#111827]'>
-                      <p className='text-sm'>{message.content}</p>
-                      <p className='text-xs text-[#6B7280] mt-1'>
+                    <div className='max-w-[80%] rounded-lg p-3.5 bg-blue-50 text-[#111827]'>
+                      <p className='text-[15px] font-medium'>{message.content}</p>
+                      <p className='text-xs text-[#6B7280] mt-1.5 font-medium'>
                         {message.timestamp.toLocaleTimeString()}
                       </p>
-                    </div>
-                    <div className='w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0'>
-                      <User className='w-4 h-4 text-blue-600' />
                     </div>
                   </div>
                 )}
@@ -88,7 +86,7 @@ export default function RightSidebar() {
               return e.key === 'Enter' && !e.shiftKey && handleSend();
             }}
             placeholder='Type your message...'
-            className='w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[80px] resize-none'
+            className='w-full px-4 py-3 text-[15px] border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[80px] resize-none font-medium placeholder:text-[#9CA3AF]'
           />
           <Button
             onClick={handleSend}
