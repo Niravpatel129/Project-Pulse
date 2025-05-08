@@ -269,7 +269,10 @@ export default function InvoicesList() {
   };
 
   // Filtered invoices for tab
-  const filteredInvoices = invoicesData || [];
+  const filteredInvoices = (invoicesData || []).filter((invoice) => {
+    if (activeTab === 'all') return true;
+    return invoice.status === activeTab;
+  });
 
   // Pagination logic
   const totalPages = Math.ceil((filteredInvoices?.length || 0) / perPage);
