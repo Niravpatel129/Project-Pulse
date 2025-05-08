@@ -301,20 +301,11 @@ export default function InvoicesList() {
 
   const formatCurrency = (amount: number, currency: string) => {
     const formatter = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency.toUpperCase(),
+      style: 'decimal',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     });
-    return formatter.format(amount);
-  };
-
-  const formatValue = (value: number | string, suffix: string) => {
-    if (typeof value === 'number') {
-      if (suffix === 'days') {
-        return `${value} days`;
-      }
-      return formatCurrency(value, suffix);
-    }
-    return value;
+    return `${formatter.format(amount)} ${currency.toUpperCase()}`;
   };
 
   return (
