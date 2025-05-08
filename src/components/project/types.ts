@@ -19,6 +19,33 @@ export type Client = {
     name: string;
     email: string;
   };
+  phone: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    country: string;
+    zip: string;
+  };
+  shippingAddress: {
+    street: string;
+    city: string;
+    state: string;
+    country: string;
+    zip: string;
+  };
+  contact: {
+    firstName: string;
+    lastName: string;
+  };
+  taxId: string;
+  accountNumber: string;
+  fax: string;
+  mobile: string;
+  tollFree: string;
+  website: string;
+  internalNotes: string;
+  customFields: Record<string, any>;
 };
 
 export type AIItem = Item & {
