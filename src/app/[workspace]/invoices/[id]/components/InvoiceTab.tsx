@@ -292,7 +292,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                 disabled
                 className='scale-90 bg-green-600 data-[state=checked]:bg-green-600'
               />
-              <span className='ml-1 text-xs font-semibold text-green-600'>ON</span>
+              <span className='ml-1 text-xs font-semibold text-green-600'>CONNECTED</span>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
