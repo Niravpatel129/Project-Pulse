@@ -141,13 +141,21 @@ export function BusinessSettings({ open, onOpenChange }: BusinessSettingsProps) 
                   Choose File
                 </Button>
               ) : (
-                <div className='relative w-32 h-32 border rounded-md overflow-hidden group'>
-                  <Image
-                    src={logoPreview}
-                    alt='Business logo preview'
-                    fill
-                    className='object-contain'
-                  />
+                <div className='relative w-32 h-32 border rounded-md overflow-hidden group p-2'>
+                  <div className='relative w-full h-full p-2'>
+                    <Image
+                      src={logoPreview}
+                      alt='Business logo preview'
+                      fill
+                      unoptimized
+                      className='object-contain'
+                      onError={(e) => {
+                        console.error('Error loading image:', e);
+                        // Optionally set a fallback image
+                        // setLogoPreview('/path-to-fallback-image.png');
+                      }}
+                    />
+                  </div>
                   <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2'>
                     <Button
                       type='button'
