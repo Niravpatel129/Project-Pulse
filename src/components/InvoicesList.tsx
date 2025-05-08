@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -86,7 +86,7 @@ interface Activity {
   _id: string;
   type: 'created' | 'paid' | 'overdue' | 'updated';
   invoiceNumber: string;
-  timestamp: string;
+  createdAt: string;
   description: string;
 }
 
@@ -328,8 +328,8 @@ export default function InvoicesList() {
       </div>
 
       <div className='p-8'>
-        <div className='grid grid-cols-12 gap-8'>
-          <div className='col-span-12 lg:col-span-8'>
+        <div className=''>
+          <div className=''>
             {/* Error Banner */}
             {invoicesError && (
               <motion.div
@@ -805,53 +805,6 @@ export default function InvoicesList() {
                 </div>
               </Card>
             )}
-          </div>
-
-          {/* Right Column - Recent Activity */}
-          <div className='col-span-12 lg:col-span-4 space-y-0'>
-            <Card>
-              <CardHeader>
-                <CardTitle className='text-xl font-semibold text-gray-900'>
-                  Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent className='space-y-5'>
-                {activities.length === 0 ? (
-                  <p className='text-base text-gray-600'>No recent activities</p>
-                ) : (
-                  activities.map((activity) => {
-                    const getActivityColor = (type: Activity['type']) => {
-                      switch (type) {
-                        case 'created':
-                          return 'bg-blue-500';
-                        case 'paid':
-                          return 'bg-green-500';
-                        case 'overdue':
-                          return 'bg-yellow-500';
-                        default:
-                          return 'bg-gray-500';
-                      }
-                    };
-
-                    return (
-                      <div key={activity._id} className='flex items-start gap-4'>
-                        <div
-                          className={`w-2 h-2 rounded-full ${getActivityColor(activity.type)} mt-2`}
-                        ></div>
-                        <div>
-                          <p className='text-base font-medium text-gray-900'>
-                            {activity.description}
-                          </p>
-                          <p className='text-sm text-gray-600 mt-1'>
-                            {format(new Date(activity.timestamp), 'MMM d, yyyy h:mm a')}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
