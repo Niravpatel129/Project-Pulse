@@ -77,6 +77,26 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
     },
   });
 
+  const recordPaymentMutation = useMutation({
+    mutationFn: async () => {
+      await newRequest.post(`/invoices/${invoice.id}/payments`, {
+        date: paymentDate,
+        amount: parseFloat(paymentAmount),
+        method: paymentMethod,
+        account: paymentAccount,
+        memo: paymentMemo,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries();
+      toast.success('Payment recorded successfully');
+      setIsPaymentDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to record payment');
+    },
+  });
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'paid':
@@ -443,12 +463,19 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
             </Button>
             <Button
               type='submit'
-              disabled={!paymentDate || !paymentAmount || !paymentMethod || !paymentAccount}
-              onClick={() => {
-                return setIsPaymentDialogOpen(false);
+              disabled={
+                !paymentDate ||
+                !paymentAmount ||
+                !paymentMethod ||
+                !paymentAccount ||
+                recordPaymentMutation.isPending
+              }
+              onClick={(e) => {
+                e.preventDefault();
+                recordPaymentMutation.mutate();
               }}
             >
-              Submit
+              {recordPaymentMutation.isPending ? 'Recording...' : 'Submit'}
             </Button>
           </DialogFooter>
         </DialogContent>
