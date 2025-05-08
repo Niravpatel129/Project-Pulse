@@ -149,6 +149,7 @@ export default function Page() {
 
   // Transform API response to match component expectations
   const invoice = {
+    _id: response.data._id,
     id: response.data._id,
     invoiceNumber: response.data.invoiceNumber,
     clientName: response.data.client?.user.name || 'Client Name Pending',

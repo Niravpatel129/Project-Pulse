@@ -63,6 +63,7 @@ interface Payment {
 }
 
 interface ExtendedInvoice extends Invoice {
+  _id: string;
   payments?: Payment[];
 }
 
