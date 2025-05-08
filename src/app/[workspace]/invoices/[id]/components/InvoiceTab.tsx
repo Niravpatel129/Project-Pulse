@@ -126,10 +126,14 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
         </div>
         <div className='flex flex-col items-end gap-2'>
           <div className='flex items-center gap-4'>
-            <div className='flex items-center gap-1'>
-              <span className='text-sm font-medium'>Online Payments</span>
-              <Switch checked={false} disabled className='scale-90' />
-              <span className='ml-1 text-xs font-semibold text-red-600'>OFF</span>
+            <div className='flex items-center gap-1 bg-white rounded-full border p-1 px-2'>
+              <span className='text-sm font-medium'>Stripe Invoice Payments</span>
+              <Switch
+                checked={true}
+                disabled
+                className='scale-90 bg-green-600 data-[state=checked]:bg-green-600'
+              />
+              <span className='ml-1 text-xs font-semibold text-green-600'>ON</span>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -240,9 +244,6 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                   Record a payment
                 </span>{' '}
                 manually
-              </div>
-              <div className='text-sm mt-1'>
-                Status: <span className='font-medium'>Your invoice is {invoice.status}</span>
               </div>
             </div>
             <div className='ml-auto'>
