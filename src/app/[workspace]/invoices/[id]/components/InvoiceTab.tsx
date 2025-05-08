@@ -2,6 +2,7 @@ import { Invoice } from '@/api/models';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
@@ -17,12 +18,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { format } from 'date-fns';
 import {
+  CalendarIcon,
   CheckCircle2,
   CreditCard,
   DownloadCloud,
@@ -40,6 +54,12 @@ interface InvoiceTabProps {
 
 export function InvoiceTab({ invoice }: InvoiceTabProps) {
   const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
+  const [paymentAmount, setPaymentAmount] = useState(invoice.total.toFixed(2));
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [paymentAccount, setPaymentAccount] = useState('');
+  const [paymentMemo, setPaymentMemo] = useState('');
   const queryClient = useQueryClient();
 
   const markAsSentMutation = useMutation({
@@ -241,14 +261,26 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
               <div className='font-medium'>Manage payments</div>
               <div className='text-sm text-muted-foreground'>
                 Amount due: <span className='font-mono'>${invoice.total.toFixed(2)}</span> —{' '}
-                <span className='text-primary cursor-pointer underline underline-offset-2'>
+                <span
+                  className='text-primary cursor-pointer underline underline-offset-2'
+                  onClick={() => {
+                    return setIsPaymentDialogOpen(true);
+                  }}
+                >
                   Record a payment
                 </span>{' '}
                 manually
               </div>
             </div>
             <div className='ml-auto'>
-              <Button size='sm'>Record a payment</Button>
+              <Button
+                size='sm'
+                onClick={() => {
+                  return setIsPaymentDialogOpen(true);
+                }}
+              >
+                Record a payment
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -309,6 +341,115 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                 {markAsSentMutation.isPending ? 'Marking...' : 'Mark invoice as sent'}
               </Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+        <DialogContent className='sm:max-w-[450px]'>
+          <DialogHeader>
+            <DialogTitle>Record a payment for this invoice</DialogTitle>
+          </DialogHeader>
+          <form className='space-y-4'>
+            <div>
+              <Label>Date</Label>
+              <Popover modal>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant='outline'
+                    className={
+                      'w-full justify-start text-left font-normal' +
+                      (!paymentDate ? ' text-muted-foreground' : '')
+                    }
+                  >
+                    <CalendarIcon className='mr-2 h-4 w-4' />
+                    {paymentDate ? format(paymentDate, 'yyyy-MM-dd') : 'Select date'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className='w-auto p-0 min-w-[300px]' align='start'>
+                  <Calendar
+                    mode='single'
+                    selected={paymentDate}
+                    onSelect={setPaymentDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div>
+              <Label>Amount</Label>
+              <Input
+                type='number'
+                min='0'
+                step='0.01'
+                value={paymentAmount}
+                onChange={(e) => {
+                  return setPaymentAmount(e.target.value);
+                }}
+                placeholder='$0.00'
+              />
+              <div className='text-xs text-green-700 mt-1'>Invoice will be fully paid</div>
+            </div>
+            <div>
+              <Label>Method</Label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger>
+                  <SelectValue placeholder='Select a payment method...' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='credit-card'>Credit Card</SelectItem>
+                  <SelectItem value='bank-transfer'>Bank Transfer</SelectItem>
+                  <SelectItem value='cash'>Cash</SelectItem>
+                  <SelectItem value='check'>Check</SelectItem>
+                  <SelectItem value='other'>Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Account</Label>
+              <Select value={paymentAccount} onValueChange={setPaymentAccount}>
+                <SelectTrigger>
+                  <SelectValue placeholder='Select a payment account...' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='main-checking'>Main Checking</SelectItem>
+                  <SelectItem value='business-savings'>Business Savings</SelectItem>
+                  <SelectItem value='petty-cash'>Petty Cash</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className='text-xs text-muted-foreground mt-1'>
+                Any account into which you deposit and withdraw funds from.
+              </div>
+            </div>
+            <div>
+              <Label>Memo / notes</Label>
+              <Textarea
+                value={paymentMemo}
+                onChange={(e) => {
+                  return setPaymentMemo(e.target.value);
+                }}
+                placeholder='Optional notes about this payment...'
+              />
+            </div>
+          </form>
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => {
+                return setIsPaymentDialogOpen(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type='submit'
+              disabled={!paymentDate || !paymentAmount || !paymentMethod || !paymentAccount}
+              onClick={() => {
+                return setIsPaymentDialogOpen(false);
+              }}
+            >
+              Submit
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
