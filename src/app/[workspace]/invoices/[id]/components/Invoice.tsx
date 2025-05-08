@@ -132,14 +132,6 @@ export function Invoice({ invoice }: InvoiceProps) {
                 )}
               </div>
             </div>
-            <div className='text-right'>
-              <h3 className='text-sm font-medium text-gray-900'>Invoice Details</h3>
-              <div className='mt-2 text-sm text-gray-500'>
-                <p>Invoice #{invoice.invoiceNumber}</p>
-                <p>Issue Date: {new Date(invoice.issueDate).toLocaleDateString()}</p>
-                <p>Due Date: {new Date(invoice.dueDate).toLocaleDateString()}</p>
-              </div>
-            </div>
           </div>
         </div>
         <div className='text-right space-y-1 text-sm'>
