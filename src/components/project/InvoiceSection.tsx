@@ -170,6 +170,38 @@ type InvoiceSectionProps = {
   dueDate: Date | null;
   setDueDate: (date: Date | null) => void;
   onClose: () => void;
+  existingInvoice?: {
+    _id: string;
+    client: {
+      _id: string;
+      user: {
+        name: string;
+        email: string;
+      };
+    };
+    items: Array<{
+      name: string;
+      description: string;
+      quantity: number;
+      price: number;
+      discount: number;
+      tax: number;
+    }>;
+    total: number;
+    status: string;
+    dueDate: string;
+    notes?: string;
+    currency: string;
+    taxRate: number;
+    taxId?: string;
+    showTaxId: boolean;
+    requireDeposit: boolean;
+    depositPercentage: number;
+    discount: number;
+    discountAmount: number;
+    subtotal: number;
+    taxAmount: number;
+  };
 };
 
 export default function InvoiceSection({
@@ -183,6 +215,7 @@ export default function InvoiceSection({
   dueDate,
   setDueDate,
   onClose,
+  existingInvoice,
 }: InvoiceSectionProps) {
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
   const [openAccordionItems, setOpenAccordionItems] = useState<string[]>(['client-info']);
@@ -258,18 +291,20 @@ export default function InvoiceSection({
         status: 'draft',
       };
 
-      // Make API call to create invoice
-      const response = await newRequest.post('/invoices', invoiceData);
+      // Make API call to create or update invoice
+      const response = existingInvoice
+        ? await newRequest.put(`/invoices/${existingInvoice._id}`, invoiceData)
+        : await newRequest.post('/invoices', invoiceData);
 
       if (response.data.status === 'success') {
-        toast.success('Invoice saved as draft');
+        toast.success(existingInvoice ? 'Invoice updated successfully' : 'Invoice saved as draft');
         onClose();
       } else {
-        throw new Error(response.data.message || 'Failed to save invoice as draft');
+        throw new Error(response.data.message || 'Failed to save invoice');
       }
     } catch (error: any) {
-      console.error('Error saving invoice as draft:', error);
-      toast.error(error.message || 'Failed to save invoice as draft');
+      console.error('Error saving invoice:', error);
+      toast.error(error.message || 'Failed to save invoice');
     } finally {
       setIsGeneratingInvoice(false);
     }
@@ -315,17 +350,21 @@ export default function InvoiceSection({
         status: 'open',
       };
 
-      // Make API call to create invoice
-      const response = await newRequest.post('/invoices', invoiceData);
+      // Make API call to create or update invoice
+      const response = existingInvoice
+        ? await newRequest.put(`/invoices/${existingInvoice._id}`, invoiceData)
+        : await newRequest.post('/invoices', invoiceData);
 
       if (response.data.status === 'success') {
-        toast.success('Invoice created successfully');
+        toast.success(
+          existingInvoice ? 'Invoice updated successfully' : 'Invoice created successfully',
+        );
         onClose();
       } else {
         throw new Error(response.data.message || 'Failed to create invoice');
       }
     } catch (error: any) {
-      console.error('Error generating invoice:', error);
+      console.error('Error creating invoice:', error);
       toast.error(error.message || 'Failed to create invoice');
     } finally {
       setIsGeneratingInvoice(false);

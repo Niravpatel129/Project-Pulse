@@ -11,39 +11,84 @@ import { InvoiceSettings, Item, Section } from './types';
 type ProjectManagementProps = {
   onClose: () => void;
   initialStatus?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  existingInvoice?: {
+    _id: string;
+    client: {
+      _id: string;
+      user: {
+        name: string;
+        email: string;
+      };
+    };
+    items: Array<{
+      name: string;
+      description: string;
+      quantity: number;
+      price: number;
+      discount: number;
+      tax: number;
+    }>;
+    total: number;
+    status: string;
+    dueDate: string;
+    notes?: string;
+    currency: string;
+    taxRate: number;
+    taxId?: string;
+    showTaxId: boolean;
+    requireDeposit: boolean;
+    depositPercentage: number;
+    discount: number;
+    discountAmount: number;
+    subtotal: number;
+    taxAmount: number;
+  };
 };
 
 export default function ProjectManagement({
   onClose,
   initialStatus = 'draft',
+  existingInvoice,
 }: ProjectManagementProps) {
   const [activeSection, setActiveSection] = useState<Section>('items');
-  const [selectedClient, setSelectedClient] = useState('');
-  const [items, setItems] = useState<Item[]>([]);
-  const [projectCurrency, setProjectCurrency] = useState('USD');
+  const [selectedClient, setSelectedClient] = useState(existingInvoice?.client?._id || '');
+  const [items, setItems] = useState<Item[]>(
+    existingInvoice?.items.map((item) => {
+      return {
+        id: Math.random().toString(36).substr(2, 9),
+        name: item.name,
+        description: item.description,
+        quantity: item.quantity.toString(),
+        price: item.price.toString(),
+      };
+    }) || [],
+  );
+  const [projectCurrency, setProjectCurrency] = useState(existingInvoice?.currency || 'USD');
   const { clients } = useClients();
 
   // Workspace tax settings would normally be loaded from a global state or context
   // For demo purposes, we're initializing with default values
   const [workspaceTaxSettings, setWorkspaceTaxSettings] = useState({
-    defaultTaxRate: 20,
-    taxId: '',
+    defaultTaxRate: existingInvoice?.taxRate || 20,
+    taxId: existingInvoice?.taxId || '',
   });
 
   // Project-specific invoice settings
   const [invoiceSettings, setInvoiceSettings] = useState<InvoiceSettings>({
-    requireDeposit: false,
-    depositPercentage: 50,
-    defaultTaxRate: workspaceTaxSettings.defaultTaxRate, // Initialize from workspace settings
-    taxId: workspaceTaxSettings.taxId, // Initialize from workspace settings
+    requireDeposit: existingInvoice?.requireDeposit || false,
+    depositPercentage: existingInvoice?.depositPercentage || 50,
+    defaultTaxRate: existingInvoice?.taxRate || workspaceTaxSettings.defaultTaxRate,
+    taxId: existingInvoice?.taxId || workspaceTaxSettings.taxId,
     allowDiscount: true,
-    defaultDiscountRate: 0,
-    invoiceNotes: '',
+    defaultDiscountRate: existingInvoice?.discount || 0,
+    invoiceNotes: existingInvoice?.notes || '',
     teamNotes: '',
   });
 
   const [dueDate, setDueDate] = useState<Date | null>(
-    new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Default to 30 days from now
+    existingInvoice?.dueDate
+      ? new Date(existingInvoice.dueDate)
+      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   );
 
   // Handle workspace tax settings update
@@ -159,6 +204,7 @@ export default function ProjectManagement({
             dueDate={dueDate}
             setDueDate={setDueDate}
             onClose={onClose}
+            existingInvoice={existingInvoice}
           />
         )}
       </div>

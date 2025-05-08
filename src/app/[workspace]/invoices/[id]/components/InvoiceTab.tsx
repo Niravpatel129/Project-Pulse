@@ -1,5 +1,5 @@
-import { Invoice } from '@/api/models';
 import { SendInvoiceDialog } from '@/components/invoice/SendInvoiceDialog';
+import ProjectManagement from '@/components/project/ProjectManagement';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -64,22 +64,115 @@ interface Payment {
   createdBy?: { _id: string; name: string };
 }
 
-interface ExtendedInvoice extends Invoice {
+type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'unpaid' | 'open';
+
+interface InvoiceItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  discount: number;
+  tax: number;
+}
+
+interface InvoiceClient {
+  name: string;
+  email: string;
+  phone: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    country: string;
+    zip: string;
+  };
+  shippingAddress: {
+    street: string;
+    city: string;
+    state: string;
+    country: string;
+    zip: string;
+  };
+  taxId: string;
+  website: string;
+}
+
+interface ExtendedInvoice {
   _id: string;
+  id: string;
+  invoiceNumber: string;
+  clientName: string;
+  clientId: string;
+  status: InvoiceStatus;
+  items: InvoiceItem[];
+  subtotal: number;
+  discount: number;
+  tax: number;
+  total: number;
+  dueDate: string;
+  issueDate: string;
+  createdAt: string;
+  updatedAt: string;
+  notes: string;
+  terms: string;
+  paymentMethod: string;
+  paymentDate: string | null;
+  currency: string;
+  createdBy: string;
+  requireDeposit: boolean;
+  depositPercentage: number;
+  teamNotes: string;
+  client: InvoiceClient;
   payments?: Payment[];
 }
+
+type ProjectManagementInvoice = {
+  _id: string;
+  client: {
+    _id: string;
+    user: {
+      name: string;
+      email: string;
+    };
+  };
+  items: Array<{
+    name: string;
+    description: string;
+    quantity: number;
+    price: number;
+    discount: number;
+    tax: number;
+  }>;
+  total: number;
+  status: string;
+  dueDate: string;
+  notes: string;
+  currency: string;
+  taxRate: number;
+  taxId: string;
+  showTaxId: boolean;
+  requireDeposit: boolean;
+  depositPercentage: number;
+  discount: number;
+  discountAmount: number;
+  subtotal: number;
+  taxAmount: number;
+};
 
 interface InvoiceTabProps {
   invoice: ExtendedInvoice;
 }
 
 export function InvoiceTab({ invoice }: InvoiceTabProps) {
+  console.log('🚀 invoice:', invoice);
   const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
   const [isEditPaymentDialogOpen, setIsEditPaymentDialogOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isBusinessSettingsOpen, setIsBusinessSettingsOpen] = useState(false);
+  const [isEditInvoiceOpen, setIsEditInvoiceOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
@@ -274,6 +367,62 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
     setIsReceiptDialogOpen(true);
   };
 
+  // Transform invoice data to match SendInvoiceDialog's expected format
+  const transformForSendDialog = () => {
+    return {
+      _id: invoice._id,
+      invoiceNumber: invoice.invoiceNumber,
+      client: invoice.client
+        ? {
+            _id: invoice.clientId,
+            user: {
+              name: invoice.clientName,
+              email: invoice.client.email,
+            },
+          }
+        : null,
+      status: invoice.status,
+    };
+  };
+
+  // Transform invoice data to match ProjectManagement expected format
+  const transformForProjectManagement = (): ProjectManagementInvoice => {
+    return {
+      _id: invoice._id,
+      client: {
+        _id: invoice.clientId,
+        user: {
+          name: invoice.clientName,
+          email: invoice.client.email,
+        },
+      },
+      items: invoice.items.map((item) => {
+        return {
+          name: item.description,
+          description: item.description,
+          quantity: item.quantity,
+          price: item.unitPrice,
+          discount: item.discount || 0,
+          tax: item.tax || 0,
+        };
+      }),
+      total: invoice.total,
+      status: invoice.status,
+      dueDate: invoice.dueDate,
+      notes: invoice.notes || '',
+      currency: invoice.currency,
+      taxRate: invoice.tax || 0,
+      taxId: invoice.client.taxId || '',
+      showTaxId: !!invoice.client.taxId,
+      requireDeposit: invoice.requireDeposit || false,
+      depositPercentage: invoice.depositPercentage || 0,
+      discount: invoice.discount || 0,
+      discountAmount: invoice.discount || 0,
+      subtotal: invoice.subtotal,
+      taxAmount: invoice.tax || 0,
+    };
+  };
+
   return (
     <>
       {/* Header */}
@@ -364,7 +513,13 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align='end'>
-                <DropdownMenuItem>Edit</DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    return setIsEditInvoiceOpen(true);
+                  }}
+                >
+                  Edit
+                </DropdownMenuItem>
                 <DropdownMenuItem>Delete</DropdownMenuItem>
                 <DropdownMenuItem>Download PDF</DropdownMenuItem>
               </DropdownMenuContent>
@@ -604,7 +759,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
       <SendInvoiceDialog
         open={isSendDialogOpen}
         onOpenChange={setIsSendDialogOpen}
-        invoice={invoice}
+        invoice={transformForSendDialog()}
       />
 
       <Dialog
@@ -1063,6 +1218,19 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
               Save Changes
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Invoice Dialog */}
+      <Dialog open={isEditInvoiceOpen} onOpenChange={setIsEditInvoiceOpen}>
+        <DialogContent className='max-w-[90vw] h-[90vh] p-0'>
+          <DialogTitle className='sr-only'>Edit Invoice</DialogTitle>
+          <ProjectManagement
+            onClose={() => {
+              return setIsEditInvoiceOpen(false);
+            }}
+            existingInvoice={transformForProjectManagement()}
+          />
         </DialogContent>
       </Dialog>
     </>
