@@ -263,3 +263,14 @@
 [data-radix-scroll-area-viewport] {
   overscroll-behavior: contain;
 }
+
+/* Remove global step attribute */
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

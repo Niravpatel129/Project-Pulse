@@ -346,7 +346,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
       </Dialog>
 
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-        <DialogContent className='sm:max-w-[450px]'>
+        <DialogContent className='sm:max-w-[450px]' forceMount>
           <DialogHeader>
             <DialogTitle>Record a payment for this invoice</DialogTitle>
           </DialogHeader>
@@ -381,7 +381,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
               <Input
                 type='number'
                 min='0'
-                step='0.01'
+                step='any'
                 value={paymentAmount}
                 onChange={(e) => {
                   return setPaymentAmount(e.target.value);
@@ -396,7 +396,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                 <SelectTrigger>
                   <SelectValue placeholder='Select a payment method...' />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className='z-[100]'>
                   <SelectItem value='credit-card'>Credit Card</SelectItem>
                   <SelectItem value='bank-transfer'>Bank Transfer</SelectItem>
                   <SelectItem value='cash'>Cash</SelectItem>
@@ -411,7 +411,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                 <SelectTrigger>
                   <SelectValue placeholder='Select a payment account...' />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className='z-[100]'>
                   <SelectItem value='main-checking'>Main Checking</SelectItem>
                   <SelectItem value='business-savings'>Business Savings</SelectItem>
                   <SelectItem value='petty-cash'>Petty Cash</SelectItem>
