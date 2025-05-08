@@ -102,7 +102,7 @@ interface ActivitiesResponse {
 }
 
 const statusTabs = [
-  { key: 'open', label: 'open' },
+  { key: 'open', label: 'Open' },
   { key: 'draft', label: 'Draft' },
   { key: 'all', label: 'All invoices' },
 ];
@@ -371,7 +371,7 @@ export default function InvoicesList() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value='all'>All statuses</SelectItem>
-                    <SelectItem value='open'>open</SelectItem>
+                    <SelectItem value='open'>Open</SelectItem>
                     <SelectItem value='draft'>Draft</SelectItem>
                     <SelectItem value='paid'>Paid</SelectItem>
                     <SelectItem value='overdue'>Overdue</SelectItem>
