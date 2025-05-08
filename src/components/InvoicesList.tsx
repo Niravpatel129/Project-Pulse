@@ -34,9 +34,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import { ChevronDown, DownloadCloud, LinkIcon, Plus, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -530,7 +531,20 @@ export default function InvoicesList() {
                         >
                           <TableCell className='py-4'>{getStatusBadge(invoice.status)}</TableCell>
                           <TableCell className='text-base text-gray-700 py-4'>
-                            {format(new Date(invoice.dueDate), 'MMM d, yyyy')}
+                            <TooltipProvider>
+                              <Tooltip delayDuration={0}>
+                                <TooltipTrigger asChild>
+                                  <span>{format(new Date(invoice.createdAt), 'MMM d, yyyy')}</span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>
+                                    {formatDistanceToNow(new Date(invoice.createdAt), {
+                                      addSuffix: true,
+                                    })}
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </TableCell>
                           <TableCell className='text-base font-medium text-gray-900 py-4'>
                             {invoice.invoiceNumber}
