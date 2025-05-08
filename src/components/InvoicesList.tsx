@@ -315,6 +315,7 @@ export default function InvoicesList() {
       overdue: 'bg-red-100 text-red-800',
       cancelled: 'bg-gray-100 text-gray-800',
       open: 'bg-yellow-100 text-yellow-800',
+      sent: 'bg-blue-100 text-blue-800',
     };
     return (
       <Badge className={statusColors[status as keyof typeof statusColors] || 'bg-gray-100'}>
