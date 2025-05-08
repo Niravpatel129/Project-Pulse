@@ -507,6 +507,7 @@ export default function InvoicesList() {
                   </TableHeader>
                   <TableBody>
                     {paginatedInvoices.map((invoice) => {
+                      console.log('🚀 invoice:', invoice);
                       return (
                         <TableRow
                           key={invoice._id}
