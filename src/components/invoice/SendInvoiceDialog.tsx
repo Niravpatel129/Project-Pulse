@@ -50,8 +50,20 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-[700px]'>
+    <Dialog
+      open={open}
+      onOpenChange={(newOpen) => {
+        if (!newOpen) {
+          onOpenChange(false);
+        }
+      }}
+    >
+      <DialogContent
+        className='sm:max-w-[700px]'
+        onClick={(e) => {
+          return e.stopPropagation();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Send Invoice</DialogTitle>
           <DialogDescription>
@@ -96,8 +108,10 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
         <DialogFooter>
           <Button
             variant='outline'
-            onClick={() => {
-              return onOpenChange(false);
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onOpenChange(false);
             }}
           >
             Close
