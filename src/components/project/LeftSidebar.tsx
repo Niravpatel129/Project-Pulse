@@ -40,6 +40,51 @@ export default function LeftSidebar({
   const [hasAttemptedToLeave, setHasAttemptedToLeave] = useState(false);
   const [visitedSections, setVisitedSections] = useState<Set<Section>>(new Set(['items']));
 
+  // Calculate totals
+  const calculateTotals = () => {
+    let subtotal = 0;
+    let totalTaxAmount = 0;
+    let totalDiscountAmount = 0;
+
+    items.forEach((item) => {
+      // Parse price and quantity, handling comma-separated numbers
+      const price = parseFloat(item.price.replace(/,/g, ''));
+      const quantity = parseFloat(item.quantity || '1');
+
+      // Calculate item subtotal
+      const itemSubtotal = price * quantity;
+
+      // Calculate discount first (if any)
+      let discountedAmount = itemSubtotal;
+      if (item.discount && item.discount > 0) {
+        const discountAmount = itemSubtotal * (item.discount / 100);
+        totalDiscountAmount += discountAmount;
+        discountedAmount = itemSubtotal - discountAmount;
+      }
+
+      // Calculate tax on the discounted amount (if taxable)
+      if (item.taxable && item.taxRate && item.taxRate > 0) {
+        const taxAmount = discountedAmount * (item.taxRate / 100);
+        totalTaxAmount += taxAmount;
+      }
+
+      subtotal += itemSubtotal;
+    });
+
+    // Calculate final total
+    const finalTotal = subtotal + totalTaxAmount - totalDiscountAmount;
+
+    // Format all numbers to 2 decimal places
+    return {
+      subtotal: subtotal.toFixed(2),
+      tax: totalTaxAmount.toFixed(2),
+      discount: totalDiscountAmount.toFixed(2),
+      total: finalTotal.toFixed(2),
+    };
+  };
+
+  const totals = calculateTotals();
+
   // Update visited sections when activeSection changes
   useEffect(() => {
     setVisitedSections((prev) => {
@@ -353,7 +398,7 @@ export default function LeftSidebar({
                 <TooltipTrigger asChild>
                   <span className='text-[#111827] text-base font-medium border-b border-dashed border-gray-400 cursor-help'>
                     {getCurrencySymbol(currency)}
-                    {total}
+                    {totals.total}
                   </span>
                 </TooltipTrigger>
                 <TooltipContent className='bg-white text-gray-900 border border-gray-200 shadow-md rounded-md p-3'>
@@ -362,28 +407,28 @@ export default function LeftSidebar({
                       <span className='text-[#6B7280] text-xs'>Subtotal</span>
                       <span className='text-[#111827] text-xs font-medium'>
                         {getCurrencySymbol(currency)}
-                        {total}
+                        {totals.subtotal}
                       </span>
                     </div>
                     <div className='flex justify-between items-center'>
                       <span className='text-[#6B7280] text-xs'>Tax</span>
                       <span className='text-[#111827] text-xs font-medium'>
                         {getCurrencySymbol(currency)}
-                        {totalTax}
+                        {totals.tax}
                       </span>
                     </div>
                     <div className='flex justify-between items-center'>
                       <span className='text-[#6B7280] text-xs'>Discount</span>
                       <span className='text-green-600 text-xs font-medium'>
                         -{getCurrencySymbol(currency)}
-                        {totalDiscount}
+                        {totals.discount}
                       </span>
                     </div>
                     <div className='pt-1 border-t border-gray-200 flex justify-between items-center'>
                       <span className='text-[#111827] text-xs font-medium'>Total</span>
                       <span className='text-[#111827] text-xs font-bold'>
                         {getCurrencySymbol(currency)}
-                        {total}
+                        {totals.total}
                       </span>
                     </div>
                   </div>

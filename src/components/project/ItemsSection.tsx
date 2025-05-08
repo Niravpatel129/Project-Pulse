@@ -1135,8 +1135,19 @@ export default function ItemsSection({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05, duration: 0.2 }}
                     key={item.id}
-                    className='border border-[#E5E7EB] rounded-xl p-4 transition-all duration-200 ease-in-out hover:border-blue-300 group bg-white shadow-sm hover:shadow-md hover:translate-y-[-1px]'
+                    className='border border-[#E5E7EB] rounded-xl p-4 transition-all duration-200 ease-in-out hover:border-blue-300 group bg-white shadow-sm hover:shadow-md hover:translate-y-[-1px] relative'
                   >
+                    {/* Remove button */}
+                    <button
+                      onClick={(e) => {
+                        return handleRemoveItem(item.id, e);
+                      }}
+                      className='absolute top-2 right-2 p-1.5 rounded-full bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all duration-200'
+                      aria-label='Remove item'
+                    >
+                      <X size={16} />
+                    </button>
+
                     <div className='flex justify-between items-start'>
                       <div
                         className='flex items-start flex-1 cursor-pointer'
@@ -1182,6 +1193,29 @@ export default function ItemsSection({
                                     Discount: {item.discount}%
                                   </div>
                                 )}
+                              </div>
+                              <div className='mt-3 flex items-center justify-between'>
+                                <div className='flex items-center gap-4'>
+                                  <div className='flex items-center gap-1'>
+                                    <span className='text-sm text-gray-500'>Qty:</span>
+                                    <span className='text-sm font-medium text-gray-900'>
+                                      {item.quantity}
+                                    </span>
+                                  </div>
+                                  <div className='flex items-center gap-2'>
+                                    <span className='text-sm text-gray-600'>
+                                      {getCurrencySymbol(item.currency || projectCurrency)}
+                                      {item.price}
+                                      <span className='text-gray-400 ml-1'>/unit</span>
+                                    </span>
+                                    {parseInt(item.quantity) > 1 && (
+                                      <span className='text-sm font-medium text-gray-900'>
+                                        Total: {getCurrencySymbol(item.currency || projectCurrency)}
+                                        {calculateItemTotal(item.price, item.quantity)}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
