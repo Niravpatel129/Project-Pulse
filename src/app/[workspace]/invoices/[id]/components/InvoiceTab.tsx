@@ -93,7 +93,15 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
               <span className='text-xs text-muted-foreground font-medium mb-0.5'>Status</span>
               <Badge
                 variant={getStatusColor(invoice.status)}
-                className='py-1 px-2 rounded-none capitalize'
+                className={`px-3 rounded capitalize ${
+                  invoice.status.toLowerCase() === 'paid'
+                    ? 'bg-green-100 text-green-700 hover:bg-green-100'
+                    : invoice.status.toLowerCase() === 'overdue'
+                    ? 'bg-red-100 text-red-700 hover:bg-red-100'
+                    : invoice.status.toLowerCase() === 'sent'
+                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-100'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
+                }`}
               >
                 {invoice.status}
               </Badge>
