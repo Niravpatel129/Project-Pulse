@@ -506,7 +506,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
             >
               Business Settings
             </Button>
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Button variant='outline' size='sm' className='px-3'>
                   <MoreHorizontal className='w-4 h-4' />
