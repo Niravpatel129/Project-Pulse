@@ -1,34 +1,68 @@
 'use client';
 
 import { InvoicesTable } from '@/app/[workspace]/invoices/components/invoices-table';
-import { useInvoices } from '@/app/[workspace]/invoices/hooks/useInvoices';
 import { Button } from '@/components/ui/button';
+import { useInvoices } from '@/contexts';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { LucidePiggyBank, PlusIcon, ZapIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import InvoicesDialog from '../invoices/InvoicesDialog/InvoicesDialog';
 import QuickInvoiceDialog from '../invoices/QuickInvoiceDialog/QuickInvoiceDialog';
 
 export default function ProjectPayments() {
+  const router = useRouter();
   const [isInvoicesDialogOpen, setIsInvoicesDialogOpen] = useState(false);
   const [isQuickInvoiceDialogOpen, setIsQuickInvoiceDialogOpen] = useState(false);
-  const {
-    accountStatus,
-    isAccountStatusLoading,
-    createStripeAccount,
-    invoices,
-    isCreatingAccount,
-  } = useInvoices();
+  const { invoices, isLoading: isInvoicesLoading } = useInvoices();
+  const { workspace, isLoading: isWorkspaceLoading, connectStripe } = useWorkspace();
 
   const handleCreateAccount = async () => {
     try {
-      const data = await createStripeAccount();
-      if (data.onboardingUrl) {
-        window.location.href = data.onboardingUrl;
-      }
+      await connectStripe?.();
     } catch (error) {
       console.error('Error creating Stripe account:', error);
     }
   };
+
+  const handleViewInvoice = (invoiceId: string) => {
+    router.push(`/invoices/${invoiceId}`);
+  };
+
+  const transformedInvoices = invoices?.map((invoice) => {
+    return {
+      _id: invoice.id,
+      invoiceNumber: invoice.invoiceNumber,
+      client: {
+        _id: invoice.clientId,
+        user: {
+          name: invoice.clientName,
+          email: '', // Add email if available in the API model
+        },
+      },
+      items: invoice.items.map((item) => {
+        return {
+          id: item.id,
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          total: item.total,
+          discount: item.discount,
+          tax: item.tax,
+        };
+      }),
+      total: invoice.total,
+      status: invoice.status,
+      dueDate: invoice.dueDate,
+      notes: invoice.notes,
+      currency: invoice.currency || 'USD',
+      createdBy: {
+        _id: invoice.createdBy,
+        name: '', // Add name if available in the API model
+      },
+      createdAt: invoice.createdAt,
+    };
+  });
 
   if (invoices?.length > 0) {
     return (
@@ -56,7 +90,7 @@ export default function ProjectPayments() {
             </Button>
           </div>
         </div>
-        <InvoicesTable invoices={invoices} />
+        <InvoicesTable invoices={transformedInvoices} onViewInvoice={handleViewInvoice} />
         <InvoicesDialog open={isInvoicesDialogOpen} onOpenChange={setIsInvoicesDialogOpen} />
         <QuickInvoiceDialog
           open={isQuickInvoiceDialogOpen}
@@ -73,7 +107,7 @@ export default function ProjectPayments() {
         open={isQuickInvoiceDialogOpen}
         onOpenChange={setIsQuickInvoiceDialogOpen}
       />
-      {isAccountStatusLoading ? (
+      {isWorkspaceLoading || isInvoicesLoading ? (
         <div className='flex justify-center items-center h-[300px]'>
           <div className='animate-pulse space-y-4'>
             <div className='h-16 w-16 bg-gray-200 rounded-full mx-auto'></div>
@@ -100,13 +134,13 @@ export default function ProjectPayments() {
               </p>
 
               <div className='mb-8 flex justify-center gap-2'>
-                {!accountStatus?.chargesEnabled ? (
+                {!workspace?.stripeConnected ? (
                   <Button
                     className='bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md'
                     onClick={handleCreateAccount}
-                    disabled={isCreatingAccount}
+                    disabled={isWorkspaceLoading}
                   >
-                    {isCreatingAccount ? 'Setting up...' : 'Connect Stripe Account'}
+                    {isWorkspaceLoading ? 'Setting up...' : 'Connect Stripe Account'}
                   </Button>
                 ) : (
                   <div className='flex gap-2'>
