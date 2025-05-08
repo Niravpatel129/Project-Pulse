@@ -380,12 +380,16 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
             <div className='ml-auto'>
               <Button
                 size='sm'
-                variant={invoice.status === 'sent' ? 'outline' : 'default'}
+                variant={
+                  invoice.status === 'sent' || invoice.status === 'paid' ? 'outline' : 'default'
+                }
                 onClick={() => {
                   return setIsSendDialogOpen(true);
                 }}
               >
-                {invoice.status === 'sent' ? 'Resend invoice' : 'Send invoice'}
+                {invoice.status === 'sent' || invoice.status === 'paid'
+                  ? 'Resend invoice'
+                  : 'Send invoice'}
               </Button>
             </div>
           </div>

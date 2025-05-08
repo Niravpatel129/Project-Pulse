@@ -200,10 +200,7 @@ export function Invoice({ invoice }: InvoiceProps) {
           )}
           {invoice.paymentDate && (
             <div className='flex justify-between py-2 text-sm text-gray-500 border-b border-gray-200'>
-              <span>
-                Payment on {new Date(invoice.paymentDate).toLocaleDateString()} using{' '}
-                {invoice.paymentMethod}:
-              </span>
+              <span>Payment on {new Date(invoice.paymentDate).toLocaleDateString()}:</span>
               <span>${invoice.total.toFixed(2)}</span>
             </div>
           )}
