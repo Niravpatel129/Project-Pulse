@@ -585,8 +585,15 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
             <div className='flex flex-col'>
               <span className='text-xs text-muted-foreground font-medium mb-0.5'>Business</span>
               <span className='text-muted-foreground text-sm'>
-                <span className='text-primary font-medium cursor-pointer underline underline-offset-2'>
-                  {invoiceSettings?.taxId ? 'Your Business' : 'Set Up Business'}
+                <span
+                  className='text-primary font-medium cursor-pointer underline underline-offset-2'
+                  onClick={() => {
+                    return setIsBusinessSettingsOpen(true);
+                  }}
+                >
+                  {invoiceSettings?.businessName
+                    ? invoiceSettings?.businessName
+                    : 'Set Up Business'}
                 </span>
                 <TooltipProvider>
                   <Tooltip>
