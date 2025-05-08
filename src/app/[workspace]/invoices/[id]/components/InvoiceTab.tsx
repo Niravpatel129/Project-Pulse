@@ -1,6 +1,16 @@
 import { SendInvoiceDialog } from '@/components/invoice/SendInvoiceDialog';
 import ProjectManagement from '@/components/project/ProjectManagement';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -48,6 +58,7 @@ import {
   MoreHorizontal,
   Send,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { BusinessSettings } from './BusinessSettings';
@@ -209,6 +220,9 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
   const { data: invoiceSettings } = useInvoiceSettings();
   const updateInvoiceSettings = useUpdateInvoiceSettings();
   const invoiceRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [invoiceToDelete, setInvoiceToDelete] = useState<string | null>(null);
 
   const markAsSentMutation = useMutation({
     mutationFn: async () => {
@@ -499,6 +513,35 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
     }
   };
 
+  const deleteInvoiceMutation = useMutation({
+    mutationFn: async (invoiceId: string) => {
+      await newRequest.delete(`/invoices/${invoiceId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      toast.success('Invoice deleted successfully');
+      router.push('/');
+    },
+    onError: () => {
+      toast.error('Failed to delete invoice');
+    },
+  });
+
+  const handleDeleteInvoice = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setInvoiceToDelete(invoice._id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteInvoice = () => {
+    if (invoiceToDelete) {
+      deleteInvoiceMutation.mutate(invoiceToDelete);
+      setIsDeleteDialogOpen(false);
+      setInvoiceToDelete(null);
+    }
+  };
+
   return (
     <>
       {/* Header */}
@@ -596,7 +639,12 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                 >
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem>Delete</DropdownMenuItem>
+                <DropdownMenuItem
+                  className='text-base py-2.5 text-red-600'
+                  onClick={handleDeleteInvoice}
+                >
+                  Delete
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDownloadPDF}>Download PDF</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -1223,6 +1271,33 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
           <Invoice invoice={invoice} />
         </div>
       </div>
+
+      {/* Add AlertDialog for delete confirmation */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Invoice</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this invoice? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                return setInvoiceToDelete(null);
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteInvoice}
+              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
