@@ -1,3 +1,13 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -146,6 +156,8 @@ export default function InvoicesList() {
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
   const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [invoiceToDelete, setInvoiceToDelete] = useState<string | null>(null);
 
   // Fetch invoices with React Query
   const {
@@ -253,20 +265,16 @@ export default function InvoicesList() {
   // Handle invoice actions
   const handleDeleteInvoice = async (invoiceId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this invoice?')) {
-      deleteInvoiceMutation.mutate(invoiceId);
+    setInvoiceToDelete(invoiceId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteInvoice = async () => {
+    if (invoiceToDelete) {
+      deleteInvoiceMutation.mutate(invoiceToDelete);
+      setIsDeleteDialogOpen(false);
+      setInvoiceToDelete(null);
     }
-  };
-
-  const handleMarkAsPaid = async (invoiceId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    markAsPaidMutation.mutate(invoiceId);
-  };
-
-  const handleSendInvoice = (invoice: Invoice, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedInvoice(invoice);
-    setIsSendDialogOpen(true);
   };
 
   // Filtered invoices for tab
@@ -813,6 +821,33 @@ export default function InvoicesList() {
           </div>
         </div>
       </div>
+
+      {/* Add AlertDialog for delete confirmation */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Invoice</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this invoice? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                return setInvoiceToDelete(null);
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteInvoice}
+              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
