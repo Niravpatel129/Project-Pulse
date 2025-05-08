@@ -58,8 +58,8 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
   const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
   const [paymentAmount, setPaymentAmount] = useState(invoice.total.toFixed(2));
   const [paymentMethod, setPaymentMethod] = useState('');
-  const [paymentAccount, setPaymentAccount] = useState('');
   const [paymentMemo, setPaymentMemo] = useState('');
+  const [amountTouched, setAmountTouched] = useState(false);
   const queryClient = useQueryClient();
 
   const markAsSentMutation = useMutation({
@@ -83,7 +83,6 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
         date: paymentDate,
         amount: parseFloat(paymentAmount),
         method: paymentMethod,
-        account: paymentAccount,
         memo: paymentMemo,
       });
     },
@@ -404,11 +403,37 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                 step='any'
                 value={paymentAmount}
                 onChange={(e) => {
+                  setAmountTouched(true);
                   return setPaymentAmount(e.target.value);
+                }}
+                onBlur={() => {
+                  return setAmountTouched(true);
                 }}
                 placeholder='$0.00'
               />
-              <div className='text-xs text-green-700 mt-1'>Invoice will be fully paid</div>
+              {amountTouched && (
+                <div
+                  className={`text-xs mt-1 ${
+                    !paymentAmount || isNaN(parseFloat(paymentAmount))
+                      ? 'text-red-600'
+                      : parseFloat(paymentAmount) > invoice.total
+                      ? 'text-yellow-600'
+                      : parseFloat(paymentAmount) === invoice.total
+                      ? 'text-green-700'
+                      : 'text-muted-foreground'
+                  }`}
+                >
+                  {!paymentAmount || isNaN(parseFloat(paymentAmount))
+                    ? 'Amount cannot be blank'
+                    : parseFloat(paymentAmount) > invoice.total
+                    ? `$${(parseFloat(paymentAmount) - invoice.total).toFixed(2)} overpayment`
+                    : parseFloat(paymentAmount) === invoice.total
+                    ? 'Invoice will be fully paid'
+                    : `$${(invoice.total - parseFloat(paymentAmount)).toFixed(
+                        2,
+                      )} remaining after this payment`}
+                </div>
+              )}
             </div>
             <div>
               <Label>Method</Label>
@@ -425,22 +450,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label>Account</Label>
-              <Select value={paymentAccount} onValueChange={setPaymentAccount}>
-                <SelectTrigger>
-                  <SelectValue placeholder='Select a payment account...' />
-                </SelectTrigger>
-                <SelectContent className='z-[100]'>
-                  <SelectItem value='main-checking'>Main Checking</SelectItem>
-                  <SelectItem value='business-savings'>Business Savings</SelectItem>
-                  <SelectItem value='petty-cash'>Petty Cash</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className='text-xs text-muted-foreground mt-1'>
-                Any account into which you deposit and withdraw funds from.
-              </div>
-            </div>
+
             <div>
               <Label>Memo / notes</Label>
               <Textarea
@@ -464,11 +474,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
             <Button
               type='submit'
               disabled={
-                !paymentDate ||
-                !paymentAmount ||
-                !paymentMethod ||
-                !paymentAccount ||
-                recordPaymentMutation.isPending
+                !paymentDate || !paymentAmount || !paymentMethod || recordPaymentMutation.isPending
               }
               onClick={(e) => {
                 e.preventDefault();
