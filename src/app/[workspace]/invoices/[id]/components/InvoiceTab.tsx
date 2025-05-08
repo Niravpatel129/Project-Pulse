@@ -516,21 +516,6 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                           >
                             Remove payment
                           </Button>
-                          {idx === payments.length - 1 && (
-                            <>
-                              <span className='text-gray-400'>·</span>
-                              <Button
-                                variant='link'
-                                size='sm'
-                                className='p-0 h-auto'
-                                onClick={() => {
-                                  return setIsPaymentDialogOpen(true);
-                                }}
-                              >
-                                Add another payment
-                              </Button>
-                            </>
-                          )}
                         </div>
                       </div>
                     );
