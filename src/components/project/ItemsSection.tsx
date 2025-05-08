@@ -53,10 +53,12 @@ type ItemWithType = Item & { type?: string };
 
 type ItemsSectionProps = {
   items: Item[];
-  setItems: (items: Item[]) => void;
+  setItems: React.Dispatch<React.SetStateAction<Item[]>>;
   setActiveSection: React.Dispatch<React.SetStateAction<Section>>;
   handleRemoveItem: (id: string, e?: React.MouseEvent) => void;
   projectCurrency: string;
+  onChatClick?: () => void;
+  onSectionChange?: (section: number) => void;
 };
 
 export default function ItemsSection({
@@ -65,6 +67,8 @@ export default function ItemsSection({
   setActiveSection,
   handleRemoveItem,
   projectCurrency,
+  onChatClick,
+  onSectionChange,
 }: ItemsSectionProps) {
   // Replace dummy notification function with toast
   const showNotification = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
@@ -615,12 +619,12 @@ export default function ItemsSection({
 
   return (
     <div className='flex flex-col h-full relative bg-[#FAFAFA]'>
-      <div className='absolute inset-0 pt-6 px-8 pb-16 overflow-y-auto'>
-        <div className='mb-6'>
-          <div className='flex justify-between items-center mb-4'>
+      <div className='absolute inset-0 pt-4 px-6 pb-16 overflow-y-auto'>
+        <div className='mb-4'>
+          <div className='flex justify-between items-center mb-3'>
             <h2 className='text-lg font-semibold text-[#111827]'>Items</h2>
           </div>
-          <p className='text-[#6B7280] text-sm leading-5 mb-6'>
+          <p className='text-[#6B7280] text-sm leading-5 mb-4'>
             Add items to your project. Include name, description, and price for each item.
           </p>
 
@@ -1611,10 +1615,13 @@ export default function ItemsSection({
       {/* Footer */}
       <SectionFooter
         onContinue={() => {
-          setActiveSection('client');
+          return setActiveSection('client');
         }}
         currentSection={1}
         totalSections={4}
+        isDisabled={items.length === 0}
+        disabledTooltip='Please add at least one item to continue'
+        onChatClick={onChatClick}
       />
     </div>
   );

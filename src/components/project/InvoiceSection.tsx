@@ -203,6 +203,8 @@ type InvoiceSectionProps = {
     subtotal: number;
     taxAmount: number;
   };
+  onChatClick?: () => void;
+  onSectionChange?: (section: number) => void;
 };
 
 export default function InvoiceSection({
@@ -217,6 +219,8 @@ export default function InvoiceSection({
   setDueDate,
   onClose,
   existingInvoice,
+  onChatClick,
+  onSectionChange,
 }: InvoiceSectionProps) {
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
   const [openAccordionItems, setOpenAccordionItems] = useState<string[]>(['client-info']);
@@ -595,6 +599,7 @@ export default function InvoiceSection({
           onClick: handleSaveAsDraft,
           disabled: isGeneratingInvoice,
         }}
+        onChatClick={onChatClick}
       />
     </div>
   );

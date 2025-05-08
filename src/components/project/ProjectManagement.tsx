@@ -54,6 +54,7 @@ export default function ProjectManagement({
   existingInvoice,
 }: ProjectManagementProps) {
   const [activeSection, setActiveSection] = useState<Section>('items');
+  const [showRightSidebar, setShowRightSidebar] = useState(false);
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [selectedClient, setSelectedClient] = useState(existingInvoice?.client?._id || '');
   const [items, setItems] = useState<Item[]>(
@@ -192,6 +193,13 @@ export default function ProjectManagement({
             setActiveSection={setActiveSection}
             handleRemoveItem={handleRemoveItem}
             projectCurrency={projectCurrency}
+            onChatClick={() => {
+              return setShowRightSidebar(!showRightSidebar);
+            }}
+            onSectionChange={(section) => {
+              const sections: Section[] = ['items', 'client', 'invoice'];
+              setActiveSection(sections[section - 1]);
+            }}
           />
         )}
 
@@ -201,6 +209,13 @@ export default function ProjectManagement({
             selectedClient={selectedClient}
             setSelectedClient={setSelectedClient}
             setActiveSection={setActiveSection}
+            onChatClick={() => {
+              return setShowRightSidebar(!showRightSidebar);
+            }}
+            onSectionChange={(section) => {
+              const sections: Section[] = ['items', 'client', 'invoice'];
+              setActiveSection(sections[section - 1]);
+            }}
           />
         )}
 
@@ -221,6 +236,13 @@ export default function ProjectManagement({
             setDueDate={setDueDate}
             onClose={onClose}
             existingInvoice={existingInvoice}
+            onChatClick={() => {
+              return setShowRightSidebar(!showRightSidebar);
+            }}
+            onSectionChange={(section) => {
+              const sections: Section[] = ['items', 'client', 'invoice'];
+              setActiveSection(sections[section - 1]);
+            }}
           />
         )}
       </div>
@@ -232,81 +254,46 @@ export default function ProjectManagement({
         </div>
       )}
 
-      {/* Mobile Bottom Navigation */}
-      {isMobile && (
-        <div className='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-2 flex justify-around items-center'>
-          <button
-            onClick={() => {
-              return setActiveSection('items');
+      {/* Mobile Chat Panel */}
+      {isMobile && showRightSidebar && (
+        <div
+          className='fixed inset-0 bg-black/50 z-40'
+          onClick={() => {
+            return setShowRightSidebar(false);
+          }}
+        >
+          <div
+            className='absolute inset-0 bg-white flex flex-col'
+            onClick={(e) => {
+              return e.stopPropagation();
             }}
-            className={`flex flex-col items-center p-2 ${
-              activeSection === 'items' ? 'text-blue-600' : 'text-gray-600'
-            }`}
           >
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              className='h-6 w-6'
-              fill='none'
-              viewBox='0 0 24 24'
-              stroke='currentColor'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'
-              />
-            </svg>
-            <span className='text-xs mt-1'>Items</span>
-          </button>
-          <button
-            onClick={() => {
-              return setActiveSection('client');
-            }}
-            className={`flex flex-col items-center p-2 ${
-              activeSection === 'client' ? 'text-blue-600' : 'text-gray-600'
-            }`}
-          >
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              className='h-6 w-6'
-              fill='none'
-              viewBox='0 0 24 24'
-              stroke='currentColor'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
-              />
-            </svg>
-            <span className='text-xs mt-1'>Client</span>
-          </button>
-          <button
-            onClick={() => {
-              return setActiveSection('invoice');
-            }}
-            className={`flex flex-col items-center p-2 ${
-              activeSection === 'invoice' ? 'text-blue-600' : 'text-gray-600'
-            }`}
-          >
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              className='h-6 w-6'
-              fill='none'
-              viewBox='0 0 24 24'
-              stroke='currentColor'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
-              />
-            </svg>
-            <span className='text-xs mt-1'>Invoice</span>
-          </button>
+            <div className='flex items-center justify-between p-4 border-b'>
+              <h2 className='text-lg font-semibold'>Chat</h2>
+              <button
+                onClick={() => {
+                  return setShowRightSidebar(false);
+                }}
+                className='p-2 hover:bg-gray-100 rounded-full'
+              >
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  className='h-5 w-5'
+                  viewBox='0 0 20 20'
+                  fill='currentColor'
+                >
+                  <path
+                    fillRule='evenodd'
+                    d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z'
+                    clipRule='evenodd'
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className='flex-1 overflow-y-auto pb-20'>
+              <RightSidebar />
+            </div>
+          </div>
         </div>
       )}
     </div>

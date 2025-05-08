@@ -23,7 +23,10 @@ export default function ProjectDialog() {
               New Project
             </Button>
           </DialogTrigger>
-          <DialogContent className='!overflow-hidden' forceMount>
+          <DialogContent
+            className='!overflow-hidden p-0 max-w-none w-full h-full md:max-w-[90vw] md:h-[90vh] md:rounded-lg'
+            forceMount
+          >
             <DialogTitle className='sr-only'>Project Management</DialogTitle>
             <ProjectManagement
               onClose={() => {

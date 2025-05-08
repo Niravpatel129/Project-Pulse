@@ -32,6 +32,8 @@ type ClientSectionProps = {
   selectedClient: string;
   setSelectedClient: (clientId: string) => void;
   setActiveSection: React.Dispatch<React.SetStateAction<Section>>;
+  onChatClick?: () => void;
+  onSectionChange?: (section: number) => void;
 };
 
 export default function ClientSection({
@@ -39,6 +41,8 @@ export default function ClientSection({
   selectedClient,
   setSelectedClient,
   setActiveSection,
+  onChatClick,
+  onSectionChange,
 }: ClientSectionProps) {
   const queryClient = useQueryClient();
   const { clients: apiClients, isLoading: isLoadingClients } = useClients();
@@ -286,12 +290,12 @@ export default function ClientSection({
 
   return (
     <div className='flex flex-col h-full relative bg-[#FAFAFA]'>
-      <div className='absolute inset-0 pt-6 px-8 pb-16 overflow-y-auto'>
-        <div className='mb-8'>
-          <div className='flex justify-between items-center mb-4'>
+      <div className='absolute inset-0 pt-4 px-6 pb-16 overflow-y-auto'>
+        <div className='mb-4'>
+          <div className='flex justify-between items-center mb-3'>
             <h2 className='text-lg font-semibold text-[#111827]'>Client Information</h2>
           </div>
-          <p className='text-[#6B7280] text-sm leading-5 mb-6'>
+          <p className='text-[#6B7280] text-sm leading-5 mb-4'>
             Select an existing client or add a new one for this project. This information will be
             used on the invoice.
           </p>
@@ -987,6 +991,7 @@ export default function ClientSection({
         totalSections={4}
         isDisabled={!selectedClient}
         disabledTooltip='Please select a client to continue'
+        onChatClick={onChatClick}
       />
     </div>
   );
