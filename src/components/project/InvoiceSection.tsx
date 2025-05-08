@@ -312,7 +312,7 @@ export default function InvoiceSection({
         subtotal: subtotal,
         taxAmount: taxAmount,
         total: total,
-        status: 'sent',
+        status: 'open',
       };
 
       // Make API call to create invoice
