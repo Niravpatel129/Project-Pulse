@@ -33,7 +33,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { newRequest } from '@/utils/newRequest';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import {
   CalendarIcon,
@@ -48,13 +48,33 @@ import {
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+interface Payment {
+  _id: string;
+  amount: number;
+  date: string;
+  method: string;
+  memo?: string;
+  status?: string;
+  type?: string;
+  remainingBalance?: number;
+  balanceBefore?: number;
+  balanceAfter?: number;
+  createdBy?: { _id: string; name: string };
+}
+
+interface ExtendedInvoice extends Invoice {
+  payments?: Payment[];
+}
+
 interface InvoiceTabProps {
-  invoice: Invoice;
+  invoice: ExtendedInvoice;
 }
 
 export function InvoiceTab({ invoice }: InvoiceTabProps) {
   const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
   const [paymentAmount, setPaymentAmount] = useState(invoice.total.toFixed(2));
   const [paymentMethod, setPaymentMethod] = useState('');
@@ -89,12 +109,30 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
     onSuccess: () => {
       queryClient.invalidateQueries();
       toast.success('Payment recorded successfully');
-      setIsPaymentDialogOpen(false);
+      setPaymentSuccess(true);
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to record payment');
     },
   });
+
+  // Fetch payments for this invoice
+  const {
+    data: paymentData,
+    isLoading: paymentsLoading,
+    isError: paymentsError,
+  } = useQuery<{ paymentHistory: Payment[]; currentBalance: number; availableCredits: number }>({
+    queryKey: ['invoice-payments', invoice.id],
+    queryFn: async () => {
+      const res = await newRequest.get(`/invoices/${invoice.id}/payments`);
+      return {
+        paymentHistory: res.data.data.paymentHistory,
+        currentBalance: res.data.data.currentBalance,
+        availableCredits: res.data.data.availableCredits,
+      };
+    },
+  });
+  const payments = paymentData?.paymentHistory || [];
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -279,27 +317,141 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
             <div>
               <div className='font-medium'>Manage payments</div>
               <div className='text-sm text-muted-foreground'>
-                Amount due: <span className='font-mono'>${invoice.total.toFixed(2)}</span> —{' '}
-                <span
-                  className='text-primary cursor-pointer underline underline-offset-2'
+                {invoice.status === 'paid' ? (
+                  <>
+                    Amount due: <span className='font-mono'>(${invoice.total.toFixed(2)})</span> —{' '}
+                    <span
+                      className='text-primary cursor-pointer underline underline-offset-2'
+                      onClick={() => {
+                        return setIsPaymentDialogOpen(true);
+                      }}
+                    >
+                      Manage overpayment
+                    </span>{' '}
+                    manually
+                  </>
+                ) : (
+                  <>
+                    Amount due: <span className='font-mono'>${invoice.total.toFixed(2)}</span> —{' '}
+                    <span
+                      className='text-primary cursor-pointer underline underline-offset-2'
+                      onClick={() => {
+                        return setIsPaymentDialogOpen(true);
+                      }}
+                    >
+                      Record a payment
+                    </span>{' '}
+                    manually
+                  </>
+                )}
+              </div>
+            </div>
+            <div className='ml-auto'>
+              {invoice.status === 'paid' ? (
+                <Badge
+                  variant='outline'
+                  className='bg-green-50 text-green-700 border-green-200 hover:bg-green-50 px-3 py-1'
+                >
+                  PAID
+                </Badge>
+              ) : (
+                <Button
+                  size='sm'
                   onClick={() => {
                     return setIsPaymentDialogOpen(true);
                   }}
                 >
                   Record a payment
-                </span>{' '}
-                manually
-              </div>
+                </Button>
+              )}
             </div>
-            <div className='ml-auto'>
-              <Button
-                size='sm'
-                onClick={() => {
-                  return setIsPaymentDialogOpen(true);
-                }}
-              >
-                Record a payment
-              </Button>
+          </div>
+
+          {/* Payment History Section */}
+          <div className='mt-6'>
+            <Separator className='mb-4' />
+            <div className='space-y-4'>
+              <h3 className='font-medium text-sm text-muted-foreground'>Payments received:</h3>
+              {paymentsLoading && (
+                <div className='text-sm text-muted-foreground'>Loading payments...</div>
+              )}
+              {paymentsError && (
+                <div className='text-sm text-red-600'>Failed to load payments.</div>
+              )}
+              {payments && payments.length > 0 ? (
+                <div className='space-y-6'>
+                  {payments.map((payment: Payment, idx: number) => {
+                    return (
+                      <div key={payment._id} className='mb-2'>
+                        <div>
+                          {new Date(payment.date).toLocaleDateString(undefined, {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })}{' '}
+                          - A payment for{' '}
+                          <b>
+                            $
+                            {Number(payment.amount).toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </b>{' '}
+                          was made using {payment.method}.
+                        </div>
+                        {payment.memo && payment.memo.length > 0 && (
+                          <div className='text-xs text-muted-foreground mb-1'>{payment.memo}</div>
+                        )}
+                        <div className='flex flex-wrap gap-1 text-sm font-medium mt-1 items-center'>
+                          <Button
+                            variant='link'
+                            size='sm'
+                            className='p-0 h-auto'
+                            onClick={() => {}}
+                          >
+                            Send a receipt
+                          </Button>
+                          <span className='text-gray-400'>·</span>
+                          <Button
+                            variant='link'
+                            size='sm'
+                            className='p-0 h-auto'
+                            onClick={() => {}}
+                          >
+                            Edit payment
+                          </Button>
+                          <span className='text-gray-400'>·</span>
+                          <Button
+                            variant='link'
+                            size='sm'
+                            className='p-0 h-auto'
+                            onClick={() => {}}
+                          >
+                            Remove payment
+                          </Button>
+                          {idx === payments.length - 1 && (
+                            <>
+                              <span className='text-gray-400'>·</span>
+                              <Button
+                                variant='link'
+                                size='sm'
+                                className='p-0 h-auto'
+                                onClick={() => {}}
+                              >
+                                Add another payment
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                !paymentsLoading && (
+                  <div className='text-sm text-muted-foreground'>No payments recorded yet.</div>
+                )
+              )}
             </div>
           </div>
         </CardContent>
@@ -364,126 +516,193 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+      <Dialog
+        open={isPaymentDialogOpen}
+        onOpenChange={(open) => {
+          setIsPaymentDialogOpen(open);
+          if (!open) setPaymentSuccess(false);
+        }}
+      >
         <DialogContent className='sm:max-w-[450px]' forceMount>
           <DialogHeader>
             <DialogTitle>Record a payment for this invoice</DialogTitle>
           </DialogHeader>
-          <form className='space-y-4'>
-            <div>
-              <Label>Date</Label>
-              <Popover modal>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant='outline'
-                    className={
-                      'w-full justify-start text-left font-normal' +
-                      (!paymentDate ? ' text-muted-foreground' : '')
-                    }
+          {!paymentSuccess ? (
+            <form className='space-y-4'>
+              <div>
+                <Label>Date</Label>
+                <Popover modal>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant='outline'
+                      className={
+                        'w-full justify-start text-left font-normal' +
+                        (!paymentDate ? ' text-muted-foreground' : '')
+                      }
+                    >
+                      <CalendarIcon className='mr-2 h-4 w-4' />
+                      {paymentDate ? format(paymentDate, 'yyyy-MM-dd') : 'Select date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className='w-auto p-0 min-w-[300px]' align='start'>
+                    <Calendar
+                      mode='single'
+                      selected={paymentDate}
+                      onSelect={setPaymentDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div>
+                <Label>Amount</Label>
+                <Input
+                  type='number'
+                  min='0'
+                  step='any'
+                  value={paymentAmount}
+                  onChange={(e) => {
+                    setAmountTouched(true);
+                    return setPaymentAmount(e.target.value);
+                  }}
+                  onBlur={() => {
+                    return setAmountTouched(true);
+                  }}
+                  placeholder='$0.00'
+                />
+                {amountTouched && (
+                  <div
+                    className={`text-xs mt-1 ${
+                      !paymentAmount || isNaN(parseFloat(paymentAmount))
+                        ? 'text-red-600'
+                        : parseFloat(paymentAmount) > invoice.total
+                        ? 'text-yellow-600'
+                        : parseFloat(paymentAmount) === invoice.total
+                        ? 'text-green-700'
+                        : 'text-muted-foreground'
+                    }`}
                   >
-                    <CalendarIcon className='mr-2 h-4 w-4' />
-                    {paymentDate ? format(paymentDate, 'yyyy-MM-dd') : 'Select date'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className='w-auto p-0 min-w-[300px]' align='start'>
-                  <Calendar
-                    mode='single'
-                    selected={paymentDate}
-                    onSelect={setPaymentDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div>
-              <Label>Amount</Label>
-              <Input
-                type='number'
-                min='0'
-                step='any'
-                value={paymentAmount}
-                onChange={(e) => {
-                  setAmountTouched(true);
-                  return setPaymentAmount(e.target.value);
-                }}
-                onBlur={() => {
-                  return setAmountTouched(true);
-                }}
-                placeholder='$0.00'
-              />
-              {amountTouched && (
-                <div
-                  className={`text-xs mt-1 ${
-                    !paymentAmount || isNaN(parseFloat(paymentAmount))
-                      ? 'text-red-600'
+                    {!paymentAmount || isNaN(parseFloat(paymentAmount))
+                      ? 'Amount cannot be blank'
                       : parseFloat(paymentAmount) > invoice.total
-                      ? 'text-yellow-600'
+                      ? `$${(parseFloat(paymentAmount) - invoice.total).toFixed(2)} overpayment`
                       : parseFloat(paymentAmount) === invoice.total
-                      ? 'text-green-700'
-                      : 'text-muted-foreground'
-                  }`}
-                >
-                  {!paymentAmount || isNaN(parseFloat(paymentAmount))
-                    ? 'Amount cannot be blank'
-                    : parseFloat(paymentAmount) > invoice.total
-                    ? `$${(parseFloat(paymentAmount) - invoice.total).toFixed(2)} overpayment`
-                    : parseFloat(paymentAmount) === invoice.total
-                    ? 'Invoice will be fully paid'
-                    : `$${(invoice.total - parseFloat(paymentAmount)).toFixed(
-                        2,
-                      )} remaining after this payment`}
-                </div>
-              )}
+                      ? 'Invoice will be fully paid'
+                      : `$${(invoice.total - parseFloat(paymentAmount)).toFixed(
+                          2,
+                        )} remaining after this payment`}
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label>Method</Label>
+                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select a payment method...' />
+                  </SelectTrigger>
+                  <SelectContent className='z-[100]'>
+                    <SelectItem value='credit-card'>Credit Card</SelectItem>
+                    <SelectItem value='bank-transfer'>Bank Transfer</SelectItem>
+                    <SelectItem value='cash'>Cash</SelectItem>
+                    <SelectItem value='check'>Check</SelectItem>
+                    <SelectItem value='other'>Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Memo / notes</Label>
+                <Textarea
+                  value={paymentMemo}
+                  onChange={(e) => {
+                    return setPaymentMemo(e.target.value);
+                  }}
+                  placeholder='Optional notes about this payment...'
+                />
+              </div>
+            </form>
+          ) : (
+            <div className='flex flex-col items-center justify-center py-10'>
+              <CheckCircle2 className='w-16 h-16 text-green-500 mb-4' />
+              <div className='text-2xl font-bold mb-2'>The payment was recorded</div>
+              <div className='text-muted-foreground mb-6 text-center'>
+                Get paid 3 times faster. Accept Credit Cards or Bank Payments and get paid faster
+                with online payments.
+              </div>
             </div>
-            <div>
-              <Label>Method</Label>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger>
-                  <SelectValue placeholder='Select a payment method...' />
-                </SelectTrigger>
-                <SelectContent className='z-[100]'>
-                  <SelectItem value='credit-card'>Credit Card</SelectItem>
-                  <SelectItem value='bank-transfer'>Bank Transfer</SelectItem>
-                  <SelectItem value='cash'>Cash</SelectItem>
-                  <SelectItem value='check'>Check</SelectItem>
-                  <SelectItem value='other'>Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Memo / notes</Label>
-              <Textarea
-                value={paymentMemo}
-                onChange={(e) => {
-                  return setPaymentMemo(e.target.value);
-                }}
-                placeholder='Optional notes about this payment...'
-              />
-            </div>
-          </form>
+          )}
           <DialogFooter>
+            {!paymentSuccess ? (
+              <>
+                <Button
+                  variant='outline'
+                  onClick={() => {
+                    return setIsPaymentDialogOpen(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type='submit'
+                  disabled={
+                    !paymentDate ||
+                    !paymentAmount ||
+                    !paymentMethod ||
+                    recordPaymentMutation.isPending
+                  }
+                  onClick={(e) => {
+                    e.preventDefault();
+                    recordPaymentMutation.mutate();
+                  }}
+                >
+                  {recordPaymentMutation.isPending ? 'Recording...' : 'Submit'}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant='outline'
+                  onClick={() => {
+                    setIsPaymentDialogOpen(false);
+                    setPaymentSuccess(false);
+                  }}
+                >
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsReceiptDialogOpen(true);
+                  }}
+                >
+                  Send a receipt
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Receipt Modal */}
+      <Dialog open={isReceiptDialogOpen} onOpenChange={setIsReceiptDialogOpen}>
+        <DialogContent className='sm:max-w-[450px]'>
+          <DialogHeader>
+            <DialogTitle>Send payment receipt</DialogTitle>
+          </DialogHeader>
+          <div className='flex flex-col items-center justify-center py-10'>
+            <LinkIcon className='h-10 w-10 mb-4 text-purple-600' />
+            <div className='font-bold text-lg mb-1 text-center'>Copy link</div>
+            <div className='text-center text-muted-foreground text-base mb-4'>
+              A link to your payment receipt with all details included
+            </div>
             <Button
               variant='outline'
               onClick={() => {
-                return setIsPaymentDialogOpen(false);
+                navigator.clipboard.writeText(window.location.href);
+                toast.success('Receipt link copied!');
               }}
             >
-              Cancel
+              Copy link
             </Button>
-            <Button
-              type='submit'
-              disabled={
-                !paymentDate || !paymentAmount || !paymentMethod || recordPaymentMutation.isPending
-              }
-              onClick={(e) => {
-                e.preventDefault();
-                recordPaymentMutation.mutate();
-              }}
-            >
-              {recordPaymentMutation.isPending ? 'Recording...' : 'Submit'}
-            </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </>
