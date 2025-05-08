@@ -232,7 +232,18 @@ export default function InvoiceSection({
     ? (subtotal * (invoiceSettings.defaultDiscountRate || 0)) / 100
     : 0;
 
-  const taxAmount = ((subtotal - discountAmount) * workspaceTaxSettings.defaultTaxRate) / 100;
+  const taxAmount = items.reduce((sum, item) => {
+    if (!item.taxable || !item.taxRate) return sum;
+    const quantity = Number.parseFloat(item.quantity);
+    const price = Number.parseFloat(item.price.replace(/,/g, ''));
+    const itemSubtotal = quantity * price;
+    const itemDiscount = invoiceSettings.allowDiscount
+      ? (itemSubtotal * (invoiceSettings.defaultDiscountRate || 0)) / 100
+      : 0;
+    const taxableAmount = itemSubtotal - itemDiscount;
+    return sum + (taxableAmount * item.taxRate) / 100;
+  }, 0);
+
   const total = subtotal - discountAmount + taxAmount;
 
   // Custom handlers to preserve scroll position
@@ -271,7 +282,8 @@ export default function InvoiceSection({
             quantity: Number.parseFloat(item.quantity),
             price: Number.parseFloat(item.price.replace(/,/g, '')),
             discount: invoiceSettings.allowDiscount ? invoiceSettings.defaultDiscountRate : 0,
-            tax: workspaceTaxSettings.defaultTaxRate,
+            tax: item.taxRate || 0,
+            taxName: item.taxName || 'VAT',
           };
         }),
         dueDate: dueDate?.toISOString(),
@@ -330,7 +342,8 @@ export default function InvoiceSection({
             quantity: Number.parseFloat(item.quantity),
             price: Number.parseFloat(item.price.replace(/,/g, '')),
             discount: invoiceSettings.allowDiscount ? invoiceSettings.defaultDiscountRate : 0,
-            tax: workspaceTaxSettings.defaultTaxRate,
+            tax: item.taxRate || 0,
+            taxName: item.taxName || 'VAT',
           };
         }),
         dueDate: dueDate?.toISOString(),

@@ -61,9 +61,9 @@ export default function ProjectManagement({
         description: item.description,
         quantity: item.quantity.toString(),
         price: item.price.toString(),
-        tax: item.tax || 0,
         taxRate: item.tax || 0,
-        taxable: true,
+        taxName: 'VAT', // Default tax name, should be configurable
+        taxable: item.tax > 0,
         discount: item.discount || 0,
         currency: existingInvoice.currency,
       };
