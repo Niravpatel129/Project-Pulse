@@ -1,5 +1,7 @@
 'use client';
 
+import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
+
 interface ClientAddress {
   street: string;
   city: string;
@@ -61,6 +63,8 @@ interface InvoiceProps {
 }
 
 export function Invoice({ invoice }: InvoiceProps) {
+  const { data: invoiceSettings } = useInvoiceSettings();
+
   return (
     <div
       className='bg-white rounded-lg border border-gray-200 shadow-sm invoice-paper'
@@ -93,10 +97,15 @@ export function Invoice({ invoice }: InvoiceProps) {
         <div className='text-right'>
           <h1 className='text-4xl font-semibold tracking-tight text-gray-900'>INVOICE</h1>
           <div className='mt-2'>
-            <div className='font-semibold text-gray-800'>Your Company Name</div>
-            <div className='text-gray-500 text-sm'>123 Business Street</div>
-            <div className='text-gray-500 text-sm'>City, State 12345</div>
-            <div className='text-gray-500 text-sm'>Canada</div>
+            <div className='font-semibold text-gray-800'>
+              {invoiceSettings?.businessName || 'Your Company Name'}
+            </div>
+            <div className='text-gray-500 text-sm whitespace-pre-line'>
+              {invoiceSettings?.businessAddress}
+            </div>
+            {invoiceSettings?.showTaxId && invoiceSettings?.taxId && (
+              <div className='text-gray-500 text-sm mt-1'>Tax ID: {invoiceSettings.taxId}</div>
+            )}
           </div>
         </div>
       </div>

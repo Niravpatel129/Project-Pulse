@@ -9,6 +9,9 @@ interface UpdateInvoiceSettings {
   accentColor?: string;
   icon?: string;
   logo?: string;
+  businessName?: string;
+  businessAddress?: string;
+  businessNotes?: string;
   taxes?: Array<{
     id: string;
     name: string;

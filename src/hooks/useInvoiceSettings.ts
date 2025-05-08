@@ -8,6 +8,8 @@ interface InvoiceSettings {
   accentColor?: string;
   icon?: string;
   logo?: string;
+  businessName?: string;
+  businessAddress?: string;
   taxes?: Array<{
     id: string;
     name: string;
@@ -47,6 +49,8 @@ export const useInvoiceSettings = () => {
           showTaxId: false,
           icon: '',
           logo: '',
+          businessName: '',
+          businessAddress: '',
           taxes: [],
           shippingMethods: [],
         };

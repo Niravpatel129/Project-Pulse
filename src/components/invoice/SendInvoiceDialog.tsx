@@ -23,6 +23,22 @@ interface Invoice {
     };
   } | null;
   status: string;
+  items: Array<{
+    name: string;
+    description: string;
+    quantity: number;
+    price: number;
+    discount: number;
+    tax: number;
+  }>;
+  businessInfo: {
+    name: string;
+    address: string;
+    taxId: string;
+    showTaxId: boolean;
+    logo: string | null;
+    currency: string;
+  };
 }
 
 interface SendInvoiceDialogProps {

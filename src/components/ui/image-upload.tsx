@@ -73,9 +73,9 @@ export function ImageUpload({ label, value, onChange, className }: ImageUploadPr
   };
 
   return (
-    <div className={cn('w-full flex flex-col items-center', className)}>
+    <div className={cn('w-full flex flex-col', className)}>
       <Label className='text-sm text-gray-700 mb-2 block'>{label}</Label>
-      <div className='relative w-full flex justify-center'>
+      <div className='relative w-full flex'>
         <input
           type='file'
           id={`${label.toLowerCase()}-upload`}
@@ -86,7 +86,7 @@ export function ImageUpload({ label, value, onChange, className }: ImageUploadPr
         <label
           htmlFor={`${label.toLowerCase()}-upload`}
           className={cn(
-            'border border-dashed border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50 transition-colors block',
+            'border border-dashed border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors block',
             preview && 'p-0',
             'aspect-square w-full max-w-[200px]', // Changed to square aspect ratio with max width
           )}

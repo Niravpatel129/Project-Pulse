@@ -47,8 +47,9 @@ import {
   MoreHorizontal,
   Send,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+import { BusinessSettings } from './BusinessSettings';
 
 interface Payment {
   _id: string;
@@ -75,6 +76,15 @@ interface InvoiceItem {
   discount: number;
   tax: number;
   total?: number;
+}
+
+interface BusinessInfo {
+  name: string;
+  address: string;
+  taxId: string;
+  showTaxId: boolean;
+  logo: string | null;
+  currency: string;
 }
 
 interface InvoiceClient {
@@ -135,6 +145,7 @@ interface ExtendedInvoice {
   teamNotes: string;
   client: InvoiceClient;
   payments?: Payment[];
+  businessInfo?: BusinessInfo;
 }
 
 type ProjectManagementInvoice = {
@@ -169,6 +180,7 @@ type ProjectManagementInvoice = {
   subtotal: number;
   taxAmount: number;
   teamNotes?: string;
+  businessInfo: BusinessInfo;
 };
 
 interface InvoiceTabProps {
@@ -194,21 +206,6 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
   const queryClient = useQueryClient();
   const { data: invoiceSettings } = useInvoiceSettings();
   const updateInvoiceSettings = useUpdateInvoiceSettings();
-
-  // Business settings state
-  const [businessName, setBusinessName] = useState('');
-  const [businessAddress, setBusinessAddress] = useState('');
-  const [businessNotes, setBusinessNotes] = useState('');
-
-  // Initialize business settings from invoice settings when available
-  useEffect(() => {
-    if (invoiceSettings) {
-      // TODO: Initialize from proper fields when backend is ready
-      setBusinessName('');
-      setBusinessAddress('');
-      setBusinessNotes('');
-    }
-  }, [invoiceSettings]);
 
   const markAsSentMutation = useMutation({
     mutationFn: async () => {
@@ -403,6 +400,14 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
           tax: item.tax || 0,
         };
       }),
+      businessInfo: {
+        name: invoiceSettings?.businessName || '',
+        address: invoiceSettings?.businessAddress || '',
+        taxId: invoiceSettings?.taxId || '',
+        showTaxId: invoiceSettings?.showTaxId || false,
+        logo: invoiceSettings?.logo || null,
+        currency: invoiceSettings?.currency || 'usd',
+      },
     };
   };
 
@@ -442,6 +447,14 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
       subtotal: invoice.subtotal,
       taxAmount: invoice.tax || 0,
       teamNotes: invoice.teamNotes || '',
+      businessInfo: {
+        name: invoiceSettings?.businessName || '',
+        address: invoiceSettings?.businessAddress || '',
+        taxId: invoiceSettings?.taxId || '',
+        showTaxId: invoiceSettings?.showTaxId || false,
+        logo: invoiceSettings?.logo || null,
+        currency: invoiceSettings?.currency || 'usd',
+      },
     };
   };
 
@@ -1137,117 +1150,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
       </Dialog>
 
       {/* Business Settings Dialog */}
-      <Dialog open={isBusinessSettingsOpen} onOpenChange={setIsBusinessSettingsOpen}>
-        <DialogContent className='sm:max-w-[600px]'>
-          <DialogHeader>
-            <DialogTitle>Business Settings</DialogTitle>
-            <DialogDescription>
-              Update your business information that appears on invoices
-            </DialogDescription>
-          </DialogHeader>
-          <div className='space-y-6 py-4'>
-            <div>
-              <Label>Company Name</Label>
-              <Input
-                value={businessName}
-                onChange={(e) => {
-                  return setBusinessName(e.target.value);
-                }}
-                placeholder='Your company name'
-              />
-            </div>
-            <div>
-              <Label>Business Address</Label>
-              <Textarea
-                value={businessAddress}
-                onChange={(e) => {
-                  return setBusinessAddress(e.target.value);
-                }}
-                placeholder='Enter your business address'
-                className='h-20'
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label>Tax ID / VAT Number</Label>
-              <div className='space-y-2'>
-                <Input
-                  value={invoiceSettings?.taxId || ''}
-                  onChange={(e) => {
-                    updateInvoiceSettings.mutate({
-                      settings: { ...invoiceSettings, taxId: e.target.value },
-                    });
-                  }}
-                  placeholder='Enter your tax ID'
-                />
-                <div className='flex items-center gap-2'>
-                  <Switch
-                    id='showTaxId'
-                    checked={invoiceSettings?.showTaxId}
-                    onCheckedChange={(checked) => {
-                      updateInvoiceSettings.mutate({
-                        settings: { ...invoiceSettings, showTaxId: checked },
-                      });
-                    }}
-                  />
-                  <Label htmlFor='showTaxId' className='text-sm text-muted-foreground'>
-                    Show tax ID on invoices
-                  </Label>
-                </div>
-              </div>
-            </div>
-            <div>
-              <Label>Business Logo</Label>
-              <div className='flex items-center gap-4'>
-                {invoiceSettings?.logo && (
-                  <img
-                    src={invoiceSettings.logo}
-                    alt='Business logo'
-                    className='w-16 h-16 object-contain border rounded'
-                  />
-                )}
-                <Button variant='outline' size='sm'>
-                  Upload Logo
-                </Button>
-              </div>
-            </div>
-            <div>
-              <Label>Default Invoice Notes</Label>
-              <Textarea
-                value={businessNotes}
-                onChange={(e) => {
-                  return setBusinessNotes(e.target.value);
-                }}
-                placeholder='Add default notes to appear on all invoices'
-                className='h-20'
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant='outline'
-              onClick={() => {
-                return setIsBusinessSettingsOpen(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                // TODO: Update backend with new fields
-                updateInvoiceSettings.mutate({
-                  settings: {
-                    ...invoiceSettings,
-                    // Add new fields when backend is ready
-                  },
-                });
-                setIsBusinessSettingsOpen(false);
-              }}
-            >
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <BusinessSettings open={isBusinessSettingsOpen} onOpenChange={setIsBusinessSettingsOpen} />
 
       {/* Edit Invoice Dialog */}
       <Dialog open={isEditInvoiceOpen} onOpenChange={setIsEditInvoiceOpen}>
