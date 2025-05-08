@@ -91,7 +91,12 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
           <div className='flex items-center gap-6 mt-2'>
             <div className='flex flex-col'>
               <span className='text-xs text-muted-foreground font-medium mb-0.5'>Status</span>
-              <Badge variant={getStatusColor(invoice.status)}>{invoice.status}</Badge>
+              <Badge
+                variant={getStatusColor(invoice.status)}
+                className='py-1 px-2 rounded-none capitalize'
+              >
+                {invoice.status}
+              </Badge>
             </div>
             <div className='flex flex-col'>
               <span className='text-xs text-muted-foreground font-medium mb-0.5'>Customer</span>
