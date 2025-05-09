@@ -211,7 +211,6 @@ function PaymentForm({
                   {mapCurrency(invoice.currency)}
                   {depositAmount.toFixed(2)}
                 </div>
-                <div className='text-xs text-gray-500'>{invoice.depositPercentage}% of total</div>
               </div>
             </button>
           )}
@@ -228,7 +227,6 @@ function PaymentForm({
           >
             <div className='space-y-1'>
               <div className='text-sm font-medium text-gray-500'>Custom Amount</div>
-              <div className='text-lg font-semibold text-gray-900'>Enter amount</div>
             </div>
           </button>
         </div>
