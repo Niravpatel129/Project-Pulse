@@ -125,7 +125,9 @@ function PaymentForm({
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isDepositPayment, setIsDepositPayment] = useState(false);
+  const [paymentType, setPaymentType] = useState<'full' | 'deposit' | 'custom'>('full');
+  const [customAmount, setCustomAmount] = useState<string>('');
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,54 +159,178 @@ function PaymentForm({
   };
 
   const depositAmount = invoice.total * (invoice.depositPercentage / 100);
+  const getPaymentAmount = () => {
+    switch (paymentType) {
+      case 'deposit':
+        return depositAmount;
+      case 'custom':
+        return parseFloat(customAmount) || 0;
+      default:
+        return invoice.total;
+    }
+  };
 
-  return (
-    <form onSubmit={handleSubmit} className='space-y-4'>
-      <PaymentElement />
-      {error && <div className='text-red-500 text-sm mt-2'>{error}</div>}
-      {invoice.requireDeposit && (
-        <div className='flex gap-3'>
+  if (!showPaymentForm) {
+    return (
+      <div className='space-y-8'>
+        {/* Payment Options */}
+        <div className='grid grid-cols-3 gap-4'>
           <button
-            type='button'
             onClick={() => {
-              return setIsDepositPayment(false);
+              return setPaymentType('full');
             }}
-            className={`flex-1 py-2 px-4 rounded-lg border ${
-              !isDepositPayment
-                ? 'bg-[#0066FF] text-white border-[#0066FF]'
-                : 'bg-white text-gray-600 border-gray-200'
-            } font-medium hover:bg-opacity-90 transition-colors`}
+            className={`p-4 rounded-xl border transition-all ${
+              paymentType === 'full'
+                ? 'border-[#0066FF] bg-[#0066FF]/5'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
           >
-            Pay Full Amount
+            <div className='space-y-1'>
+              <div className='text-sm font-medium text-gray-500'>Full Amount</div>
+              <div className='text-lg font-semibold text-gray-900'>
+                {mapCurrency(invoice.currency)}
+                {invoice.total.toFixed(2)}
+              </div>
+            </div>
           </button>
+
+          {invoice.requireDeposit && (
+            <button
+              onClick={() => {
+                return setPaymentType('deposit');
+              }}
+              className={`p-4 rounded-xl border transition-all ${
+                paymentType === 'deposit'
+                  ? 'border-[#0066FF] bg-[#0066FF]/5'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className='space-y-1'>
+                <div className='text-sm font-medium text-gray-500'>Deposit</div>
+                <div className='text-lg font-semibold text-gray-900'>
+                  {mapCurrency(invoice.currency)}
+                  {depositAmount.toFixed(2)}
+                </div>
+                <div className='text-xs text-gray-500'>{invoice.depositPercentage}% of total</div>
+              </div>
+            </button>
+          )}
+
           <button
-            type='button'
             onClick={() => {
-              return setIsDepositPayment(true);
+              return setPaymentType('custom');
             }}
-            className={`flex-1 py-2 px-4 rounded-lg border ${
-              isDepositPayment
-                ? 'bg-[#0066FF] text-white border-[#0066FF]'
-                : 'bg-white text-gray-600 border-gray-200'
-            } font-medium hover:bg-opacity-90 transition-colors`}
+            className={`p-4 rounded-xl border transition-all ${
+              paymentType === 'custom'
+                ? 'border-[#0066FF] bg-[#0066FF]/5'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
           >
-            Pay Deposit
+            <div className='space-y-1'>
+              <div className='text-sm font-medium text-gray-500'>Custom Amount</div>
+              <div className='text-lg font-semibold text-gray-900'>Enter amount</div>
+            </div>
           </button>
         </div>
-      )}
-      <button
-        type='submit'
-        disabled={!stripe || isProcessing}
-        className='w-full bg-[#0066FF] text-white rounded-lg h-10 font-medium flex items-center justify-center gap-2 hover:bg-[#0052CC] transition-colors disabled:opacity-50 disabled:cursor-not-allowed capitalize'
-      >
-        {isProcessing
-          ? 'Processing...'
-          : `Pay ${mapCurrency(invoice.currency || 'USD')}${
-              isDepositPayment ? depositAmount.toFixed(2) : invoice.total.toFixed(2)
-            }`}
-        <Lock className='w-3.5 h-3.5' />
-      </button>
-    </form>
+
+        {paymentType === 'custom' && (
+          <div className='space-y-2'>
+            <label className='block text-sm font-medium text-gray-700'>Enter Payment Amount</label>
+            <div className='relative'>
+              <span className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-500'>
+                {mapCurrency(invoice.currency)}
+              </span>
+              <input
+                type='number'
+                value={customAmount}
+                onChange={(e) => {
+                  return setCustomAmount(e.target.value);
+                }}
+                className='w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0066FF] focus:border-[#0066FF] outline-none transition-all'
+                placeholder='0.00'
+                min='0'
+                step='0.01'
+                max={invoice.total}
+              />
+            </div>
+            <p className='text-sm text-gray-500'>
+              Maximum amount: {mapCurrency(invoice.currency)}
+              {invoice.total.toFixed(2)}
+            </p>
+          </div>
+        )}
+
+        <button
+          onClick={() => {
+            if (paymentType === 'custom' && (!customAmount || parseFloat(customAmount) <= 0)) {
+              return;
+            }
+            setShowPaymentForm(true);
+          }}
+          disabled={paymentType === 'custom' && (!customAmount || parseFloat(customAmount) <= 0)}
+          className='w-full bg-[#0066FF] text-white rounded-xl h-12 font-medium flex items-center justify-center gap-2 hover:bg-[#0052CC] transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+        >
+          Continue to Payment
+          <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
+          </svg>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className='space-y-6'>
+      <div className='flex items-center justify-between p-4 bg-gray-50 rounded-xl'>
+        <div className='space-y-1'>
+          <div className='text-sm font-medium text-gray-500'>Selected Payment</div>
+          <div className='text-lg font-semibold text-gray-900'>
+            {mapCurrency(invoice.currency)}
+            {getPaymentAmount().toFixed(2)}
+          </div>
+        </div>
+        <button
+          onClick={() => {
+            return setShowPaymentForm(false);
+          }}
+          className='text-sm text-gray-500 hover:text-gray-700 transition-colors'
+        >
+          Change
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className='space-y-6'>
+        <div className='space-y-4'>
+          <div className='text-sm font-medium text-gray-700'>Payment Details</div>
+          <PaymentElement />
+        </div>
+
+        {error && (
+          <div className='p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600'>
+            {error}
+          </div>
+        )}
+
+        <button
+          type='submit'
+          disabled={!stripe || isProcessing}
+          className='w-full bg-[#0066FF] text-white rounded-xl h-12 font-medium flex items-center justify-center gap-2 hover:bg-[#0052CC] transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+        >
+          {isProcessing ? (
+            <>
+              <div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin' />
+              Processing...
+            </>
+          ) : (
+            <>
+              Pay {mapCurrency(invoice.currency)}
+              {getPaymentAmount().toFixed(2)}
+              <Lock className='w-4 h-4' />
+            </>
+          )}
+        </button>
+      </form>
+    </div>
   );
 }
 
