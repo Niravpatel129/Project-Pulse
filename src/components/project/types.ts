@@ -4,10 +4,8 @@ export type Item = {
   description: string;
   quantity: string;
   price: string;
-  currency?: string;
   taxRate?: number;
   taxName?: string;
-  taxable?: boolean;
   discount?: number;
 };
 
@@ -51,7 +49,6 @@ export type Client = {
 export type AIItem = Item & {
   type: string;
   reasoning: string;
-  currency?: string;
 };
 
 export interface Attachment {

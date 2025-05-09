@@ -237,7 +237,7 @@ export default function InvoiceSection({
     : 0;
 
   const taxAmount = items.reduce((sum, item) => {
-    if (!item.taxable || !item.taxRate) return sum;
+    if (!item.taxRate) return sum;
     const quantity = Number.parseFloat(item.quantity);
     const price = Number.parseFloat(item.price.replace(/,/g, ''));
     const itemSubtotal = quantity * price;

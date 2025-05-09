@@ -4,7 +4,6 @@ import AICard from '@/components/ui/ai-card';
 import type { Attachment } from '@/components/ui/ai-input';
 import AIInput from '@/components/ui/ai-input';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -96,10 +95,8 @@ export default function ItemsSection({
     description: '',
     price: '',
     quantity: '1',
-    currency: 'USD',
     taxRate: 0,
     discount: 0,
-    taxable: true,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingItem, setEditingItem] = useState<ExtendedItem | null>(null);
@@ -124,7 +121,6 @@ export default function ItemsSection({
   const [batchEditSettings, setBatchEditSettings] = useState({
     taxRateId: 'standard',
     discount: 0,
-    taxable: true,
   });
 
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -150,7 +146,6 @@ export default function ItemsSection({
               'Vibrant red turtle-neck style hoodie crafted from premium materials, featuring a cozy front pocket and soft inner lining for warmth. Designed for all-day comfort and style, perfect for casual wear.',
             price: '15.00',
             type: 'PRODUCT',
-            currency: projectCurrency,
             reasoning:
               "Name and color extracted from prompt. Price specified as 'something like $15'. Description generated to include color, type, and standard hoodie features.",
           },
@@ -160,7 +155,6 @@ export default function ItemsSection({
               'Classic black t-shirt made from high-quality cotton, offering a comfortable regular fit with reinforced stitching and breathable fabric. Versatile for everyday use and layering.',
             price: '12.00',
             type: 'PRODUCT',
-            currency: projectCurrency,
             reasoning:
               "Name ('black regular shirt') and color taken from prompt. Price estimated based on typical t-shirt prices and services table reference. Description generated to match a standard product of this type.",
           },
@@ -170,7 +164,6 @@ export default function ItemsSection({
               'Professional Direct to Film (DTF) printing service, using advanced technology for vibrant, detailed prints on a variety of garments. Ideal for custom apparel with lasting color and durability.',
             price: '10.00',
             type: 'SERVICE',
-            currency: projectCurrency,
             reasoning:
               "Name matched to 'DTF' from services table. Price of $10 derived from services table. Description generated based on DTF printing process.",
           },
@@ -180,7 +173,6 @@ export default function ItemsSection({
               'Expert screen printing service delivering sharp, long-lasting designs on apparel. Utilizes high-quality inks and precision techniques for both single and bulk orders.',
             price: '14.00',
             type: 'SERVICE',
-            currency: projectCurrency,
             reasoning:
               "Name matched to 'Screen' from services table. Price of $14 derived from services table. Description generated based on screen printing process and standard features.",
           },
@@ -211,7 +203,6 @@ export default function ItemsSection({
             quantity: '1',
             type: item.type,
             reasoning: item.reasoning,
-            currency: projectCurrency,
           };
         });
 
@@ -287,11 +278,9 @@ export default function ItemsSection({
         description: item.description,
         price: formattedPrice,
         quantity: item.quantity || '1',
-        currency: projectCurrency, // Use project currency
         type: item.type,
         taxRate: taxRate,
         discount: settings?.discount || 0,
-        taxable: settings?.taxable !== undefined ? settings?.taxable : true,
         taxName: taxRateName,
       } as ItemWithType;
     });
@@ -325,10 +314,8 @@ export default function ItemsSection({
       description: item.description,
       price: item.price.replace(/,/g, ''),
       quantity: item.quantity,
-      currency: item.currency || 'USD',
       taxRate: item.taxRate || 0,
       discount: item.discount || 0,
-      taxable: item.taxable !== undefined ? item.taxable : true,
     });
     setCurrentNewItemMode('manual');
 
@@ -366,10 +353,8 @@ export default function ItemsSection({
         description: newItem.description.trim(),
         price: formattedPrice,
         quantity: newItem.quantity || '1',
-        currency: projectCurrency,
         taxRate: newItem.taxRate,
         discount: newItem.discount,
-        taxable: newItem.taxable,
         taxName: taxRateName, // Store the tax name for reference
         type: 'PRODUCT', // Default type for manually added items
       } as ItemWithType;
@@ -383,10 +368,8 @@ export default function ItemsSection({
           description: '',
           price: '',
           quantity: '1',
-          currency: 'USD',
           taxRate: newItem.taxRate, // Keep the same tax rate for next item
           discount: newItem.discount, // Keep the same discount for next item
-          taxable: newItem.taxable, // Keep the same taxable setting for next item
         });
         setIsSubmitting(false);
         // Focus back on the name input for quick entry
@@ -437,7 +420,6 @@ export default function ItemsSection({
             quantity: newItem.quantity || '1',
             taxRate: newItem.taxRate,
             discount: newItem.discount,
-            taxable: newItem.taxable,
             taxName: taxRateName, // Store the tax name for reference
             ...(itemWithType.type ? { type: itemWithType.type } : { type: 'PRODUCT' }),
           } as Item;
@@ -460,10 +442,8 @@ export default function ItemsSection({
       description: '',
       price: '',
       quantity: '1',
-      currency: 'USD',
       taxRate: 0,
       discount: 0,
-      taxable: true,
     });
     // Reset AI-related state
     setAiPromptError('');
@@ -701,10 +681,8 @@ export default function ItemsSection({
                           description: '',
                           price: '',
                           quantity: '1',
-                          currency: 'USD',
                           taxRate: 0,
                           discount: 0,
-                          taxable: true,
                         });
                         setTimeout(() => {
                           return aiPromptInputRef.current?.focus();
@@ -756,10 +734,8 @@ export default function ItemsSection({
                         description: '',
                         price: '',
                         quantity: '1',
-                        currency: 'USD',
                         taxRate: 0,
                         discount: 0,
-                        taxable: true,
                       });
                       setCurrentNewItemMode('');
                     }}
@@ -848,22 +824,6 @@ export default function ItemsSection({
                         aria-label='Item quantity'
                       />
                     </div>
-                    <div className='mb-4'>
-                      <Label htmlFor='taxable' className='flex items-center'>
-                        <Checkbox
-                          id='taxable'
-                          checked={newItem.taxable}
-                          onCheckedChange={(checked) => {
-                            setNewItem({
-                              ...newItem,
-                              taxable: checked as boolean,
-                            });
-                          }}
-                          className='mr-2'
-                        />
-                        <span>Item is taxable</span>
-                      </Label>
-                    </div>
                     <div className='grid grid-cols-2 gap-3 mb-4'>
                       <div>
                         <Label htmlFor='tax-rate'>Tax Rate</Label>
@@ -876,7 +836,6 @@ export default function ItemsSection({
                             }
                             updateItemTaxRate(value);
                           }}
-                          disabled={!newItem.taxable}
                         >
                           <SelectTrigger className='w-full'>
                             <SelectValue placeholder='Select tax rate' />
@@ -1191,7 +1150,7 @@ export default function ItemsSection({
                               )}
 
                               <div className='mt-2 flex flex-wrap items-center gap-2'>
-                                {item.taxable && item.taxRate > 0 && (
+                                {item.taxRate > 0 && (
                                   <div className='text-xs text-blue-600 bg-blue-50 rounded-full py-0.5 px-2 flex items-center'>
                                     <Hash size={10} className='mr-1' />
                                     {item.taxName || 'Tax'}: {item.taxRate}%
@@ -1214,13 +1173,13 @@ export default function ItemsSection({
                                   </div>
                                   <div className='flex items-center gap-2'>
                                     <span className='text-sm text-gray-600'>
-                                      {getCurrencySymbol(item.currency || projectCurrency)}
+                                      {getCurrencySymbol(projectCurrency)}
                                       {item.price}
                                       <span className='text-gray-400 ml-1'>/unit</span>
                                     </span>
                                     {parseInt(item.quantity) > 1 && (
                                       <span className='text-sm font-medium text-gray-900'>
-                                        Total: {getCurrencySymbol(item.currency || projectCurrency)}
+                                        Total: {getCurrencySymbol(projectCurrency)}
                                         {calculateItemTotal(item.price, item.quantity)}
                                       </span>
                                     )}
@@ -1561,11 +1520,11 @@ export default function ItemsSection({
                   <div className='flex items-center space-x-2 mt-2'>
                     <Switch
                       id='modal-taxable'
-                      checked={batchEditSettings.taxable}
+                      checked={batchEditSettings.taxRateId !== 'zero'}
                       onCheckedChange={(checked) => {
                         setBatchEditSettings({
                           ...batchEditSettings,
-                          taxable: checked,
+                          taxRateId: checked ? 'standard' : 'zero',
                         });
                       }}
                     />

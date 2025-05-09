@@ -63,7 +63,7 @@ export default function LeftSidebar({
       }
 
       // Calculate tax on the discounted amount (if taxable)
-      if (item.taxable && item.taxRate && item.taxRate > 0) {
+      if (item.taxRate && item.taxRate > 0) {
         const taxAmount = discountedAmount * (item.taxRate / 100);
         totalTaxAmount += taxAmount;
       }
