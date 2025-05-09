@@ -63,7 +63,19 @@ export default function RightSidebar({ setItems, projectCurrency }: RightSidebar
 
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
-      const response = await newRequest.post('/ai/smart-response', { prompt: message });
+      const history = messages
+        .filter((m) => {
+          return m.role !== 'assistant' || m.content !== 'Hello! How can I help you today?';
+        })
+        .map((m) => {
+          return `${m.role === 'user' ? 'Human' : 'AI'}: ${m.content}`;
+        })
+        .join('\n\n');
+
+      const response = await newRequest.post('/ai/smart-response', {
+        prompt: message,
+        history,
+      });
       return response.data;
     },
     onSuccess: (data) => {
