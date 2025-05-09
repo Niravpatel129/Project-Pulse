@@ -8,12 +8,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DownloadCloud, Link as LinkIcon } from 'lucide-react';
-import { useParams } from 'next/navigation';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { toast } from 'sonner';
 
 type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'unpaid' | 'open';
@@ -61,8 +59,6 @@ interface SendInvoiceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   invoice: Invoice;
-  onSend: () => void;
-  paymentUrl?: string;
 }
 
 // Utility function to transform invoice data for PDF generation
@@ -144,32 +140,10 @@ export function transformInvoiceForPDF(invoice: Invoice) {
   };
 }
 
-export function SendInvoiceDialog({
-  open,
-  onOpenChange,
-  invoice,
-  onSend,
-  paymentUrl,
-}: SendInvoiceDialogProps) {
-  const [emailContent, setEmailContent] = useState('');
-  const [copied, setCopied] = useState(false);
-  const { data: invoiceSettings } = useInvoiceSettings();
+export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDialogProps) {
   const queryClient = useQueryClient();
-  const params = useParams();
   const isPaid = invoice.status === 'paid';
   const invoiceRef = useRef<HTMLDivElement>(null);
-  const remainingBalance = invoice.remainingBalance ?? invoice.total;
-  const totalPaid = invoice.total - remainingBalance;
-
-  const handleCopyLink = () => {
-    if (paymentUrl) {
-      navigator.clipboard.writeText(paymentUrl);
-      setCopied(true);
-      setTimeout(() => {
-        return setCopied(false);
-      }, 2000);
-    }
-  };
 
   const handleDownloadPDF = async () => {
     if (typeof window === 'undefined') return;
