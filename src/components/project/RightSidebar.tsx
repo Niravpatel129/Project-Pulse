@@ -265,11 +265,20 @@ export default function RightSidebar({ setItems, projectCurrency }: RightSidebar
                             <div key={dataIndex} className='space-y-2 pl-2'>
                               {data.items.map((item, itemIndex) => {
                                 return (
-                                  <LineItemCard
-                                    key={itemIndex}
-                                    item={item}
-                                    onClick={handleAddItem}
-                                  />
+                                  <TooltipProvider key={itemIndex}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div>
+                                          <LineItemCard item={item} onClick={handleAddItem} />
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p className='text-xs'>
+                                          Click to add another instance of this item
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                 );
                               })}
                             </div>

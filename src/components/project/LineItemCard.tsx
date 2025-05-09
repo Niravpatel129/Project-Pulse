@@ -27,10 +27,7 @@ export function LineItemCard({ item, onClick, className }: LineItemCardProps) {
   const hasDiscount = item.discount && parseFloat(item.discount) > 0;
 
   const handleClick = () => {
-    if (!isAdded) {
-      setIsAdded(true);
-      onClick(item);
-    }
+    onClick(item);
   };
 
   return (

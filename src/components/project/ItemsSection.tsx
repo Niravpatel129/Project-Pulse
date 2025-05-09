@@ -30,7 +30,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, Copy, Hash, History, Loader2, Plus, Scissors, Sparkles, X } from 'lucide-react';
+import { Check, Copy, Hash, Loader2, Plus, Scissors, Sparkles, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import SectionFooter from './SectionFooter';
@@ -645,69 +645,7 @@ export default function ItemsSection({
         <div className='mb-4'>
           <div className='flex justify-between items-center mb-3'>
             <h2 className='text-lg font-semibold text-[#111827]'>Items</h2>
-            <div className='flex items-center space-x-2'>
-              {removedItems.length > 0 && (
-                <Button
-                  onClick={() => {
-                    return setShowRemovedItems(!showRemovedItems);
-                  }}
-                  variant='outline'
-                  size='sm'
-                  className='text-xs h-8'
-                >
-                  <History size={14} className='mr-2' />
-                  Recently Removed ({removedItems.length})
-                </Button>
-              )}
-            </div>
           </div>
-
-          {/* Recently Removed Items Section */}
-          {showRemovedItems && removedItems.length > 0 && (
-            <div className='mb-6'>
-              <div className='flex items-center justify-between mb-3'>
-                <h3 className='text-sm font-medium text-gray-500'>Recently Removed Items</h3>
-                <Button
-                  onClick={() => {
-                    return setShowRemovedItems(false);
-                  }}
-                  variant='ghost'
-                  size='sm'
-                  className='h-8 text-xs'
-                >
-                  Hide
-                </Button>
-              </div>
-              <div className='space-y-2'>
-                {removedItems.map((item) => {
-                  return (
-                    <div
-                      key={item.id}
-                      className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200'
-                    >
-                      <div className='flex-1'>
-                        <h4 className='text-sm font-medium text-gray-900'>{item.name}</h4>
-                        <p className='text-xs text-gray-500'>
-                          {getCurrencySymbol(projectCurrency)}
-                          {item.price} × {item.quantity}
-                        </p>
-                      </div>
-                      <Button
-                        onClick={() => {
-                          return handleRestoreItem(item);
-                        }}
-                        variant='outline'
-                        size='sm'
-                        className='h-8 text-xs'
-                      >
-                        Restore
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
 
           <p className='text-[#6B7280] text-sm leading-5 mb-4'>
             Add items to your project. Include name, description, and price for each item.
