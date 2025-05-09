@@ -8,7 +8,6 @@ import { useMutation } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Info, Send, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
 import { LineItemCard } from './LineItemCard';
 
 interface LineItem {
@@ -166,7 +165,6 @@ export default function RightSidebar({ setItems, projectCurrency }: RightSidebar
     });
 
     // Show success notification
-    toast.success('Item added successfully');
   };
 
   return (

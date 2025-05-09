@@ -376,11 +376,9 @@ export default function ItemsSection({
         setTimeout(() => {
           nameInputRef.current?.focus();
         }, 10);
-        showNotification('Item added successfully. Add another item.', 'success');
       } else {
         // Reset form state completely and close the modal
         resetFormState();
-        showNotification('Item added successfully', 'success');
       }
     }, 300);
   };
