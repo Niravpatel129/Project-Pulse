@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { newRequest } from '@/utils/newRequest';
@@ -79,6 +80,8 @@ export default function RightSidebar({
   ]);
   const [input, setInput] = useState('');
   const [images, setImages] = useState<string[]>([]);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Focus input when component mounts
@@ -533,7 +536,11 @@ export default function RightSidebar({
                     <img
                       src={img}
                       alt={`pasted-${idx}`}
-                      className='w-16 h-16 object-cover rounded'
+                      className='w-16 h-16 object-cover rounded cursor-pointer'
+                      onClick={() => {
+                        setPreviewImage(img);
+                        setIsDialogOpen(true);
+                      }}
                     />
                     <button
                       type='button'
@@ -587,6 +594,19 @@ export default function RightSidebar({
           </Button>
         </div>
       </div>
+
+      {/* Image Preview Modal */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className='flex items-center justify-center'>
+          {previewImage && (
+            <img
+              src={previewImage}
+              alt='Preview'
+              className='max-w-[90vw] max-h-[80vh] rounded shadow-lg'
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
