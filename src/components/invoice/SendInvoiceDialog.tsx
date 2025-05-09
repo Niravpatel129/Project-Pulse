@@ -8,18 +8,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Check,
-  CheckCircle2,
-  Copy,
-  CreditCard,
-  DownloadCloud,
-  Link as LinkIcon,
-} from 'lucide-react';
+import { DownloadCloud, Link as LinkIcon } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -264,73 +256,6 @@ export function SendInvoiceDialog({
         </DialogHeader>
         <div className='py-6'>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            {/* Payment Status */}
-            <div className='border rounded-2xl p-6'>
-              <h3 className='font-semibold text-lg mb-4'>Payment Status</h3>
-              <div className='space-y-4'>
-                <div className='flex justify-between items-center'>
-                  <span className='text-gray-600'>Total Amount:</span>
-                  <span className='font-medium'>${invoice.total.toFixed(2)}</span>
-                </div>
-                {totalPaid > 0 && (
-                  <div className='flex justify-between items-center'>
-                    <span className='text-gray-600'>Amount Paid:</span>
-                    <span className='font-medium text-green-600'>${totalPaid.toFixed(2)}</span>
-                  </div>
-                )}
-                <div className='flex justify-between items-center pt-2 border-t'>
-                  <span className='font-semibold'>Remaining Balance:</span>
-                  <span className='font-semibold'>${remainingBalance.toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Payment Options */}
-            <div className='border rounded-2xl p-6'>
-              <h3 className='font-semibold text-lg mb-4'>Payment Options</h3>
-              <div className='space-y-4'>
-                <div className='flex items-center gap-2'>
-                  <div className='w-8 h-8 rounded-full bg-green-100 flex items-center justify-center'>
-                    <CheckCircle2 className='w-5 h-5 text-green-600' />
-                  </div>
-                  <div>
-                    <div className='font-medium'>Online Payment</div>
-                    <div className='text-sm text-gray-500'>
-                      Pay securely with credit card or bank transfer
-                    </div>
-                    {!isPaid && (
-                      <div className='mt-2 flex items-center gap-2'>
-                        <Input value={paymentUrl} readOnly className='text-sm bg-gray-50' />
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          onClick={handleCopyLink}
-                          className='shrink-0'
-                        >
-                          {copied ? (
-                            <Check className='h-4 w-4 text-green-600' />
-                          ) : (
-                            <Copy className='h-4 w-4' />
-                          )}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className='flex items-center gap-2'>
-                  <div className='w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center'>
-                    <CreditCard className='w-5 h-5 text-blue-600' />
-                  </div>
-                  <div>
-                    <div className='font-medium'>Bank Transfer</div>
-                    <div className='text-sm text-gray-500'>
-                      Direct bank transfer details included in invoice
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Share Options */}
             <div
               className='cursor-pointer border rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-primary group bg-indigo-50'
