@@ -607,8 +607,15 @@ export default function ItemsSection({
 
   // Add this utility function near the other utility functions
   const calculateItemTotal = (price: string, quantity: string): string => {
+    // Remove commas and convert to number
     const numPrice = parseFloat(price.replace(/,/g, ''));
     const numQuantity = parseFloat(quantity || '1');
+
+    // Check if either value is NaN
+    if (isNaN(numPrice) || isNaN(numQuantity)) {
+      return '0.00';
+    }
+
     const total = numPrice * numQuantity;
 
     return total.toLocaleString('en-US', {
