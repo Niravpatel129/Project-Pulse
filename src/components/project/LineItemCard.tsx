@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { Percent, Plus, Tag } from 'lucide-react';
+import { Check, Percent, Plus, Tag } from 'lucide-react';
+import { useState } from 'react';
 
 interface LineItem {
   name: string;
@@ -21,18 +22,25 @@ interface LineItemCardProps {
 }
 
 export function LineItemCard({ item, onClick, className }: LineItemCardProps) {
+  const [isAdded, setIsAdded] = useState(false);
   const hasTax = item.taxRate && parseFloat(item.taxRate) > 0;
   const hasDiscount = item.discount && parseFloat(item.discount) > 0;
+
+  const handleClick = () => {
+    if (!isAdded) {
+      setIsAdded(true);
+      onClick(item);
+    }
+  };
 
   return (
     <Card
       className={cn(
         'cursor-pointer transition-all duration-200 hover:shadow-sm hover:border-purple-200 bg-white',
+        isAdded && 'bg-purple-50 border-purple-200 shadow-sm',
         className,
       )}
-      onClick={() => {
-        return onClick(item);
-      }}
+      onClick={handleClick}
     >
       <CardContent className='p-3'>
         <div className='flex items-center justify-between gap-3'>
@@ -62,8 +70,15 @@ export function LineItemCard({ item, onClick, className }: LineItemCardProps) {
             )}
           </div>
           <div className='flex-shrink-0'>
-            <div className='w-7 h-7 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 hover:bg-purple-100 transition-colors'>
-              <Plus className='w-3.5 h-3.5' />
+            <div
+              className={cn(
+                'w-7 h-7 rounded-full flex items-center justify-center transition-colors',
+                isAdded
+                  ? 'bg-green-50 text-green-600'
+                  : 'bg-purple-50 text-purple-600 hover:bg-purple-100',
+              )}
+            >
+              {isAdded ? <Check className='w-3.5 h-3.5' /> : <Plus className='w-3.5 h-3.5' />}
             </div>
           </div>
         </div>
