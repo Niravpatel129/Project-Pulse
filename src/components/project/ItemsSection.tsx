@@ -715,13 +715,7 @@ export default function ItemsSection({
             {/* Add Item Form */}
             <AnimatePresence mode='wait'>
               {currentNewItemMode === 'manual' && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.25 }}
-                  className='border border-[#E5E7EB] rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200 w-full relative'
-                >
+                <motion.div className='border border-[#E5E7EB] rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200 w-full relative'>
                   {/* Close button in top-right corner */}
                   <button
                     type='button'
