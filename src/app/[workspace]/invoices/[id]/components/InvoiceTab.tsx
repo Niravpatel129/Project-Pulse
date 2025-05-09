@@ -616,13 +616,12 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
         <div className='flex flex-col items-end gap-2'>
           <div className='flex items-center gap-4'>
             <div className='flex items-center gap-1 bg-white rounded-full border p-1 px-2'>
-              <span className='text-sm font-medium'>Stripe Invoice Payments</span>
+              <span className='text-sm font-medium md:block hidden'>Payments</span>
               <Switch
                 checked={true}
                 disabled
                 className='scale-90 bg-green-600 data-[state=checked]:bg-green-600'
               />
-              <span className='ml-1 text-xs font-semibold text-green-600'>CONNECTED</span>
             </div>
             <Button
               variant='outline'
@@ -664,7 +663,9 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
             </div>
             {invoice.depositPercentage > 0 && (
               <div className='flex flex-col items-end'>
-                <span className='text-xs text-muted-foreground font-medium mb-0.5'>Deposit</span>
+                <span className='text-xs text-muted-foreground font-medium mb-0.5'>
+                  Deposit Due
+                </span>
                 <div className='flex items-center gap-1'>
                   <div className='text-lg font-semibold text-blue-700'>
                     ${(invoice.total * (invoice.depositPercentage / 100)).toFixed(2)}
