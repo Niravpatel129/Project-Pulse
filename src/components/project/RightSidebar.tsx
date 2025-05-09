@@ -2,9 +2,11 @@
 
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { newRequest } from '@/utils/newRequest';
+import { useMutation } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Send, Sparkles } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Message {
   id: string;
@@ -23,6 +25,46 @@ export default function RightSidebar() {
     },
   ]);
   const [input, setInput] = useState('');
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Focus input when component mounts
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const chatMutation = useMutation({
+    mutationFn: async (message: string) => {
+      const response = await newRequest.post('/chat', { message });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      const assistantMessage: Message = {
+        id: Date.now().toString(),
+        content: data.reply,
+        role: 'assistant',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => {
+        return [...prev, assistantMessage];
+      });
+      // Focus input after receiving response
+      inputRef.current?.focus();
+    },
+    onError: (error) => {
+      console.error('Error sending message:', error);
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        content: 'Sorry, I encountered an error. Please try again.',
+        role: 'assistant',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => {
+        return [...prev, errorMessage];
+      });
+      // Focus input after error
+      inputRef.current?.focus();
+    },
+  });
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -34,9 +76,11 @@ export default function RightSidebar() {
       timestamp: new Date(),
     };
 
-    setMessages([...messages, newMessage]);
+    setMessages((prev) => {
+      return [...prev, newMessage];
+    });
     setInput('');
-    // Here you would typically make an API call to your AI service
+    chatMutation.mutate(input);
   };
 
   return (
@@ -81,6 +125,53 @@ export default function RightSidebar() {
                 </motion.div>
               );
             })}
+            {chatMutation.isPending && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className='max-w-[85%]'
+              >
+                <div className='text-sm text-neutral-800 leading-relaxed bg-neutral-50 rounded-lg px-4 py-3'>
+                  <div className='flex items-center gap-2'>
+                    <motion.div
+                      animate={{
+                        scale: [1, 1.2, 1],
+                      }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                      }}
+                      className='w-2 h-2 bg-purple-500 rounded-full'
+                    />
+                    <motion.div
+                      animate={{
+                        scale: [1, 1.2, 1],
+                      }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                        delay: 0.2,
+                      }}
+                      className='w-2 h-2 bg-purple-500 rounded-full'
+                    />
+                    <motion.div
+                      animate={{
+                        scale: [1, 1.2, 1],
+                      }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                        delay: 0.4,
+                      }}
+                      className='w-2 h-2 bg-purple-500 rounded-full'
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </ScrollArea>
@@ -89,6 +180,7 @@ export default function RightSidebar() {
       <div className='p-4 border-t border-neutral-100'>
         <div className='relative'>
           <textarea
+            ref={inputRef}
             value={input}
             onChange={(e) => {
               return setInput(e.target.value);
@@ -97,11 +189,13 @@ export default function RightSidebar() {
               return e.key === 'Enter' && !e.shiftKey && handleSend();
             }}
             placeholder='Type your message...'
-            className='w-full px-4 py-3 text-sm border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 min-h-[72px] resize-none transition-colors duration-200 placeholder:text-neutral-400'
+            disabled={chatMutation.isPending}
+            className='w-full px-4 py-3 text-sm border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 min-h-[72px] resize-none transition-colors duration-200 placeholder:text-neutral-400 disabled:opacity-50 disabled:cursor-not-allowed'
           />
           <Button
             onClick={handleSend}
-            className='absolute bottom-2 right-2 bg-purple-500 hover:bg-purple-600 transition-colors duration-200'
+            disabled={chatMutation.isPending || !input.trim()}
+            className='absolute bottom-2 right-2 bg-purple-500 hover:bg-purple-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
             size='icon'
           >
             <Send className='w-3.5 h-3.5' />
