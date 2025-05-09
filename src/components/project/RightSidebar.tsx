@@ -218,63 +218,64 @@ export default function RightSidebar({ setItems, projectCurrency }: RightSidebar
                   className={message.role === 'assistant' ? 'max-w-[85%]' : 'max-w-[85%] ml-auto'}
                 >
                   {message.role === 'assistant' ? (
-                    <div className='text-sm text-neutral-800 leading-relaxed bg-neutral-50 rounded-lg px-4 py-3'>
-                      <div className='flex items-start gap-2'>
-                        <div className='flex-1'>
-                          {message.content}
-                          {message.structuredData?.map((data, dataIndex) => {
-                            if (data.type === 'LINE_ITEMS') {
-                              return (
-                                <div key={dataIndex} className='mt-4 space-y-2'>
-                                  {data.items.map((item, itemIndex) => {
-                                    return (
-                                      <LineItemCard
-                                        key={itemIndex}
-                                        item={item}
-                                        onClick={handleAddItem}
-                                      />
-                                    );
-                                  })}
-                                </div>
-                              );
-                            }
-                            return null;
-                          })}
+                    <div className='space-y-3'>
+                      <div className='text-sm text-neutral-800 leading-relaxed bg-neutral-50 rounded-lg px-4 py-3'>
+                        <div className='flex items-start gap-2'>
+                          <div className='flex-1'>{message.content}</div>
+                          {message.meta && (
+                            <TooltipProvider delayDuration={0}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button className='text-neutral-400 hover:text-neutral-600 transition-colors'>
+                                    <Info className='w-4 h-4' />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent className='max-w-[300px] p-3'>
+                                  <div className='space-y-2 text-xs'>
+                                    {message.meta.confidence && (
+                                      <div>
+                                        <span className='font-medium'>Confidence:</span>{' '}
+                                        {(message.meta.confidence * 100).toFixed(1)}%
+                                      </div>
+                                    )}
+                                    {message.meta.reasoning && (
+                                      <div>
+                                        <span className='font-medium'>Reasoning:</span>{' '}
+                                        {message.meta.reasoning}
+                                      </div>
+                                    )}
+                                    {message.meta.processingTime && (
+                                      <div>
+                                        <span className='font-medium'>Processing Time:</span>{' '}
+                                        {message.meta.processingTime.toFixed(2)}s
+                                      </div>
+                                    )}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
                         </div>
-                        {message.meta && (
-                          <TooltipProvider delayDuration={0}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button className='text-neutral-400 hover:text-neutral-600 transition-colors'>
-                                  <Info className='w-4 h-4' />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent className='max-w-[300px] p-3'>
-                                <div className='space-y-2 text-xs'>
-                                  {message.meta.confidence && (
-                                    <div>
-                                      <span className='font-medium'>Confidence:</span>{' '}
-                                      {(message.meta.confidence * 100).toFixed(1)}%
-                                    </div>
-                                  )}
-                                  {message.meta.reasoning && (
-                                    <div>
-                                      <span className='font-medium'>Reasoning:</span>{' '}
-                                      {message.meta.reasoning}
-                                    </div>
-                                  )}
-                                  {message.meta.processingTime && (
-                                    <div>
-                                      <span className='font-medium'>Processing Time:</span>{' '}
-                                      {message.meta.processingTime.toFixed(2)}s
-                                    </div>
-                                  )}
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
                       </div>
+
+                      {/* Line Items */}
+                      {message.structuredData?.map((data, dataIndex) => {
+                        return (
+                          data.type === 'LINE_ITEMS' && (
+                            <div key={dataIndex} className='space-y-2 pl-2'>
+                              {data.items.map((item, itemIndex) => {
+                                return (
+                                  <LineItemCard
+                                    key={itemIndex}
+                                    item={item}
+                                    onClick={handleAddItem}
+                                  />
+                                );
+                              })}
+                            </div>
+                          )
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className='rounded-lg px-4 py-3 bg-purple-50 text-neutral-800 shadow-sm'>

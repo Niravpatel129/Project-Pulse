@@ -1,6 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { Plus } from 'lucide-react';
+import { Percent, Plus, Tag } from 'lucide-react';
 
 interface LineItem {
   name: string;
@@ -21,44 +21,49 @@ interface LineItemCardProps {
 }
 
 export function LineItemCard({ item, onClick, className }: LineItemCardProps) {
+  const hasTax = item.taxRate && parseFloat(item.taxRate) > 0;
+  const hasDiscount = item.discount && parseFloat(item.discount) > 0;
+
   return (
     <Card
       className={cn(
-        'cursor-pointer transition-all duration-200 hover:shadow-md hover:border-purple-200',
+        'cursor-pointer transition-all duration-200 hover:shadow-sm hover:border-purple-200 bg-white',
         className,
       )}
       onClick={() => {
         return onClick(item);
       }}
     >
-      <CardContent className='p-4'>
-        <div className='flex items-start justify-between gap-4'>
+      <CardContent className='p-3'>
+        <div className='flex items-center justify-between gap-3'>
           <div className='flex-1 min-w-0'>
-            <h3 className='font-medium text-sm text-neutral-900 truncate'>{item.name}</h3>
-            <p className='text-xs text-neutral-500 mt-0.5 line-clamp-2'>{item.description}</p>
-            <div className='flex items-center gap-2 mt-2'>
-              <span className='text-sm font-medium text-purple-600'>{item.price}</span>
+            <div className='flex items-center gap-2'>
+              <h3 className='font-medium text-sm text-neutral-900 truncate'>{item.name}</h3>
               <span className='text-xs text-neutral-400'>× {item.qty}</span>
             </div>
-            <div className='mt-2 space-y-1'>
-              {item.taxRate && (
-                <div className='flex items-center gap-1 text-xs text-neutral-500'>
-                  <span>Tax:</span>
-                  <span>{item.taxName || 'Standard Tax'}</span>
-                  <span>({item.taxRate}%)</span>
-                </div>
-              )}
-              {item.discount && (
-                <div className='flex items-center gap-1 text-xs text-neutral-500'>
-                  <span>Discount:</span>
-                  <span>{item.discount}</span>
-                </div>
-              )}
+            <div className='flex items-center gap-2 mt-1'>
+              <span className='text-sm font-medium text-purple-600'>{item.price}</span>
             </div>
+            {(hasTax || hasDiscount) && (
+              <div className='flex items-center gap-1.5 mt-1.5 text-xs'>
+                {hasTax && (
+                  <span className='inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded'>
+                    <Percent className='w-3 h-3' />
+                    {item.taxRate}% {item.taxName || 'tax'}
+                  </span>
+                )}
+                {hasDiscount && (
+                  <span className='inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-50 text-green-700 rounded'>
+                    <Tag className='w-3 h-3' />
+                    {item.discount} off
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           <div className='flex-shrink-0'>
-            <div className='w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-600'>
-              <Plus className='w-4 h-4' />
+            <div className='w-7 h-7 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 hover:bg-purple-100 transition-colors'>
+              <Plus className='w-3.5 h-3.5' />
             </div>
           </div>
         </div>
