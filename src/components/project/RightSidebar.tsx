@@ -78,6 +78,7 @@ export default function RightSidebar({
     },
   ]);
   const [input, setInput] = useState('');
+  const [images, setImages] = useState<string[]>([]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Focus input when component mounts
@@ -236,6 +237,24 @@ export default function RightSidebar({
           ];
         });
         return;
+      }
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            setImages((prev) => {
+              return [...prev, event.target?.result as string];
+            });
+          };
+          reader.readAsDataURL(file);
+        }
       }
     }
   };
@@ -506,6 +525,44 @@ export default function RightSidebar({
       {/* Input Area */}
       <div className='p-4 border-t border-neutral-100 flex-shrink-0'>
         <div className='relative'>
+          {images.length > 0 && (
+            <div className='flex gap-2 mb-2'>
+              {images.map((img, idx) => {
+                return (
+                  <div key={idx} className='relative'>
+                    <img
+                      src={img}
+                      alt={`pasted-${idx}`}
+                      className='w-16 h-16 object-cover rounded'
+                    />
+                    <button
+                      type='button'
+                      className='absolute -top-2 -right-2 w-4 h-4 flex items-center justify-center bg-black rounded-full text-white shadow-md hover:bg-neutral-800 transition'
+                      onClick={() => {
+                        return setImages(
+                          images.filter((_, i) => {
+                            return i !== idx;
+                          }),
+                        );
+                      }}
+                      aria-label='Remove image'
+                    >
+                      <svg
+                        width='10'
+                        height='10'
+                        viewBox='0 0 16 16'
+                        fill='none'
+                        xmlns='http://www.w3.org/2000/svg'
+                      >
+                        <path d='M4 4L12 12' stroke='white' strokeWidth='2' strokeLinecap='round' />
+                        <path d='M12 4L4 12' stroke='white' strokeWidth='2' strokeLinecap='round' />
+                      </svg>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
           <textarea
             ref={inputRef}
             value={input}
@@ -515,6 +572,7 @@ export default function RightSidebar({
             onKeyPress={(e) => {
               return e.key === 'Enter' && !e.shiftKey && handleSend();
             }}
+            onPaste={handlePaste}
             placeholder='Type your message...'
             disabled={chatMutation.isPending}
             className='w-full px-4 py-3 text-sm border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 min-h-[72px] resize-none transition-colors duration-200 placeholder:text-neutral-400 disabled:opacity-50 disabled:cursor-not-allowed'
