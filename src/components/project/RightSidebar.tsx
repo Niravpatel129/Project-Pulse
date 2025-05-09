@@ -5,9 +5,11 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { newRequest } from '@/utils/newRequest';
+import { DialogTitle } from '@radix-ui/react-dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Info, Send, Sparkles } from 'lucide-react';
+import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { LineItemCard } from './LineItemCard';
 
@@ -598,11 +600,15 @@ export default function RightSidebar({
       {/* Image Preview Modal */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className='flex items-center justify-center'>
+          <DialogTitle className='sr-only'>Preview</DialogTitle>
           {previewImage && (
-            <img
+            <Image
+              unoptimized
+              width={1000}
+              height={1000}
               src={previewImage}
               alt='Preview'
-              className='max-w-[90vw] max-h-[80vh] rounded shadow-lg'
+              className='max-w-[90vw] max-h-[80vh] rounded shadow-lg object-contain'
             />
           )}
         </DialogContent>
