@@ -11,6 +11,7 @@ import {
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DownloadCloud, Link as LinkIcon } from 'lucide-react';
+import { useParams } from 'next/navigation';
 import { useRef } from 'react';
 import { toast } from 'sonner';
 
@@ -144,6 +145,7 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
   const queryClient = useQueryClient();
   const isPaid = invoice.status === 'paid';
   const invoiceRef = useRef<HTMLDivElement>(null);
+  const params = useParams();
 
   const handleDownloadPDF = async () => {
     if (typeof window === 'undefined') return;
@@ -234,7 +236,10 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
             <div
               className='cursor-pointer border rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-primary group bg-indigo-50'
               onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
+                const publicUrl = `${window.location.origin}/invoice/${invoice._id}`;
+                console.log('🚀 publicUrl:', publicUrl);
+
+                navigator.clipboard.writeText(publicUrl);
                 toast.success('Invoice link copied!');
               }}
             >
