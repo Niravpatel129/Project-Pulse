@@ -250,7 +250,11 @@ export default function ProjectManagement({
       {/* Desktop Right Sidebar */}
       {!isMobile && (
         <div className='w-[350px]'>
-          <RightSidebar setItems={setItems} projectCurrency={projectCurrency} />
+          <RightSidebar
+            setItems={setItems}
+            projectCurrency={projectCurrency}
+            setSelectedClient={setSelectedClient}
+          />
         </div>
       )}
 
@@ -291,7 +295,11 @@ export default function ProjectManagement({
               </button>
             </div>
             <div className='flex-1 overflow-y-auto pb-20'>
-              <RightSidebar setItems={setItems} projectCurrency={projectCurrency} />
+              <RightSidebar
+                setItems={setItems}
+                projectCurrency={projectCurrency}
+                setSelectedClient={setSelectedClient}
+              />
             </div>
           </div>
         </div>
