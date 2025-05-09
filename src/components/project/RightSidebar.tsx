@@ -308,7 +308,7 @@ export default function RightSidebar({ setItems, projectCurrency }: RightSidebar
           <Button
             onClick={handleSend}
             disabled={chatMutation.isPending || !input.trim()}
-            className='absolute bottom-2 right-2 bg-purple-500 hover:bg-purple-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+            className='absolute bottom-4 right-2 bg-purple-500 hover:bg-purple-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
             size='icon'
           >
             <Send className='w-3.5 h-3.5' />
