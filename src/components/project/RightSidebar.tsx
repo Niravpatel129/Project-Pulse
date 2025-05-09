@@ -8,6 +8,17 @@ import { useMutation } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Info, Send, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { LineItemCard } from './LineItemCard';
+
+interface LineItem {
+  name: string;
+  description: string;
+  price: string;
+  type: string;
+  qty: number;
+  reasoning: string;
+}
 
 interface Message {
   id: string;
@@ -19,9 +30,18 @@ interface Message {
     reasoning?: string;
     processingTime?: number;
   };
+  structuredData?: {
+    type: string;
+    items: LineItem[];
+  }[];
 }
 
-export default function RightSidebar() {
+interface RightSidebarProps {
+  setItems: React.Dispatch<React.SetStateAction<any[]>>;
+  projectCurrency: string;
+}
+
+export default function RightSidebar({ setItems, projectCurrency }: RightSidebarProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -54,6 +74,7 @@ export default function RightSidebar() {
           reasoning: data.reasoning,
           processingTime: data.meta?.processingTime,
         },
+        structuredData: data.structuredData,
       };
       setMessages((prev) => {
         return [...prev, assistantMessage];
@@ -92,6 +113,30 @@ export default function RightSidebar() {
     chatMutation.mutate(input);
   };
 
+  const handleAddItem = (item: LineItem) => {
+    // Format the item to match the expected structure
+    const formattedItem = {
+      id: `item-${Date.now()}`,
+      name: item.name,
+      description: item.description,
+      price: item.price,
+      quantity: item.qty.toString(),
+      currency: projectCurrency,
+      type: item.type,
+      taxRate: 0,
+      discount: 0,
+      taxable: true,
+    };
+
+    // Add the item to the items array
+    setItems((prev) => {
+      return [...prev, formattedItem];
+    });
+
+    // Show success notification
+    toast.success('Item added successfully');
+  };
+
   return (
     <div className='h-full bg-white border-l border-neutral-100 flex flex-col'>
       {/* Header */}
@@ -119,7 +164,27 @@ export default function RightSidebar() {
                   {message.role === 'assistant' ? (
                     <div className='text-sm text-neutral-800 leading-relaxed bg-neutral-50 rounded-lg px-4 py-3'>
                       <div className='flex items-start gap-2'>
-                        <div className='flex-1'>{message.content}</div>
+                        <div className='flex-1'>
+                          {message.content}
+                          {message.structuredData?.map((data, dataIndex) => {
+                            if (data.type === 'LINE_ITEMS') {
+                              return (
+                                <div key={dataIndex} className='mt-4 space-y-2'>
+                                  {data.items.map((item, itemIndex) => {
+                                    return (
+                                      <LineItemCard
+                                        key={itemIndex}
+                                        item={item}
+                                        onClick={handleAddItem}
+                                      />
+                                    );
+                                  })}
+                                </div>
+                              );
+                            }
+                            return null;
+                          })}
+                        </div>
                         {message.meta && (
                           <TooltipProvider delayDuration={0}>
                             <Tooltip>
