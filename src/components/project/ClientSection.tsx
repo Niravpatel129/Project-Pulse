@@ -22,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useClients } from '@/hooks/useClients';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronDown, Plus, Search, Sparkles, User } from 'lucide-react';
+import { ChevronDown, Plus, Search, Sparkles, Trash2, User } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import SectionFooter from './SectionFooter';
 import { Client, Section } from './types';
@@ -207,6 +207,16 @@ export default function ClientSection({
     },
   });
 
+  const deleteClientMutation = useMutation({
+    mutationFn: async (clientId: string) => {
+      const response = await newRequest.delete(`/clients/${clientId}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+    },
+  });
+
   const handleCreateClient = () => {
     if (!newClient.user?.name) {
       return;
@@ -320,6 +330,13 @@ export default function ClientSection({
       setAiError('Failed to generate client. Please try again.');
     } finally {
       setIsAiGenerating(false);
+    }
+  };
+
+  const handleDeleteClient = (clientId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('Are you sure you want to delete this client?')) {
+      deleteClientMutation.mutate(clientId);
     }
   };
 
@@ -570,6 +587,16 @@ export default function ClientSection({
                                 }}
                               >
                                 Edit
+                              </Button>
+                              <Button
+                                variant='ghost'
+                                size='sm'
+                                onClick={(e) => {
+                                  return handleDeleteClient(client._id, e);
+                                }}
+                                className='text-red-600 hover:text-red-700 hover:bg-red-50'
+                              >
+                                <Trash2 className='w-4 h-4' />
                               </Button>
                             </div>
                           </div>

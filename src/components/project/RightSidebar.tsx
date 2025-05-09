@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { newRequest } from '@/utils/newRequest';
-import { useMutation } from '@tanstack/react-query';
-import axios from 'axios';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Info, Send, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -69,6 +68,7 @@ export default function RightSidebar({
   setSelectedClient,
   onAiGeneratedClient,
 }: RightSidebarProps) {
+  const queryClient = useQueryClient();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -194,29 +194,30 @@ export default function RightSidebar({
 
   const handleAddClient = async (clientData: any) => {
     try {
-      const response = await axios.post('/api/clients', clientData);
-      if (response.status === 201) {
-        const clientId = response.data.data._id;
-        setSelectedClient(clientId);
-        setMessages((prev) => {
-          return [
-            ...prev,
-            {
-              id: Date.now().toString(),
-              content: '✅ Client added successfully!',
-              role: 'assistant',
-              timestamp: new Date(),
-            },
-            {
-              id: (Date.now() + 1).toString(),
-              content: 'Now you can proceed with creating an invoice for this client.',
-              role: 'assistant',
-              timestamp: new Date(),
-            },
-          ];
-        });
-      }
+      const response = await newRequest.post('/clients', clientData);
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      const clientId = response.data.data;
+      console.log('🚀 clientId:', clientId);
+      setSelectedClient(clientId);
+      setMessages((prev) => {
+        return [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            content: '✅ Client added successfully!',
+            role: 'assistant',
+            timestamp: new Date(),
+          },
+          {
+            id: (Date.now() + 1).toString(),
+            content: 'Now you can proceed with creating an invoice for this client.',
+            role: 'assistant',
+            timestamp: new Date(),
+          },
+        ];
+      });
     } catch (error: any) {
+      console.log('🚀 error:', error);
       console.error('API Error:', error.response?.data);
       if (
         error.response?.data?.status === 'fail' &&
@@ -228,63 +229,14 @@ export default function RightSidebar({
             ...prev,
             {
               id: Date.now().toString(),
-              content: `⚠️ A client with email ${email} already exists. Would you like to select this client for your invoice?`,
+              content: `⚠️ A client with email ${email} already exists.`,
               role: 'assistant',
               timestamp: new Date(),
-              structuredData: [
-                {
-                  type: 'SELECT_EXISTING_CLIENT',
-                  action: async () => {
-                    try {
-                      const response = await axios.get(`/api/clients?email=${email}`);
-                      if (response.data.data.length > 0) {
-                        const client = response.data.data[0];
-                        setSelectedClient(client._id);
-                        setMessages((prev) => {
-                          return [
-                            ...prev,
-                            {
-                              id: Date.now().toString(),
-                              content: `✅ Selected client: ${client.user.name}`,
-                              role: 'assistant',
-                              timestamp: new Date(),
-                            },
-                          ];
-                        });
-                      }
-                    } catch (error) {
-                      console.error('Error finding client:', error);
-                      setMessages((prev) => {
-                        return [
-                          ...prev,
-                          {
-                            id: Date.now().toString(),
-                            content: '❌ Failed to find the existing client. Please try again.',
-                            role: 'assistant',
-                            timestamp: new Date(),
-                          },
-                        ];
-                      });
-                    }
-                  },
-                },
-              ],
             },
           ];
         });
         return;
       }
-      setMessages((prev) => {
-        return [
-          ...prev,
-          {
-            id: Date.now().toString(),
-            content: '❌ Failed to add client. Please try again.',
-            role: 'assistant',
-            timestamp: new Date(),
-          },
-        ];
-      });
     }
   };
 
@@ -479,20 +431,6 @@ export default function RightSidebar({
                                       </ul>
                                     </div>
                                   )}
-                                </div>
-                              </div>
-                            )}
-                            {data.type === 'SELECT_EXISTING_CLIENT' && (
-                              <div key={`select-client-${dataIndex}`} className='space-y-2 pl-2'>
-                                <div className='bg-white rounded-lg border border-gray-200 p-4'>
-                                  <Button
-                                    variant='outline'
-                                    size='sm'
-                                    className='w-full'
-                                    onClick={data.action}
-                                  >
-                                    Select Client
-                                  </Button>
                                 </div>
                               </div>
                             )}
