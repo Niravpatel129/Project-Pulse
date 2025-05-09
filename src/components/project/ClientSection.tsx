@@ -1,7 +1,5 @@
 'use client';
 
-import AICard from '@/components/ui/ai-card';
-import AIInput, { Attachment } from '@/components/ui/ai-input';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -10,20 +8,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useClients } from '@/hooks/useClients';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronDown, Plus, Search, Sparkles, Trash2, User } from 'lucide-react';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Plus, Search, Trash2, User } from 'lucide-react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import SectionFooter from './SectionFooter';
 import { Client, Section } from './types';
 
@@ -34,7 +26,6 @@ type ClientSectionProps = {
   setActiveSection: React.Dispatch<React.SetStateAction<Section>>;
   onChatClick?: () => void;
   onSectionChange?: (section: number) => void;
-  aiGeneratedClient?: any;
 };
 
 export default function ClientSection({
@@ -44,7 +35,6 @@ export default function ClientSection({
   setActiveSection,
   onChatClick,
   onSectionChange,
-  aiGeneratedClient,
 }: ClientSectionProps) {
   const queryClient = useQueryClient();
   const { clients: apiClients, isLoading: isLoadingClients } = useClients();
@@ -53,9 +43,6 @@ export default function ClientSection({
     'contact',
   );
   const [searchQuery, setSearchQuery] = useState('');
-  const [aiInput, setAiInput] = useState('');
-  const [isAiGenerating, setIsAiGenerating] = useState(false);
-  const [showAiInput, setShowAiInput] = useState(false);
   const [newClient, setNewClient] = useState<Partial<Client>>({
     user: {
       name: '',
@@ -91,9 +78,6 @@ export default function ClientSection({
   });
   const [isEditingClient, setIsEditingClient] = useState(false);
   const [editClientId, setEditClientId] = useState<string | null>(null);
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [aiError, setAiError] = useState<string | null>(null);
-  const [aiGeneratedFields, setAiGeneratedFields] = useState<string[]>([]);
   const [shippingSameAsBilling, setShippingSameAsBilling] = useState(true);
   const tabContentRef = useRef<HTMLDivElement>(null);
   const [tabContentHeight, setTabContentHeight] = useState<number | undefined>(undefined);
@@ -104,33 +88,6 @@ export default function ClientSection({
       setTabContentHeight(tabContentRef.current.scrollHeight);
     }
   }, [activeTab, clientModalOpen]);
-
-  useEffect(() => {
-    if (aiGeneratedClient) {
-      setNewClient(aiGeneratedClient);
-      setAiGeneratedFields([
-        'user.name',
-        'user.email',
-        'phone',
-        'address.street',
-        'address.city',
-        'address.state',
-        'address.country',
-        'address.zip',
-        'shippingAddress.street',
-        'shippingAddress.city',
-        'shippingAddress.state',
-        'shippingAddress.country',
-        'shippingAddress.zip',
-        'taxId',
-        'accountNumber',
-        'mobile',
-        'internalNotes',
-      ]);
-      setClientModalOpen(true);
-      setActiveTab('contact');
-    }
-  }, [aiGeneratedClient]);
 
   const resetClientForm = () => {
     setNewClient({
@@ -169,9 +126,6 @@ export default function ClientSection({
     setActiveTab('contact');
     setIsEditingClient(false);
     setEditClientId(null);
-    setAttachments([]);
-    setAiError(null);
-    setAiGeneratedFields([]);
   };
 
   const createClientMutation = useMutation({
@@ -257,82 +211,6 @@ export default function ClientSection({
     setClientModalOpen(true);
   };
 
-  const handleAiGenerate = async () => {
-    setIsAiGenerating(true);
-    setAiError(null);
-
-    try {
-      const response = await newRequest.post('/ai/smart-response', {
-        prompt: aiInput,
-        history: '',
-      });
-
-      if (response.data.structuredData?.[0]?.type === 'INVOICE_CLIENT') {
-        const clientData = response.data.structuredData[0].client;
-
-        // Parse address strings into structured format
-        const parseAddress = (addressStr: string) => {
-          const parts = addressStr.split(', ');
-          return {
-            street: parts[0],
-            city: parts[1],
-            state: parts[2],
-            country: parts[3],
-            zip: parts[4],
-          };
-        };
-
-        const aiGeneratedClient = {
-          user: {
-            name: clientData.user,
-            email: clientData.contact,
-          } as Client['user'],
-          phone: clientData.phone,
-          address: parseAddress(clientData.address),
-          shippingAddress: parseAddress(clientData.shippingAddress),
-          taxId: clientData.taxId,
-          accountNumber: clientData.accountNumber,
-          fax: clientData.fax,
-          mobile: clientData.mobile,
-          tollFree: clientData.tollFree,
-          website: clientData.website,
-          internalNotes: clientData.internalNotes,
-          customFields: clientData.customFields || {},
-        };
-
-        setNewClient(aiGeneratedClient);
-        setAiGeneratedFields([
-          'user.name',
-          'user.email',
-          'phone',
-          'address.street',
-          'address.city',
-          'address.state',
-          'address.country',
-          'address.zip',
-          'shippingAddress.street',
-          'shippingAddress.city',
-          'shippingAddress.state',
-          'shippingAddress.country',
-          'shippingAddress.zip',
-          'taxId',
-          'accountNumber',
-          'mobile',
-          'internalNotes',
-        ]);
-        setClientModalOpen(true);
-        setShowAiInput(false);
-      } else {
-        setAiError('Invalid response format from AI service');
-      }
-    } catch (error) {
-      console.error('Error generating client:', error);
-      setAiError('Failed to generate client. Please try again.');
-    } finally {
-      setIsAiGenerating(false);
-    }
-  };
-
   const handleDeleteClient = (clientId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (window.confirm('Are you sure you want to delete this client?')) {
@@ -347,14 +225,6 @@ export default function ClientSection({
       client.user.email.toLowerCase().includes(searchLower)
     );
   });
-
-  const removeAttachment = (attachment: Attachment) => {
-    setAttachments(
-      attachments.filter((a) => {
-        return a.id !== attachment.id;
-      }),
-    );
-  };
 
   const validateEmail = (email: string) => {
     if (!email) return true; // Empty email is valid since it's optional
@@ -399,213 +269,141 @@ export default function ClientSection({
                     className='pl-10'
                   />
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button className='bg-gray-900 hover:bg-gray-800 text-white whitespace-nowrap border border-gray-700 shadow-sm'>
-                      <Plus className='w-4 h-4 mr-2' />
-                      Add Client
-                      <ChevronDown className='w-4 h-4 ml-2' />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align='end' className='w-[200px]'>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        resetClientForm();
-                        setClientModalOpen(true);
-                      }}
-                      className='cursor-pointer'
-                    >
-                      <Plus className='w-4 h-4 mr-2' />
-                      Manual Entry
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        return setShowAiInput(true);
-                      }}
-                      className='cursor-pointer'
-                    >
-                      <Sparkles className='w-4 h-4 mr-2' />
-                      AI-Powered
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <Button
+                  onClick={() => {
+                    resetClientForm();
+                    setClientModalOpen(true);
+                  }}
+                  className='bg-gray-900 hover:bg-gray-800 text-white whitespace-nowrap border border-gray-700 shadow-sm'
+                >
+                  <Plus className='w-4 h-4 mr-2' />
+                  Add Client
+                </Button>
               </div>
             )}
 
-            {showAiInput ? (
-              <AICard
-                title='AI-Powered Client Creation'
-                onClose={() => {
-                  setShowAiInput(false);
-                  setAiInput('');
-                  setAttachments([]);
-                  setAiError(null);
-                }}
-              >
-                <AIInput
-                  value={aiInput}
-                  onChange={setAiInput}
-                  onGenerate={handleAiGenerate}
-                  isGenerating={isAiGenerating}
-                  error={aiError}
-                  placeholder='Describe your client in natural language...'
-                  exampleText='Example: "Acme Corp, a tech company in San Francisco, contact email is contact@acmecorp.com, phone is 555-123-4567"'
-                  attachments={attachments}
-                  onAttachmentAdd={setAttachments}
-                  onAttachmentRemove={(id: any) => {
-                    removeAttachment(id);
-                  }}
-                />
-              </AICard>
-            ) : (
-              <>
-                {filteredClients.length === 0 ? (
-                  <div className='text-center py-0 px-4'>
-                    <h3 className='mt-2 text-xl font-semibold text-gray-900 mb-3'>
-                      Add Your First Client
-                    </h3>
-                    <p className='text-gray-500 mb-8 max-w-md mx-auto'>
-                      {searchQuery
-                        ? 'No clients match your search. Try a different search term or add a new client.'
-                        : 'Get started by adding your first client. Choose from two convenient options:'}
-                    </p>
+            {filteredClients.length === 0 ? (
+              <div className='text-center py-0 px-4'>
+                <h3 className='mt-2 text-xl font-semibold text-gray-900 mb-3'>
+                  Add Your First Client
+                </h3>
+                <p className='text-gray-500 mb-8 max-w-md mx-auto'>
+                  {searchQuery
+                    ? 'No clients match your search. Try a different search term or add a new client.'
+                    : 'Get started by adding your first client.'}
+                </p>
 
-                    {!searchQuery && (
-                      <div className='grid grid-cols-2 gap-6 max-w-2xl mx-auto'>
-                        <div className='bg-white p-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors flex flex-col'>
-                          <div className='relative'>
-                            <div className='absolute inset-0 bg-gradient-to-r from-blue-100 to-blue-50 blur-xl opacity-50 rounded-full'></div>
-                            <div className='bg-blue-50 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 relative'>
-                              <Plus className='w-6 h-6 text-blue-600' />
-                            </div>
-                          </div>
-                          <h4 className='font-medium text-gray-900 mb-2'>Manual Entry</h4>
-                          <p className='text-sm text-gray-500 mb-4 flex-grow'>
-                            Perfect for when you have all the client details ready. Enter
-                            information directly into our organized form.
-                          </p>
-                          <Button
-                            onClick={() => {
-                              resetClientForm();
-                              setClientModalOpen(true);
-                            }}
-                            className='w-full bg-gray-900 hover:bg-gray-800 text-white'
-                          >
-                            Add Manually
-                          </Button>
-                        </div>
-
-                        <div className='bg-white p-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors flex flex-col'>
-                          <div className='relative'>
-                            <div className='absolute inset-0 bg-gradient-to-r from-purple-100 to-purple-50 blur-xl opacity-50 rounded-full'></div>
-                            <div className='bg-purple-50 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 relative'>
-                              <Sparkles className='w-6 h-6 text-purple-600' />
-                            </div>
-                          </div>
-                          <h4 className='font-medium text-gray-900 mb-2'>AI-Powered</h4>
-                          <p className='text-sm text-gray-500 mb-4 flex-grow'>
-                            Let AI help you create a client profile. Just describe your client in
-                            natural language.
-                          </p>
-                          <Button
-                            onClick={() => {
-                              return setShowAiInput(true);
-                            }}
-                            className='w-full bg-gray-900 hover:bg-gray-800 text-white'
-                          >
-                            Use AI Assistant
-                          </Button>
+                {!searchQuery && (
+                  <div className='max-w-md mx-auto'>
+                    <div className='bg-white p-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors flex flex-col'>
+                      <div className='relative'>
+                        <div className='absolute inset-0 bg-gradient-to-r from-blue-100 to-blue-50 blur-xl opacity-50 rounded-full'></div>
+                        <div className='bg-blue-50 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 relative'>
+                          <Plus className='w-6 h-6 text-blue-600' />
                         </div>
                       </div>
-                    )}
+                      <h4 className='font-medium text-gray-900 mb-2'>Add Client</h4>
+                      <p className='text-sm text-gray-500 mb-4 flex-grow'>
+                        Enter your client information directly into our organized form.
+                      </p>
+                      <Button
+                        onClick={() => {
+                          resetClientForm();
+                          setClientModalOpen(true);
+                        }}
+                        className='w-full bg-gray-900 hover:bg-gray-800 text-white'
+                      >
+                        Add Client
+                      </Button>
+                    </div>
                   </div>
-                ) : (
-                  <div className='space-y-3'>
-                    {filteredClients.map((client) => {
-                      return (
-                        <div
-                          key={client._id}
-                          className={`p-4 rounded-lg border cursor-pointer transition-colors ${
-                            selectedClient === client._id
-                              ? 'border-blue-500 bg-blue-50'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                          onClick={() => {
-                            return setSelectedClient(client._id);
-                          }}
-                        >
-                          <div className='flex justify-between items-start'>
-                            <div className='space-y-1'>
-                              <h3 className='font-medium text-gray-900'>{client.user.name}</h3>
-                              <div className='space-y-0.5'>
-                                {client.contact?.firstName && client.contact?.lastName && (
-                                  <p className='text-sm text-gray-500'>
-                                    {client.contact.firstName} {client.contact.lastName}
-                                  </p>
-                                )}
-                                {client.user.email ? (
-                                  <p className='text-sm text-gray-500'>{client.user.email}</p>
-                                ) : (
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    className='text-sm text-blue-600 hover:text-blue-700 p-0 h-auto'
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleEditClient(client);
-                                      setActiveTab('contact');
-                                    }}
-                                  >
-                                    + Add Email
-                                  </Button>
-                                )}
-                                {client.phone && (
-                                  <p className='text-sm text-gray-500'>{client.phone}</p>
-                                )}
-                                {client.address?.city && client.address?.country && (
-                                  <p className='text-sm text-gray-500'>
-                                    {client.address.city}, {client.address.country}
-                                  </p>
-                                )}
-                                {client.website && (
-                                  <p className='text-sm text-gray-500'>{client.website}</p>
-                                )}
-                              </div>
-                            </div>
-                            <div className='flex items-center gap-2'>
-                              {client.accountNumber && (
-                                <span className='text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded'>
-                                  #{client.accountNumber}
-                                </span>
-                              )}
+                )}
+              </div>
+            ) : (
+              <div className='space-y-3'>
+                {filteredClients.map((client) => {
+                  return (
+                    <div
+                      key={client._id}
+                      className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                        selectedClient === client._id
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      onClick={() => {
+                        return setSelectedClient(client._id);
+                      }}
+                    >
+                      <div className='flex justify-between items-start'>
+                        <div className='space-y-1'>
+                          <h3 className='font-medium text-gray-900'>{client.user.name}</h3>
+                          <div className='space-y-0.5'>
+                            {client.contact?.firstName && client.contact?.lastName && (
+                              <p className='text-sm text-gray-500'>
+                                {client.contact.firstName} {client.contact.lastName}
+                              </p>
+                            )}
+                            {client.user.email ? (
+                              <p className='text-sm text-gray-500'>{client.user.email}</p>
+                            ) : (
                               <Button
                                 variant='ghost'
                                 size='sm'
+                                className='text-sm text-blue-600 hover:text-blue-700 p-0 h-auto'
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleEditClient(client);
+                                  setActiveTab('contact');
                                 }}
                               >
-                                Edit
+                                + Add Email
                               </Button>
-                              <Button
-                                variant='ghost'
-                                size='sm'
-                                onClick={(e) => {
-                                  return handleDeleteClient(client._id, e);
-                                }}
-                                className='text-red-600 hover:text-red-700 hover:bg-red-50'
-                              >
-                                <Trash2 className='w-4 h-4' />
-                              </Button>
-                            </div>
+                            )}
+                            {client.phone && (
+                              <p className='text-sm text-gray-500'>{client.phone}</p>
+                            )}
+                            {client.address?.city && client.address?.country && (
+                              <p className='text-sm text-gray-500'>
+                                {client.address.city}, {client.address.country}
+                              </p>
+                            )}
+                            {client.website && (
+                              <p className='text-sm text-gray-500'>{client.website}</p>
+                            )}
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </>
+                        <div className='flex items-center gap-2'>
+                          {client.accountNumber && (
+                            <span className='text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded'>
+                              #{client.accountNumber}
+                            </span>
+                          )}
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditClient(client);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            onClick={(e) => {
+                              return handleDeleteClient(client._id, e);
+                            }}
+                            className='text-red-600 hover:text-red-700 hover:bg-red-50'
+                          >
+                            <Trash2 className='w-4 h-4' />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
@@ -671,21 +469,11 @@ export default function ClientSection({
                                     ...newClient,
                                     user: { ...newClient.user, name: e.target.value },
                                   });
-                                  setAiGeneratedFields(
-                                    aiGeneratedFields.filter((f) => {
-                                      return f !== 'name';
-                                    }),
-                                  );
                                 }}
                                 placeholder='Business or person'
                                 required
-                                className={
-                                  (aiGeneratedFields.includes('name') ? 'pl-8 ' : '') + 'w-full'
-                                }
+                                className='w-full'
                               />
-                              {aiGeneratedFields.includes('name') && (
-                                <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
-                              )}
                             </div>
                           </div>
                           <div className='grid grid-cols-2 gap-5'>
@@ -706,22 +494,14 @@ export default function ClientSection({
                                       ...newClient,
                                       user: { ...newClient.user, email: e.target.value },
                                     });
-                                    setAiGeneratedFields(
-                                      aiGeneratedFields.filter((f) => {
-                                        return f !== 'email';
-                                      }),
-                                    );
                                     if (emailError) setEmailError(null);
                                   }}
                                   onBlur={handleEmailBlur}
                                   placeholder=''
-                                  className={`${
-                                    aiGeneratedFields.includes('email') ? 'pl-8 ' : ''
-                                  }w-full ${emailError ? 'border-red-500 focus:ring-red-200' : ''}`}
+                                  className={`w-full ${
+                                    emailError ? 'border-red-500 focus:ring-red-200' : ''
+                                  }`}
                                 />
-                                {aiGeneratedFields.includes('email') && (
-                                  <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
-                                )}
                                 {emailError && (
                                   <p className='absolute -bottom-5 left-0 text-xs text-red-400'>
                                     {emailError}
@@ -743,20 +523,10 @@ export default function ClientSection({
                                   value={newClient.phone || ''}
                                   onChange={(e) => {
                                     setNewClient({ ...newClient, phone: e.target.value });
-                                    setAiGeneratedFields(
-                                      aiGeneratedFields.filter((f) => {
-                                        return f !== 'phone';
-                                      }),
-                                    );
                                   }}
                                   placeholder=''
-                                  className={
-                                    aiGeneratedFields.includes('phone') ? 'pl-8 w-full' : 'w-full'
-                                  }
+                                  className='w-full'
                                 />
-                                {aiGeneratedFields.includes('phone') && (
-                                  <Sparkles className='absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500' />
-                                )}
                               </div>
                             </div>
                           </div>
