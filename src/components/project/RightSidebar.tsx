@@ -2,10 +2,11 @@
 
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Send, Sparkles } from 'lucide-react';
+import { Info, Send, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface Message {
@@ -13,6 +14,11 @@ interface Message {
   content: string;
   role: 'user' | 'assistant';
   timestamp: Date;
+  meta?: {
+    confidence?: number;
+    reasoning?: string;
+    processingTime?: number;
+  };
 }
 
 export default function RightSidebar() {
@@ -34,20 +40,24 @@ export default function RightSidebar() {
 
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
-      const response = await newRequest.post('/chat', { message });
+      const response = await newRequest.post('/ai/smart-response', { prompt: message });
       return response.data;
     },
     onSuccess: (data) => {
       const assistantMessage: Message = {
         id: Date.now().toString(),
-        content: data.reply,
+        content: data.message,
         role: 'assistant',
         timestamp: new Date(),
+        meta: {
+          confidence: data.confidence,
+          reasoning: data.reasoning,
+          processingTime: data.meta?.processingTime,
+        },
       };
       setMessages((prev) => {
         return [...prev, assistantMessage];
       });
-      // Focus input after receiving response
       inputRef.current?.focus();
     },
     onError: (error) => {
@@ -61,7 +71,6 @@ export default function RightSidebar() {
       setMessages((prev) => {
         return [...prev, errorMessage];
       });
-      // Focus input after error
       inputRef.current?.focus();
     },
   });
@@ -109,7 +118,42 @@ export default function RightSidebar() {
                 >
                   {message.role === 'assistant' ? (
                     <div className='text-sm text-neutral-800 leading-relaxed bg-neutral-50 rounded-lg px-4 py-3'>
-                      {message.content}
+                      <div className='flex items-start gap-2'>
+                        <div className='flex-1'>{message.content}</div>
+                        {message.meta && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button className='text-neutral-400 hover:text-neutral-600 transition-colors'>
+                                  <Info className='w-4 h-4' />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent className='max-w-[300px] p-3'>
+                                <div className='space-y-2 text-xs'>
+                                  {message.meta.confidence && (
+                                    <div>
+                                      <span className='font-medium'>Confidence:</span>{' '}
+                                      {(message.meta.confidence * 100).toFixed(1)}%
+                                    </div>
+                                  )}
+                                  {message.meta.reasoning && (
+                                    <div>
+                                      <span className='font-medium'>Reasoning:</span>{' '}
+                                      {message.meta.reasoning}
+                                    </div>
+                                  )}
+                                  {message.meta.processingTime && (
+                                    <div>
+                                      <span className='font-medium'>Processing Time:</span>{' '}
+                                      {message.meta.processingTime.toFixed(2)}s
+                                    </div>
+                                  )}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <div className='rounded-lg px-4 py-3 bg-purple-50 text-neutral-800 shadow-sm'>
