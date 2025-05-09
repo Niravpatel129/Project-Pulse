@@ -328,6 +328,11 @@ export default function InvoiceSection({
   };
 
   const handleGenerateInvoice = async () => {
+    if (!client?._id) {
+      toast.error('Please select a client');
+      return;
+    }
+
     if (items.length === 0) {
       toast.error('Please add at least one item to the invoice');
       return;
