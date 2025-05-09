@@ -30,7 +30,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, Hash, Loader2, Plus, Scissors, Sparkles, X } from 'lucide-react';
+import { Check, Copy, Hash, History, Loader2, Plus, Scissors, Sparkles, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import SectionFooter from './SectionFooter';
@@ -122,6 +122,8 @@ export default function ItemsSection({
     taxRateId: 'standard',
     discount: 0,
   });
+  const [removedItems, setRemovedItems] = useState<Item[]>([]);
+  const [showRemovedItems, setShowRemovedItems] = useState(false);
 
   const nameInputRef = useRef<HTMLInputElement>(null);
   const aiPromptInputRef = useRef<HTMLTextAreaElement>(null);
@@ -602,13 +604,111 @@ export default function ItemsSection({
     });
   };
 
+  const handleDuplicateItem = (item: Item) => {
+    const duplicatedItem = {
+      ...item,
+      id: `item${Date.now()}`,
+      name: `${item.name} (Copy)`,
+    };
+    setItems([...items, duplicatedItem]);
+    toast.success('Item duplicated successfully');
+  };
+
+  // Modify the handleRemoveItem to store removed items
+  const handleRemoveItemWithHistory = (id: string, e?: React.MouseEvent) => {
+    const itemToRemove = items.find((item) => {
+      return item.id === id;
+    });
+    if (itemToRemove) {
+      setRemovedItems((prev) => {
+        return [...prev, itemToRemove];
+      });
+    }
+    handleRemoveItem(id, e);
+  };
+
+  const handleRestoreItem = (item: Item) => {
+    setItems((prev) => {
+      return [...prev, item];
+    });
+    setRemovedItems((prev) => {
+      return prev.filter((i) => {
+        return i.id !== item.id;
+      });
+    });
+    toast.success('Item restored successfully');
+  };
+
   return (
     <div className='flex flex-col h-full relative bg-[#FAFAFA]'>
       <div className='absolute inset-0 pt-4 px-6 pb-16 overflow-y-auto'>
         <div className='mb-4'>
           <div className='flex justify-between items-center mb-3'>
             <h2 className='text-lg font-semibold text-[#111827]'>Items</h2>
+            <div className='flex items-center space-x-2'>
+              {removedItems.length > 0 && (
+                <Button
+                  onClick={() => {
+                    return setShowRemovedItems(!showRemovedItems);
+                  }}
+                  variant='outline'
+                  size='sm'
+                  className='text-xs h-8'
+                >
+                  <History size={14} className='mr-2' />
+                  Recently Removed ({removedItems.length})
+                </Button>
+              )}
+            </div>
           </div>
+
+          {/* Recently Removed Items Section */}
+          {showRemovedItems && removedItems.length > 0 && (
+            <div className='mb-6'>
+              <div className='flex items-center justify-between mb-3'>
+                <h3 className='text-sm font-medium text-gray-500'>Recently Removed Items</h3>
+                <Button
+                  onClick={() => {
+                    return setShowRemovedItems(false);
+                  }}
+                  variant='ghost'
+                  size='sm'
+                  className='h-8 text-xs'
+                >
+                  Hide
+                </Button>
+              </div>
+              <div className='space-y-2'>
+                {removedItems.map((item) => {
+                  return (
+                    <div
+                      key={item.id}
+                      className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200'
+                    >
+                      <div className='flex-1'>
+                        <h4 className='text-sm font-medium text-gray-900'>{item.name}</h4>
+                        <p className='text-xs text-gray-500'>
+                          {getCurrencySymbol(projectCurrency)}
+                          {item.price} × {item.quantity}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() => {
+                          return handleRestoreItem(item);
+                        }}
+                        variant='outline'
+                        size='sm'
+                        className='h-8 text-xs'
+                      >
+                        Restore
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <p className='text-[#6B7280] text-sm leading-5 mb-4'>
             Add items to your project. Include name, description, and price for each item.
           </p>
@@ -1108,16 +1208,27 @@ export default function ItemsSection({
                     key={item.id}
                     className='border border-[#E5E7EB] rounded-xl p-4 transition-all duration-200 ease-in-out hover:border-blue-300 group bg-white shadow-sm hover:shadow-md hover:translate-y-[-1px] relative'
                   >
-                    {/* Remove button */}
-                    <button
-                      onClick={(e) => {
-                        return handleRemoveItem(item.id, e);
-                      }}
-                      className='absolute top-2 right-2 p-1.5 rounded-full bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all duration-200'
-                      aria-label='Remove item'
-                    >
-                      <X size={16} />
-                    </button>
+                    {/* Action buttons */}
+                    <div className='absolute top-2 right-2 flex space-x-1'>
+                      <button
+                        onClick={() => {
+                          return handleDuplicateItem(item);
+                        }}
+                        className='p-1.5 rounded-full bg-gray-100 text-gray-500 hover:bg-blue-50 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-all duration-200'
+                        aria-label='Duplicate item'
+                      >
+                        <Copy size={16} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          return handleRemoveItemWithHistory(item.id, e);
+                        }}
+                        className='p-1.5 rounded-full bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all duration-200'
+                        aria-label='Remove item'
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
 
                     <div className='flex justify-between items-start'>
                       <div
