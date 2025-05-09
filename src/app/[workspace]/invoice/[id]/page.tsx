@@ -125,6 +125,7 @@ function PaymentForm({
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isDepositPayment, setIsDepositPayment] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,10 +156,42 @@ function PaymentForm({
     setIsProcessing(false);
   };
 
+  const depositAmount = invoice.total * (invoice.depositPercentage / 100);
+
   return (
     <form onSubmit={handleSubmit} className='space-y-4'>
       <PaymentElement />
       {error && <div className='text-red-500 text-sm mt-2'>{error}</div>}
+      {invoice.requireDeposit && (
+        <div className='flex gap-3'>
+          <button
+            type='button'
+            onClick={() => {
+              return setIsDepositPayment(false);
+            }}
+            className={`flex-1 py-2 px-4 rounded-lg border ${
+              !isDepositPayment
+                ? 'bg-[#0066FF] text-white border-[#0066FF]'
+                : 'bg-white text-gray-600 border-gray-200'
+            } font-medium hover:bg-opacity-90 transition-colors`}
+          >
+            Pay Full Amount
+          </button>
+          <button
+            type='button'
+            onClick={() => {
+              return setIsDepositPayment(true);
+            }}
+            className={`flex-1 py-2 px-4 rounded-lg border ${
+              isDepositPayment
+                ? 'bg-[#0066FF] text-white border-[#0066FF]'
+                : 'bg-white text-gray-600 border-gray-200'
+            } font-medium hover:bg-opacity-90 transition-colors`}
+          >
+            Pay Deposit
+          </button>
+        </div>
+      )}
       <button
         type='submit'
         disabled={!stripe || isProcessing}
@@ -166,7 +199,9 @@ function PaymentForm({
       >
         {isProcessing
           ? 'Processing...'
-          : `Pay ${mapCurrency(invoice.currency || 'USD')}${invoice.total.toFixed(2)}`}
+          : `Pay ${mapCurrency(invoice.currency || 'USD')}${
+              isDepositPayment ? depositAmount.toFixed(2) : invoice.total.toFixed(2)
+            }`}
         <Lock className='w-3.5 h-3.5' />
       </button>
     </form>
@@ -207,14 +242,20 @@ export default function InvoicePage() {
   });
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [isDepositPayment, setIsDepositPayment] = useState(false);
 
   const createPaymentIntentMutation = useMutation({
     mutationFn: async () => {
       if (!invoice) throw new Error('Invoice not loaded');
       try {
+        const amount = isDepositPayment
+          ? invoice.total * (invoice.depositPercentage / 100)
+          : invoice.total;
+
         const response = await newRequest.post(`/invoices/${invoiceId}/payment-intent`, {
-          amount: invoice.total,
+          amount,
           currency: invoice.currency || 'USD',
+          isDeposit: isDepositPayment,
         });
         return response.data;
       } catch (error) {
@@ -240,12 +281,13 @@ export default function InvoicePage() {
     },
   });
 
-  // Create payment intent when invoice is loaded
+  // Create payment intent when invoice is loaded or payment type changes
   useEffect(() => {
-    if (invoice && !clientSecret && invoice.status !== 'paid') {
+    if (invoice && invoice.status !== 'paid') {
+      console.log('🚀 invoice:', invoice);
       createPaymentIntentMutation.mutate();
     }
-  }, [invoice]);
+  }, [invoice, isDepositPayment]);
 
   if (isLoading || (createPaymentIntentMutation.isPending && invoice?.status !== 'paid')) {
     return (
@@ -269,7 +311,7 @@ export default function InvoicePage() {
       <div className='mb-16'>
         <div className='flex items-center gap-3'>
           <span className='text-[15px] font-medium text-gray-900 tracking-tight'>
-            {invoice.client.user.name}
+            {invoice?.client?.user?.name}
           </span>
         </div>
       </div>
@@ -304,7 +346,7 @@ export default function InvoicePage() {
         <div className='space-y-5 mb-7'>
           <div className='flex justify-between items-center'>
             <span className='text-[13px] text-gray-500'>To</span>
-            <span className='text-[13px] text-gray-900'>{invoice.client.user.name}</span>
+            <span className='text-[13px] text-gray-900'>{invoice?.client?.user?.name}</span>
           </div>
           <div className='flex justify-between items-center'>
             <span className='text-[13px] text-gray-500'>From</span>
@@ -380,8 +422,8 @@ export default function InvoicePage() {
             invoice={{
               id: invoice._id,
               invoiceNumber: invoice.invoiceNumber,
-              clientName: invoice.client.user.name,
-              clientId: invoice.client._id,
+              clientName: invoice?.client?.user?.name,
+              clientId: invoice?.client?._id,
               status: invoice.status as any,
               items: invoice.items.map((item) => {
                 return {
@@ -445,8 +487,8 @@ export default function InvoicePage() {
               </div>
               <div className='text-right'>
                 <h3 className='font-semibold mb-2'>To</h3>
-                <p>{invoice.client.user.name}</p>
-                <p>{invoice.client.user.email}</p>
+                <p>{invoice?.client?.user?.name}</p>
+                <p>{invoice?.client?.user?.email}</p>
               </div>
             </div>
 
