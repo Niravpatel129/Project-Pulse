@@ -1137,8 +1137,7 @@ export default function ItemsSection({
               </div>
             ) : (
               items.map((item, index) => {
-                const itemTotal =
-                  parseFloat(item.price.replace(/,/g, '')) * parseFloat(item.quantity || '1');
+                console.log('🚀 item:', item);
 
                 return (
                   <motion.div
