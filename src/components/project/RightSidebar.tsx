@@ -18,6 +18,9 @@ interface LineItem {
   type: string;
   qty: number;
   reasoning: string;
+  discount?: string;
+  taxName?: string;
+  taxRate?: string;
 }
 
 interface Message {
@@ -123,9 +126,10 @@ export default function RightSidebar({ setItems, projectCurrency }: RightSidebar
       quantity: item.qty.toString(),
       currency: projectCurrency,
       type: item.type,
-      taxRate: 0,
-      discount: 0,
-      taxable: true,
+      taxRate: item.taxRate ? parseFloat(item.taxRate) : 0,
+      discount: item.discount ? parseFloat(item.discount) : 0,
+      taxable: item.taxRate ? parseFloat(item.taxRate) > 0 : true,
+      taxName: item.taxName || 'Standard Tax',
     };
 
     // Add the item to the items array
