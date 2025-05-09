@@ -662,6 +662,17 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
               <span className='text-xs text-muted-foreground font-medium mb-0.5'>Amount</span>
               <div className='text-lg font-semibold'>${invoice.total.toFixed(2)}</div>
             </div>
+            {invoice.depositPercentage > 0 && (
+              <div className='flex flex-col items-end'>
+                <span className='text-xs text-muted-foreground font-medium mb-0.5'>Deposit</span>
+                <div className='flex items-center gap-1'>
+                  <div className='text-lg font-semibold text-blue-700'>
+                    ${(invoice.total * (invoice.depositPercentage / 100)).toFixed(2)}
+                  </div>
+                  <span className='text-sm text-blue-600'>({invoice.depositPercentage}%)</span>
+                </div>
+              </div>
+            )}
             <div className='flex flex-col items-end'>
               <span className='text-xs text-muted-foreground font-medium mb-0.5'>Due Date</span>
               <div className='text-sm text-muted-foreground'>
@@ -776,6 +787,15 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
                   </>
                 ) : (
                   <>
+                    {invoice.requireDeposit && invoice.depositPercentage > 0 && (
+                      <>
+                        Deposit due:{' '}
+                        <span className='font-mono'>
+                          ${(invoice.total * (invoice.depositPercentage / 100)).toFixed(2)}
+                        </span>{' '}
+                        —{' '}
+                      </>
+                    )}
                     Amount due: <span className='font-mono'>${remainingAmount.toFixed(2)}</span> —{' '}
                     <span
                       className='text-primary cursor-pointer underline underline-offset-2'

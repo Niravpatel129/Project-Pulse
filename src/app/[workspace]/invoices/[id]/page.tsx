@@ -207,6 +207,12 @@ export default function Page() {
             <ChevronLeft className='w-5 h-5' />
           </Link>
           <span className='text-gray-900 font-medium'>Invoice #{invoice.invoiceNumber}</span>
+          {invoice.depositPercentage && (
+            <div className='inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium'>
+              <span className='mr-1'>💰</span>
+              {invoice.depositPercentage}% Deposit Required
+            </div>
+          )}
         </div>
         <Tabs defaultValue='invoice' className='w-full'>
           <TabsList>
