@@ -95,7 +95,7 @@ export default function RightSidebar() {
   return (
     <div className='h-full bg-white border-l border-neutral-100 flex flex-col'>
       {/* Header */}
-      <div className='px-6 py-4 border-b border-neutral-100'>
+      <div className='px-6 py-4 border-b border-neutral-100 flex-shrink-0'>
         <div className='flex items-center gap-2.5'>
           <Sparkles className='w-4 h-4 text-purple-500' />
           <h2 className='text-base font-medium text-neutral-900 tracking-tight'>AI Assistant</h2>
@@ -103,72 +103,75 @@ export default function RightSidebar() {
       </div>
 
       {/* Chat Messages */}
-      <ScrollArea className='flex-1'>
+      <ScrollArea className='flex-1 min-h-0'>
         <div className='px-5 py-4 space-y-4'>
           <AnimatePresence>
-            {messages.map((message) => {
-              return (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                  className={message.role === 'assistant' ? 'max-w-[85%]' : 'max-w-[85%] ml-auto'}
-                >
-                  {message.role === 'assistant' ? (
-                    <div className='text-sm text-neutral-800 leading-relaxed bg-neutral-50 rounded-lg px-4 py-3'>
-                      <div className='flex items-start gap-2'>
-                        <div className='flex-1'>{message.content}</div>
-                        {message.meta && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button className='text-neutral-400 hover:text-neutral-600 transition-colors'>
-                                  <Info className='w-4 h-4' />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent className='max-w-[300px] p-3'>
-                                <div className='space-y-2 text-xs'>
-                                  {message.meta.confidence && (
-                                    <div>
-                                      <span className='font-medium'>Confidence:</span>{' '}
-                                      {(message.meta.confidence * 100).toFixed(1)}%
-                                    </div>
-                                  )}
-                                  {message.meta.reasoning && (
-                                    <div>
-                                      <span className='font-medium'>Reasoning:</span>{' '}
-                                      {message.meta.reasoning}
-                                    </div>
-                                  )}
-                                  {message.meta.processingTime && (
-                                    <div>
-                                      <span className='font-medium'>Processing Time:</span>{' '}
-                                      {message.meta.processingTime.toFixed(2)}s
-                                    </div>
-                                  )}
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
+            {Array(15)
+              .fill(messages)
+              .flat()
+              .map((message, index) => {
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className={message.role === 'assistant' ? 'max-w-[85%]' : 'max-w-[85%] ml-auto'}
+                  >
+                    {message.role === 'assistant' ? (
+                      <div className='text-sm text-neutral-800 leading-relaxed bg-neutral-50 rounded-lg px-4 py-3'>
+                        <div className='flex items-start gap-2'>
+                          <div className='flex-1'>{message.content}</div>
+                          {message.meta && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button className='text-neutral-400 hover:text-neutral-600 transition-colors'>
+                                    <Info className='w-4 h-4' />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent className='max-w-[300px] p-3'>
+                                  <div className='space-y-2 text-xs'>
+                                    {message.meta.confidence && (
+                                      <div>
+                                        <span className='font-medium'>Confidence:</span>{' '}
+                                        {(message.meta.confidence * 100).toFixed(1)}%
+                                      </div>
+                                    )}
+                                    {message.meta.reasoning && (
+                                      <div>
+                                        <span className='font-medium'>Reasoning:</span>{' '}
+                                        {message.meta.reasoning}
+                                      </div>
+                                    )}
+                                    {message.meta.processingTime && (
+                                      <div>
+                                        <span className='font-medium'>Processing Time:</span>{' '}
+                                        {message.meta.processingTime.toFixed(2)}s
+                                      </div>
+                                    )}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className='rounded-lg px-4 py-3 bg-purple-50 text-neutral-800 shadow-sm'>
-                      <p className='text-sm leading-relaxed'>{message.content}</p>
-                      <p className='text-xs text-neutral-500 mt-1.5'>
-                        {message.timestamp.toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </p>
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
+                    ) : (
+                      <div className='rounded-lg px-4 py-3 bg-purple-50 text-neutral-800 shadow-sm'>
+                        <p className='text-sm leading-relaxed'>{message.content}</p>
+                        <p className='text-xs text-neutral-500 mt-1.5'>
+                          {message.timestamp.toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
             {chatMutation.isPending && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -221,7 +224,7 @@ export default function RightSidebar() {
       </ScrollArea>
 
       {/* Input Area */}
-      <div className='p-4 border-t border-neutral-100'>
+      <div className='p-4 border-t border-neutral-100 flex-shrink-0'>
         <div className='relative'>
           <textarea
             ref={inputRef}
