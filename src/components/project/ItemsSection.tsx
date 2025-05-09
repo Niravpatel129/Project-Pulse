@@ -906,28 +906,41 @@ export default function ItemsSection({
                       {/* Spacer when editing */}
                       {editingItem && <div></div>}
 
-                      {/* Action button */}
-                      <button
-                        type='button'
-                        onClick={(e) => {
-                          return editingItem ? handleUpdateItem(e) : handleSubmitNewItem(e);
-                        }}
-                        className={cn(
-                          'bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center min-w-[100px]',
-                          !newItem.name.trim() || isSubmitting
-                            ? 'opacity-70 cursor-not-allowed'
-                            : 'hover:bg-blue-700 hover:shadow',
+                      {/* Action buttons */}
+                      <div className='flex items-center space-x-2'>
+                        {editingItem && (
+                          <button
+                            type='button'
+                            onClick={() => {
+                              resetFormState();
+                            }}
+                            className='px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center min-w-[100px] border border-gray-200 hover:bg-gray-50'
+                          >
+                            Cancel
+                          </button>
                         )}
-                        disabled={!newItem.name.trim() || isSubmitting}
-                      >
-                        {isSubmitting ? (
-                          <Loader2 size={16} className='animate-spin' />
-                        ) : editingItem ? (
-                          'Update'
-                        ) : (
-                          'Add Item'
-                        )}
-                      </button>
+                        <button
+                          type='button'
+                          onClick={(e) => {
+                            return editingItem ? handleUpdateItem(e) : handleSubmitNewItem(e);
+                          }}
+                          className={cn(
+                            'bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center min-w-[100px]',
+                            !newItem.name.trim() || isSubmitting
+                              ? 'opacity-70 cursor-not-allowed'
+                              : 'hover:bg-blue-700 hover:shadow',
+                          )}
+                          disabled={!newItem.name.trim() || isSubmitting}
+                        >
+                          {isSubmitting ? (
+                            <Loader2 size={16} className='animate-spin' />
+                          ) : editingItem ? (
+                            'Update'
+                          ) : (
+                            'Add Item'
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </form>
                 </motion.div>
