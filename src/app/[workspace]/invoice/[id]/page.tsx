@@ -22,23 +22,75 @@ interface Invoice {
   invoiceNumber: string;
   client: {
     _id: string;
-    name: string;
-    email: string;
+    user: {
+      name: string;
+      email: string;
+    };
+    phone: string;
+    address: {
+      street: string;
+      city: string;
+      state: string;
+      country: string;
+      zip: string;
+    };
+    shippingAddress: {
+      street: string;
+      city: string;
+      state: string;
+      country: string;
+      zip: string;
+    };
+    contact: {
+      firstName: string;
+      lastName: string;
+    };
+    taxId: string;
+    accountNumber: string;
+    fax: string;
+    mobile: string;
+    tollFree: string;
+    website: string;
+    internalNotes: string;
+    customFields: Record<string, any>;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
   };
-  items: string[];
+  items: Array<{
+    name: string;
+    description: string;
+    quantity: number;
+    price: number;
+    discount: number;
+    tax: number;
+    taxName: string;
+    _id: string;
+  }>;
+  selectedItems: any[];
+  discount: number;
+  discountAmount: number;
   subtotal: number;
   tax: number;
-  discount: number;
+  taxRate: number;
+  taxAmount: number;
+  taxId: string;
+  showTaxId: boolean;
+  shippingTotal: number;
   total: number;
   status: string;
   dueDate: string;
+  notes: string;
   currency: string;
-  deliveryMethod: string;
+  deliveryOptions: string;
   workspace: string;
   createdBy: {
     _id: string;
     name: string;
   };
+  requireDeposit: boolean;
+  depositPercentage: number;
+  teamNotes: string;
   createdAt: string;
   updatedAt: string;
   paymentIntentId?: string;
@@ -217,7 +269,7 @@ export default function InvoicePage() {
       <div className='mb-16'>
         <div className='flex items-center gap-3'>
           <span className='text-[15px] font-medium text-gray-900 tracking-tight'>
-            {invoice.client.name}
+            {invoice.client.user.name}
           </span>
         </div>
       </div>
@@ -252,7 +304,7 @@ export default function InvoicePage() {
         <div className='space-y-5 mb-7'>
           <div className='flex justify-between items-center'>
             <span className='text-[13px] text-gray-500'>To</span>
-            <span className='text-[13px] text-gray-900'>{invoice.client.name}</span>
+            <span className='text-[13px] text-gray-900'>{invoice.client.user.name}</span>
           </div>
           <div className='flex justify-between items-center'>
             <span className='text-[13px] text-gray-500'>From</span>
@@ -328,10 +380,10 @@ export default function InvoicePage() {
             invoice={{
               id: invoice._id,
               invoiceNumber: invoice.invoiceNumber,
-              clientName: invoice.client.name,
+              clientName: invoice.client.user.name,
               clientId: invoice.client._id,
               status: invoice.status as any,
-              items: invoice.items.map((item: any) => {
+              items: invoice.items.map((item) => {
                 return {
                   id: item._id,
                   name: item.name,
@@ -350,15 +402,15 @@ export default function InvoicePage() {
               issueDate: invoice.createdAt,
               createdAt: invoice.createdAt,
               updatedAt: invoice.updatedAt,
-              notes: '',
+              notes: invoice.notes,
               terms: '',
-              paymentMethod: invoice.deliveryMethod,
+              paymentMethod: invoice.deliveryOptions,
               paymentDate: invoice.paidAt || null,
               currency: invoice.currency,
               createdBy: invoice.createdBy._id,
-              requireDeposit: false,
-              depositPercentage: 0,
-              teamNotes: '',
+              requireDeposit: invoice.requireDeposit,
+              depositPercentage: invoice.depositPercentage,
+              teamNotes: invoice.teamNotes,
             }}
           />
         </div>
@@ -393,8 +445,8 @@ export default function InvoicePage() {
               </div>
               <div className='text-right'>
                 <h3 className='font-semibold mb-2'>To</h3>
-                <p>{invoice.client.name}</p>
-                <p>{invoice?.client?.email}</p>
+                <p>{invoice.client.user.name}</p>
+                <p>{invoice.client.user.email}</p>
               </div>
             </div>
 
@@ -422,7 +474,7 @@ export default function InvoicePage() {
               </div>
               <div>
                 <h3 className='font-semibold mb-2'>Delivery Method</h3>
-                <p className='capitalize'>{invoice.deliveryMethod}</p>
+                <p className='capitalize'>{invoice.deliveryOptions}</p>
               </div>
             </div>
 
