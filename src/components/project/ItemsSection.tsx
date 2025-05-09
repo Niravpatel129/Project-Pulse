@@ -1,8 +1,5 @@
 'use client';
 
-import AICard from '@/components/ui/ai-card';
-import type { Attachment } from '@/components/ui/ai-input';
-import AIInput from '@/components/ui/ai-input';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -24,17 +21,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, Copy, Hash, Loader2, Plus, Scissors, Sparkles, X } from 'lucide-react';
+import { Copy, Hash, Loader2, Plus, Scissors, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import SectionFooter from './SectionFooter';
-import type { AIItem, ExtendedItem, Item, Section } from './types';
+import type { ExtendedItem, Item, Section } from './types';
 
 // Define a TaxRate type
 type TaxRate = {
@@ -42,11 +38,6 @@ type TaxRate = {
   name: string;
   rate: number;
 };
-
-// We don't need EnhancedItem anymore since we can use AIItem which already has the type field
-// interface EnhancedItem extends Item {
-//   type?: 'PRODUCT' | 'SERVICE';
-// }
 
 type ItemWithType = Item & { type?: string };
 
@@ -84,12 +75,6 @@ export default function ItemsSection({
   };
 
   const [currentNewItemMode, setCurrentNewItemMode] = useState('');
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [aiPromptError, setAiPromptError] = useState('');
-  const [aiGeneratedItems, setAiGeneratedItems] = useState<AIItem[]>([]);
-  const [selectedAiItems, setSelectedAiItems] = useState<Record<string, boolean>>({});
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isAiResultsModalOpen, setIsAiResultsModalOpen] = useState(false);
   const [newItem, setNewItem] = useState({
     name: '',
     description: '',
@@ -100,10 +85,6 @@ export default function ItemsSection({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingItem, setEditingItem] = useState<ExtendedItem | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingDuration, setRecordingDuration] = useState(0);
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [aiResponse, setAiResponse] = useState<any>(null);
   const [keyboardShortcutsVisible, setKeyboardShortcutsVisible] = useState(false);
   // Add tax rates state
   const [taxRates, setTaxRates] = useState<TaxRate[]>([
@@ -118,189 +99,11 @@ export default function ItemsSection({
     rate: 0,
   });
   const [addAnother, setAddAnother] = useState(false);
-  const [batchEditSettings, setBatchEditSettings] = useState({
-    taxRateId: 'standard',
-    discount: 0,
-  });
   const [removedItems, setRemovedItems] = useState<Item[]>([]);
   const [showRemovedItems, setShowRemovedItems] = useState(false);
 
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const aiPromptInputRef = useRef<HTMLTextAreaElement>(null);
   const newTaxNameInputRef = useRef<HTMLInputElement>(null);
-
-  const handleGenerateAiItems = () => {
-    if (!aiPrompt.trim()) return;
-
-    setIsGenerating(true);
-    setAiGeneratedItems([]);
-    setAiResponse(null);
-    setAiPromptError(''); // Clear any previous errors
-
-    // Simulate AI processing delay
-    setTimeout(() => {
-      // Mock response based on the provided JSON format
-      const mockResponse = {
-        lineItems: [
-          {
-            name: 'Red Turtle Hoodie',
-            description:
-              'Vibrant red turtle-neck style hoodie crafted from premium materials, featuring a cozy front pocket and soft inner lining for warmth. Designed for all-day comfort and style, perfect for casual wear.',
-            price: '15.00',
-            type: 'PRODUCT',
-            reasoning:
-              "Name and color extracted from prompt. Price specified as 'something like $15'. Description generated to include color, type, and standard hoodie features.",
-          },
-          {
-            name: 'Black Regular Shirt',
-            description:
-              'Classic black t-shirt made from high-quality cotton, offering a comfortable regular fit with reinforced stitching and breathable fabric. Versatile for everyday use and layering.',
-            price: '12.00',
-            type: 'PRODUCT',
-            reasoning:
-              "Name ('black regular shirt') and color taken from prompt. Price estimated based on typical t-shirt prices and services table reference. Description generated to match a standard product of this type.",
-          },
-          {
-            name: 'DTF',
-            description:
-              'Professional Direct to Film (DTF) printing service, using advanced technology for vibrant, detailed prints on a variety of garments. Ideal for custom apparel with lasting color and durability.',
-            price: '10.00',
-            type: 'SERVICE',
-            reasoning:
-              "Name matched to 'DTF' from services table. Price of $10 derived from services table. Description generated based on DTF printing process.",
-          },
-          {
-            name: 'Screen',
-            description:
-              'Expert screen printing service delivering sharp, long-lasting designs on apparel. Utilizes high-quality inks and precision techniques for both single and bulk orders.',
-            price: '14.00',
-            type: 'SERVICE',
-            reasoning:
-              "Name matched to 'Screen' from services table. Price of $14 derived from services table. Description generated based on screen printing process and standard features.",
-          },
-        ],
-        meta: {
-          processingTime: 8.584,
-          promptLength: 203,
-          timestamp: '2025-05-05T21:07:25.310Z',
-          feedbackMessage:
-            'Successfully generated 4 items for your project based on your description.',
-        },
-      };
-
-      // Simulate successful case (comment/uncomment to test error case)
-      // Uncomment the line below to test the error case
-      // mockResponse.lineItems = [];
-
-      setAiResponse(mockResponse);
-
-      if (mockResponse.lineItems && mockResponse.lineItems.length > 0) {
-        // Convert the response to our item format for display
-        const generatedItems = mockResponse.lineItems.map((item, index) => {
-          return {
-            id: `ai-item-${Date.now()}-${index}`,
-            name: item.name,
-            description: item.description,
-            price: item.price,
-            quantity: '1',
-            type: item.type,
-            reasoning: item.reasoning,
-          };
-        });
-
-        setAiGeneratedItems(generatedItems);
-        // Auto-select all items by default
-        const allSelected = generatedItems.reduce((acc, item) => {
-          acc[item.id] = true;
-          return acc;
-        }, {} as Record<string, boolean>);
-        setSelectedAiItems(allSelected);
-        setIsAiResultsModalOpen(true); // Only open modal if we have items
-
-        // Show success toast if there's a feedback message
-        if (mockResponse.meta?.feedbackMessage) {
-          toast.success(mockResponse.meta.feedbackMessage);
-        }
-      } else {
-        // Handle case where AI couldn't generate any items
-        const errorMessage =
-          mockResponse.meta?.feedbackMessage ||
-          'Unable to generate items from your description. Please try again with more details.';
-        setAiPromptError(errorMessage);
-        toast.error(errorMessage);
-      }
-
-      setIsGenerating(false);
-    }, 1500);
-  };
-
-  const handleAddSelectedAiItems = () => {
-    const selectedItems = aiGeneratedItems.filter((item) => {
-      return selectedAiItems[item.id];
-    });
-
-    if (selectedItems.length === 0) {
-      showNotification('Please select at least one item', 'error');
-      return;
-    }
-
-    // If multiple items selected, open batch edit modal for tax and discount
-    if (selectedItems.length > 1) {
-      setIsAiResultsModalOpen(true);
-      return;
-    }
-
-    // For single item, proceed directly
-    addSelectedItemsToProject(selectedItems);
-  };
-
-  // New function to actually add the items after potentially configuring them
-  const addSelectedItemsToProject = (
-    selectedItems: AIItem[],
-    settings?: typeof batchEditSettings,
-  ) => {
-    // Get the selected tax rate for display purposes
-    const selectedTax = taxRates.find((tax) => {
-      return tax.id === (settings?.taxRateId || selectedTaxRateId);
-    });
-    const taxRateName = selectedTax ? selectedTax.name : '';
-    const taxRate = selectedTax ? selectedTax.rate : 0;
-
-    // Format the items to match our items array structure
-    const formattedItems = selectedItems.map((item) => {
-      // Format price to have 2 decimal places
-      const formattedPrice = Number(item.price || 0).toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
-
-      return {
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        price: formattedPrice,
-        quantity: item.quantity || '1',
-        type: item.type,
-        taxRate: taxRate,
-        discount: settings?.discount || 0,
-        taxName: taxRateName,
-      } as ItemWithType;
-    });
-
-    setItems([...items, ...(formattedItems as Item[])]);
-    setAiPrompt('');
-    setAiGeneratedItems([]);
-    setAiResponse(null);
-    setSelectedAiItems({});
-    setIsAiResultsModalOpen(false);
-
-    // Show success notification
-    toast.success(
-      `${formattedItems.length} ${
-        formattedItems.length === 1 ? 'item' : 'items'
-      } added successfully`,
-    );
-  };
 
   const handleEditItem = (item: ExtendedItem) => {
     setEditingItem(item);
@@ -445,9 +248,6 @@ export default function ItemsSection({
       taxRate: 0,
       discount: 0,
     });
-    // Reset AI-related state
-    setAiPromptError('');
-    setAiPrompt('');
     // Reset the selected tax rate to standard
     setSelectedTaxRateId('standard');
     setIsSubmitting(false);
@@ -467,74 +267,6 @@ export default function ItemsSection({
       e.preventDefault();
       document.getElementById('item-price')?.focus();
     }
-  };
-
-  const toggleAiItemSelection = (id: string) => {
-    setSelectedAiItems((prev) => {
-      return {
-        ...prev,
-        [id]: !prev[id],
-      };
-    });
-  };
-
-  // Simulate recording start/stop
-  const toggleRecording = () => {
-    if (isRecording) {
-      // Stop recording and attach the voice note
-      setIsRecording(false);
-      const newAttachment: Attachment = {
-        id: `voice-${Date.now()}`,
-        type: 'voice',
-        name: `Voice note (${recordingDuration}s)`,
-        timestamp: new Date().toISOString(),
-      };
-      setAttachments([...attachments, newAttachment]);
-      setRecordingDuration(0);
-      showNotification('Voice note added', 'success');
-    } else {
-      // Start recording
-      setIsRecording(true);
-      // Start duration counter
-      const intervalId = setInterval(() => {
-        setRecordingDuration((prev) => {
-          return prev + 1;
-        });
-      }, 1000);
-
-      // Store interval ID for cleanup
-      return () => {
-        return clearInterval(intervalId);
-      };
-    }
-  };
-
-  const handleFileAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fileList = e.target.files;
-    if (fileList && fileList.length > 0) {
-      const filesArray = Array.from(fileList) as File[];
-
-      const newAttachments: Attachment[] = filesArray.map((file) => {
-        return {
-          id: `file-${Date.now()}-${file.name}`,
-          type: 'file',
-          name: file.name,
-          size: file.size,
-          timestamp: new Date().toISOString(),
-        };
-      });
-
-      setAttachments([...attachments, ...newAttachments]);
-      showNotification(`${fileList.length} file(s) attached`, 'success');
-    }
-  };
-
-  const removeAttachment = (id: string) => {
-    setAttachments(
-      attachments.filter((attachment) => {
-        return attachment.id !== id;
-      }),
-    );
   };
 
   // Function to get currency symbol
@@ -663,8 +395,6 @@ export default function ItemsSection({
                           return setCurrentNewItemMode('');
                         }
                         setCurrentNewItemMode('manual');
-                        setAiGeneratedItems([]);
-                        setAiResponse(null);
 
                         // Get the currently selected tax rate
                         const selectedTax = taxRates.find((tax) => {
@@ -692,52 +422,11 @@ export default function ItemsSection({
                       variant='outline'
                     >
                       <Plus size={18} className='mr-2' />
-                      <span className='font-medium'>Add Item Manually</span>
+                      <span className='font-medium'>Add Item</span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>Create a new item with a name, description, and price</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      onClick={() => {
-                        if (currentNewItemMode === 'ai') {
-                          return setCurrentNewItemMode('');
-                        }
-                        setCurrentNewItemMode('ai');
-                        setEditingItem(null);
-                        setAiPromptError(''); // Clear any previous errors
-                        setNewItem({
-                          name: '',
-                          description: '',
-                          price: '',
-                          quantity: '1',
-                          taxRate: 0,
-                          discount: 0,
-                        });
-                        setTimeout(() => {
-                          return aiPromptInputRef.current?.focus();
-                        }, 10);
-                      }}
-                      className={cn(
-                        'flex items-center justify-center transition-all duration-300 h-11',
-                        currentNewItemMode === 'ai'
-                          ? 'bg-purple-600 text-white hover:bg-purple-700 hover:text-white shadow-md border-0'
-                          : 'hover:bg-gray-100 border-2 border-gray-200',
-                      )}
-                      variant='outline'
-                    >
-                      <Sparkles size={18} className='mr-2' />
-                      <span className='font-medium'>Quick Add With AI</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Describe what you need and let AI generate items for you</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -983,54 +672,6 @@ export default function ItemsSection({
                   </form>
                 </motion.div>
               )}
-
-              {/* AI Prompt Form */}
-              {currentNewItemMode === 'ai' && (
-                <AICard
-                  className='animate-in fade-in slide-in-from-top-2 duration-200'
-                  title='Generate items with AI'
-                  onClose={() => {
-                    setCurrentNewItemMode('');
-                    setAiPrompt('');
-                    setAttachments([]);
-                    setAiPromptError(null);
-                  }}
-                >
-                  <AIInput
-                    value={aiPrompt}
-                    onChange={(value) => {
-                      setAiPrompt(value);
-                      setAiPromptError(null);
-                    }}
-                    onGenerate={handleGenerateAiItems}
-                    isGenerating={isGenerating}
-                    error={aiPromptError}
-                    placeholder='Describe the items you want to add...'
-                    exampleText='Example: "Add 5 hours of web development at $150/hour, 2 hours of design at $120/hour, and a $500 software license fee"'
-                    attachments={attachments}
-                    onAttachmentAdd={setAttachments}
-                    onAttachmentRemove={removeAttachment}
-                  />
-
-                  {isGenerating && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className='flex flex-col items-center justify-center py-8'
-                    >
-                      <div className='relative w-12 h-12'>
-                        <div className='absolute inset-0 flex items-center justify-center'>
-                          <Loader2 size={24} className='text-purple-600 animate-spin' />
-                        </div>
-                        <div className='absolute inset-0 animate-ping rounded-full bg-purple-200 opacity-50'></div>
-                      </div>
-                      <p className='text-[#6B7280] text-sm mt-3'>
-                        Generating items based on your description...
-                      </p>
-                    </motion.div>
-                  )}
-                </AICard>
-              )}
             </AnimatePresence>
           </div>
 
@@ -1059,8 +700,6 @@ export default function ItemsSection({
                             return setCurrentNewItemMode('');
                           }
                           setCurrentNewItemMode('manual');
-                          setAiGeneratedItems([]);
-                          setAiResponse(null);
                         }}
                         className='bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs py-1 px-3 rounded-full h-auto transition-colors duration-200'
                         variant='ghost'
@@ -1081,10 +720,10 @@ export default function ItemsSection({
                     Add Your First Item
                   </h3>
                   <p className='text-gray-500 mb-8 max-w-md mx-auto'>
-                    Get started by adding your first item. Choose from two convenient options:
+                    Get started by adding your first item. Enter the details below:
                   </p>
 
-                  <div className='grid grid-cols-2 gap-6 max-w-2xl mx-auto'>
+                  <div className='max-w-xl mx-auto'>
                     <div className='bg-white p-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors flex flex-col'>
                       <div className='relative'>
                         <div className='absolute inset-0 bg-gradient-to-r from-blue-100 to-blue-50 blur-xl opacity-50 rounded-full'></div>
@@ -1092,10 +731,9 @@ export default function ItemsSection({
                           <Plus className='w-6 h-6 text-blue-600' />
                         </div>
                       </div>
-                      <h4 className='font-medium text-gray-900 mb-2'>Manual Entry</h4>
+                      <h4 className='font-medium text-gray-900 mb-2'>Add Item</h4>
                       <p className='text-sm text-gray-500 mb-4 flex-grow'>
-                        Perfect for when you have all the item details ready. Enter information
-                        directly into our organized form.
+                        Enter the item details including name, description, price, and quantity.
                       </p>
                       <Button
                         onClick={() => {
@@ -1106,32 +744,7 @@ export default function ItemsSection({
                         }}
                         className='w-full bg-gray-900 hover:bg-gray-800 text-white'
                       >
-                        Add Manually
-                      </Button>
-                    </div>
-
-                    <div className='bg-white p-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors flex flex-col'>
-                      <div className='relative'>
-                        <div className='absolute inset-0 bg-gradient-to-r from-purple-100 to-purple-50 blur-xl opacity-50 rounded-full'></div>
-                        <div className='bg-purple-50 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 relative'>
-                          <Sparkles className='w-6 h-6 text-purple-600' />
-                        </div>
-                      </div>
-                      <h4 className='font-medium text-gray-900 mb-2'>AI-Powered</h4>
-                      <p className='text-sm text-gray-500 mb-4 flex-grow'>
-                        Let AI help you create items. Just describe what you need in natural
-                        language.
-                      </p>
-                      <Button
-                        onClick={() => {
-                          setCurrentNewItemMode('ai');
-                          setTimeout(() => {
-                            return aiPromptInputRef.current?.focus();
-                          }, 10);
-                        }}
-                        className='w-full bg-gray-900 hover:bg-gray-800 text-white'
-                      >
-                        Use AI Assistant
+                        Add Item
                       </Button>
                     </div>
                   </div>
@@ -1139,8 +752,6 @@ export default function ItemsSection({
               </div>
             ) : (
               items.map((item, index) => {
-                console.log('🚀 item:', item);
-
                 return (
                   <motion.div
                     key={item.id}
@@ -1322,307 +933,6 @@ export default function ItemsSection({
             >
               <Plus size={16} className='mr-2' />
               Add Tax Rate
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* AI Generated Items Results Modal */}
-      <Dialog
-        open={isAiResultsModalOpen}
-        onOpenChange={(open) => {
-          if (!open && !isGenerating) {
-            setIsAiResultsModalOpen(false);
-            if (!open) {
-              // When dialog closes and it wasn't from an error, clean up AI state
-              if (aiGeneratedItems.length > 0) {
-                setAiPrompt('');
-                setAiPromptError('');
-                setAiGeneratedItems([]);
-                setAiResponse(null);
-              }
-            }
-          }
-        }}
-      >
-        <DialogContent className='sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col'>
-          <DialogHeader>
-            <DialogTitle className='flex items-center text-lg font-semibold'>
-              <div className='mr-2 p-1.5 bg-purple-100 rounded-full'>
-                <Sparkles size={18} className='text-purple-600' />
-              </div>
-              AI Generated Items
-            </DialogTitle>
-            <DialogDescription>Review and select items to add to your project</DialogDescription>
-          </DialogHeader>
-
-          {isGenerating ? (
-            <div className='flex flex-col items-center justify-center py-12'>
-              <div className='relative w-16 h-16'>
-                <div className='absolute inset-0 flex items-center justify-center'>
-                  <Loader2 size={32} className='text-purple-600 animate-spin' />
-                </div>
-                <div className='absolute inset-0 animate-ping rounded-full bg-purple-200 opacity-50'></div>
-              </div>
-              <p className='text-[#6B7280] text-base mt-4'>
-                Generating items based on your description...
-              </p>
-            </div>
-          ) : (
-            <div className='overflow-y-auto flex-1 -mx-6 px-6'>
-              <div className='space-y-4 mb-6'>
-                <div className='flex justify-between items-center'>
-                  <p className='text-sm text-gray-500'>
-                    {aiGeneratedItems.length} items generated from your prompt
-                  </p>
-
-                  <div className='flex items-center gap-2'>
-                    <Button
-                      onClick={() => {
-                        setSelectedAiItems(
-                          aiGeneratedItems.reduce((acc, item) => {
-                            acc[item.id] = true;
-                            return acc;
-                          }, {} as Record<string, boolean>),
-                        );
-                      }}
-                      size='sm'
-                      variant='outline'
-                      className='text-xs h-8'
-                    >
-                      Select All
-                    </Button>
-
-                    <Button
-                      onClick={() => {
-                        setSelectedAiItems({});
-                      }}
-                      size='sm'
-                      variant='outline'
-                      className='text-xs h-8'
-                    >
-                      Deselect All
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Item List with Checkboxes */}
-                <div className='space-y-3'>
-                  {aiGeneratedItems.map((item, index) => {
-                    return (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        key={item.id}
-                        className={`border ${
-                          selectedAiItems[item.id]
-                            ? 'border-purple-500 ring-1 ring-purple-200'
-                            : 'border-[#E5E7EB]'
-                        } rounded-lg p-4 transition-all duration-200 ease-in-out hover:border-purple-300 bg-white cursor-pointer shadow-sm`}
-                        onClick={() => {
-                          return toggleAiItemSelection(item.id);
-                        }}
-                      >
-                        <div className='flex items-start'>
-                          <div
-                            className={`w-[18px] h-[18px] rounded-[4px] border flex-shrink-0 ${
-                              selectedAiItems[item.id]
-                                ? 'bg-purple-600 border-purple-600'
-                                : 'border-[#D1D5DB]'
-                            } flex items-center justify-center mr-3 mt-[2px] transition-colors`}
-                          >
-                            {selectedAiItems[item.id] && <Check size={12} className='text-white' />}
-                          </div>
-                          <div className='flex-1 min-w-0'>
-                            <div className='flex justify-between items-start flex-wrap gap-2'>
-                              <div className='flex flex-wrap items-center gap-2'>
-                                <span className='text-[#111827] text-base font-medium'>
-                                  {item.name}
-                                </span>
-                                <span
-                                  className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
-                                    item.type === 'PRODUCT'
-                                      ? 'bg-blue-50 text-blue-700'
-                                      : 'bg-purple-50 text-purple-700'
-                                  }`}
-                                >
-                                  {item.type}
-                                </span>
-                              </div>
-                              <div className='flex items-center space-x-2'>
-                                <span className='text-[#111827] text-sm font-medium bg-green-50 px-2 py-0.5 rounded-full flex-shrink-0'>
-                                  {getCurrencySymbol(projectCurrency)}
-                                  {item.price}
-                                </span>
-                                <span className='text-[#111827] text-sm font-medium bg-gray-50 px-2 py-0.5 rounded-full flex-shrink-0'>
-                                  {item.quantity || '1'}{' '}
-                                  {parseInt(item.quantity || '1') === 1 ? 'unit' : 'units'}
-                                </span>
-                              </div>
-                            </div>
-                            {item.description ? (
-                              <p className='text-[#6B7280] text-sm mt-1 leading-relaxed'>
-                                {item.description}
-                              </p>
-                            ) : (
-                              <p className='text-[#9CA3AF] text-sm mt-1 italic group-hover/item:text-[#6B7280] transition-colors'>
-                                Add a description...
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {!isGenerating && (
-            <>
-              <Separator />
-              <div className='py-4'>
-                <div className='flex flex-col space-y-4'>
-                  <h3 className='text-sm font-medium'>Configuration</h3>
-
-                  <div className='grid grid-cols-2 gap-4'>
-                    <div className='space-y-2'>
-                      <Label htmlFor='modal-tax-rate' className='text-xs text-gray-500'>
-                        Tax Rate
-                      </Label>
-                      <Select
-                        value={batchEditSettings.taxRateId}
-                        onValueChange={(value) => {
-                          if (value === 'add-new') {
-                            setIsNewTaxRateDialogOpen(true);
-                            return;
-                          }
-                          setBatchEditSettings({
-                            ...batchEditSettings,
-                            taxRateId: value,
-                          });
-                        }}
-                      >
-                        <SelectTrigger className='w-full h-9 text-sm'>
-                          <SelectValue placeholder='Select tax rate' />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            <SelectLabel className='text-xs font-medium text-gray-500'>
-                              Available Tax Rates
-                            </SelectLabel>
-                            {taxRates.map((taxRate) => {
-                              return (
-                                <SelectItem
-                                  key={taxRate.id}
-                                  value={taxRate.id}
-                                  className={
-                                    batchEditSettings.taxRateId === taxRate.id ? 'bg-blue-50' : ''
-                                  }
-                                >
-                                  <div className='flex justify-between w-full items-center'>
-                                    <div className='flex items-center'>
-                                      <span>{taxRate.name}</span>
-                                    </div>
-                                    <span className='text-xs font-medium bg-blue-50 text-blue-600 rounded-full px-2 py-0.5 ml-2'>
-                                      {taxRate.rate}%
-                                    </span>
-                                  </div>
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectGroup>
-                          <SelectSeparator />
-                          <SelectGroup>
-                            <SelectItem value='add-new' className='text-purple-600 font-medium'>
-                              <div className='flex items-center'>
-                                <Plus size={14} className='mr-2' />
-                                Add New Tax Rate
-                              </div>
-                            </SelectItem>
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className='space-y-2'>
-                      <Label htmlFor='modal-discount' className='text-xs text-gray-500'>
-                        Discount (%)
-                      </Label>
-                      <Input
-                        id='modal-discount'
-                        type='number'
-                        min='0'
-                        max='100'
-                        value={batchEditSettings.discount}
-                        onChange={(e) => {
-                          setBatchEditSettings({
-                            ...batchEditSettings,
-                            discount: Number(e.target.value),
-                          });
-                        }}
-                        className='h-9 text-sm'
-                      />
-                    </div>
-                  </div>
-
-                  <div className='flex items-center space-x-2 mt-2'>
-                    <Switch
-                      id='modal-taxable'
-                      checked={batchEditSettings.taxRateId !== 'zero'}
-                      onCheckedChange={(checked) => {
-                        setBatchEditSettings({
-                          ...batchEditSettings,
-                          taxRateId: checked ? 'standard' : 'zero',
-                        });
-                      }}
-                    />
-                    <Label htmlFor='modal-taxable' className='text-sm cursor-pointer'>
-                      Items are taxable
-                    </Label>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          <DialogFooter className='space-x-2'>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={() => {
-                setIsAiResultsModalOpen(false);
-                setAiPrompt('');
-                setAiPromptError('');
-              }}
-              disabled={isGenerating}
-            >
-              Cancel
-            </Button>
-
-            <Button
-              type='button'
-              onClick={() => {
-                const selectedItems = aiGeneratedItems.filter((item) => {
-                  return selectedAiItems[item.id];
-                });
-
-                if (selectedItems.length === 0) {
-                  toast.error('Please select at least one item');
-                  return;
-                }
-
-                addSelectedItemsToProject(selectedItems, batchEditSettings);
-                setIsAiResultsModalOpen(false);
-                setCurrentNewItemMode('');
-              }}
-              disabled={isGenerating || Object.values(selectedAiItems).filter(Boolean).length === 0}
-              className='bg-purple-600 hover:bg-purple-700 text-white'
-            >
-              Add {Object.values(selectedAiItems).filter(Boolean).length}{' '}
-              {Object.values(selectedAiItems).filter(Boolean).length === 1 ? 'Item' : 'Items'}
             </Button>
           </DialogFooter>
         </DialogContent>
