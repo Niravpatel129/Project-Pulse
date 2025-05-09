@@ -5,6 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation } from '@tanstack/react-query';
+import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Info, Send, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -33,17 +34,41 @@ interface Message {
     processingTime?: number;
   };
   structuredData?: {
-    type: string;
-    items: LineItem[];
+    type: 'LINE_ITEMS' | 'INVOICE_CLIENT' | 'SELECT_EXISTING_CLIENT';
+    items?: LineItem[];
+    client?: {
+      user: string;
+      contact: string;
+      phone?: string;
+      address: string;
+      shippingAddress: string;
+      taxId: string;
+      accountNumber: string;
+      fax?: string;
+      mobile?: string;
+      tollFree?: string;
+      website?: string;
+      internalNotes?: string;
+      customFields?: Record<string, string>;
+    };
+    action?: () => void;
+    suggestions?: string[];
   }[];
 }
 
 interface RightSidebarProps {
   setItems: React.Dispatch<React.SetStateAction<any[]>>;
   projectCurrency: string;
+  setSelectedClient: (clientId: string) => void;
+  onAiGeneratedClient?: (clientData: any) => void;
 }
 
-export default function RightSidebar({ setItems, projectCurrency }: RightSidebarProps) {
+export default function RightSidebar({
+  setItems,
+  projectCurrency,
+  setSelectedClient,
+  onAiGeneratedClient,
+}: RightSidebarProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -167,6 +192,102 @@ export default function RightSidebar({ setItems, projectCurrency }: RightSidebar
     // Show success notification
   };
 
+  const handleAddClient = async (clientData: any) => {
+    try {
+      const response = await axios.post('/api/clients', clientData);
+      if (response.status === 201) {
+        const clientId = response.data.data._id;
+        setSelectedClient(clientId);
+        setMessages((prev) => {
+          return [
+            ...prev,
+            {
+              id: Date.now().toString(),
+              content: '✅ Client added successfully!',
+              role: 'assistant',
+              timestamp: new Date(),
+            },
+            {
+              id: (Date.now() + 1).toString(),
+              content: 'Now you can proceed with creating an invoice for this client.',
+              role: 'assistant',
+              timestamp: new Date(),
+            },
+          ];
+        });
+      }
+    } catch (error: any) {
+      console.error('API Error:', error.response?.data);
+      if (
+        error.response?.data?.status === 'fail' &&
+        error.response?.data?.message?.includes('email already exists')
+      ) {
+        const email = error.response.data.message.split('"')[1];
+        setMessages((prev) => {
+          return [
+            ...prev,
+            {
+              id: Date.now().toString(),
+              content: `⚠️ A client with email ${email} already exists. Would you like to select this client for your invoice?`,
+              role: 'assistant',
+              timestamp: new Date(),
+              structuredData: [
+                {
+                  type: 'SELECT_EXISTING_CLIENT',
+                  action: async () => {
+                    try {
+                      const response = await axios.get(`/api/clients?email=${email}`);
+                      if (response.data.data.length > 0) {
+                        const client = response.data.data[0];
+                        setSelectedClient(client._id);
+                        setMessages((prev) => {
+                          return [
+                            ...prev,
+                            {
+                              id: Date.now().toString(),
+                              content: `✅ Selected client: ${client.user.name}`,
+                              role: 'assistant',
+                              timestamp: new Date(),
+                            },
+                          ];
+                        });
+                      }
+                    } catch (error) {
+                      console.error('Error finding client:', error);
+                      setMessages((prev) => {
+                        return [
+                          ...prev,
+                          {
+                            id: Date.now().toString(),
+                            content: '❌ Failed to find the existing client. Please try again.',
+                            role: 'assistant',
+                            timestamp: new Date(),
+                          },
+                        ];
+                      });
+                    }
+                  },
+                },
+              ],
+            },
+          ];
+        });
+        return;
+      }
+      setMessages((prev) => {
+        return [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            content: '❌ Failed to add client. Please try again.',
+            role: 'assistant',
+            timestamp: new Date(),
+          },
+        ];
+      });
+    }
+  };
+
   return (
     <div className='h-full bg-white border-l border-neutral-100 flex flex-col'>
       {/* Header */}
@@ -261,28 +382,121 @@ export default function RightSidebar({ setItems, projectCurrency }: RightSidebar
                       {/* Line Items */}
                       {message.structuredData?.map((data, dataIndex) => {
                         return (
-                          data.type === 'LINE_ITEMS' && (
-                            <div key={dataIndex} className='space-y-2 pl-2'>
-                              {data.items.map((item, itemIndex) => {
-                                return (
-                                  <TooltipProvider key={itemIndex}>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div>
-                                          <LineItemCard item={item} onClick={handleAddItem} />
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p className='text-xs'>
-                                          Click to add another instance of this item
-                                        </p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                );
-                              })}
-                            </div>
-                          )
+                          <>
+                            {data.type === 'LINE_ITEMS' && (
+                              <div key={`line-items-${dataIndex}`} className='space-y-2 pl-2'>
+                                {data.items.map((item, itemIndex) => {
+                                  return (
+                                    <TooltipProvider key={itemIndex}>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div>
+                                            <LineItemCard item={item} onClick={handleAddItem} />
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p className='text-xs'>
+                                            Click to add another instance of this item
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            {data.type === 'INVOICE_CLIENT' && (
+                              <div key={`client-${dataIndex}`} className='space-y-2 pl-2'>
+                                <div className='bg-white rounded-lg border border-gray-200 p-4 space-y-3'>
+                                  <div className='space-y-1'>
+                                    <h4 className='font-medium text-gray-900'>
+                                      {data.client.user}
+                                    </h4>
+                                    <p className='text-sm text-gray-500'>{data.client.contact}</p>
+                                    {data.client.phone && (
+                                      <p className='text-sm text-gray-500'>{data.client.phone}</p>
+                                    )}
+                                    {data.client.address && (
+                                      <p className='text-sm text-gray-500'>{data.client.address}</p>
+                                    )}
+                                  </div>
+                                  <div className='pt-2'>
+                                    <Button
+                                      variant='outline'
+                                      size='sm'
+                                      className='w-full'
+                                      onClick={() => {
+                                        // Handle adding client
+                                        const clientData = {
+                                          user: {
+                                            name: data.client.user,
+                                            email: data.client.contact,
+                                          },
+                                          phone: data.client.phone,
+                                          address: {
+                                            street: data.client.address.split(', ')[0],
+                                            city: data.client.address.split(', ')[1],
+                                            state: data.client.address.split(', ')[2],
+                                            country: data.client.address.split(', ')[3],
+                                            zip: data.client.address.split(', ')[4],
+                                          },
+                                          shippingAddress: {
+                                            street: data.client.shippingAddress.split(', ')[0],
+                                            city: data.client.shippingAddress.split(', ')[1],
+                                            state: data.client.shippingAddress.split(', ')[2],
+                                            country: data.client.shippingAddress.split(', ')[3],
+                                            zip: data.client.shippingAddress.split(', ')[4],
+                                          },
+                                          taxId: data.client.taxId,
+                                          accountNumber: data.client.accountNumber,
+                                          fax: data.client.fax,
+                                          mobile: data.client.mobile,
+                                          tollFree: data.client.tollFree,
+                                          website: data.client.website,
+                                          internalNotes: data.client.internalNotes,
+                                          customFields: data.client.customFields || {},
+                                        };
+                                        // You'll need to implement this function to handle adding the client
+                                        handleAddClient(clientData);
+                                      }}
+                                    >
+                                      Add Client
+                                    </Button>
+                                  </div>
+                                  {data.suggestions && data.suggestions.length > 0 && (
+                                    <div className='mt-3 pt-3 border-t border-gray-100'>
+                                      <h5 className='text-xs font-medium text-gray-500 mb-2'>
+                                        Suggestions
+                                      </h5>
+                                      <ul className='space-y-1'>
+                                        {data.suggestions.map((suggestion, index) => {
+                                          return (
+                                            <li key={index} className='text-xs text-gray-600'>
+                                              • {suggestion}
+                                            </li>
+                                          );
+                                        })}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            {data.type === 'SELECT_EXISTING_CLIENT' && (
+                              <div key={`select-client-${dataIndex}`} className='space-y-2 pl-2'>
+                                <div className='bg-white rounded-lg border border-gray-200 p-4'>
+                                  <Button
+                                    variant='outline'
+                                    size='sm'
+                                    className='w-full'
+                                    onClick={data.action}
+                                  >
+                                    Select Client
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </>
                         );
                       })}
                     </div>

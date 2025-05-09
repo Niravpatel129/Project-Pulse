@@ -23,7 +23,7 @@ import { useClients } from '@/hooks/useClients';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, Plus, Search, Sparkles, User } from 'lucide-react';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import SectionFooter from './SectionFooter';
 import { Client, Section } from './types';
 
@@ -34,6 +34,7 @@ type ClientSectionProps = {
   setActiveSection: React.Dispatch<React.SetStateAction<Section>>;
   onChatClick?: () => void;
   onSectionChange?: (section: number) => void;
+  aiGeneratedClient?: any;
 };
 
 export default function ClientSection({
@@ -43,6 +44,7 @@ export default function ClientSection({
   setActiveSection,
   onChatClick,
   onSectionChange,
+  aiGeneratedClient,
 }: ClientSectionProps) {
   const queryClient = useQueryClient();
   const { clients: apiClients, isLoading: isLoadingClients } = useClients();
@@ -102,6 +104,33 @@ export default function ClientSection({
       setTabContentHeight(tabContentRef.current.scrollHeight);
     }
   }, [activeTab, clientModalOpen]);
+
+  useEffect(() => {
+    if (aiGeneratedClient) {
+      setNewClient(aiGeneratedClient);
+      setAiGeneratedFields([
+        'user.name',
+        'user.email',
+        'phone',
+        'address.street',
+        'address.city',
+        'address.state',
+        'address.country',
+        'address.zip',
+        'shippingAddress.street',
+        'shippingAddress.city',
+        'shippingAddress.state',
+        'shippingAddress.country',
+        'shippingAddress.zip',
+        'taxId',
+        'accountNumber',
+        'mobile',
+        'internalNotes',
+      ]);
+      setClientModalOpen(true);
+      setActiveTab('contact');
+    }
+  }, [aiGeneratedClient]);
 
   const resetClientForm = () => {
     setNewClient({
@@ -218,43 +247,80 @@ export default function ClientSection({
     setClientModalOpen(true);
   };
 
-  const handleAiGenerate = () => {
+  const handleAiGenerate = async () => {
     setIsAiGenerating(true);
-    // Simulate AI processing
-    setTimeout(() => {
-      // Example AI-generated data - in real app, this would come from an AI service
-      const aiGeneratedClient = {
-        user: {
-          name: 'Acme Corporation',
-          email: 'contact@acmecorp.com',
-        } as Client['user'],
-        phone: '+1 (555) 123-4567',
-        address: {
-          street: '123 Business Ave',
-          city: 'San Francisco',
-          state: 'CA',
-          country: 'USA',
-          zip: '94105',
-        },
-        taxId: 'TAX123456789',
-        customFields: {},
-      };
-      setNewClient(aiGeneratedClient);
-      setAiGeneratedFields([
-        'user.name',
-        'user.email',
-        'phone',
-        'address.street',
-        'address.city',
-        'address.state',
-        'address.country',
-        'address.zip',
-        'taxId',
-      ]);
-      setClientModalOpen(true);
-      setShowAiInput(false);
+    setAiError(null);
+
+    try {
+      const response = await newRequest.post('/ai/smart-response', {
+        prompt: aiInput,
+        history: '',
+      });
+
+      if (response.data.structuredData?.[0]?.type === 'INVOICE_CLIENT') {
+        const clientData = response.data.structuredData[0].client;
+
+        // Parse address strings into structured format
+        const parseAddress = (addressStr: string) => {
+          const parts = addressStr.split(', ');
+          return {
+            street: parts[0],
+            city: parts[1],
+            state: parts[2],
+            country: parts[3],
+            zip: parts[4],
+          };
+        };
+
+        const aiGeneratedClient = {
+          user: {
+            name: clientData.user,
+            email: clientData.contact,
+          } as Client['user'],
+          phone: clientData.phone,
+          address: parseAddress(clientData.address),
+          shippingAddress: parseAddress(clientData.shippingAddress),
+          taxId: clientData.taxId,
+          accountNumber: clientData.accountNumber,
+          fax: clientData.fax,
+          mobile: clientData.mobile,
+          tollFree: clientData.tollFree,
+          website: clientData.website,
+          internalNotes: clientData.internalNotes,
+          customFields: clientData.customFields || {},
+        };
+
+        setNewClient(aiGeneratedClient);
+        setAiGeneratedFields([
+          'user.name',
+          'user.email',
+          'phone',
+          'address.street',
+          'address.city',
+          'address.state',
+          'address.country',
+          'address.zip',
+          'shippingAddress.street',
+          'shippingAddress.city',
+          'shippingAddress.state',
+          'shippingAddress.country',
+          'shippingAddress.zip',
+          'taxId',
+          'accountNumber',
+          'mobile',
+          'internalNotes',
+        ]);
+        setClientModalOpen(true);
+        setShowAiInput(false);
+      } else {
+        setAiError('Invalid response format from AI service');
+      }
+    } catch (error) {
+      console.error('Error generating client:', error);
+      setAiError('Failed to generate client. Please try again.');
+    } finally {
       setIsAiGenerating(false);
-    }, 1500);
+    }
   };
 
   const filteredClients = apiClients.filter((client) => {
