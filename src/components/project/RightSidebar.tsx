@@ -116,6 +116,17 @@ export default function RightSidebar({ setItems, projectCurrency }: RightSidebar
     chatMutation.mutate(input);
   };
 
+  const handleClear = () => {
+    setMessages([
+      {
+        id: '1',
+        content: 'Hello! How can I help you today?',
+        role: 'assistant',
+        timestamp: new Date(),
+      },
+    ]);
+  };
+
   const handleAddItem = (item: LineItem) => {
     // Format the item to match the expected structure
     const formattedItem = {
@@ -145,15 +156,41 @@ export default function RightSidebar({ setItems, projectCurrency }: RightSidebar
     <div className='h-full bg-white border-l border-neutral-100 flex flex-col'>
       {/* Header */}
       <div className='px-6 py-4 border-b border-neutral-100 flex-shrink-0'>
-        <div className='flex items-center gap-2.5'>
-          <Sparkles className='w-4 h-4 text-purple-500' />
-          <h2 className='text-base font-medium text-neutral-900 tracking-tight'>AI Assistant</h2>
+        <div className='flex items-center justify-between'>
+          <div className='flex items-center gap-2.5'>
+            <Sparkles className='w-4 h-4 text-purple-500' />
+            <h2 className='text-base font-medium text-neutral-900 tracking-tight'>AI Assistant</h2>
+          </div>
         </div>
       </div>
 
       {/* Chat Messages */}
       <ScrollArea className='flex-1 min-h-0'>
         <div className='px-5 py-4 space-y-4'>
+          <div className='flex justify-end'>
+            <Button
+              onClick={handleClear}
+              variant='ghost'
+              size='icon'
+              className='h-8 w-8 text-neutral-500 hover:text-neutral-700'
+            >
+              <svg
+                xmlns='http://www.w3.org/2000/svg'
+                width='16'
+                height='16'
+                viewBox='0 0 24 24'
+                fill='none'
+                stroke='currentColor'
+                strokeWidth='2'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+              >
+                <path d='M3 6h18' />
+                <path d='M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6' />
+                <path d='M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2' />
+              </svg>
+            </Button>
+          </div>
           <AnimatePresence>
             {messages.map((message, index) => {
               return (
