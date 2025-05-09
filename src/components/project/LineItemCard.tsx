@@ -9,6 +9,9 @@ interface LineItem {
   type: string;
   qty: number;
   reasoning: string;
+  discount?: string;
+  taxName?: string;
+  taxRate?: string;
 }
 
 interface LineItemCardProps {
@@ -36,6 +39,21 @@ export function LineItemCard({ item, onClick, className }: LineItemCardProps) {
             <div className='flex items-center gap-2 mt-2'>
               <span className='text-sm font-medium text-purple-600'>{item.price}</span>
               <span className='text-xs text-neutral-400'>× {item.qty}</span>
+            </div>
+            <div className='mt-2 space-y-1'>
+              {item.taxRate && (
+                <div className='flex items-center gap-1 text-xs text-neutral-500'>
+                  <span>Tax:</span>
+                  <span>{item.taxName || 'Standard Tax'}</span>
+                  <span>({item.taxRate}%)</span>
+                </div>
+              )}
+              {item.discount && (
+                <div className='flex items-center gap-1 text-xs text-neutral-500'>
+                  <span>Discount:</span>
+                  <span>{item.discount}</span>
+                </div>
+              )}
             </div>
           </div>
           <div className='flex-shrink-0'>
