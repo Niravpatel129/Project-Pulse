@@ -1,4 +1,5 @@
 'use client';
+import { Invoice } from '@/app/[workspace]/invoices/[id]/components/Invoice';
 import {
   Dialog,
   DialogClose,
@@ -215,7 +216,6 @@ export default function InvoicePage() {
       {/* Company Logo */}
       <div className='mb-16'>
         <div className='flex items-center gap-3'>
-          <div className='w-6 h-6 rounded-full bg-[#0066FF]' />
           <span className='text-[15px] font-medium text-gray-900 tracking-tight'>
             {invoice.client.name}
           </span>
@@ -320,6 +320,50 @@ export default function InvoicePage() {
         </div>
       </div>
 
+      {/* Invoice Preview */}
+      <div className='w-full max-w-[8.5in] mt-6 bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8 overflow-x-auto'>
+        <h2 className='text-lg font-semibold mb-20'>Invoice Preview</h2>
+        <div className='flex justify-center min-w-[8.5in]'>
+          <Invoice
+            invoice={{
+              id: invoice._id,
+              invoiceNumber: invoice.invoiceNumber,
+              clientName: invoice.client.name,
+              clientId: invoice.client._id,
+              status: invoice.status as any,
+              items: invoice.items.map((item: any) => {
+                return {
+                  id: item._id,
+                  name: item.name,
+                  description: item.description,
+                  quantity: item.quantity,
+                  price: item.price,
+                  discount: item.discount,
+                  tax: item.tax,
+                };
+              }),
+              subtotal: invoice.subtotal,
+              discount: invoice.discount,
+              tax: invoice.tax,
+              total: invoice.total,
+              dueDate: invoice.dueDate,
+              issueDate: invoice.createdAt,
+              createdAt: invoice.createdAt,
+              updatedAt: invoice.updatedAt,
+              notes: '',
+              terms: '',
+              paymentMethod: invoice.deliveryMethod,
+              paymentDate: invoice.paidAt || null,
+              currency: invoice.currency,
+              createdBy: invoice.createdBy._id,
+              requireDeposit: false,
+              depositPercentage: 0,
+              teamNotes: '',
+            }}
+          />
+        </div>
+      </div>
+
       {/* Invoice Details Modal */}
       <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
         <DialogContent className='max-w-4xl w-[90vw] h-[90vh] p-0 flex flex-col overflow-hidden'>
@@ -350,7 +394,7 @@ export default function InvoicePage() {
               <div className='text-right'>
                 <h3 className='font-semibold mb-2'>To</h3>
                 <p>{invoice.client.name}</p>
-                <p>{invoice.client.email}</p>
+                <p>{invoice?.client?.email}</p>
               </div>
             </div>
 

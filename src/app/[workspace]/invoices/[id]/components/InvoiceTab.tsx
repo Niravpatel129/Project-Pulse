@@ -402,7 +402,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
             _id: invoice.clientId,
             user: {
               name: invoice.clientName,
-              email: invoice.client.email,
+              email: invoice?.client?.email,
             },
           }
         : null,
@@ -437,7 +437,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
         _id: invoice.clientId,
         user: {
           name: invoice.clientName,
-          email: invoice.client.email,
+          email: invoice?.client?.email,
         },
       },
       items: invoice.items.map((item) => {
@@ -456,8 +456,8 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
       notes: invoice.notes || '',
       currency: invoice.currency,
       taxRate: invoice.tax || 0,
-      taxId: invoice.client.taxId || '',
-      showTaxId: !!invoice.client.taxId,
+      taxId: invoice?.client?.taxId || '',
+      showTaxId: !!invoice?.client?.taxId,
       requireDeposit: invoice.requireDeposit || false,
       depositPercentage: invoice.depositPercentage || 0,
       discount: invoice.discount || 0,

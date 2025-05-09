@@ -162,8 +162,10 @@ export function Invoice({ invoice, paymentUrl }: InvoiceProps) {
                     )}
                     {invoice.client.address.country && <p>{invoice.client.address.country}</p>}
                     {invoice.client.phone && <p className='mt-1'>{invoice.client.phone}</p>}
-                    {invoice.client.email && <p>{invoice.client.email}</p>}
-                    {invoice.client.taxId && <p className='mt-1'>Tax ID: {invoice.client.taxId}</p>}
+                    {invoice?.client?.email && <p>{invoice?.client?.email}</p>}
+                    {invoice?.client?.taxId && (
+                      <p className='mt-1'>Tax ID: {invoice?.client?.taxId}</p>
+                    )}
                   </>
                 )}
               </div>
@@ -274,49 +276,6 @@ export function Invoice({ invoice, paymentUrl }: InvoiceProps) {
           </div>
         </div>
       </div>
-
-      {/* Payment Instructions */}
-      {invoice.status !== 'paid' && (
-        <div className='mt-8 border-t border-gray-200 pt-6'>
-          <h3 className='font-semibold text-gray-900 mb-2'>Payment Instructions</h3>
-          <div className='space-y-4 text-sm text-gray-600'>
-            {/* Online Payment */}
-            {paymentUrl && (
-              <div>
-                <p className='font-medium text-gray-800 mb-1'>Pay Online</p>
-                <p>Click the link below to pay this invoice online:</p>
-                <a
-                  href={paymentUrl}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='text-blue-600 hover:text-blue-800 underline'
-                >
-                  {paymentUrl}
-                </a>
-              </div>
-            )}
-
-            {/* Bank Transfer */}
-            {invoiceSettings?.bankName && invoiceSettings?.bankAccount && (
-              <div>
-                <p className='font-medium text-gray-800 mb-1'>Bank Transfer</p>
-                <div className='grid grid-cols-2 gap-x-4 gap-y-2'>
-                  <div>Bank Name:</div>
-                  <div>{invoiceSettings.bankName}</div>
-                  <div>Account Number:</div>
-                  <div>{invoiceSettings.bankAccount}</div>
-                  {invoiceSettings.bankRouting && (
-                    <>
-                      <div>Routing Number:</div>
-                      <div>{invoiceSettings.bankRouting}</div>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Notes */}
       {(invoice.notes || invoiceSettings?.businessNotes) && (
