@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,60 +8,20 @@ import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { FaBell, FaBolt } from 'react-icons/fa';
 import { FiRefreshCw, FiSearch, FiSidebar } from 'react-icons/fi';
+import { IoPerson } from 'react-icons/io5';
 
 interface InvoicesProps {
+  invoices: any[];
   onPreviewClick?: () => void;
 }
 
-const mockInvoices = [
-  {
-    id: '1',
-    clientName: 'John Smith',
-    createdAt: '2024-03-15T22:24:00',
-    status: 'paid',
-    total: 1250.0,
-    items: [{ description: 'Website Development - Homepage Design' }],
-    unread: true,
-    avatarUrl: null,
-  },
-  {
-    id: '2',
-    clientName: 'Sarah Johnson',
-    createdAt: '2024-03-14T18:10:00',
-    status: 'overdue',
-    total: 850.5,
-    items: [{ description: 'Mobile App Development - Phase 1' }],
-    unread: false,
-    avatarUrl: null,
-  },
-  {
-    id: '3',
-    clientName: 'Michael Brown',
-    createdAt: '2024-03-13T09:30:00',
-    status: 'pending',
-    total: 2100.0,
-    items: [{ description: 'E-commerce Platform Integration' }],
-    unread: true,
-    avatarUrl: null,
-  },
-  {
-    id: '4',
-    clientName: 'Emily Davis',
-    createdAt: '2024-03-12T15:45:00',
-    status: 'paid',
-    total: 450.75,
-    items: [{ description: 'SEO Optimization Package' }],
-    unread: false,
-    avatarUrl: null,
-  },
-];
-
 const getStatusColor = (status: string) => {
-  switch (status) {
+  switch (status.toLowerCase()) {
     case 'paid':
       return 'bg-green-500/10 text-green-500';
     case 'overdue':
       return 'bg-red-500/10 text-red-500';
+    case 'sent':
     case 'pending':
       return 'bg-yellow-500/10 text-yellow-500';
     default:
@@ -69,7 +29,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export default function Invoices({ onPreviewClick }: InvoicesProps) {
+export default function Invoices({ invoices, onPreviewClick }: InvoicesProps) {
   const { toggleSidebar } = useSidebar();
 
   return (
@@ -99,11 +59,10 @@ export default function Invoices({ onPreviewClick }: InvoicesProps) {
         </div>
       </div>
       <div className='flex-1 overflow-y-auto px-1 scrollbar-hide'>
-        {Array.from({ length: 20 }).map((_, index) => {
-          const invoice = mockInvoices[index % mockInvoices.length];
+        {invoices?.map((invoice) => {
           return (
             <div
-              key={index}
+              key={invoice._id}
               className='group relative flex items-center px-3 py-2 my-2 rounded-lg hover:bg-[#232428] transition-colors cursor-pointer'
               onClick={onPreviewClick}
             >
@@ -175,18 +134,10 @@ export default function Invoices({ onPreviewClick }: InvoicesProps) {
               </div>
               <div className='relative mr-3'>
                 <Avatar className='h-8 w-8'>
-                  {invoice.avatarUrl ? (
-                    <AvatarImage src={invoice.avatarUrl} alt={invoice.clientName} />
-                  ) : (
-                    <AvatarFallback className='bg-[#373737] text-[#9f9f9f] text-xs font-semibold'>
-                      {invoice.clientName
-                        .split(' ')
-                        .map((n) => {
-                          return n[0];
-                        })
-                        .join('')}
-                    </AvatarFallback>
-                  )}
+                  <AvatarFallback className='bg-[#373737] text-[#9f9f9f] text-xs font-semibold capitalize'>
+                    {invoice.client?.contact.firstName[0] || <IoPerson />}
+                    {invoice.client?.contact.lastName[0]}
+                  </AvatarFallback>
                 </Avatar>
               </div>
 
@@ -194,7 +145,7 @@ export default function Invoices({ onPreviewClick }: InvoicesProps) {
                 <div className='flex items-center justify-between'>
                   <div className='flex items-center gap-2'>
                     <span className='font-semibold text-[#fafafa] text-[14px] truncate'>
-                      {invoice.clientName}
+                      {invoice.client?.user.name || 'Unnamed'}
                     </span>
                   </div>
                   <span className='text-xs text-[#8C8C8C] ml-2 whitespace-nowrap'>
@@ -204,9 +155,11 @@ export default function Invoices({ onPreviewClick }: InvoicesProps) {
 
                 <div className='flex items-center justify-between'>
                   <div className='flex items-center gap-2'>
-                    <span className='text-[#8C8C8C] text-sm truncate'>
-                      {invoice.items[0]?.description || 'No description'} • $
-                      {invoice.total.toFixed(2)}
+                    <span className='text-[#8C8C8C] text-sm truncate max-w-[300px]'>
+                      {invoice.items[0]?.description || 'No description'}
+                    </span>
+                    <span className='text-[#8C8C8C] text-sm'>
+                      • {invoice.total.toFixed(2)} {invoice.currency}
                     </span>
                     <Badge
                       variant='secondary'
