@@ -143,9 +143,9 @@ export default function InvoicePreview() {
                 </div>
                 <div className='sm:ml-auto'>
                   <Button
-                    variant='default'
+                    variant='outline'
                     size='sm'
-                    className='bg-[#232323] text-white text-sm h-11 w-full sm:w-auto px-6'
+                    className='bg-[#232323] border-[#333] text-white text-sm h-11 w-full sm:w-auto px-6'
                   >
                     Record a payment
                   </Button>
