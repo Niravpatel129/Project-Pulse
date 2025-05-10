@@ -557,7 +557,7 @@ export default function InvoicePreview({
               </div>
               <div className='col-span-2'>
                 <div className='text-sm text-[#8C8C8C] mb-2'>Notes</div>
-                <div className='text-[14px] text-white'>{invoice.notes || 'No notes provided'}</div>
+                <div className='text-[14px] text-white'>{invoice.notes || ''}</div>
               </div>
             </div>
           </div>

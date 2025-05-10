@@ -177,7 +177,7 @@ export default function Page() {
     issueDate: response.data.createdAt,
     createdAt: response.data.createdAt,
     updatedAt: response.data.updatedAt,
-    notes: response.data.notes || 'No notes provided',
+    notes: response.data.notes || '',
     terms: 'Payment due within 30 days',
     paymentMethod: 'Pending',
     paymentDate: response.data.status === 'paid' ? response.data.updatedAt : null,
@@ -185,7 +185,7 @@ export default function Page() {
     createdBy: response.data.createdBy.name,
     requireDeposit: response.data.requireDeposit,
     depositPercentage: response.data.depositPercentage,
-    teamNotes: response.data.teamNotes || 'No team notes provided',
+    teamNotes: response.data.teamNotes || '',
     client: response.data.client
       ? {
           name: response.data.client.user.name,
