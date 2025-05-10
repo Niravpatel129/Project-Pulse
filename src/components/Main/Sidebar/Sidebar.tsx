@@ -144,7 +144,7 @@ export default function AppSidebar() {
           </SidebarHeader>
           <SidebarContent className='dark:bg-[#141414] px-2 group-data-[state=collapsed]:px-2'>
             <div className='flex items-center justify-center px-2 mt-2'>
-              <Button className='w-full mb-2 bg-white/10 hover:bg-white/20 text-[#f7f7f7] group-data-[state=collapsed]:w-10 group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:mx-auto mx-8'>
+              <Button className='w-full mb-2 bg-white/10 hover:bg-white/20 text-[#f7f7f7] group-data-[state=collapsed]:w-10 group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:mx-auto'>
                 <PencilIcon className='h-4 w-4' />
                 <span className='group-data-[state=collapsed]:hidden'>New Invoice</span>
                 <RiFileListFill className='h-4 w-4 group-data-[state=collapsed]:block hidden' />
@@ -156,7 +156,7 @@ export default function AppSidebar() {
                 {navigation.map((section) => {
                   return (
                     <div key={section.name} className='mb-4'>
-                      <h3 className='px-4 text-xs font-semibold text-white/60 uppercase tracking-wider mb-2 group-data-[state=collapsed]:hidden'>
+                      <h3 className='px-0 text-xs font-semibold text-[#898989] text-[13px] uppercase tracking-wider mb-2 group-data-[state=collapsed]:hidden'>
                         {section.name}
                       </h3>
                       {section.items.map((item) => {
@@ -170,10 +170,10 @@ export default function AppSidebar() {
                             >
                               <a
                                 href={item.href}
-                                className='flex items-center gap-3 px-2 text-[#f7f7f7] group-data-[state=collapsed]:justify-center'
+                                className='flex items-center gap-3 px-2 text-[#fafafa] group-data-[state=collapsed]:justify-center'
                               >
                                 <item.icon className='h-4 w-4 text-[#858585]' />
-                                <span className='group-data-[state=collapsed]:hidden'>
+                                <span className='group-data-[state=collapsed]:hidden text-[#fafafa]'>
                                   {item.name}
                                 </span>
                               </a>
