@@ -12,8 +12,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { PencilIcon } from 'lucide-react';
-import { useTheme } from 'next-themes';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext } from 'react';
 import {
   RiBarChartFill,
   RiCalendarFill,
@@ -39,8 +38,6 @@ export const useSidebarToggle = () => {
 };
 
 export default function AppSidebar() {
-  const { theme } = useTheme();
-  const [isOpen, setIsOpen] = useState(false);
   const { state, toggleSidebar } = useSidebar();
 
   const navigation = [
