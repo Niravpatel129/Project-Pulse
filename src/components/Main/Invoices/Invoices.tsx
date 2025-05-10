@@ -1,9 +1,10 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { FaBell, FaBolt } from 'react-icons/fa';
-import { FiRefreshCw, FiSidebar } from 'react-icons/fi';
+import { FiRefreshCw, FiSearch, FiSidebar } from 'react-icons/fi';
 
 const mockInvoices = [
   {
@@ -60,12 +61,25 @@ export default function Invoices() {
         </Button>
       </div>
       <Separator className='bg-[#232428] mb-2' />
+      <div className='px-4 mb-3'>
+        <div className='relative'>
+          <FiSearch
+            className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#8C8C8C]'
+            size={16}
+          />
+          <Input
+            type='text'
+            placeholder='Search...'
+            className='w-full pl-9 bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C] focus-visible:ring-1 focus-visible:ring-[#8C8C8C]'
+          />
+        </div>
+      </div>
       <div className='px-1'>
         {mockInvoices.map((invoice) => {
           return (
             <div
               key={invoice.id}
-              className='flex items-center px-3 py-2 rounded-lg hover:bg-[#232428] transition-colors cursor-pointer'
+              className='flex items-center px-3 py-2 my-2 rounded-lg hover:bg-[#232428] transition-colors cursor-pointer'
             >
               <div className='relative mr-3'>
                 <Avatar className='h-8 w-8'>
