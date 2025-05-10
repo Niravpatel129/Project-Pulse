@@ -168,10 +168,15 @@ const labelColors = [
 ];
 
 interface Note {
-  id: string;
+  _id: string;
   text: string;
   label: string;
   createdAt: string;
+  invoice: string;
+  createdBy: {
+    _id: string;
+    name: string;
+  };
 }
 
 function NotesPopoverContent({ invoiceId }: { invoiceId: string }) {
@@ -194,9 +199,12 @@ function NotesPopoverContent({ invoiceId }: { invoiceId: string }) {
   // Add/Update note mutation
   const saveNoteMutation = useMutation({
     mutationFn: async (noteData: { text: string; label: string; id?: string }) => {
+      console.log('Mutation function called with:', noteData);
       if (noteData.id) {
+        console.log('Using PUT for edit');
         return newRequest.put(`/invoices/${invoiceId}/notes/${noteData.id}`, noteData);
       }
+      console.log('Using POST for new note');
       return newRequest.post(`/invoices/${invoiceId}/notes`, noteData);
     },
     onSuccess: () => {
@@ -233,27 +241,31 @@ function NotesPopoverContent({ invoiceId }: { invoiceId: string }) {
     return n.text.toLowerCase().includes(search.toLowerCase());
   });
 
+  // Edit note handler
+  const handleEditNote = (note: Note) => {
+    console.log('Editing note:', note);
+    setNote(note.text);
+    setLabel(note.label);
+    setEditIndex(note._id);
+    setAdding(true);
+  };
+
   // Add or update note handler
   const handleSaveNote = () => {
     if (!note.trim()) return;
-    saveNoteMutation.mutate({
+    console.log('Saving note with editIndex:', editIndex);
+    const noteData = {
       text: note,
       label,
-      id: editIndex || undefined,
-    });
+      id: editIndex,
+    };
+    console.log('Note data being sent:', noteData);
+    saveNoteMutation.mutate(noteData);
   };
 
   // Delete note handler
   const handleDeleteNote = (noteId: string) => {
     deleteNoteMutation.mutate(noteId);
-  };
-
-  // Edit note handler
-  const handleEditNote = (note: Note) => {
-    setNote(note.text);
-    setLabel(note.label);
-    setEditIndex(note.id);
-    setAdding(true);
   };
 
   // Format time ago
@@ -398,7 +410,7 @@ function NotesPopoverContent({ invoiceId }: { invoiceId: string }) {
           ) : (
             filteredNotes.map((n: Note) => {
               return (
-                <div key={n.id} className='bg-[#232323] rounded-lg p-3 mb-3 relative'>
+                <div key={n._id} className='bg-[#232323] rounded-lg p-3 mb-3 relative'>
                   <div className='flex items-center gap-2 mb-1'>
                     <span
                       className='w-3 h-3 rounded-full border border-[#181818]'
@@ -441,7 +453,7 @@ function NotesPopoverContent({ invoiceId }: { invoiceId: string }) {
                         <button
                           className='w-full text-left px-4 py-2 hover:bg-[#313131] text-sm text-[#f63e68]'
                           onClick={() => {
-                            return handleDeleteNote(n.id);
+                            return handleDeleteNote(n._id);
                           }}
                         >
                           Delete
