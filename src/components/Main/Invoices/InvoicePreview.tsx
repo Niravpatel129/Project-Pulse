@@ -11,7 +11,7 @@ export default function InvoicePreview() {
       <div className=''>
         <div className='flex flex-col space-y-6 pb-6 border-b border-[#232323]  rounded-t-lg'>
           {/* Invoice Info Section */}
-          <div className='flex flex-col border-b border-[#232323] px-5 mt-4'>
+          <div className='flex flex-col border-b border-[#232323] px-5 mt-3'>
             <div className='flex items-center'>
               <span className='text-[14px] font-medium text-white'>Invoice #INV-202505-0020</span>
               <Badge className='ml-auto'>

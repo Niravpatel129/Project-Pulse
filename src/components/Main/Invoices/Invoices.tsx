@@ -63,7 +63,7 @@ export default function Invoices() {
           <FiRefreshCw className='text-[#8C8C8C]' size={16} />
         </Button>
       </div>
-      <Separator className='bg-[#232428] mb-2' />
+      <Separator className='bg-[#232428] mb-3' />
       <div className='px-4 mb-3'>
         <div className='relative'>
           <FiSearch
