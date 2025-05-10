@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { useSidebar } from '@/components/ui/sidebar';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 import { FaBell, FaBolt } from 'react-icons/fa';
 import { FiRefreshCw, FiSearch, FiSidebar } from 'react-icons/fi';
 import { IoPerson } from 'react-icons/io5';
@@ -31,6 +32,7 @@ const getStatusColor = (status: string) => {
 
 export default function Invoices({ invoices, onPreviewClick }: InvoicesProps) {
   const { toggleSidebar } = useSidebar();
+  const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
 
   return (
     <div className='bg-background h-full flex flex-col'>
@@ -39,9 +41,11 @@ export default function Invoices({ invoices, onPreviewClick }: InvoicesProps) {
           <Button variant='ghost' size='icon' onClick={toggleSidebar}>
             <FiSidebar className='text-[#8C8C8C] ' />
           </Button>
-          <Button variant='ghost' size='icon'>
-            <FiRefreshCw className='text-[#8C8C8C]' size={16} />
-          </Button>
+          <div className='flex items-center gap-2'>
+            <Button variant='ghost' size='icon'>
+              <FiRefreshCw className='text-[#8C8C8C]' size={16} />
+            </Button>
+          </div>
         </div>
         <Separator className='bg-[#232428] mb-3' />
         <div className='px-4 mb-3'>

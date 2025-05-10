@@ -1,3 +1,4 @@
+import CreateInvoiceDialog from '@/components/InvoicesList/CreateInvoiceDialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +15,7 @@ import {
 import { PencilIcon } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useState } from 'react';
 import {
   RiBarChartFill,
   RiCalendarFill,
@@ -42,6 +43,7 @@ export const useSidebarToggle = () => {
 export default function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const pathname = usePathname();
+  const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
 
   const navigation = [
     {
@@ -144,8 +146,13 @@ export default function AppSidebar() {
           </SidebarHeader>
           <SidebarContent className='dark:bg-[#141414] px-2 group-data-[state=collapsed]:px-2'>
             <div className='flex items-center justify-center px-2 mt-2'>
-              <Button className='w-full mb-2 bg-white/10 hover:bg-white/20 text-[#f7f7f7] group-data-[state=collapsed]:w-10 group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:mx-auto'>
-                <PencilIcon className='h-4 w-4' />
+              <Button
+                className='w-full mb-2 bg-white/10 hover:bg-white/20 text-[#f7f7f7] group-data-[state=collapsed]:w-10 group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:mx-auto'
+                onClick={() => {
+                  return setIsCreateInvoiceOpen(true);
+                }}
+              >
+                <PencilIcon className='h-4 w-4 group-data-[state=collapsed]:hidden' />
                 <span className='group-data-[state=collapsed]:hidden'>New Invoice</span>
                 <RiFileListFill className='h-4 w-4 group-data-[state=collapsed]:block hidden' />
               </Button>
@@ -190,6 +197,8 @@ export default function AppSidebar() {
           <SidebarFooter></SidebarFooter>
         </Sidebar>
       </SidebarToggleContext.Provider>
+
+      <CreateInvoiceDialog open={isCreateInvoiceOpen} onOpenChange={setIsCreateInvoiceOpen} />
     </>
   );
 }
