@@ -19,7 +19,7 @@ export default function Main() {
               <div className='w-full h-full overflow-auto'>
                 <Invoices />
               </div>
-              <div className='w-full border-l border-l-gray-800 h-full overflow-auto'>
+              <div className='w-full border-l border-l-gray-800 overflow-hidden'>
                 <InvoicePreview />
               </div>
             </div>

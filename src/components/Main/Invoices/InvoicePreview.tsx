@@ -5,10 +5,12 @@ import InvoiceActionBar from './InvoiceActionBar';
 
 export default function InvoicePreview() {
   return (
-    <div className='bg-background min-h-screen'>
-      <InvoiceActionBar />
-      <div className=''>
-        <div className='flex flex-col space-y-6 pb-6 border-b border-[#232323]  rounded-t-lg'>
+    <div className='bg-background overflow-hidden'>
+      <div className='sticky top-0 z-10 bg-background'>
+        <InvoiceActionBar />
+      </div>
+      <div className='mt-4 overflow-auto h-[calc(100vh-4rem)]'>
+        <div className='flex flex-col space-y-6 pb-6 border-b border-[#232323] rounded-t-lg'>
           {/* Invoice Info Section */}
           <div className='flex flex-col border-b border-[#232323] px-5 mt-3'>
             <div className='flex items-center'>
