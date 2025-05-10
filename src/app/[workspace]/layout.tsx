@@ -34,6 +34,7 @@ export default function DashboardLayout({
   const isInvoiceNewPage = pathname?.includes('/invoices/new');
   const isInvoiceViewPage = pathname?.includes('/invoice/');
   const isPaymentSuccessPage = pathname?.includes('/payment-success');
+  const isMainPage = pathname?.includes('/main');
 
   const showNavigation =
     !isAuthPage &&
@@ -42,7 +43,8 @@ export default function DashboardLayout({
     !isApprovalsPage &&
     !isInvoiceNewPage &&
     !isInvoiceViewPage &&
-    !isPaymentSuccessPage;
+    !isPaymentSuccessPage &&
+    !isMainPage;
 
   const isLeadsPage = pathname?.includes('/leads');
 
@@ -58,6 +60,7 @@ export default function DashboardLayout({
           'flex-1 bg-[#eff6fd] p-3 pt-1 px-6 sm:p-4 sm:pt-2 md:px-10 md:py-1 lg:p-8 lg:pt-4 lg:px-12 xl:px-16 overflow-auto',
           isFullPage && '!p-0',
           isLeadsPage && 'bg-white',
+          isMainPage && 'bg-white',
         )}
       >
         {children}
