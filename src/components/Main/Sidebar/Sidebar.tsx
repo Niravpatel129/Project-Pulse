@@ -1,3 +1,4 @@
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   Sidebar,
@@ -8,9 +9,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { useTheme } from 'next-themes';
-import { useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 import {
   RiBarChartFill,
   RiCalendarFill,
@@ -25,9 +27,21 @@ import {
   RiUserFill,
 } from 'react-icons/ri';
 
+// Create a context for the sidebar toggle function
+export const SidebarToggleContext = createContext<{
+  toggleSidebar: () => void;
+}>({
+  toggleSidebar: () => {},
+});
+
+export const useSidebarToggle = () => {
+  return useContext(SidebarToggleContext);
+};
+
 export default function AppSidebar() {
   const { theme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const { state, toggleSidebar } = useSidebar();
 
   const navigation = [
     {
@@ -123,55 +137,69 @@ export default function AppSidebar() {
         </Button>
       </div>
 
-      <Sidebar>
-        <SidebarHeader className='dark:bg-[#141414] pt-2'>
-          <div className='flex items-center space-x-3 px-2 py-1'>
-            <div>
-              <p className='text-sm font-medium text-white'>Nirav</p>
-              <p className='text-xs text-white/60'>niravpatelp129@gmail.com</p>
+      <SidebarToggleContext.Provider value={{ toggleSidebar }}>
+        <Sidebar
+          collapsible='icon'
+          data-state={state}
+          className='group-data-[state=collapsed]:w-16'
+        >
+          <SidebarHeader className='dark:bg-[#141414] pt-2 group-data-[state=collapsed]:px-2'>
+            <div className='flex items-center space-x-3 px-2 py-1'>
+              <Avatar className='h-8 w-8 bg-[#373737] rounded-sm'>
+                <AvatarFallback className='bg-[#373737] text-[#9f9f9f] text-xs font-semibold'>
+                  NP
+                </AvatarFallback>
+              </Avatar>
+              <div className='group-data-[state=collapsed]:hidden'>
+                <p className='text-sm font-medium text-white'>Nirav</p>
+                <p className='text-xs text-white/60'>niravpatelp129@gmail.com</p>
+              </div>
             </div>
-          </div>
-        </SidebarHeader>
-        <SidebarContent className='dark:bg-[#141414] px-2'>
-          <Button className='w-full mb-3 bg-white/10 hover:bg-white/20 text-[#f7f7f7]'>
-            New Invoice
-          </Button>
-          <SidebarGroup>
-            <SidebarMenu>
-              {navigation.map((section) => {
-                return (
-                  <div key={section.name} className='mb-4'>
-                    <h3 className='px-4 text-xs font-semibold text-white/60 uppercase tracking-wider mb-2'>
-                      {section.name}
-                    </h3>
-                    {section.items.map((item) => {
-                      return (
-                        <SidebarMenuItem key={item.name}>
-                          <SidebarMenuButton
-                            asChild
-                            isActive={item.current}
-                            tooltip={item.name}
-                            className='text-white hover:bg-white/10 data-[active=true]:bg-white/10'
-                          >
-                            <a
-                              href={item.href}
-                              className='flex items-center gap-3 px-2 text-[#f7f7f7]'
+          </SidebarHeader>
+          <SidebarContent className='dark:bg-[#141414] px-2 group-data-[state=collapsed]:px-2'>
+            <Button className='w-full mb-3 bg-white/10 hover:bg-white/20 text-[#f7f7f7] group-data-[state=collapsed]:w-10 group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:mx-auto'>
+              <span className='group-data-[state=collapsed]:hidden'>New Invoice</span>
+              <RiFileListFill className='h-4 w-4 group-data-[state=collapsed]:block hidden' />
+            </Button>
+            <SidebarGroup>
+              <SidebarMenu>
+                {navigation.map((section) => {
+                  return (
+                    <div key={section.name} className='mb-4'>
+                      <h3 className='px-4 text-xs font-semibold text-white/60 uppercase tracking-wider mb-2 group-data-[state=collapsed]:hidden'>
+                        {section.name}
+                      </h3>
+                      {section.items.map((item) => {
+                        return (
+                          <SidebarMenuItem key={item.name}>
+                            <SidebarMenuButton
+                              asChild
+                              isActive={item.current}
+                              tooltip={item.name}
+                              className='text-white hover:bg-white/10 data-[active=true]:bg-white/10'
                             >
-                              <item.icon className='h-4 w-4 text-[#858585]' />
-                              {item.name}
-                            </a>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroup>
-        </SidebarContent>
-        <SidebarFooter></SidebarFooter>
-      </Sidebar>
+                              <a
+                                href={item.href}
+                                className='flex items-center gap-3 px-2 text-[#f7f7f7] group-data-[state=collapsed]:justify-center'
+                              >
+                                <item.icon className='h-4 w-4 text-[#858585]' />
+                                <span className='group-data-[state=collapsed]:hidden'>
+                                  {item.name}
+                                </span>
+                              </a>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroup>
+          </SidebarContent>
+          <SidebarFooter></SidebarFooter>
+        </Sidebar>
+      </SidebarToggleContext.Provider>
     </>
   );
 }

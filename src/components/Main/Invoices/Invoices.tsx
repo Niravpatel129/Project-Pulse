@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { useSidebar } from '@/components/ui/sidebar';
 import { format } from 'date-fns';
 import { FaBell, FaBolt } from 'react-icons/fa';
 import { FiRefreshCw, FiSearch, FiSidebar } from 'react-icons/fi';
@@ -50,10 +51,12 @@ const mockInvoices = [
 ];
 
 export default function Invoices() {
+  const { toggleSidebar } = useSidebar();
+
   return (
     <div className='bg-background '>
       <div className='flex justify-between items-center px-4 py-2'>
-        <Button variant='ghost' size='icon'>
+        <Button variant='ghost' size='icon' onClick={toggleSidebar}>
           <FiSidebar className='text-[#8C8C8C] ' />
         </Button>
         <Button variant='ghost' size='icon'>
