@@ -1,7 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { CheckIcon } from 'lucide-react';
 import InvoiceActionBar from './InvoiceActionBar';
 
 export default function InvoicePreview() {
@@ -14,9 +13,7 @@ export default function InvoicePreview() {
           <div className='flex flex-col border-b border-[#232323] px-5 mt-3'>
             <div className='flex items-center'>
               <span className='text-[14px] font-medium text-white'>Invoice #INV-202505-0020</span>
-              <Badge className='ml-auto'>
-                Paid <CheckIcon className='w-4 h-4' />
-              </Badge>
+              <Badge className='ml-2'>Paid</Badge>
             </div>
             <div className='flex flex-col sm:flex-row gap-4 mt-2'>
               <div className='flex items-center gap-0'>
