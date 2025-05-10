@@ -137,11 +137,7 @@ export function ApproverDialog({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent
-        side='bottom'
-        className='p-0 m-0 max-w-full h-[90vh] w-screen rounded-t-lg'
-        hideCloseButton
-      >
+      <SheetContent side='bottom' className='p-0 m-0 max-w-full h-[90vh] w-screen rounded-t-lg'>
         <VisuallyHidden>
           <SheetTitle>Send for Client Approval</SheetTitle>
         </VisuallyHidden>
