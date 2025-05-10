@@ -6,12 +6,12 @@ import InvoiceActionBar from './InvoiceActionBar';
 
 export default function InvoicePreview() {
   return (
-    <div className='bg-[#141414] min-h-screen'>
+    <div className='bg-background min-h-screen'>
       <InvoiceActionBar />
       <div className=''>
         <div className='flex flex-col space-y-6 pb-6 border-b border-[#232323]  rounded-t-lg'>
           {/* Invoice Info Section */}
-          <div className='flex flex-col border-b border-[#232323] px-3 mt-4'>
+          <div className='flex flex-col border-b border-[#232323] px-5 mt-4'>
             <div className='flex items-center'>
               <span className='text-[14px] font-medium text-white'>Invoice #INV-202505-0020</span>
               <Badge className='ml-auto'>
@@ -33,7 +33,7 @@ export default function InvoicePreview() {
               </div>
             </div>
           </div>
-          <div className='grid grid-cols-3 gap-4 px-3'>
+          <div className='grid grid-cols-3 gap-4 px-5'>
             <div className='flex flex-col'>
               <span className='text-sm text-[#8C8C8C] mb-2'>Amount</span>
               <span className='text-[14px] font-bold text-white'>$26.40</span>
@@ -52,9 +52,9 @@ export default function InvoicePreview() {
         </div>
 
         {/* Timeline Section */}
-        <div className='py-6 space-y-6 px-3'>
+        <div className='py-6 space-y-6 px-5'>
           {/* Timeline */}
-          <div className=' rounded-lg border border-[#232323] p-6'>
+          <div className='bg-[#141414] rounded-lg border border-[#232323] p-6'>
             <div className='flex flex-col space-y-6'>
               {/* Create */}
               <div className='flex flex-col sm:flex-row sm:items-center gap-4'>
@@ -163,7 +163,7 @@ export default function InvoicePreview() {
           </div>
 
           {/* Additional Info Panel */}
-          <div className=' rounded-lg border border-[#232323] p-6'>
+          <div className='bg-[#141414] rounded-lg border border-[#232323] p-6'>
             <h3 className='text-[14px] font-semibold text-white mb-5'>Additional Information</h3>
             <div className='grid grid-cols-2 gap-6'>
               <div>
