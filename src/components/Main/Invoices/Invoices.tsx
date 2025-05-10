@@ -8,6 +8,10 @@ import { motion } from 'framer-motion';
 import { FaBell, FaBolt } from 'react-icons/fa';
 import { FiRefreshCw, FiSearch, FiSidebar } from 'react-icons/fi';
 
+interface InvoicesProps {
+  onPreviewClick?: () => void;
+}
+
 const mockInvoices = [
   {
     id: '1',
@@ -51,7 +55,7 @@ const mockInvoices = [
   },
 ];
 
-export default function Invoices() {
+export default function Invoices({ onPreviewClick }: InvoicesProps) {
   const { toggleSidebar } = useSidebar();
 
   return (
@@ -87,6 +91,7 @@ export default function Invoices() {
             <div
               key={index}
               className='group relative flex items-center px-3 py-2 my-2 rounded-lg hover:bg-[#232428] transition-colors cursor-pointer'
+              onClick={onPreviewClick}
             >
               <div className='absolute right-2 z-[25] flex -translate-y-1/2 items-center gap-1 rounded-xl border bg-white p-1 shadow-sm dark:bg-[#1A1A1A] top-[-1] opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
                 <motion.button

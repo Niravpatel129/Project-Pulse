@@ -10,10 +10,14 @@ import {
   FiX,
 } from 'react-icons/fi';
 
-export default function InvoiceActionBar() {
+interface InvoiceActionBarProps {
+  onClose?: () => void;
+}
+
+export default function InvoiceActionBar({ onClose }: InvoiceActionBarProps) {
   return (
     <div className='flex items-center py-2.5 px-4 border-b border-b-[#222]'>
-      <Button variant='ghost' size='sm' className='text-[#8b8b8b]'>
+      <Button variant='ghost' size='sm' className='text-[#8b8b8b]' onClick={onClose}>
         <FiX size={16} />
       </Button>
       <div className='w-[1px] h-[18px] bg-[#222] mr-4' />
