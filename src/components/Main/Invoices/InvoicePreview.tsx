@@ -249,7 +249,7 @@ export default function InvoicePreview({
     return (
       <div className='bg-background overflow-hidden'>
         <div className='sticky top-0 z-10 bg-background'>
-          <InvoiceActionBar onClose={handleClose} />
+          <InvoiceActionBar onClose={handleClose} invoiceId={invoiceId || selectedInvoice?._id} />
         </div>
         <div className='mt-4 overflow-auto h-[calc(100vh-4rem)]'>
           <div className='flex flex-col space-y-6 pb-6 border-b border-[#232323] rounded-t-lg'>
@@ -275,7 +275,7 @@ export default function InvoicePreview({
     return (
       <div className='bg-background overflow-hidden'>
         <div className='sticky top-0 z-10 bg-background'>
-          <InvoiceActionBar onClose={handleClose} />
+          <InvoiceActionBar onClose={handleClose} invoiceId={invoiceId || selectedInvoice?._id} />
         </div>
         <div className='mt-4 overflow-auto h-[calc(100vh-4rem)]'>
           <div className='flex items-center justify-center h-full'>
@@ -293,7 +293,7 @@ export default function InvoicePreview({
   return (
     <div className='bg-background overflow-hidden'>
       <div className='sticky top-0 z-10 bg-background'>
-        <InvoiceActionBar onClose={handleClose} />
+        <InvoiceActionBar onClose={handleClose} invoiceId={invoiceId || selectedInvoice?._id} />
       </div>
       <div className='mt-4 overflow-auto h-[calc(100vh-4rem)]'>
         <div className='flex flex-col space-y-6 pb-6 border-b border-[#232323] rounded-t-lg'>

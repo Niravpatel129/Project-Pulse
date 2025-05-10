@@ -1,6 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import {
   FiArchive,
@@ -12,12 +14,14 @@ import {
   FiTrash2,
   FiX,
 } from 'react-icons/fi';
+import { toast } from 'sonner';
 
 interface InvoiceActionBarProps {
   onClose?: () => void;
+  invoiceId: string;
 }
 
-export default function InvoiceActionBar({ onClose }: InvoiceActionBarProps) {
+export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBarProps) {
   return (
     <div className='flex items-center py-2.5 px-4 border-b border-b-[#222]'>
       <TooltipProvider delayDuration={0}>
@@ -91,63 +95,63 @@ export default function InvoiceActionBar({ onClose }: InvoiceActionBarProps) {
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant='default'
-                size='icon'
-                className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8'
-              >
-                <FiArchive size={14} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Archive</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <Popover>
-              <PopoverTrigger asChild>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant='default'
-                    size='icon'
-                    className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8'
-                    aria-label='Notes'
-                  >
-                    <FiBook size={16} />
-                  </Button>
-                </TooltipTrigger>
-              </PopoverTrigger>
-              <TooltipContent>
-                <p>Notes</p>
-              </TooltipContent>
-              <PopoverContent className='w-[350px] p-0 bg-[#181818] text-white rounded-lg shadow-lg border-none'>
-                <NotesPopoverContent />
-              </PopoverContent>
-            </Popover>
-          </Tooltip>
-        </TooltipProvider>
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant='default'
-                size='icon'
-                className='text-[#f63e68] bg-[#451a26] h-8 w-8 border-2 border-[#6e2535] hover:bg-[#6e2535]'
-              >
-                <FiTrash2 size={14} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Delete</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
       </div>
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant='default'
+              size='icon'
+              className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8'
+            >
+              <FiArchive size={14} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Archive</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
+          <Popover>
+            <PopoverTrigger asChild>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='default'
+                  size='icon'
+                  className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8'
+                  aria-label='Notes'
+                >
+                  <FiBook size={16} />
+                </Button>
+              </TooltipTrigger>
+            </PopoverTrigger>
+            <TooltipContent>
+              <p>Notes</p>
+            </TooltipContent>
+            <PopoverContent className='w-[350px] p-0 bg-[#181818] text-white rounded-lg shadow-lg border-none'>
+              <NotesPopoverContent invoiceId={invoiceId} />
+            </PopoverContent>
+          </Popover>
+        </Tooltip>
+      </TooltipProvider>
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant='default'
+              size='icon'
+              className='text-[#f63e68] bg-[#451a26] h-8 w-8 border-2 border-[#6e2535] hover:bg-[#6e2535]'
+            >
+              <FiTrash2 size={14} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Delete</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 }
@@ -163,65 +167,99 @@ const labelColors = [
   '#e91e63', // pink
 ];
 
-function NotesPopoverContent() {
+interface Note {
+  id: string;
+  text: string;
+  label: string;
+  createdAt: string;
+}
+
+function NotesPopoverContent({ invoiceId }: { invoiceId: string }) {
   const [adding, setAdding] = useState(false);
   const [note, setNote] = useState('');
   const [label, setLabel] = useState(labelColors[0]);
-  const [notes, setNotes] = useState([]); // [{text, label, createdAt}]
+  const [editIndex, setEditIndex] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [editIndex, setEditIndex] = useState(null); // index of note being edited
+  const queryClient = useQueryClient();
+
+  // Fetch notes
+  const { data: notes = [], isLoading } = useQuery({
+    queryKey: ['invoice-notes', invoiceId],
+    queryFn: async () => {
+      const response = await newRequest.get(`/invoices/${invoiceId}/notes`);
+      return response.data;
+    },
+  });
+
+  // Add/Update note mutation
+  const saveNoteMutation = useMutation({
+    mutationFn: async (noteData: { text: string; label: string; id?: string }) => {
+      if (noteData.id) {
+        return newRequest.put(`/invoices/${invoiceId}/notes/${noteData.id}`, noteData);
+      }
+      return newRequest.post(`/invoices/${invoiceId}/notes`, noteData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoice-notes', invoiceId] });
+      setAdding(false);
+      setNote('');
+      setLabel(labelColors[0]);
+      setEditIndex(null);
+      toast.success('Note saved successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to save note');
+      console.error('Error saving note:', error);
+    },
+  });
+
+  // Delete note mutation
+  const deleteNoteMutation = useMutation({
+    mutationFn: async (noteId: string) => {
+      return newRequest.delete(`/invoices/${invoiceId}/notes/${noteId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoice-notes', invoiceId] });
+      toast.success('Note deleted successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to delete note');
+      console.error('Error deleting note:', error);
+    },
+  });
 
   // Filter notes by search
-  const filteredNotes = notes.filter((n) => {
+  const filteredNotes = notes.filter((n: Note) => {
     return n.text.toLowerCase().includes(search.toLowerCase());
   });
 
   // Add or update note handler
   const handleSaveNote = () => {
     if (!note.trim()) return;
-    if (editIndex !== null) {
-      // Edit existing note
-      setNotes((notes) => {
-        return notes.map((n, i) => {
-          return i === editIndex ? { ...n, text: note, label } : n;
-        });
-      });
-      setEditIndex(null);
-    } else {
-      // Add new note
-      setNotes([{ text: note, label, createdAt: new Date() }, ...notes]);
-    }
-    setAdding(false);
-    setNote('');
-    setLabel(labelColors[0]);
+    saveNoteMutation.mutate({
+      text: note,
+      label,
+      id: editIndex || undefined,
+    });
   };
 
   // Delete note handler
-  const handleDeleteNote = (index) => {
-    setNotes((notes) => {
-      return notes.filter((_, i) => {
-        return i !== index;
-      });
-    });
+  const handleDeleteNote = (noteId: string) => {
+    deleteNoteMutation.mutate(noteId);
   };
 
   // Edit note handler
-  const handleEditNote = (index) => {
-    const n = filteredNotes[index];
-    // Find the real index in the notes array (since filteredNotes may be a subset)
-    const realIndex = notes.findIndex((note) => {
-      return note === n;
-    });
-    setNote(n.text);
-    setLabel(n.label);
-    setEditIndex(realIndex);
+  const handleEditNote = (note: Note) => {
+    setNote(note.text);
+    setLabel(note.label);
+    setEditIndex(note.id);
     setAdding(true);
   };
 
   // Format time ago
-  function timeAgo(date) {
+  function timeAgo(date: string) {
     const now = new Date();
-    const d = date instanceof Date ? date : new Date(date);
+    const d = new Date(date);
     const diff = Math.floor((now.getTime() - d.getTime()) / 1000);
     if (diff < 60) return `${diff} second${diff !== 1 ? 's' : ''} ago`;
     if (diff < 3600)
@@ -303,10 +341,10 @@ function NotesPopoverContent() {
           <Button
             variant='outline'
             className='bg-[#313131] text-white border border-[#313131] hover:bg-[#232323]/80 px-6 py-2 rounded-lg'
-            disabled={!note.trim()}
+            disabled={!note.trim() || saveNoteMutation.isPending}
             onClick={handleSaveNote}
           >
-            {editIndex !== null ? 'Save changes' : 'Save note'}
+            {editIndex ? 'Save changes' : 'Save note'}
           </Button>
         </div>
       </div>
@@ -353,12 +391,14 @@ function NotesPopoverContent() {
         </div>
         {/* Notes list */}
         <div className='flex-1 overflow-y-auto px-4 pb-2'>
-          {filteredNotes.length === 0 ? (
+          {isLoading ? (
+            <div className='text-[#8b8b8b] text-center mt-8'>Loading notes...</div>
+          ) : filteredNotes.length === 0 ? (
             <div className='text-[#8b8b8b] text-center mt-8'>No notes found.</div>
           ) : (
-            filteredNotes.map((n, i) => {
+            filteredNotes.map((n: Note) => {
               return (
-                <div key={i} className='bg-[#232323] rounded-lg p-3 mb-3 relative'>
+                <div key={n.id} className='bg-[#232323] rounded-lg p-3 mb-3 relative'>
                   <div className='flex items-center gap-2 mb-1'>
                     <span
                       className='w-3 h-3 rounded-full border border-[#181818]'
@@ -377,7 +417,7 @@ function NotesPopoverContent() {
                           strokeLinejoin='round'
                         />
                       </svg>
-                      {timeAgo(new Date(n.createdAt))}
+                      {timeAgo(n.createdAt)}
                     </span>
                     <Popover>
                       <PopoverTrigger asChild>
@@ -393,7 +433,7 @@ function NotesPopoverContent() {
                         <button
                           className='w-full text-left px-4 py-2 hover:bg-[#313131] text-sm'
                           onClick={() => {
-                            return handleEditNote(i);
+                            return handleEditNote(n);
                           }}
                         >
                           Edit
@@ -401,11 +441,7 @@ function NotesPopoverContent() {
                         <button
                           className='w-full text-left px-4 py-2 hover:bg-[#313131] text-sm text-[#f63e68]'
                           onClick={() => {
-                            return handleDeleteNote(
-                              notes.findIndex((note) => {
-                                return note === n;
-                              }),
-                            );
+                            return handleDeleteNote(n.id);
                           }}
                         >
                           Delete
