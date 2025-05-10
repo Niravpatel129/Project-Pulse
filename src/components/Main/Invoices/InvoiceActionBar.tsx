@@ -21,6 +21,15 @@ interface InvoiceActionBarProps {
 }
 
 export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBarProps) {
+  // Fetch notes
+  const { data: notes = [] } = useQuery({
+    queryKey: ['invoice-notes', invoiceId],
+    queryFn: async () => {
+      const response = await newRequest.get(`/invoices/${invoiceId}/notes`);
+      return response.data;
+    },
+  });
+
   return (
     <div className='flex items-center py-2.5 px-4 border-b border-b-[#222]'>
       <TooltipProvider delayDuration={0}>
@@ -103,10 +112,15 @@ export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBa
                 <Button
                   variant='default'
                   size='icon'
-                  className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8'
+                  className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8 relative'
                   aria-label='Notes'
                 >
                   <FiBook size={16} />
+                  {notes?.length > 0 && (
+                    <span className='absolute -top-1 -right-1 bg-[#f63e68] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center'>
+                      {notes.length}
+                    </span>
+                  )}
                 </Button>
               </TooltipTrigger>
             </PopoverTrigger>
@@ -114,7 +128,7 @@ export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBa
               <p>Notes</p>
             </TooltipContent>
             <PopoverContent className='w-[350px] p-0 bg-[#181818] text-white rounded-lg shadow-lg border-none'>
-              <NotesPopoverContent invoiceId={invoiceId} />
+              <NotesPopoverContent invoiceId={invoiceId} initialNotes={notes} />
             </PopoverContent>
           </Popover>
         </Tooltip>
@@ -162,7 +176,13 @@ interface Note {
   };
 }
 
-function NotesPopoverContent({ invoiceId }: { invoiceId: string }) {
+function NotesPopoverContent({
+  invoiceId,
+  initialNotes,
+}: {
+  invoiceId: string;
+  initialNotes: Note[];
+}) {
   const [adding, setAdding] = useState(false);
   const [note, setNote] = useState('');
   const [label, setLabel] = useState(labelColors[0]);
@@ -171,7 +191,7 @@ function NotesPopoverContent({ invoiceId }: { invoiceId: string }) {
   const queryClient = useQueryClient();
 
   // Fetch notes
-  const { data: notes = [], isLoading } = useQuery({
+  const { data: notes = initialNotes, isLoading } = useQuery({
     queryKey: ['invoice-notes', invoiceId],
     queryFn: async () => {
       const response = await newRequest.get(`/invoices/${invoiceId}/notes`);
