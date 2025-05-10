@@ -58,16 +58,19 @@ export default function AppSidebar() {
       </div>
 
       <Sidebar>
-        <SidebarHeader>
-          <h1 className='text-xl font-semibold'>Pulse</h1>
-        </SidebarHeader>
-        <SidebarContent>
+        <SidebarHeader></SidebarHeader>
+        <SidebarContent className='dark:bg-[#141414]'>
           <SidebarGroup>
             <SidebarMenu>
               {navigation.map((item) => {
                 return (
                   <SidebarMenuItem key={item.name}>
-                    <SidebarMenuButton asChild isActive={item.current} tooltip={item.name}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={item.current}
+                      tooltip={item.name}
+                      className='text-white hover:bg-white/10 data-[active=true]:bg-white/10'
+                    >
                       <a href={item.href}>{item.name}</a>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -78,10 +81,10 @@ export default function AppSidebar() {
         </SidebarContent>
         <SidebarFooter>
           <div className='flex items-center space-x-3'>
-            <div className='h-8 w-8 rounded-full bg-accent'></div>
+            <div className='h-8 w-8 rounded-full bg-white/10'></div>
             <div>
-              <p className='text-sm font-medium'>User Name</p>
-              <p className='text-xs text-muted-foreground'>user@example.com</p>
+              <p className='text-sm font-medium text-white'>User Name</p>
+              <p className='text-xs text-white/60'>user@example.com</p>
             </div>
           </div>
         </SidebarFooter>
