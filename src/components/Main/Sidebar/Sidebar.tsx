@@ -9,18 +9,18 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import {
-  BarChart,
-  Calendar,
-  CheckSquare,
-  FolderKanban,
-  LayoutDashboard,
-  Menu,
-  Settings,
-  Users,
-} from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useState } from 'react';
+import {
+  RiBarChartFill,
+  RiCalendarFill,
+  RiCheckboxFill,
+  RiDashboardFill,
+  RiFolderFill,
+  RiMenuFill,
+  RiSettingsFill,
+  RiTeamFill,
+} from 'react-icons/ri';
 
 export default function AppSidebar() {
   const { theme } = useTheme();
@@ -34,19 +34,19 @@ export default function AppSidebar() {
           name: 'Dashboard',
           href: '#',
           current: true,
-          icon: LayoutDashboard,
+          icon: RiDashboardFill,
         },
         {
           name: 'Projects',
           href: '#',
           current: false,
-          icon: FolderKanban,
+          icon: RiFolderFill,
         },
         {
           name: 'Analytics',
           href: '#',
           current: false,
-          icon: BarChart,
+          icon: RiBarChartFill,
         },
       ],
     },
@@ -57,25 +57,25 @@ export default function AppSidebar() {
           name: 'Tasks',
           href: '#',
           current: false,
-          icon: CheckSquare,
+          icon: RiCheckboxFill,
         },
         {
           name: 'Calendar',
           href: '#',
           current: false,
-          icon: Calendar,
+          icon: RiCalendarFill,
         },
         {
           name: 'Team',
           href: '#',
           current: false,
-          icon: Users,
+          icon: RiTeamFill,
         },
         {
           name: 'Settings',
           href: '#',
           current: false,
-          icon: Settings,
+          icon: RiSettingsFill,
         },
       ],
     },
@@ -92,7 +92,7 @@ export default function AppSidebar() {
             return setIsOpen(!isOpen);
           }}
         >
-          <Menu className='h-6 w-6' />
+          <RiMenuFill className='h-6 w-6' />
           <span className='sr-only'>Open sidebar</span>
         </Button>
       </div>
@@ -124,8 +124,11 @@ export default function AppSidebar() {
                             tooltip={item.name}
                             className='text-white hover:bg-white/10 data-[active=true]:bg-white/10'
                           >
-                            <a href={item.href} className='flex items-center gap-3 px-4'>
-                              <item.icon className='h-4 w-4' />
+                            <a
+                              href={item.href}
+                              className='flex items-center gap-3 px-4 text-[#f7f7f7]'
+                            >
+                              <item.icon className='h-4 w-4 text-[#858585]' />
                               {item.name}
                             </a>
                           </SidebarMenuButton>
