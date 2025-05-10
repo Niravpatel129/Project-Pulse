@@ -4,15 +4,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import {
-  FiArchive,
-  FiBook,
-  FiChevronLeft,
-  FiChevronRight,
-  FiStar,
-  FiTrash2,
-  FiX,
-} from 'react-icons/fi';
+import { BsStarFill } from 'react-icons/bs';
+import { FiBook, FiChevronLeft, FiChevronRight, FiStar, FiTrash2, FiX } from 'react-icons/fi';
 import { toast } from 'sonner';
 
 interface InvoiceActionBarProps {
@@ -46,22 +39,6 @@ export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBa
     },
     onError: () => {
       toast.error('Failed to update star status');
-    },
-  });
-
-  // Archive mutation
-  const archiveMutation = useMutation({
-    mutationFn: async () => {
-      return newRequest.put(`/invoices/${invoiceId}/archive`, {
-        status: invoice?.status === 'archived' ? 'draft' : 'archived',
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] });
-      toast.success(invoice?.status === 'archived' ? 'Invoice unarchived' : 'Invoice archived');
-    },
-    onError: () => {
-      toast.error('Failed to update archive status');
     },
   });
 
@@ -158,33 +135,11 @@ export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBa
                 }}
                 disabled={starMutation.isPending}
               >
-                <FiStar size={14} />
+                {invoice?.starred ? <BsStarFill size={14} /> : <FiStar size={14} />}
               </Button>
             </TooltipTrigger>
             <TooltipContent>
               <p>{invoice?.starred ? 'Unstar' : 'Star'}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant='default'
-                size='icon'
-                className={`text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8 ${
-                  invoice?.status === 'archived' ? 'text-[#f5a623]' : ''
-                }`}
-                onClick={() => {
-                  return archiveMutation.mutate();
-                }}
-                disabled={archiveMutation.isPending}
-              >
-                <FiArchive size={14} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{invoice?.status === 'archived' ? 'Unarchive' : 'Archive'}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
