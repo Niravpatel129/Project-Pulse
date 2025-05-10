@@ -9,7 +9,6 @@ import {
   FiBook,
   FiChevronLeft,
   FiChevronRight,
-  FiCopy,
   FiStar,
   FiTrash2,
   FiX,
@@ -63,22 +62,6 @@ export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBa
       </TooltipProvider>
       <div className='flex-1' />
       <div className='flex items-center gap-1'>
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant='default'
-                size='icon'
-                className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8'
-              >
-                <FiCopy size={14} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Copy</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
         <TooltipProvider delayDuration={0}>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -279,12 +262,7 @@ function NotesPopoverContent({ invoiceId }: { invoiceId: string }) {
   if (adding) {
     return (
       <div className='p-4 rounded-lg bg-[#181818] min-h-[300px] flex flex-col'>
-        <div className='text-lg font-medium mb-4 flex items-center gap-2'>
-          <span role='img' aria-label='Notes'>
-            🗒️
-          </span>{' '}
-          Notes
-        </div>
+        <div className='text-lg font-medium mb-4 flex items-center gap-2'>Notes</div>
         <div className='flex-1 mb-4'>
           <textarea
             className='w-full min-h-[80px] bg-transparent border-none outline-none resize-none text-white placeholder-[#8b8b8b] text-base p-0 mb-2'
@@ -363,12 +341,7 @@ function NotesPopoverContent({ invoiceId }: { invoiceId: string }) {
       <div className='flex flex-col h-[400px]'>
         {/* Header with badge */}
         <div className='flex items-center gap-2 px-4 pt-4 pb-2'>
-          <span className='text-lg font-medium flex items-center gap-2'>
-            <span role='img' aria-label='Notes'>
-              🗒️
-            </span>{' '}
-            Notes
-          </span>
+          <span className='text-lg font-medium flex items-center gap-2'>Notes</span>
           <span className='ml-2 bg-[#232323] text-xs px-2 py-0.5 rounded-full'>{notes.length}</span>
         </div>
         {/* Search */}
