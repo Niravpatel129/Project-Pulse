@@ -79,10 +79,11 @@ export default function Invoices() {
         </div>
       </div>
       <div className='px-1'>
-        {mockInvoices.map((invoice) => {
+        {Array.from({ length: 20 }).map((_, index) => {
+          const invoice = mockInvoices[index % mockInvoices.length];
           return (
             <div
-              key={invoice.id}
+              key={index}
               className='group relative flex items-center px-3 py-2 my-2 rounded-lg hover:bg-[#232428] transition-colors cursor-pointer'
             >
               <div className='absolute right-2 z-[25] flex -translate-y-1/2 items-center gap-1 rounded-xl border bg-white p-1 shadow-sm dark:bg-[#1A1A1A] top-[-1] opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
