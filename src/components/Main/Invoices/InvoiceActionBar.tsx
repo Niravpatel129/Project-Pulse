@@ -21,6 +21,49 @@ interface InvoiceActionBarProps {
 }
 
 export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBarProps) {
+  const queryClient = useQueryClient();
+
+  // Fetch invoice data including star and archive status
+  const { data: invoice } = useQuery({
+    queryKey: ['invoice', invoiceId],
+    queryFn: async () => {
+      const response = await newRequest.get(`/invoices/${invoiceId}`);
+      return response.data;
+    },
+  });
+
+  // Star mutation
+  const starMutation = useMutation({
+    mutationFn: async () => {
+      return newRequest.put(`/invoices/${invoiceId}/star`, {
+        starred: !invoice?.starred,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] });
+      toast.success(invoice?.starred ? 'Invoice unstarred' : 'Invoice starred');
+    },
+    onError: () => {
+      toast.error('Failed to update star status');
+    },
+  });
+
+  // Archive mutation
+  const archiveMutation = useMutation({
+    mutationFn: async () => {
+      return newRequest.put(`/invoices/${invoiceId}/archive`, {
+        archived: !invoice?.archived,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] });
+      toast.success(invoice?.archived ? 'Invoice unarchived' : 'Invoice archived');
+    },
+    onError: () => {
+      toast.error('Failed to update archive status');
+    },
+  });
+
   // Fetch notes
   const { data: notes = [] } = useQuery({
     queryKey: ['invoice-notes', invoiceId],
@@ -106,13 +149,19 @@ export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBa
               <Button
                 variant='default'
                 size='icon'
-                className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8'
+                className={`text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8 ${
+                  invoice?.starred ? 'text-[#f5a623]' : ''
+                }`}
+                onClick={() => {
+                  return starMutation.mutate();
+                }}
+                disabled={starMutation.isPending}
               >
                 <FiStar size={14} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Star</p>
+              <p>{invoice?.starred ? 'Unstar' : 'Star'}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -122,13 +171,19 @@ export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBa
               <Button
                 variant='default'
                 size='icon'
-                className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8'
+                className={`text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8 ${
+                  invoice?.archived ? 'text-[#f5a623]' : ''
+                }`}
+                onClick={() => {
+                  return archiveMutation.mutate();
+                }}
+                disabled={archiveMutation.isPending}
               >
                 <FiArchive size={14} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Archive</p>
+              <p>{invoice?.archived ? 'Unarchive' : 'Archive'}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
