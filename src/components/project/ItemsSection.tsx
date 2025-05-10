@@ -503,7 +503,7 @@ export default function ItemsSection({
                         }}
                         onKeyDown={handleDescriptionKeyDown}
                         placeholder='Add a description'
-                        className='min-h-[80px] resize-none'
+                        className='min-h-[80px] resize-none text-[#313037]'
                         aria-label='Item description'
                       />
                     </div>
