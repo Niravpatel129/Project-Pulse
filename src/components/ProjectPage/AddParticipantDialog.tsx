@@ -243,7 +243,6 @@ export default function AddParticipantDialog({
                 onClick={handleAddParticipant}
                 className='flex-1 gap-1'
                 disabled={!validation.isFormValid || addParticipantMutation.isPending}
-                isLoading={addParticipantMutation.isPending}
               >
                 {!addParticipantMutation.isPending && <UserPlus className='h-4 w-4' />}
                 Add Participant
@@ -302,7 +301,6 @@ export default function AddParticipantDialog({
                         }}
                         className='h-8 gap-1'
                         disabled={addExistingContactMutation.isPending}
-                        isLoading={addExistingContactMutation.isPending}
                       >
                         {!addExistingContactMutation.isPending && (
                           <UserPlus className='h-3.5 w-3.5' />
