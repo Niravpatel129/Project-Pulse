@@ -13,7 +13,7 @@ export default function InvoicePreview() {
           {/* Invoice Info Section */}
           <div className='flex flex-col border-b border-[#232323] px-3 mt-4'>
             <div className='flex items-center'>
-              <span className='text-[16px] font-medium text-white'>Invoice #INV-202505-0020</span>
+              <span className='text-[14px] font-medium text-white'>Invoice #INV-202505-0020</span>
               <Badge className='ml-auto'>
                 Paid <CheckIcon className='w-4 h-4' />
               </Badge>
@@ -36,17 +36,17 @@ export default function InvoicePreview() {
           <div className='grid grid-cols-3 gap-4 px-3'>
             <div className='flex flex-col'>
               <span className='text-sm text-[#8C8C8C] mb-2'>Amount</span>
-              <span className='text-xl font-bold text-white'>$26.40</span>
+              <span className='text-[14px] font-bold text-white'>$26.40</span>
             </div>
             <div className='flex flex-col'>
               <span className='text-sm text-[#8C8C8C] mb-2'>Deposit Due</span>
-              <span className='text-base font-semibold text-[#a78bfa]'>
+              <span className='text-[14px] font-semibold text-[#a78bfa]'>
                 $13.20 <span className='text-sm'>(50%)</span>
               </span>
             </div>
             <div className='flex flex-col'>
               <span className='text-sm text-[#8C8C8C] mb-2'>Due Date</span>
-              <span className='text-base font-medium text-white'>Due in 29 days</span>
+              <span className='text-[14px] font-medium text-white'>Due in 29 days</span>
             </div>
           </div>
         </div>
@@ -72,7 +72,7 @@ export default function InvoicePreview() {
                     </svg>
                   </span>
                   <div>
-                    <div className='font-semibold text-white text-base mb-1'>Create</div>
+                    <div className='font-semibold text-white text-[14px] mb-1'>Create</div>
                     <div className='text-sm text-[#8C8C8C]'>Created: 5/8/2025, 11:26:20 PM</div>
                   </div>
                 </div>
@@ -103,7 +103,7 @@ export default function InvoicePreview() {
                     </svg>
                   </span>
                   <div>
-                    <div className='font-semibold text-white text-base mb-1'>Send</div>
+                    <div className='font-semibold text-white text-[14px] mb-1'>Send</div>
                     <div className='text-sm text-[#8C8C8C]'>
                       Last sent: Marked as sent 5/9/2025, 12:11:10 AM{' '}
                       <span className='underline cursor-pointer'>Edit date</span>
@@ -137,7 +137,7 @@ export default function InvoicePreview() {
                     </svg>
                   </span>
                   <div>
-                    <div className='font-semibold text-white text-base mb-1'>Manage payments</div>
+                    <div className='font-semibold text-white text-[14px] mb-1'>Manage payments</div>
                     <div className='text-sm text-[#8C8C8C]'>
                       Amount due: $26.40 —{' '}
                       <span className='underline cursor-pointer'>Record a payment</span> manually
@@ -164,19 +164,19 @@ export default function InvoicePreview() {
 
           {/* Additional Info Panel */}
           <div className=' rounded-lg border border-[#232323] p-6'>
-            <h3 className='text-base font-semibold text-white mb-5'>Additional Information</h3>
+            <h3 className='text-[14px] font-semibold text-white mb-5'>Additional Information</h3>
             <div className='grid grid-cols-2 gap-6'>
               <div>
                 <div className='text-sm text-[#8C8C8C] mb-2'>Invoice Date</div>
-                <div className='text-sm text-white'>May 8, 2025</div>
+                <div className='text-[14px] text-white'>May 8, 2025</div>
               </div>
               <div>
                 <div className='text-sm text-[#8C8C8C] mb-2'>Due Date</div>
-                <div className='text-sm text-white'>June 6, 2025</div>
+                <div className='text-[14px] text-white'>June 6, 2025</div>
               </div>
               <div className='col-span-2'>
                 <div className='text-sm text-[#8C8C8C] mb-2'>Payment Terms</div>
-                <div className='text-sm text-white'>Net 30</div>
+                <div className='text-[14px] text-white'>Net 30</div>
               </div>
             </div>
           </div>
