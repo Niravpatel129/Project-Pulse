@@ -20,7 +20,6 @@ import {
   RiDashboardFill,
   RiFileListFill,
   RiFolderFill,
-  RiMenuFill,
   RiMoneyDollarCircleFill,
   RiSettingsFill,
   RiTeamFill,
@@ -123,20 +122,6 @@ export default function AppSidebar() {
 
   return (
     <>
-      <div className='lg:hidden fixed top-4 left-4 z-50'>
-        <Button
-          variant='ghost'
-          size='icon'
-          className='lg:hidden'
-          onClick={() => {
-            return setIsOpen(!isOpen);
-          }}
-        >
-          <RiMenuFill className='h-6 w-6' />
-          <span className='sr-only'>Open sidebar</span>
-        </Button>
-      </div>
-
       <SidebarToggleContext.Provider value={{ toggleSidebar }}>
         <Sidebar
           collapsible='icon'
