@@ -242,23 +242,23 @@ export default function ClientSection({
   };
 
   return (
-    <div className='flex flex-col h-full relative bg-[#FAFAFA]'>
+    <div className='flex flex-col h-full relative bg-[#141414]'>
       <div className='absolute inset-0 pt-4 px-6 pb-16 overflow-y-auto'>
         <div className='mb-4'>
           <div className='flex justify-between items-center mb-3'>
-            <h2 className='text-lg font-semibold text-[#111827]'>Client Information</h2>
+            <h2 className='text-lg font-semibold text-[#fafafa]'>Client Information</h2>
           </div>
-          <p className='text-[#6B7280] text-sm leading-5 mb-4'>
+          <p className='text-[#8C8C8C] text-sm leading-5 mb-4'>
             Select an existing client or add a new one for this project. This information will be
             used on the invoice.
           </p>
 
           {/* Search and client list */}
-          <div className='bg-white rounded-xl border border-gray-200 p-6'>
+          <div className='bg-[#232428] rounded-xl border border-[#232428] p-6'>
             {apiClients.length > 0 && (
               <div className='flex gap-2 mb-4'>
                 <div className='relative flex-1'>
-                  <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
+                  <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#8C8C8C] w-4 h-4' />
                   <Input
                     type='text'
                     placeholder='Search clients...'
@@ -266,7 +266,7 @@ export default function ClientSection({
                     onChange={(e) => {
                       return setSearchQuery(e.target.value);
                     }}
-                    className='pl-10'
+                    className='pl-10 bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
                   />
                 </div>
                 <Button
@@ -274,7 +274,7 @@ export default function ClientSection({
                     resetClientForm();
                     setClientModalOpen(true);
                   }}
-                  className='bg-gray-900 hover:bg-gray-800 text-white whitespace-nowrap border border-gray-700 shadow-sm'
+                  className='bg-[#232428] hover:bg-[#2A2A2F] text-[#fafafa] whitespace-nowrap border border-[#232428] shadow-sm'
                 >
                   <Plus className='w-4 h-4 mr-2' />
                   Add Client
@@ -284,10 +284,10 @@ export default function ClientSection({
 
             {filteredClients.length === 0 ? (
               <div className='text-center py-0 px-4'>
-                <h3 className='mt-2 text-xl font-semibold text-gray-900 mb-3'>
+                <h3 className='mt-2 text-xl font-semibold text-[#fafafa] mb-3'>
                   Add Your First Client
                 </h3>
-                <p className='text-gray-500 mb-8 max-w-md mx-auto'>
+                <p className='text-[#8C8C8C] mb-8 max-w-md mx-auto'>
                   {searchQuery
                     ? 'No clients match your search. Try a different search term or add a new client.'
                     : 'Get started by adding your first client.'}
@@ -295,15 +295,15 @@ export default function ClientSection({
 
                 {!searchQuery && (
                   <div className='max-w-md mx-auto'>
-                    <div className='bg-white p-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors flex flex-col'>
+                    <div className='bg-[#232428] p-6 rounded-xl border border-[#232428] hover:border-[#2A2A2F] transition-colors flex flex-col'>
                       <div className='relative'>
-                        <div className='absolute inset-0 bg-gradient-to-r from-blue-100 to-blue-50 blur-xl opacity-50 rounded-full'></div>
-                        <div className='bg-blue-50 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 relative'>
-                          <Plus className='w-6 h-6 text-blue-600' />
+                        <div className='absolute inset-0 bg-gradient-to-r from-[#232428] to-[#1A1A1A] blur-xl opacity-50 rounded-full'></div>
+                        <div className='bg-[#232428] rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 relative'>
+                          <Plus className='w-6 h-6 text-[#8b5df8]' />
                         </div>
                       </div>
-                      <h4 className='font-medium text-gray-900 mb-2'>Add Client</h4>
-                      <p className='text-sm text-gray-500 mb-4 flex-grow'>
+                      <h4 className='font-medium text-[#fafafa] mb-2'>Add Client</h4>
+                      <p className='text-sm text-[#8C8C8C] mb-4 flex-grow'>
                         Enter your client information directly into our organized form.
                       </p>
                       <Button
@@ -311,7 +311,7 @@ export default function ClientSection({
                           resetClientForm();
                           setClientModalOpen(true);
                         }}
-                        className='w-full bg-gray-900 hover:bg-gray-800 text-white'
+                        className='w-full bg-[#232428] hover:bg-[#2A2A2F] text-[#fafafa]'
                       >
                         Add Client
                       </Button>
@@ -327,8 +327,8 @@ export default function ClientSection({
                       key={client._id}
                       className={`p-4 rounded-lg border cursor-pointer transition-colors ${
                         selectedClient === client._id
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-[#8b5df8] bg-[#232428]'
+                          : 'border-[#232428] hover:border-[#2A2A2F]'
                       }`}
                       onClick={() => {
                         return setSelectedClient(client._id);
@@ -336,20 +336,20 @@ export default function ClientSection({
                     >
                       <div className='flex justify-between items-start'>
                         <div className='space-y-1'>
-                          <h3 className='font-medium text-gray-900'>{client.user.name}</h3>
+                          <h3 className='font-medium text-[#fafafa]'>{client.user.name}</h3>
                           <div className='space-y-0.5'>
                             {client.contact?.firstName && client.contact?.lastName && (
-                              <p className='text-sm text-gray-500'>
+                              <p className='text-sm text-[#8C8C8C]'>
                                 {client.contact.firstName} {client.contact.lastName}
                               </p>
                             )}
                             {client.user.email ? (
-                              <p className='text-sm text-gray-500'>{client.user.email}</p>
+                              <p className='text-sm text-[#8C8C8C]'>{client.user.email}</p>
                             ) : (
                               <Button
                                 variant='ghost'
                                 size='sm'
-                                className='text-sm text-blue-600 hover:text-blue-700 p-0 h-auto'
+                                className='text-sm text-[#8b5df8] hover:text-[#7c3aed] p-0 h-auto'
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleEditClient(client);
@@ -360,21 +360,21 @@ export default function ClientSection({
                               </Button>
                             )}
                             {client.phone && (
-                              <p className='text-sm text-gray-500'>{client.phone}</p>
+                              <p className='text-sm text-[#8C8C8C]'>{client.phone}</p>
                             )}
                             {client.address?.city && client.address?.country && (
-                              <p className='text-sm text-gray-500'>
+                              <p className='text-sm text-[#8C8C8C]'>
                                 {client.address.city}, {client.address.country}
                               </p>
                             )}
                             {client.website && (
-                              <p className='text-sm text-gray-500'>{client.website}</p>
+                              <p className='text-sm text-[#8C8C8C]'>{client.website}</p>
                             )}
                           </div>
                         </div>
                         <div className='flex items-center gap-2'>
                           {client.accountNumber && (
-                            <span className='text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded'>
+                            <span className='text-xs text-[#8C8C8C] bg-[#232428] px-2 py-1 rounded'>
                               #{client.accountNumber}
                             </span>
                           )}
@@ -385,6 +385,7 @@ export default function ClientSection({
                               e.stopPropagation();
                               handleEditClient(client);
                             }}
+                            className='text-[#fafafa] hover:bg-[#232428]'
                           >
                             Edit
                           </Button>
@@ -394,7 +395,7 @@ export default function ClientSection({
                             onClick={(e) => {
                               return handleDeleteClient(client._id, e);
                             }}
-                            className='text-red-600 hover:text-red-700 hover:bg-red-50'
+                            className='text-[#F43F5E] hover:text-[#F43F5E] hover:bg-[#411D23]'
                           >
                             <Trash2 className='w-4 h-4' />
                           </Button>
@@ -411,15 +412,15 @@ export default function ClientSection({
 
       {/* Client Modal */}
       <Dialog open={clientModalOpen} onOpenChange={setClientModalOpen}>
-        <DialogContent className='sm:max-w-[600px]'>
+        <DialogContent className='sm:max-w-[600px] bg-[#141414] border-[#232428]'>
           <DialogHeader>
-            <DialogTitle className='flex items-center text-lg font-semibold'>
-              <div className='mr-2 p-1.5 bg-blue-100 rounded-full'>
-                <User size={18} className='text-blue-600' />
+            <DialogTitle className='flex items-center text-lg font-semibold text-[#fafafa]'>
+              <div className='mr-2 p-1.5 bg-[#232428] rounded-full'>
+                <User size={18} className='text-[#8b5df8]' />
               </div>
               {isEditingClient ? 'Edit Client' : 'Add New Client'}
             </DialogTitle>
-            <p className='text-sm text-gray-500 mt-1'>
+            <p className='text-sm text-[#8C8C8C] mt-1'>
               {isEditingClient
                 ? 'Update your client information below. Required fields are marked with an asterisk (*).'
                 : 'Fill in your client information below. Required fields are marked with an asterisk (*).'}
@@ -433,11 +434,28 @@ export default function ClientSection({
             }}
             className='mt-4'
           >
-            <TabsList className='grid grid-cols-4 mb-6'>
-              <TabsTrigger value='contact'>Contact</TabsTrigger>
-              <TabsTrigger value='billing'>Billing</TabsTrigger>
-              <TabsTrigger value='shipping'>Shipping</TabsTrigger>
-              <TabsTrigger value='more'>More</TabsTrigger>
+            <TabsList className='grid grid-cols-4 mb-6 bg-[#232428]'>
+              <TabsTrigger
+                value='contact'
+                className='text-[#fafafa] data-[state=active]:bg-[#141414]'
+              >
+                Contact
+              </TabsTrigger>
+              <TabsTrigger
+                value='billing'
+                className='text-[#fafafa] data-[state=active]:bg-[#141414]'
+              >
+                Billing
+              </TabsTrigger>
+              <TabsTrigger
+                value='shipping'
+                className='text-[#fafafa] data-[state=active]:bg-[#141414]'
+              >
+                Shipping
+              </TabsTrigger>
+              <TabsTrigger value='more' className='text-[#fafafa] data-[state=active]:bg-[#141414]'>
+                More
+              </TabsTrigger>
             </TabsList>
             <div className='p-1'>
               <div
@@ -456,9 +474,9 @@ export default function ClientSection({
                           <div>
                             <Label
                               htmlFor='client-name-modal'
-                              className='block mb-1 text-sm font-medium text-gray-700'
+                              className='block mb-1 text-sm font-medium text-[#fafafa]'
                             >
-                              Customer <span className='text-red-500'>*</span>
+                              Customer <span className='text-[#F43F5E]'>*</span>
                             </Label>
                             <div className='relative'>
                               <Input
@@ -472,7 +490,7 @@ export default function ClientSection({
                                 }}
                                 placeholder='Business or person'
                                 required
-                                className='w-full'
+                                className='w-full bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
                               />
                             </div>
                           </div>
@@ -480,7 +498,7 @@ export default function ClientSection({
                             <div>
                               <Label
                                 htmlFor='client-email-modal'
-                                className='block mb-1 text-sm font-medium text-gray-700'
+                                className='block mb-1 text-sm font-medium text-[#fafafa]'
                               >
                                 Email
                               </Label>
@@ -498,12 +516,12 @@ export default function ClientSection({
                                   }}
                                   onBlur={handleEmailBlur}
                                   placeholder=''
-                                  className={`w-full ${
-                                    emailError ? 'border-red-500 focus:ring-red-200' : ''
+                                  className={`w-full bg-[#141414] border-[#232428] text-[#fafafa] ${
+                                    emailError ? 'border-[#F43F5E] focus:ring-[#F43F5E]/20' : ''
                                   }`}
                                 />
                                 {emailError && (
-                                  <p className='absolute -bottom-5 left-0 text-xs text-red-400'>
+                                  <p className='absolute -bottom-5 left-0 text-xs text-[#F43F5E]'>
                                     {emailError}
                                   </p>
                                 )}
@@ -512,7 +530,7 @@ export default function ClientSection({
                             <div>
                               <Label
                                 htmlFor='client-phone-modal'
-                                className='block mb-1 text-sm font-medium text-gray-700'
+                                className='block mb-1 text-sm font-medium text-[#fafafa]'
                               >
                                 Phone
                               </Label>
@@ -525,13 +543,13 @@ export default function ClientSection({
                                     setNewClient({ ...newClient, phone: e.target.value });
                                   }}
                                   placeholder=''
-                                  className='w-full'
+                                  className='w-full bg-[#141414] border-[#232428] text-[#fafafa]'
                                 />
                               </div>
                             </div>
                           </div>
                           <div>
-                            <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                            <Label className='block mb-1 text-sm font-medium text-[#fafafa]'>
                               Contact
                             </Label>
                             <div className='grid grid-cols-2 gap-2'>
@@ -544,6 +562,7 @@ export default function ClientSection({
                                     contact: { ...newClient.contact, firstName: e.target.value },
                                   });
                                 }}
+                                className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
                               />
                               <Input
                                 placeholder='Last name'
@@ -554,6 +573,7 @@ export default function ClientSection({
                                     contact: { ...newClient.contact, lastName: e.target.value },
                                   });
                                 }}
+                                className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
                               />
                             </div>
                           </div>
@@ -565,7 +585,7 @@ export default function ClientSection({
                   {activeTab === 'billing' && (
                     <TabsContent value='billing' className='space-y-4 block'>
                       <div className='p-1'>
-                        <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                        <Label className='block mb-1 text-sm font-medium text-[#fafafa]'>
                           Billing address
                         </Label>
                         <div className='space-y-2'>
@@ -578,6 +598,7 @@ export default function ClientSection({
                                 address: { ...newClient.address, street: e.target.value },
                               });
                             }}
+                            className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
                           />
                           <div className='grid grid-cols-2 gap-2'>
                             <Input
@@ -589,6 +610,7 @@ export default function ClientSection({
                                   address: { ...newClient.address, city: e.target.value },
                                 });
                               }}
+                              className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
                             />
                             <Input
                               placeholder='Postal/ZIP code'
@@ -599,6 +621,7 @@ export default function ClientSection({
                                   address: { ...newClient.address, zip: e.target.value },
                                 });
                               }}
+                              className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
                             />
                           </div>
                           <div className='grid grid-cols-2 gap-2'>
@@ -611,6 +634,7 @@ export default function ClientSection({
                                   address: { ...newClient.address, country: e.target.value },
                                 });
                               }}
+                              className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
                             />
                             <Input
                               placeholder='Province/State'
@@ -621,6 +645,7 @@ export default function ClientSection({
                                   address: { ...newClient.address, state: e.target.value },
                                 });
                               }}
+                              className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
                             />
                           </div>
                         </div>
@@ -631,20 +656,20 @@ export default function ClientSection({
                   {activeTab === 'shipping' && (
                     <TabsContent value='shipping' className='space-y-4 block'>
                       <div className='p-1'>
-                        <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                        <Label className='block mb-1 text-sm font-medium text-[#fafafa]'>
                           Shipping address
                         </Label>
                         <div className='flex items-center gap-2 mb-2'>
                           <input
                             type='checkbox'
-                            className='accent-blue-600 w-4 h-4'
+                            className='accent-[#8b5df8] w-4 h-4'
                             id='same-as-billing'
                             checked={shippingSameAsBilling}
                             onChange={(e) => {
                               return setShippingSameAsBilling(e.target.checked);
                             }}
                           />
-                          <Label htmlFor='same-as-billing' className='text-gray-700'>
+                          <Label htmlFor='same-as-billing' className='text-[#fafafa]'>
                             Same as billing address
                           </Label>
                         </div>
@@ -662,6 +687,7 @@ export default function ClientSection({
                                   },
                                 });
                               }}
+                              className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
                             />
                             <div className='grid grid-cols-2 gap-2'>
                               <Input
@@ -676,6 +702,7 @@ export default function ClientSection({
                                     },
                                   });
                                 }}
+                                className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
                               />
                               <Input
                                 placeholder='Postal/ZIP code'
@@ -689,6 +716,7 @@ export default function ClientSection({
                                     },
                                   });
                                 }}
+                                className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
                               />
                             </div>
                             <div className='grid grid-cols-2 gap-2'>
@@ -704,6 +732,7 @@ export default function ClientSection({
                                     },
                                   });
                                 }}
+                                className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
                               />
                               <Input
                                 placeholder='Province/State'
@@ -717,6 +746,7 @@ export default function ClientSection({
                                     },
                                   });
                                 }}
+                                className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
                               />
                             </div>
                           </div>
@@ -730,7 +760,7 @@ export default function ClientSection({
                       <div className='p-1'>
                         <div className='grid grid-cols-2 gap-5'>
                           <div>
-                            <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                            <Label className='block mb-1 text-sm font-medium text-[#fafafa]'>
                               Account number
                             </Label>
                             <Input
@@ -741,10 +771,11 @@ export default function ClientSection({
                                   accountNumber: e.target.value,
                                 });
                               }}
+                              className='bg-[#141414] border-[#232428] text-[#fafafa]'
                             />
                           </div>
                           <div>
-                            <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                            <Label className='block mb-1 text-sm font-medium text-[#fafafa]'>
                               Fax
                             </Label>
                             <Input
@@ -755,10 +786,11 @@ export default function ClientSection({
                                   fax: e.target.value,
                                 });
                               }}
+                              className='bg-[#141414] border-[#232428] text-[#fafafa]'
                             />
                           </div>
                           <div>
-                            <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                            <Label className='block mb-1 text-sm font-medium text-[#fafafa]'>
                               Mobile
                             </Label>
                             <Input
@@ -769,10 +801,11 @@ export default function ClientSection({
                                   mobile: e.target.value,
                                 });
                               }}
+                              className='bg-[#141414] border-[#232428] text-[#fafafa]'
                             />
                           </div>
                           <div>
-                            <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                            <Label className='block mb-1 text-sm font-medium text-[#fafafa]'>
                               Toll-free
                             </Label>
                             <Input
@@ -783,10 +816,11 @@ export default function ClientSection({
                                   tollFree: e.target.value,
                                 });
                               }}
+                              className='bg-[#141414] border-[#232428] text-[#fafafa]'
                             />
                           </div>
                           <div className='col-span-2'>
-                            <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                            <Label className='block mb-1 text-sm font-medium text-[#fafafa]'>
                               Website
                             </Label>
                             <Input
@@ -797,11 +831,12 @@ export default function ClientSection({
                                   website: e.target.value,
                                 });
                               }}
+                              className='bg-[#141414] border-[#232428] text-[#fafafa]'
                             />
                           </div>
                         </div>
                         <div className='mt-5'>
-                          <Label className='block mb-1 text-sm font-medium text-gray-700'>
+                          <Label className='block mb-1 text-sm font-medium text-[#fafafa]'>
                             Internal notes
                           </Label>
                           <textarea
@@ -813,7 +848,7 @@ export default function ClientSection({
                               });
                             }}
                             placeholder='Notes entered here will not be visible to your customer'
-                            className='italic w-full rounded-lg border border-gray-200 px-3 py-2 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 text-sm resize-y bg-gray-50'
+                            className='italic w-full rounded-lg border border-[#232428] px-3 py-2 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-[#8b5df8]/20 focus:border-[#8b5df8] text-sm resize-y bg-[#141414] text-[#fafafa] placeholder:text-[#8C8C8C]'
                           />
                         </div>
                       </div>
@@ -831,12 +866,13 @@ export default function ClientSection({
                 setClientModalOpen(false);
                 resetClientForm();
               }}
+              className='border-[#232428] text-[#fafafa] hover:bg-[#232428]'
             >
               Cancel
             </Button>
             <Button
               onClick={isEditingClient ? handleUpdateClient : handleCreateClient}
-              className='bg-blue-600 hover:bg-blue-700 text-white'
+              className='bg-[#8b5df8] hover:bg-[#7c3aed] text-white'
               disabled={!newClient.user?.name}
             >
               {isEditingClient ? 'Update Client' : 'Add Client'}

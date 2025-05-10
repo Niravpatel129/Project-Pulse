@@ -165,7 +165,7 @@ export default function ProjectManagement({
   };
 
   return (
-    <div className='flex h-full relative'>
+    <div className='flex h-full relative bg-background'>
       {/* Desktop Left Sidebar */}
       {!isMobile && (
         <LeftSidebar
@@ -267,18 +267,18 @@ export default function ProjectManagement({
           }}
         >
           <div
-            className='absolute inset-0 bg-white flex flex-col'
+            className='absolute inset-0 bg-[#141414] flex flex-col'
             onClick={(e) => {
               return e.stopPropagation();
             }}
           >
-            <div className='flex items-center justify-between p-4 border-b'>
-              <h2 className='text-lg font-semibold'>Chat</h2>
+            <div className='flex items-center justify-between p-4 border-b border-[#232428]'>
+              <h2 className='text-lg font-semibold text-[#fafafa]'>Chat</h2>
               <button
                 onClick={() => {
                   return setShowRightSidebar(false);
                 }}
-                className='p-2 hover:bg-gray-100 rounded-full'
+                className='p-2 hover:bg-[#232428] rounded-full text-[#8C8C8C] hover:text-[#fafafa] transition-colors'
               >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'

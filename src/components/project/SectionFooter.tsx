@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { cn } from '@/lib/utils';
 import { ChevronDown, MessageSquare } from 'lucide-react';
 import { useEffect } from 'react';
 
@@ -79,19 +80,19 @@ export default function SectionFooter({
   };
 
   return (
-    <div className='absolute bottom-0 left-0 right-0 flex items-center justify-between py-4 border-t border-[#E5E7EB] px-8 bg-[#FAFAFA] z-10'>
+    <div className='absolute bottom-0 left-0 right-0 flex items-center justify-between py-4 border-t border-[#232428] px-8 bg-[#141414] z-10'>
       {isMobile ? (
         <Popover modal>
           <PopoverTrigger asChild>
-            <button className='flex items-center text-[#6B7280] text-xs border-b border-dashed border-[#D1D5DB] pb-1'>
-              <div className='w-4 h-4 rounded-full border-2 border-[#D1D5DB] border-t-[#6B7280] animate-spin mr-2'></div>
+            <button className='flex items-center text-[#8C8C8C] text-xs border-b border-dashed border-[#232428] pb-1'>
+              <div className='w-4 h-4 rounded-full border-2 border-[#232428] border-t-[#8C8C8C] animate-spin mr-2'></div>
               <span>
                 {currentSection}/{totalSections} steps
               </span>
               <ChevronDown className='w-4 h-4 ml-1' />
             </button>
           </PopoverTrigger>
-          <PopoverContent className='w-48 p-2' align='start'>
+          <PopoverContent className='w-48 p-2 bg-[#141414] border-[#232428]' align='start'>
             <div className='space-y-1'>
               {Array.from({ length: totalSections }, (_, i) => {
                 return i + 1;
@@ -104,8 +105,8 @@ export default function SectionFooter({
                     }}
                     className={`w-full text-left px-3 py-2 rounded-md text-sm ${
                       section === currentSection
-                        ? 'bg-blue-50 text-blue-600'
-                        : 'hover:bg-gray-100 text-gray-700'
+                        ? 'bg-[#232428] text-[#fafafa]'
+                        : 'hover:bg-[#232428] text-[#8C8C8C]'
                     }`}
                   >
                     {getSectionName(section)}
@@ -117,22 +118,26 @@ export default function SectionFooter({
         </Popover>
       ) : (
         <div className='flex items-center'>
-          <div className='w-4 h-4 rounded-full border-2 border-[#D1D5DB] border-t-[#6B7280] animate-spin mr-2'></div>
-          <span className='text-[#6B7280] text-xs'>
+          <div className='w-4 h-4 rounded-full border-2 border-[#232428] border-t-[#8C8C8C] animate-spin mr-2'></div>
+          <span className='text-[#8C8C8C] text-xs'>
             {currentSection}/{totalSections} steps
           </span>
         </div>
       )}
       {!isMobile && (
-        <div className='flex items-center text-[#6B7280] text-xs'>
+        <div className='flex items-center text-[#8C8C8C] text-xs'>
           <span>press</span>
-          <span className='mx-1 px-1 border border-[#D1D5DB] rounded text-[11px]'>Enter</span>
+          <span className='mx-1 px-1 border border-[#232428] rounded text-[11px]'>Enter</span>
           <span className='ml-0.5'>↵</span>
         </div>
       )}
       <div className='flex gap-3'>
         {onCancel && (
-          <Button variant='outline' onClick={onCancel}>
+          <Button
+            variant='outline'
+            onClick={onCancel}
+            className='border-[#232428] text-[#fafafa] hover:bg-[#232428]'
+          >
             Cancel
           </Button>
         )}
@@ -141,12 +146,17 @@ export default function SectionFooter({
             variant='outline'
             onClick={secondaryAction.onClick}
             disabled={secondaryAction.disabled}
+            className='border-[#232428] text-[#fafafa] hover:bg-[#232428]'
           >
             {secondaryAction.label}
           </Button>
         )}
         {isMobile && onChatClick && (
-          <Button variant='outline' onClick={onChatClick} className='gap-2'>
+          <Button
+            variant='outline'
+            onClick={onChatClick}
+            className='gap-2 border-[#232428] text-[#fafafa] hover:bg-[#232428]'
+          >
             <MessageSquare className='h-4 w-4' />
             Chat
           </Button>
@@ -158,14 +168,17 @@ export default function SectionFooter({
                 <Button
                   onClick={onContinue}
                   disabled={isDisabled}
-                  className={isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
+                  className={cn(
+                    isDisabled ? 'opacity-50 cursor-not-allowed' : '',
+                    'bg-blue-600 text-white hover:bg-blue-700',
+                  )}
                 >
                   {isLastSection ? 'Finish' : customContinueLabel || 'Continue'}
                 </Button>
               </span>
             </TooltipTrigger>
             {isDisabled && (
-              <TooltipContent side='top'>
+              <TooltipContent side='top' className='bg-[#141414] text-[#fafafa] border-[#232428]'>
                 <p>{disabledTooltip}</p>
               </TooltipContent>
             )}

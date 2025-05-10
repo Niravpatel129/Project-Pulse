@@ -116,7 +116,7 @@ export default function LeftSidebar({
   };
 
   return (
-    <div className='w-[300px] bg-white p-6 border-r border-[#F3F4F6] flex flex-col rounded-none'>
+    <div className='w-[300px] bg-[#141414] p-6 border-r border-[#232428] flex flex-col rounded-none'>
       {/* Custom style to fix select spacing */}
       <style jsx global>{`
         .compact-select [data-radix-select-trigger] {
@@ -135,8 +135,8 @@ export default function LeftSidebar({
       `}</style>
 
       <div className='mb-6'>
-        <h1 className='text-xl font-semibold mb-2 text-[#111827]'>New Project</h1>
-        <p className='text-[#4B5563] text-sm leading-5'>
+        <h1 className='text-xl font-semibold mb-2 text-[#fafafa]'>New Project</h1>
+        <p className='text-[#8C8C8C] text-sm leading-5'>
           Create new project to help manage items, clients and notes in one place.
         </p>
       </div>
@@ -144,8 +144,8 @@ export default function LeftSidebar({
       <div className='space-y-3 flex-grow'>
         <button
           className={`flex items-center w-full text-left p-2 rounded-md ${
-            activeSection === 'items' ? 'bg-[#F9FAFB]' : ''
-          } hover:bg-[#F9FAFB] transition-colors`}
+            activeSection === 'items' ? 'bg-[#232428]' : ''
+          } hover:bg-[#232428] transition-colors`}
           onClick={() => {
             return handleSectionChange('items');
           }}
@@ -153,10 +153,10 @@ export default function LeftSidebar({
           <div
             className={`w-6 h-6 rounded-full ${
               activeSection === 'items'
-                ? 'bg-[#111827]'
+                ? 'bg-[#fafafa]'
                 : items.length > 0
-                ? 'bg-green-100 border border-green-200'
-                : 'border border-[#D1D5DB]'
+                ? 'bg-[#232428] border border-[#2A2A2F]'
+                : 'border border-[#232428]'
             } flex items-center justify-center mr-3 transition-colors`}
           >
             {activeSection === 'items' ? (
@@ -169,7 +169,7 @@ export default function LeftSidebar({
               >
                 <path
                   d='M10 3L4.5 8.5L2 6'
-                  stroke='white'
+                  stroke='#141414'
                   strokeWidth='1.5'
                   strokeLinecap='round'
                   strokeLinejoin='round'
@@ -185,30 +185,30 @@ export default function LeftSidebar({
               >
                 <path
                   d='M10 3L4.5 8.5L2 6'
-                  stroke='#059669'
+                  stroke='#8b5df8'
                   strokeWidth='1.5'
                   strokeLinecap='round'
                   strokeLinejoin='round'
                 />
               </svg>
             ) : (
-              <span className='text-[#6B7280] text-xs'>1</span>
+              <span className='text-[#8C8C8C] text-xs'>1</span>
             )}
           </div>
           <div className='flex flex-col'>
             <span
               className={`text-sm ${
                 activeSection === 'items'
-                  ? 'text-[#111827] font-medium'
+                  ? 'text-[#fafafa] font-medium'
                   : items.length > 0
-                  ? 'text-[#059669]'
-                  : 'text-[#6B7280]'
+                  ? 'text-[#8b5df8]'
+                  : 'text-[#8C8C8C]'
               }`}
             >
               Items
             </span>
             {items.length > 0 && (
-              <span className='text-xs text-[#6B7280]'>
+              <span className='text-xs text-[#8C8C8C]'>
                 {items.length} {items.length === 1 ? 'item' : 'items'} added
               </span>
             )}
@@ -218,8 +218,8 @@ export default function LeftSidebar({
         <div className='relative'>
           <button
             className={`flex items-center w-full text-left p-2 rounded-md ${
-              activeSection === 'client' ? 'bg-[#F9FAFB]' : ''
-            } hover:bg-[#F9FAFB] transition-colors`}
+              activeSection === 'client' ? 'bg-[#232428]' : ''
+            } hover:bg-[#232428] transition-colors`}
             onClick={() => {
               return handleSectionChange('client');
             }}
@@ -227,10 +227,10 @@ export default function LeftSidebar({
             <div
               className={`w-6 h-6 rounded-full ${
                 activeSection === 'client'
-                  ? 'bg-[#111827]'
+                  ? 'bg-[#fafafa]'
                   : clientSelected && visitedSections.has('client')
-                  ? 'bg-green-100 border border-green-200'
-                  : 'border border-[#D1D5DB]'
+                  ? 'bg-[#232428] border border-[#2A2A2F]'
+                  : 'border border-[#232428]'
               } flex items-center justify-center mr-3 transition-colors`}
             >
               {activeSection === 'client' ? (
@@ -243,7 +243,7 @@ export default function LeftSidebar({
                 >
                   <path
                     d='M10 3L4.5 8.5L2 6'
-                    stroke='white'
+                    stroke='#141414'
                     strokeWidth='1.5'
                     strokeLinecap='round'
                     strokeLinejoin='round'
@@ -259,29 +259,29 @@ export default function LeftSidebar({
                 >
                   <path
                     d='M10 3L4.5 8.5L2 6'
-                    stroke='#059669'
+                    stroke='#8b5df8'
                     strokeWidth='1.5'
                     strokeLinecap='round'
                     strokeLinejoin='round'
                   />
                 </svg>
               ) : (
-                <span className='text-[#6B7280] text-xs'>2</span>
+                <span className='text-[#8C8C8C] text-xs'>2</span>
               )}
             </div>
             <div className='flex flex-col'>
               <span
                 className={`text-sm ${
                   activeSection === 'client'
-                    ? 'text-[#111827] font-medium'
+                    ? 'text-[#fafafa] font-medium'
                     : clientSelected && visitedSections.has('client')
-                    ? 'text-[#059669]'
-                    : 'text-[#6B7280]'
+                    ? 'text-[#8b5df8]'
+                    : 'text-[#8C8C8C]'
                 }`}
               >
                 Client
               </span>
-              {clientSelected && <span className='text-xs text-[#6B7280]'>Client selected</span>}
+              {clientSelected && <span className='text-xs text-[#8C8C8C]'>Client selected</span>}
             </div>
 
             {!clientSelected && hasAttemptedToLeave && (
@@ -289,26 +289,26 @@ export default function LeftSidebar({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className='absolute right-2 top-1/2 transform -translate-y-1/2'>
-                      <AlertCircle className='h-4 w-4 text-amber-500 animate-pulse' />
+                      <AlertCircle className='h-4 w-4 text-[#eea01a] animate-pulse' />
                     </div>
                   </TooltipTrigger>
                   <TooltipContent
                     side='right'
-                    className='bg-white text-gray-900 border border-amber-200 shadow-md rounded-md p-3 max-w-[250px]'
+                    className='bg-[#141414] text-[#fafafa] border border-[#232428] shadow-md rounded-md p-3 max-w-[250px]'
                   >
                     <div className='space-y-2'>
                       <div className='flex items-start gap-2'>
-                        <AlertCircle className='h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0' />
+                        <AlertCircle className='h-4 w-4 text-[#eea01a] mt-0.5 flex-shrink-0' />
                         <div>
-                          <p className='text-sm font-medium text-gray-900 mb-1'>Client Required</p>
-                          <p className='text-xs text-gray-600'>
+                          <p className='text-sm font-medium text-[#fafafa] mb-1'>Client Required</p>
+                          <p className='text-xs text-[#8C8C8C]'>
                             You need to select or create a client before proceeding to the next
                             section. This information is required for generating invoices.
                           </p>
                         </div>
                       </div>
-                      <div className='pt-2 border-t border-amber-100'>
-                        <p className='text-xs text-amber-600'>
+                      <div className='pt-2 border-t border-[#232428]'>
+                        <p className='text-xs text-[#eea01a]'>
                           Click the &quot;Add Client&quot; button or select an existing client to
                           continue.
                         </p>
@@ -323,8 +323,8 @@ export default function LeftSidebar({
 
         <button
           className={`flex items-center w-full text-left p-2 rounded-md ${
-            activeSection === 'invoice' ? 'bg-[#F9FAFB]' : ''
-          } hover:bg-[#F9FAFB] transition-colors`}
+            activeSection === 'invoice' ? 'bg-[#232428]' : ''
+          } hover:bg-[#232428] transition-colors`}
           onClick={() => {
             return handleSectionChange('invoice');
           }}
@@ -332,10 +332,10 @@ export default function LeftSidebar({
           <div
             className={`w-6 h-6 rounded-full ${
               activeSection === 'invoice'
-                ? 'bg-[#111827]'
+                ? 'bg-[#fafafa]'
                 : hasInvoice && visitedSections.has('invoice')
-                ? 'bg-green-100 border border-green-200'
-                : 'border border-[#D1D5DB]'
+                ? 'bg-[#232428] border border-[#2A2A2F]'
+                : 'border border-[#232428]'
             } flex items-center justify-center mr-3 transition-colors`}
           >
             {activeSection === 'invoice' ? (
@@ -348,7 +348,7 @@ export default function LeftSidebar({
               >
                 <path
                   d='M10 3L4.5 8.5L2 6'
-                  stroke='white'
+                  stroke='#141414'
                   strokeWidth='1.5'
                   strokeLinecap='round'
                   strokeLinejoin='round'
@@ -364,23 +364,23 @@ export default function LeftSidebar({
               >
                 <path
                   d='M10 3L4.5 8.5L2 6'
-                  stroke='#059669'
+                  stroke='#8b5df8'
                   strokeWidth='1.5'
                   strokeLinecap='round'
                   strokeLinejoin='round'
                 />
               </svg>
             ) : (
-              <span className='text-[#6B7280] text-xs'>3</span>
+              <span className='text-[#8C8C8C] text-xs'>3</span>
             )}
           </div>
           <span
             className={`text-sm ${
               activeSection === 'invoice'
-                ? 'text-[#111827] font-medium'
+                ? 'text-[#fafafa] font-medium'
                 : hasInvoice && visitedSections.has('invoice')
-                ? 'text-[#059669]'
-                : 'text-[#6B7280]'
+                ? 'text-[#8b5df8]'
+                : 'text-[#8C8C8C]'
             }`}
           >
             Invoice
@@ -389,44 +389,44 @@ export default function LeftSidebar({
       </div>
 
       {/* Total at bottom of sidebar */}
-      <div className='mt-auto pt-6 border-t border-[#E5E7EB]'>
+      <div className='mt-auto pt-6 border-t border-[#232428]'>
         <div className='flex justify-between items-center mb-3'>
-          <span className='text-[#6B7280] text-sm'>Total</span>
+          <span className='text-[#8C8C8C] text-sm'>Total</span>
           <div className='flex items-center gap-1'>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className='text-[#111827] text-base font-medium border-b border-dashed border-gray-400 cursor-help'>
+                  <span className='text-[#fafafa] text-base font-medium border-b border-dashed border-[#232428] cursor-help'>
                     {getCurrencySymbol(currency)}
                     {totals.total}
                   </span>
                 </TooltipTrigger>
-                <TooltipContent className='bg-white text-gray-900 border border-gray-200 shadow-md rounded-md p-3'>
+                <TooltipContent className='bg-[#141414] text-[#fafafa] border border-[#232428] shadow-md rounded-md p-3'>
                   <div className='space-y-2 w-[180px]'>
                     <div className='flex justify-between items-center'>
-                      <span className='text-[#6B7280] text-xs'>Subtotal</span>
-                      <span className='text-[#111827] text-xs font-medium'>
+                      <span className='text-[#8C8C8C] text-xs'>Subtotal</span>
+                      <span className='text-[#fafafa] text-xs font-medium'>
                         {getCurrencySymbol(currency)}
                         {totals.subtotal}
                       </span>
                     </div>
                     <div className='flex justify-between items-center'>
-                      <span className='text-[#6B7280] text-xs'>Tax</span>
-                      <span className='text-[#111827] text-xs font-medium'>
+                      <span className='text-[#8C8C8C] text-xs'>Tax</span>
+                      <span className='text-[#fafafa] text-xs font-medium'>
                         {getCurrencySymbol(currency)}
                         {totals.tax}
                       </span>
                     </div>
                     <div className='flex justify-between items-center'>
-                      <span className='text-[#6B7280] text-xs'>Discount</span>
-                      <span className='text-green-600 text-xs font-medium'>
+                      <span className='text-[#8C8C8C] text-xs'>Discount</span>
+                      <span className='text-[#8b5df8] text-xs font-medium'>
                         -{getCurrencySymbol(currency)}
                         {totals.discount}
                       </span>
                     </div>
-                    <div className='pt-1 border-t border-gray-200 flex justify-between items-center'>
-                      <span className='text-[#111827] text-xs font-medium'>Total</span>
-                      <span className='text-[#111827] text-xs font-bold'>
+                    <div className='pt-1 border-t border-[#232428] flex justify-between items-center'>
+                      <span className='text-[#fafafa] text-xs font-medium'>Total</span>
+                      <span className='text-[#fafafa] text-xs font-bold'>
                         {getCurrencySymbol(currency)}
                         {totals.total}
                       </span>
@@ -437,14 +437,22 @@ export default function LeftSidebar({
             </TooltipProvider>
             <div className='compact-select'>
               <Select value={currency} onValueChange={onCurrencyChange}>
-                <SelectTrigger className='w-[50px] h-7 text-xs border-none shadow-none px-1 focus:ring-0'>
+                <SelectTrigger className='w-[50px] h-7 text-xs border-none shadow-none px-1 focus:ring-0 text-[#fafafa]'>
                   <SelectValue placeholder='USD' />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='USD'>USD</SelectItem>
-                  <SelectItem value='CAD'>CAD</SelectItem>
-                  <SelectItem value='EUR'>EUR</SelectItem>
-                  <SelectItem value='GBP'>GBP</SelectItem>
+                <SelectContent className='bg-[#141414] border-[#232428]'>
+                  <SelectItem value='USD' className='text-[#fafafa]'>
+                    USD
+                  </SelectItem>
+                  <SelectItem value='CAD' className='text-[#fafafa]'>
+                    CAD
+                  </SelectItem>
+                  <SelectItem value='EUR' className='text-[#fafafa]'>
+                    EUR
+                  </SelectItem>
+                  <SelectItem value='GBP' className='text-[#fafafa]'>
+                    GBP
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

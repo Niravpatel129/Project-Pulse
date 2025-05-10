@@ -265,13 +265,13 @@ export default function RightSidebar({
   };
 
   return (
-    <div className='h-full bg-white border-l border-neutral-100 flex flex-col'>
+    <div className='h-full bg-[#141414] border-l border-[#232428] flex flex-col'>
       {/* Header */}
-      <div className='px-6 py-4 border-b border-neutral-100 flex-shrink-0'>
+      <div className='px-6 py-4 border-b border-[#232428] flex-shrink-0'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-2.5'>
-            <Sparkles className='w-4 h-4 text-purple-500' />
-            <h2 className='text-base font-medium text-neutral-900 tracking-tight'>AI Assistant</h2>
+            <Sparkles className='w-4 h-4 text-[#8b5df8]' />
+            <h2 className='text-base font-medium text-[#fafafa] tracking-tight'>AI Assistant</h2>
           </div>
         </div>
       </div>
@@ -284,7 +284,7 @@ export default function RightSidebar({
               onClick={handleClear}
               variant='ghost'
               size='icon'
-              className='h-8 w-8 text-neutral-500 hover:text-neutral-700'
+              className='h-8 w-8 text-[#8C8C8C] hover:text-[#fafafa] hover:bg-[#232428]'
             >
               <svg
                 xmlns='http://www.w3.org/2000/svg'
@@ -316,18 +316,18 @@ export default function RightSidebar({
                 >
                   {message.role === 'assistant' ? (
                     <div className='space-y-3'>
-                      <div className='text-sm text-neutral-800 leading-relaxed bg-neutral-50 rounded-lg px-4 py-3'>
+                      <div className='text-sm text-[#fafafa] leading-relaxed bg-[#232428] rounded-lg px-4 py-3'>
                         <div className='flex items-start gap-2'>
                           <div className='flex-1'>{message.content}</div>
                           {message.meta && (
                             <TooltipProvider delayDuration={0}>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <button className='text-neutral-400 hover:text-neutral-600 transition-colors'>
+                                  <button className='text-[#8C8C8C] hover:text-[#fafafa] transition-colors'>
                                     <Info className='w-4 h-4' />
                                   </button>
                                 </TooltipTrigger>
-                                <TooltipContent className='max-w-[300px] p-3'>
+                                <TooltipContent className='max-w-[300px] p-3 bg-[#141414] border-[#232428] text-[#fafafa]'>
                                   <div className='space-y-2 text-xs'>
                                     {message.meta.confidence && (
                                       <div>
@@ -370,7 +370,7 @@ export default function RightSidebar({
                                             <LineItemCard item={item} onClick={handleAddItem} />
                                           </div>
                                         </TooltipTrigger>
-                                        <TooltipContent>
+                                        <TooltipContent className='bg-[#141414] border-[#232428] text-[#fafafa]'>
                                           <p className='text-xs'>
                                             Click to add another instance of this item
                                           </p>
@@ -383,24 +383,26 @@ export default function RightSidebar({
                             )}
                             {data.type === 'INVOICE_CLIENT' && (
                               <div key={`client-${dataIndex}`} className='space-y-2 pl-2'>
-                                <div className='bg-white rounded-lg border border-gray-200 p-4 space-y-3'>
+                                <div className='bg-[#232428] rounded-lg border border-[#232428] p-4 space-y-3'>
                                   <div className='space-y-1'>
-                                    <h4 className='font-medium text-gray-900'>
+                                    <h4 className='font-medium text-[#fafafa]'>
                                       {data.client.user}
                                     </h4>
-                                    <p className='text-sm text-gray-500'>{data.client.contact}</p>
+                                    <p className='text-sm text-[#8C8C8C]'>{data.client.contact}</p>
                                     {data.client.phone && (
-                                      <p className='text-sm text-gray-500'>{data.client.phone}</p>
+                                      <p className='text-sm text-[#8C8C8C]'>{data.client.phone}</p>
                                     )}
                                     {data.client.address && (
-                                      <p className='text-sm text-gray-500'>{data.client.address}</p>
+                                      <p className='text-sm text-[#8C8C8C]'>
+                                        {data.client.address}
+                                      </p>
                                     )}
                                   </div>
                                   <div className='pt-2'>
                                     <Button
                                       variant='outline'
                                       size='sm'
-                                      className='w-full'
+                                      className='w-full border-[#232428] text-[#fafafa] hover:bg-[#232428]'
                                       onClick={() => {
                                         // Handle adding client
                                         const clientData = {
@@ -432,7 +434,6 @@ export default function RightSidebar({
                                           internalNotes: data.client.internalNotes,
                                           customFields: data.client.customFields || {},
                                         };
-                                        // You'll need to implement this function to handle adding the client
                                         handleAddClient(clientData);
                                       }}
                                     >
@@ -440,14 +441,14 @@ export default function RightSidebar({
                                     </Button>
                                   </div>
                                   {data.suggestions && data.suggestions.length > 0 && (
-                                    <div className='mt-3 pt-3 border-t border-gray-100'>
-                                      <h5 className='text-xs font-medium text-gray-500 mb-2'>
+                                    <div className='mt-3 pt-3 border-t border-[#232428]'>
+                                      <h5 className='text-xs font-medium text-[#8C8C8C] mb-2'>
                                         Suggestions
                                       </h5>
                                       <ul className='space-y-1'>
                                         {data.suggestions.map((suggestion, index) => {
                                           return (
-                                            <li key={index} className='text-xs text-gray-600'>
+                                            <li key={index} className='text-xs text-[#8C8C8C]'>
                                               • {suggestion}
                                             </li>
                                           );
@@ -463,9 +464,9 @@ export default function RightSidebar({
                       })}
                     </div>
                   ) : (
-                    <div className='rounded-lg px-4 py-3 bg-purple-50 text-neutral-800 shadow-sm'>
+                    <div className='rounded-lg px-4 py-3 bg-[#232428] text-[#fafafa] shadow-sm'>
                       <p className='text-sm leading-relaxed'>{message.content}</p>
-                      <p className='text-xs text-neutral-500 mt-1.5'>
+                      <p className='text-xs text-[#8C8C8C] mt-1.5'>
                         {message.timestamp.toLocaleTimeString([], {
                           hour: '2-digit',
                           minute: '2-digit',
@@ -482,7 +483,7 @@ export default function RightSidebar({
                 animate={{ opacity: 1, y: 0 }}
                 className='max-w-[85%]'
               >
-                <div className='text-sm text-neutral-800 leading-relaxed bg-neutral-50 rounded-lg px-4 py-3'>
+                <div className='text-sm text-[#fafafa] leading-relaxed bg-[#232428] rounded-lg px-4 py-3'>
                   <div className='flex items-center gap-2'>
                     <motion.div
                       animate={{
@@ -493,7 +494,7 @@ export default function RightSidebar({
                         repeat: Infinity,
                         ease: 'easeInOut',
                       }}
-                      className='w-2 h-2 bg-purple-500 rounded-full'
+                      className='w-2 h-2 bg-[#8b5df8] rounded-full'
                     />
                     <motion.div
                       animate={{
@@ -505,7 +506,7 @@ export default function RightSidebar({
                         ease: 'easeInOut',
                         delay: 0.2,
                       }}
-                      className='w-2 h-2 bg-purple-500 rounded-full'
+                      className='w-2 h-2 bg-[#8b5df8] rounded-full'
                     />
                     <motion.div
                       animate={{
@@ -517,7 +518,7 @@ export default function RightSidebar({
                         ease: 'easeInOut',
                         delay: 0.4,
                       }}
-                      className='w-2 h-2 bg-purple-500 rounded-full'
+                      className='w-2 h-2 bg-[#8b5df8] rounded-full'
                     />
                   </div>
                 </div>
@@ -528,7 +529,7 @@ export default function RightSidebar({
       </ScrollArea>
 
       {/* Input Area */}
-      <div className='p-4 border-t border-neutral-100 flex-shrink-0'>
+      <div className='p-4 border-t border-[#232428] flex-shrink-0'>
         <div className='relative'>
           {images.length > 0 && (
             <div className='flex gap-2 mb-2'>
@@ -546,7 +547,7 @@ export default function RightSidebar({
                     />
                     <button
                       type='button'
-                      className='absolute -top-2 -right-2 w-4 h-4 flex items-center justify-center bg-black rounded-full text-white shadow-md hover:bg-neutral-800 transition'
+                      className='absolute -top-2 -right-2 w-4 h-4 flex items-center justify-center bg-[#232428] rounded-full text-[#fafafa] shadow-md hover:bg-[#2A2A2F] transition'
                       onClick={() => {
                         return setImages(
                           images.filter((_, i) => {
@@ -563,8 +564,18 @@ export default function RightSidebar({
                         fill='none'
                         xmlns='http://www.w3.org/2000/svg'
                       >
-                        <path d='M4 4L12 12' stroke='white' strokeWidth='2' strokeLinecap='round' />
-                        <path d='M12 4L4 12' stroke='white' strokeWidth='2' strokeLinecap='round' />
+                        <path
+                          d='M4 4L12 12'
+                          stroke='currentColor'
+                          strokeWidth='2'
+                          strokeLinecap='round'
+                        />
+                        <path
+                          d='M12 4L4 12'
+                          stroke='currentColor'
+                          strokeWidth='2'
+                          strokeLinecap='round'
+                        />
                       </svg>
                     </button>
                   </div>
@@ -584,12 +595,12 @@ export default function RightSidebar({
             onPaste={handlePaste}
             placeholder='Type your message...'
             disabled={chatMutation.isPending}
-            className='w-full px-4 py-3 text-sm border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 min-h-[72px] resize-none transition-colors duration-200 placeholder:text-neutral-400 disabled:opacity-50 disabled:cursor-not-allowed bg-white'
+            className='w-full px-4 py-3 text-sm border border-[#232428] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5df8]/20 focus:border-[#8b5df8] min-h-[72px] resize-none transition-colors duration-200 placeholder:text-[#8C8C8C] disabled:opacity-50 disabled:cursor-not-allowed bg-[#141414] text-[#fafafa]'
           />
           <Button
             onClick={handleSend}
             disabled={chatMutation.isPending || !input.trim()}
-            className='absolute bottom-4 right-2 bg-purple-500 hover:bg-purple-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+            className='absolute bottom-4 right-2 bg-[#8b5df8] hover:bg-[#7c3aed] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
             size='icon'
           >
             <Send className='w-3.5 h-3.5' />
@@ -599,7 +610,7 @@ export default function RightSidebar({
 
       {/* Image Preview Modal */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className='flex items-center justify-center'>
+        <DialogContent className='flex items-center justify-center bg-[#141414] border-[#232428]'>
           <DialogTitle className='sr-only'>Preview</DialogTitle>
           {previewImage && (
             <Image
