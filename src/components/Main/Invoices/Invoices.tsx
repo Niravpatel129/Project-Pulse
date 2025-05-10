@@ -1,6 +1,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
-import { FiBell, FiZap } from 'react-icons/fi';
+import { FiBell, FiRefreshCw, FiSidebar, FiZap } from 'react-icons/fi';
 
 const mockInvoices = [
   {
@@ -47,52 +49,63 @@ const mockInvoices = [
 
 export default function Invoices() {
   return (
-    <div className='space-y-1 bg-background p-4 rounded-lg'>
-      {mockInvoices.map((invoice) => {
-        return (
-          <div
-            key={invoice.id}
-            className='flex items-center px-3 py-2 rounded-lg hover:bg-[#232428] transition-colors cursor-pointer'
-          >
-            <div className='relative mr-3'>
-              <Avatar className='h-8 w-8'>
-                {invoice.avatarUrl ? (
-                  <AvatarImage src={invoice.avatarUrl} alt={invoice.clientName} />
-                ) : (
-                  <AvatarFallback className='bg-[#373737] text-[#9f9f9f] text-xs font-semibold'>
-                    {invoice.clientName
-                      .split(' ')
-                      .map((n) => {
-                        return n[0];
-                      })
-                      .join('')}
-                  </AvatarFallback>
-                )}
-              </Avatar>
-            </div>
+    <div className='bg-background '>
+      <div className='flex justify-between items-center px-3 py-2'>
+        <Button variant='ghost' size='icon'>
+          <FiSidebar className='text-[#8C8C8C] w-4 h-4' />
+        </Button>
+        <Button variant='ghost' size='icon'>
+          <FiRefreshCw className='text-[#8C8C8C] w-4 h-4' />
+        </Button>
+      </div>
+      <Separator className='bg-[#232428] mb-2' />
+      <div className='px-1'>
+        {mockInvoices.map((invoice) => {
+          return (
+            <div
+              key={invoice.id}
+              className='flex items-center px-3 py-2 rounded-lg hover:bg-[#232428] transition-colors cursor-pointer'
+            >
+              <div className='relative mr-3'>
+                <Avatar className='h-8 w-8'>
+                  {invoice.avatarUrl ? (
+                    <AvatarImage src={invoice.avatarUrl} alt={invoice.clientName} />
+                  ) : (
+                    <AvatarFallback className='bg-[#373737] text-[#9f9f9f] text-xs font-semibold'>
+                      {invoice.clientName
+                        .split(' ')
+                        .map((n) => {
+                          return n[0];
+                        })
+                        .join('')}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+              </div>
 
-            <div className='flex-1 min-w-0'>
-              <div className='flex items-center justify-between'>
-                <span className='font-semibold text-[#fafafa] text-[14px] truncate'>
-                  {invoice.clientName}
-                </span>
-                <span className='text-xs text-[#8C8C8C] ml-2 whitespace-nowrap'>
-                  {format(new Date(invoice.createdAt), 'h:mm a')}
-                </span>
-              </div>
-              <div className='flex items-center justify-between'>
-                <span className='text-[#8C8C8C] text-sm truncate'>
-                  {invoice.items[0]?.description || 'No description'}
-                </span>
-                <span className='flex items-center gap-2 ml-2'>
-                  <FiZap className='text-yellow-400 text-lg' />
-                  <FiBell className='text-purple-400 text-lg' />
-                </span>
+              <div className='flex-1 min-w-0'>
+                <div className='flex items-center justify-between'>
+                  <span className='font-semibold text-[#fafafa] text-[14px] truncate'>
+                    {invoice.clientName}
+                  </span>
+                  <span className='text-xs text-[#8C8C8C] ml-2 whitespace-nowrap'>
+                    {format(new Date(invoice.createdAt), 'h:mm a')}
+                  </span>
+                </div>
+                <div className='flex items-center justify-between'>
+                  <span className='text-[#8C8C8C] text-sm truncate'>
+                    {invoice.items[0]?.description || 'No description'}
+                  </span>
+                  <span className='flex items-center gap-2 ml-2'>
+                    <FiZap className='text-yellow-400 text-lg' />
+                    <FiBell className='text-purple-400 text-lg' />
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
