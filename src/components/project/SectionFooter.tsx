@@ -170,7 +170,7 @@ export default function SectionFooter({
                   disabled={isDisabled}
                   className={cn(
                     isDisabled ? 'opacity-50 cursor-not-allowed' : '',
-                    'bg-blue-600 text-white hover:bg-blue-700',
+                    'w-full mb-2 bg-white/10 hover:bg-white/20 text-[#f7f7f7] ',
                   )}
                 >
                   {isLastSection ? 'Finish' : customContinueLabel || 'Continue'}

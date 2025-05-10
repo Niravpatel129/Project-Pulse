@@ -747,24 +747,49 @@ export default function ItemsSection({
                   >
                     {/* Action buttons */}
                     <div className='absolute top-2 right-2 flex space-x-1'>
-                      <button
-                        onClick={() => {
-                          return handleDuplicateItem(item);
-                        }}
-                        className='p-1.5 rounded-full bg-[#232428] text-[#8C8C8C] hover:bg-[#2A2A2F] hover:text-[#fafafa] opacity-0 group-hover:opacity-100 transition-all duration-200'
-                        aria-label='Duplicate item'
-                      >
-                        <Copy size={16} />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          return handleRemoveItemWithHistory(item.id, e);
-                        }}
-                        className='p-1.5 rounded-full bg-[#232428] text-[#8C8C8C] hover:bg-[#411D23] hover:text-[#F43F5E] opacity-0 group-hover:opacity-100 transition-all duration-200'
-                        aria-label='Remove item'
-                      >
-                        <X size={16} />
-                      </button>
+                      <TooltipProvider delayDuration={0}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => {
+                                return handleDuplicateItem(item);
+                              }}
+                              className='p-1.5 rounded-full bg-[#232428] text-[#8C8C8C] hover:bg-[#2A2A2F] hover:text-[#fafafa] opacity-0 group-hover:opacity-100 transition-all duration-200'
+                              aria-label='Duplicate item'
+                            >
+                              <Copy size={16} />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side='top'
+                            className='bg-[#141414] border-[#232428] text-[#fafafa]'
+                          >
+                            <p>Duplicate item</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      <TooltipProvider delayDuration={0}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={(e) => {
+                                return handleRemoveItemWithHistory(item.id, e);
+                              }}
+                              className='p-1.5 rounded-full bg-[#232428] text-[#8C8C8C] hover:bg-[#411D23] hover:text-[#F43F5E] opacity-0 group-hover:opacity-100 transition-all duration-200'
+                              aria-label='Remove item'
+                            >
+                              <X size={16} />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side='top'
+                            className='bg-[#141414] border-[#232428] text-[#fafafa]'
+                          >
+                            <p>Delete item</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
 
                     <div className='flex justify-between items-start'>
