@@ -2,14 +2,19 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { useSidebar } from '@/components/ui/sidebar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { FaBell, FaBolt } from 'react-icons/fa';
-import { FiRefreshCw, FiSearch, FiSidebar } from 'react-icons/fi';
+import { BsStarFill } from 'react-icons/bs';
+import { FiBook, FiRefreshCw, FiSearch, FiSidebar, FiStar } from 'react-icons/fi';
 import { IoPerson } from 'react-icons/io5';
+import { toast } from 'sonner';
 
 interface InvoicesProps {
   invoices: any[];
@@ -32,7 +37,68 @@ const getStatusColor = (status: string) => {
 
 export default function Invoices({ invoices, onPreviewClick }: InvoicesProps) {
   const { toggleSidebar } = useSidebar();
-  const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Star mutation
+  const starMutation = useMutation({
+    mutationFn: async (invoiceId: string) => {
+      const invoice = invoices.find((inv) => {
+        return inv._id === invoiceId;
+      });
+      return newRequest.put(`/invoices/${invoiceId}/star`, {
+        starred: !invoice?.starred,
+      });
+    },
+    onMutate: async (invoiceId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['invoices'] });
+
+      // Snapshot the previous value
+      const previousInvoices = queryClient.getQueryData(['invoices']);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(['invoices'], (old: any) => {
+        return old.map((inv: any) => {
+          if (inv._id === invoiceId) {
+            return { ...inv, starred: !inv.starred };
+          }
+          return inv;
+        });
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousInvoices };
+    },
+    onError: (err, newTodo, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData(['invoices'], context?.previousInvoices);
+      toast.error('Failed to update star status');
+    },
+    onSuccess: (_, invoiceId) => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      // Get the updated invoice from the cache
+      const updatedInvoices = queryClient.getQueryData(['invoices']) as any[];
+      const updatedInvoice = updatedInvoices?.find((inv) => {
+        return inv._id === invoiceId;
+      });
+      toast.success(updatedInvoice?.starred ? 'Invoice starred' : 'Invoice unstarred');
+    },
+  });
+
+  // Fetch notes for each invoice
+  const { data: notesData = {} } = useQuery({
+    queryKey: ['invoice-notes'],
+    queryFn: async () => {
+      const notesPromises = invoices.map((invoice) => {
+        return newRequest.get(`/invoices/${invoice._id}/notes`);
+      });
+      const responses = await Promise.all(notesPromises);
+      return responses.reduce((acc, response, index) => {
+        acc[invoices[index]._id] = response.data;
+        return acc;
+      }, {});
+    },
+  });
 
   return (
     <div className='bg-background h-full flex flex-col'>
@@ -64,6 +130,7 @@ export default function Invoices({ invoices, onPreviewClick }: InvoicesProps) {
       </div>
       <div className='flex-1 overflow-y-auto px-1 scrollbar-hide'>
         {invoices?.map((invoice) => {
+          console.log('🚀 invoice:', invoice);
           return (
             <div
               key={invoice._id}
@@ -72,72 +139,6 @@ export default function Invoices({ invoices, onPreviewClick }: InvoicesProps) {
                 return onPreviewClick?.(invoice);
               }}
             >
-              <div className='absolute right-2 z-[25] flex -translate-y-1/2 items-center gap-1 rounded-xl border bg-white p-1 shadow-sm dark:bg-[#1A1A1A] top-[-1] opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className='inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-6 w-6 overflow-visible [&_svg]:size-3.5'
-                  data-state='closed'
-                >
-                  <svg
-                    className='h-4 w-4 fill-transparent stroke-[#9D9D9D] dark:stroke-[#9D9D9D]'
-                    width='16'
-                    height='16'
-                    viewBox='0 0 16 16'
-                    fill='none'
-                    xmlns='http://www.w3.org/2000/svg'
-                  >
-                    <path
-                      fillRule='evenodd'
-                      clipRule='evenodd'
-                      d='M7.99934 1.75C8.30229 1.75 8.57549 1.93226 8.69183 2.21198L10.1029 5.60466L13.7656 5.8983C14.0676 5.92251 14.3254 6.12601 14.419 6.41413C14.5126 6.70226 14.4237 7.01841 14.1936 7.21549L11.403 9.60592L12.2556 13.1801C12.3259 13.4748 12.212 13.7828 11.9669 13.9609C11.7218 14.1389 11.3936 14.1521 11.1351 13.9942L7.99934 12.0788L4.86357 13.9942C4.60503 14.1521 4.27688 14.1389 4.03179 13.9609C3.7867 13.7828 3.6728 13.4748 3.7431 13.1801L4.59566 9.60592L1.80508 7.21549C1.57501 7.01841 1.48609 6.70226 1.57971 6.41413C1.67333 6.12601 1.93109 5.92251 2.23307 5.8983L5.89575 5.60466L7.30685 2.21198C7.42319 1.93226 7.69639 1.75 7.99934 1.75Z'
-                    ></path>
-                  </svg>
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className='inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-6 w-6 [&_svg]:size-3.5'
-                  data-state='closed'
-                >
-                  <svg
-                    className='fill-[#9D9D9D]'
-                    width='16'
-                    height='16'
-                    viewBox='0 0 16 16'
-                    fill='none'
-                    xmlns='http://www.w3.org/2000/svg'
-                  >
-                    <path d='M3 2C2.44772 2 2 2.44772 2 3V4C2 4.55228 2.44772 5 3 5H13C13.5523 5 14 4.55228 14 4V3C14 2.44772 13.5523 2 13 2H3Z'></path>
-                    <path
-                      fillRule='evenodd'
-                      clipRule='evenodd'
-                      d='M3 6H13V12C13 13.1046 12.1046 14 11 14H5C3.89543 14 3 13.1046 3 12V6ZM6 8.75C6 8.33579 6.33579 8 6.75 8H9.25C9.66421 8 10 8.33579 10 8.75C10 9.16421 9.66421 9.5 9.25 9.5H6.75C6.33579 9.5 6 9.16421 6 8.75Z'
-                    ></path>
-                  </svg>
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className='inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:text-accent-foreground h-6 w-6 hover:bg-[#FDE4E9] dark:hover:bg-[#411D23] [&_svg]:size-3.5'
-                  data-state='closed'
-                >
-                  <svg
-                    className='fill-[#F43F5E]'
-                    width='16'
-                    height='16'
-                    viewBox='0 0 16 16'
-                    fill='none'
-                    xmlns='http://www.w3.org/2000/svg'
-                  >
-                    <path
-                      fillRule='evenodd'
-                      clipRule='evenodd'
-                      d='M5 3.25V4H2.75C2.33579 4 2 4.33579 2 4.75C2 5.16421 2.33579 5.5 2.75 5.5H3.05L3.86493 13.6493C3.94161 14.4161 4.58685 15 5.35748 15H10.6425C11.4131 15 12.0584 14.4161 12.1351 13.6493L12.95 5.5H13.25C13.6642 5.5 14 5.16421 14 4.75C14 4.33579 13.6642 4 13.25 4H11V3.25C11 2.00736 9.99264 1 8.75 1H7.25C6.00736 1 5 2.00736 5 3.25ZM7.25 2.5C6.83579 2.5 6.5 2.83579 6.5 3.25V4H9.5V3.25C9.5 2.83579 9.16421 2.5 8.75 2.5H7.25ZM6.05044 6.00094C6.46413 5.98025 6.81627 6.29885 6.83696 6.71255L7.11195 12.2125C7.13264 12.6262 6.81404 12.9784 6.40034 12.9991C5.98665 13.0197 5.63451 12.7011 5.61383 12.2875L5.33883 6.78745C5.31814 6.37376 5.63674 6.02162 6.05044 6.00094ZM9.95034 6.00094C10.364 6.02162 10.6826 6.37376 10.662 6.78745L10.387 12.2875C10.3663 12.7011 10.0141 13.0197 9.60044 12.9991C9.18674 12.9784 8.86814 12.6262 8.88883 12.2125L9.16383 6.71255C9.18451 6.29885 9.53665 5.98025 9.95034 6.00094Z'
-                    ></path>
-                  </svg>
-                </motion.button>
-              </div>
               <div className='relative mr-3'>
                 <Avatar className='h-8 w-8'>
                   <AvatarFallback className='bg-[#373737] text-[#9f9f9f] text-xs font-semibold capitalize'>
@@ -175,8 +176,72 @@ export default function Invoices({ invoices, onPreviewClick }: InvoicesProps) {
                     </Badge>
                   </div>
                   <div className='flex items-center gap-2 ml-2'>
-                    <FaBolt className='text-[#eea01a]' />
-                    <FaBell className='text-[#8b5df8]' />
+                    <TooltipProvider delayDuration={0}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className='inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-6 w-6 overflow-visible [&_svg]:size-3.5'
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              starMutation.mutate(invoice._id);
+                            }}
+                            disabled={starMutation.isPending}
+                          >
+                            {invoice.starred ? (
+                              <BsStarFill className='text-[#f5a623]' size={14} />
+                            ) : (
+                              <FiStar className='text-[#8b8b8b]' size={14} />
+                            )}
+                          </motion.button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{invoice.starred ? 'Unstar' : 'Star'}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider delayDuration={0}>
+                      <Tooltip>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <TooltipTrigger asChild>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className='inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-6 w-6 relative [&_svg]:size-3.5'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                }}
+                              >
+                                <FiBook
+                                  size={14}
+                                  className={`${
+                                    notesData[invoice._id]?.length > 0
+                                      ? 'text-[#f5a623]'
+                                      : 'text-[#8b8b8b]'
+                                  }`}
+                                />
+                                {notesData[invoice._id]?.length > 0 && (
+                                  <span className='absolute -top-1 -right-1 bg-[#ffffff] text-[#030303] text-xs rounded-full w-4 h-4 flex items-center justify-center'>
+                                    {notesData[invoice._id].length}
+                                  </span>
+                                )}
+                              </motion.button>
+                            </TooltipTrigger>
+                          </PopoverTrigger>
+                          <TooltipContent>
+                            <p>Notes</p>
+                          </TooltipContent>
+                          <PopoverContent className='w-[350px] p-0 bg-[#181818] text-white rounded-lg shadow-lg border-none'>
+                            <NotesPopoverContent
+                              invoiceId={invoice._id}
+                              initialNotes={notesData[invoice._id] || []}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                 </div>
               </div>
@@ -184,6 +249,353 @@ export default function Invoices({ invoices, onPreviewClick }: InvoicesProps) {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+const labelColors = [
+  '#fff', // white
+  '#f44336', // red
+  '#ff9800', // orange
+  '#ffc107', // yellow
+  '#4caf50', // green
+  '#2196f3', // blue
+  '#9c27b0', // purple
+  '#e91e63', // pink
+];
+
+interface Note {
+  _id: string;
+  text: string;
+  label: string;
+  createdAt: string;
+  invoice: string;
+  createdBy: {
+    _id: string;
+    name: string;
+  };
+}
+
+function NotesPopoverContent({
+  invoiceId,
+  initialNotes,
+}: {
+  invoiceId: string;
+  initialNotes: Note[];
+}) {
+  const [adding, setAdding] = useState(false);
+  const [note, setNote] = useState('');
+  const [label, setLabel] = useState(labelColors[0]);
+  const [editIndex, setEditIndex] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const queryClient = useQueryClient();
+
+  // Fetch notes
+  const { data: notes = initialNotes, isLoading } = useQuery({
+    queryKey: ['invoice-notes', invoiceId],
+    queryFn: async () => {
+      const response = await newRequest.get(`/invoices/${invoiceId}/notes`);
+      return response.data;
+    },
+  });
+
+  // Add/Update note mutation
+  const saveNoteMutation = useMutation({
+    mutationFn: async (noteData: { text: string; label: string; id?: string }) => {
+      if (noteData.id) {
+        return newRequest.put(`/invoices/${invoiceId}/notes/${noteData.id}`, noteData);
+      }
+      return newRequest.post(`/invoices/${invoiceId}/notes`, noteData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoice-notes', invoiceId] });
+      setAdding(false);
+      setNote('');
+      setLabel(labelColors[0]);
+      setEditIndex(null);
+      toast.success('Note saved successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to save note');
+      console.error('Error saving note:', error);
+    },
+  });
+
+  // Delete note mutation
+  const deleteNoteMutation = useMutation({
+    mutationFn: async (noteId: string) => {
+      return newRequest.delete(`/invoices/${invoiceId}/notes/${noteId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoice-notes', invoiceId] });
+      toast.success('Note deleted successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to delete note');
+      console.error('Error deleting note:', error);
+    },
+  });
+
+  // Filter notes by search
+  const filteredNotes = notes.filter((n: Note) => {
+    return n.text.toLowerCase().includes(search.toLowerCase());
+  });
+
+  // Edit note handler
+  const handleEditNote = (note: Note) => {
+    setNote(note.text);
+    setLabel(note.label);
+    setEditIndex(note._id);
+    setAdding(true);
+  };
+
+  // Add or update note handler
+  const handleSaveNote = () => {
+    if (!note.trim()) return;
+    const noteData = {
+      text: note,
+      label,
+      id: editIndex,
+    };
+    saveNoteMutation.mutate(noteData);
+  };
+
+  // Delete note handler
+  const handleDeleteNote = (noteId: string) => {
+    deleteNoteMutation.mutate(noteId);
+  };
+
+  // Format time ago
+  function timeAgo(date: string) {
+    const now = new Date();
+    const d = new Date(date);
+    const diff = Math.floor((now.getTime() - d.getTime()) / 1000);
+    if (diff < 60) return `${diff} second${diff !== 1 ? 's' : ''} ago`;
+    if (diff < 3600)
+      return `${Math.floor(diff / 60)} minute${Math.floor(diff / 60) !== 1 ? 's' : ''} ago`;
+    if (diff < 86400)
+      return `${Math.floor(diff / 3600)} hour${Math.floor(diff / 3600) !== 1 ? 's' : ''} ago`;
+    return d.toLocaleDateString();
+  }
+
+  // If adding a note, show the add note form
+  if (adding) {
+    return (
+      <div className='p-4 rounded-lg bg-[#181818] min-h-[300px] flex flex-col'>
+        <div className='text-lg font-medium mb-4 flex items-center gap-2'>Notes</div>
+        <div className='flex-1 mb-4'>
+          <textarea
+            className='w-full min-h-[80px] bg-transparent border-none outline-none resize-none text-white placeholder-[#8b8b8b] text-base p-0 mb-2'
+            placeholder='Add your note here...'
+            value={note}
+            onChange={(e) => {
+              return setNote(e.target.value);
+            }}
+            style={{ fontFamily: 'inherit' }}
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') handleSaveNote();
+            }}
+          />
+        </div>
+        <div className='mb-4 flex items-center gap-2'>
+          <span className='text-[#8b8b8b] text-sm'>Label:</span>
+          {labelColors.map((color) => {
+            return (
+              <button
+                key={color}
+                type='button'
+                onClick={() => {
+                  return setLabel(color);
+                }}
+                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                  label === color ? 'border-white' : 'border-transparent'
+                }`}
+                style={{ background: color }}
+                aria-label={`Label color ${color}`}
+              >
+                {label === color && (
+                  <span
+                    className='block w-3 h-3 rounded-full border border-[#181818]'
+                    style={{ background: color === '#fff' ? '#fff' : 'transparent' }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <div className='flex items-center gap-2 mb-4'>
+          <kbd className='px-2 py-1 rounded bg-[#232323] text-[#8b8b8b] text-xs border border-[#313131]'>
+            ⌘+Enter
+          </kbd>
+          <span className='text-[#8b8b8b] text-xs'>to save</span>
+        </div>
+        <div className='flex justify-between items-center mt-auto'>
+          <Button
+            variant='ghost'
+            className='text-[#8b8b8b] hover:bg-transparent hover:text-white'
+            onClick={() => {
+              setAdding(false);
+              setEditIndex(null);
+              setNote('');
+              setLabel(labelColors[0]);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant='outline'
+            className='bg-[#313131] text-white border border-[#313131] hover:bg-[#232323]/80 px-6 py-2 rounded-lg'
+            disabled={!note.trim() || saveNoteMutation.isPending}
+            onClick={handleSaveNote}
+          >
+            {editIndex ? 'Save changes' : 'Save note'}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // If there are notes, show the notes list
+  if (notes.length > 0) {
+    return (
+      <div className='flex flex-col h-[400px]'>
+        {/* Header with badge */}
+        <div className='flex items-center gap-2 px-4 pt-4 pb-2'>
+          <span className='text-lg font-medium flex items-center gap-2'>Notes</span>
+          <span className='ml-2 bg-[#232323] text-xs px-2 py-0.5 rounded-full'>{notes.length}</span>
+        </div>
+        {/* Search */}
+        <div className='px-4 pb-2'>
+          <div className='relative'>
+            <input
+              className='w-full bg-[#232323] text-white rounded-md px-3 py-2 pr-10 text-sm placeholder-[#8b8b8b] border-none outline-none'
+              placeholder='Search notes...'
+              value={search}
+              onChange={(e) => {
+                return setSearch(e.target.value);
+              }}
+            />
+            <span className='absolute left-2 top-2.5 text-[#8b8b8b] pointer-events-none'>
+              <svg width='16' height='16' fill='none' viewBox='0 0 24 24'>
+                <path
+                  d='M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z'
+                  stroke='#8b8b8b'
+                  strokeWidth='2'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                />
+              </svg>
+            </span>
+          </div>
+        </div>
+        {/* Notes list */}
+        <div className='flex-1 overflow-y-auto px-4 pb-2'>
+          {isLoading ? (
+            <div className='text-[#8b8b8b] text-center mt-8'>Loading notes...</div>
+          ) : filteredNotes.length === 0 ? (
+            <div className='text-[#8b8b8b] text-center mt-8'>No notes found.</div>
+          ) : (
+            filteredNotes.map((n: Note) => {
+              return (
+                <div key={n._id} className='bg-[#232323] rounded-lg p-3 mb-3 relative'>
+                  <div className='flex items-center gap-2 mb-1'>
+                    <span
+                      className='w-3 h-3 rounded-full border border-[#181818]'
+                      style={{ background: n.label }}
+                    />
+                    <span className='text-white text-sm whitespace-pre-line'>{n.text}</span>
+                  </div>
+                  <div className='flex items-center justify-between mt-2'>
+                    <span className='text-[#8b8b8b] text-xs flex items-center gap-1'>
+                      <svg width='14' height='14' fill='none' viewBox='0 0 24 24'>
+                        <path
+                          d='M8 2v4M16 2v4M3 10h18M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
+                          stroke='#8b8b8b'
+                          strokeWidth='2'
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                        />
+                      </svg>
+                      {timeAgo(n.createdAt)}
+                    </span>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className='text-[#444] flex items-center gap-1 p-1 rounded hover:bg-[#232323] focus:outline-none'>
+                          <svg width='18' height='18' fill='none' viewBox='0 0 24 24'>
+                            <circle cx='12' cy='6' r='1.5' fill='#444' />
+                            <circle cx='12' cy='12' r='1.5' fill='#444' />
+                            <circle cx='12' cy='18' r='1.5' fill='#444' />
+                          </svg>
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className='w-32 p-0 bg-[#232323] text-white rounded shadow-lg border-none'>
+                        <button
+                          className='w-full text-left px-4 py-2 hover:bg-[#313131] text-sm'
+                          onClick={() => {
+                            return handleEditNote(n);
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className='w-full text-left px-4 py-2 hover:bg-[#313131] text-sm text-[#f63e68]'
+                          onClick={() => {
+                            return handleDeleteNote(n._id);
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+        {/* Add note button */}
+        <div className='p-4 border-t border-[#232323] bg-[#181818]'>
+          <Button
+            variant='outline'
+            className='w-full bg-[#232323] text-white border border-[#313131] hover:bg-[#232323]/80 flex items-center gap-2 justify-center'
+            onClick={() => {
+              setAdding(true);
+              setEditIndex(null);
+              setNote('');
+              setLabel(labelColors[0]);
+            }}
+          >
+            <span className='text-lg'>＋</span> Add a note
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // If no notes, show the empty state
+  return (
+    <div className='flex flex-col items-center justify-center py-10 px-6'>
+      <div className='mb-6'>
+        <svg width='48' height='48' fill='none' xmlns='http://www.w3.org/2000/svg'>
+          <rect x='8' y='12' width='32' height='28' rx='4' fill='#232323' />
+          <rect x='12' y='16' width='24' height='20' rx='2' fill='#181818' />
+          <rect x='16' y='20' width='16' height='2' rx='1' fill='#232323' />
+          <rect x='16' y='24' width='12' height='2' rx='1' fill='#232323' />
+        </svg>
+      </div>
+      <div className='text-lg font-medium mb-2'>No notes for this invoice</div>
+      <div className='text-[#8b8b8b] text-center mb-6 text-sm'>
+        Add notes to keep track of important information or follow-ups.
+      </div>
+      <Button
+        variant='outline'
+        className='bg-[#232323] text-white border border-[#313131] hover:bg-[#232323]/80 px-6 py-2 rounded-lg flex items-center gap-2'
+        onClick={() => {
+          return setAdding(true);
+        }}
+      >
+        <span className='text-xl'>＋</span> Add a note
+      </Button>
     </div>
   );
 }

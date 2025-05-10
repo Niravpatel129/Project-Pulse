@@ -66,6 +66,7 @@ export default function InvoicesPage() {
     queryKey: ['invoices'],
     queryFn: async () => {
       const response = await newRequest.get<ApiResponse>('/invoices');
+      console.log('🚀 response:', response);
       return response.data.data;
     },
   });

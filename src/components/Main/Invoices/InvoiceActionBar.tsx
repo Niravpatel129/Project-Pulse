@@ -103,7 +103,10 @@ export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBa
                     className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8 relative'
                     aria-label='Notes'
                   >
-                    <FiBook size={16} className='text-[#f5a623]' />
+                    <FiBook
+                      size={16}
+                      className={`${notes?.length > 0 ? 'text-[#f5a623]' : 'text-[#8b8b8b]'}`}
+                    />
                     {notes?.length > 0 && (
                       <span className='absolute -top-1 -right-1 bg-[#ffffff] text-[#030303] text-xs rounded-full w-4 h-4 flex items-center justify-center'>
                         {notes.length}
