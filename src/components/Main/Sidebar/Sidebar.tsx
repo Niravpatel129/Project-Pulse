@@ -99,14 +99,14 @@ export default function AppSidebar() {
 
       <Sidebar>
         <SidebarHeader className='dark:bg-[#141414]'>
-          <div className='flex items-center space-x-3 p-4'>
+          <div className='flex items-center space-x-3 px-2 py-1'>
             <div>
               <p className='text-sm font-medium text-white'>Nirav</p>
               <p className='text-xs text-white/60'>niravpatelp129@gmail.com</p>
             </div>
           </div>
         </SidebarHeader>
-        <SidebarContent className='dark:bg-[#141414]'>
+        <SidebarContent className='dark:bg-[#141414] px-2'>
           <SidebarGroup>
             <SidebarMenu>
               {navigation.map((section) => {
