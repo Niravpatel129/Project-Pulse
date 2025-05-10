@@ -55,30 +55,32 @@ export default function Invoices() {
   const { toggleSidebar } = useSidebar();
 
   return (
-    <div className='bg-background '>
-      <div className='flex justify-between items-center px-4 py-2'>
-        <Button variant='ghost' size='icon' onClick={toggleSidebar}>
-          <FiSidebar className='text-[#8C8C8C] ' />
-        </Button>
-        <Button variant='ghost' size='icon'>
-          <FiRefreshCw className='text-[#8C8C8C]' size={16} />
-        </Button>
-      </div>
-      <Separator className='bg-[#232428] mb-3' />
-      <div className='px-4 mb-3'>
-        <div className='relative'>
-          <FiSearch
-            className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#8C8C8C]'
-            size={16}
-          />
-          <Input
-            type='text'
-            placeholder='Search...'
-            className='w-full pl-9 bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C] focus-visible:ring-1 focus-visible:ring-[#8C8C8C]'
-          />
+    <div className='bg-background h-full flex flex-col'>
+      <div className='sticky top-0 bg-background z-10'>
+        <div className='flex justify-between items-center px-4 py-2'>
+          <Button variant='ghost' size='icon' onClick={toggleSidebar}>
+            <FiSidebar className='text-[#8C8C8C] ' />
+          </Button>
+          <Button variant='ghost' size='icon'>
+            <FiRefreshCw className='text-[#8C8C8C]' size={16} />
+          </Button>
+        </div>
+        <Separator className='bg-[#232428] mb-3' />
+        <div className='px-4 mb-3'>
+          <div className='relative'>
+            <FiSearch
+              className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#8C8C8C]'
+              size={16}
+            />
+            <Input
+              type='text'
+              placeholder='Search...'
+              className='w-full pl-9 bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C] focus-visible:ring-1 focus-visible:ring-[#8C8C8C]'
+            />
+          </div>
         </div>
       </div>
-      <div className='px-1'>
+      <div className='flex-1 overflow-y-auto px-1 scrollbar-hide'>
         {Array.from({ length: 20 }).map((_, index) => {
           const invoice = mockInvoices[index % mockInvoices.length];
           return (
