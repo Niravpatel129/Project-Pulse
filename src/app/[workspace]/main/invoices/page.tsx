@@ -91,6 +91,7 @@ export default function InvoicesPage() {
                 selectedInvoice={selectedInvoice}
                 onClose={() => {
                   setShowPreview(false);
+                  setSelectedInvoice(undefined);
                 }}
               />
             </SheetContent>
@@ -101,6 +102,7 @@ export default function InvoicesPage() {
               selectedInvoice={selectedInvoice}
               onClose={() => {
                 setShowPreview(false);
+                setSelectedInvoice(undefined);
               }}
             />
           </div>
