@@ -98,7 +98,7 @@ export default function AppSidebar() {
       </div>
 
       <Sidebar>
-        <SidebarHeader className='dark:bg-[#141414]'>
+        <SidebarHeader className='dark:bg-[#141414] pt-2'>
           <div className='flex items-center space-x-3 px-2 py-1'>
             <div>
               <p className='text-sm font-medium text-white'>Nirav</p>
@@ -107,7 +107,7 @@ export default function AppSidebar() {
           </div>
         </SidebarHeader>
         <SidebarContent className='dark:bg-[#141414] px-2'>
-          <Button className='w-full mb-4 bg-white/10 hover:bg-white/20 text-[#f7f7f7]'>
+          <Button className='w-full mb-3 bg-white/10 hover:bg-white/20 text-[#f7f7f7]'>
             New Invoice
           </Button>
           <SidebarGroup>
@@ -129,7 +129,7 @@ export default function AppSidebar() {
                           >
                             <a
                               href={item.href}
-                              className='flex items-center gap-3 px-4 text-[#f7f7f7]'
+                              className='flex items-center gap-3 px-2 text-[#f7f7f7]'
                             >
                               <item.icon className='h-4 w-4 text-[#858585]' />
                               {item.name}
