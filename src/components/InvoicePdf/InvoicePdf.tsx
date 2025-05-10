@@ -3,7 +3,6 @@
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { useParams } from 'next/navigation';
 import { useState } from 'react';
 import { FiMoon, FiSun } from 'react-icons/fi';
 
@@ -70,29 +69,46 @@ interface InvoiceProps {
 
 export function InvoicePdf({ invoice }: InvoiceProps) {
   const { data: invoiceSettings } = useInvoiceSettings();
-  const params = useParams();
   const remainingBalance = invoice.total;
-  const [isDarkTheme, setIsDarkTheme] = useState(true);
+  const [isDarkTheme, setIsDarkTheme] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('invoiceTheme');
+      return savedTheme ? savedTheme === 'dark' : true;
+    }
+    return true;
+  });
+  const [isHovering, setIsHovering] = useState(false);
 
   const toggleTheme = () => {
-    setIsDarkTheme(!isDarkTheme);
+    const newTheme = !isDarkTheme;
+    setIsDarkTheme(newTheme);
+    localStorage.setItem('invoiceTheme', newTheme ? 'dark' : 'light');
   };
 
   return (
     <div
       className={`${isDarkTheme ? 'bg-background' : 'bg-white'} rounded-lg border ${
         isDarkTheme ? 'border-[#232428]' : 'border-gray-200'
-      } shadow-sm invoice-paper relative`}
+      } shadow-sm invoice-paper relative mx-auto`}
       style={{
         width: '8.5in',
         minHeight: '11in',
         padding: '2.5rem 2rem',
         transform: 'scale(0.8)',
-        transformOrigin: 'top center',
+        transformOrigin: 'top left',
         boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+      }}
+      onMouseEnter={() => {
+        return setIsHovering(true);
+      }}
+      onMouseLeave={() => {
+        return setIsHovering(false);
       }}
     >
       <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isHovering ? 1 : 0 }}
+        transition={{ duration: 0.2 }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={toggleTheme}
@@ -169,18 +185,22 @@ export function InvoicePdf({ invoice }: InvoiceProps) {
         <div>
           <div className='flex justify-between'>
             <div>
-              <h3
-                className={`text-sm font-medium ${
-                  isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'
-                }`}
-              >
-                Bill To
-              </h3>
+              {invoice?.client && (
+                <>
+                  <h3
+                    className={`text-sm font-medium ${
+                      isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'
+                    }`}
+                  >
+                    Bill To
+                  </h3>
+                </>
+              )}
               <div className={`mt-2 text-sm ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'}`}>
-                <p>{invoice.client.user.name}</p>
-                {invoice.client && (
+                <p>{invoice?.client?.user?.name}</p>
+                {invoice?.client && (
                   <>
-                    {invoice.client.address.street && <p>{invoice.client.address.street}</p>}
+                    {invoice?.client?.address?.street && <p>{invoice?.client?.address?.street}</p>}
                     {(invoice.client.address.city ||
                       invoice.client.address.state ||
                       invoice.client.address.zip) && (
@@ -319,7 +339,7 @@ export function InvoicePdf({ invoice }: InvoiceProps) {
       </div>
 
       {/* Notes */}
-      {(invoice.notes || invoiceSettings?.businessNotes) && (
+      {(invoice?.notes || invoiceSettings?.businessNotes) && (
         <div
           className={`mt-8 border-t ${isDarkTheme ? 'border-[#232428]' : 'border-gray-200'} pt-6`}
         >
