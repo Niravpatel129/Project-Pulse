@@ -1,5 +1,6 @@
 'use client';
 
+import InvoicePreview from '@/components/Main/Invoices/InvoicePreview';
 import Invoices from '@/components/Main/Invoices/Invoices';
 import Sidebar from '@/components/Main/Sidebar/Sidebar';
 import { ThemeProvider } from '@/components/ThemeProvider';
@@ -18,7 +19,9 @@ export default function Main() {
               <div className='w-full h-full'>
                 <Invoices />
               </div>
-              <div className='w-full border-l border-l-gray-800 h-full'>Selected Invoice</div>
+              <div className='w-full border-l border-l-gray-800 h-full'>
+                <InvoicePreview />
+              </div>
             </div>
           </main>
         </div>
