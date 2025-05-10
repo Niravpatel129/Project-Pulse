@@ -372,7 +372,7 @@ export default function ItemsSection({
   };
 
   return (
-    <div className='flex flex-col h-full relative bg-background'>
+    <div className='flex flex-col h-full relative bg-[#141414]'>
       <div className='absolute inset-0 pt-4 px-6 pb-16 overflow-y-auto'>
         <div className='mb-4'>
           <div className='flex justify-between items-center mb-3'>
@@ -723,40 +723,19 @@ export default function ItemsSection({
             )}
 
             {items.length === 0 ? (
-              <div className='bg-[#141414] rounded-xl border border-[#232428] p-6'>
-                <div className='text-center py-0 px-4'>
-                  <h3 className='mt-2 text-xl font-semibold text-[#fafafa] mb-3'>
-                    Add Your First Item
-                  </h3>
-                  <p className='text-[#8C8C8C] mb-8 max-w-md mx-auto'>
-                    Get started by adding your first item. Enter the details below:
-                  </p>
-
-                  <div className='max-w-xl mx-auto'>
-                    <div className='bg-[#141414] p-6 rounded-xl border border-[#232428] hover:border-[#2A2A2F] transition-colors flex flex-col'>
-                      <div className='relative'>
-                        <div className='absolute inset-0 bg-gradient-to-r from-[#232428] to-[#1A1A1A] blur-xl opacity-50 rounded-full'></div>
-                        <div className='bg-[#232428] rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 relative'>
-                          <Plus className='w-6 h-6 text-[#8b5df8]' />
-                        </div>
-                      </div>
-                      <h4 className='font-medium text-[#fafafa] mb-2'>Add Item</h4>
-                      <p className='text-sm text-[#8C8C8C] mb-4 flex-grow'>
-                        Enter the item details including name, description, price, and quantity.
-                      </p>
-                      <Button
-                        onClick={() => {
-                          setCurrentNewItemMode('manual');
-                          setTimeout(() => {
-                            return nameInputRef.current?.focus();
-                          }, 10);
-                        }}
-                        className='w-full bg-[#232428] hover:bg-[#2A2A2F] text-[#fafafa]'
-                      >
-                        Add Item
-                      </Button>
-                    </div>
-                  </div>
+              <div className=''>
+                <div className='text-center py-0'>
+                  <Button
+                    onClick={() => {
+                      setCurrentNewItemMode('manual');
+                      setTimeout(() => {
+                        return nameInputRef.current?.focus();
+                      }, 10);
+                    }}
+                    className='w-full bg-[#232428] hover:bg-[#2A2A2F] text-[#fafafa]'
+                  >
+                    Add Item
+                  </Button>
                 </div>
               </div>
             ) : (

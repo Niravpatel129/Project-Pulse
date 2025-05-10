@@ -116,7 +116,7 @@ export default function LeftSidebar({
   };
 
   return (
-    <div className='w-[300px] bg-[#141414] p-6 border-r border-[#232428] flex flex-col rounded-none'>
+    <div className='w-[300px] bg-[#141414] border-r border-[#232428] flex flex-col rounded-none'>
       {/* Custom style to fix select spacing */}
       <style jsx global>{`
         .compact-select [data-radix-select-trigger] {
@@ -134,14 +134,14 @@ export default function LeftSidebar({
         }
       `}</style>
 
-      <div className='mb-6'>
+      <div className='mb-6 px-3 pt-4'>
         <h1 className='text-xl font-semibold mb-2 text-[#fafafa]'>New Project</h1>
         <p className='text-[#8C8C8C] text-sm leading-5'>
           Create new project to help manage items, clients and notes in one place.
         </p>
       </div>
 
-      <div className='space-y-3 flex-grow'>
+      <div className='space-y-3 flex-grow px-3'>
         <button
           className={`flex items-center w-full text-left p-2 rounded-md ${
             activeSection === 'items' ? 'bg-[#232428]' : ''
@@ -389,8 +389,8 @@ export default function LeftSidebar({
       </div>
 
       {/* Total at bottom of sidebar */}
-      <div className='mt-auto pt-6 border-t border-[#232428]'>
-        <div className='flex justify-between items-center mb-3'>
+      <div className='mt-auto py-5 border-t border-[#232428] px-3'>
+        <div className='flex justify-between items-center'>
           <span className='text-[#8C8C8C] text-sm'>Total</span>
           <div className='flex items-center gap-1'>
             <TooltipProvider>

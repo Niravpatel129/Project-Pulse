@@ -529,7 +529,7 @@ export default function RightSidebar({
       </ScrollArea>
 
       {/* Input Area */}
-      <div className='p-4 border-t border-[#232428] flex-shrink-0'>
+      <div className='p-4 flex-shrink-0'>
         <div className='relative'>
           {images.length > 0 && (
             <div className='flex gap-2 mb-2'>

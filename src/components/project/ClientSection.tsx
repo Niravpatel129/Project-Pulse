@@ -254,7 +254,7 @@ export default function ClientSection({
           </p>
 
           {/* Search and client list */}
-          <div className='bg-[#232428] rounded-xl border border-[#232428] p-6'>
+          <div className='rounded-xl'>
             {apiClients.length > 0 && (
               <div className='flex gap-2 mb-4'>
                 <div className='relative flex-1'>
