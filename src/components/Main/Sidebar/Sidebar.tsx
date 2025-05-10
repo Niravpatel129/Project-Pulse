@@ -16,10 +16,13 @@ import {
   RiCalendarFill,
   RiCheckboxFill,
   RiDashboardFill,
+  RiFileListFill,
   RiFolderFill,
   RiMenuFill,
+  RiMoneyDollarCircleFill,
   RiSettingsFill,
   RiTeamFill,
+  RiUserFill,
 } from 'react-icons/ri';
 
 export default function AppSidebar() {
@@ -28,12 +31,35 @@ export default function AppSidebar() {
 
   const navigation = [
     {
+      name: 'Payments',
+      items: [
+        {
+          name: 'Invoices',
+          href: '#',
+          current: true,
+          icon: RiFileListFill,
+        },
+        {
+          name: 'Payments',
+          href: '#',
+          current: false,
+          icon: RiMoneyDollarCircleFill,
+        },
+        {
+          name: 'Customers',
+          href: '#',
+          current: false,
+          icon: RiUserFill,
+        },
+      ],
+    },
+    {
       name: 'Core',
       items: [
         {
           name: 'Dashboard',
           href: '#',
-          current: true,
+          current: false,
           icon: RiDashboardFill,
         },
         {
