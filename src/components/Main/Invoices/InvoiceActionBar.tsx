@@ -73,6 +73,35 @@ export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBa
       <div className='flex items-center gap-1'>
         <TooltipProvider delayDuration={0}>
           <Tooltip>
+            <Popover>
+              <PopoverTrigger asChild>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant='default'
+                    size='icon'
+                    className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8 relative'
+                    aria-label='Notes'
+                  >
+                    <FiBook size={16} className='text-[#f5a623]' />
+                    {notes?.length > 0 && (
+                      <span className='absolute -top-1 -right-1 bg-[#ffffff] text-[#030303] text-xs rounded-full w-4 h-4 flex items-center justify-center'>
+                        {notes.length}
+                      </span>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+              </PopoverTrigger>
+              <TooltipContent>
+                <p>Notes</p>
+              </TooltipContent>
+              <PopoverContent className='w-[350px] p-0 bg-[#181818] text-white rounded-lg shadow-lg border-none'>
+                <NotesPopoverContent invoiceId={invoiceId} initialNotes={notes} />
+              </PopoverContent>
+            </Popover>
+          </Tooltip>
+        </TooltipProvider>
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant='default'
@@ -87,68 +116,39 @@ export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBa
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-      </div>
-      <TooltipProvider delayDuration={0}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant='default'
-              size='icon'
-              className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8'
-            >
-              <FiArchive size={14} />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Archive</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      <TooltipProvider delayDuration={0}>
-        <Tooltip>
-          <Popover>
-            <PopoverTrigger asChild>
-              <TooltipTrigger asChild>
-                <Button
-                  variant='default'
-                  size='icon'
-                  className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8 relative'
-                  aria-label='Notes'
-                >
-                  <FiBook size={16} />
-                  {notes?.length > 0 && (
-                    <span className='absolute -top-1 -right-1 bg-[#f63e68] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center'>
-                      {notes.length}
-                    </span>
-                  )}
-                </Button>
-              </TooltipTrigger>
-            </PopoverTrigger>
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant='default'
+                size='icon'
+                className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8'
+              >
+                <FiArchive size={14} />
+              </Button>
+            </TooltipTrigger>
             <TooltipContent>
-              <p>Notes</p>
+              <p>Archive</p>
             </TooltipContent>
-            <PopoverContent className='w-[350px] p-0 bg-[#181818] text-white rounded-lg shadow-lg border-none'>
-              <NotesPopoverContent invoiceId={invoiceId} initialNotes={notes} />
-            </PopoverContent>
-          </Popover>
-        </Tooltip>
-      </TooltipProvider>
-      <TooltipProvider delayDuration={0}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant='default'
-              size='icon'
-              className='text-[#f63e68] bg-[#451a26] h-8 w-8 border-2 border-[#6e2535] hover:bg-[#6e2535]'
-            >
-              <FiTrash2 size={14} />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Delete</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+          </Tooltip>
+        </TooltipProvider>
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant='default'
+                size='icon'
+                className='text-[#f63e68] bg-[#451a26] h-8 w-8 border-2 border-[#6e2535] hover:bg-[#6e2535]'
+              >
+                <FiTrash2 size={14} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Delete</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
     </div>
   );
 }
