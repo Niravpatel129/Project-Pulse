@@ -11,6 +11,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { PencilIcon } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { createContext, useContext, useState } from 'react';
 import {
@@ -142,10 +143,14 @@ export default function AppSidebar() {
             </div>
           </SidebarHeader>
           <SidebarContent className='dark:bg-[#141414] px-2 group-data-[state=collapsed]:px-2'>
-            <Button className='w-full mb-3 bg-white/10 hover:bg-white/20 text-[#f7f7f7] group-data-[state=collapsed]:w-10 group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:mx-auto'>
-              <span className='group-data-[state=collapsed]:hidden'>New Invoice</span>
-              <RiFileListFill className='h-4 w-4 group-data-[state=collapsed]:block hidden' />
-            </Button>
+            <div className='flex items-center justify-center px-2 mt-2'>
+              <Button className='w-full mb-2 bg-white/10 hover:bg-white/20 text-[#f7f7f7] group-data-[state=collapsed]:w-10 group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:mx-auto mx-8'>
+                <PencilIcon className='h-4 w-4' />
+                <span className='group-data-[state=collapsed]:hidden'>New Invoice</span>
+                <RiFileListFill className='h-4 w-4 group-data-[state=collapsed]:block hidden' />
+              </Button>
+            </div>
+
             <SidebarGroup>
               <SidebarMenu>
                 {navigation.map((section) => {

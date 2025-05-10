@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -54,6 +55,19 @@ const mockInvoices = [
     avatarUrl: null,
   },
 ];
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'paid':
+      return 'bg-green-500/10 text-green-500';
+    case 'overdue':
+      return 'bg-red-500/10 text-red-500';
+    case 'pending':
+      return 'bg-yellow-500/10 text-yellow-500';
+    default:
+      return 'bg-gray-500/10 text-gray-500';
+  }
+};
 
 export default function Invoices({ onPreviewClick }: InvoicesProps) {
   const { toggleSidebar } = useSidebar();
@@ -178,21 +192,33 @@ export default function Invoices({ onPreviewClick }: InvoicesProps) {
 
               <div className='flex-1 min-w-0'>
                 <div className='flex items-center justify-between'>
-                  <span className='font-semibold text-[#fafafa] text-[14px] truncate'>
-                    {invoice.clientName}
-                  </span>
+                  <div className='flex items-center gap-2'>
+                    <span className='font-semibold text-[#fafafa] text-[14px] truncate'>
+                      {invoice.clientName}
+                    </span>
+                  </div>
                   <span className='text-xs text-[#8C8C8C] ml-2 whitespace-nowrap'>
                     {format(new Date(invoice.createdAt), 'h:mm a')}
                   </span>
                 </div>
+
                 <div className='flex items-center justify-between'>
-                  <span className='text-[#8C8C8C] text-sm truncate'>
-                    {invoice.items[0]?.description || 'No description'}
-                  </span>
-                  <span className='flex items-center gap-2 ml-2'>
+                  <div className='flex items-center gap-2'>
+                    <span className='text-[#8C8C8C] text-sm truncate'>
+                      {invoice.items[0]?.description || 'No description'} • $
+                      {invoice.total.toFixed(2)}
+                    </span>
+                    <Badge
+                      variant='secondary'
+                      className={`${getStatusColor(invoice.status)} text-xs px-2 py-0.5`}
+                    >
+                      {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                    </Badge>
+                  </div>
+                  <div className='flex items-center gap-2 ml-2'>
                     <FaBolt className='text-[#eea01a]' />
                     <FaBell className='text-[#8b5df8]' />
-                  </span>
+                  </div>
                 </div>
               </div>
             </div>
