@@ -1,3 +1,4 @@
+import { InvoicePdf } from '@/components/InvoicePdf/InvoicePdf';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -340,7 +341,6 @@ export default function InvoicePreview({
             </div>
           </div>
         </div>
-
         {/* Timeline Section */}
         <div className='py-6 space-y-6 px-5'>
           {/* Timeline */}
@@ -539,7 +539,6 @@ export default function InvoicePreview({
               )}
             </div>
           </div>
-
           {/* Additional Info Panel */}
           <div className='bg-[#141414] rounded-lg border border-[#232323] p-6'>
             <h3 className='text-[14px] font-semibold text-white mb-5'>Additional Information</h3>
@@ -562,8 +561,9 @@ export default function InvoicePreview({
               </div>
             </div>
           </div>
-        </div>
 
+          <InvoicePdf invoice={invoice as any} />
+        </div>
         {/* Receipt Dialog */}
         <Dialog open={isReceiptDialogOpen} onOpenChange={setIsReceiptDialogOpen}>
           <DialogContent className='sm:max-w-[450px]'>
@@ -592,7 +592,6 @@ export default function InvoicePreview({
             </div>
           </DialogContent>
         </Dialog>
-
         {/* Edit Payment Dialog */}
         <Dialog open={isEditPaymentDialogOpen} onOpenChange={setIsEditPaymentDialogOpen}>
           <DialogContent className='sm:max-w-[450px]'>
@@ -695,7 +694,6 @@ export default function InvoicePreview({
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
         {/* Delete Payment Alert */}
         <Dialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
           <DialogContent className='sm:max-w-[425px]'>
