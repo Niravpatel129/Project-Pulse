@@ -107,6 +107,9 @@ export default function AppSidebar() {
           </div>
         </SidebarHeader>
         <SidebarContent className='dark:bg-[#141414] px-2'>
+          <Button className='w-full mb-4 bg-white/10 hover:bg-white/20 text-[#f7f7f7]'>
+            New Invoice
+          </Button>
           <SidebarGroup>
             <SidebarMenu>
               {navigation.map((section) => {
