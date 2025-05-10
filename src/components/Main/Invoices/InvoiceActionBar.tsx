@@ -28,9 +28,10 @@ export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBa
     queryKey: ['invoice', invoiceId],
     queryFn: async () => {
       const response = await newRequest.get(`/invoices/${invoiceId}`);
-      return response.data;
+      return response.data.data;
     },
   });
+  console.log('🚀 invoice:', invoice);
 
   // Star mutation
   const starMutation = useMutation({
@@ -52,12 +53,12 @@ export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBa
   const archiveMutation = useMutation({
     mutationFn: async () => {
       return newRequest.put(`/invoices/${invoiceId}/archive`, {
-        archived: !invoice?.archived,
+        status: invoice?.status === 'archived' ? 'draft' : 'archived',
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] });
-      toast.success(invoice?.archived ? 'Invoice unarchived' : 'Invoice archived');
+      toast.success(invoice?.status === 'archived' ? 'Invoice unarchived' : 'Invoice archived');
     },
     onError: () => {
       toast.error('Failed to update archive status');
@@ -172,7 +173,7 @@ export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBa
                 variant='default'
                 size='icon'
                 className={`text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8 ${
-                  invoice?.archived ? 'text-[#f5a623]' : ''
+                  invoice?.status === 'archived' ? 'text-[#f5a623]' : ''
                 }`}
                 onClick={() => {
                   return archiveMutation.mutate();
@@ -183,7 +184,7 @@ export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBa
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{invoice?.archived ? 'Unarchive' : 'Archive'}</p>
+              <p>{invoice?.status === 'archived' ? 'Unarchive' : 'Archive'}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
