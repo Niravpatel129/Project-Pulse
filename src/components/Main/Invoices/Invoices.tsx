@@ -2,7 +2,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
-import { FiBell, FiRefreshCw, FiSidebar, FiZap } from 'react-icons/fi';
+import { FaBell, FaBolt } from 'react-icons/fa';
+import { FiRefreshCw, FiSidebar } from 'react-icons/fi';
 
 const mockInvoices = [
   {
@@ -50,12 +51,12 @@ const mockInvoices = [
 export default function Invoices() {
   return (
     <div className='bg-background '>
-      <div className='flex justify-between items-center px-3 py-2'>
+      <div className='flex justify-between items-center px-4 py-2'>
         <Button variant='ghost' size='icon'>
-          <FiSidebar className='text-[#8C8C8C] w-4 h-4' />
+          <FiSidebar className='text-[#8C8C8C] ' />
         </Button>
         <Button variant='ghost' size='icon'>
-          <FiRefreshCw className='text-[#8C8C8C] w-4 h-4' />
+          <FiRefreshCw className='text-[#8C8C8C]' size={16} />
         </Button>
       </div>
       <Separator className='bg-[#232428] mb-2' />
@@ -97,8 +98,8 @@ export default function Invoices() {
                     {invoice.items[0]?.description || 'No description'}
                   </span>
                   <span className='flex items-center gap-2 ml-2'>
-                    <FiZap className='text-yellow-400 text-lg' />
-                    <FiBell className='text-purple-400 text-lg' />
+                    <FaBolt className='text-[#eea01a]' />
+                    <FaBell className='text-[#8b5df8]' />
                   </span>
                 </div>
               </div>
