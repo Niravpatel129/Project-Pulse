@@ -199,12 +199,9 @@ function NotesPopoverContent({ invoiceId }: { invoiceId: string }) {
   // Add/Update note mutation
   const saveNoteMutation = useMutation({
     mutationFn: async (noteData: { text: string; label: string; id?: string }) => {
-      console.log('Mutation function called with:', noteData);
       if (noteData.id) {
-        console.log('Using PUT for edit');
         return newRequest.put(`/invoices/${invoiceId}/notes/${noteData.id}`, noteData);
       }
-      console.log('Using POST for new note');
       return newRequest.post(`/invoices/${invoiceId}/notes`, noteData);
     },
     onSuccess: () => {
@@ -243,7 +240,6 @@ function NotesPopoverContent({ invoiceId }: { invoiceId: string }) {
 
   // Edit note handler
   const handleEditNote = (note: Note) => {
-    console.log('Editing note:', note);
     setNote(note.text);
     setLabel(note.label);
     setEditIndex(note._id);
@@ -253,13 +249,11 @@ function NotesPopoverContent({ invoiceId }: { invoiceId: string }) {
   // Add or update note handler
   const handleSaveNote = () => {
     if (!note.trim()) return;
-    console.log('Saving note with editIndex:', editIndex);
     const noteData = {
       text: note,
       label,
       id: editIndex,
     };
-    console.log('Note data being sent:', noteData);
     saveNoteMutation.mutate(noteData);
   };
 
