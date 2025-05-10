@@ -12,6 +12,8 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { PencilIcon } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { createContext, useContext } from 'react';
 import {
   RiBarChartFill,
@@ -39,6 +41,7 @@ export const useSidebarToggle = () => {
 
 export default function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
+  const pathname = usePathname();
 
   const navigation = [
     {
@@ -46,20 +49,20 @@ export default function AppSidebar() {
       items: [
         {
           name: 'Invoices',
-          href: '#',
-          current: true,
+          href: '/main/invoices',
+          current: pathname === '/main/invoices',
           icon: RiFileListFill,
         },
         {
           name: 'Payments',
-          href: '#',
-          current: false,
+          href: '/main/payments',
+          current: pathname === '/main/payments',
           icon: RiMoneyDollarCircleFill,
         },
         {
           name: 'Customers',
-          href: '#',
-          current: false,
+          href: '/main/customers',
+          current: pathname === '/main/customers',
           icon: RiUserFill,
         },
       ],
@@ -69,20 +72,20 @@ export default function AppSidebar() {
       items: [
         {
           name: 'Dashboard',
-          href: '#',
-          current: false,
+          href: '/main/dashboard',
+          current: pathname === '/main/dashboard',
           icon: RiDashboardFill,
         },
         {
           name: 'Projects',
-          href: '#',
-          current: false,
+          href: '/main/projects',
+          current: pathname === '/main/projects',
           icon: RiFolderFill,
         },
         {
           name: 'Analytics',
-          href: '#',
-          current: false,
+          href: '/main/analytics',
+          current: pathname === '/main/analytics',
           icon: RiBarChartFill,
         },
       ],
@@ -92,26 +95,26 @@ export default function AppSidebar() {
       items: [
         {
           name: 'Tasks',
-          href: '#',
-          current: false,
+          href: '/main/tasks',
+          current: pathname === '/main/tasks',
           icon: RiCheckboxFill,
         },
         {
           name: 'Calendar',
-          href: '#',
-          current: false,
+          href: '/main/calendar',
+          current: pathname === '/main/calendar',
           icon: RiCalendarFill,
         },
         {
           name: 'Team',
-          href: '#',
-          current: false,
+          href: '/main/team',
+          current: pathname === '/main/team',
           icon: RiTeamFill,
         },
         {
           name: 'Settings',
-          href: '#',
-          current: false,
+          href: '/main/settings',
+          current: pathname === '/main/settings',
           icon: RiSettingsFill,
         },
       ],
@@ -165,7 +168,7 @@ export default function AppSidebar() {
                               tooltip={item.name}
                               className='text-white hover:bg-white/10 data-[active=true]:bg-white/10'
                             >
-                              <a
+                              <Link
                                 href={item.href}
                                 className='flex items-center gap-3 px-2 text-[#fafafa] group-data-[state=collapsed]:justify-center'
                               >
@@ -173,7 +176,7 @@ export default function AppSidebar() {
                                 <span className='group-data-[state=collapsed]:hidden text-[#fafafa]'>
                                   {item.name}
                                 </span>
-                              </a>
+                              </Link>
                             </SidebarMenuButton>
                           </SidebarMenuItem>
                         );
