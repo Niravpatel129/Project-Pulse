@@ -8,9 +8,17 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarProvider,
 } from '@/components/ui/sidebar';
-import { Menu } from 'lucide-react';
+import {
+  BarChart,
+  Calendar,
+  CheckSquare,
+  FolderKanban,
+  LayoutDashboard,
+  Menu,
+  Settings,
+  Users,
+} from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useState } from 'react';
 
@@ -20,29 +28,61 @@ export default function AppSidebar() {
 
   const navigation = [
     {
-      name: 'Dashboard',
-      href: '#',
-      current: true,
+      name: 'Core',
+      items: [
+        {
+          name: 'Dashboard',
+          href: '#',
+          current: true,
+          icon: LayoutDashboard,
+        },
+        {
+          name: 'Projects',
+          href: '#',
+          current: false,
+          icon: FolderKanban,
+        },
+        {
+          name: 'Analytics',
+          href: '#',
+          current: false,
+          icon: BarChart,
+        },
+      ],
     },
     {
-      name: 'Projects',
-      href: '#',
-      current: false,
-    },
-    {
-      name: 'Tasks',
-      href: '#',
-      current: false,
-    },
-    {
-      name: 'Calendar',
-      href: '#',
-      current: false,
+      name: 'Management',
+      items: [
+        {
+          name: 'Tasks',
+          href: '#',
+          current: false,
+          icon: CheckSquare,
+        },
+        {
+          name: 'Calendar',
+          href: '#',
+          current: false,
+          icon: Calendar,
+        },
+        {
+          name: 'Team',
+          href: '#',
+          current: false,
+          icon: Users,
+        },
+        {
+          name: 'Settings',
+          href: '#',
+          current: false,
+          icon: Settings,
+        },
+      ],
     },
   ];
 
   return (
-    <SidebarProvider defaultOpen>
+    <>
       <div className='lg:hidden fixed top-4 left-4 z-50'>
         <Button
           variant='ghost'
@@ -58,37 +98,48 @@ export default function AppSidebar() {
       </div>
 
       <Sidebar>
-        <SidebarHeader></SidebarHeader>
+        <SidebarHeader className='dark:bg-[#141414]'>
+          <div className='flex items-center space-x-3 p-4'>
+            <div>
+              <p className='text-sm font-medium text-white'>Nirav</p>
+              <p className='text-xs text-white/60'>niravpatelp129@gmail.com</p>
+            </div>
+          </div>
+        </SidebarHeader>
         <SidebarContent className='dark:bg-[#141414]'>
           <SidebarGroup>
             <SidebarMenu>
-              {navigation.map((item) => {
+              {navigation.map((section) => {
                 return (
-                  <SidebarMenuItem key={item.name}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={item.current}
-                      tooltip={item.name}
-                      className='text-white hover:bg-white/10 data-[active=true]:bg-white/10'
-                    >
-                      <a href={item.href}>{item.name}</a>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  <div key={section.name} className='mb-4'>
+                    <h3 className='px-4 text-xs font-semibold text-white/60 uppercase tracking-wider mb-2'>
+                      {section.name}
+                    </h3>
+                    {section.items.map((item) => {
+                      return (
+                        <SidebarMenuItem key={item.name}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={item.current}
+                            tooltip={item.name}
+                            className='text-white hover:bg-white/10 data-[active=true]:bg-white/10'
+                          >
+                            <a href={item.href} className='flex items-center gap-3 px-4'>
+                              <item.icon className='h-4 w-4' />
+                              {item.name}
+                            </a>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </div>
                 );
               })}
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
-        <SidebarFooter>
-          <div className='flex items-center space-x-3'>
-            <div className='h-8 w-8 rounded-full bg-white/10'></div>
-            <div>
-              <p className='text-sm font-medium text-white'>User Name</p>
-              <p className='text-xs text-white/60'>user@example.com</p>
-            </div>
-          </div>
-        </SidebarFooter>
+        <SidebarFooter></SidebarFooter>
       </Sidebar>
-    </SidebarProvider>
+    </>
   );
 }

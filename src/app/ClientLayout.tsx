@@ -23,6 +23,7 @@ export default function ClientLayout({
   const pageContext: PageContext = {
     url: pathname,
   };
+  const isMainPage = pathname?.includes('/main');
 
   return (
     <>
@@ -36,8 +37,11 @@ export default function ClientLayout({
                 {/* Main content area */}
                 <main className='flex-1'>{children}</main>
 
-                {/* Chat widget */}
-                <ChatWidget pageContext={pageContext} />
+                {!isMainPage && (
+                  <>
+                    <ChatWidget pageContext={pageContext} />
+                  </>
+                )}
               </div>
             </TooltipProvider>
             <LoadingOverlay />
