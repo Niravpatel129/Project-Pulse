@@ -12,7 +12,7 @@ import { IoPerson } from 'react-icons/io5';
 
 interface InvoicesProps {
   invoices: any[];
-  onPreviewClick?: () => void;
+  onPreviewClick?: (invoice: any) => void;
 }
 
 const getStatusColor = (status: string) => {
@@ -64,7 +64,9 @@ export default function Invoices({ invoices, onPreviewClick }: InvoicesProps) {
             <div
               key={invoice._id}
               className='group relative flex items-center px-3 py-2 my-2 rounded-lg hover:bg-[#232428] transition-colors cursor-pointer'
-              onClick={onPreviewClick}
+              onClick={() => {
+                return onPreviewClick?.(invoice);
+              }}
             >
               <div className='absolute right-2 z-[25] flex -translate-y-1/2 items-center gap-1 rounded-xl border bg-white p-1 shadow-sm dark:bg-[#1A1A1A] top-[-1] opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
                 <motion.button

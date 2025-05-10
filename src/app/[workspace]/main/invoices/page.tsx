@@ -55,6 +55,7 @@ interface ApiResponse {
 export default function InvoicesPage() {
   const isMobile = useIsMobile();
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | undefined>();
 
   const {
     data: invoicesData,
@@ -68,16 +69,16 @@ export default function InvoicesPage() {
     },
   });
 
+  const handlePreviewClick = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setShowPreview(true);
+  };
+
   return (
     <main className='flex-1 w-full overflow-auto bg-background h-screen'>
       <div className='flex h-full'>
         <div className='w-full h-full overflow-auto'>
-          <Invoices
-            invoices={invoicesData}
-            onPreviewClick={() => {
-              return setShowPreview(true);
-            }}
-          />
+          <Invoices invoices={invoicesData} onPreviewClick={handlePreviewClick} />
         </div>
         {isMobile ? (
           <Sheet open={showPreview} onOpenChange={setShowPreview}>
@@ -86,8 +87,9 @@ export default function InvoicesPage() {
                 <SheetTitle>Invoice Preview</SheetTitle>
               </SheetHeader>
               <InvoicePreview
+                selectedInvoice={selectedInvoice}
                 onClose={() => {
-                  return setShowPreview(false);
+                  setShowPreview(false);
                 }}
               />
             </SheetContent>
@@ -95,8 +97,9 @@ export default function InvoicesPage() {
         ) : (
           <div className='w-full border-l border-l-gray-800 overflow-hidden'>
             <InvoicePreview
+              selectedInvoice={selectedInvoice}
               onClose={() => {
-                return setShowPreview(false);
+                setShowPreview(false);
               }}
             />
           </div>
