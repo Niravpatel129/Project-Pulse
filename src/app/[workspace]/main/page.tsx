@@ -16,10 +16,10 @@ export default function Main() {
           <Sidebar />
           <main className='flex-1 w-full overflow-auto bg-background h-screen'>
             <div className='flex h-full'>
-              <div className='w-full h-full'>
+              <div className='w-full h-full overflow-auto'>
                 <Invoices />
               </div>
-              <div className='w-full border-l border-l-gray-800 h-full'>
+              <div className='w-full border-l border-l-gray-800 h-full overflow-auto'>
                 <InvoicePreview />
               </div>
             </div>

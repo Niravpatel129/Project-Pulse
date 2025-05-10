@@ -103,6 +103,7 @@
   /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
@@ -110,17 +111,18 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
-    border-radius: 10px;
+    background: #313037;
+    border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #cbd5e1;
+    background: #3d3a42;
   }
 
   /* Make scrollbar overlay content and not take up space */
   * {
     scrollbar-width: thin;
+    scrollbar-color: #313037 transparent;
   }
 
   html {
