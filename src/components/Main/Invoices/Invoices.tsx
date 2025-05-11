@@ -8,8 +8,7 @@ import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { useEffect, useState } from 'react';
-import { BsStarFill } from 'react-icons/bs';
-import { FiRefreshCw, FiSearch, FiSidebar, FiStar } from 'react-icons/fi';
+import { FiRefreshCw, FiSearch, FiSidebar } from 'react-icons/fi';
 import { IoPerson } from 'react-icons/io5';
 import { toast } from 'sonner';
 
@@ -151,9 +150,6 @@ export default function Invoices({ invoices, onPreviewClick, isPreviewOpen }: In
                       {invoice.client?.user.name || 'Unnamed'}
                     </span>
                   </div>
-                  {/* <span className='text-xs text-[#8C8C8C] ml-2 whitespace-nowrap'>
-                    {format(new Date(invoice.createdAt), 'h:mm a')}
-                  </span> */}
                 </div>
 
                 <div className='flex items-center justify-between'>
@@ -171,30 +167,25 @@ export default function Invoices({ invoices, onPreviewClick, isPreviewOpen }: In
                       {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
                     </Badge>
                   </div>
-                  {/* <span className='text-xs text-[#8C8C8C] ml-2 whitespace-nowrap'>
-                    {format(new Date(invoice.createdAt), 'MMM d')}
-                  </span> */}
                 </div>
               </div>
 
               <div className='flex items-center gap-2 ml-4'>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className={`text-[#8b8b8b] hover:text-white ${
-                    invoice.starred ? 'text-[#f5a623]' : ''
-                  }`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    return starMutation.mutate(invoice._id);
-                  }}
-                >
-                  {invoice.starred ? <BsStarFill size={16} /> : <FiStar size={16} />}
-                </Button>
-                <div>
-                  <div className='text-xs text-[#8C8C8C] ml-2 whitespace-nowrap'>
-                    {format(new Date(invoice.createdAt), 'MMM d')}
-                  </div>
+                <div className='text-xs text-[#8C8C8C] ml-0 whitespace-nowrap'>
+                  {(() => {
+                    const date = new Date(invoice.createdAt);
+                    const today = new Date();
+                    const isToday = date.toDateString() === today.toDateString();
+                    const isThisYear = date.getFullYear() === today.getFullYear();
+
+                    if (isToday) {
+                      return format(date, 'h:mm a');
+                    } else if (!isThisYear) {
+                      return format(date, 'MMM d, yyyy');
+                    } else {
+                      return format(date, 'MMM d');
+                    }
+                  })()}
                 </div>
               </div>
             </div>
