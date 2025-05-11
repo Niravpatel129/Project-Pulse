@@ -11,18 +11,14 @@ import { toast } from 'sonner';
 interface InvoiceActionBarProps {
   onClose?: () => void;
   invoiceId: string;
+  invoice?: {
+    _id: string;
+    starred: boolean;
+  };
 }
 
-export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBarProps) {
+export default function InvoiceActionBar({ onClose, invoiceId, invoice }: InvoiceActionBarProps) {
   const queryClient = useQueryClient();
-
-  const { data: invoice } = useQuery({
-    queryKey: ['invoice', invoiceId],
-    queryFn: async () => {
-      const response = await newRequest.get(`/invoices/${invoiceId}`);
-      return response.data.data;
-    },
-  });
 
   // Star mutation
   const starMutation = useMutation({

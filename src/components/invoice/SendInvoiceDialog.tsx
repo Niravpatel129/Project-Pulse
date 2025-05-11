@@ -192,7 +192,7 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
       await newRequest.put(`/invoices/${invoice._id}`, { status: 'sent' });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries();
+      queryClient.invalidateQueries({ queryKey: ['invoice', invoice._id] });
       toast.success('Invoice marked as sent');
       onOpenChange(false);
     },
