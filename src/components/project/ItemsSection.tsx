@@ -685,7 +685,7 @@ export default function ItemsSection({
           </div>
 
           {/* Item Cards */}
-          <div className='space-y-3'>
+          <div className='space-y-3 overflow-visible'>
             {items.length > 0 && (
               <>
                 <div className='flex items-center mb-4'>
