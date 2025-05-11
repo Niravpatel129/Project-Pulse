@@ -8,7 +8,7 @@ import { GeistSans } from 'geist/font/sans';
 import { usePathname } from 'next/navigation';
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isInvoiceRoute = pathname.includes('/invoice') || pathname.includes('/invoices');
+  const isInvoiceRoute = pathname.startsWith('/invoice/');
 
   return (
     <ThemeProvider defaultTheme='dark' enableSystem={false}>
