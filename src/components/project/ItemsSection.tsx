@@ -469,7 +469,7 @@ export default function ItemsSection({
                     }}
                     className='space-y-4'
                   >
-                    <div>
+                    <div className='p-1'>
                       <label htmlFor='item-name' className='text-xs text-[#8C8C8C] mb-1 block'>
                         Item name
                       </label>
@@ -488,7 +488,7 @@ export default function ItemsSection({
                         aria-label='Item name'
                       />
                     </div>
-                    <div>
+                    <div className='p-1'>
                       <label
                         htmlFor='item-description'
                         className='text-xs text-[#8C8C8C] mb-1 block'
@@ -507,27 +507,26 @@ export default function ItemsSection({
                         aria-label='Item description'
                       />
                     </div>
-                    <div>
+                    <div className='p-1'>
                       <label htmlFor='item-price' className='text-xs text-[#8C8C8C] mb-1 block'>
                         Price ({projectCurrency})
                       </label>
-                      <div className='flex-1 relative'>
-                        <Input
-                          type='text'
-                          id='item-price'
-                          value={newItem.price}
-                          onChange={(e) => {
-                            // Allow only numbers and decimal point
-                            const value = e.target.value.replace(/[^0-9.]/g, '');
-                            setNewItem({ ...newItem, price: value });
-                          }}
-                          placeholder='0.00'
-                          aria-label='Item price'
-                          className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
-                        />
-                      </div>
+                      <Input
+                        type='text'
+                        id='item-price'
+                        value={newItem.price}
+                        onChange={(e) => {
+                          // Allow only numbers and decimal point
+                          const value = e.target.value.replace(/[^0-9.]/g, '');
+                          setNewItem({ ...newItem, price: value });
+                        }}
+                        placeholder='0.00'
+                        aria-label='Item price'
+                        className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
+                      />
                     </div>
-                    <div>
+
+                    <div className='p-1'>
                       <label htmlFor='item-quantity' className='text-xs text-[#8C8C8C] mb-1 block'>
                         Quantity
                       </label>
@@ -545,7 +544,7 @@ export default function ItemsSection({
                       />
                     </div>
                     <div className='grid grid-cols-2 gap-3 mb-4'>
-                      <div>
+                      <div className='p-1'>
                         <Label htmlFor='tax-rate' className='text-[#fafafa] text-sm font-medium'>
                           Tax Rate
                         </Label>
@@ -601,7 +600,7 @@ export default function ItemsSection({
                           </SelectContent>
                         </Select>
                       </div>
-                      <div>
+                      <div className='p-1'>
                         <Label htmlFor='discount' className='text-[#fafafa] text-sm font-medium'>
                           Discount (%)
                         </Label>
