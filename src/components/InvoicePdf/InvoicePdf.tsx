@@ -309,11 +309,13 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
               <th className='py-3 px-4 text-left font-semibold'>Items</th>
               <th className='py-3 px-4 text-center font-semibold'>Quantity</th>
               <th className='py-3 px-4 text-right font-semibold'>Price</th>
+              <th className='py-3 px-4 text-right font-semibold'>Tax</th>
               <th className='py-3 px-4 text-right font-semibold'>Amount</th>
             </tr>
           </thead>
           <tbody>
             {invoice.items.map((item) => {
+              console.log('🚀 item:', item);
               const itemTotal = item.price * item.quantity - item.discount + item.tax;
               return (
                 <tr
@@ -339,6 +341,17 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
                   >
                     $
                     {item.price.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                  <td
+                    className={`py-3 px-4 text-right ${
+                      isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'
+                    }`}
+                  >
+                    $
+                    {item.tax.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
