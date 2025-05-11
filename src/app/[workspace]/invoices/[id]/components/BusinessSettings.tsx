@@ -164,7 +164,7 @@ export function BusinessSettings({ open, onOpenChange }: BusinessSettingsProps) 
                       onClick={() => {
                         return fileInputRef.current?.click();
                       }}
-                      className='h-8 w-8 bg-white/90 hover:bg-white'
+                      className='h-8 w-8 bg-black/90 hover:bg-black'
                     >
                       <svg
                         xmlns='http://www.w3.org/2000/svg'
@@ -187,7 +187,7 @@ export function BusinessSettings({ open, onOpenChange }: BusinessSettingsProps) 
                       variant='ghost'
                       size='icon'
                       onClick={handleRemoveLogo}
-                      className='h-8 w-8 bg-white/90 hover:bg-white'
+                      className='h-8 w-8 bg-black/90 hover:bg-black'
                     >
                       <X className='h-4 w-4' />
                     </Button>
