@@ -143,8 +143,8 @@ export default function Invoices({
           return (
             <div
               key={invoice._id}
-              className={`group relative flex items-center px-3 py-2 my-2 rounded-lg hover:bg-[#232428] transition-all duration-150 ease-in-out cursor-pointer ${
-                selectedInvoice === invoice._id ? 'bg-[#232428]' : ''
+              className={`group relative flex items-center px-3 py-2 my-2 rounded-lg hover:bg-[#252525] transition-all duration-150 ease-in-out cursor-pointer ${
+                selectedInvoice === invoice._id ? 'bg-[#252525]' : ''
               }`}
               onClick={(e) => {
                 console.log('Invoice clicked:', invoice._id);
