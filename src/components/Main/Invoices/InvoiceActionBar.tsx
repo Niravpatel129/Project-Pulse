@@ -56,23 +56,13 @@ export default function InvoiceActionBar({
   // Star mutation
   const starMutation = useMutation({
     mutationFn: async () => {
-      // Use invoice.starred to determine the new state
       const newStarredState = !invoice?.starred;
-      console.log(
-        'Mutation starting, current invoice starred:',
-        invoice?.starred,
-        'new state:',
-        newStarredState,
-      );
       return newRequest.put(`/invoices/${invoiceId}/star`, {
         starred: newStarredState,
       });
     },
     onMutate: async () => {
       const newStarredState = !invoice?.starred;
-
-      // Update local state immediately
-      setIsStarred(newStarredState);
 
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['invoice', invoiceId] });
@@ -88,13 +78,10 @@ export default function InvoiceActionBar({
         };
       });
 
-      // update invoices as well
+      // Update invoices list as well
       queryClient.setQueryData(['invoices'], (old: any) => {
         return old.map((invoice: any) => {
-          if (invoice._id === invoiceId) {
-            return { ...invoice, starred: newStarredState };
-          }
-          return invoice;
+          return invoice._id === invoiceId ? { ...invoice, starred: newStarredState } : invoice;
         });
       });
 
@@ -108,7 +95,7 @@ export default function InvoiceActionBar({
       queryClient.setQueryData(['invoice', invoiceId], context?.previousInvoice);
       toast.error('Failed to update star status');
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries();
       toast.success(invoice?.starred ? 'Invoice unstarred' : 'Invoice starred');
     },
@@ -251,17 +238,12 @@ export default function InvoiceActionBar({
                     isStarred ? 'text-[#f5a623]' : ''
                   }`}
                   onClick={() => {
-                    return starMutation.mutate();
+                    // Update local state immediately for instant feedback
+                    setIsStarred(!isStarred);
+                    starMutation.mutate();
                   }}
-                  disabled={starMutation.isPending}
                 >
-                  {starMutation.isPending ? (
-                    <div className='w-4 h-4 border-2 border-[#8b8b8b] border-t-transparent rounded-full animate-spin' />
-                  ) : isStarred ? (
-                    <BsStarFill size={14} />
-                  ) : (
-                    <FiStar size={14} />
-                  )}
+                  {isStarred ? <BsStarFill size={14} /> : <FiStar size={14} />}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
