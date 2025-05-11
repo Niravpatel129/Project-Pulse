@@ -1,5 +1,6 @@
 'use client';
 import { Invoice } from '@/app/[workspace]/invoices/[id]/components/Invoice';
+import { InvoicePdf } from '@/components/InvoicePdf/InvoicePdf';
 import {
   Dialog,
   DialogClose,
@@ -182,12 +183,12 @@ function PaymentForm({
             className={`p-4 rounded-xl border transition-all ${
               paymentType === 'full'
                 ? 'border-[#0066FF] bg-[#0066FF]/5'
-                : 'border-gray-200 hover:border-gray-300'
+                : 'border-[#232323] hover:border-[#333333]'
             }`}
           >
             <div className='space-y-1'>
-              <div className='text-sm font-medium text-gray-500'>Full Amount</div>
-              <div className='text-lg font-semibold text-gray-900'>
+              <div className='text-sm font-medium text-[#8C8C8C]'>Full Amount</div>
+              <div className='text-lg font-semibold text-[#fafafa]'>
                 {mapCurrency(invoice.currency)}
                 {invoice.total.toFixed(2)}
               </div>
@@ -202,12 +203,12 @@ function PaymentForm({
               className={`p-4 rounded-xl border transition-all ${
                 paymentType === 'deposit'
                   ? 'border-[#0066FF] bg-[#0066FF]/5'
-                  : 'border-gray-200 hover:border-gray-300'
+                  : 'border-[#232323] hover:border-[#333333]'
               }`}
             >
               <div className='space-y-1'>
-                <div className='text-sm font-medium text-gray-500'>Deposit</div>
-                <div className='text-lg font-semibold text-gray-900'>
+                <div className='text-sm font-medium text-[#8C8C8C]'>Deposit</div>
+                <div className='text-lg font-semibold text-[#fafafa]'>
                   {mapCurrency(invoice.currency)}
                   {depositAmount.toFixed(2)}
                 </div>
@@ -222,20 +223,20 @@ function PaymentForm({
             className={`p-4 rounded-xl border transition-all ${
               paymentType === 'custom'
                 ? 'border-[#0066FF] bg-[#0066FF]/5'
-                : 'border-gray-200 hover:border-gray-300'
+                : 'border-[#232323] hover:border-[#333333]'
             }`}
           >
             <div className='space-y-1'>
-              <div className='text-sm font-medium text-gray-500'>Custom Amount</div>
+              <div className='text-sm font-medium text-[#8C8C8C]'>Custom Amount</div>
             </div>
           </button>
         </div>
 
         {paymentType === 'custom' && (
           <div className='space-y-2'>
-            <label className='block text-sm font-medium text-gray-700'>Enter Payment Amount</label>
+            <label className='block text-sm font-medium text-[#8C8C8C]'>Enter Payment Amount</label>
             <div className='relative'>
-              <span className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-500'>
+              <span className='absolute left-4 top-1/2 -translate-y-1/2 text-[#8C8C8C]'>
                 {mapCurrency(invoice.currency)}
               </span>
               <input
@@ -244,14 +245,14 @@ function PaymentForm({
                 onChange={(e) => {
                   return setCustomAmount(e.target.value);
                 }}
-                className='w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0066FF] focus:border-[#0066FF] outline-none transition-all'
+                className='w-full pl-10 pr-4 py-3 bg-[#232323] border border-[#232323] text-[#fafafa] rounded-xl focus:ring-2 focus:ring-[#0066FF] focus:border-[#0066FF] outline-none transition-all placeholder:text-[#8C8C8C]'
                 placeholder='0.00'
                 min='0'
                 step='0.01'
                 max={invoice.total}
               />
             </div>
-            <p className='text-sm text-gray-500'>
+            <p className='text-sm text-[#8C8C8C]'>
               Maximum amount: {mapCurrency(invoice.currency)}
               {invoice.total.toFixed(2)}
             </p>
@@ -279,10 +280,10 @@ function PaymentForm({
 
   return (
     <div className='space-y-6'>
-      <div className='flex items-center justify-between p-4 bg-gray-50 rounded-xl'>
+      <div className='flex items-center justify-between p-4 bg-[#232323] rounded-xl'>
         <div className='space-y-1'>
-          <div className='text-sm font-medium text-gray-500'>Selected Payment</div>
-          <div className='text-lg font-semibold text-gray-900'>
+          <div className='text-sm font-medium text-[#8C8C8C]'>Selected Payment</div>
+          <div className='text-lg font-semibold text-[#fafafa]'>
             {mapCurrency(invoice.currency)}
             {getPaymentAmount().toFixed(2)}
           </div>
@@ -291,7 +292,7 @@ function PaymentForm({
           onClick={() => {
             return setShowPaymentForm(false);
           }}
-          className='text-sm text-gray-500 hover:text-gray-700 transition-colors'
+          className='text-sm text-[#8C8C8C] hover:text-[#fafafa] transition-colors'
         >
           Change
         </button>
@@ -299,12 +300,24 @@ function PaymentForm({
 
       <form onSubmit={handleSubmit} className='space-y-6'>
         <div className='space-y-4'>
-          <div className='text-sm font-medium text-gray-700'>Payment Details</div>
-          <PaymentElement />
+          <div className='text-sm font-medium text-[#8C8C8C]'>Payment Details</div>
+          <div className='[&_.StripeElement]:bg-[#232323] [&_.StripeElement]:text-[#fafafa] [&_.StripeElement]:border-[#232323] [&_.StripeElement]:rounded-xl [&_.StripeElement]:p-3 [&_.StripeElement]:min-h-[40px] [&_.StripeElement]:focus:ring-2 [&_.StripeElement]:focus:ring-[#0066FF] [&_.StripeElement]:focus:border-[#0066FF] [&_.StripeElement]:outline-none [&_.StripeElement]:transition-all'>
+            <PaymentElement
+              options={{
+                layout: 'tabs',
+                defaultValues: {
+                  billingDetails: {
+                    name: invoice?.client?.user?.name,
+                    email: invoice?.client?.user?.email,
+                  },
+                },
+              }}
+            />
+          </div>
         </div>
 
         {error && (
-          <div className='p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600'>
+          <div className='p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-500'>
             {error}
           </div>
         )}
@@ -430,25 +443,25 @@ export default function InvoicePage() {
   }
 
   return (
-    <div className='min-h-screen bg-[#fafafa] flex flex-col items-center py-16 px-4 antialiased'>
+    <div className='min-h-screen bg-[#141414] flex flex-col items-center py-16 px-4 antialiased dark'>
       {/* Company Logo */}
       <div className='mb-16'>
         <div className='flex items-center gap-3'>
-          <span className='text-[15px] font-medium text-gray-900 tracking-tight'>
+          <span className='text-[15px] font-medium text-[#fafafa] tracking-tight'>
             {invoice?.client?.user?.name}
           </span>
         </div>
       </div>
 
       {/* Invoice Card */}
-      <div className='w-full max-w-[440px] bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8 mb-3'>
+      <div className='w-full max-w-[440px] bg-[#181818] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8 mb-3'>
         <div className='flex justify-between items-start mb-10'>
           <div>
-            <h1 className='text-[32px] font-semibold text-gray-900 mb-1 tracking-tight'>
+            <h1 className='text-[32px] font-semibold text-[#fafafa] mb-1 tracking-tight'>
               {mapCurrency(invoice.currency) || 'USD'}
               {invoice.total.toFixed(2)}
             </h1>
-            <p className='text-[13px] text-gray-500'>
+            <p className='text-[13px] text-[#8C8C8C]'>
               {invoice.status === 'paid'
                 ? `Paid on ${new Date(invoice.paidAt || '').toLocaleDateString()}`
                 : `Due ${new Date(invoice.dueDate).toLocaleDateString()}`}
@@ -458,21 +471,21 @@ export default function InvoicePage() {
 
         <div className='space-y-5 mb-7'>
           <div className='flex justify-between items-center'>
-            <span className='text-[13px] text-gray-500'>To</span>
-            <span className='text-[13px] text-gray-900'>{invoice?.client?.user?.name}</span>
+            <span className='text-[13px] text-[#8C8C8C]'>To</span>
+            <span className='text-[13px] text-[#fafafa]'>{invoice?.client?.user?.name}</span>
           </div>
           <div className='flex justify-between items-center'>
-            <span className='text-[13px] text-gray-500'>From</span>
-            <span className='text-[13px] text-gray-900'>{invoice.createdBy.name}</span>
+            <span className='text-[13px] text-[#8C8C8C]'>From</span>
+            <span className='text-[13px] text-[#fafafa]'>{invoice.createdBy.name}</span>
           </div>
           <div className='flex justify-between items-center'>
-            <span className='text-[13px] text-gray-500'>Invoice</span>
-            <span className='text-[13px] text-gray-900 font-mono'>{invoice.invoiceNumber}</span>
+            <span className='text-[13px] text-[#8C8C8C]'>Invoice</span>
+            <span className='text-[13px] text-[#fafafa] font-mono'>{invoice.invoiceNumber}</span>
           </div>
           {invoice.status === 'paid' && (
             <div className='flex justify-between items-center'>
-              <span className='text-[13px] text-gray-500'>Status</span>
-              <span className='text-[13px] text-green-600 font-medium flex items-center gap-1'>
+              <span className='text-[13px] text-[#8C8C8C]'>Status</span>
+              <span className='text-[13px] text-green-500 font-medium flex items-center gap-1'>
                 <CheckCircle className='w-3.5 h-3.5' /> Paid
               </span>
             </div>
@@ -481,22 +494,22 @@ export default function InvoicePage() {
       </div>
 
       {/* Payment Methods */}
-      <div className='w-full max-w-[440px] bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8'>
+      <div className='w-full max-w-[440px] bg-[#181818] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8'>
         {invoice.status === 'paid' ? (
           <div className='text-center py-6'>
             <CheckCircle className='text-green-500 w-12 h-12 mx-auto mb-4' />
-            <h2 className='text-xl font-semibold text-gray-900 mb-2'>Payment Complete</h2>
-            <p className='text-gray-500 mb-4'>
+            <h2 className='text-xl font-semibold text-[#fafafa] mb-2'>Payment Complete</h2>
+            <p className='text-[#8C8C8C] mb-4'>
               This invoice has been paid on {new Date(invoice.paidAt || '').toLocaleDateString()}
             </p>
-            <div className='bg-gray-50 p-4 rounded-lg text-left mb-4'>
+            <div className='bg-[#232323] p-4 rounded-lg text-left mb-4'>
               <div className='flex justify-between mb-2'>
-                <span className='text-gray-500'>Payment ID:</span>
-                <span className='font-mono text-sm'>{invoice.paymentIntentId}</span>
+                <span className='text-[#8C8C8C]'>Payment ID:</span>
+                <span className='font-mono text-sm text-[#fafafa]'>{invoice.paymentIntentId}</span>
               </div>
               <div className='flex justify-between'>
-                <span className='text-gray-500'>Amount:</span>
-                <span className='font-medium'>
+                <span className='text-[#8C8C8C]'>Amount:</span>
+                <span className='font-medium text-[#fafafa]'>
                   {mapCurrency(invoice.currency) || 'USD'} {invoice.total.toFixed(2)}
                 </span>
               </div>
@@ -511,73 +524,81 @@ export default function InvoicePage() {
         )}
 
         {/* Footer */}
-        <div className='mt-10 flex items-center justify-center gap-6 text-[13px] text-gray-400'>
+        <div className='mt-10 flex items-center justify-center gap-6 text-[13px] text-[#8C8C8C]'>
           <span>Powered by stripe</span>
-          <span className='hover:text-gray-600 transition-colors cursor-pointer'>Terms</span>
-          <span className='hover:text-gray-600 transition-colors cursor-pointer'>Privacy</span>
+          <span className='hover:text-[#fafafa] transition-colors cursor-pointer'>Terms</span>
+          <span className='hover:text-[#fafafa] transition-colors cursor-pointer'>Privacy</span>
         </div>
       </div>
 
       {/* Invoice Preview */}
-      <div className='w-full max-w-[8.5in] mt-6 bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8 overflow-x-auto'>
-        <h2 className='text-lg font-semibold mb-20'>Invoice Preview</h2>
+      <div className='w-full max-w-[8.5in] mt-6 bg-[#181818] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8 overflow-x-auto'>
+        <h2 className='text-lg font-semibold mb-20 text-[#fafafa]'>Invoice Preview</h2>
         <div className='flex justify-center min-w-[8.5in]'>
-          <Invoice
+          <InvoicePdf
             invoice={{
-              id: invoice._id,
+              _id: invoice._id,
               invoiceNumber: invoice.invoiceNumber,
-              clientName: invoice?.client?.user?.name,
-              clientId: invoice?.client?._id,
-              status: invoice.status as any,
+              client: {
+                _id: invoice.client._id,
+                user: {
+                  name: invoice.client.user.name,
+                  email: invoice.client.user.email,
+                },
+                phone: invoice.client.phone,
+                address: invoice.client.address,
+                shippingAddress: invoice.client.shippingAddress,
+                contact: invoice.client.contact,
+                taxId: invoice.client.taxId,
+                website: invoice.client.website,
+                isActive: invoice.client.isActive,
+                createdAt: invoice.client.createdAt,
+                updatedAt: invoice.client.updatedAt,
+              },
               items: invoice.items.map((item) => {
                 return {
-                  id: item._id,
+                  _id: item._id,
                   name: item.name,
                   description: item.description,
                   quantity: item.quantity,
                   price: item.price,
                   discount: item.discount,
                   tax: item.tax,
+                  taxName: item.taxName,
                 };
               }),
-              subtotal: invoice.subtotal,
-              discount: invoice.discount,
-              tax: invoice.tax,
               total: invoice.total,
+              status: invoice.status as any,
               dueDate: invoice.dueDate,
-              issueDate: invoice.createdAt,
-              createdAt: invoice.createdAt,
-              updatedAt: invoice.updatedAt,
               notes: invoice.notes,
-              terms: '',
-              paymentMethod: invoice.deliveryOptions,
-              paymentDate: invoice.paidAt || null,
               currency: invoice.currency,
-              createdBy: invoice.createdBy._id,
-              requireDeposit: invoice.requireDeposit,
-              depositPercentage: invoice.depositPercentage,
-              teamNotes: invoice.teamNotes,
+              createdBy: {
+                _id: invoice.createdBy._id,
+                name: invoice.createdBy.name,
+              },
+              createdAt: invoice.createdAt,
             }}
+            isReadOnly={true}
           />
         </div>
       </div>
 
       {/* Invoice Details Modal */}
       <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
-        <DialogContent className='max-w-4xl w-[90vw] h-[90vh] p-0 flex flex-col overflow-hidden'>
-          <DialogHeader className='p-6 border-b'>
+        <DialogContent className='max-w-4xl w-[90vw] h-[90vh] p-0 flex flex-col overflow-hidden bg-[#181818] border-[#232323]'>
+          <DialogHeader className='p-6 border-b border-[#232323]'>
             <div className='flex justify-between items-center'>
-              <DialogTitle className='text-xl font-semibold'>
+              <DialogTitle className='text-xl font-semibold text-[#fafafa]'>
                 Invoice #{invoice.invoiceNumber}
               </DialogTitle>
               <DialogClose asChild>
-                <button className='rounded-full p-1.5 hover:bg-gray-100'>
-                  <X className='h-5 w-5' />
+                <button className='rounded-full p-1.5 hover:bg-[#232323]'>
+                  <X className='h-5 w-5 text-[#8C8C8C]' />
                   <span className='sr-only'>Close</span>
                 </button>
               </DialogClose>
             </div>
-            <DialogDescription>
+            <DialogDescription className='text-[#8C8C8C]'>
               Created on {new Date(invoice.createdAt).toLocaleDateString()}
             </DialogDescription>
           </DialogHeader>
@@ -586,29 +607,33 @@ export default function InvoicePage() {
             {/* Invoice Header */}
             <div className='flex justify-between mb-8'>
               <div>
-                <h3 className='font-semibold mb-2'>From</h3>
-                <p>{invoice.createdBy.name}</p>
+                <h3 className='font-semibold mb-2 text-[#fafafa]'>From</h3>
+                <p className='text-[#8C8C8C]'>{invoice.createdBy.name}</p>
               </div>
               <div className='text-right'>
-                <h3 className='font-semibold mb-2'>To</h3>
-                <p>{invoice?.client?.user?.name}</p>
-                <p>{invoice?.client?.user?.email}</p>
+                <h3 className='font-semibold mb-2 text-[#fafafa]'>To</h3>
+                <p className='text-[#8C8C8C]'>{invoice?.client?.user?.name}</p>
+                <p className='text-[#8C8C8C]'>{invoice?.client?.user?.email}</p>
               </div>
             </div>
 
             {/* Invoice Info */}
             <div className='grid grid-cols-2 gap-6 mb-8'>
               <div>
-                <h3 className='font-semibold mb-2'>Invoice Number</h3>
-                <p className='font-mono'>{invoice.invoiceNumber}</p>
+                <h3 className='font-semibold mb-2 text-[#fafafa]'>Invoice Number</h3>
+                <p className='font-mono text-[#8C8C8C]'>{invoice.invoiceNumber}</p>
               </div>
               <div>
-                <h3 className='font-semibold mb-2'>Due Date</h3>
-                <p>{new Date(invoice.dueDate).toLocaleDateString()}</p>
+                <h3 className='font-semibold mb-2 text-[#fafafa]'>Due Date</h3>
+                <p className='text-[#8C8C8C]'>{new Date(invoice.dueDate).toLocaleDateString()}</p>
               </div>
               <div>
-                <h3 className='font-semibold mb-2'>Status</h3>
-                <p className={invoice.status === 'paid' ? 'text-green-600 font-medium' : ''}>
+                <h3 className='font-semibold mb-2 text-[#fafafa]'>Status</h3>
+                <p
+                  className={
+                    invoice.status === 'paid' ? 'text-green-500 font-medium' : 'text-[#8C8C8C]'
+                  }
+                >
                   {invoice.status === 'paid' ? (
                     <span className='flex items-center gap-1.5'>
                       <CheckCircle className='w-4 h-4' /> Paid
@@ -619,18 +644,18 @@ export default function InvoicePage() {
                 </p>
               </div>
               <div>
-                <h3 className='font-semibold mb-2'>Delivery Method</h3>
-                <p className='capitalize'>{invoice.deliveryOptions}</p>
+                <h3 className='font-semibold mb-2 text-[#fafafa]'>Delivery Method</h3>
+                <p className='capitalize text-[#8C8C8C]'>{invoice.deliveryOptions}</p>
               </div>
             </div>
 
             {/* Invoice Summary */}
-            <div className='border rounded-lg overflow-hidden mb-6'>
-              <div className='bg-gray-50 p-4 border-b'>
-                <h3 className='font-semibold'>Invoice Summary</h3>
+            <div className='border border-[#232323] rounded-lg overflow-hidden mb-6'>
+              <div className='bg-[#232323] p-4 border-b border-[#232323]'>
+                <h3 className='font-semibold text-[#fafafa]'>Invoice Summary</h3>
               </div>
               <div className='p-4 space-y-4'>
-                <div className='flex justify-between'>
+                <div className='flex justify-between text-[#8C8C8C]'>
                   <span>Subtotal</span>
                   <span>
                     {mapCurrency(invoice.currency)}
@@ -638,7 +663,7 @@ export default function InvoicePage() {
                   </span>
                 </div>
                 {invoice.discount > 0 && (
-                  <div className='flex justify-between text-green-600'>
+                  <div className='flex justify-between text-green-500'>
                     <span>Discount</span>
                     <span>
                       -{mapCurrency(invoice.currency)}
@@ -646,14 +671,14 @@ export default function InvoicePage() {
                     </span>
                   </div>
                 )}
-                <div className='flex justify-between'>
+                <div className='flex justify-between text-[#8C8C8C]'>
                   <span>Tax</span>
                   <span>
                     {mapCurrency(invoice.currency)}
                     {invoice.tax.toFixed(2)}
                   </span>
                 </div>
-                <div className='border-t pt-4 flex justify-between font-semibold'>
+                <div className='border-t border-[#232323] pt-4 flex justify-between font-semibold text-[#fafafa]'>
                   <span>Total</span>
                   <span>
                     {mapCurrency(invoice.currency)}
@@ -665,16 +690,20 @@ export default function InvoicePage() {
 
             {/* Payment Info (if paid) */}
             {invoice.status === 'paid' && (
-              <div className='bg-gray-50 p-4 rounded-lg'>
-                <h3 className='font-semibold mb-3'>Payment Information</h3>
+              <div className='bg-[#232323] p-4 rounded-lg'>
+                <h3 className='font-semibold mb-3 text-[#fafafa]'>Payment Information</h3>
                 <div className='space-y-2'>
                   <div className='flex justify-between'>
-                    <span className='text-gray-600'>Payment ID</span>
-                    <span className='font-mono text-sm'>{invoice.paymentIntentId}</span>
+                    <span className='text-[#8C8C8C]'>Payment ID</span>
+                    <span className='font-mono text-sm text-[#fafafa]'>
+                      {invoice.paymentIntentId}
+                    </span>
                   </div>
                   <div className='flex justify-between'>
-                    <span className='text-gray-600'>Payment Date</span>
-                    <span>{new Date(invoice.paidAt || '').toLocaleDateString()}</span>
+                    <span className='text-[#8C8C8C]'>Payment Date</span>
+                    <span className='text-[#fafafa]'>
+                      {new Date(invoice.paidAt || '').toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
               </div>

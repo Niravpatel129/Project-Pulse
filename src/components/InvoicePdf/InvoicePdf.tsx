@@ -66,9 +66,10 @@ interface Invoice {
 interface InvoiceProps {
   invoice: Invoice;
   paymentUrl?: string;
+  isReadOnly?: boolean;
 }
 
-export function InvoicePdf({ invoice }: InvoiceProps) {
+export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
   const { data: invoiceSettings } = useInvoiceSettings();
   const remainingBalance = invoice.total;
   const [isDarkTheme, setIsDarkTheme] = useState(() => {
@@ -140,9 +141,15 @@ export function InvoicePdf({ invoice }: InvoiceProps) {
       <div className='flex justify-between items-start mb-10'>
         <div>
           <div
-            className='cursor-pointer group relative p-2 rounded-lg transition-all hover:border-2 hover:border-dashed hover:border-[#8C8C8C]'
+            className={`relative p-2 rounded-lg transition-all ${
+              !isReadOnly
+                ? 'cursor-pointer group hover:border-2 hover:border-dashed hover:border-[#8C8C8C]'
+                : ''
+            }`}
             onClick={() => {
-              return setIsBusinessSettingsOpen(true);
+              if (!isReadOnly) {
+                return setIsBusinessSettingsOpen(true);
+              }
             }}
           >
             {invoiceSettings?.logo ? (
@@ -159,9 +166,11 @@ export function InvoicePdf({ invoice }: InvoiceProps) {
                 <span className='text-sm text-[#8C8C8C]'></span>
               </div>
             )}
-            <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity'>
-              <span className='text-xs text-[#8C8C8C]'>Click to edit logo</span>
-            </div>
+            {!isReadOnly && (
+              <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity'>
+                <span className='text-xs text-[#8C8C8C]'>Click to edit logo</span>
+              </div>
+            )}
           </div>
         </div>
         <div className='text-right'>
