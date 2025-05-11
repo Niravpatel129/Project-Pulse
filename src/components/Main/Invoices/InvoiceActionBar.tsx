@@ -3,13 +3,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { BsStarFill } from 'react-icons/bs';
 import {
   FiBook,
   FiChevronLeft,
   FiChevronRight,
-  FiEdit,
+  FiCreditCard,
   FiStar,
   FiTrash2,
   FiX,
@@ -33,6 +34,7 @@ export default function InvoiceActionBar({
   onEditInvoice,
 }: InvoiceActionBarProps) {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   // Star mutation
   const starMutation = useMutation({
@@ -107,13 +109,15 @@ export default function InvoiceActionBar({
                 variant='default'
                 size='icon'
                 className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8'
-                onClick={onEditInvoice}
+                onClick={() => {
+                  window.open(`/invoice/${invoiceId}`, '_blank');
+                }}
               >
-                <FiEdit size={16} />
+                <FiCreditCard size={14} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Edit Invoice</p>
+              <p>Pay Online</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -171,6 +175,7 @@ export default function InvoiceActionBar({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+
         <TooltipProvider delayDuration={0}>
           <Tooltip>
             <TooltipTrigger asChild>
