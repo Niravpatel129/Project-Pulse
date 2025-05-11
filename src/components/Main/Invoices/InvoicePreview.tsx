@@ -87,6 +87,7 @@ interface Invoice {
   };
   createdAt: string;
   updatedAt: string;
+  starred: boolean;
 }
 
 interface InvoicePreviewProps {

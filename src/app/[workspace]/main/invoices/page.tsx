@@ -46,6 +46,7 @@ interface Invoice {
   createdAt: string;
   updatedAt: string;
   dateSent: string;
+  starred: boolean;
 }
 
 interface ApiResponse {
