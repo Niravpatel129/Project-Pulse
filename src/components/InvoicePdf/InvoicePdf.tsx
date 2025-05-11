@@ -1,6 +1,6 @@
 'use client';
 
-import { BusinessSettings } from '@/app/[workspace]/invoices/[id]/components/BusinessSettings';
+import { BusinessSettings } from '@/app/[workspace]/invoicesOld/[id]/components/BusinessSettings';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { motion } from 'framer-motion';
 import Image from 'next/image';

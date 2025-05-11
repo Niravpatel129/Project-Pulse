@@ -3,8 +3,8 @@
 import { ArrowLeft, MoreHorizontal, Plus, ZoomIn, ZoomOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import AddItemDialog from '@/app/[workspace]/invoices/new/components/AddItemDialog';
-import { useInvoiceEditor } from '@/app/[workspace]/invoices/new/hooks/useInvoiceEditor';
+import AddItemDialog from '@/app/[workspace]/invoicesOld/new/components/AddItemDialog';
+import { useInvoiceEditor } from '@/app/[workspace]/invoicesOld/new/hooks/useInvoiceEditor';
 import CreateClientDialog from '@/components/ProjectPage/NewProjectDialog/CreateClientDialog';
 import EditClientDialog from '@/components/ProjectPage/NewProjectDialog/EditClientDialog';
 import { Button } from '@/components/ui/button';

@@ -1,4 +1,4 @@
-import { BusinessSettings } from '@/app/[workspace]/invoices/[id]/components/BusinessSettings';
+import { BusinessSettings } from '@/app/[workspace]/invoicesOld/[id]/components/BusinessSettings';
 import { SendInvoiceDialog } from '@/components/invoice/SendInvoiceDialog';
 import { InvoicePdf } from '@/components/InvoicePdf/InvoicePdf';
 import ProjectManagement from '@/components/project/ProjectManagement';

@@ -1,6 +1,6 @@
 'use client';
 
-import { InvoicesTable } from '@/app/[workspace]/invoices/components/invoices-table';
+import { InvoicesTable } from '@/app/[workspace]/invoicesOld/components/invoices-table';
 import { Button } from '@/components/ui/button';
 import { useInvoices } from '@/contexts';
 import { useWorkspace } from '@/contexts/WorkspaceContext';

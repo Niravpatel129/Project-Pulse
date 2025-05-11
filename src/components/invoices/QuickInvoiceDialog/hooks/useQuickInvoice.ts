@@ -1,4 +1,4 @@
-import { useInvoiceEditor } from '@/app/[workspace]/invoices/new/hooks/useInvoiceEditor';
+import { useInvoiceEditor } from '@/app/[workspace]/invoicesOld/new/hooks/useInvoiceEditor';
 import { useToast } from '@/components/ui/use-toast';
 import { useProject } from '@/contexts/ProjectContext';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';

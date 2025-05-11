@@ -1,4 +1,4 @@
-import { Invoice } from '@/app/[workspace]/invoices/[id]/components/Invoice';
+import { Invoice } from '@/app/[workspace]/invoicesOld/[id]/components/Invoice';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,

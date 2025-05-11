@@ -1,25 +1,11 @@
-'use client';
-
-import PaymentsPage from '@/app/payments/page';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-
-export default function DashboardPaymentsPage() {
-  const router = useRouter();
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  // For this implementation, we'll reuse the existing payments page
-  useEffect(() => {
-    setIsLoaded(true);
-  }, []);
-
-  if (!isLoaded) {
-    return <div className='container mx-auto py-8'>Loading payments...</div>;
-  }
-
+export default function PaymentsPage() {
   return (
-    <>
-      <PaymentsPage />
-    </>
+    <div className='bg-background h-full flex flex-col'>
+      <div className='sticky top-0 bg-background z-10'>
+        <div className='flex justify-between items-center px-4 py-2'>
+          <h1 className=''>Payments</h1>
+        </div>
+      </div>
+    </div>
   );
 }
