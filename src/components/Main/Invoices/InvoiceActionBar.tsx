@@ -56,14 +56,23 @@ export default function InvoiceActionBar({
   // Star mutation
   const starMutation = useMutation({
     mutationFn: async () => {
-      console.log('Mutation starting, current starred state:', isStarred);
+      // Use invoice.starred to determine the new state
+      const newStarredState = !invoice?.starred;
+      console.log(
+        'Mutation starting, current invoice starred:',
+        invoice?.starred,
+        'new state:',
+        newStarredState,
+      );
       return newRequest.put(`/invoices/${invoiceId}/star`, {
-        starred: !isStarred,
+        starred: newStarredState,
       });
     },
     onMutate: async () => {
+      const newStarredState = !invoice?.starred;
+
       // Update local state immediately
-      setIsStarred(!isStarred);
+      setIsStarred(newStarredState);
 
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['invoice', invoiceId] });
@@ -75,8 +84,18 @@ export default function InvoiceActionBar({
       queryClient.setQueryData(['invoice', invoiceId], (old: any) => {
         return {
           ...old,
-          starred: !isStarred,
+          starred: newStarredState,
         };
+      });
+
+      // update invoices as well
+      queryClient.setQueryData(['invoices'], (old: any) => {
+        return old.map((invoice: any) => {
+          if (invoice._id === invoiceId) {
+            return { ...invoice, starred: newStarredState };
+          }
+          return invoice;
+        });
       });
 
       // Return a context object with the snapshotted value
@@ -84,14 +103,14 @@ export default function InvoiceActionBar({
     },
     onError: (err, newInvoice, context) => {
       // Revert local state on error
-      setIsStarred(isStarred);
+      setIsStarred(invoice?.starred || false);
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData(['invoice', invoiceId], context?.previousInvoice);
       toast.error('Failed to update star status');
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] });
-      toast.success(isStarred ? 'Invoice unstarred' : 'Invoice starred');
+      queryClient.invalidateQueries();
+      toast.success(invoice?.starred ? 'Invoice unstarred' : 'Invoice starred');
     },
   });
 
