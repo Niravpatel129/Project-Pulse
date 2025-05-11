@@ -11,7 +11,6 @@ import {
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DownloadCloud, Link as LinkIcon } from 'lucide-react';
-import { useParams } from 'next/navigation';
 import { useRef } from 'react';
 import { toast } from 'sonner';
 
@@ -145,7 +144,6 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
   const queryClient = useQueryClient();
   const isPaid = invoice.status === 'paid';
   const invoiceRef = useRef<HTMLDivElement>(null);
-  const params = useParams();
 
   const handleDownloadPDF = async () => {
     if (typeof window === 'undefined') return;
@@ -194,7 +192,10 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
       await newRequest.put(`/invoices/${invoice._id}`, { status: 'sent' });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries();
+      // Invalidate all invoice-related queries to ensure data is refreshed
+      queryClient.invalidateQueries({ queryKey: ['invoice'] });
+      // Also invalidate the specific invoice query
+      queryClient.invalidateQueries({ queryKey: ['invoice', invoice._id] });
       toast.success('Invoice marked as sent');
       onOpenChange(false);
     },

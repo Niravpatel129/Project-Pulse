@@ -1,3 +1,4 @@
+import { SendInvoiceDialog } from '@/components/invoice/SendInvoiceDialog';
 import { InvoicePdf } from '@/components/InvoicePdf/InvoicePdf';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -89,17 +90,20 @@ interface InvoicePreviewProps {
   onClose?: () => void;
   selectedInvoice?: Invoice;
   invoiceId?: string;
+  onInvoiceUpdate?: (invoiceId: string) => Promise<void>;
 }
 
 export default function InvoicePreview({
   onClose,
   selectedInvoice,
   invoiceId,
+  onInvoiceUpdate,
 }: InvoicePreviewProps) {
   const queryClient = useQueryClient();
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
   const [isEditPaymentDialogOpen, setIsEditPaymentDialogOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
   const [paymentAmount, setPaymentAmount] = useState('');
@@ -144,7 +148,7 @@ export default function InvoicePreview({
     enabled: !!(invoiceId || selectedInvoice?._id),
   });
 
-  const invoice = selectedInvoice || response?.data;
+  const invoice = response?.data || selectedInvoice;
   const payments = paymentData?.paymentHistory || [];
 
   const deletePaymentMutation = useMutation({
@@ -214,6 +218,62 @@ export default function InvoicePreview({
   const handleSendReceipt = (payment: Payment) => {
     setSelectedPayment(payment);
     setIsReceiptDialogOpen(true);
+  };
+
+  const handleSendInvoice = () => {
+    setIsSendDialogOpen(true);
+  };
+
+  const handleSendDialogClose = async (open: boolean) => {
+    setIsSendDialogOpen(open);
+    if (!open && invoiceId && onInvoiceUpdate) {
+      // Invalidate local queries first
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] }),
+        queryClient.invalidateQueries({ queryKey: ['invoice-payments', invoiceId] }),
+      ]);
+
+      // Update the invoice in the parent component
+      await onInvoiceUpdate(invoiceId);
+    }
+  };
+
+  // Transform invoice data to match SendInvoiceDialog's expected format
+  const transformForSendDialog = () => {
+    if (!invoice) return null;
+    return {
+      _id: invoice._id,
+      invoiceNumber: invoice.invoiceNumber,
+      client: invoice.client
+        ? {
+            _id: invoice.client._id,
+            user: {
+              name: invoice.client.user.name,
+              email: invoice.client.user.email,
+            },
+          }
+        : null,
+      status: invoice.status,
+      items: invoice.items.map((item) => {
+        return {
+          name: item.name,
+          description: item.description || item.name,
+          quantity: item.quantity,
+          price: item.price,
+          discount: item.discount || 0,
+          tax: item.tax || 0,
+        };
+      }),
+      total: invoice.total,
+      businessInfo: {
+        name: invoice.createdBy.name,
+        address: '',
+        taxId: '',
+        showTaxId: false,
+        logo: null,
+        currency: invoice.currency,
+      },
+    };
   };
 
   if (!invoiceId && !selectedInvoice) {
@@ -410,8 +470,11 @@ export default function InvoicePreview({
                     variant='outline'
                     size='sm'
                     className='bg-[#232323] border-[#333] text-white text-sm h-11 w-full sm:w-auto px-6'
+                    onClick={handleSendInvoice}
                   >
-                    Resend invoice
+                    {invoice.status === 'sent' || invoice.status === 'paid'
+                      ? 'Resend invoice'
+                      : 'Send invoice'}
                   </Button>
                 </div>
               </div>
@@ -744,6 +807,15 @@ export default function InvoicePreview({
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Add SendInvoiceDialog */}
+      {invoice && (
+        <SendInvoiceDialog
+          open={isSendDialogOpen}
+          onOpenChange={handleSendDialogClose}
+          invoice={transformForSendDialog()}
+        />
+      )}
     </div>
   );
 }

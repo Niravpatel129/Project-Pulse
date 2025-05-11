@@ -5,7 +5,7 @@ import Invoices from '@/components/Main/Invoices/Invoices';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { newRequest } from '@/utils/newRequest';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 interface InvoiceItem {
@@ -57,6 +57,7 @@ export default function InvoicesPage() {
   const isMobile = useIsMobile();
   const [showPreview, setShowPreview] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | undefined>();
+  const queryClient = useQueryClient();
 
   const {
     data: invoicesData,
@@ -66,7 +67,6 @@ export default function InvoicesPage() {
     queryKey: ['invoices'],
     queryFn: async () => {
       const response = await newRequest.get<ApiResponse>('/invoices');
-      console.log('🚀 response:', response);
       return response.data.data;
     },
   });
@@ -74,6 +74,28 @@ export default function InvoicesPage() {
   const handlePreviewClick = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
     setShowPreview(true);
+  };
+
+  const handleInvoiceUpdate = async (invoiceId: string) => {
+    // Invalidate both the specific invoice and the invoices list
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] }),
+      queryClient.invalidateQueries({ queryKey: ['invoices'] }),
+    ]);
+
+    // Force refetch the specific invoice
+    const response = await queryClient.fetchQuery({
+      queryKey: ['invoice', invoiceId],
+      queryFn: async () => {
+        const res = await newRequest.get<{ status: string; data: Invoice }>(
+          `/invoices/${invoiceId}`,
+        );
+        return res.data;
+      },
+    });
+
+    // Update the selected invoice with the new data
+    setSelectedInvoice(response.data);
   };
 
   return (
@@ -94,6 +116,7 @@ export default function InvoicesPage() {
                   setShowPreview(false);
                   setSelectedInvoice(undefined);
                 }}
+                onInvoiceUpdate={handleInvoiceUpdate}
               />
             </SheetContent>
           </Sheet>
@@ -101,10 +124,12 @@ export default function InvoicesPage() {
           <div className='w-full border-l border-l-gray-800 overflow-hidden'>
             <InvoicePreview
               selectedInvoice={selectedInvoice}
+              invoiceId={selectedInvoice?._id}
               onClose={() => {
                 setShowPreview(false);
                 setSelectedInvoice(undefined);
               }}
+              onInvoiceUpdate={handleInvoiceUpdate}
             />
           </div>
         )}
