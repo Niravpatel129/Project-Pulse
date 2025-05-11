@@ -139,6 +139,9 @@ export default function ClientSection({
       resetClientForm();
       if (data._id) {
         setSelectedClient(data._id);
+        if (onSectionChange) {
+          onSectionChange(3);
+        }
       }
     },
   });
