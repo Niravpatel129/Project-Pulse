@@ -3,22 +3,20 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Separator } from '@/components/ui/separator';
 import { useSidebar } from '@/components/ui/sidebar';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BsStarFill } from 'react-icons/bs';
-import { FiBook, FiRefreshCw, FiSearch, FiSidebar, FiStar } from 'react-icons/fi';
+import { FiRefreshCw, FiSearch, FiSidebar, FiStar } from 'react-icons/fi';
 import { IoPerson } from 'react-icons/io5';
 import { toast } from 'sonner';
 
 interface InvoicesProps {
   invoices: any[];
   onPreviewClick?: (invoice: any) => void;
+  isPreviewOpen?: boolean;
 }
 
 const getStatusColor = (status: string) => {
@@ -35,55 +33,36 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export default function Invoices({ invoices, onPreviewClick }: InvoicesProps) {
+export default function Invoices({ invoices, onPreviewClick, isPreviewOpen }: InvoicesProps) {
   const { toggleSidebar } = useSidebar();
   const queryClient = useQueryClient();
+  const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
 
   // Star mutation
   const starMutation = useMutation({
     mutationFn: async (invoiceId: string) => {
-      const invoice = invoices.find((inv) => {
-        return inv._id === invoiceId;
-      });
       return newRequest.put(`/invoices/${invoiceId}/star`, {
-        starred: !invoice?.starred,
+        starred: !invoices?.find((inv) => {
+          return inv._id === invoiceId;
+        })?.starred,
       });
     },
-    onMutate: async (invoiceId) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['invoices'] });
-
-      // Snapshot the previous value
-      const previousInvoices = queryClient.getQueryData(['invoices']);
-
-      // Optimistically update to the new value
-      queryClient.setQueryData(['invoices'], (old: any) => {
-        return old.map((inv: any) => {
-          if (inv._id === invoiceId) {
-            return { ...inv, starred: !inv.starred };
-          }
-          return inv;
-        });
-      });
-
-      // Return a context object with the snapshotted value
-      return { previousInvoices };
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
     },
-    onError: (err, newTodo, context) => {
-      // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData(['invoices'], context?.previousInvoices);
+    onError: () => {
       toast.error('Failed to update star status');
     },
-    onSuccess: (_, invoiceId) => {
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
-      // Get the updated invoice from the cache
-      const updatedInvoices = queryClient.getQueryData(['invoices']) as any[];
-      const updatedInvoice = updatedInvoices?.find((inv) => {
-        return inv._id === invoiceId;
-      });
-      toast.success(updatedInvoice?.starred ? 'Invoice starred' : 'Invoice unstarred');
-    },
   });
+
+  // Add effect to clear selection when preview is closed
+  useEffect(() => {
+    console.log('Preview state changed:', isPreviewOpen);
+    if (!isPreviewOpen) {
+      console.log('Clearing selected invoice state');
+      setSelectedInvoice(null);
+    }
+  }, [isPreviewOpen]);
 
   // Fetch notes for each invoice
   const { data: notesData = {} } = useQuery({
@@ -101,42 +80,59 @@ export default function Invoices({ invoices, onPreviewClick }: InvoicesProps) {
   });
 
   return (
-    <div className='bg-background h-full flex flex-col'>
-      <div className='sticky top-0 bg-background z-10'>
-        <div className='flex justify-between items-center px-4 py-2'>
-          <Button variant='ghost' size='icon' onClick={toggleSidebar}>
-            <FiSidebar className='text-[#8C8C8C] ' />
+    <div className='flex flex-col h-full'>
+      <div className='flex items-center justify-between px-4 py-2 border-b border-[#232428]'>
+        <div className='flex items-center gap-2'>
+          <Button
+            variant='ghost'
+            size='icon'
+            className='text-[#8b8b8b] hover:text-white'
+            onClick={toggleSidebar}
+          >
+            <FiSidebar size={20} />
           </Button>
-          <div className='flex items-center gap-2'>
-            <Button variant='ghost' size='icon'>
-              <FiRefreshCw className='text-[#8C8C8C]' size={16} />
-            </Button>
-          </div>
+          <h1 className='text-lg font-semibold text-white'>Invoices</h1>
         </div>
-        <Separator className='bg-[#232428] mb-3' />
-        <div className='px-4 mb-3'>
-          <div className='relative'>
-            <FiSearch
-              className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#8C8C8C]'
-              size={16}
-            />
-            <Input
-              type='text'
-              placeholder='Search...'
-              className='w-full pl-9 bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C] focus-visible:ring-1 focus-visible:ring-[#8C8C8C]'
-            />
-          </div>
+        <div className='flex items-center gap-2'>
+          <Button
+            variant='ghost'
+            size='icon'
+            className='text-[#8b8b8b] hover:text-white'
+            onClick={() => {
+              return queryClient.invalidateQueries({ queryKey: ['invoices'] });
+            }}
+          >
+            <FiRefreshCw size={20} />
+          </Button>
+        </div>
+      </div>
+      <div className='px-4 py-2'>
+        <div className='relative'>
+          <FiSearch className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#8C8C8C]' />
+          <Input
+            type='text'
+            placeholder='Search...'
+            className='w-full pl-9 bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C] focus-visible:ring-1 focus-visible:ring-[#8C8C8C]'
+          />
         </div>
       </div>
       <div className='flex-1 overflow-y-auto px-1 scrollbar-hide'>
         {invoices?.map((invoice) => {
-          console.log('🚀 invoice:', invoice);
+          console.log('🚀 selectedInvoice:', selectedInvoice);
           return (
             <div
               key={invoice._id}
-              className='group relative flex items-center px-3 py-2 my-2 rounded-lg hover:bg-[#232428] transition-colors cursor-pointer'
-              onClick={() => {
-                return onPreviewClick?.(invoice);
+              className={`group relative flex items-center px-3 py-2 my-2 rounded-lg hover:bg-[#232428] transition-all duration-150 ease-in-out cursor-pointer ${
+                selectedInvoice === invoice._id ? 'bg-[#232428]' : ''
+              }`}
+              onClick={(e) => {
+                console.log('Invoice clicked:', invoice._id);
+                console.log('Current selectedInvoice:', selectedInvoice);
+                if (onPreviewClick) {
+                  setSelectedInvoice(invoice._id);
+                  console.log('Setting selectedInvoice to:', invoice._id);
+                  onPreviewClick(invoice);
+                }
               }}
             >
               <div className='relative mr-3'>
@@ -175,75 +171,24 @@ export default function Invoices({ invoices, onPreviewClick }: InvoicesProps) {
                       {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
                     </Badge>
                   </div>
-                  <div className='flex items-center gap-2 ml-2'>
-                    <TooltipProvider delayDuration={0}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className='inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-6 w-6 overflow-visible [&_svg]:size-3.5'
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              starMutation.mutate(invoice._id);
-                            }}
-                            disabled={starMutation.isPending}
-                          >
-                            {invoice.starred ? (
-                              <BsStarFill className='text-[#f5a623]' size={14} />
-                            ) : (
-                              <FiStar className='text-[#8b8b8b]' size={14} />
-                            )}
-                          </motion.button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{invoice.starred ? 'Unstar' : 'Star'}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider delayDuration={0}>
-                      <Tooltip>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <TooltipTrigger asChild>
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className='inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-6 w-6 relative [&_svg]:size-3.5'
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                }}
-                              >
-                                <FiBook
-                                  size={14}
-                                  className={`${
-                                    notesData[invoice._id]?.length > 0
-                                      ? 'text-[#f5a623]'
-                                      : 'text-[#8b8b8b]'
-                                  }`}
-                                />
-                                {notesData[invoice._id]?.length > 0 && (
-                                  <span className='absolute -top-1 -right-1 bg-[#ffffff] text-[#030303] text-xs rounded-full w-4 h-4 flex items-center justify-center'>
-                                    {notesData[invoice._id].length}
-                                  </span>
-                                )}
-                              </motion.button>
-                            </TooltipTrigger>
-                          </PopoverTrigger>
-                          <TooltipContent>
-                            <p>Notes</p>
-                          </TooltipContent>
-                          <PopoverContent className='w-[350px] p-0 bg-[#181818] text-white rounded-lg shadow-lg border-none'>
-                            <NotesPopoverContent
-                              invoiceId={invoice._id}
-                              initialNotes={notesData[invoice._id] || []}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
+                  <span className='text-xs text-[#8C8C8C] ml-2 whitespace-nowrap'>
+                    {format(new Date(invoice.createdAt), 'MMM d')}
+                  </span>
                 </div>
+              </div>
+
+              <div className='flex items-center gap-2 ml-4'>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='text-[#8b8b8b] hover:text-white'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    return starMutation.mutate(invoice._id);
+                  }}
+                >
+                  {invoice.starred ? <BsStarFill size={16} /> : <FiStar size={16} />}
+                </Button>
               </div>
             </div>
           );

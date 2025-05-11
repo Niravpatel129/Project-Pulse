@@ -73,9 +73,22 @@ export default function InvoicesPage() {
     },
   });
 
-  const handlePreviewClick = (invoice: Invoice) => {
-    setSelectedInvoice(invoice);
-    setShowPreview(true);
+  const handlePreviewClick = (invoice: Invoice | null) => {
+    console.log('handlePreviewClick called with:', invoice);
+    if (invoice) {
+      setSelectedInvoice(invoice);
+      setShowPreview(true);
+    } else {
+      setSelectedInvoice(undefined);
+      setShowPreview(false);
+    }
+  };
+
+  const handleClosePreview = () => {
+    console.log('handleClosePreview called');
+    setShowPreview(false);
+    setSelectedInvoice(undefined);
+    handlePreviewClick(null);
   };
 
   const handleInvoiceUpdate = async (invoiceId: string) => {
@@ -112,7 +125,11 @@ export default function InvoicesPage() {
     <main className='flex-1 w-full overflow-auto bg-background h-screen'>
       <div className='flex h-full'>
         <div className='w-full h-full overflow-auto'>
-          <Invoices invoices={invoicesData} onPreviewClick={handlePreviewClick} />
+          <Invoices
+            invoices={invoicesData}
+            onPreviewClick={handlePreviewClick}
+            isPreviewOpen={showPreview}
+          />
         </div>
         {isMobile ? (
           <Sheet open={showPreview} onOpenChange={setShowPreview}>
@@ -122,10 +139,7 @@ export default function InvoicesPage() {
               </SheetHeader>
               <InvoicePreview
                 selectedInvoice={selectedInvoice}
-                onClose={() => {
-                  setShowPreview(false);
-                  setSelectedInvoice(undefined);
-                }}
+                onClose={handleClosePreview}
                 onInvoiceUpdate={handleInvoiceUpdate}
               />
             </SheetContent>
@@ -135,10 +149,7 @@ export default function InvoicesPage() {
             <InvoicePreview
               selectedInvoice={selectedInvoice}
               invoiceId={selectedInvoice?._id}
-              onClose={() => {
-                setShowPreview(false);
-                setSelectedInvoice(undefined);
-              }}
+              onClose={handleClosePreview}
               onInvoiceUpdate={handleInvoiceUpdate}
             />
           </div>

@@ -1,3 +1,13 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -35,6 +45,7 @@ export default function InvoiceActionBar({
 }: InvoiceActionBarProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Star mutation
   const starMutation = useMutation({
@@ -61,139 +72,188 @@ export default function InvoiceActionBar({
     },
   });
 
-  return (
-    <div className='flex items-center py-2.5 px-4 border-b border-b-[#222]'>
-      <TooltipProvider delayDuration={0}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant='ghost' size='sm' className='text-[#8b8b8b]' onClick={onClose}>
-              <FiX size={16} />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Close</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      <div className='w-[1px] h-[18px] bg-[#222] mr-4' />
-      <TooltipProvider delayDuration={0}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant='ghost' size='sm' className='text-[#8b8b8b]'>
-              <FiChevronLeft size={16} />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Previous</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      <TooltipProvider delayDuration={0}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant='ghost' size='sm' className='text-[#8b8b8b]'>
-              <FiChevronRight size={16} />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Next</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      <div className='flex-1' />
-      <div className='flex items-center gap-1'>
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant='default'
-                size='icon'
-                className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8'
-                onClick={() => {
-                  window.open(`/invoice/${invoiceId}`, '_blank');
-                }}
-              >
-                <FiCreditCard size={14} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Pay Online</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <Popover>
-              <PopoverTrigger asChild>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant='default'
-                    size='icon'
-                    className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8 relative'
-                    aria-label='Notes'
-                  >
-                    <FiBook
-                      size={16}
-                      className={`${notes?.length > 0 ? 'text-[#f5a623]' : 'text-[#8b8b8b]'}`}
-                    />
-                    {notes?.length > 0 && (
-                      <span className='absolute -top-1 -right-1 bg-[#ffffff] text-[#030303] text-xs rounded-full w-4 h-4 flex items-center justify-center'>
-                        {notes.length}
-                      </span>
-                    )}
-                  </Button>
-                </TooltipTrigger>
-              </PopoverTrigger>
-              <TooltipContent>
-                <p>Notes</p>
-              </TooltipContent>
-              <PopoverContent className='w-[350px] p-0 bg-[#181818] text-white rounded-lg shadow-lg border-none'>
-                <NotesPopoverContent invoiceId={invoiceId} initialNotes={notes} />
-              </PopoverContent>
-            </Popover>
-          </Tooltip>
-        </TooltipProvider>
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant='default'
-                size='icon'
-                className={`text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8 ${
-                  invoice?.starred ? 'text-[#f5a623]' : ''
-                }`}
-                onClick={() => {
-                  return starMutation.mutate();
-                }}
-                disabled={starMutation.isPending}
-              >
-                {invoice?.starred ? <BsStarFill size={14} /> : <FiStar size={14} />}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{invoice?.starred ? 'Unstar' : 'Star'}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+  // Delete invoice mutation
+  const deleteInvoiceMutation = useMutation({
+    mutationFn: async () => {
+      await newRequest.delete(`/invoices/${invoiceId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      toast.success('Invoice deleted successfully');
+    },
+    onError: () => {
+      toast.error('Failed to delete invoice');
+    },
+  });
 
+  const handleDeleteInvoice = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteInvoice = () => {
+    deleteInvoiceMutation.mutate();
+    setIsDeleteDialogOpen(false);
+  };
+
+  return (
+    <>
+      <div className='flex items-center py-2.5 px-4 border-b border-b-[#222]'>
         <TooltipProvider delayDuration={0}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant='default'
-                size='icon'
-                className='text-[#f63e68] bg-[#451a26] h-8 w-8 border-2 border-[#6e2535] hover:bg-[#6e2535]'
-              >
-                <FiTrash2 size={14} />
+              <Button variant='ghost' size='sm' className='text-[#8b8b8b]' onClick={onClose}>
+                <FiX size={16} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Delete</p>
+              <p>Close</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+        <div className='w-[1px] h-[18px] bg-[#222] mr-4' />
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant='ghost' size='sm' className='text-[#8b8b8b]'>
+                <FiChevronLeft size={16} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Previous</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant='ghost' size='sm' className='text-[#8b8b8b]'>
+                <FiChevronRight size={16} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Next</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <div className='flex-1' />
+        <div className='flex items-center gap-1'>
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='default'
+                  size='icon'
+                  className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8'
+                  onClick={() => {
+                    window.open(`/invoice/${invoiceId}`, '_blank');
+                  }}
+                >
+                  <FiCreditCard size={14} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Pay Online</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant='default'
+                      size='icon'
+                      className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8 relative'
+                      aria-label='Notes'
+                    >
+                      <FiBook
+                        size={16}
+                        className={`${notes?.length > 0 ? 'text-[#f5a623]' : 'text-[#8b8b8b]'}`}
+                      />
+                      {notes?.length > 0 && (
+                        <span className='absolute -top-1 -right-1 bg-[#ffffff] text-[#030303] text-xs rounded-full w-4 h-4 flex items-center justify-center'>
+                          {notes.length}
+                        </span>
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                </PopoverTrigger>
+                <TooltipContent>
+                  <p>Notes</p>
+                </TooltipContent>
+                <PopoverContent className='w-[350px] p-0 bg-[#181818] text-white rounded-lg shadow-lg border-none'>
+                  <NotesPopoverContent invoiceId={invoiceId} initialNotes={notes} />
+                </PopoverContent>
+              </Popover>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='default'
+                  size='icon'
+                  className={`text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8 ${
+                    invoice?.starred ? 'text-[#f5a623]' : ''
+                  }`}
+                  onClick={() => {
+                    return starMutation.mutate();
+                  }}
+                  disabled={starMutation.isPending}
+                >
+                  {invoice?.starred ? <BsStarFill size={14} /> : <FiStar size={14} />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{invoice?.starred ? 'Unstar' : 'Star'}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='default'
+                  size='icon'
+                  className='text-[#f63e68] bg-[#451a26] h-8 w-8 border-2 border-[#6e2535] hover:bg-[#6e2535]'
+                  onClick={handleDeleteInvoice}
+                >
+                  <FiTrash2 size={14} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Delete</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
-    </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Invoice</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this invoice? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteInvoice}
+              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
