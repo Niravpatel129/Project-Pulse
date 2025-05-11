@@ -14,7 +14,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BsStarFill } from 'react-icons/bs';
 import {
   FiBook,
@@ -46,20 +46,52 @@ export default function InvoiceActionBar({
   const queryClient = useQueryClient();
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isStarred, setIsStarred] = useState(invoice?.starred || false);
+
+  // Update local state when invoice prop changes
+  useEffect(() => {
+    setIsStarred(invoice?.starred || false);
+  }, [invoice?.starred]);
 
   // Star mutation
   const starMutation = useMutation({
     mutationFn: async () => {
+      console.log('Mutation starting, current starred state:', isStarred);
       return newRequest.put(`/invoices/${invoiceId}/star`, {
-        starred: !invoice?.starred,
+        starred: !isStarred,
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] });
-      toast.success(invoice?.starred ? 'Invoice unstarred' : 'Invoice starred');
+    onMutate: async () => {
+      // Update local state immediately
+      setIsStarred(!isStarred);
+
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['invoice', invoiceId] });
+
+      // Snapshot the previous value
+      const previousInvoice = queryClient.getQueryData(['invoice', invoiceId]);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(['invoice', invoiceId], (old: any) => {
+        return {
+          ...old,
+          starred: !isStarred,
+        };
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousInvoice };
     },
-    onError: () => {
+    onError: (err, newInvoice, context) => {
+      // Revert local state on error
+      setIsStarred(isStarred);
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData(['invoice', invoiceId], context?.previousInvoice);
       toast.error('Failed to update star status');
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] });
+      toast.success(isStarred ? 'Invoice unstarred' : 'Invoice starred');
     },
   });
 
@@ -96,6 +128,9 @@ export default function InvoiceActionBar({
     deleteInvoiceMutation.mutate();
     setIsDeleteDialogOpen(false);
   };
+
+  // Add a debug log for the button render
+  console.log('Button render - invoice starred state:', invoice?.starred);
 
   return (
     <>
@@ -197,18 +232,24 @@ export default function InvoiceActionBar({
                   variant='default'
                   size='icon'
                   className={`text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8 ${
-                    invoice?.starred ? 'text-[#f5a623]' : ''
+                    isStarred ? 'text-[#f5a623]' : ''
                   }`}
                   onClick={() => {
                     return starMutation.mutate();
                   }}
                   disabled={starMutation.isPending}
                 >
-                  {invoice?.starred ? <BsStarFill size={14} /> : <FiStar size={14} />}
+                  {starMutation.isPending ? (
+                    <div className='w-4 h-4 border-2 border-[#8b8b8b] border-t-transparent rounded-full animate-spin' />
+                  ) : isStarred ? (
+                    <BsStarFill size={14} />
+                  ) : (
+                    <FiStar size={14} />
+                  )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{invoice?.starred ? 'Unstar' : 'Star'}</p>
+                <p>{isStarred ? 'Unstar' : 'Star'}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
