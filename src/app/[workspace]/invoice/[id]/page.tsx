@@ -315,7 +315,7 @@ function PaymentForm({
       <form onSubmit={handleSubmit} className='space-y-6'>
         <div className='space-y-4'>
           <div className='text-sm font-medium text-[#8C8C8C]'>Payment Details</div>
-          <div className='[&_.StripeElement]:bg-[#232323] [&_.StripeElement]:text-[#fafafa] [&_.StripeElement]:border-[#232323] [&_.StripeElement]:rounded-xl [&_.StripeElement]:p-3 [&_.StripeElement]:min-h-[40px] [&_.StripeElement]:focus:ring-2 [&_.StripeElement]:focus:ring-[#0066FF] [&_.StripeElement]:focus:border-[#0066FF] [&_.StripeElement]:outline-none [&_.StripeElement]:transition-all'>
+          <div className='min-h-[200px]'>
             <PaymentElement
               options={{
                 layout: 'tabs',
@@ -581,7 +581,24 @@ export default function InvoicePage() {
           </div>
         ) : (
           clientSecret && (
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
+            <Elements
+              stripe={stripePromise}
+              options={{
+                clientSecret,
+                appearance: {
+                  theme: 'night',
+                  variables: {
+                    colorPrimary: '#0066FF',
+                    colorBackground: '#232323',
+                    colorText: '#fafafa',
+                    colorDanger: '#ef4444',
+                    fontFamily: 'system-ui, sans-serif',
+                    spacingUnit: '4px',
+                    borderRadius: '12px',
+                  },
+                },
+              }}
+            >
               <PaymentForm clientSecret={clientSecret} invoice={invoice} workspace={workspace} />
             </Elements>
           )
