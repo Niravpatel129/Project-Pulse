@@ -298,7 +298,7 @@ export default function InvoicePreview({
       invoiceNumber: invoice.invoiceNumber,
       client: invoice.client
         ? {
-            _id: invoice.client._id,
+            _id: invoice?.client?._id,
             user: {
               name: invoice.client.user.name,
               email: invoice.client.user.email,

@@ -208,7 +208,7 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
         <div>
           <div className='flex justify-between'>
             <div>
-              {invoice?.client && (
+              {invoice?.client?.user?.name && (
                 <>
                   <h3
                     className={`text-sm font-medium ${
@@ -224,23 +224,27 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
                 {invoice?.client && (
                   <>
                     {invoice?.client?.address?.street && <p>{invoice?.client?.address?.street}</p>}
-                    {(invoice.client.address.city ||
-                      invoice.client.address.state ||
-                      invoice.client.address.zip) && (
+                    {(invoice?.client?.address?.city ||
+                      invoice?.client?.address?.state ||
+                      invoice?.client?.address?.zip) && (
                       <p>
                         {[
-                          invoice.client.address.city,
-                          invoice.client.address.state,
-                          invoice.client.address.zip,
+                          invoice?.client?.address?.city,
+                          invoice?.client?.address?.state,
+                          invoice?.client?.address?.zip,
                         ]
                           .filter(Boolean)
                           .join(', ')}
                       </p>
                     )}
-                    {invoice.client.address.country && <p>{invoice.client.address.country}</p>}
-                    {invoice.client.phone && <p className='mt-1'>{invoice.client.phone}</p>}
-                    {invoice.client.user.email && <p>{invoice.client.user.email}</p>}
-                    {invoice.client.taxId && <p className='mt-1'>Tax ID: {invoice.client.taxId}</p>}
+                    {invoice?.client?.address?.country && (
+                      <p>{invoice?.client?.address?.country}</p>
+                    )}
+                    {invoice?.client?.phone && <p className='mt-1'>{invoice?.client?.phone}</p>}
+                    {invoice?.client?.user?.email && <p>{invoice?.client?.user?.email}</p>}
+                    {invoice?.client?.taxId && (
+                      <p className='mt-1'>Tax ID: {invoice?.client?.taxId}</p>
+                    )}
                   </>
                 )}
               </div>
