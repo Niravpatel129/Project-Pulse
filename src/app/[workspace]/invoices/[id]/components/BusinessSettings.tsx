@@ -69,7 +69,7 @@ export function BusinessSettings({ open, onOpenChange }: BusinessSettingsProps) 
       settings: {
         taxId,
         showTaxId,
-        logo: logoPreview || invoiceSettings?.logo || '',
+        logo: logoPreview === null ? '' : logoPreview || invoiceSettings?.logo || '',
         businessName,
         businessAddress,
       },
