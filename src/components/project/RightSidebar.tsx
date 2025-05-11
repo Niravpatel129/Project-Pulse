@@ -86,11 +86,25 @@ export default function RightSidebar({
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Focus input when component mounts
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (scrollRef.current) {
+      const scrollContainer = scrollRef.current.closest('[data-radix-scroll-area-viewport]');
+      if (scrollContainer) {
+        scrollContainer.scrollTo({
+          top: scrollContainer.scrollHeight,
+          behavior: 'smooth',
+        });
+      }
+    }
+  }, [messages]);
 
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
@@ -279,7 +293,7 @@ export default function RightSidebar({
 
       {/* Chat Messages */}
       <ScrollArea className='flex-1 min-h-0'>
-        <div className='px-5 py-4 space-y-4'>
+        <div ref={scrollRef} className='px-5 py-4 space-y-4'>
           <div className='flex justify-end'>
             <Button
               onClick={handleClear}
