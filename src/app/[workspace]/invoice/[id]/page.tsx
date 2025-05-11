@@ -371,12 +371,14 @@ export default function InvoicePage() {
   const { data: invoice, isLoading } = useQuery<Invoice>({
     queryKey: ['invoice', workspace, invoiceId],
     queryFn: async () => {
-      const response = await newRequest.get(`/invoices/${invoiceId}`);
+      const response = await newRequest.get(`/invoices/${invoiceId}/public`);
       return response.data.data;
     },
   });
 
   const [stripePromise] = useState(() => {
+    if (typeof window === 'undefined') return null;
+
     try {
       const stripeKey =
         'pk_live_51RC3v3AShnUAruhwfThWbkHXdQmj1Swuf2W6pNrvLanujLClvv2upNwZYR1Yr0MspTeadOXa5rxKa8VtORdNgIgi00Etd76FLo';
@@ -438,7 +440,6 @@ export default function InvoicePage() {
   // Create payment intent when invoice is loaded or payment type changes
   useEffect(() => {
     if (invoice && invoice.status !== 'paid') {
-      console.log('🚀 invoice:', invoice);
       createPaymentIntentMutation.mutate();
     }
   }, [invoice, isDepositPayment]);
@@ -500,7 +501,7 @@ export default function InvoicePage() {
   }
 
   return (
-    <div className='min-h-screen bg-[#141414] flex flex-col items-center py-16 px-4 antialiased dark w-full'>
+    <div className='min-h-screen bg-[#141414] flex flex-col items-center py-16 px-4 antialiased dark w-full min-w-screen'>
       {/* Company Logo */}
       <div className='mb-16'>
         <div className='flex items-center gap-3'>

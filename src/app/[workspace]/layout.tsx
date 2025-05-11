@@ -9,6 +9,8 @@ import { usePathname } from 'next/navigation';
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isInvoiceRoute = pathname.startsWith('/invoice/');
+  const isLoginRoute = pathname.startsWith('/login');
+  const isRegisterRoute = pathname.startsWith('/register');
 
   return (
     <ThemeProvider defaultTheme='dark' enableSystem={false}>
@@ -17,7 +19,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <div
             className={`relative flex min-h-screen w-full bg-background text-foreground ${GeistSans.className}`}
           >
-            {!isInvoiceRoute && <Sidebar />}
+            {!isInvoiceRoute && !isLoginRoute && !isRegisterRoute && <Sidebar />}
             {children}
           </div>
         </ProjectProvider>
