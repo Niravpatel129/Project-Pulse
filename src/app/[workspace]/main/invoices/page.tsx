@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { useIsMobile } from '@/hooks/use-mobile';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface InvoiceItem {
   _id: string;
@@ -97,6 +97,18 @@ export default function InvoicesPage() {
     // Update the selected invoice with the new data
     setSelectedInvoice(response.data);
   };
+
+  // Add effect to update selectedInvoice when invoices data changes
+  useEffect(() => {
+    if (selectedInvoice && invoicesData) {
+      const updatedInvoice = invoicesData.find((inv) => {
+        return inv._id === selectedInvoice._id;
+      });
+      if (updatedInvoice) {
+        setSelectedInvoice(updatedInvoice);
+      }
+    }
+  }, [invoicesData, selectedInvoice]);
 
   return (
     <main className='flex-1 w-full overflow-auto bg-background h-screen'>

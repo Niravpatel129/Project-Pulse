@@ -148,7 +148,7 @@ export default function InvoicePreview({
     enabled: !!(invoiceId || selectedInvoice?._id),
   });
 
-  const invoice = response?.data || selectedInvoice;
+  const invoice = selectedInvoice || response?.data;
   const payments = paymentData?.paymentHistory || [];
 
   const deletePaymentMutation = useMutation({
