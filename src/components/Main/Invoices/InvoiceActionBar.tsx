@@ -16,7 +16,6 @@ interface InvoiceActionBarProps {
 export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBarProps) {
   const queryClient = useQueryClient();
 
-  // Fetch invoice data including star and archive status
   const { data: invoice } = useQuery({
     queryKey: ['invoice', invoiceId],
     queryFn: async () => {
@@ -24,7 +23,6 @@ export default function InvoiceActionBar({ onClose, invoiceId }: InvoiceActionBa
       return response.data.data;
     },
   });
-  console.log('🚀 invoice:', invoice);
 
   // Star mutation
   const starMutation = useMutation({
