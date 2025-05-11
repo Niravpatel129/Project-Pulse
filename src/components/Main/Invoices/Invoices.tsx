@@ -151,9 +151,9 @@ export default function Invoices({ invoices, onPreviewClick, isPreviewOpen }: In
                       {invoice.client?.user.name || 'Unnamed'}
                     </span>
                   </div>
-                  <span className='text-xs text-[#8C8C8C] ml-2 whitespace-nowrap'>
+                  {/* <span className='text-xs text-[#8C8C8C] ml-2 whitespace-nowrap'>
                     {format(new Date(invoice.createdAt), 'h:mm a')}
-                  </span>
+                  </span> */}
                 </div>
 
                 <div className='flex items-center justify-between'>
@@ -171,9 +171,9 @@ export default function Invoices({ invoices, onPreviewClick, isPreviewOpen }: In
                       {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
                     </Badge>
                   </div>
-                  <span className='text-xs text-[#8C8C8C] ml-2 whitespace-nowrap'>
+                  {/* <span className='text-xs text-[#8C8C8C] ml-2 whitespace-nowrap'>
                     {format(new Date(invoice.createdAt), 'MMM d')}
-                  </span>
+                  </span> */}
                 </div>
               </div>
 
@@ -181,7 +181,9 @@ export default function Invoices({ invoices, onPreviewClick, isPreviewOpen }: In
                 <Button
                   variant='ghost'
                   size='icon'
-                  className='text-[#8b8b8b] hover:text-white'
+                  className={`text-[#8b8b8b] hover:text-white ${
+                    invoice.starred ? 'text-[#f5a623]' : ''
+                  }`}
                   onClick={(e) => {
                     e.stopPropagation();
                     return starMutation.mutate(invoice._id);
@@ -189,6 +191,11 @@ export default function Invoices({ invoices, onPreviewClick, isPreviewOpen }: In
                 >
                   {invoice.starred ? <BsStarFill size={16} /> : <FiStar size={16} />}
                 </Button>
+                <div>
+                  <div className='text-xs text-[#8C8C8C] ml-2 whitespace-nowrap'>
+                    {format(new Date(invoice.createdAt), 'MMM d')}
+                  </div>
+                </div>
               </div>
             </div>
           );

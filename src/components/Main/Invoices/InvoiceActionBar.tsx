@@ -138,7 +138,7 @@ export default function InvoiceActionBar({
           </Tooltip>
         </TooltipProvider>
         <div className='flex-1' />
-        <div className='flex items-center gap-1'>
+        <div className='flex items-center gap-1 overflow-visible'>
           <TooltipProvider delayDuration={0}>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -166,7 +166,7 @@ export default function InvoiceActionBar({
                     <Button
                       variant='default'
                       size='icon'
-                      className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8 relative'
+                      className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8 relative overflow-visible'
                       aria-label='Notes'
                     >
                       <FiBook
