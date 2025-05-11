@@ -1,18 +1,21 @@
 import { newRequest } from '@/utils/newRequest';
 import { Metadata, ResolvingMetadata } from 'next';
 
+type Props = {
+  params: { id: string; workspace: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+};
+
 export async function generateMetadata(
-  { params }: { params: { id: string; workspace: string } },
+  { params }: Props,
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
-  const resolvedParams = await params;
-  const { id, workspace } = resolvedParams;
+  const { id, workspace } = params;
 
   try {
     // Fetch invoice data
     const response = await newRequest.get(`/invoices/${id}/public`);
     const invoice = response.data.data;
-    console.log('🚀 invoice:', invoice);
 
     const title = `Invoice #${invoice.invoiceNumber}`;
     const description = `Invoice for ${invoice.client.user.name} - ${
