@@ -257,7 +257,7 @@ export default function ClientSection({
           </p>
 
           {/* Search and client list */}
-          <div className='rounded-xl overflow-visible'>
+          <div className='rounded-xl overflow-visible p-1'>
             {apiClients.length > 0 && (
               <div className='flex gap-2 mb-4'>
                 <div className='relative flex-1'>
@@ -481,7 +481,7 @@ export default function ClientSection({
                             >
                               Customer <span className='text-[#F43F5E]'>*</span>
                             </Label>
-                            <div className='relative'>
+                            <div className='relative p-1'>
                               <Input
                                 id='client-name-modal'
                                 value={newClient.user?.name || ''}
@@ -505,7 +505,7 @@ export default function ClientSection({
                               >
                                 Email
                               </Label>
-                              <div className='relative'>
+                              <div className='relative p-1'>
                                 <Input
                                   id='client-email-modal'
                                   type='email'
@@ -537,7 +537,7 @@ export default function ClientSection({
                               >
                                 Phone
                               </Label>
-                              <div className='relative'>
+                              <div className='relative p-1'>
                                 <Input
                                   id='client-phone-modal'
                                   type='tel'
@@ -555,7 +555,7 @@ export default function ClientSection({
                             <Label className='block mb-1 text-sm font-medium text-[#fafafa]'>
                               Contact
                             </Label>
-                            <div className='grid grid-cols-2 gap-2'>
+                            <div className='grid grid-cols-2 gap-2 p-1'>
                               <Input
                                 placeholder='First name'
                                 value={newClient.contact?.firstName || ''}
@@ -592,18 +592,20 @@ export default function ClientSection({
                           Billing address
                         </Label>
                         <div className='space-y-2'>
-                          <Input
-                            placeholder='Address line 1'
-                            value={newClient.address?.street || ''}
-                            onChange={(e) => {
-                              return setNewClient({
-                                ...newClient,
-                                address: { ...newClient.address, street: e.target.value },
-                              });
-                            }}
-                            className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
-                          />
-                          <div className='grid grid-cols-2 gap-2'>
+                          <div className='p-1'>
+                            <Input
+                              placeholder='Address line 1'
+                              value={newClient.address?.street || ''}
+                              onChange={(e) => {
+                                return setNewClient({
+                                  ...newClient,
+                                  address: { ...newClient.address, street: e.target.value },
+                                });
+                              }}
+                              className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
+                            />
+                          </div>
+                          <div className='grid grid-cols-2 gap-2 p-1'>
                             <Input
                               placeholder='City'
                               value={newClient.address?.city || ''}
@@ -627,7 +629,7 @@ export default function ClientSection({
                               className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
                             />
                           </div>
-                          <div className='grid grid-cols-2 gap-2'>
+                          <div className='grid grid-cols-2 gap-2 p-1'>
                             <Input
                               placeholder='Country'
                               value={newClient.address?.country || ''}
@@ -662,98 +664,102 @@ export default function ClientSection({
                         <Label className='block mb-1 text-sm font-medium text-[#fafafa]'>
                           Shipping address
                         </Label>
-                        <div className='flex items-center gap-2 mb-2'>
-                          <input
-                            type='checkbox'
-                            className='accent-[#8b5df8] w-4 h-4'
-                            id='same-as-billing'
-                            checked={shippingSameAsBilling}
-                            onChange={(e) => {
-                              return setShippingSameAsBilling(e.target.checked);
-                            }}
-                          />
-                          <Label htmlFor='same-as-billing' className='text-[#fafafa]'>
-                            Same as billing address
-                          </Label>
-                        </div>
-                        {!shippingSameAsBilling && (
-                          <div className='space-y-2'>
-                            <Input
-                              placeholder='Address line 1'
-                              value={newClient.shippingAddress?.street || ''}
+                        <div className='space-y-2'>
+                          <div className='flex items-center gap-2 mb-2 p-1'>
+                            <input
+                              type='checkbox'
+                              className='accent-[#8b5df8] w-4 h-4'
+                              id='same-as-billing'
+                              checked={shippingSameAsBilling}
                               onChange={(e) => {
-                                return setNewClient({
-                                  ...newClient,
-                                  shippingAddress: {
-                                    ...newClient.shippingAddress,
-                                    street: e.target.value,
-                                  },
-                                });
+                                return setShippingSameAsBilling(e.target.checked);
                               }}
-                              className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
                             />
-                            <div className='grid grid-cols-2 gap-2'>
-                              <Input
-                                placeholder='City'
-                                value={newClient.shippingAddress?.city || ''}
-                                onChange={(e) => {
-                                  return setNewClient({
-                                    ...newClient,
-                                    shippingAddress: {
-                                      ...newClient.shippingAddress,
-                                      city: e.target.value,
-                                    },
-                                  });
-                                }}
-                                className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
-                              />
-                              <Input
-                                placeholder='Postal/ZIP code'
-                                value={newClient.shippingAddress?.zip || ''}
-                                onChange={(e) => {
-                                  return setNewClient({
-                                    ...newClient,
-                                    shippingAddress: {
-                                      ...newClient.shippingAddress,
-                                      zip: e.target.value,
-                                    },
-                                  });
-                                }}
-                                className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
-                              />
-                            </div>
-                            <div className='grid grid-cols-2 gap-2'>
-                              <Input
-                                placeholder='Country'
-                                value={newClient.shippingAddress?.country || ''}
-                                onChange={(e) => {
-                                  return setNewClient({
-                                    ...newClient,
-                                    shippingAddress: {
-                                      ...newClient.shippingAddress,
-                                      country: e.target.value,
-                                    },
-                                  });
-                                }}
-                                className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
-                              />
-                              <Input
-                                placeholder='Province/State'
-                                value={newClient.shippingAddress?.state || ''}
-                                onChange={(e) => {
-                                  return setNewClient({
-                                    ...newClient,
-                                    shippingAddress: {
-                                      ...newClient.shippingAddress,
-                                      state: e.target.value,
-                                    },
-                                  });
-                                }}
-                                className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
-                              />
-                            </div>
+                            <Label htmlFor='same-as-billing' className='text-[#fafafa]'>
+                              Same as billing address
+                            </Label>
                           </div>
-                        )}
+                          {!shippingSameAsBilling && (
+                            <div className='space-y-2'>
+                              <div className='p-1'>
+                                <Input
+                                  placeholder='Address line 1'
+                                  value={newClient.shippingAddress?.street || ''}
+                                  onChange={(e) => {
+                                    return setNewClient({
+                                      ...newClient,
+                                      shippingAddress: {
+                                        ...newClient.shippingAddress,
+                                        street: e.target.value,
+                                      },
+                                    });
+                                  }}
+                                  className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
+                                />
+                              </div>
+                              <div className='grid grid-cols-2 gap-2 p-1'>
+                                <Input
+                                  placeholder='City'
+                                  value={newClient.shippingAddress?.city || ''}
+                                  onChange={(e) => {
+                                    return setNewClient({
+                                      ...newClient,
+                                      shippingAddress: {
+                                        ...newClient.shippingAddress,
+                                        city: e.target.value,
+                                      },
+                                    });
+                                  }}
+                                  className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
+                                />
+                                <Input
+                                  placeholder='Postal/ZIP code'
+                                  value={newClient.shippingAddress?.zip || ''}
+                                  onChange={(e) => {
+                                    return setNewClient({
+                                      ...newClient,
+                                      shippingAddress: {
+                                        ...newClient.shippingAddress,
+                                        zip: e.target.value,
+                                      },
+                                    });
+                                  }}
+                                  className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
+                                />
+                              </div>
+                              <div className='grid grid-cols-2 gap-2 p-1'>
+                                <Input
+                                  placeholder='Country'
+                                  value={newClient.shippingAddress?.country || ''}
+                                  onChange={(e) => {
+                                    return setNewClient({
+                                      ...newClient,
+                                      shippingAddress: {
+                                        ...newClient.shippingAddress,
+                                        country: e.target.value,
+                                      },
+                                    });
+                                  }}
+                                  className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
+                                />
+                                <Input
+                                  placeholder='Province/State'
+                                  value={newClient.shippingAddress?.state || ''}
+                                  onChange={(e) => {
+                                    return setNewClient({
+                                      ...newClient,
+                                      shippingAddress: {
+                                        ...newClient.shippingAddress,
+                                        state: e.target.value,
+                                      },
+                                    });
+                                  }}
+                                  className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </TabsContent>
                   )}
@@ -766,76 +772,86 @@ export default function ClientSection({
                             <Label className='block mb-1 text-sm font-medium text-[#fafafa]'>
                               Account number
                             </Label>
-                            <Input
-                              value={newClient.accountNumber || ''}
-                              onChange={(e) => {
-                                return setNewClient({
-                                  ...newClient,
-                                  accountNumber: e.target.value,
-                                });
-                              }}
-                              className='bg-[#141414] border-[#232428] text-[#fafafa]'
-                            />
+                            <div className='p-1'>
+                              <Input
+                                value={newClient.accountNumber || ''}
+                                onChange={(e) => {
+                                  return setNewClient({
+                                    ...newClient,
+                                    accountNumber: e.target.value,
+                                  });
+                                }}
+                                className='bg-[#141414] border-[#232428] text-[#fafafa]'
+                              />
+                            </div>
                           </div>
                           <div>
                             <Label className='block mb-1 text-sm font-medium text-[#fafafa]'>
                               Fax
                             </Label>
-                            <Input
-                              value={newClient.fax || ''}
-                              onChange={(e) => {
-                                return setNewClient({
-                                  ...newClient,
-                                  fax: e.target.value,
-                                });
-                              }}
-                              className='bg-[#141414] border-[#232428] text-[#fafafa]'
-                            />
+                            <div className='p-1'>
+                              <Input
+                                value={newClient.fax || ''}
+                                onChange={(e) => {
+                                  return setNewClient({
+                                    ...newClient,
+                                    fax: e.target.value,
+                                  });
+                                }}
+                                className='bg-[#141414] border-[#232428] text-[#fafafa]'
+                              />
+                            </div>
                           </div>
                           <div>
                             <Label className='block mb-1 text-sm font-medium text-[#fafafa]'>
                               Mobile
                             </Label>
-                            <Input
-                              value={newClient.mobile || ''}
-                              onChange={(e) => {
-                                return setNewClient({
-                                  ...newClient,
-                                  mobile: e.target.value,
-                                });
-                              }}
-                              className='bg-[#141414] border-[#232428] text-[#fafafa]'
-                            />
+                            <div className='p-1'>
+                              <Input
+                                value={newClient.mobile || ''}
+                                onChange={(e) => {
+                                  return setNewClient({
+                                    ...newClient,
+                                    mobile: e.target.value,
+                                  });
+                                }}
+                                className='bg-[#141414] border-[#232428] text-[#fafafa]'
+                              />
+                            </div>
                           </div>
                           <div>
                             <Label className='block mb-1 text-sm font-medium text-[#fafafa]'>
                               Toll-free
                             </Label>
-                            <Input
-                              value={newClient.tollFree || ''}
-                              onChange={(e) => {
-                                return setNewClient({
-                                  ...newClient,
-                                  tollFree: e.target.value,
-                                });
-                              }}
-                              className='bg-[#141414] border-[#232428] text-[#fafafa]'
-                            />
+                            <div className='p-1'>
+                              <Input
+                                value={newClient.tollFree || ''}
+                                onChange={(e) => {
+                                  return setNewClient({
+                                    ...newClient,
+                                    tollFree: e.target.value,
+                                  });
+                                }}
+                                className='bg-[#141414] border-[#232428] text-[#fafafa]'
+                              />
+                            </div>
                           </div>
                           <div className='col-span-2'>
                             <Label className='block mb-1 text-sm font-medium text-[#fafafa]'>
                               Website
                             </Label>
-                            <Input
-                              value={newClient.website || ''}
-                              onChange={(e) => {
-                                return setNewClient({
-                                  ...newClient,
-                                  website: e.target.value,
-                                });
-                              }}
-                              className='bg-[#141414] border-[#232428] text-[#fafafa]'
-                            />
+                            <div className='p-1'>
+                              <Input
+                                value={newClient.website || ''}
+                                onChange={(e) => {
+                                  return setNewClient({
+                                    ...newClient,
+                                    website: e.target.value,
+                                  });
+                                }}
+                                className='bg-[#141414] border-[#232428] text-[#fafafa]'
+                              />
+                            </div>
                           </div>
                         </div>
                         <div className='mt-5'>
