@@ -104,6 +104,7 @@
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
+    position: absolute;
   }
 
   ::-webkit-scrollbar-track {
@@ -123,6 +124,7 @@
   * {
     scrollbar-width: thin;
     scrollbar-color: #313037 transparent;
+    overflow: overlay;
   }
 
   html {
