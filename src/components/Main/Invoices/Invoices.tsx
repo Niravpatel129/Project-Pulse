@@ -172,7 +172,12 @@ export default function Invoices({ invoices, onPreviewClick, isPreviewOpen }: In
                                   <div className='flex-1'>
                                     <p className='text-white'>{item.description}</p>
                                     <p className='text-[#8C8C8C] text-xs'>
-                                      {item.quantity} × {item.price} {invoice.currency}
+                                      {item.quantity} ×{' '}
+                                      {item.price.toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      })}{' '}
+                                      {invoice.currency}
                                     </p>
                                   </div>
                                 </div>
@@ -183,7 +188,12 @@ export default function Invoices({ invoices, onPreviewClick, isPreviewOpen }: In
                       </Tooltip>
                     </TooltipProvider>
                     <span className='text-[#8C8C8C] text-sm'>
-                      • {invoice.total.toFixed(2)} {invoice.currency}
+                      •{' '}
+                      {invoice.total.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}{' '}
+                      {invoice.currency}
                     </span>
                     <Badge
                       variant='secondary'

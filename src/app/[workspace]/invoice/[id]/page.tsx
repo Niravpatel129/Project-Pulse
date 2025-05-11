@@ -190,7 +190,10 @@ function PaymentForm({
               <div className='text-sm font-medium text-[#8C8C8C]'>Full Amount</div>
               <div className='text-lg font-semibold text-[#fafafa]'>
                 {mapCurrency(invoice.currency)}
-                {invoice.total.toFixed(2)}
+                {invoice.total.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </div>
             </div>
           </button>
@@ -210,7 +213,10 @@ function PaymentForm({
                 <div className='text-sm font-medium text-[#8C8C8C]'>Deposit</div>
                 <div className='text-lg font-semibold text-[#fafafa]'>
                   {mapCurrency(invoice.currency)}
-                  {depositAmount.toFixed(2)}
+                  {depositAmount.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </div>
               </div>
             </button>
@@ -254,7 +260,10 @@ function PaymentForm({
             </div>
             <p className='text-sm text-[#8C8C8C]'>
               Maximum amount: {mapCurrency(invoice.currency)}
-              {invoice.total.toFixed(2)}
+              {invoice.total.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </p>
           </div>
         )}
@@ -285,7 +294,10 @@ function PaymentForm({
           <div className='text-sm font-medium text-[#8C8C8C]'>Selected Payment</div>
           <div className='text-lg font-semibold text-[#fafafa]'>
             {mapCurrency(invoice.currency)}
-            {getPaymentAmount().toFixed(2)}
+            {getPaymentAmount().toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </div>
         </div>
         <button
@@ -335,7 +347,10 @@ function PaymentForm({
           ) : (
             <>
               Pay {mapCurrency(invoice.currency)}
-              {getPaymentAmount().toFixed(2)}
+              {getPaymentAmount().toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
               <Lock className='w-4 h-4' />
             </>
           )}
@@ -459,7 +474,10 @@ export default function InvoicePage() {
           <div>
             <h1 className='text-[32px] font-semibold text-[#fafafa] mb-1 tracking-tight'>
               {mapCurrency(invoice.currency) || 'USD'}
-              {invoice.total.toFixed(2)}
+              {invoice.total.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </h1>
             <p className='text-[13px] text-[#8C8C8C]'>
               {invoice.status === 'paid'
@@ -510,7 +528,11 @@ export default function InvoicePage() {
               <div className='flex justify-between'>
                 <span className='text-[#8C8C8C]'>Amount:</span>
                 <span className='font-medium text-[#fafafa]'>
-                  {mapCurrency(invoice.currency) || 'USD'} {invoice.total.toFixed(2)}
+                  {mapCurrency(invoice.currency) || 'USD'}{' '}
+                  {invoice.total.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </span>
               </div>
             </div>
@@ -663,7 +685,10 @@ export default function InvoicePage() {
                   <span>Subtotal</span>
                   <span>
                     {mapCurrency(invoice.currency)}
-                    {invoice.subtotal.toFixed(2)}
+                    {invoice.subtotal.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </span>
                 </div>
                 {invoice.discount > 0 && (
@@ -671,7 +696,10 @@ export default function InvoicePage() {
                     <span>Discount</span>
                     <span>
                       -{mapCurrency(invoice.currency)}
-                      {invoice.discount.toFixed(2)}
+                      {invoice.discount.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </span>
                   </div>
                 )}
@@ -679,14 +707,20 @@ export default function InvoicePage() {
                   <span>Tax</span>
                   <span>
                     {mapCurrency(invoice.currency)}
-                    {invoice.tax.toFixed(2)}
+                    {invoice.tax.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </span>
                 </div>
                 <div className='border-t border-[#232323] pt-4 flex justify-between font-semibold text-[#fafafa]'>
                   <span>Total</span>
                   <span>
                     {mapCurrency(invoice.currency)}
-                    {invoice.total.toFixed(2)}
+                    {invoice.total.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </span>
                 </div>
               </div>

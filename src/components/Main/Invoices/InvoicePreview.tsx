@@ -532,13 +532,22 @@ export default function InvoicePreview({
             <div className='flex flex-col'>
               <span className='text-sm text-[#8C8C8C] mb-2'>Amount</span>
               <span className='text-[14px] font-bold text-white'>
-                {invoice.total} {invoice.currency}
+                {invoice.total.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}{' '}
+                {invoice.currency}
               </span>
             </div>
             <div className='flex flex-col'>
               <span className='text-sm text-[#8C8C8C] mb-2'>Deposit Due</span>
               <span className='text-[14px] font-semibold text-[#a78bfa]'>
-                ${(invoice.total / 2).toFixed(2)} <span className='text-sm'>(50%)</span>
+                $
+                {(invoice.total / 2).toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}{' '}
+                <span className='text-sm'>(50%)</span>
               </span>
             </div>
             <div className='flex flex-col'>
@@ -648,7 +657,12 @@ export default function InvoicePreview({
                   <div>
                     <div className='font-semibold text-white text-[14px] mb-1'>Manage payments</div>
                     <div className='text-sm text-[#8C8C8C]'>
-                      Amount due: {invoice.total} {invoice.currency} —{' '}
+                      Amount due:{' '}
+                      {invoice.total.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}{' '}
+                      {invoice.currency} —{' '}
                       <span
                         className='underline cursor-pointer'
                         onClick={() => {
@@ -799,8 +813,12 @@ export default function InvoicePreview({
             <DialogHeader>
               <DialogTitle>Send Payment Receipt</DialogTitle>
               <DialogDescription>
-                Share the payment receipt for ${selectedPayment?.amount.toFixed(2)} with{' '}
-                {invoice.client?.user.name}
+                Share the payment receipt for $
+                {selectedPayment?.amount.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}{' '}
+                with {invoice.client?.user.name}
               </DialogDescription>
             </DialogHeader>
             <div className='flex flex-col items-center justify-center py-10'>
@@ -936,8 +954,14 @@ export default function InvoicePreview({
               <Alert variant='destructive'>
                 <AlertDescription>
                   This will permanently delete the payment of{' '}
-                  <span className='font-semibold'>${selectedPayment?.amount.toFixed(2)}</span> made
-                  on{' '}
+                  <span className='font-semibold'>
+                    $
+                    {selectedPayment?.amount.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>{' '}
+                  made on{' '}
                   {selectedPayment?.date &&
                     new Date(selectedPayment.date).toLocaleDateString(undefined, {
                       year: 'numeric',
@@ -1053,12 +1077,16 @@ export default function InvoicePreview({
                     {!paymentAmount || isNaN(parseFloat(paymentAmount))
                       ? 'Amount cannot be blank'
                       : parseFloat(paymentAmount) > invoice.total
-                      ? `$${(parseFloat(paymentAmount) - invoice.total).toFixed(2)} overpayment`
+                      ? `$${(parseFloat(paymentAmount) - invoice.total).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })} overpayment`
                       : parseFloat(paymentAmount) === invoice.total
                       ? 'Invoice will be fully paid'
-                      : `$${(invoice.total - parseFloat(paymentAmount)).toFixed(
-                          2,
-                        )} remaining after this payment`}
+                      : `$${(invoice.total - parseFloat(paymentAmount)).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })} remaining after this payment`}
                   </div>
                 )}
               </div>
