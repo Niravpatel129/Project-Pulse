@@ -272,7 +272,7 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
               {new Date(invoice.dueDate).toLocaleDateString()}
             </span>
           </div>
-          <div className='flex items-center gap-3 mt-3'>
+          <div className=''>
             <div
               className={`${
                 isDarkTheme ? 'bg-[#141414]' : 'bg-gray-100'

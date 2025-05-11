@@ -185,7 +185,7 @@ export function Invoice({ invoice, paymentUrl }: InvoiceProps) {
             <span className='font-semibold text-gray-900'>Payment Due:</span>{' '}
             <span className='ml-2'>{new Date(invoice.dueDate).toLocaleDateString()}</span>
           </div>
-          <div className='flex items-center gap-3 mt-3'>
+          <div className=''>
             <div className='bg-gray-100 rounded-lg px-3 py-2 inline-flex items-center font-semibold text-gray-700'>
               <span>Amount Due ({invoiceSettings?.currency || 'CAD'}):</span>
               <span className='ml-2 text-black text-lg'>${remainingBalance.toFixed(2)}</span>
