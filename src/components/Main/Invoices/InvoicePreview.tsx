@@ -28,7 +28,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { CalendarIcon, LinkIcon } from 'lucide-react';
+import { CalendarIcon, CheckCircle2, LinkIcon } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import InvoiceActionBar from './InvoiceActionBar';
@@ -106,10 +106,13 @@ export default function InvoicePreview({
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [paymentMemo, setPaymentMemo] = useState('');
+  const [amountTouched, setAmountTouched] = useState(false);
 
   const handleClose = () => {
     if (onClose) {
@@ -276,6 +279,25 @@ export default function InvoicePreview({
       },
     };
   };
+
+  const recordPaymentMutation = useMutation({
+    mutationFn: async () => {
+      await newRequest.post(`/invoices/${invoiceId || selectedInvoice?._id}/payments`, {
+        date: paymentDate,
+        amount: parseFloat(paymentAmount),
+        method: paymentMethod,
+        memo: paymentMemo,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries();
+      toast.success('Payment recorded successfully');
+      setPaymentSuccess(true);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to record payment');
+    },
+  });
 
   if (!invoiceId && !selectedInvoice) {
     return (
@@ -499,7 +521,15 @@ export default function InvoicePreview({
                     <div className='font-semibold text-white text-[14px] mb-1'>Manage payments</div>
                     <div className='text-sm text-[#8C8C8C]'>
                       Amount due: {invoice.total} {invoice.currency} —{' '}
-                      <span className='underline cursor-pointer'>Record a payment</span> manually
+                      <span
+                        className='underline cursor-pointer'
+                        onClick={() => {
+                          return setIsPaymentDialogOpen(true);
+                        }}
+                      >
+                        Record a payment
+                      </span>{' '}
+                      manually
                     </div>
                   </div>
                 </div>
@@ -508,6 +538,9 @@ export default function InvoicePreview({
                     variant='outline'
                     size='sm'
                     className='bg-[#232323] border-[#333] text-white text-sm h-11 w-full sm:w-auto px-6'
+                    onClick={() => {
+                      return setIsPaymentDialogOpen(true);
+                    }}
                   >
                     Record a payment
                   </Button>
@@ -817,6 +850,172 @@ export default function InvoicePreview({
           invoice={transformForSendDialog()}
         />
       )}
+
+      {/* Payment Dialog */}
+      <Dialog
+        open={isPaymentDialogOpen}
+        onOpenChange={(open) => {
+          setIsPaymentDialogOpen(open);
+          if (!open) setPaymentSuccess(false);
+        }}
+      >
+        <DialogContent className='sm:max-w-[450px]' forceMount>
+          <DialogHeader>
+            <DialogTitle>Record a payment for this invoice</DialogTitle>
+          </DialogHeader>
+          {!paymentSuccess ? (
+            <form className='space-y-4'>
+              <div>
+                <Label>Date</Label>
+                <Popover modal>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant='outline'
+                      className={
+                        'w-full justify-start text-left font-normal' +
+                        (!paymentDate ? ' text-muted-foreground' : '')
+                      }
+                    >
+                      <CalendarIcon className='mr-2 h-4 w-4' />
+                      {paymentDate ? format(paymentDate, 'yyyy-MM-dd') : 'Select date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className='w-auto p-0 min-w-[300px]' align='start'>
+                    <Calendar
+                      mode='single'
+                      selected={paymentDate}
+                      onSelect={setPaymentDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div>
+                <Label>Amount</Label>
+                <Input
+                  type='number'
+                  min='0'
+                  step='any'
+                  value={paymentAmount}
+                  onChange={(e) => {
+                    setAmountTouched(true);
+                    return setPaymentAmount(e.target.value);
+                  }}
+                  onBlur={() => {
+                    return setAmountTouched(true);
+                  }}
+                  placeholder='$0.00'
+                />
+                {amountTouched && (
+                  <div
+                    className={`text-xs mt-1 ${
+                      !paymentAmount || isNaN(parseFloat(paymentAmount))
+                        ? 'text-red-600'
+                        : parseFloat(paymentAmount) > invoice.total
+                        ? 'text-yellow-600'
+                        : parseFloat(paymentAmount) === invoice.total
+                        ? 'text-green-700'
+                        : 'text-muted-foreground'
+                    }`}
+                  >
+                    {!paymentAmount || isNaN(parseFloat(paymentAmount))
+                      ? 'Amount cannot be blank'
+                      : parseFloat(paymentAmount) > invoice.total
+                      ? `$${(parseFloat(paymentAmount) - invoice.total).toFixed(2)} overpayment`
+                      : parseFloat(paymentAmount) === invoice.total
+                      ? 'Invoice will be fully paid'
+                      : `$${(invoice.total - parseFloat(paymentAmount)).toFixed(
+                          2,
+                        )} remaining after this payment`}
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label>Method</Label>
+                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select a payment method...' />
+                  </SelectTrigger>
+                  <SelectContent className='z-[100]'>
+                    <SelectItem value='credit-card'>Credit Card</SelectItem>
+                    <SelectItem value='bank-transfer'>Bank Transfer</SelectItem>
+                    <SelectItem value='cash'>Cash</SelectItem>
+                    <SelectItem value='check'>Check</SelectItem>
+                    <SelectItem value='other'>Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Memo / notes</Label>
+                <Textarea
+                  value={paymentMemo}
+                  onChange={(e) => {
+                    return setPaymentMemo(e.target.value);
+                  }}
+                  placeholder='Optional notes about this payment...'
+                />
+              </div>
+            </form>
+          ) : (
+            <div className='flex flex-col items-center justify-center py-10'>
+              <CheckCircle2 className='w-16 h-16 text-green-500 mb-4' />
+              <div className='text-2xl font-bold mb-2'>The payment was recorded</div>
+              <div className='text-muted-foreground mb-6 text-center'>
+                Get paid 3 times faster. Accept Credit Cards or Bank Payments and get paid faster
+                with online payments.
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            {!paymentSuccess ? (
+              <>
+                <Button
+                  variant='outline'
+                  onClick={() => {
+                    return setIsPaymentDialogOpen(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type='submit'
+                  disabled={
+                    !paymentDate ||
+                    !paymentAmount ||
+                    !paymentMethod ||
+                    recordPaymentMutation.isPending
+                  }
+                  onClick={(e) => {
+                    e.preventDefault();
+                    recordPaymentMutation.mutate();
+                  }}
+                >
+                  {recordPaymentMutation.isPending ? 'Recording...' : 'Submit'}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant='outline'
+                  onClick={() => {
+                    setIsPaymentDialogOpen(false);
+                    setPaymentSuccess(false);
+                  }}
+                >
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsReceiptDialogOpen(true);
+                  }}
+                >
+                  Send a receipt
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
