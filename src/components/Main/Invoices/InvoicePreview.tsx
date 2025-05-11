@@ -25,7 +25,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { newRequest } from '@/utils/newRequest';
@@ -427,36 +426,6 @@ export default function InvoicePreview({
           </div>
           <div className='text-white text-xl font-semibold mb-2'>It&apos;s empty here</div>
           <div className='text-[#8C8C8C] text-base'>Choose an invoice to view details</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className='bg-background overflow-hidden'>
-        <div className='sticky top-0 z-10 bg-background'>
-          <InvoiceActionBar
-            onClose={handleClose}
-            invoiceId={invoiceId || selectedInvoice?._id}
-            invoice={invoice}
-          />
-        </div>
-        <div className='mt-4 overflow-auto h-[calc(100vh-4rem)]'>
-          <div className='flex flex-col space-y-6 pb-6 border-b border-[#232323] rounded-t-lg'>
-            <div className='flex flex-col border-b border-[#232323] px-5 mt-3'>
-              <Skeleton className='h-6 w-32 mb-4' />
-              <div className='flex flex-col sm:flex-row gap-4 mt-2'>
-                <Skeleton className='h-4 w-48' />
-                <Skeleton className='h-4 w-48' />
-              </div>
-            </div>
-            <div className='grid grid-cols-3 gap-4 px-5'>
-              <Skeleton className='h-8 w-full' />
-              <Skeleton className='h-8 w-full' />
-              <Skeleton className='h-8 w-full' />
-            </div>
-          </div>
         </div>
       </div>
     );
