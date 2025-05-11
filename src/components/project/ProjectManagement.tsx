@@ -73,7 +73,10 @@ export default function ProjectManagement({
       };
     }) || [],
   );
-  const [projectCurrency, setProjectCurrency] = useState(existingInvoice?.currency || 'USD');
+  const [projectCurrency, setProjectCurrency] = useState(() => {
+    // Try to get currency from local storage first, then fallback to existing invoice or default
+    return localStorage.getItem('projectCurrency') || existingInvoice?.currency || 'USD';
+  });
   const { clients } = useClients();
 
   // Workspace tax settings would normally be loaded from a global state or context
@@ -121,6 +124,8 @@ export default function ProjectManagement({
   // Handle currency change
   const handleCurrencyChange = (newCurrency: string) => {
     setProjectCurrency(newCurrency);
+    // Save to local storage
+    localStorage.setItem('projectCurrency', newCurrency);
 
     // Update all items to use the new currency
     if (items.length > 0) {
