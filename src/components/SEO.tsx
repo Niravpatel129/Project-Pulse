@@ -28,7 +28,7 @@ export function SEO({
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://pulse-dashboard.com';
   const fullUrl = canonicalUrl || `${siteUrl}${pathname}`;
 
-  const formattedTitle = `${title} | Pulse Dashboard`;
+  const formattedTitle = `${title}`;
 
   return (
     <Head>

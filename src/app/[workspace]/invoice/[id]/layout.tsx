@@ -5,39 +5,34 @@ export async function generateMetadata(
   { params }: { params: { id: string; workspace: string } },
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
+  const resolvedParams = await params;
+  const { id, workspace } = resolvedParams;
+
   try {
     // Fetch invoice data
-    const response = await newRequest.get(`/invoices/${params.id}/public`, {
-      headers: {
-        workspace: params.workspace,
-      },
-    });
+    const response = await newRequest.get(`/invoices/${id}/public`);
     const invoice = response.data.data;
+    console.log('🚀 invoice:', invoice);
 
-    // Get parent metadata
-    const previousMetadata = await parent;
+    const title = `Invoice #${invoice.invoiceNumber}`;
+    const description = `Invoice for ${invoice.client.user.name} - ${
+      invoice.currency
+    }${invoice.total.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
 
     return {
-      title: `Invoice #${invoice.invoiceNumber}`,
-      description: `Invoice for ${invoice.client.user.name} - ${
-        invoice.currency
-      }${invoice.total.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`,
-      applicationName: 'Pulse',
+      title,
+      description,
+      applicationName: 'Invoice',
       authors: [{ name: invoice.createdBy.name }],
       keywords: ['invoice', 'payment', 'billing', 'finance'],
       openGraph: {
-        title: `Invoice #${invoice.invoiceNumber}`,
-        description: `Invoice for ${invoice.client.user.name} - ${
-          invoice.currency
-        }${invoice.total.toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`,
+        title,
+        description,
         type: 'website',
-        siteName: 'Pulse',
+        siteName: 'Invoice',
         locale: 'en_US',
         images: [
           {
@@ -50,13 +45,8 @@ export async function generateMetadata(
       },
       twitter: {
         card: 'summary_large_image',
-        title: `Invoice #${invoice.invoiceNumber}`,
-        description: `Invoice for ${invoice.client.user.name} - ${
-          invoice.currency
-        }${invoice.total.toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`,
+        title,
+        description,
         images: ['/og-image-invoice.jpg'],
       },
       robots: {
@@ -64,7 +54,7 @@ export async function generateMetadata(
         follow: true,
       },
       alternates: {
-        canonical: `https://pulse-app.com/${params.workspace}/invoice/${params.id}`,
+        canonical: `https://pulse-app.com/${workspace}/invoice/${id}`,
       },
       other: {
         'invoice-status': invoice.status,

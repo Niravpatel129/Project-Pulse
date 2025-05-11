@@ -22,7 +22,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | Pulse',
+    template: '%s',
     default: 'Pulse',
   },
   description:
