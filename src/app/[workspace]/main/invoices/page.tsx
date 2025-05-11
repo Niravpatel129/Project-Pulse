@@ -78,11 +78,7 @@ export default function InvoicesPage() {
   };
 
   const handleInvoiceUpdate = async (invoiceId: string) => {
-    // Invalidate both the specific invoice and the invoices list
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] }),
-      queryClient.invalidateQueries({ queryKey: ['invoices'] }),
-    ]);
+    await Promise.all([queryClient.invalidateQueries()]);
 
     // Force refetch the specific invoice
     const response = await queryClient.fetchQuery({
