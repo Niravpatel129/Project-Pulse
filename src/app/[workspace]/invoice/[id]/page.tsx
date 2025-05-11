@@ -554,8 +554,7 @@ export default function InvoicePage() {
       </div>
 
       {/* Invoice Preview */}
-      <div className='flex flex-col items-center justify-center w-full'>
-        <h2 className='text-lg font-semibold mb-20 text-[#fafafa]'>Invoice Preview</h2>
+      <div className='flex flex-col items-center justify-center w-full mt-14'>
         <div className='bg-[#181818] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8'>
           <div className='w-full overflow-auto flex justify-center'>
             <div style={{ transform: 'scale(0.8)', transformOrigin: 'top center' }}>
