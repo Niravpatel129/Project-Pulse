@@ -4,6 +4,7 @@ import { Metadata, ResolvingMetadata } from 'next';
 type Props = {
   params: { id: string; workspace: string };
   searchParams: { [key: string]: string | string[] | undefined };
+  children: React.ReactNode;
 };
 
 export async function generateMetadata(
