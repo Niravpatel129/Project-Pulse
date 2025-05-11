@@ -1,5 +1,6 @@
 'use client';
 
+import { BusinessSettings } from '@/app/[workspace]/invoices/[id]/components/BusinessSettings';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
@@ -78,6 +79,7 @@ export function InvoicePdf({ invoice }: InvoiceProps) {
     return true;
   });
   const [isHovering, setIsHovering] = useState(false);
+  const [isBusinessSettingsOpen, setIsBusinessSettingsOpen] = useState(false);
 
   const toggleTheme = () => {
     const newTheme = !isDarkTheme;
@@ -138,14 +140,24 @@ export function InvoicePdf({ invoice }: InvoiceProps) {
       <div className='flex justify-between items-start mb-10'>
         <div>
           {invoiceSettings?.logo && (
-            <Image
-              unoptimized
-              width={100}
-              height={100}
-              src={invoiceSettings.logo}
-              alt='Company Logo'
-              className='h-16 w-auto object-contain'
-            />
+            <div
+              className='cursor-pointer group relative p-2 rounded-lg transition-all hover:border-2 hover:border-dashed hover:border-[#8C8C8C]'
+              onClick={() => {
+                return setIsBusinessSettingsOpen(true);
+              }}
+            >
+              <Image
+                unoptimized
+                width={100}
+                height={100}
+                src={invoiceSettings.logo}
+                alt='Company Logo'
+                className='h-16 w-auto object-contain'
+              />
+              <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity'>
+                <span className='text-xs text-[#8C8C8C]'>Click to edit</span>
+              </div>
+            </div>
           )}
         </div>
         <div className='text-right'>
@@ -357,6 +369,9 @@ export function InvoicePdf({ invoice }: InvoiceProps) {
           </div>
         </div>
       )}
+
+      {/* Business Settings Dialog */}
+      <BusinessSettings open={isBusinessSettingsOpen} onOpenChange={setIsBusinessSettingsOpen} />
     </div>
   );
 }
