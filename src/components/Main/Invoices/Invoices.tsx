@@ -222,7 +222,7 @@ export default function Invoices({
                       <TooltipProvider delayDuration={0}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className='text-[#8C8C8C] text-sm truncate md:max-w-[20%] max-w-[10%]  hover:text-white transition-colors'>
+                            <span className='text-[#8C8C8C] text-sm truncate md:max-w-[300px]  max-w-[180px]  hover:text-white transition-colors'>
                               {invoice.items[0]?.description || 'No description'}
                             </span>
                           </TooltipTrigger>
