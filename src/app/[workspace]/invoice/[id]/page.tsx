@@ -98,7 +98,9 @@ interface Invoice {
   paidAt?: string;
 }
 
-const mapCurrency = (currency: string) => {
+const mapCurrency = (currency: string | undefined) => {
+  if (!currency) return '$';
+
   switch (currency.toUpperCase()) {
     case 'USD':
       return '$';
@@ -441,24 +443,64 @@ export default function InvoicePage() {
     }
   }, [invoice, isDepositPayment]);
 
-  if (isLoading || (createPaymentIntentMutation.isPending && invoice?.status !== 'paid')) {
+  if (isLoading) {
     return (
-      <div className='min-h-screen bg-[#fafafa] flex items-center justify-center'>
-        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#0066FF]'></div>
+      <div className='min-h-screen bg-[#141414] flex flex-col items-center py-16 px-4 antialiased dark w-full'>
+        {/* Company Logo Skeleton */}
+        <div className='mb-16'>
+          <div className='flex items-center gap-3'>
+            <div className='h-5 w-32 bg-[#232323] rounded animate-pulse' />
+          </div>
+        </div>
+
+        {/* Invoice Card Skeleton */}
+        <div className='w-full max-w-[440px] bg-[#181818] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8 mb-3'>
+          <div className='flex justify-between items-start mb-10'>
+            <div>
+              <div className='h-8 w-48 bg-[#232323] rounded animate-pulse mb-2' />
+              <div className='h-4 w-32 bg-[#232323] rounded animate-pulse' />
+            </div>
+          </div>
+
+          <div className='space-y-5 mb-7'>
+            {[1, 2, 3].map((i) => {
+              return (
+                <div key={i} className='flex justify-between items-center'>
+                  <div className='h-4 w-16 bg-[#232323] rounded animate-pulse' />
+                  <div className='h-4 w-32 bg-[#232323] rounded animate-pulse' />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Payment Methods Skeleton */}
+        <div className='w-full max-w-[440px] bg-[#181818] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8'>
+          <div className='space-y-6'>
+            <div className='h-8 w-full bg-[#232323] rounded animate-pulse' />
+            <div className='h-40 w-full bg-[#232323] rounded animate-pulse' />
+            <div className='h-12 w-full bg-[#232323] rounded animate-pulse' />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!invoice) {
     return (
-      <div className='min-h-screen bg-[#fafafa] flex items-center justify-center'>
-        <div className='text-gray-500'>Invoice not found</div>
+      <div className='min-h-screen bg-[#141414] flex flex-col items-center justify-center py-16 px-4 antialiased dark w-full'>
+        <div className='text-[#fafafa] text-center'>
+          <h1 className='text-2xl font-semibold mb-2'>Invoice Not Found</h1>
+          <p className='text-[#8C8C8C]'>
+            The invoice youre looking for doesnt exist or you dont have permission to view it.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className='min-h-screen bg-[#141414] flex flex-col items-center py-16 px-4 antialiased dark'>
+    <div className='min-h-screen bg-[#141414] flex flex-col items-center py-16 px-4 antialiased dark w-full'>
       {/* Company Logo */}
       <div className='mb-16'>
         <div className='flex items-center gap-3'>
@@ -473,7 +515,7 @@ export default function InvoicePage() {
         <div className='flex justify-between items-start mb-10'>
           <div>
             <h1 className='text-[32px] font-semibold text-[#fafafa] mb-1 tracking-tight'>
-              {mapCurrency(invoice.currency) || 'USD'}
+              {mapCurrency(invoice?.currency) || 'USD'}
               {invoice.total.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
@@ -555,7 +597,7 @@ export default function InvoicePage() {
 
       {/* Invoice Preview */}
       <div className='flex flex-col items-center justify-center w-full mt-14'>
-        <div className='bg-[#181818] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8'>
+        <div className='rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8'>
           <div className='w-full overflow-auto flex justify-center'>
             <div style={{ transform: 'scale(0.8)', transformOrigin: 'top center' }}>
               <InvoicePdf

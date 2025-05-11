@@ -5,8 +5,11 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { ProjectProvider } from '@/contexts/ProjectContext';
 import { GeistSans } from 'geist/font/sans';
-
+import { usePathname } from 'next/navigation';
 export default function MainLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isInvoiceRoute = pathname.includes('/invoice');
+
   return (
     <ThemeProvider defaultTheme='dark' enableSystem={false}>
       <SidebarProvider defaultOpen>
@@ -14,7 +17,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <div
             className={`relative flex min-h-screen w-full bg-background text-foreground ${GeistSans.className}`}
           >
-            <Sidebar />
+            {!isInvoiceRoute && <Sidebar />}
             {children}
           </div>
         </ProjectProvider>
