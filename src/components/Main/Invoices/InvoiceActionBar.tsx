@@ -511,7 +511,7 @@ function NotesPopoverContent({
         <div className='px-4 pb-2'>
           <div className='relative'>
             <input
-              className='w-full bg-[#232323] text-white rounded-md px-3 py-2 pr-10 text-sm placeholder-[#8b8b8b] border-none outline-none'
+              className='w-full bg-[#232323] text-white rounded-md px-3 py-2 pr-10 text-sm placeholder-[#8b8b8b] border-none outline-none pl-8'
               placeholder='Search notes...'
               value={search}
               onChange={(e) => {
