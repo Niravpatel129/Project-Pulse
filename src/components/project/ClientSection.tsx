@@ -257,7 +257,7 @@ export default function ClientSection({
           </p>
 
           {/* Search and client list */}
-          <div className='rounded-xl'>
+          <div className='rounded-xl overflow-visible'>
             {apiClients.length > 0 && (
               <div className='flex gap-2 mb-4'>
                 <div className='relative flex-1'>
