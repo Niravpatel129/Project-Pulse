@@ -243,7 +243,7 @@ function PaymentForm({
         {paymentType === 'custom' && (
           <div className='space-y-2'>
             <label className='block text-sm font-medium text-[#8C8C8C]'>Enter Payment Amount</label>
-            <div className='relative'>
+            <div className='relative p-1'>
               <span className='absolute left-4 top-1/2 -translate-y-1/2 text-[#8C8C8C]'>
                 {mapCurrency(invoice.currency)}
               </span>
@@ -315,7 +315,7 @@ function PaymentForm({
       <form onSubmit={handleSubmit} className='space-y-6'>
         <div className='space-y-4'>
           <div className='text-sm font-medium text-[#8C8C8C]'>Payment Details</div>
-          <div className='min-h-[200px]'>
+          <div>
             <PaymentElement
               options={{
                 layout: 'tabs',
