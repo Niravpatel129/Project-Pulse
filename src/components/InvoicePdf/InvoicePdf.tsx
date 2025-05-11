@@ -70,6 +70,7 @@ interface InvoiceProps {
 }
 
 export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
+  console.log('🚀 invoice:', invoice);
   const { data: invoiceSettings } = useInvoiceSettings();
   const remainingBalance = invoice.total;
   const [isDarkTheme, setIsDarkTheme] = useState(() => {
@@ -284,13 +285,13 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
                 isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-700'
               }`}
             >
-              <span>Amount Due ({invoiceSettings?.currency || 'CAD'}):</span>
+              <span>Amount Due:</span>
               <span className={`ml-2 text-lg ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'}`}>
-                $
                 {remainingBalance.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
-                })}
+                })}{' '}
+                {invoice?.currency || 'CAD'}
               </span>
             </div>
           </div>
@@ -383,11 +384,11 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
                 Total:
               </span>
               <span className={`font-semibold ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'}`}>
-                $
                 {invoice.total.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
-                })}
+                })}{' '}
+                {invoice?.currency || 'CAD'}
               </span>
             </div>
           </div>
