@@ -9,6 +9,7 @@ import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { useEffect, useState } from 'react';
+import { BsStarFill } from 'react-icons/bs';
 import { FiRefreshCw, FiSearch, FiSidebar } from 'react-icons/fi';
 import { IoPerson } from 'react-icons/io5';
 import { toast } from 'sonner';
@@ -206,6 +207,24 @@ export default function Invoices({ invoices, onPreviewClick, isPreviewOpen }: In
               </div>
 
               <div className='flex items-center gap-2 ml-4'>
+                {invoice.starred && (
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='text-[#f5a623] hover:text-white'
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      starMutation.mutate(invoice._id);
+                    }}
+                    disabled={starMutation.isPending}
+                  >
+                    {starMutation.isPending ? (
+                      <div className='w-4 h-4 border-2 border-[#8b8b8b] border-t-transparent rounded-full animate-spin' />
+                    ) : (
+                      <BsStarFill size={14} />
+                    )}
+                  </Button>
+                )}
                 <div className='text-xs text-[#8C8C8C] ml-0 whitespace-nowrap'>
                   {(() => {
                     const date = new Date(invoice.createdAt);
