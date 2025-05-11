@@ -5,7 +5,15 @@ import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { BsStarFill } from 'react-icons/bs';
-import { FiBook, FiChevronLeft, FiChevronRight, FiStar, FiTrash2, FiX } from 'react-icons/fi';
+import {
+  FiBook,
+  FiChevronLeft,
+  FiChevronRight,
+  FiEdit,
+  FiStar,
+  FiTrash2,
+  FiX,
+} from 'react-icons/fi';
 import { toast } from 'sonner';
 
 interface InvoiceActionBarProps {
@@ -15,9 +23,15 @@ interface InvoiceActionBarProps {
     _id: string;
     starred: boolean;
   };
+  onEditInvoice?: () => void;
 }
 
-export default function InvoiceActionBar({ onClose, invoiceId, invoice }: InvoiceActionBarProps) {
+export default function InvoiceActionBar({
+  onClose,
+  invoiceId,
+  invoice,
+  onEditInvoice,
+}: InvoiceActionBarProps) {
   const queryClient = useQueryClient();
 
   // Star mutation
@@ -86,6 +100,23 @@ export default function InvoiceActionBar({ onClose, invoiceId, invoice }: Invoic
       </TooltipProvider>
       <div className='flex-1' />
       <div className='flex items-center gap-1'>
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant='default'
+                size='icon'
+                className='text-[#8b8b8b] bg-[#313131] hover:bg-[#3a3a3a] h-8 w-8'
+                onClick={onEditInvoice}
+              >
+                <FiEdit size={16} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Edit Invoice</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <TooltipProvider delayDuration={0}>
           <Tooltip>
             <Popover>

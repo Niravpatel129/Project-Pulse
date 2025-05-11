@@ -1,6 +1,7 @@
 import { BusinessSettings } from '@/app/[workspace]/invoices/[id]/components/BusinessSettings';
 import { SendInvoiceDialog } from '@/components/invoice/SendInvoiceDialog';
 import { InvoicePdf } from '@/components/InvoicePdf/InvoicePdf';
+import ProjectManagement from '@/components/project/ProjectManagement';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -90,6 +91,48 @@ interface Invoice {
   starred: boolean;
 }
 
+interface ProjectManagementInvoice {
+  _id: string;
+  client: {
+    _id: string;
+    user: {
+      name: string;
+      email: string;
+    };
+  };
+  items: Array<{
+    name: string;
+    description: string;
+    quantity: number;
+    price: number;
+    discount: number;
+    tax: number;
+  }>;
+  total: number;
+  status: string;
+  dueDate: string;
+  notes: string;
+  currency: string;
+  taxRate: number;
+  taxId: string;
+  showTaxId: boolean;
+  requireDeposit: boolean;
+  depositPercentage: number;
+  discount: number;
+  discountAmount: number;
+  subtotal: number;
+  taxAmount: number;
+  teamNotes?: string;
+  businessInfo: {
+    name: string;
+    address: string;
+    taxId: string;
+    showTaxId: boolean;
+    logo: string | null;
+    currency: string;
+  };
+}
+
 interface InvoicePreviewProps {
   onClose?: () => void;
   selectedInvoice?: Invoice;
@@ -117,6 +160,7 @@ export default function InvoicePreview({
   const [paymentMemo, setPaymentMemo] = useState('');
   const [amountTouched, setAmountTouched] = useState(false);
   const [isBusinessSettingsOpen, setIsBusinessSettingsOpen] = useState(false);
+  const [isEditInvoiceOpen, setIsEditInvoiceOpen] = useState(false);
   const { data: invoiceSettings } = useInvoiceSettings();
 
   const handleClose = () => {
@@ -304,6 +348,61 @@ export default function InvoicePreview({
     },
   });
 
+  // Transform invoice data to match ProjectManagement expected format
+  const transformForProjectManagement = (): ProjectManagementInvoice => {
+    if (!invoice) return null;
+    return {
+      _id: invoice._id,
+      client: {
+        _id: invoice.client?._id || '',
+        user: {
+          name: invoice.client?.user.name || '',
+          email: invoice.client?.user.email || '',
+        },
+      },
+      items: invoice.items.map((item) => {
+        return {
+          name: item.name,
+          description: item.description || item.name,
+          quantity: item.quantity,
+          price: item.price,
+          discount: item.discount || 0,
+          tax: item.tax || 0,
+        };
+      }),
+      total: invoice.total,
+      status: invoice.status,
+      dueDate: invoice.dueDate,
+      notes: invoice.notes || '',
+      currency: invoice.currency,
+      taxRate:
+        invoice.items.reduce((sum, item) => {
+          return sum + (item.tax || 0);
+        }, 0) / invoice.items.length || 0,
+      taxId: invoiceSettings?.taxId || '',
+      showTaxId: invoiceSettings?.showTaxId || false,
+      requireDeposit: false,
+      depositPercentage: 0,
+      discount: 0,
+      discountAmount: 0,
+      subtotal: invoice.items.reduce((sum, item) => {
+        return sum + item.price * item.quantity;
+      }, 0),
+      taxAmount: invoice.items.reduce((sum, item) => {
+        return sum + (item.tax || 0);
+      }, 0),
+      teamNotes: '',
+      businessInfo: {
+        name: invoiceSettings?.businessName || '',
+        address: invoiceSettings?.businessAddress || '',
+        taxId: invoiceSettings?.taxId || '',
+        showTaxId: invoiceSettings?.showTaxId || false,
+        logo: invoiceSettings?.logo || null,
+        currency: invoiceSettings?.currency || 'usd',
+      },
+    };
+  };
+
   if (!invoiceId && !selectedInvoice) {
     return (
       <div className='flex flex-col items-center justify-center h-full w-full bg-background'>
@@ -393,6 +492,9 @@ export default function InvoicePreview({
           onClose={handleClose}
           invoiceId={invoiceId || selectedInvoice?._id}
           invoice={invoice}
+          onEditInvoice={() => {
+            return setIsEditInvoiceOpen(true);
+          }}
         />
       </div>
       <div className='mt-4 overflow-auto h-[calc(100vh-4rem)]'>
@@ -479,6 +581,9 @@ export default function InvoicePreview({
                     variant='outline'
                     size='sm'
                     className='bg-[#232323] border-[#333] text-white text-sm h-11 w-full sm:w-auto px-6'
+                    onClick={() => {
+                      return setIsEditInvoiceOpen(true);
+                    }}
                   >
                     Edit invoice
                   </Button>
@@ -1042,6 +1147,22 @@ export default function InvoicePreview({
 
       {/* Business Settings Dialog */}
       <BusinessSettings open={isBusinessSettingsOpen} onOpenChange={setIsBusinessSettingsOpen} />
+
+      {/* Edit Invoice Dialog */}
+      <Dialog open={isEditInvoiceOpen} onOpenChange={setIsEditInvoiceOpen}>
+        <DialogContent className='max-w-[90vw] h-[90vh] p-0'>
+          <DialogTitle className='sr-only'>Edit Invoice</DialogTitle>
+          <ProjectManagement
+            onClose={() => {
+              setIsEditInvoiceOpen(false);
+              if (invoiceId && onInvoiceUpdate) {
+                onInvoiceUpdate(invoiceId);
+              }
+            }}
+            existingInvoice={transformForProjectManagement()}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

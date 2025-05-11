@@ -201,7 +201,6 @@ interface InvoiceTabProps {
 }
 
 export function InvoiceTab({ invoice }: InvoiceTabProps) {
-  console.log('🚀 invoice:', invoice);
   const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
