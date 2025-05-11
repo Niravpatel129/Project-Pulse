@@ -80,7 +80,7 @@ export default function SectionFooter({
   };
 
   return (
-    <div className='absolute bottom-0 left-0 right-0 flex items-center justify-between py-4 border-t border-[#232428] px-8 bg-[#141414] z-10'>
+    <div className='absolute bottom-0 left-0 right-0 flex items-center justify-between py-3 border-t border-[#232428] px-8 bg-[#141414] z-10'>
       {isMobile ? (
         <Popover modal>
           <PopoverTrigger asChild>
