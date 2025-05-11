@@ -1,17 +1,12 @@
 import { newRequest } from '@/utils/newRequest';
 import { Metadata, ResolvingMetadata } from 'next';
 
-type Props = {
-  params: { id: string; workspace: string };
-  searchParams: { [key: string]: string | string[] | undefined };
-  children: React.ReactNode;
-};
-
+// Only params is available in layout generateMetadata
 export async function generateMetadata(
-  { params }: Props,
+  { params }: { params: Promise<{ id: string; workspace: string }> },
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
-  const { id, workspace } = params;
+  const { id, workspace } = await params;
 
   try {
     // Fetch invoice data
