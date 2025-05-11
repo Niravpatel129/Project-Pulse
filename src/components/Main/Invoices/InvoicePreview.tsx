@@ -1,3 +1,4 @@
+import { BusinessSettings } from '@/app/[workspace]/invoices/[id]/components/BusinessSettings';
 import { SendInvoiceDialog } from '@/components/invoice/SendInvoiceDialog';
 import { InvoicePdf } from '@/components/InvoicePdf/InvoicePdf';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -25,6 +26,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
+import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -113,6 +115,8 @@ export default function InvoicePreview({
   const [paymentMethod, setPaymentMethod] = useState('');
   const [paymentMemo, setPaymentMemo] = useState('');
   const [amountTouched, setAmountTouched] = useState(false);
+  const [isBusinessSettingsOpen, setIsBusinessSettingsOpen] = useState(false);
+  const { data: invoiceSettings } = useInvoiceSettings();
 
   const handleClose = () => {
     if (onClose) {
@@ -397,8 +401,14 @@ export default function InvoicePreview({
               </div>
               <div className='flex items-center gap-0'>
                 <span className='text-sm text-[#8C8C8C]'>Business:</span>
-                <Button variant='link' size='sm'>
-                  {invoice.createdBy.name}
+                <Button
+                  variant='link'
+                  size='sm'
+                  onClick={() => {
+                    return setIsBusinessSettingsOpen(true);
+                  }}
+                >
+                  {invoiceSettings?.businessName || 'Set Up Business'}
                 </Button>
               </div>
             </div>
@@ -1016,6 +1026,9 @@ export default function InvoicePreview({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Business Settings Dialog */}
+      <BusinessSettings open={isBusinessSettingsOpen} onOpenChange={setIsBusinessSettingsOpen} />
     </div>
   );
 }
