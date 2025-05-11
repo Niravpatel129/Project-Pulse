@@ -787,7 +787,11 @@ export default function InvoicePreview({
             </div>
           </div>
 
-          <InvoicePdf invoice={invoice as any} />
+          <div className='w-full overflow-auto flex justify-center'>
+            <div style={{ transform: 'scale(0.8)', transformOrigin: 'top center' }}>
+              <InvoicePdf invoice={invoice as any} />
+            </div>
+          </div>
         </div>
         {/* Receipt Dialog */}
         <Dialog open={isReceiptDialogOpen} onOpenChange={setIsReceiptDialogOpen}>
