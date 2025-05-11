@@ -534,9 +534,12 @@ export default function ItemsSection({
                         type='number'
                         id='item-quantity'
                         min='1'
+                        step='1'
                         value={newItem.quantity}
                         onChange={(e) => {
-                          return setNewItem({ ...newItem, quantity: e.target.value });
+                          // Only allow whole numbers
+                          const value = Math.floor(Number(e.target.value));
+                          setNewItem({ ...newItem, quantity: value.toString() });
                         }}
                         placeholder='1'
                         aria-label='Item quantity'
