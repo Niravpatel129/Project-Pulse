@@ -59,6 +59,7 @@ interface InvoiceItem {
 
 interface Invoice {
   _id: string;
+  dateSent: string;
   invoiceNumber: string;
   client: {
     _id: string;
@@ -73,7 +74,6 @@ interface Invoice {
     description: string;
   };
   items: InvoiceItem[];
-  dateSent: string;
   total: number;
   status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'open';
   dueDate: string;
