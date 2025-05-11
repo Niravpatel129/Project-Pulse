@@ -154,7 +154,7 @@ export default function Invoices({ invoices, onPreviewClick, isPreviewOpen }: In
 
                 <div className='flex items-center justify-between'>
                   <div className='flex items-center gap-2'>
-                    <span className='text-[#8C8C8C] text-sm truncate max-w-[300px]'>
+                    <span className='text-[#8C8C8C] text-sm truncate max-w-[50%]'>
                       {invoice.items[0]?.description || 'No description'}
                     </span>
                     <span className='text-[#8C8C8C] text-sm'>
