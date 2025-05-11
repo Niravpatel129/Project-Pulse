@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useSidebar } from '@/components/ui/sidebar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -154,9 +155,33 @@ export default function Invoices({ invoices, onPreviewClick, isPreviewOpen }: In
 
                 <div className='flex items-center justify-between'>
                   <div className='flex items-center gap-2'>
-                    <span className='text-[#8C8C8C] text-sm truncate max-w-[50%]'>
-                      {invoice.items[0]?.description || 'No description'}
-                    </span>
+                    <TooltipProvider delayDuration={0}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className='text-[#8C8C8C] text-sm truncate max-w-[50%] hover:text-white transition-colors'>
+                            {invoice.items[0]?.description || 'No description'}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent className='w-80 p-4 bg-[#232323] border border-[#313131] shadow-lg'>
+                          <div className='space-y-2'>
+                            <h4 className='font-medium text-white mb-2'>Invoice Items</h4>
+                            {invoice.items.map((item: any, index: number) => {
+                              return (
+                                <div key={index} className='flex items-start gap-2 text-sm'>
+                                  <span className='text-[#8C8C8C] min-w-[20px]'>{index + 1}.</span>
+                                  <div className='flex-1'>
+                                    <p className='text-white'>{item.description}</p>
+                                    <p className='text-[#8C8C8C] text-xs'>
+                                      {item.quantity} × {item.price} {invoice.currency}
+                                    </p>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <span className='text-[#8C8C8C] text-sm'>
                       • {invoice.total.toFixed(2)} {invoice.currency}
                     </span>
