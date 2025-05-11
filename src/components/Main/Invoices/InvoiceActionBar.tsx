@@ -148,9 +148,6 @@ export default function InvoiceActionBar({
     setIsDeleteDialogOpen(false);
   };
 
-  // Add a debug log for the button render
-  console.log('Button render - invoice starred state:', invoice?.starred);
-
   return (
     <>
       <div className='flex items-center py-2.5 px-4 border-b border-b-[#222]'>
