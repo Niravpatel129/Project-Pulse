@@ -405,7 +405,7 @@ export default function InvoicePreview({
   if (!invoiceId && !selectedInvoice) {
     return (
       <div className='flex flex-col items-center justify-center h-full w-full bg-background'>
-        <div className='flex flex-col items-center justify-center mt-32'>
+        <div className='flex flex-col items-center justify-center'>
           <div className='flex items-center justify-center rounded-full border-2 border-dashed border-[#444] w-32 h-32 mb-6'>
             {/* Envelope Icon */}
             <svg
