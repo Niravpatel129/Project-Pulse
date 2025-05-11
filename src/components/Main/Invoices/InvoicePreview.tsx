@@ -73,6 +73,7 @@ interface Invoice {
     description: string;
   };
   items: InvoiceItem[];
+  dateSent: string;
   total: number;
   status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'open';
   dueDate: string;
@@ -459,7 +460,7 @@ export default function InvoicePreview({
                     <div className='text-sm text-[#8C8C8C]'>
                       Last sent:{' '}
                       {invoice.status === 'sent'
-                        ? new Date(invoice.updatedAt).toLocaleString()
+                        ? new Date(invoice.dateSent).toLocaleString()
                         : 'Not sent yet'}{' '}
                       <span className='underline cursor-pointer'>Edit date</span>
                     </div>
