@@ -10,7 +10,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Info, Send, Sparkles } from 'lucide-react';
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { LineItemCard } from './LineItemCard';
 
 interface LineItem {
@@ -75,7 +75,8 @@ export default function RightSidebar({
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: 'Hello! How can I help you today?',
+      content:
+        "Just tell me what you need - like 'Add a meeting with John for the website design' or 'Create an invoice for Sarah's consulting'",
       role: 'assistant',
       timestamp: new Date(),
     },
@@ -358,7 +359,7 @@ export default function RightSidebar({
                       {/* Line Items */}
                       {message.structuredData?.map((data, dataIndex) => {
                         return (
-                          <>
+                          <React.Fragment key={`data-${dataIndex}`}>
                             {data.type === 'LINE_ITEMS' && (
                               <div key={`line-items-${dataIndex}`} className='space-y-2 pl-2'>
                                 {data.items.map((item, itemIndex) => {
@@ -459,7 +460,7 @@ export default function RightSidebar({
                                 </div>
                               </div>
                             )}
-                          </>
+                          </React.Fragment>
                         );
                       })}
                     </div>

@@ -25,7 +25,7 @@ export default function CreateInvoiceDialog({
   };
 
   const dialogContent = (
-    <DialogContent className='max-w-[90vw] h-[90vh] p-0 overflow-hidden flex flex-col'>
+    <DialogContent className='max-w-[90vw] h-[90vh] p-0 overflow-hidden flex flex-col outline-none focus:outline-none '>
       <DialogTitle className='sr-only'>Create New Invoice</DialogTitle>
       <div className='flex-1 min-h-0'>
         <ProjectManagement onClose={handleClose} initialStatus='draft' />
