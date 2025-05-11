@@ -282,7 +282,11 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
             >
               <span>Amount Due ({invoiceSettings?.currency || 'CAD'}):</span>
               <span className={`ml-2 text-lg ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'}`}>
-                ${remainingBalance.toFixed(2)}
+                $
+                {remainingBalance.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </span>
             </div>
           </div>
@@ -329,14 +333,22 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
                       isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'
                     }`}
                   >
-                    ${item.price.toFixed(2)}
+                    $
+                    {item.price.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </td>
                   <td
                     className={`py-3 px-4 text-right ${
                       isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'
                     }`}
                   >
-                    ${itemTotal.toFixed(2)}
+                    $
+                    {itemTotal.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </td>
                 </tr>
               );
@@ -354,7 +366,11 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
                 Total:
               </span>
               <span className={`font-semibold ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'}`}>
-                ${invoice.total.toFixed(2)}
+                $
+                {invoice.total.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </span>
             </div>
           </div>
