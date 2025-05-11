@@ -627,7 +627,12 @@ export default function InvoicePreview({
                     <div className='font-semibold text-white text-[14px] mb-1'>Manage payments</div>
                     <div className='text-sm text-[#8C8C8C]'>
                       Amount due:{' '}
-                      {invoice.total.toLocaleString(undefined, {
+                      {(
+                        invoice.total -
+                        payments.reduce((sum, payment) => {
+                          return sum + payment.amount;
+                        }, 0)
+                      ).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}{' '}
@@ -653,7 +658,11 @@ export default function InvoicePreview({
                       return setIsPaymentDialogOpen(true);
                     }}
                   >
-                    Record a payment
+                    {payments.reduce((sum, payment) => {
+                      return sum + payment.amount;
+                    }, 0) >= invoice.total
+                      ? 'Record Overpayment'
+                      : 'Record a payment'}
                   </Button>
                 </div>
               </div>
