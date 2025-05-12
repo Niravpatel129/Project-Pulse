@@ -18,21 +18,7 @@ interface Client {
 }
 
 // Fallback mock data in case API fails
-const MOCK_CLIENTS: Client[] = [
-  {
-    _id: '1',
-    user: {
-      _id: 'user1',
-      name: 'John Doe',
-      email: 'john@example.com',
-    },
-    workspace: 'workspace1',
-    isActive: true,
-    notes: 'Key decision maker for all major projects',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+const MOCK_CLIENTS: Client[] = [];
 
 export function useClients() {
   const [activeItem, setActiveItem] = useState<Client | null>(null);

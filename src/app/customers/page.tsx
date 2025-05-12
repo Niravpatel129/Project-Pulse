@@ -21,6 +21,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useClients } from '@/hooks/useClients';
+import { newRequest } from '@/utils/newRequest';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   Download,
@@ -85,6 +87,7 @@ export default function CustomersPage() {
   const tabContentRef = useRef<HTMLDivElement>(null);
   const [tabContentHeight, setTabContentHeight] = useState<number | undefined>(undefined);
   const { clients: apiClients, isLoading: isLoadingClients } = useClients();
+  const queryClient = useQueryClient();
 
   useLayoutEffect(() => {
     if (tabContentRef.current) {
@@ -139,13 +142,42 @@ export default function CustomersPage() {
     }
   };
 
+  const createClientMutation = useMutation({
+    mutationFn: async (clientData: any) => {
+      const response = await newRequest.post('/clients', clientData);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      setCustomerModalOpen(false);
+      resetCustomerForm();
+      toast.success('Customer added successfully');
+    },
+  });
+
   const handleCreateCustomer = () => {
     if (!newCustomer.name) return;
 
-    const newId = customers.length + 1;
-    setCustomers([...customers, { ...newCustomer, id: newId }]);
-    setCustomerModalOpen(false);
-    resetCustomerForm();
+    const clientData = {
+      user: {
+        name: newCustomer.name,
+        email: newCustomer.contactEmail,
+      },
+      phone: newCustomer.contactPhone,
+      address: newCustomer.address,
+      shippingAddress: newCustomer.shippingAddress,
+      contact: {
+        firstName: newCustomer.contactName.split(' ')[0] || '',
+        lastName: newCustomer.contactName.split(' ').slice(1).join(' ') || '',
+      },
+      industry: newCustomer.industry,
+      type: newCustomer.type,
+      status: newCustomer.status,
+      website: newCustomer.website,
+      internalNotes: newCustomer.internalNotes,
+    };
+
+    createClientMutation.mutate(clientData);
   };
 
   // Function to handle column sorting
@@ -219,11 +251,21 @@ export default function CustomersPage() {
     setCustomerModalOpen(true);
   };
 
+  const deleteClientMutation = useMutation({
+    mutationFn: async (clientId: string) => {
+      const response = await newRequest.delete(`/clients/${clientId}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      toast.success('Client deleted successfully');
+    },
+  });
+
   const handleDeleteClient = (clientId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (window.confirm('Are you sure you want to delete this client?')) {
-      // TODO: Implement delete functionality
-      toast.success('Client deleted successfully');
+      deleteClientMutation.mutate(clientId);
     }
   };
 
