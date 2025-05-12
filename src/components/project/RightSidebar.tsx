@@ -8,9 +8,10 @@ import { newRequest } from '@/utils/newRequest';
 import { DialogTitle } from '@radix-ui/react-dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Info, Send, Sparkles } from 'lucide-react';
+import { FileText, Info, Send, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import React, { useEffect, useRef, useState } from 'react';
+import { AIContextDialog } from './AIContextDialog';
 import { LineItemCard } from './LineItemCard';
 
 interface LineItem {
@@ -85,6 +86,7 @@ export default function RightSidebar({
   const [images, setImages] = useState<string[]>([]);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isContextDialogOpen, setIsContextDialogOpen] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -287,6 +289,25 @@ export default function RightSidebar({
           <div className='flex items-center gap-2.5'>
             <Sparkles className='w-4 h-4 text-[#8b5df8]' />
             <h2 className='text-base font-medium text-[#fafafa] tracking-tight'>AI Assistant</h2>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='h-8 w-8 text-[#8C8C8C] hover:text-[#fafafa] hover:bg-[#232428]'
+                    onClick={() => {
+                      return setIsContextDialogOpen(true);
+                    }}
+                  >
+                    <FileText className='w-4 h-4' />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className='bg-[#141414] border-[#232428] text-[#fafafa]'>
+                  <p className='text-xs'>View AI Context</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
       </div>
@@ -643,6 +664,9 @@ export default function RightSidebar({
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Add the AIContextDialog */}
+      <AIContextDialog open={isContextDialogOpen} onOpenChange={setIsContextDialogOpen} />
     </div>
   );
 }
