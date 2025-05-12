@@ -388,7 +388,7 @@ export default function PaymentsPage() {
           </Sheet>
         ) : (
           <div className='w-full border-l  overflow-hidden'>
-            {selectedPayment && (
+            {selectedPayment ? (
               <div className='h-full overflow-y-auto'>
                 <div className='sticky top-0 z-10 bg-background border-b border-[#232428] p-4'>
                   <div className='flex items-center justify-between'>
@@ -491,6 +491,31 @@ export default function PaymentsPage() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            ) : (
+              <div className='flex flex-col items-center justify-center h-full w-full bg-background'>
+                <div className='flex flex-col items-center justify-center'>
+                  <div className='flex items-center justify-center rounded-full border-2 border-dashed border-[#444] w-32 h-32 mb-6'>
+                    {/* Envelope Icon */}
+                    <svg
+                      xmlns='http://www.w3.org/2000/svg'
+                      width='56'
+                      height='56'
+                      viewBox='0 0 24 24'
+                      fill='none'
+                      stroke='#aaabfa'
+                      strokeWidth='1.5'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      className='lucide lucide-mail'
+                    >
+                      <rect width='20' height='16' x='2' y='4' rx='2' />
+                      <path d='m22 6-8.97 6.48a2 2 0 0 1-2.06 0L2 6' />
+                    </svg>
+                  </div>
+                  <div className='text-white text-xl font-semibold mb-2'>It&apos;s empty here</div>
+                  <div className='text-[#8C8C8C] text-base'>Choose a payment to view details</div>
                 </div>
               </div>
             )}
