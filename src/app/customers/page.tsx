@@ -154,7 +154,7 @@ export default function CustomersPage() {
   };
 
   return (
-    <div className='container mx-auto py-8'>
+    <div className='container mx-auto py-8 bg-background'>
       <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-8'>
         <div>
           <h1 className='text-3xl font-bold'>Customers</h1>
