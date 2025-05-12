@@ -61,6 +61,27 @@ interface Invoice {
     name: string;
   };
   createdAt: string;
+  subtotal?: number;
+  discount?: number;
+  tax?: number;
+  remainingBalance?: number;
+  totalPaid?: number;
+  payments?: Array<{
+    _id: string;
+    amount: number;
+    date: string;
+    method: string;
+    memo?: string;
+    status?: string;
+  }>;
+  businessInfo?: {
+    name: string;
+    address: string;
+    taxId: string;
+    showTaxId: boolean;
+    logo: string | null;
+    currency: string;
+  };
 }
 
 interface InvoiceProps {

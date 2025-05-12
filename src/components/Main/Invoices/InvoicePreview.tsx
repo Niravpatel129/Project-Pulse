@@ -318,7 +318,7 @@ export default function InvoicePreview({
       }),
       total: invoice.total,
       businessInfo: {
-        name: invoice.createdBy.name,
+        name: invoice?.createdBy?.name,
         address: '',
         taxId: '',
         showTaxId: false,

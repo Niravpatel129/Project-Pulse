@@ -146,22 +146,24 @@ export function Invoice({ invoice, paymentUrl }: InvoiceProps) {
                 <p>{invoice.clientName}</p>
                 {invoice.client && (
                   <>
-                    {invoice.client.address.street && <p>{invoice.client.address.street}</p>}
-                    {(invoice.client.address.city ||
-                      invoice.client.address.state ||
-                      invoice.client.address.zip) && (
+                    {invoice?.client?.address?.street && <p>{invoice?.client?.address?.street}</p>}
+                    {(invoice?.client?.address?.city ||
+                      invoice?.client?.address?.state ||
+                      invoice?.client?.address?.zip) && (
                       <p>
                         {[
-                          invoice.client.address.city,
-                          invoice.client.address.state,
-                          invoice.client.address.zip,
+                          invoice?.client?.address?.city,
+                          invoice?.client?.address?.state,
+                          invoice?.client?.address?.zip,
                         ]
                           .filter(Boolean)
                           .join(', ')}
                       </p>
                     )}
-                    {invoice.client.address.country && <p>{invoice.client.address.country}</p>}
-                    {invoice.client.phone && <p className='mt-1'>{invoice.client.phone}</p>}
+                    {invoice?.client?.address?.country && (
+                      <p>{invoice?.client?.address?.country}</p>
+                    )}
+                    {invoice?.client?.phone && <p className='mt-1'>{invoice?.client?.phone}</p>}
                     {invoice?.client?.email && <p>{invoice?.client?.email}</p>}
                     {invoice?.client?.taxId && (
                       <p className='mt-1'>Tax ID: {invoice?.client?.taxId}</p>
