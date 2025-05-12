@@ -86,6 +86,7 @@ export function AIContextDialog({ open, onOpenChange }: AIContextDialogProps) {
                 </p>
                 <Textarea
                   value={knowledgePrompt}
+                  maxLength={1000}
                   onChange={(e) => {
                     return setKnowledgePrompt(e.target.value);
                   }}
@@ -93,6 +94,9 @@ export function AIContextDialog({ open, onOpenChange }: AIContextDialogProps) {
                   className='min-h-[200px] bg-[#1a1a1a] border-[#232428] text-[#fafafa]'
                   disabled={isLoadingContext}
                 />
+                {knowledgePrompt.length > 1000 && (
+                  <p className='text-sm text-gray-400'>{knowledgePrompt.length} / 1000</p>
+                )}
                 <div className='flex justify-end mt-4'>
                   <Button
                     onClick={handleSave}
