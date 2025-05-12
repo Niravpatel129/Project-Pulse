@@ -79,6 +79,15 @@ export default function SettingsPage() {
   const { teamMembers, isLoading: isLoadingTeam, invitations } = useTeamMembers();
   const { workspace, connectStripe, disconnectStripe } = useWorkspace();
 
+  // Add Stripe account status query
+  const { data: stripeStatus } = useQuery({
+    queryKey: ['stripe-account-status'],
+    queryFn: async () => {
+      const response = await newRequest.get('/stripe/connect/account-status');
+      return response.data.data;
+    },
+  });
+
   // Filter out members who have pending invitations
   const activeTeamMembers = teamMembers.filter((member) => {
     // If there are no invitations or if the member is an owner, always show them
@@ -812,9 +821,7 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value='billing' className='p-6'>
-            {/* ... existing code ... */}
-          </TabsContent>
+          <TabsContent value='billing' className='p-6'></TabsContent>
 
           <TabsContent value='integrations' className='p-6'>
             <div className='space-y-6'>
@@ -828,7 +835,7 @@ export default function SettingsPage() {
                         Connect your workspace to Stripe to process payments and invoices
                       </CardDescription>
                     </div>
-                    {workspace?.stripeConnected ? (
+                    {stripeStatus?.status === 'active' ? (
                       <Badge className='bg-green-100 text-green-800 hover:bg-green-100'>
                         Connected
                       </Badge>
@@ -843,12 +850,59 @@ export default function SettingsPage() {
                           <CreditCard className='h-5 w-5 text-purple-600' />
                         </div>
                         <div>
-                          {workspace?.stripeConnected ? (
+                          {stripeStatus?.status === 'active' ? (
                             <div className='space-y-1'>
                               <p className='text-sm font-medium'>Stripe Account Connected</p>
                               <p className='text-xs text-muted-foreground'>
-                                Account ID: {workspace?.stripeAccountId}
+                                Account ID: {stripeStatus?.accountId}
                               </p>
+                              <div className='mt-2 space-y-1'>
+                                <div className='flex items-center gap-2'>
+                                  <div
+                                    className={`h-2 w-2 rounded-full ${
+                                      stripeStatus?.chargesEnabled ? 'bg-green-500' : 'bg-red-500'
+                                    }`}
+                                  />
+                                  <p className='text-xs text-muted-foreground'>
+                                    Charges: {stripeStatus?.chargesEnabled ? 'Enabled' : 'Disabled'}
+                                  </p>
+                                </div>
+                                <div className='flex items-center gap-2'>
+                                  <div
+                                    className={`h-2 w-2 rounded-full ${
+                                      stripeStatus?.payoutsEnabled ? 'bg-green-500' : 'bg-red-500'
+                                    }`}
+                                  />
+                                  <p className='text-xs text-muted-foreground'>
+                                    Payouts: {stripeStatus?.payoutsEnabled ? 'Enabled' : 'Disabled'}
+                                  </p>
+                                </div>
+                                <div className='flex items-center gap-2'>
+                                  <div
+                                    className={`h-2 w-2 rounded-full ${
+                                      stripeStatus?.detailsSubmitted ? 'bg-green-500' : 'bg-red-500'
+                                    }`}
+                                  />
+                                  <p className='text-xs text-muted-foreground'>
+                                    Details:{' '}
+                                    {stripeStatus?.detailsSubmitted ? 'Submitted' : 'Pending'}
+                                  </p>
+                                </div>
+                                <div className='flex items-center gap-2'>
+                                  <div
+                                    className={`h-2 w-2 rounded-full ${
+                                      stripeStatus?.status === 'active'
+                                        ? 'bg-green-500'
+                                        : 'bg-yellow-500'
+                                    }`}
+                                  />
+                                  <p className='text-xs text-muted-foreground'>
+                                    Status:{' '}
+                                    {stripeStatus?.status?.charAt(0).toUpperCase() +
+                                      stripeStatus?.status?.slice(1)}
+                                  </p>
+                                </div>
+                              </div>
                             </div>
                           ) : (
                             <p className='text-sm'>
@@ -858,34 +912,18 @@ export default function SettingsPage() {
                         </div>
                       </div>
 
-                      {workspace?.stripeConnected ? (
-                        <Button variant='outline' onClick={disconnectStripe}>
+                      {stripeStatus?.status === 'active' ? (
+                        <Button
+                          variant='outline'
+                          onClick={disconnectStripe}
+                          disabled={stripeStatus?.status === 'active'}
+                        >
                           Disconnect
                         </Button>
                       ) : (
                         <Button onClick={connectStripe}>Connect Stripe</Button>
                       )}
                     </div>
-
-                    {workspace?.stripeConnected && (
-                      <div className='mt-4 bg-gray-50 rounded-md p-3'>
-                        <h3 className='text-sm font-medium mb-2'>Payment Features Enabled</h3>
-                        <ul className='text-xs space-y-1 text-gray-600'>
-                          <li className='flex items-center'>
-                            <div className='h-3 w-3 rounded-full bg-green-500 mr-2'></div>
-                            Invoice payments
-                          </li>
-                          <li className='flex items-center'>
-                            <div className='h-3 w-3 rounded-full bg-green-500 mr-2'></div>
-                            Subscription billing
-                          </li>
-                          <li className='flex items-center'>
-                            <div className='h-3 w-3 rounded-full bg-green-500 mr-2'></div>
-                            Automatic payouts
-                          </li>
-                        </ul>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               </div>
