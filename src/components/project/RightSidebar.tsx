@@ -289,7 +289,7 @@ export default function RightSidebar({
           <div className='flex items-center gap-2.5'>
             <Sparkles className='w-4 h-4 text-[#8b5df8]' />
             <h2 className='text-base font-medium text-[#fafafa] tracking-tight'>AI Assistant</h2>
-            <TooltipProvider>
+            <TooltipProvider delayDuration={0}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -401,7 +401,7 @@ export default function RightSidebar({
                               <div key={`line-items-${dataIndex}`} className='space-y-2 pl-2'>
                                 {data.items.map((item, itemIndex) => {
                                   return (
-                                    <TooltipProvider key={itemIndex}>
+                                    <TooltipProvider key={itemIndex} delayDuration={0}>
                                       <Tooltip>
                                         <TooltipTrigger asChild>
                                           <div>
