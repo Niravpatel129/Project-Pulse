@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useSidebar } from '@/components/ui/sidebar';
+import { newRequest } from '@/utils/newRequest';
+import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
@@ -25,8 +27,22 @@ const getStatusColor = (status: string) => {
 
 export default function PaymentsPage() {
   const { toggleSidebar } = useSidebar();
-  const [payments, setPayments] = useState<any[]>([]); // Replace with actual data fetching
+  // const [payments, setPayments] = useState<any[]>([]); // Replace with actual data fetching
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
+
+  const {
+    data: payments,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['payments'],
+    queryFn: async () => {
+      const response = await newRequest.get('/payments');
+      return response.data.data;
+    },
+  });
+
+  console.log('🚀 payments:', payments);
 
   return (
     <motion.div
