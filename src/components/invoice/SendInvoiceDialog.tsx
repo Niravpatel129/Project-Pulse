@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { DownloadCloud, Link as LinkIcon } from 'lucide-react';
+import { Link as LinkIcon } from 'lucide-react';
 import { useRef } from 'react';
 import { toast } from 'sonner';
 
@@ -244,7 +244,7 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
       }}
     >
       <DialogContent
-        className='sm:max-w-[700px] bg-[#181818] text-white border-[#232323]'
+        className='sm:max-w-[400px] bg-[#181818] text-white border-[#232323]'
         onClick={(e) => {
           return e.stopPropagation();
         }}
@@ -262,7 +262,7 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
           </DialogDescription>
         </DialogHeader>
         <div className='py-6'>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+          <div className=''>
             {/* Share Options */}
             <div
               className='cursor-pointer border border-[#232323] rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-[#313131] group bg-[#232323]'
@@ -278,18 +278,6 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
               <div className='font-bold text-lg mb-1 text-center text-white'>Copy link</div>
               <div className='text-center text-[#8b8b8b] text-base'>
                 Share a link to this invoice
-              </div>
-            </div>
-
-            {/* Download PDF */}
-            <div
-              className='cursor-pointer border border-[#232323] rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-[#313131] group bg-[#232323]'
-              onClick={handleDownloadPDF}
-            >
-              <DownloadCloud className='h-8 w-8 mb-4 text-[#8b8b8b] group-hover:text-white' />
-              <div className='font-bold text-lg mb-1 text-center text-white'>Download PDF</div>
-              <div className='text-center text-[#8b8b8b] text-base'>
-                Your invoice all in one document
               </div>
             </div>
           </div>
