@@ -30,8 +30,8 @@ import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { CalendarIcon, CheckCircle2, LinkIcon } from 'lucide-react';
-import { useState } from 'react';
+import { CalendarIcon, CheckCircle2, Download, LinkIcon } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import InvoiceActionBar from './InvoiceActionBar';
 
@@ -146,6 +146,7 @@ export default function InvoicePreview({
   onInvoiceUpdate,
 }: InvoicePreviewProps) {
   const queryClient = useQueryClient();
+  const invoiceRef = useRef<HTMLDivElement>(null);
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
   const [isEditPaymentDialogOpen, setIsEditPaymentDialogOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
@@ -400,6 +401,158 @@ export default function InvoicePreview({
         currency: invoiceSettings?.currency || 'usd',
       },
     };
+  };
+
+  const handleDownloadPDF = () => {
+    if (!invoiceRef.current) return;
+
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    // Get the invoice content
+    const invoiceContent = invoiceRef.current.innerHTML;
+
+    // Write the invoice content to the new window
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Invoice ${invoice?.invoiceNumber}</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            
+            body {
+              font-family: 'Inter', sans-serif;
+              margin: 0;
+              padding: 0;
+              background: #141414;
+            }
+            
+            .invoice-paper {
+              width: 8.5in;
+              min-height: 11in;
+              padding: 2.5rem 2rem;
+              margin: 0 auto;
+              background: #141414;
+              color: #fafafa;
+              border: 1px solid #232428;
+              box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            }
+            
+            .invoice-paper table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+            
+            .invoice-paper th {
+              background: #232428;
+              color: white;
+              text-align: left;
+              padding: 0.75rem 1rem;
+              font-weight: 600;
+            }
+            
+            .invoice-paper td {
+              padding: 0.75rem 1rem;
+              border-top: 1px solid #232428;
+              color: #8C8C8C;
+            }
+            
+            .invoice-paper h1 {
+              font-size: 2rem;
+              font-weight: 600;
+              color: #fafafa;
+            }
+            
+            .invoice-paper .text-sm {
+              font-size: 0.875rem;
+            }
+            
+            .invoice-paper .text-base {
+              font-size: 1rem;
+            }
+            
+            .invoice-paper .font-semibold {
+              font-weight: 600;
+            }
+            
+            .invoice-paper .text-[#8C8C8C] {
+              color: #8C8C8C;
+            }
+            
+            .invoice-paper .text-[#fafafa] {
+              color: #fafafa;
+            }
+            
+            .invoice-paper .border-[#232428] {
+              border-color: #232428;
+            }
+            
+            .invoice-paper .bg-[#232428] {
+              background-color: #232428;
+            }
+            
+            @media print {
+              body {
+                background: white;
+              }
+              
+              .invoice-paper {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 1in;
+                transform: none;
+                box-shadow: none;
+                border: none;
+                background: white;
+                color: black;
+              }
+              
+              .invoice-paper th {
+                background: #f3f4f6;
+                color: black;
+              }
+              
+              .invoice-paper td {
+                border-color: #e5e7eb;
+                color: #374151;
+              }
+              
+              .invoice-paper h1 {
+                color: black;
+              }
+              
+              .invoice-paper .text-[#8C8C8C] {
+                color: #6b7280;
+              }
+              
+              .invoice-paper .text-[#fafafa] {
+                color: black;
+              }
+              
+              .invoice-paper .border-[#232428] {
+                border-color: #e5e7eb;
+              }
+              
+              .invoice-paper .bg-[#232428] {
+                background-color: #f3f4f6;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          ${invoiceContent}
+        </body>
+      </html>
+    `);
+
+    // Wait for the content to load
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 1000);
   };
 
   if (!invoiceId && !selectedInvoice) {
@@ -779,8 +932,23 @@ export default function InvoicePreview({
             </div>
           </div>
 
+          <div className='flex items-center justify-between mb-5'>
+            <h3 className='text-[14px] font-semibold text-white'>Receipt</h3>
+            <Button
+              variant='outline'
+              size='sm'
+              className='bg-[#232323] border-[#333] text-white text-sm h-8 px-4'
+              onClick={handleDownloadPDF}
+            >
+              <Download className='w-4 h-4 mr-2' />
+              Download PDF
+            </Button>
+          </div>
           <div className='w-full overflow-auto flex justify-center'>
-            <div style={{ transform: 'scale(0.8)', transformOrigin: 'top center' }}>
+            <div
+              style={{ transform: 'scale(0.8)', transformOrigin: 'top center' }}
+              ref={invoiceRef}
+            >
               <InvoicePdf invoice={invoice as any} />
             </div>
           </div>
