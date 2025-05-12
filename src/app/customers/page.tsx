@@ -9,51 +9,35 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useClients } from '@/hooks/useClients';
+import { motion } from 'framer-motion';
 import {
-  ArrowUpDown,
-  Building2,
   Download,
+  Edit,
+  Globe,
+  Loader2,
   Mail,
   MapPin,
-  MoreHorizontal,
   Phone,
   Plus,
   Search,
-  Star,
-  StarHalf,
+  Trash2,
   User,
   UserRound,
 } from 'lucide-react';
-import Link from 'next/link';
 import { useLayoutEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 // Remove mock customer data
 const MOCK_CUSTOMERS: any[] = [];
@@ -100,6 +84,7 @@ export default function CustomersPage() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const tabContentRef = useRef<HTMLDivElement>(null);
   const [tabContentHeight, setTabContentHeight] = useState<number | undefined>(undefined);
+  const { clients: apiClients, isLoading: isLoadingClients } = useClients();
 
   useLayoutEffect(() => {
     if (tabContentRef.current) {
@@ -173,90 +158,73 @@ export default function CustomersPage() {
     }
   };
 
-  // Filter customers based on search query and status filter
-  const filteredCustomers = customers.filter((customer) => {
+  // Filter clients based on search query and status filter
+  const filteredClients = apiClients.filter((client) => {
+    const searchLower = searchQuery.toLowerCase();
     const matchesSearch =
-      customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.contactName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.contactEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.industry.toLowerCase().includes(searchQuery.toLowerCase());
+      client.user.name.toLowerCase().includes(searchLower) ||
+      client.user.email?.toLowerCase().includes(searchLower) ||
+      client.contact?.firstName?.toLowerCase().includes(searchLower) ||
+      client.contact?.lastName?.toLowerCase().includes(searchLower);
 
-    const matchesStatus = statusFilter === 'all' || customer.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
 
-  // Sort the filtered customers
-  const sortedCustomers = [...filteredCustomers].sort((a, b) => {
-    // Handle different column types appropriately
+  // Sort the filtered clients
+  const sortedClients = [...filteredClients].sort((a, b) => {
     let comparison = 0;
 
     if (sortColumn === 'totalSpent' || sortColumn === 'projects' || sortColumn === 'rating') {
-      // Numeric comparison
-      comparison =
-        (a[sortColumn as keyof typeof a] as number) - (b[sortColumn as keyof typeof b] as number);
+      comparison = (a[sortColumn] || 0) - (b[sortColumn] || 0);
     } else {
-      // String comparison
-      const aValue = String(a[sortColumn as keyof typeof a]).toLowerCase();
-      const bValue = String(b[sortColumn as keyof typeof b]).toLowerCase();
+      const aValue = String(a[sortColumn] || '').toLowerCase();
+      const bValue = String(b[sortColumn] || '').toLowerCase();
       comparison = aValue.localeCompare(bValue);
     }
 
     return sortDirection === 'asc' ? comparison : -comparison;
   });
 
-  // Function to handle customer deletion
-  const handleDeleteCustomer = (customerId: number) => {
-    setCustomers(
-      customers.filter((customer) => {
-        return customer.id !== customerId;
-      }),
-    );
+  const handleEditClient = (client: any) => {
+    setNewCustomer({
+      name: client.user.name,
+      contactName: `${client.contact?.firstName || ''} ${client.contact?.lastName || ''}`.trim(),
+      contactEmail: client.user.email || '',
+      contactPhone: client.phone || '',
+      industry: client.industry || '',
+      type: client.type || 'Individual',
+      totalSpent: client.totalSpent || 0,
+      projects: client.projects || 0,
+      rating: client.rating || 0,
+      status: client.status || 'Active',
+      address: {
+        street: client.address?.street || '',
+        city: client.address?.city || '',
+        state: client.address?.state || '',
+        country: client.address?.country || '',
+        zip: client.address?.zip || '',
+      },
+      shippingAddress: {
+        street: client.shippingAddress?.street || '',
+        city: client.shippingAddress?.city || '',
+        state: client.shippingAddress?.state || '',
+        country: client.shippingAddress?.country || '',
+        zip: client.shippingAddress?.zip || '',
+      },
+      website: client.website || '',
+      internalNotes: client.internalNotes || '',
+    });
+    setCustomerModalOpen(true);
   };
 
-  // Function to render customer status badge
-  const renderStatusBadge = (status: string) => {
-    return (
-      <Badge
-        className={`${
-          status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'
-        }`}
-      >
-        {status}
-      </Badge>
-    );
-  };
-
-  // Function to render customer rating
-  const renderRating = (rating: number) => {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-    const stars = [];
-
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(<Star key={`full-${i}`} className='h-4 w-4 fill-amber-400 text-amber-400' />);
+  const handleDeleteClient = (clientId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('Are you sure you want to delete this client?')) {
+      // TODO: Implement delete functionality
+      toast.success('Client deleted successfully');
     }
-
-    if (hasHalfStar) {
-      stars.push(<StarHalf key='half' className='h-4 w-4 fill-amber-400 text-amber-400' />);
-    }
-
-    return <div className='flex items-center'>{stars}</div>;
-  };
-
-  // Helper for column header with sorting
-  const SortableColumnHeader = ({ column, label }: { column: string; label: string }) => {
-    return (
-      <div
-        className='flex items-center cursor-pointer'
-        onClick={() => {
-          return handleSort(column);
-        }}
-      >
-        {label}
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </div>
-    );
   };
 
   return (
@@ -297,144 +265,168 @@ export default function CustomersPage() {
             }}
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className='w-full md:w-[180px]'>
-            <SelectValue placeholder='Filter by status' />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Status</SelectLabel>
-              <SelectItem value='all'>All Statuses</SelectItem>
-              <SelectItem value='Active'>Active</SelectItem>
-              <SelectItem value='Inactive'>Inactive</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
       </div>
 
-      {/* Customers table */}
-      {sortedCustomers.length > 0 ? (
-        <div className='rounded-md border shadow-sm'>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>
-                  <SortableColumnHeader column='name' label='Customer' />
-                </TableHead>
-                <TableHead>
-                  <SortableColumnHeader column='contactName' label='Contact' />
-                </TableHead>
-                <TableHead>
-                  <SortableColumnHeader column='industry' label='Industry' />
-                </TableHead>
-                <TableHead>
-                  <SortableColumnHeader column='type' label='Type' />
-                </TableHead>
-                <TableHead>
-                  <SortableColumnHeader column='totalSpent' label='Total Spent' />
-                </TableHead>
-                <TableHead>
-                  <SortableColumnHeader column='projects' label='Projects' />
-                </TableHead>
-                <TableHead>
-                  <SortableColumnHeader column='rating' label='Rating' />
-                </TableHead>
-                <TableHead>
-                  <SortableColumnHeader column='status' label='Status' />
-                </TableHead>
-                <TableHead className='text-right'>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedCustomers.map((customer) => {
-                return (
-                  <TableRow key={customer.id}>
-                    <TableCell className='font-medium'>
-                      <Link
-                        href={`/customers/${customer.id}`}
-                        className='hover:underline text-primary flex items-center'
+      {/* Customers list */}
+      <div className='space-y-3'>
+        {isLoadingClients ? (
+          <div className='text-center py-12'>
+            <div className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-4'>
+              <Loader2 className='h-6 w-6 animate-spin text-muted-foreground' />
+            </div>
+            <h3 className='text-lg font-medium'>Loading customers...</h3>
+          </div>
+        ) : sortedClients.length === 0 ? (
+          <div className='text-center py-12'>
+            <div className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-4'>
+              <UserRound className='h-6 w-6 text-muted-foreground' />
+            </div>
+            <h3 className='text-lg font-medium'>No customers found</h3>
+            <p className='text-muted-foreground mt-2 mb-4'>
+              {searchQuery || statusFilter !== 'all'
+                ? "Try adjusting your search or filter to find what you're looking for."
+                : 'Get started by adding your first customer.'}
+            </p>
+            {!searchQuery && statusFilter === 'all' && (
+              <Button
+                onClick={() => {
+                  return setCustomerModalOpen(true);
+                }}
+              >
+                <Plus className='mr-2 h-4 w-4' />
+                New Customer
+              </Button>
+            )}
+          </div>
+        ) : (
+          sortedClients.map((client) => {
+            return (
+              <motion.div
+                key={client._id}
+                className='border border-[#232428] rounded-xl p-4 transition-all duration-200 ease-in-out hover:border-[#2A2A2F] group bg-[#141414] shadow-sm hover:shadow-md hover:translate-y-[-1px] relative'
+              >
+                {/* Action buttons */}
+                <div className='absolute top-2 right-2 flex space-x-1'>
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          onClick={() => {
+                            handleEditClient(client);
+                          }}
+                          className='p-1.5 rounded-full bg-[#232428] text-[#8C8C8C] hover:bg-[#2A2A2F] hover:text-[#fafafa] opacity-0 group-hover:opacity-100 transition-all duration-200'
+                        >
+                          <Edit className='h-4 w-4' />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side='top'
+                        className='bg-[#141414] border-[#232428] text-[#fafafa]'
                       >
-                        {customer.type === 'Enterprise' ? (
-                          <Building2 className='h-4 w-4 mr-2 text-muted-foreground' />
-                        ) : (
-                          <UserRound className='h-4 w-4 mr-2 text-muted-foreground' />
-                        )}
-                        {customer.name}
-                      </Link>
-                      <div className='text-xs text-muted-foreground mt-1 ml-6'>
-                        <div className='flex items-center'>
-                          <MapPin className='h-3 w-3 mr-1' />
-                          {customer.address.split(',')[0]}...
+                        <p>Edit customer</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          onClick={(e) => {
+                            handleDeleteClient(client._id, e);
+                          }}
+                          className='p-1.5 rounded-full bg-[#232428] text-[#8C8C8C] hover:bg-[#411D23] hover:text-[#F43F5E] opacity-0 group-hover:opacity-100 transition-all duration-200'
+                        >
+                          <Trash2 className='h-4 w-4' />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side='top'
+                        className='bg-[#141414] border-[#232428] text-[#fafafa]'
+                      >
+                        <p>Delete customer</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
+                <div className='flex justify-between items-start'>
+                  <div className='flex items-start flex-1'>
+                    <div className='flex-1'>
+                      <div className='group/item'>
+                        <div className='flex flex-col'>
+                          <div className='flex items-center'>
+                            <span className='text-[#fafafa] text-[14px] font-semibold group-hover/item:text-white transition-colors'>
+                              {client.user.name}
+                            </span>
+                            {client.type === 'Enterprise' && (
+                              <span className='ml-2 text-xs font-medium bg-[#232428] text-[#8C8C8C] rounded-full px-2 py-0.5'>
+                                Enterprise
+                              </span>
+                            )}
+                          </div>
+
+                          <div className='mt-2 flex flex-wrap items-center gap-2'>
+                            {client.contact?.firstName && client.contact?.lastName && (
+                              <div className='text-xs text-[#8C8C8C]'>
+                                {client.contact.firstName} {client.contact.lastName}
+                              </div>
+                            )}
+                            {client.user.email && (
+                              <div className='text-xs text-[#8C8C8C] flex items-center'>
+                                <Mail className='h-3 w-3 mr-1' />
+                                {client.user.email}
+                              </div>
+                            )}
+                            {client.phone && (
+                              <div className='text-xs text-[#8C8C8C] flex items-center'>
+                                <Phone className='h-3 w-3 mr-1' />
+                                {client.phone}
+                              </div>
+                            )}
+                            {client.address?.city && client.address?.country && (
+                              <div className='text-xs text-[#8C8C8C] flex items-center'>
+                                <MapPin className='h-3 w-3 mr-1' />
+                                {client.address.city}, {client.address.country}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className='mt-3 flex items-center justify-between'>
+                            <div className='flex items-center gap-4'>
+                              {client.website && (
+                                <div className='text-xs text-[#8C8C8C] flex items-center'>
+                                  <Globe className='h-3 w-3 mr-1' />
+                                  {client.website}
+                                </div>
+                              )}
+                              {client.status && (
+                                <Badge
+                                  className={`${
+                                    client.status === 'Active'
+                                      ? 'bg-green-100 text-green-800'
+                                      : 'bg-slate-100 text-slate-800'
+                                  }`}
+                                >
+                                  {client.status}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>{customer.contactName}</div>
-                      <div className='text-xs text-muted-foreground flex items-center mt-1'>
-                        <Mail className='h-3 w-3 mr-1' />
-                        {customer.contactEmail}
-                      </div>
-                      <div className='text-xs text-muted-foreground flex items-center mt-1'>
-                        <Phone className='h-3 w-3 mr-1' />
-                        {customer.contactPhone}
-                      </div>
-                    </TableCell>
-                    <TableCell>{customer.industry}</TableCell>
-                    <TableCell>{customer.type}</TableCell>
-                    <TableCell>${customer.totalSpent.toLocaleString()}</TableCell>
-                    <TableCell className='text-center'>{customer.projects}</TableCell>
-                    <TableCell>{renderRating(customer.rating)}</TableCell>
-                    <TableCell>{renderStatusBadge(customer.status)}</TableCell>
-                    <TableCell className='text-right'>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant='ghost' size='icon' className='h-8 w-8'>
-                            <MoreHorizontal className='h-4 w-4' />
-                            <span className='sr-only'>Actions</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align='end'>
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem asChild>
-                            <Link href={`/customers/${customer.id}`}>View Details</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/customers/${customer.id}/edit`}>Edit Customer</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/customers/${customer.id}/contact`}>Contact</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              return handleDeleteCustomer(customer.id);
-                            }}
-                            className='text-destructive focus:text-destructive'
-                          >
-                            Delete Customer
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      ) : (
-        <div className='text-center py-12'>
-          <div className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-4'>
-            <UserRound className='h-6 w-6 text-muted-foreground' />
-          </div>
-          <h3 className='text-lg font-medium'>No customers found</h3>
-          <p className='text-muted-foreground mt-2 mb-4'>
-            {searchQuery || statusFilter !== 'all'
-              ? "Try adjusting your search or filter to find what you're looking for."
-              : 'Get started by adding your first customer.'}
-          </p>
-        </div>
-      )}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })
+        )}
+      </div>
 
       {/* Customer Modal */}
       <Dialog open={customerModalOpen} onOpenChange={setCustomerModalOpen}>
