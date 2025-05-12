@@ -408,10 +408,8 @@ export default function RightSidebar({
                                             <LineItemCard item={item} onClick={handleAddItem} />
                                           </div>
                                         </TooltipTrigger>
-                                        <TooltipContent className='bg-[#141414] border-[#232428] text-[#fafafa]'>
-                                          <p className='text-xs'>
-                                            Click to add another instance of this item
-                                          </p>
+                                        <TooltipContent className='bg-[#141414] border-[#232428] text-[#fafafa] max-w-[300px]'>
+                                          <p className='text-xs'>{item.reasoning}</p>
                                         </TooltipContent>
                                       </Tooltip>
                                     </TooltipProvider>
