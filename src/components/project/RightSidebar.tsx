@@ -71,7 +71,6 @@ export default function RightSidebar({
   setItems,
   projectCurrency,
   setSelectedClient,
-  onAiGeneratedClient,
 }: RightSidebarProps) {
   const queryClient = useQueryClient();
   const [messages, setMessages] = useState<Message[]>([
@@ -111,7 +110,11 @@ export default function RightSidebar({
   const chatMutation = useMutation({
     mutationFn: async ({ message, images }: { message: string; images: string[] }) => {
       const previousMessages = messages.filter((m) => {
-        return m.role !== 'assistant' || m.content !== 'Hello! How can I help you today?';
+        return (
+          m.role !== 'assistant' ||
+          m.content !==
+            'Just tell me line items in natural language or client details in natural language'
+        );
       });
 
       // Create FormData instance
@@ -213,7 +216,8 @@ export default function RightSidebar({
     setMessages([
       {
         id: '1',
-        content: 'Hello! How can I help you today?',
+        content:
+          'Just tell me line items in natural language or client details in natural language',
         role: 'assistant',
         timestamp: new Date(),
       },
@@ -369,7 +373,7 @@ export default function RightSidebar({
             </Button>
           </div>
           <AnimatePresence>
-            {messages.map((message, index) => {
+            {messages?.map((message, index) => {
               return (
                 <motion.div
                   key={index}
