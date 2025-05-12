@@ -58,7 +58,7 @@ export default function PaymentsPage() {
 
   return (
     <motion.div
-      className='flex h-full'
+      className='flex h-full w-full'
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{
@@ -174,7 +174,7 @@ export default function PaymentsPage() {
                         </span>
                         <span className='text-[#8C8C8C] text-sm'>
                           •{' '}
-                          {payment.amount.toLocaleString(undefined, {
+                          {payment?.amount?.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}{' '}
@@ -278,7 +278,7 @@ export default function PaymentsPage() {
                   <div className='flex flex-col'>
                     <span className='text-sm text-[#8C8C8C] mb-2'>Amount</span>
                     <span className='text-[14px] font-bold text-white'>
-                      {selectedPayment.amount.toLocaleString(undefined, {
+                      {selectedPayment.amount?.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}{' '}
@@ -341,11 +341,11 @@ export default function PaymentsPage() {
                             <div className='font-semibold text-white text-[14px] mb-1'>Credit</div>
                             <div className='text-sm text-[#8C8C8C]'>
                               Credit from overpayment of{' '}
-                              {selectedPayment.previousPayment?.amount.toLocaleString(undefined, {
+                              {selectedPayment?.previousPayment?.amount?.toLocaleString(undefined, {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2,
                               })}{' '}
-                              {selectedPayment.invoice?.currency}
+                              {selectedPayment?.invoice?.currency}
                             </div>
                           </div>
                         </div>
@@ -404,7 +404,7 @@ export default function PaymentsPage() {
             <DialogTitle>Send Payment Receipt</DialogTitle>
             <DialogDescription>
               Share the payment receipt for $
-              {selectedPayment?.amount.toLocaleString(undefined, {
+              {selectedPayment?.amount?.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}{' '}
