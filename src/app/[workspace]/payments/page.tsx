@@ -41,6 +41,7 @@ interface Payment {
     invoiceNumber: string;
     currency: string;
     client?: {
+      _id: string;
       user?: {
         name: string;
       };
