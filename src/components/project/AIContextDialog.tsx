@@ -4,9 +4,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/use-toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { DocumentUpload } from './DocumentUpload';
 
 interface AIContextDialogProps {
@@ -17,7 +17,6 @@ interface AIContextDialogProps {
 export function AIContextDialog({ open, onOpenChange }: AIContextDialogProps) {
   const [activeTab, setActiveTab] = useState('documents');
   const [knowledgePrompt, setKnowledgePrompt] = useState('');
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Query for fetching AI context
@@ -32,18 +31,11 @@ export function AIContextDialog({ open, onOpenChange }: AIContextDialogProps) {
     mutationFn: aiContext.update,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['aiContext'] });
-      toast({
-        title: 'Success',
-        description: 'AI context saved successfully',
-      });
+      toast.success('AI context saved successfully');
     },
     onError: (error) => {
       console.error('Error saving AI context:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save AI context',
-        variant: 'destructive',
-      });
+      toast.error('Failed to save AI context');
     },
   });
 
