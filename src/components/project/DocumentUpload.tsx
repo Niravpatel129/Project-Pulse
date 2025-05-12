@@ -155,7 +155,7 @@ export function DocumentUpload({ onUploadSuccess, onUploadError }: DocumentUploa
               return (
                 <div
                   key={`${doc.filename}-${index}`}
-                  className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'
+                  className='flex items-center justify-between p-3 bg-background rounded-lg'
                 >
                   <div className='flex items-center space-x-3'>
                     <File className='h-5 w-5 text-gray-400' />
