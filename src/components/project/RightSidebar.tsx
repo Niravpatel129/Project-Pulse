@@ -333,7 +333,9 @@ export default function RightSidebar({
                     <div className='space-y-3'>
                       <div className='text-sm text-[#fafafa] leading-relaxed bg-[#232428] rounded-lg px-4 py-3'>
                         <div className='flex items-start gap-2'>
-                          <div className='flex-1'>{message.content}</div>
+                          <div className='flex-1 break-words overflow-wrap-anywhere'>
+                            {message.content}
+                          </div>
                           {message.meta && (
                             <TooltipProvider delayDuration={0}>
                               <Tooltip>
@@ -480,7 +482,9 @@ export default function RightSidebar({
                     </div>
                   ) : (
                     <div className='rounded-lg px-4 py-3 bg-[#232428] text-[#fafafa] shadow-sm'>
-                      <p className='text-sm leading-relaxed'>{message.content}</p>
+                      <p className='text-sm leading-relaxed break-words overflow-wrap-anywhere'>
+                        {message.content}
+                      </p>
                       <p className='text-xs text-[#8C8C8C] mt-1.5'>
                         {message.timestamp.toLocaleTimeString([], {
                           hour: '2-digit',
