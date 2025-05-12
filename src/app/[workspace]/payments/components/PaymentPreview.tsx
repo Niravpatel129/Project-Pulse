@@ -69,9 +69,9 @@ export function PaymentPreview({ payment, onClose }: PaymentPreviewProps) {
         </div>
       </div>
 
-      <div className='p-4 space-y-6'>
+      <div className='py-4 space-y-6'>
         <div className='flex flex-col space-y-6 pb-6 border-b border-[#232323] rounded-t-lg'>
-          <div className='flex flex-col border-b border-[#232323]'>
+          <div className='flex flex-col border-b border-[#232323] px-4'>
             <div className='flex items-center'>
               <span className='text-[14px] font-medium text-white'>
                 Payment #{payment._id.slice(-6)}
@@ -80,7 +80,7 @@ export function PaymentPreview({ payment, onClose }: PaymentPreviewProps) {
                 {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
               </Badge>
             </div>
-            <div className='flex flex-col sm:flex-row gap-4 mt-2'>
+            <div className='flex flex-col sm:flex-row gap-4 mt-2 mb-2'>
               <div className='flex items-center gap-0'>
                 <span className='text-sm text-[#8C8C8C]'>Customer:</span>
                 <span className='text-sm text-white ml-1'>
@@ -95,7 +95,7 @@ export function PaymentPreview({ payment, onClose }: PaymentPreviewProps) {
               </div>
             </div>
           </div>
-          <div className='grid grid-cols-2 gap-4'>
+          <div className='grid grid-cols-2 gap-4 px-4'>
             <div className='flex flex-col'>
               <span className='text-sm text-[#8C8C8C] mb-2'>Amount</span>
               <span className='text-[14px] font-bold text-white'>
@@ -114,24 +114,25 @@ export function PaymentPreview({ payment, onClose }: PaymentPreviewProps) {
             </div>
           </div>
         </div>
-
-        <div className='bg-[#141414] rounded-lg border border-[#232323] p-6'>
-          <h3 className='text-[14px] font-semibold text-white mb-5'>Additional Information</h3>
-          <div className='grid grid-cols-1 gap-6'>
-            {payment.memo && (
+        <div className='px-4'>
+          <div className='bg-[#141414] rounded-lg border border-[#232323] p-6'>
+            <h3 className='text-[14px] font-semibold text-white mb-5'>Additional Information</h3>
+            <div className='grid grid-cols-1 gap-6'>
+              {payment.memo && (
+                <div>
+                  <div className='text-sm text-[#8C8C8C] mb-2'>Memo</div>
+                  <div className='text-[14px] text-white'>{payment.memo}</div>
+                </div>
+              )}
               <div>
-                <div className='text-sm text-[#8C8C8C] mb-2'>Memo</div>
-                <div className='text-[14px] text-white'>{payment.memo}</div>
+                <div className='text-sm text-[#8C8C8C] mb-2'>Payment ID</div>
+                <div className='text-[14px] text-white'>{payment._id}</div>
               </div>
-            )}
-            <div>
-              <div className='text-sm text-[#8C8C8C] mb-2'>Payment ID</div>
-              <div className='text-[14px] text-white'>{payment._id}</div>
-            </div>
-            <div>
-              <div className='text-sm text-[#8C8C8C] mb-2'>Date</div>
-              <div className='text-[14px] text-white'>
-                {new Date(payment.date).toLocaleString()}
+              <div>
+                <div className='text-sm text-[#8C8C8C] mb-2'>Date</div>
+                <div className='text-[14px] text-white'>
+                  {new Date(payment.date).toLocaleString()}
+                </div>
               </div>
             </div>
           </div>
