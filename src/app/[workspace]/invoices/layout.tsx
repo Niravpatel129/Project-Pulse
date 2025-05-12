@@ -15,5 +15,5 @@ export default function InvoicesLayout({
 }: {
   children: React.ReactNode;
 }): React.ReactElement {
-  return <div className='h-full'>{children}</div>;
+  return <>{children}</>;
 }
