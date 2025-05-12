@@ -76,8 +76,7 @@ export default function RightSidebar({
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content:
-        "Just tell me what you need - like 'Add a meeting with John for the website design' or 'Create an invoice for Sarah's consulting'",
+      content: 'Just tell me line items in natural language or client details in natural language',
       role: 'assistant',
       timestamp: new Date(),
     },
@@ -114,9 +113,12 @@ export default function RightSidebar({
         return m.role !== 'assistant' || m.content !== 'Hello! How can I help you today?';
       });
 
-      const requestBody = {
-        prompt: message,
-        history:
+      // Create FormData instance
+      const formData = new FormData();
+      formData.append('prompt', message);
+      formData.append(
+        'history',
+        JSON.stringify(
           previousMessages.length > 1
             ? previousMessages
                 .slice(0, -1)
@@ -125,9 +127,30 @@ export default function RightSidebar({
                 })
                 .join('\n\n')
             : '',
-      };
+        ),
+      );
 
-      const response = await newRequest.post('/ai/smart-response', requestBody);
+      // Append images if any
+      if (images.length > 0) {
+        images.forEach((image, index) => {
+          // Convert base64 to blob
+          const byteString = atob(image.split(',')[1]);
+          const mimeString = image.split(',')[0].split(':')[1].split(';')[0];
+          const ab = new ArrayBuffer(byteString.length);
+          const ia = new Uint8Array(ab);
+          for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+          }
+          const blob = new Blob([ab], { type: mimeString });
+          formData.append('images', blob, `image-${index}.${mimeString.split('/')[1]}`);
+        });
+      }
+
+      const response = await newRequest.post('/ai/smart-response', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       return response.data;
     },
     onSuccess: (data) => {
@@ -146,6 +169,8 @@ export default function RightSidebar({
       setMessages((prev) => {
         return [...prev, assistantMessage];
       });
+      // Clear images after successful send
+      setImages([]);
       inputRef.current?.focus();
     },
     onError: (error) => {
@@ -621,28 +646,70 @@ export default function RightSidebar({
               })}
             </div>
           )}
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={(e) => {
-              return setInput(e.target.value);
-            }}
-            onKeyPress={(e) => {
-              return e.key === 'Enter' && !e.shiftKey && handleSend();
-            }}
-            onPaste={handlePaste}
-            placeholder='Type your message...'
-            disabled={chatMutation.isPending}
-            className='w-full px-4 py-3 text-sm border border-[#232428] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5df8]/20 focus:border-[#8b5df8] min-h-[72px] resize-none transition-colors duration-200 placeholder:text-[#8C8C8C] disabled:opacity-50 disabled:cursor-not-allowed bg-[#141414] text-[#fafafa]'
-          />
-          <Button
-            onClick={handleSend}
-            disabled={chatMutation.isPending || !input.trim()}
-            className='absolute bottom-4 right-2 bg-[#8b5df8] hover:bg-[#7c3aed] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
-            size='icon'
-          >
-            <Send className='w-3.5 h-3.5' />
-          </Button>
+          <div className='relative'>
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => {
+                return setInput(e.target.value);
+              }}
+              onKeyPress={(e) => {
+                return e.key === 'Enter' && !e.shiftKey && handleSend();
+              }}
+              onPaste={handlePaste}
+              placeholder='Type your message...'
+              disabled={chatMutation.isPending}
+              className='w-full px-4 py-3 text-sm border border-[#232428] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5df8]/20 focus:border-[#8b5df8] min-h-[72px] resize-none transition-colors duration-200 placeholder:text-[#8C8C8C] disabled:opacity-50 disabled:cursor-not-allowed bg-[#141414] text-[#fafafa]'
+            />
+            <Button
+              onClick={handleSend}
+              disabled={chatMutation.isPending || (!input.trim() && images.length === 0)}
+              className='absolute bottom-4 right-2 bg-[#8b5df8] hover:bg-[#7c3aed] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+              size='icon'
+            >
+              {chatMutation.isPending ? (
+                <div className='flex items-center gap-1'>
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.2, 1],
+                    }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    }}
+                    className='w-2 h-2 bg-white rounded-full'
+                  />
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.2, 1],
+                    }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                      delay: 0.2,
+                    }}
+                    className='w-2 h-2 bg-white rounded-full'
+                  />
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.2, 1],
+                    }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                      delay: 0.4,
+                    }}
+                    className='w-2 h-2 bg-white rounded-full'
+                  />
+                </div>
+              ) : (
+                <Send className='w-3.5 h-3.5' />
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 
