@@ -145,7 +145,7 @@ export default function InvoicesPage() {
             </SheetContent>
           </Sheet>
         ) : (
-          <div className='w-full border-l border-l-gray-800 overflow-hidden'>
+          <div className='w-full border-l overflow-hidden'>
             <InvoicePreview
               selectedInvoice={selectedInvoice}
               invoiceId={selectedInvoice?._id}
