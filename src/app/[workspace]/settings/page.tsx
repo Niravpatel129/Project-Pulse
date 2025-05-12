@@ -381,7 +381,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className='bg-white pb-10'>
+    <div className='bg-background pb-10 w-full'>
       <div className='container mx-auto py-8 px-4 max-w-6xl '>
         <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8'>
           <div>
@@ -393,19 +393,19 @@ export default function SettingsPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-6'>
           <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
             <TabsList className='bg-muted/50'>
-              <TabsTrigger value='general' className='data-[state=active]:bg-white'>
+              <TabsTrigger value='general' className='data-[state=active]:bg-black'>
                 <Settings className='mr-2 h-4 w-4' />
                 General
               </TabsTrigger>
-              <TabsTrigger value='team' className='data-[state=active]:bg-white'>
+              <TabsTrigger value='team' className='data-[state=active]:bg-black'>
                 <Users className='mr-2 h-4 w-4' />
                 Team
               </TabsTrigger>
-              <TabsTrigger value='billing' className='data-[state=active]:bg-white'>
+              <TabsTrigger value='billing' className='data-[state=active]:bg-black'>
                 <CreditCard className='mr-2 h-4 w-4' />
                 Billing
               </TabsTrigger>
-              <TabsTrigger value='integrations' className='data-[state=active]:bg-white'>
+              <TabsTrigger value='integrations' className='data-[state=active]:bg-black'>
                 <ImageIcon className='mr-2 h-4 w-4' />
                 Integrations
               </TabsTrigger>
