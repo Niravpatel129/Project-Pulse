@@ -292,7 +292,7 @@ export default function RightSidebar({
       </div>
 
       {/* Chat Messages */}
-      <ScrollArea className='flex-1 min-h-0'>
+      <ScrollArea className='flex-1 min-h-0' viewportClassName='w-full h-full [&>div]:!block'>
         <div ref={scrollRef} className='px-5 py-4 space-y-4'>
           <div className='flex justify-end'>
             <Button
