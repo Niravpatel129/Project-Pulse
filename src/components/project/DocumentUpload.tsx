@@ -21,7 +21,8 @@ const SUPPORTED_TYPES = [
   'text/csv',
 ];
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 7 * 1024 * 1024; // 7MB
+const MAX_FILES = 5;
 
 export function DocumentUpload({ onUploadSuccess, onUploadError }: DocumentUploadProps) {
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +43,13 @@ export function DocumentUpload({ onUploadSuccess, onUploadError }: DocumentUploa
 
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
-      setError('File size exceeds 10MB limit');
+      setError('File size exceeds 7MB limit');
+      return;
+    }
+
+    // Validate total number of files
+    if (documents.length >= MAX_FILES) {
+      setError(`Maximum number of files (${MAX_FILES}) reached`);
       return;
     }
 
@@ -117,11 +124,11 @@ export function DocumentUpload({ onUploadSuccess, onUploadError }: DocumentUploa
             <p className='text-xs text-gray-500'>
               Supported formats: PDF, Word, Excel, Text, Markdown, CSV
             </p>
-            <p className='text-xs text-gray-500'>Max file size: 10MB</p>
+            <p className='text-xs text-gray-500'>Max file size: 7MB • Max files: {MAX_FILES}</p>
           </div>
           <Button
             onClick={triggerFileUpload}
-            disabled={isUploading}
+            disabled={isUploading || documents.length >= MAX_FILES}
             className='mt-2'
             variant='outline'
           >
@@ -137,6 +144,9 @@ export function DocumentUpload({ onUploadSuccess, onUploadError }: DocumentUploa
               </>
             )}
           </Button>
+          {documents.length >= MAX_FILES && (
+            <p className='text-xs text-gray-500'>Maximum number of files ({MAX_FILES}) reached</p>
+          )}
         </div>
       </div>
 
