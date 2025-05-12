@@ -917,7 +917,7 @@ export function InvoiceTab({ invoice }: InvoiceTabProps) {
       <SendInvoiceDialog
         open={isSendDialogOpen}
         onOpenChange={setIsSendDialogOpen}
-        invoice={transformForSendDialog()}
+        invoice={transformForSendDialog() as any}
       />
 
       <Dialog
