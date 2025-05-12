@@ -154,7 +154,7 @@ export function DocumentUpload({ onUploadSuccess, onUploadError }: DocumentUploa
 
       {/* Documents List */}
       <div className='space-y-2'>
-        <h3 className='text-sm font-medium'>Uploaded Documents</h3>
+        <h3 className='text-sm font-medium'>Vector Index</h3>
         {isLoading ? (
           <div className='text-sm text-gray-500'>Loading documents...</div>
         ) : documents.length === 0 ? (
