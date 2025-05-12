@@ -31,6 +31,7 @@ interface Message {
   content: string;
   role: 'user' | 'assistant';
   timestamp: Date;
+  images?: string[];
   meta?: {
     confidence?: number;
     reasoning?: string;
@@ -108,7 +109,7 @@ export default function RightSidebar({
   }, [messages]);
 
   const chatMutation = useMutation({
-    mutationFn: async (message: string) => {
+    mutationFn: async ({ message, images }: { message: string; images: string[] }) => {
       const previousMessages = messages.filter((m) => {
         return m.role !== 'assistant' || m.content !== 'Hello! How can I help you today?';
       });
@@ -165,6 +166,7 @@ export default function RightSidebar({
           processingTime: data.meta?.processingTime,
         },
         structuredData: data.structuredData,
+        images: data.images,
       };
       setMessages((prev) => {
         return [...prev, assistantMessage];
@@ -189,20 +191,22 @@ export default function RightSidebar({
   });
 
   const handleSend = () => {
-    if (!input.trim()) return;
+    if (!input.trim() && images.length === 0) return;
 
     const newMessage: Message = {
       id: Date.now().toString(),
       content: input,
       role: 'user',
       timestamp: new Date(),
+      images: images.length > 0 ? [...images] : undefined,
     };
 
     setMessages((prev) => {
       return [...prev, newMessage];
     });
     setInput('');
-    chatMutation.mutate(input);
+    // Pass both message and images to the mutation
+    chatMutation.mutate({ message: input, images: images });
   };
 
   const handleClear = () => {
@@ -418,6 +422,50 @@ export default function RightSidebar({
                         </div>
                       </div>
 
+                      {/* Show images in message bubble if they exist */}
+                      {message.images && message.images.length > 0 && (
+                        <div className='flex gap-2 pl-2'>
+                          {message.images.map((img, idx) => {
+                            return (
+                              <div key={idx} className='relative group'>
+                                <img
+                                  src={img}
+                                  alt={`message-image-${idx}`}
+                                  className='w-24 h-24 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity'
+                                  onClick={() => {
+                                    setPreviewImage(img);
+                                    setIsDialogOpen(true);
+                                  }}
+                                />
+                                <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center'>
+                                  <button
+                                    className='text-white p-1 hover:bg-white/20 rounded-full transition-colors'
+                                    onClick={() => {
+                                      setPreviewImage(img);
+                                      setIsDialogOpen(true);
+                                    }}
+                                  >
+                                    <svg
+                                      width='16'
+                                      height='16'
+                                      viewBox='0 0 24 24'
+                                      fill='none'
+                                      stroke='currentColor'
+                                      strokeWidth='2'
+                                      strokeLinecap='round'
+                                      strokeLinejoin='round'
+                                    >
+                                      <circle cx='11' cy='11' r='8' />
+                                      <path d='m21 21-4.3-4.3' />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
                       {/* Line Items */}
                       {message.structuredData?.map((data, dataIndex) => {
                         return (
@@ -529,6 +577,49 @@ export default function RightSidebar({
                       <p className='text-sm leading-relaxed break-words overflow-wrap-anywhere'>
                         {message.content}
                       </p>
+                      {/* Show images in user message bubble if they exist */}
+                      {message.images && message.images.length > 0 && (
+                        <div className='flex gap-2 mt-2'>
+                          {message.images.map((img, idx) => {
+                            return (
+                              <div key={idx} className='relative group'>
+                                <img
+                                  src={img}
+                                  alt={`message-image-${idx}`}
+                                  className='w-24 h-24 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity'
+                                  onClick={() => {
+                                    setPreviewImage(img);
+                                    setIsDialogOpen(true);
+                                  }}
+                                />
+                                <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center'>
+                                  <button
+                                    className='text-white p-1 hover:bg-white/20 rounded-full transition-colors'
+                                    onClick={() => {
+                                      setPreviewImage(img);
+                                      setIsDialogOpen(true);
+                                    }}
+                                  >
+                                    <svg
+                                      width='16'
+                                      height='16'
+                                      viewBox='0 0 24 24'
+                                      fill='none'
+                                      stroke='currentColor'
+                                      strokeWidth='2'
+                                      strokeLinecap='round'
+                                      strokeLinejoin='round'
+                                    >
+                                      <circle cx='11' cy='11' r='8' />
+                                      <path d='m21 21-4.3-4.3' />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                       <p className='text-xs text-[#8C8C8C] mt-1.5'>
                         {message.timestamp.toLocaleTimeString([], {
                           hour: '2-digit',
@@ -718,14 +809,16 @@ export default function RightSidebar({
         <DialogContent className='flex items-center justify-center bg-[#141414] border-[#232428]'>
           <DialogTitle className='sr-only'>Preview</DialogTitle>
           {previewImage && (
-            <Image
-              unoptimized
-              width={1000}
-              height={1000}
-              src={previewImage}
-              alt='Preview'
-              className='max-w-[90vw] max-h-[80vh] rounded shadow-lg object-contain'
-            />
+            <div className='w-full h-full flex items-center justify-center relative'>
+              <Image
+                unoptimized
+                width={1000}
+                height={1000}
+                src={previewImage}
+                alt='Preview'
+                className='w-full h-full object-contain'
+              />
+            </div>
           )}
         </DialogContent>
       </Dialog>
