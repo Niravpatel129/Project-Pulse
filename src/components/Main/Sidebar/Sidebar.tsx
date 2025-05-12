@@ -17,15 +17,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createContext, useContext, useState } from 'react';
 import {
-  RiBarChartFill,
-  RiCalendarFill,
-  RiCheckboxFill,
-  RiDashboardFill,
   RiFileListFill,
-  RiFolderFill,
   RiMoneyDollarCircleFill,
   RiSettingsFill,
-  RiTeamFill,
   RiUserFill,
 } from 'react-icons/ri';
 
@@ -70,49 +64,8 @@ export default function AppSidebar() {
       ],
     },
     {
-      name: 'Core',
-      items: [
-        {
-          name: 'Dashboard',
-          href: '/dashboard',
-          current: pathname === '/dashboard',
-          icon: RiDashboardFill,
-        },
-        {
-          name: 'Projects',
-          href: '/projects',
-          current: pathname === '/projects',
-          icon: RiFolderFill,
-        },
-        {
-          name: 'Analytics',
-          href: '/analytics',
-          current: pathname === '/analytics',
-          icon: RiBarChartFill,
-        },
-      ],
-    },
-    {
       name: 'Management',
       items: [
-        {
-          name: 'Tasks',
-          href: '/tasks',
-          current: pathname === '/tasks',
-          icon: RiCheckboxFill,
-        },
-        {
-          name: 'Calendar',
-          href: '/calendar',
-          current: pathname === '/calendar',
-          icon: RiCalendarFill,
-        },
-        {
-          name: 'Team',
-          href: '/team',
-          current: pathname === '/team',
-          icon: RiTeamFill,
-        },
         {
           name: 'Settings',
           href: '/settings',
