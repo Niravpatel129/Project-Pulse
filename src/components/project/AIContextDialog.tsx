@@ -103,7 +103,7 @@ export function AIContextDialog({ open, onOpenChange }: AIContextDialogProps) {
                   <Button
                     onClick={handleSave}
                     disabled={isUpdating || isLoadingContext}
-                    className='bg-blue-600 hover:bg-blue-700 text-white'
+                    variant='outline'
                   >
                     {isUpdating ? 'Saving...' : 'Save Context'}
                   </Button>
