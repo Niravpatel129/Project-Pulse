@@ -1,5 +1,6 @@
 import { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono, IBM_Plex_Sans } from 'next/font/google';
+import { headers } from 'next/headers';
 import Script from 'next/script';
 import ClientLayout from './ClientLayout';
 import './globals.css';
@@ -32,9 +33,37 @@ const workspaceColors = {
 
 export async function generateMetadata(): Promise<Metadata> {
   // Get the hostname from the request headers
-  const hostname = process.env.VERCEL_URL || 'localhost';
+  const headersList = await headers();
+  const host = headersList.get('host') || '';
+  const hostname = host.split(':')[0]; // Remove port if present
   const subdomain = hostname.split('.')[0];
   const isSubdomain = hostname !== 'localhost' && subdomain !== 'www' && subdomain !== 'pulse-app';
+
+  let logoUrl = '/favicon.ico';
+
+  if (isSubdomain) {
+    try {
+      // Create a new request instance for server-side
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004'}/api/workspaces/logo`,
+        {
+          headers: {
+            origin: host,
+            workspace: subdomain,
+          },
+        },
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data?.data?.logo) {
+          logoUrl = data.data.logo;
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching workspace logo:', error);
+    }
+  }
 
   const themeColor = isSubdomain
     ? workspaceColors[subdomain as keyof typeof workspaceColors] || workspaceColors.default
@@ -87,7 +116,7 @@ export async function generateMetadata(): Promise<Metadata> {
       images: ['/og-image-home.jpg'],
     },
     icons: {
-      icon: isSubdomain ? `/api/favicon/${subdomain}` : '/favicon.ico',
+      icon: logoUrl,
       shortcut: '/favicon-16x16.png',
       apple: '/apple-touch-icon.png',
       other: [
