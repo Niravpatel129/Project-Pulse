@@ -1,72 +1,80 @@
 import axios from 'axios';
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
-const IS_MOBILE = typeof navigator !== 'undefined' && /Mobi|Android/i.test(navigator.userAgent);
+const IS_MOBILE =
+  typeof window !== 'undefined' &&
+  typeof navigator !== 'undefined' &&
+  /Mobi|Android/i.test(navigator.userAgent);
 
-const getLocalUrl = () => {
-  if (typeof window === 'undefined') return 'http://localhost:3004';
+/**
+ * Determine the base URL for API requests.
+ */
+function getApiBase() {
+  if (typeof window === 'undefined') {
+    return '/api'; // Default fallback for server-side
+  }
+
+  if (IS_PRODUCTION || IS_MOBILE) {
+    return `${window.location.origin}/api`;
+  }
 
   const hostname = window.location.hostname;
-  if (hostname === 'localhost') return 'http://localhost:3004';
+  if (hostname === 'localhost') {
+    return 'http://localhost:3004/api';
+  }
 
   const subdomain = hostname.split('.')[0];
-  return `http://${subdomain}.hourblock.com:3004`;
-};
+  return `http://${subdomain}.hourblock.com:3004/api`;
+}
 
-export const connectionUrl =
-  IS_PRODUCTION || IS_MOBILE ? 'https://api.hourblock.com' : getLocalUrl();
+export const connectionUrl = getApiBase();
 
 export const newRequest = axios.create({
-  baseURL: `${connectionUrl}/api`,
+  baseURL: connectionUrl,
   withCredentials: true,
 });
 
-newRequest.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+newRequest.interceptors.request.use(
+  (config) => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
 
-  // Add workspace (subdomain) to every request
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    if (hostname !== 'localhost') {
-      const subdomain = hostname.split('.')[0];
-      config.headers.workspace = subdomain;
-    } else {
-      // For localhost development, you might want to set a default workspace
-      // or extract it from the URL path if available
-      const pathParts = window.location.pathname.split('/');
-      if (pathParts.length > 1 && pathParts[1]) {
-        config.headers.workspace = pathParts[1];
+      // Fallback workspace header
+      const hostname = window.location.hostname;
+      if (hostname !== 'localhost') {
+        config.headers.workspace = hostname.split('.')[0];
+      } else {
+        const pathParts = window.location.pathname.split('/');
+        if (pathParts.length > 1 && pathParts[1]) {
+          config.headers.workspace = pathParts[1];
+        }
       }
     }
-  }
 
-  return config;
-});
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  },
+);
 
 newRequest.interceptors.response.use(
   (response) => {
     return response;
   },
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Handle unauthorized error (e.g., redirect to login)
+    if (error.response?.status === 401) {
+      // TODO: handle unauthorized (e.g. redirect to login)
     }
     return Promise.reject(error);
   },
 );
 
 /**
- * Creates a streaming connection using axios for Server-Sent Events
- * @param url The endpoint URL to stream from
- * @param method The HTTP method to use
- * @param data Request payload
- * @param onChunk Callback for processing each data chunk
- * @param onStart Callback for stream start event
- * @param onEnd Callback for stream end event
- * @param onError Callback for stream errors
+ * Creates a streaming connection using fetch for Server-Sent Events.
  */
 export const streamRequest = ({
   endpoint,
@@ -76,44 +84,34 @@ export const streamRequest = ({
   onStart,
   onEnd,
   onError,
-}: {
-  endpoint: string;
-  method?: 'POST' | 'GET';
-  data?: any;
-  onChunk?: (chunk: any) => void;
-  onStart?: (data: any) => void;
-  onEnd?: () => void;
-  onError?: (error: any) => void;
 }) => {
-  // Create a reference to store the reader outside the promise chain
-  let readerRef: ReadableStreamDefaultReader<Uint8Array> | null = null;
+  let readerRef = null;
 
   try {
-    const url = `${connectionUrl}/api${endpoint}`;
-    const token = localStorage.getItem('authToken');
-    const headers: Record<string, string> = {
+    const url = `${connectionUrl}${endpoint}`;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+    /** @type {Record<string, string>} */
+    const headers = {
       'Content-Type': 'application/json',
     };
 
     if (token) {
-      headers.Authorization = `Bearer ${token}`;
+      headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Add workspace header
+    // Fallback workspace header
     if (typeof window !== 'undefined') {
       const hostname = window.location.hostname;
       if (hostname !== 'localhost') {
-        const subdomain = hostname.split('.')[0];
-        headers.workspace = subdomain;
+        headers['workspace'] = hostname.split('.')[0];
       } else {
         const pathParts = window.location.pathname.split('/');
         if (pathParts.length > 1 && pathParts[1]) {
-          headers.workspace = pathParts[1];
+          headers['workspace'] = pathParts[1];
         }
       }
     }
 
-    // Use then/catch for Promise handling instead of await
     fetch(url, {
       method,
       headers,
@@ -121,21 +119,14 @@ export const streamRequest = ({
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Stream request failed with status ${response.status}`);
+          throw new Error(`Stream request failed: ${response.status}`);
         }
-
-        const reader = response.body?.getReader();
-        if (!reader) {
-          throw new Error('Cannot read response body');
-        }
-
-        // Store reader in our reference
+        const reader = response.body.getReader();
         readerRef = reader;
-
         const decoder = new TextDecoder();
         let buffer = '';
 
-        const processChunks = () => {
+        const processStream = () => {
           reader
             .read()
             .then(({ done, value }) => {
@@ -143,30 +134,22 @@ export const streamRequest = ({
                 onEnd?.();
                 return;
               }
+              buffer += decoder.decode(value, { stream: true });
 
-              // Decode this chunk and add it to our buffer
-              const chunk = decoder.decode(value, { stream: true });
-              buffer += chunk;
+              let boundary;
+              while ((boundary = buffer.indexOf('\n\n')) !== -1) {
+                const chunk = buffer.slice(0, boundary);
+                buffer = buffer.slice(boundary + 2);
 
-              // Process complete SSE messages from the buffer
-              let boundaryIndex;
-              while ((boundaryIndex = buffer.indexOf('\n\n')) !== -1) {
-                const eventData = buffer.slice(0, boundaryIndex);
-                buffer = buffer.slice(boundaryIndex + 2);
-
-                // Process each SSE data line
-                if (eventData.startsWith('data: ')) {
+                if (chunk.startsWith('data: ')) {
                   try {
-                    const data = JSON.parse(eventData.substring(6));
-
-                    if (data.type === 'start') {
-                      onStart?.(data);
-                    } else if (data.type === 'chunk') {
-                      onChunk?.(data);
-                    } else if (data.type === 'end') {
-                      // Will be handled by done === true
-                    } else if (data.type === 'error') {
-                      onError?.(data);
+                    const parsed = JSON.parse(chunk.substring(6));
+                    if (parsed.type === 'start') {
+                      onStart?.(parsed);
+                    } else if (parsed.type === 'chunk') {
+                      onChunk?.(parsed);
+                    } else if (parsed.type === 'error') {
+                      onError?.(parsed);
                       reader.cancel();
                       return;
                     }
@@ -175,33 +158,27 @@ export const streamRequest = ({
                   }
                 }
               }
-
-              // Continue reading
-              processChunks();
+              processStream();
             })
-            .catch((error) => {
-              onError?.(error);
+            .catch((err) => {
+              onError?.(err);
               reader.cancel();
             });
         };
 
-        // Start processing
-        processChunks();
+        processStream();
       })
-      .catch((error) => {
-        onError?.(error);
+      .catch((err) => {
+        onError?.(err);
       });
 
-    // Return the cancel function that uses our reader reference
     return {
       cancel: () => {
-        if (readerRef) {
-          readerRef.cancel();
-        }
+        if (readerRef) readerRef.cancel();
       },
     };
-  } catch (error) {
-    onError?.(error);
+  } catch (err) {
+    onError?.(err);
     return { cancel: () => {} };
   }
 };
