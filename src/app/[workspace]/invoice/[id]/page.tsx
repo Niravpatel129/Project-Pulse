@@ -411,11 +411,11 @@ export default function InvoicePage() {
         let amount: number;
 
         if (currentPaymentAmount !== null) {
-          amount = currentPaymentAmount;
+          amount = Math.round(currentPaymentAmount * 100); // Convert to cents
         } else if (isDepositPayment) {
-          amount = invoice.total * (invoice.depositPercentage / 100);
+          amount = Math.round(invoice.total * (invoice.depositPercentage / 100) * 100); // Convert to cents
         } else {
-          amount = invoice.total;
+          amount = Math.round(invoice.total * 100); // Convert to cents
         }
 
         const response = await newRequest.post(`/invoices/${invoiceId}/payment-intent`, {
