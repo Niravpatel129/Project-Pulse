@@ -29,7 +29,7 @@ interface ReceiptItem {
   description?: string;
   quantity: number;
   price: number;
-  tax: number;
+  tax: number; // Tax percentage (e.g., 8.5 for 8.5%)
   taxName: string;
 }
 
@@ -283,7 +283,9 @@ export function ReceiptPdf({ receipt, isReadOnly = false }: ReceiptProps) {
           </thead>
           <tbody>
             {receipt.items.map((item) => {
-              const itemTotal = item.price * item.quantity + item.tax;
+              const itemSubtotal = item.price * item.quantity;
+              const taxAmount = (itemSubtotal * item.tax) / 100;
+              const itemTotal = itemSubtotal + taxAmount;
               return (
                 <tr
                   key={item._id}
@@ -317,11 +319,12 @@ export function ReceiptPdf({ receipt, isReadOnly = false }: ReceiptProps) {
                       isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'
                     }`}
                   >
-                    {item.tax.toLocaleString(undefined, {
+                    {item.tax}% (
+                    {taxAmount.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}{' '}
-                    {receipt.currency}
+                    {receipt.currency})
                   </td>
                   <td
                     className={`py-3 px-4 text-right ${

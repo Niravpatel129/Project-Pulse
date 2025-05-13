@@ -692,7 +692,10 @@ export default function InvoicePage() {
               </thead>
               <tbody>
                 {invoiceData.items.map((item) => {
-                  const itemTotal = item.price * item.quantity - item.discount + item.tax;
+                  const itemTotal =
+                    item.price * item.quantity -
+                    item.discount +
+                    item.price * item.quantity * (item.tax / 100);
                   return (
                     <tr
                       key={item._id}
@@ -739,7 +742,7 @@ export default function InvoicePage() {
                           localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'
                         } ${isMobileView ? 'text-sm' : 'text-base'} print:py-1 print:text-sm`}
                       >
-                        {item.tax.toFixed(2)} {invoiceData.currency}
+                        {item.tax}% {item.taxName}
                       </td>
                       <td
                         className={`text-right py-2 ${
@@ -768,28 +771,7 @@ export default function InvoicePage() {
                   {invoiceData.subtotal.toFixed(2)} {invoiceData.currency}
                 </span>
               </div>
-              {invoiceData.discount > 0 && (
-                <div
-                  className={`flex justify-between py-2 ${
-                    localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'
-                  } print:py-1`}
-                >
-                  <span>Discount:</span>
-                  <span>
-                    {invoiceData.discount.toFixed(2)} {invoiceData.currency}
-                  </span>
-                </div>
-              )}
-              <div
-                className={`flex justify-between py-2 ${
-                  localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'
-                } print:py-1`}
-              >
-                <span>Tax ({invoiceData.taxRate}%):</span>
-                <span>
-                  {invoiceData.taxAmount.toFixed(2)} {invoiceData.currency}
-                </span>
-              </div>
+
               <div
                 className={`flex justify-between py-2 font-bold border-t ${
                   localTheme === 'light' ? 'border-gray-200' : 'border-[#232428]'
