@@ -365,17 +365,22 @@ export default function InvoicePreview({
 
   const recordPaymentMutation = useMutation({
     mutationFn: async () => {
-      await newRequest.post(`/invoices/${invoiceId || selectedInvoice?._id}/payments`, {
-        date: paymentDate,
-        amount: parseFloat(paymentAmount),
-        method: paymentMethod,
-        memo: paymentMemo,
-      });
+      const response = await newRequest.post(
+        `/invoices/${invoiceId || selectedInvoice?._id}/payments`,
+        {
+          date: paymentDate,
+          amount: parseFloat(paymentAmount),
+          method: paymentMethod,
+          memo: paymentMemo,
+        },
+      );
+      return response.data.data.payment;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries();
       toast.success('Payment recorded successfully');
       setPaymentSuccess(true);
+      setSelectedPayment(data);
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to record payment');
@@ -1058,12 +1063,18 @@ export default function InvoicePreview({
             <DialogHeader>
               <DialogTitle>Send Payment Receipt</DialogTitle>
               <DialogDescription>
-                Share the payment receipt for $
-                {selectedPayment?.amount.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}{' '}
-                with {invoice.client?.user.name}
+                {selectedPayment ? (
+                  <>
+                    Share the payment receipt for $
+                    {selectedPayment.amount.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}{' '}
+                    with {invoice.client?.user.name}
+                  </>
+                ) : (
+                  'Share the payment receipt with the client'
+                )}
               </DialogDescription>
             </DialogHeader>
             <div className='flex flex-col items-center justify-center py-10'>
@@ -1075,9 +1086,13 @@ export default function InvoicePreview({
               <Button
                 variant='outline'
                 onClick={() => {
-                  const receiptUrl = `${window.location.origin}/portal/payments/receipt/${selectedPayment?._id}`;
-                  navigator.clipboard.writeText(receiptUrl);
-                  toast.success('Receipt link copied!');
+                  if (selectedPayment?._id) {
+                    const receiptUrl = `${window.location.origin}/portal/payments/receipt/${selectedPayment._id}`;
+                    navigator.clipboard.writeText(receiptUrl);
+                    toast.success('Receipt link copied!');
+                  } else {
+                    toast.error('Payment information not available');
+                  }
                 }}
               >
                 Copy link
