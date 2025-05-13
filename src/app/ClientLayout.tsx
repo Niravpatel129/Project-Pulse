@@ -23,8 +23,8 @@ export default function ClientLayout({
   const pageContext: PageContext = {
     url: pathname,
   };
-  const isMainPage = pathname?.includes('/main');
 
+  const showSidebar = pathname?.includes('/dashboard');
   return (
     <>
       <QueryClientProvider client={queryClient}>
@@ -37,7 +37,7 @@ export default function ClientLayout({
                 {/* Main content area */}
                 <main className='flex-1'>{children}</main>
 
-                {!isMainPage && (
+                {showSidebar && (
                   <>
                     <ChatWidget pageContext={pageContext} />
                   </>
