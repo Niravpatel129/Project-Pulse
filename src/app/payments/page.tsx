@@ -90,24 +90,6 @@ export default function PaymentsPage() {
     handlePreviewClick(null);
   };
 
-  const handlePaymentUpdate = async (paymentId: string) => {
-    await Promise.all([queryClient.invalidateQueries()]);
-
-    // Force refetch the specific payment
-    const response = await queryClient.fetchQuery({
-      queryKey: ['payment', paymentId],
-      queryFn: async () => {
-        const res = await newRequest.get<{ status: string; data: Payment }>(
-          `/payments/${paymentId}`,
-        );
-        return res.data;
-      },
-    });
-
-    // Update the selected payment with the new data
-    setSelectedPayment(response.data);
-  };
-
   return (
     <main className='flex-1 w-full overflow-auto bg-background h-screen'>
       <div className='flex h-full'>
