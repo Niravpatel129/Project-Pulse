@@ -103,7 +103,7 @@ export default function LoginPage() {
   return (
     <div className='flex scrollbar-hide overflow-hidden h-screen w-screen bg-white'>
       {/* Left side - Login form */}
-      <div className='w-full md:w-2/5 flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4'>
+      <div className='w-full md:w-2/5 flex items-center justify-center bg-gray-50 dark:bg-background p-4'>
         <div className='w-full max-w-sm space-y-6'>
           <div className='text-center'>
             <h2 className='text-2xl font-semibold text-gray-900 dark:text-white'>Login</h2>
@@ -173,15 +173,6 @@ export default function LoginPage() {
                 : 'Sign in'}
             </Button>
           </form>
-
-          <div className='text-xs text-center text-gray-500 dark:text-gray-400 p-2 border-t pt-4'>
-            <p className='font-medium text-gray-600 dark:text-gray-300 mb-1'>Demo accounts:</p>
-            <p>
-              admin@example.com or user@example.com
-              <br />
-              <span className='opacity-75'>(any password works)</span>
-            </p>
-          </div>
 
           {/* Debug info */}
           {isDev && (
