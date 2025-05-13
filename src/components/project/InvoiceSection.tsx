@@ -345,6 +345,16 @@ export default function InvoiceSection({
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
   const [openAccordionItems, setOpenAccordionItems] = useState<string[]>(['client-info']);
   const queryClient = useQueryClient();
+
+  // Initialize dueDate from existingInvoice if available
+  useEffect(() => {
+    if (existingInvoice?.dueDate) {
+      setDueDate(new Date(existingInvoice.dueDate));
+    } else {
+      setDueDate(null);
+    }
+  }, [existingInvoice, setDueDate]);
+
   // Calculate totals
   const subtotal = items.reduce((sum, item) => {
     const quantity = Number.parseFloat(item.quantity);
@@ -410,7 +420,7 @@ export default function InvoiceSection({
             taxName: item.taxName || 'VAT',
           };
         }),
-        dueDate: dueDate?.toISOString(),
+        dueDate: dueDate ? dueDate.toISOString() : null,
         taxRate: workspaceTaxSettings.defaultTaxRate,
         taxId: workspaceTaxSettings.taxId || '',
         showTaxId: !!workspaceTaxSettings.taxId,
@@ -476,7 +486,7 @@ export default function InvoiceSection({
             taxName: item.taxName || 'VAT',
           };
         }),
-        dueDate: dueDate?.toISOString(),
+        dueDate: dueDate ? dueDate.toISOString() : null,
         taxRate: workspaceTaxSettings.defaultTaxRate,
         taxId: workspaceTaxSettings.taxId || '',
         showTaxId: !!workspaceTaxSettings.taxId,
@@ -574,34 +584,48 @@ export default function InvoiceSection({
                         <Label htmlFor='due-date' className='text-xs text-[#8C8C8C] mb-1 block'>
                           Payment Due
                         </Label>
-                        <Popover modal>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant={'outline'}
-                              className={cn(
-                                'w-full justify-start text-left font-normal bg-[#141414] border-[#232428] rounded-lg px-3 py-2 text-base font-medium text-[#fafafa] outline-none hover:border-[#8b5df8] hover:ring-2 hover:ring-[#8b5df8]/20 transition-colors',
-                                !dueDate && 'text-[#8C8C8C]',
-                              )}
+                        <div className='flex gap-2'>
+                          <Popover modal>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant={'outline'}
+                                className={cn(
+                                  'w-full justify-start text-left font-normal bg-[#141414] border-[#232428] rounded-lg px-3 py-2 text-base font-medium text-[#fafafa] outline-none hover:border-[#8b5df8] hover:ring-2 hover:ring-[#8b5df8]/20 transition-colors',
+                                  !dueDate && 'text-[#8C8C8C]',
+                                )}
+                              >
+                                <CalendarIcon className='mr-2 h-4 w-4' />
+                                {dueDate ? format(dueDate, 'PPP') : <span>Pick a date</span>}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className='w-auto p-0 min-w-[350px] bg-[#141414] border-[#232428]'
+                              align='start'
                             >
-                              <CalendarIcon className='mr-2 h-4 w-4' />
-                              {dueDate ? format(dueDate, 'PPP') : <span>Pick a date</span>}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent
-                            className='w-auto p-0 min-w-[350px] bg-[#141414] border-[#232428]'
-                            align='start'
-                          >
-                            <Calendar
-                              mode='single'
-                              selected={dueDate || undefined}
-                              onSelect={(date) => {
-                                setDueDate(date);
+                              <Calendar
+                                mode='single'
+                                selected={dueDate || undefined}
+                                onSelect={(date) => {
+                                  setDueDate(date);
+                                }}
+                                initialFocus
+                                className='bg-[#141414] text-[#fafafa]'
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          {dueDate && (
+                            <Button
+                              variant='outline'
+                              size='icon'
+                              onClick={() => {
+                                return setDueDate(null);
                               }}
-                              initialFocus
-                              className='bg-[#141414] text-[#fafafa]'
-                            />
-                          </PopoverContent>
-                        </Popover>
+                              className='bg-[#141414] border-[#232428] hover:border-[#8b5df8] hover:ring-2 hover:ring-[#8b5df8]/20'
+                            >
+                              <X className='h-4 w-4' />
+                            </Button>
+                          )}
+                        </div>
                       </div>
 
                       {/* Deposit Options */}
