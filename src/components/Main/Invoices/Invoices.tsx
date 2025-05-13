@@ -303,58 +303,58 @@ export default function Invoices({
                   </div>
 
                   <div className='flex items-center gap-2 ml-4'>
-                    {notesMap[invoice._id]?.length > 0 && (
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant='ghost'
-                                  size='icon'
-                                  className='text-[#f5a623] hover:text-white relative'
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                  }}
-                                >
-                                  <FiBook size={14} />
-                                  <span className='absolute -top-1 -right-1 bg-[#ffffff] text-[#030303] text-xs rounded-full w-4 h-4 flex items-center justify-center'>
-                                    {notesMap[invoice._id]?.length}
-                                  </span>
-                                </Button>
-                              </TooltipTrigger>
-                            </PopoverTrigger>
-                            <TooltipContent>
-                              <p>Notes</p>
-                            </TooltipContent>
-                            <PopoverContent className='w-[350px] p-0 bg-[#181818] text-white rounded-lg shadow-lg border-none'>
-                              <NotesPopoverContent
-                                invoiceId={invoice._id}
-                                initialNotes={notesMap[invoice._id] || []}
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                    {invoice.starred && (
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='text-[#f5a623] hover:text-white'
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          starMutation.mutate(invoice._id);
-                        }}
-                        disabled={starMutation.isPending}
-                      >
-                        {starMutation.isPending ? (
-                          <div className='w-4 h-4 border-2 border-[#8b8b8b] border-t-transparent rounded-full animate-spin' />
-                        ) : (
-                          <BsStarFill size={14} />
-                        )}
-                      </Button>
-                    )}
+                    <div className='relative flex gap-0'>
+                      {notesMap[invoice._id]?.length > 0 && (
+                        <TooltipProvider delayDuration={0}>
+                          <Tooltip>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant='ghost'
+                                    size='icon'
+                                    className='text-[#f5a623] hover:text-white relative'
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                    }}
+                                  >
+                                    <FiBook size={14} />
+                                  </Button>
+                                </TooltipTrigger>
+                              </PopoverTrigger>
+                              <TooltipContent>
+                                <p>Notes</p>
+                              </TooltipContent>
+                              <PopoverContent className='w-[350px] p-0 bg-[#181818] text-white rounded-lg shadow-lg border-none'>
+                                <NotesPopoverContent
+                                  invoiceId={invoice._id}
+                                  initialNotes={notesMap[invoice._id] || []}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      {invoice.starred && (
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          className='text-[#f5a623] hover:text-white'
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            starMutation.mutate(invoice._id);
+                          }}
+                          disabled={starMutation.isPending}
+                        >
+                          {starMutation.isPending ? (
+                            <div className='w-4 h-4 border-2 border-[#8b8b8b] border-t-transparent rounded-full animate-spin' />
+                          ) : (
+                            <BsStarFill size={14} />
+                          )}
+                        </Button>
+                      )}
+                    </div>
+
                     <div className='text-xs text-[#8C8C8C] ml-0 whitespace-nowrap'>
                       {(() => {
                         const date = new Date(invoice.createdAt);
