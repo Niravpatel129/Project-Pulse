@@ -593,6 +593,7 @@ export default function InvoicePage() {
         ) : (
           clientSecret && (
             <Elements
+              key={clientSecret}
               stripe={stripePromise}
               options={{
                 clientSecret,
