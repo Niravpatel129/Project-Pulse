@@ -774,7 +774,7 @@ export default function InvoicePreview({
             <div className='flex flex-col'>
               <span className='text-sm text-[#8C8C8C] mb-2'>Due Date</span>
               <span className='text-[14px] font-medium text-white'>
-                {new Date(invoice.dueDate).toLocaleDateString()}
+                {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : 'No due date'}
               </span>
             </div>
           </div>
