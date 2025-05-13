@@ -353,8 +353,8 @@ export default function SettingsPage() {
     if (!file) return;
 
     // Validate file type
-    if (!file.type.match(/image\/(jpeg|jpg|png|gif|webp)/i)) {
-      toast.error('Please select a valid image file (JPEG, PNG, GIF, WebP)');
+    if (!file.type.match(/image\/(jpeg|jpg|png|gif|webp)|image\/(svg|svg+xml)/i)) {
+      toast.error('Please select a valid image file (JPEG, PNG, GIF, WebP, SVG)');
       return;
     }
 
