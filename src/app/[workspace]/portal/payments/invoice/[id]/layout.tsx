@@ -3,6 +3,7 @@ import { newRequest } from '@/utils/newRequest';
 import { Metadata } from 'next';
 
 type Props = {
+  children: React.ReactNode;
   params: { id: string };
 };
 
