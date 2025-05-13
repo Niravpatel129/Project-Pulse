@@ -28,6 +28,10 @@ const getStatusColor = (status: string) => {
       return 'bg-green-500/10 text-green-500';
     case 'overdue':
       return 'bg-red-500/10 text-red-500';
+    case 'overpaid':
+      return 'bg-blue-500/10 text-blue-500';
+    case 'partially_paid':
+      return 'bg-orange-500/10 text-orange-500';
     case 'sent':
     case 'pending':
       return 'bg-yellow-500/10 text-yellow-500';
