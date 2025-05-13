@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const response = await newRequest.get(`/workspaces/logo`, {
       headers: {
-        host,
+        origin: host,
       },
     });
 
