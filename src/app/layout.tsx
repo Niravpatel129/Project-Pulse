@@ -44,15 +44,12 @@ export async function generateMetadata(): Promise<Metadata> {
   if (isSubdomain) {
     try {
       // Create a new request instance for server-side
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004'}/api/workspaces/logo`,
-        {
-          headers: {
-            origin: host,
-            workspace: subdomain,
-          },
+      const response = await fetch(`https://api.hourblock.com/api/workspaces/logo`, {
+        headers: {
+          origin: host,
+          workspace: subdomain,
         },
-      );
+      });
 
       if (response.ok) {
         const data = await response.json();
