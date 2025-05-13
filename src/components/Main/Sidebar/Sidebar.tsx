@@ -126,7 +126,7 @@ export default function AppSidebar() {
                               asChild
                               isActive={item.current}
                               tooltip={item.name}
-                              className='text-white hover:bg-white/10 data-[active=true]:bg-white/10'
+                              className='text-white hover:bg-white/10 data-[active=true]:bg-white/10 mb-1'
                             >
                               <Link
                                 href={item.href}
