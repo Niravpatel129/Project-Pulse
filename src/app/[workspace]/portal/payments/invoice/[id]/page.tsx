@@ -7,6 +7,7 @@ import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { Download, Mail, Monitor, Moon, Printer, Share2, Smartphone, Sun } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -16,20 +17,15 @@ export default function InvoicePage() {
   const [isMobileView, setIsMobileView] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [email, setEmail] = useState('');
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const { theme, setTheme } = useTheme();
   const { data: invoiceSettings } = useInvoiceSettings();
 
   useEffect(() => {
-    // Check system preference
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setTheme('dark');
+    // Set initial theme to light if not set
+    if (!theme) {
+      setTheme('light');
     }
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(theme);
-  }, [theme]);
+  }, [theme, setTheme]);
 
   const { data: invoice } = useQuery<Payment>({
     queryKey: ['invoice', id],
@@ -133,7 +129,7 @@ export default function InvoicePage() {
   };
 
   return (
-    <div className='w-full min-h-screen bg-white dark:bg-[#141414]'>
+    <div className=' w-full min-h-screen bg-white dark:bg-[#141414]'>
       {/* Sticky Banner */}
       <div className='sticky top-0 z-50 bg-white/80 dark:bg-[#181818] border-b border-gray-200 dark:border-[#232428] shadow-sm print:hidden'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
