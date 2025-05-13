@@ -51,6 +51,7 @@ export async function generateMetadata(): Promise<Metadata> {
         },
       });
 
+      console.log('🚀 response:', response);
       if (response.ok) {
         const data = await response.json();
         if (data?.data?.logo) {
