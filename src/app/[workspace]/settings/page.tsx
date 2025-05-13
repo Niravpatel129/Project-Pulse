@@ -491,7 +491,7 @@ export default function SettingsPage() {
                         <input
                           type='file'
                           ref={fileInputRef}
-                          accept='image/jpeg,image/png,image/gif,image/webp'
+                          accept='image/jpeg,image/png,image/gif,image/webp,image/svg+xml'
                           onChange={handleFileChange}
                           className='hidden'
                         />
