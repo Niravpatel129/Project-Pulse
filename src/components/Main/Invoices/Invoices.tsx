@@ -182,6 +182,7 @@ export default function Invoices({
             </motion.div>
           ) : (
             filteredInvoices?.map((invoice, index) => {
+              console.log('🚀 invoice:', invoice);
               return (
                 <motion.div
                   key={invoice._id}
@@ -216,7 +217,7 @@ export default function Invoices({
                   <div className='relative mr-3'>
                     <Avatar className='h-8 w-8'>
                       <AvatarFallback className='bg-[#373737] text-[#9f9f9f] text-xs font-semibold capitalize'>
-                        {invoice.client?.contact.firstName[0] || <IoPerson />}
+                        {invoice.client?.user.name[0] || <IoPerson />}
                         {invoice.client?.contact.lastName[0]}
                       </AvatarFallback>
                     </Avatar>
