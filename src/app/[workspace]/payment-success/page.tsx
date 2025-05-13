@@ -88,8 +88,8 @@ export default function PaymentSuccessPage() {
 
   if (error) {
     return (
-      <div className='min-h-screen bg-[#fafafa] flex items-center justify-center'>
-        <div className='text-center max-w-md p-8 bg-white rounded-xl shadow-sm'>
+      <div className='min-h-screen bg-background flex items-center justify-center w-full'>
+        <div className='text-center'>
           <div className='text-red-500 text-5xl mb-4'>✕</div>
           <h1 className='text-2xl font-semibold text-gray-800 mb-2'>Payment Failed</h1>
           <p className='text-gray-600 mb-6'>{error}</p>
@@ -98,5 +98,5 @@ export default function PaymentSuccessPage() {
     );
   }
 
-  return <div className='min-h-screen bg-[#fafafa] flex items-center justify-center'></div>;
+  return <div className='min-h-screen bg-background flex items-center justify-center'></div>;
 }
