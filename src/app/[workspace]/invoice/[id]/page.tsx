@@ -119,10 +119,14 @@ function PaymentForm({
   clientSecret,
   invoice,
   workspace,
+  currentPaymentAmount,
+  setCurrentPaymentAmount,
 }: {
   clientSecret: string;
   invoice: Invoice;
   workspace: string;
+  currentPaymentAmount: number | null;
+  setCurrentPaymentAmount: (amount: number | null) => void;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -131,7 +135,6 @@ function PaymentForm({
   const [paymentType, setPaymentType] = useState<'full' | 'deposit' | 'custom'>('full');
   const [customAmount, setCustomAmount] = useState<string>('');
   const [showPaymentForm, setShowPaymentForm] = useState(false);
-  const [currentPaymentAmount, setCurrentPaymentAmount] = useState<number | null>(null);
 
   // Update currentPaymentAmount when payment type or custom amount changes
   useEffect(() => {
@@ -142,7 +145,7 @@ function PaymentForm({
     } else {
       setCurrentPaymentAmount(invoice.total);
     }
-  }, [paymentType, customAmount, invoice]);
+  }, [paymentType, customAmount, invoice, setCurrentPaymentAmount]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -379,6 +382,9 @@ export default function InvoicePage() {
   const invoiceId = params?.id as string;
   const workspace = params?.workspace as string;
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [isDepositPayment, setIsDepositPayment] = useState(false);
+  const [currentPaymentAmount, setCurrentPaymentAmount] = useState<number | null>(null);
 
   const { data: invoice, isLoading } = useQuery<Invoice>({
     queryKey: ['invoice', workspace, invoiceId],
@@ -408,10 +414,6 @@ export default function InvoicePage() {
       return null;
     }
   });
-
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [isDepositPayment, setIsDepositPayment] = useState(false);
-  const [currentPaymentAmount, setCurrentPaymentAmount] = useState<number | null>(null);
 
   const createPaymentIntentMutation = useMutation({
     mutationFn: async () => {
@@ -619,7 +621,13 @@ export default function InvoicePage() {
                 },
               }}
             >
-              <PaymentForm clientSecret={clientSecret} invoice={invoice} workspace={workspace} />
+              <PaymentForm
+                clientSecret={clientSecret}
+                invoice={invoice}
+                workspace={workspace}
+                currentPaymentAmount={currentPaymentAmount}
+                setCurrentPaymentAmount={setCurrentPaymentAmount}
+              />
             </Elements>
           )
         )}
