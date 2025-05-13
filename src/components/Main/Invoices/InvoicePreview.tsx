@@ -81,6 +81,8 @@ interface Invoice {
   dueDate: string;
   notes?: string;
   currency: string;
+  requireDeposit: boolean;
+  depositPercentage: number;
   createdBy: {
     _id: string;
     name: string;
@@ -412,8 +414,8 @@ export default function InvoicePreview({
         }, 0) / invoice.items.length || 0,
       taxId: invoiceSettings?.taxId || '',
       showTaxId: invoiceSettings?.showTaxId || false,
-      requireDeposit: false,
-      depositPercentage: 0,
+      requireDeposit: invoice.requireDeposit,
+      depositPercentage: invoice.depositPercentage,
       discount: 0,
       discountAmount: 0,
       subtotal: invoice.items.reduce((sum, item) => {
@@ -692,17 +694,19 @@ export default function InvoicePreview({
                 {invoice.currency}
               </span>
             </div>
-            <div className='flex flex-col'>
-              <span className='text-sm text-[#8C8C8C] mb-2'>Deposit Due</span>
-              <span className='text-[14px] font-semibold text-[#a78bfa]'>
-                $
-                {(invoice.total / 2).toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}{' '}
-                <span className='text-sm'>(50%)</span>
-              </span>
-            </div>
+            {invoice.requireDeposit && (
+              <div className='flex flex-col'>
+                <span className='text-sm text-[#8C8C8C] mb-2'>Deposit Due</span>
+                <span className='text-[14px] font-semibold text-[#a78bfa]'>
+                  $
+                  {(invoice.total * (invoice.depositPercentage / 100)).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}{' '}
+                  <span className='text-sm'>({invoice.depositPercentage}% )</span>
+                </span>
+              </div>
+            )}
             <div className='flex flex-col'>
               <span className='text-sm text-[#8C8C8C] mb-2'>Due Date</span>
               <span className='text-[14px] font-medium text-white'>
