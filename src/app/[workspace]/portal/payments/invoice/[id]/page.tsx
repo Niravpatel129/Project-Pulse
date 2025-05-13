@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import type { Payment } from '@/types/invoice';
 import { newRequest } from '@/utils/newRequest';
@@ -11,6 +12,99 @@ import { useTheme } from 'next-themes';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+
+function InvoiceSkeleton() {
+  return (
+    <div className='w-full min-h-screen bg-white dark:bg-[#141414]'>
+      {/* Sticky Banner Skeleton */}
+      <div className='sticky top-0 z-50 bg-white/80 dark:bg-[#181818] border-b border-gray-200 dark:border-[#232428] shadow-sm'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+          <div className='flex justify-between items-center h-16'>
+            <div className='flex items-center space-x-4'>
+              <Skeleton className='h-6 w-32' />
+              <Skeleton className='h-6 w-20' />
+            </div>
+            <div className='flex items-center space-x-2'>
+              {[...Array(6)].map((_, i) => {
+                return <Skeleton key={i} className='h-9 w-9 rounded-md' />;
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Skeleton */}
+      <div className='max-w-7xl mx-auto p-6'>
+        <div className='bg-white dark:bg-[#181818] rounded-lg shadow-lg p-8 border border-gray-200 dark:border-[#232428]'>
+          {/* Header with Business Info Skeleton */}
+          <div className='flex justify-between items-start mb-8'>
+            <div className='space-y-4'>
+              <Skeleton className='h-16 w-32' />
+              <div className='space-y-2'>
+                <Skeleton className='h-6 w-48' />
+                <Skeleton className='h-4 w-64' />
+                <Skeleton className='h-4 w-40' />
+              </div>
+            </div>
+            <div className='space-y-2'>
+              <Skeleton className='h-4 w-32' />
+              <Skeleton className='h-4 w-32' />
+            </div>
+          </div>
+
+          {/* Client Information Skeleton */}
+          <div className='grid grid-cols-2 gap-8 mb-8'>
+            <div className='space-y-4'>
+              <Skeleton className='h-6 w-24' />
+              <div className='space-y-2'>
+                <Skeleton className='h-4 w-40' />
+                <Skeleton className='h-4 w-48' />
+                <Skeleton className='h-4 w-36' />
+                <Skeleton className='h-4 w-32' />
+              </div>
+            </div>
+            <div className='space-y-4'>
+              <Skeleton className='h-6 w-32' />
+              <div className='space-y-2'>
+                <Skeleton className='h-4 w-40' />
+                <Skeleton className='h-4 w-48' />
+                <Skeleton className='h-4 w-36' />
+                <Skeleton className='h-4 w-32' />
+              </div>
+            </div>
+          </div>
+
+          {/* Items Table Skeleton */}
+          <div className='mb-8'>
+            <Skeleton className='h-6 w-20 mb-4' />
+            <div className='space-y-4'>
+              {[...Array(3)].map((_, i) => {
+                return (
+                  <div key={i} className='grid grid-cols-5 gap-4'>
+                    <Skeleton className='h-12 col-span-2' />
+                    <Skeleton className='h-12' />
+                    <Skeleton className='h-12' />
+                    <Skeleton className='h-12' />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Totals Skeleton */}
+          <div className='flex justify-end'>
+            <div className='w-64 space-y-2'>
+              <Skeleton className='h-8 w-full' />
+              <Skeleton className='h-8 w-full' />
+              <Skeleton className='h-8 w-full' />
+              <Skeleton className='h-8 w-full' />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function InvoicePage() {
   const { id } = useParams();
@@ -36,7 +130,7 @@ export default function InvoicePage() {
   });
 
   if (!invoice) {
-    return <div className='text-[#fafafa]'>Loading...</div>;
+    return <InvoiceSkeleton />;
   }
 
   const {
