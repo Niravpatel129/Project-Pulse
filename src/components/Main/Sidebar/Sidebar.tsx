@@ -45,20 +45,20 @@ export default function AppSidebar() {
       items: [
         {
           name: 'Invoices',
-          href: '/invoices',
-          current: pathname === '/invoices',
+          href: '/dashboard/invoices',
+          current: pathname === '/dashboard/invoices',
           icon: RiFileListFill,
         },
         {
           name: 'Payments',
-          href: '/payments',
-          current: pathname === '/payments',
+          href: '/dashboard/payments',
+          current: pathname === '/dashboard/payments',
           icon: RiMoneyDollarCircleFill,
         },
         {
           name: 'Customers',
-          href: '/customers',
-          current: pathname === '/customers',
+          href: '/dashboard/customers',
+          current: pathname === '/dashboard/customers',
           icon: RiUserFill,
         },
       ],
@@ -68,8 +68,8 @@ export default function AppSidebar() {
       items: [
         {
           name: 'Settings',
-          href: '/settings',
-          current: pathname === '/settings',
+          href: '/dashboard/settings',
+          current: pathname === '/dashboard/settings',
           icon: RiSettingsFill,
         },
       ],
