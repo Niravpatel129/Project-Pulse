@@ -117,7 +117,7 @@ export default function RootLayout({
         <meta name='mobile-web-app-capable' content='yes' />
         <meta name='theme-color' content='#0066FF' />
 
-        {/* Dynamic manifest for workspace subdomains */}
+        {/* Dynamic manifest and favicon for workspace subdomains */}
         <Script id='dynamic-manifest' strategy='beforeInteractive'>
           {`
             (function() {
@@ -159,6 +159,16 @@ export default function RootLayout({
                 
                 var themeColor = colors[subdomain] || colors.default;
                 document.querySelector('meta[name="theme-color"]').content = themeColor;
+
+                // Update favicon to use workspace-specific one
+                var faviconLinks = document.querySelectorAll('link[rel*="icon"]');
+                faviconLinks.forEach(function(link) {
+                  if (link.getAttribute('rel') === 'icon') {
+                    var newHref = '/api/favicon/' + subdomain;
+                    console.log('[Favicon] Updating favicon to:', newHref);
+                    link.setAttribute('href', newHref);
+                  }
+                });
               }
             })();
           `}

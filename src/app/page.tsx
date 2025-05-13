@@ -463,8 +463,6 @@ export default function ComingSoonPage() {
 
     // Check for correct password
     if (password === correctPassword) {
-      // Redirect to bolo.hourblock.com
-      router.push('https://bolo.hourblock.com/login');
       return;
     }
 

@@ -118,12 +118,8 @@ export default function WorkspaceInvitePage() {
         router.push(`/${workspaceSlug}`);
       } else {
         // For production, use subdomain-based routing
-        // Extract the base domain (e.g., hourblock.com from app.hourblock.com)
         const domainParts = hostname.split('.');
-        const baseDomain =
-          domainParts.length > 2
-            ? domainParts.slice(1).join('.') // For subdomains like app.hourblock.com
-            : hostname; // For apex domain
+        const baseDomain = domainParts.length > 2 ? domainParts.slice(1).join('.') : hostname; // For apex domain
 
         // Construct the subdomain URL
         const protocol = window.location.protocol;
