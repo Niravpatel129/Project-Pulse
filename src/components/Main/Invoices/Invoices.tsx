@@ -234,7 +234,7 @@ export default function Invoices({
 
                     <div className='flex items-center justify-between'>
                       <div className='flex items-center gap-2'>
-                        <TooltipProvider delayDuration={0}>
+                        <TooltipProvider delayDuration={500}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <span className='text-[#8C8C8C] text-sm truncate md:max-w-[300px]  max-w-[180px]  hover:text-white transition-colors'>
