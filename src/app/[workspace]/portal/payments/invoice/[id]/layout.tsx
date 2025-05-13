@@ -2,7 +2,11 @@ import type { Payment } from '@/types/invoice';
 import { newRequest } from '@/utils/newRequest';
 import { Metadata } from 'next';
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+type Props = {
+  params: { id: string };
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const res = await newRequest.get(`/payments/${params.id}`);
     const invoice: Payment = res.data.data;
