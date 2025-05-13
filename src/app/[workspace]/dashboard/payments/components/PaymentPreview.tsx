@@ -345,7 +345,7 @@ export function PaymentPreview({ payment, onClose }: PaymentPreviewProps) {
               size='sm'
               className='bg-[#232323] border-[#333] text-white text-sm h-8 px-4'
               onClick={() => {
-                window.open(`/portal/payments/invoice/${payment._id}`, '_blank');
+                window.open(`/portal/payments/receipt/${payment._id}`, '_blank');
               }}
             >
               <Download className='w-4 h-4 mr-2' />
