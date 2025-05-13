@@ -25,7 +25,6 @@ import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
-  Download,
   Edit,
   Globe,
   Loader2,
@@ -41,13 +40,9 @@ import {
 import { useLayoutEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-// Remove mock customer data
-const MOCK_CUSTOMERS: any[] = [];
-
 export default function CustomersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [customers, setCustomers] = useState(MOCK_CUSTOMERS);
   const [sortColumn, setSortColumn] = useState('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
@@ -279,10 +274,6 @@ export default function CustomersPage() {
           </p>
         </div>
         <div className='flex space-x-2'>
-          <Button variant='outline'>
-            <Download className='mr-2 h-4 w-4' />
-            Export
-          </Button>
           <Button
             onClick={() => {
               return setCustomerModalOpen(true);
