@@ -1,11 +1,9 @@
 'use client';
 
 import PaymentsPage from '@/app/[workspace]/payments/page';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function DashboardPaymentsPage() {
-  const router = useRouter();
   const [isLoaded, setIsLoaded] = useState(false);
 
   // For this implementation, we'll reuse the existing payments page
