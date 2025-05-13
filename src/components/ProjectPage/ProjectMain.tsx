@@ -46,7 +46,6 @@ export default function ProjectMain() {
       tab: 'deliverables',
       badge: 5,
     },
-    // { href: `${baseUrl}/payments`, label: 'Payments', icon: CreditCard, tab: 'payments' },
   ];
 
   const renderNavigationLink = ({
