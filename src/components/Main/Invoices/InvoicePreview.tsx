@@ -1075,7 +1075,8 @@ export default function InvoicePreview({
               <Button
                 variant='outline'
                 onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
+                  const receiptUrl = `${window.location.origin}/payments/receipt/${selectedPayment?._id}`;
+                  navigator.clipboard.writeText(receiptUrl);
                   toast.success('Receipt link copied!');
                 }}
               >
