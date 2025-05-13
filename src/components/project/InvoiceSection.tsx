@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 import { newRequest } from '@/utils/newRequest';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, File, Paperclip, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import SectionFooter from './SectionFooter';
@@ -104,6 +104,9 @@ function StatefulTextarea({
   label,
   placeholder,
   height,
+  attachments,
+  onAttachmentsChange,
+  hideAttachments,
 }: {
   id: string;
   initialValue: string;
@@ -112,11 +115,29 @@ function StatefulTextarea({
   label?: string;
   placeholder?: string;
   height?: string;
+  hideAttachments?: boolean;
+  attachments?: Array<{
+    id: string;
+    name: string;
+    url: string;
+    size?: string;
+    type?: string;
+  }>;
+  onAttachmentsChange?: (
+    attachments: Array<{
+      id: string;
+      name: string;
+      url: string;
+      size?: string;
+      type?: string;
+    }>,
+  ) => void;
 }) {
   // Internal state that won't cause parent re-renders
   const [value, setValue] = useState(initialValue);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const firstRender = useRef(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Only update local state if the initialValue prop changes
   useEffect(() => {
@@ -137,6 +158,46 @@ function StatefulTextarea({
     onValueChange(value);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0 && onAttachmentsChange) {
+      const files = Array.from(e.target.files);
+      const newAttachments = files.map((file) => {
+        return {
+          id: `attachment-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+          name: file.name,
+          url: URL.createObjectURL(file),
+          size: formatFileSize(file.size),
+          type: file.type,
+        };
+      });
+
+      onAttachmentsChange([...(attachments || []), ...newAttachments]);
+
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const removeAttachment = (id: string) => {
+    if (onAttachmentsChange) {
+      onAttachmentsChange(
+        (attachments || []).filter((attachment) => {
+          return attachment.id !== id;
+        }),
+      );
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
   return (
     <div>
       {label && (
@@ -153,6 +214,65 @@ function StatefulTextarea({
         className={`${className} ${height ? height : ''}`}
         placeholder={placeholder}
       />
+
+      {!hideAttachments && (
+        <>
+          {/* File attachment section */}
+          <div className='mt-2'>
+            <input
+              type='file'
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className='hidden'
+              multiple
+            />
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              onClick={() => {
+                return fileInputRef.current?.click();
+              }}
+              className='mt-2'
+            >
+              <Paperclip className='h-4 w-4 mr-2' />
+              Attach Files
+            </Button>
+
+            {/* Display attachments */}
+            {attachments && attachments.length > 0 && (
+              <div className='mt-2 space-y-2'>
+                {attachments.map((attachment) => {
+                  return (
+                    <div
+                      key={attachment.id}
+                      className='flex items-center justify-between bg-[#232428] p-2 rounded'
+                    >
+                      <div className='flex items-center'>
+                        <File className='h-4 w-4 mr-2 text-[#8C8C8C]' />
+                        <span className='text-sm text-[#fafafa]'>{attachment.name}</span>
+                        {attachment.size && (
+                          <span className='text-xs text-[#8C8C8C] ml-2'>({attachment.size})</span>
+                        )}
+                      </div>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        onClick={() => {
+                          return removeAttachment(attachment.id);
+                        }}
+                        className='h-6 w-6 p-0'
+                      >
+                        <X className='h-4 w-4' />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -296,6 +416,7 @@ export default function InvoiceSection({
         showTaxId: !!workspaceTaxSettings.taxId,
         notes: invoiceSettings.invoiceNotes || '',
         teamNotes: invoiceSettings.teamNotes || '',
+        teamNotesAttachments: invoiceSettings.teamNotesAttachments || [],
         currency: projectCurrency.toUpperCase(),
         deliveryOptions: 'email',
         requireDeposit: invoiceSettings.requireDeposit,
@@ -361,6 +482,7 @@ export default function InvoiceSection({
         showTaxId: !!workspaceTaxSettings.taxId,
         notes: invoiceSettings.invoiceNotes || '',
         teamNotes: invoiceSettings.teamNotes || '',
+        teamNotesAttachments: invoiceSettings.teamNotesAttachments || [],
         currency: projectCurrency.toUpperCase(),
         deliveryOptions: 'email',
         requireDeposit: invoiceSettings.requireDeposit,
@@ -566,6 +688,7 @@ export default function InvoiceSection({
                       height='h-20'
                       label='Invoice Notes & Terms'
                       placeholder='Add any additional notes to include on the invoice...'
+                      hideAttachments={true}
                     />
                   </div>
 
@@ -582,10 +705,16 @@ export default function InvoiceSection({
                       height='h-20'
                       label='Team Notes (Private)'
                       placeholder='Add private notes for the team...'
+                      attachments={invoiceSettings.teamNotesAttachments}
+                      onAttachmentsChange={(attachments) => {
+                        handleInvoiceSettingsChange({
+                          teamNotesAttachments: attachments,
+                        });
+                      }}
                     />
                     <p className='text-xs text-[#8C8C8C] mt-1'>
-                      These notes are only visible to your team and will not be included in the
-                      invoice.
+                      These notes and attachments are only visible to your team and will not be
+                      included in the invoice.
                     </p>
                   </div>
                 </div>

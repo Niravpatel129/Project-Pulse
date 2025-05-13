@@ -80,4 +80,11 @@ export type InvoiceSettings = {
   defaultDiscountRate: number;
   invoiceNotes?: string;
   teamNotes?: string;
+  teamNotesAttachments?: Array<{
+    id: string;
+    name: string;
+    url: string;
+    size?: string;
+    type?: string;
+  }>;
 };
