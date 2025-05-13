@@ -1,13 +1,29 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import type { Payment } from '@/types/invoice';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { Download, Mail, Monitor, Moon, Printer, Share2, Smartphone, Sun } from 'lucide-react';
+import {
+  Download,
+  Mail,
+  Monitor,
+  Moon,
+  MoreVertical,
+  Printer,
+  Share2,
+  Smartphone,
+  Sun,
+} from 'lucide-react';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -192,6 +208,11 @@ export default function InvoicePage() {
     setLocalTheme(savedTheme || 'light');
   }, []);
 
+  useEffect(() => {
+    // Set root element background color to match theme
+    document.documentElement.style.backgroundColor = localTheme === 'light' ? '#ffffff' : '#141414';
+  }, [localTheme]);
+
   const { data: invoice } = useQuery<Payment>({
     queryKey: ['invoice', id],
     queryFn: async () => {
@@ -343,55 +364,100 @@ export default function InvoicePage() {
               >
                 {localTheme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
               </Button>
-              <Button
-                onClick={() => {
-                  return setIsMobileView(!isMobileView);
-                }}
-                variant='ghost'
-                size='icon'
-                className='text-muted-foreground hover:text-foreground'
-                title={isMobileView ? 'Desktop View' : 'Mobile View'}
-              >
-                {isMobileView ? <Monitor size={20} /> : <Smartphone size={20} />}
-              </Button>
-              <Button
-                onClick={handleDownload}
-                variant='ghost'
-                size='icon'
-                className='text-muted-foreground hover:text-foreground'
-                title='Download'
-              >
-                <Download size={20} />
-              </Button>
-              <Button
-                onClick={() => {
-                  return setShowEmailModal(true);
-                }}
-                variant='ghost'
-                size='icon'
-                className='text-muted-foreground hover:text-foreground'
-                title='Send via Email'
-              >
-                <Mail size={20} />
-              </Button>
-              <Button
-                onClick={handlePrint}
-                variant='ghost'
-                size='icon'
-                className='text-muted-foreground hover:text-foreground'
-                title='Print'
-              >
-                <Printer size={20} />
-              </Button>
-              <Button
-                onClick={handleShare}
-                variant='ghost'
-                size='icon'
-                className='text-muted-foreground hover:text-foreground'
-                title='Share'
-              >
-                <Share2 size={20} />
-              </Button>
+              <div className='hidden md:flex items-center space-x-2'>
+                <Button
+                  onClick={() => {
+                    return setIsMobileView(!isMobileView);
+                  }}
+                  variant='ghost'
+                  size='icon'
+                  className='text-muted-foreground hover:text-foreground'
+                  title={isMobileView ? 'Desktop View' : 'Mobile View'}
+                >
+                  {isMobileView ? <Monitor size={20} /> : <Smartphone size={20} />}
+                </Button>
+                <Button
+                  onClick={handleDownload}
+                  variant='ghost'
+                  size='icon'
+                  className='text-muted-foreground hover:text-foreground'
+                  title='Download'
+                >
+                  <Download size={20} />
+                </Button>
+                <Button
+                  onClick={() => {
+                    return setShowEmailModal(true);
+                  }}
+                  variant='ghost'
+                  size='icon'
+                  className='text-muted-foreground hover:text-foreground'
+                  title='Send via Email'
+                >
+                  <Mail size={20} />
+                </Button>
+                <Button
+                  onClick={handlePrint}
+                  variant='ghost'
+                  size='icon'
+                  className='text-muted-foreground hover:text-foreground'
+                  title='Print'
+                >
+                  <Printer size={20} />
+                </Button>
+                <Button
+                  onClick={handleShare}
+                  variant='ghost'
+                  size='icon'
+                  className='text-muted-foreground hover:text-foreground'
+                  title='Share'
+                >
+                  <Share2 size={20} />
+                </Button>
+              </div>
+              <div className='md:hidden'>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='text-muted-foreground hover:text-foreground'
+                    >
+                      <MoreVertical size={20} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align='end'>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        return setIsMobileView(!isMobileView);
+                      }}
+                    >
+                      <Monitor size={16} className='mr-2' />
+                      Desktop View
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDownload}>
+                      <Download size={16} className='mr-2' />
+                      Download
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        return setShowEmailModal(true);
+                      }}
+                    >
+                      <Mail size={16} className='mr-2' />
+                      Send via Email
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handlePrint}>
+                      <Printer size={16} className='mr-2' />
+                      Print
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleShare}>
+                      <Share2 size={16} className='mr-2' />
+                      Share
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </div>
         </div>
