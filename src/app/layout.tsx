@@ -47,7 +47,6 @@ export async function generateMetadata(): Promise<Metadata> {
       const response = await fetch(`https://api.hourblock.com/api/workspaces/logo`, {
         headers: {
           origin: host,
-          workspace: subdomain,
         },
       });
 
