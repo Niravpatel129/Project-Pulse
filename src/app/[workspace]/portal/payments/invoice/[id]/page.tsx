@@ -330,11 +330,11 @@ export default function InvoicePage() {
           <div className='flex justify-between items-center h-16'>
             <div className='flex items-center space-x-4'>
               <h1
-                className={`font-semibold ${
+                className={`font-semibold text-sm md:text-lg ${
                   localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
-                } ${isMobileView ? 'text-base' : 'text-lg'}`}
+                }`}
               >
-                Invoice {invoiceData.invoiceNumber}
+                {invoiceData.invoiceNumber}
               </h1>
               <span
                 className={`px-3 py-1 rounded-full text-sm font-medium ${
