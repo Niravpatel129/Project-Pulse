@@ -22,7 +22,7 @@ export const newRequest = axios.create({
 });
 
 newRequest.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
+  const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

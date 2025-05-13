@@ -1,32 +1,51 @@
-'use client';
+import { newRequest } from '@/utils/newRequest';
+import { Metadata } from 'next';
+import { headers } from 'next/headers';
+import ClientLayout from './ClientLayout';
 
-import Sidebar from '@/components/Main/Sidebar/Sidebar';
-import { ThemeProvider } from '@/components/ThemeProvider';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import { ProjectProvider } from '@/contexts/ProjectContext';
-import { GeistSans } from 'geist/font/sans';
-import { usePathname } from 'next/navigation';
-export default function MainLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const isInvoiceRoute = pathname.startsWith('/invoice/');
-  const isLoginRoute = pathname.startsWith('/login');
-  const isRegisterRoute = pathname.startsWith('/register');
-  const isPaymentSuccessRoute = pathname.startsWith('/payment-success');
+type Props = {
+  children: React.ReactNode;
+  params: { workspace: string };
+};
 
-  return (
-    <ThemeProvider defaultTheme='dark' enableSystem={false}>
-      <SidebarProvider defaultOpen>
-        <ProjectProvider projectId=''>
-          <div
-            className={`relative flex min-h-screen w-full bg-background text-foreground ${GeistSans.className}`}
-          >
-            {!isInvoiceRoute && !isLoginRoute && !isRegisterRoute && !isPaymentSuccessRoute && (
-              <Sidebar />
-            )}
-            {children}
-          </div>
-        </ProjectProvider>
-      </SidebarProvider>
-    </ThemeProvider>
-  );
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const headersList = await headers();
+  const host = headersList.get('host') || '';
+
+  try {
+    const response = await newRequest.get(`/workspaces/logo`, {
+      headers: {
+        host,
+      },
+    });
+
+    if (response.status !== 200) {
+      throw new Error('Failed to fetch workspace logo');
+    }
+
+    const data = await response.data.data;
+    const logoUrl = data.logo;
+
+    return {
+      icons: {
+        icon: logoUrl,
+        apple: logoUrl,
+        shortcut: logoUrl,
+      },
+    };
+  } catch (error) {
+    console.log('🚀 error:', error);
+    // Fallback to default favicon if API call fails
+    return {
+      icons: {
+        icon: '/favicon.ico',
+        apple: '/apple-touch-icon.png',
+        shortcut: '/favicon.ico',
+      },
+    };
+  }
+}
+
+export default function RootLayout({ children, params }: Props) {
+  return <ClientLayout>{children}</ClientLayout>;
 }
