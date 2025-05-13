@@ -4,12 +4,13 @@ import { Metadata } from 'next';
 
 type Props = {
   children: React.ReactNode;
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
-    const res = await newRequest.get(`/payments/${params.id}`);
+    const resolvedParams = await params;
+    const res = await newRequest.get(`/payments/${resolvedParams.id}`);
     const invoice: Payment = res.data.data;
 
     return {
