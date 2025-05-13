@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -686,13 +687,76 @@ export default function InvoicePreview({
           <div className='grid grid-cols-3 gap-4 px-5'>
             <div className='flex flex-col'>
               <span className='text-sm text-[#8C8C8C] mb-2'>Amount</span>
-              <span className='text-[14px] font-bold text-white'>
-                {invoice.total.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}{' '}
-                {invoice.currency}
-              </span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className='text-[14px] font-bold text-white border-b border-dashed border-[#232428] cursor-help'>
+                      {invoice.total.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}{' '}
+                      {invoice.currency}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent className='bg-[#141414] text-[#fafafa] border border-[#232428] shadow-md rounded-md p-3'>
+                    <div className='space-y-2 w-[180px]'>
+                      <div className='flex justify-between items-center'>
+                        <span className='text-[#8C8C8C] text-xs'>Subtotal</span>
+                        <span className='text-[#fafafa] text-xs font-medium'>
+                          {invoice.items
+                            .reduce((sum, item) => {
+                              return sum + item.price * item.quantity;
+                            }, 0)
+                            .toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}{' '}
+                          {invoice.currency}
+                        </span>
+                      </div>
+                      <div className='flex justify-between items-center'>
+                        <span className='text-[#8C8C8C] text-xs'>Tax</span>
+                        <span className='text-[#fafafa] text-xs font-medium'>
+                          {invoice.items
+                            .reduce((sum, item) => {
+                              return sum + (item.tax || 0);
+                            }, 0)
+                            .toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}{' '}
+                          {invoice.currency}
+                        </span>
+                      </div>
+                      <div className='flex justify-between items-center'>
+                        <span className='text-[#8C8C8C] text-xs'>Discount</span>
+                        <span className='text-[#8b5df8] text-xs font-medium'>
+                          -
+                          {invoice.items
+                            .reduce((sum, item) => {
+                              return sum + (item.discount || 0);
+                            }, 0)
+                            .toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}{' '}
+                          {invoice.currency}
+                        </span>
+                      </div>
+                      <div className='pt-1 border-t border-[#232428] flex justify-between items-center'>
+                        <span className='text-[#fafafa] text-xs font-medium'>Total</span>
+                        <span className='text-[#fafafa] text-xs font-bold'>
+                          {invoice.total.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}{' '}
+                          {invoice.currency}
+                        </span>
+                      </div>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
             {invoice.requireDeposit && (
               <div className='flex flex-col'>
