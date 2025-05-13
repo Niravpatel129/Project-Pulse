@@ -1,10 +1,13 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
+import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import type { Payment } from '@/types/invoice';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { Download, Mail, Monitor, Moon, Printer, Share2, Smartphone, Sun } from 'lucide-react';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -14,6 +17,7 @@ export default function InvoicePage() {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [email, setEmail] = useState('');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const { data: invoiceSettings } = useInvoiceSettings();
 
   useEffect(() => {
     // Check system preference
@@ -36,7 +40,7 @@ export default function InvoicePage() {
   });
 
   if (!invoice) {
-    return <div className='text-gray-900 dark:text-gray-100'>Loading...</div>;
+    return <div className='text-[#fafafa]'>Loading...</div>;
   }
 
   const {
@@ -49,22 +53,78 @@ export default function InvoicePage() {
     invoice: invoiceData,
   } = invoice;
 
-  const handleDownload = () => {
-    // Implement PDF download logic
-    console.log('Downloading invoice...');
+  const handleDownload = async () => {
+    try {
+      const response = await newRequest.get(`/payments/${id}/download`, {
+        responseType: 'blob',
+      });
+
+      // Create a blob from the PDF Stream
+      const file = new Blob([response.data], { type: 'application/pdf' });
+
+      // Create a URL for the blob
+      const fileURL = window.URL.createObjectURL(file);
+
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = fileURL;
+      link.download = `Invoice-${invoiceData.invoiceNumber}.pdf`;
+
+      // Append to html link element page
+      document.body.appendChild(link);
+
+      // Start download
+      link.click();
+
+      // Clean up and remove the link
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(fileURL);
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      alert('Failed to download invoice. Please try again.');
+    }
   };
 
   const handlePrint = () => {
     window.print();
   };
 
-  const handleSendEmail = async () => {
-    try {
-      await newRequest.post(`/payments/${id}/send`, { email });
-      setShowEmailModal(false);
-      setEmail('');
-    } catch (error) {
-      console.error('Error sending email:', error);
+  const handleSendEmail = () => {
+    const subject = `Invoice ${invoiceData.invoiceNumber} from ${
+      invoiceSettings?.businessName || 'Your Company'
+    }`;
+    const body = `Please find attached the invoice ${
+      invoiceData.invoiceNumber
+    }.\n\nAmount: ${amount.toFixed(2)} ${invoiceData.currency}\nDue Date: ${format(
+      new Date(invoiceData.dueDate),
+      'PPP',
+    )}`;
+    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
+      body,
+    )}`;
+    window.open(mailtoLink);
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator
+        .share({
+          title: `Invoice ${invoiceData.invoiceNumber}`,
+          text: `Invoice ${invoiceData.invoiceNumber} from ${
+            invoiceSettings?.businessName || 'Your Company'
+          }`,
+          url: window.location.href,
+        })
+        .catch(console.error);
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      const shareUrl = window.location.href;
+      navigator.clipboard
+        .writeText(shareUrl)
+        .then(() => {
+          alert('Link copied to clipboard!');
+        })
+        .catch(console.error);
     }
   };
 
@@ -73,73 +133,90 @@ export default function InvoicePage() {
   };
 
   return (
-    <div className='w-full min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800'>
+    <div className='w-full min-h-screen bg-white dark:bg-[#141414]'>
       {/* Sticky Banner */}
-      <div className='sticky top-0 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-sm'>
+      <div className='sticky top-0 z-50 bg-white/80 dark:bg-[#181818] border-b border-gray-200 dark:border-[#232428] shadow-sm'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center h-16'>
             <div className='flex items-center space-x-4'>
-              <h1 className='text-lg font-semibold text-indigo-600 dark:text-indigo-400'>
+              <h1
+                className={`font-semibold text-gray-900 dark:text-[#fafafa] ${
+                  isMobileView ? 'text-base' : 'text-lg'
+                }`}
+              >
                 Invoice {invoiceData.invoiceNumber}
               </h1>
               <span
                 className={`px-3 py-1 rounded-full text-sm font-medium ${
                   status === 'completed'
-                    ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300'
+                    ? 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-500'
                     : status === 'pending'
-                    ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300'
-                    : 'bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300'
-                }`}
+                    ? 'bg-yellow-100 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-500'
+                    : 'bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-500'
+                } ${isMobileView ? 'text-xs' : 'text-sm'}`}
               >
                 {status.charAt(0).toUpperCase() + status.slice(1)}
               </span>
             </div>
             <div className='flex items-center space-x-2'>
-              <button
+              <Button
                 onClick={toggleTheme}
-                className='p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'
+                variant='ghost'
+                size='icon'
+                className='text-muted-foreground hover:text-foreground'
                 title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
               >
                 {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => {
                   return setIsMobileView(!isMobileView);
                 }}
-                className='p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'
+                variant='ghost'
+                size='icon'
+                className='text-muted-foreground hover:text-foreground'
                 title={isMobileView ? 'Desktop View' : 'Mobile View'}
               >
                 {isMobileView ? <Monitor size={20} /> : <Smartphone size={20} />}
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleDownload}
-                className='p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'
+                variant='ghost'
+                size='icon'
+                className='text-muted-foreground hover:text-foreground'
                 title='Download'
               >
                 <Download size={20} />
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => {
                   return setShowEmailModal(true);
                 }}
-                className='p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'
+                variant='ghost'
+                size='icon'
+                className='text-muted-foreground hover:text-foreground'
                 title='Send via Email'
               >
                 <Mail size={20} />
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handlePrint}
-                className='p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'
+                variant='ghost'
+                size='icon'
+                className='text-muted-foreground hover:text-foreground'
                 title='Print'
               >
                 <Printer size={20} />
-              </button>
-              <button
-                className='p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'
+              </Button>
+              <Button
+                onClick={handleShare}
+                variant='ghost'
+                size='icon'
+                className='text-muted-foreground hover:text-foreground'
                 title='Share'
               >
                 <Share2 size={20} />
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -147,12 +224,46 @@ export default function InvoicePage() {
 
       {/* Main Content */}
       <div className={`max-w-7xl mx-auto p-6 ${isMobileView ? 'max-w-md' : ''}`}>
-        <div className='bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl shadow-lg p-8 border border-gray-200 dark:border-gray-700'>
-          {/* Header */}
+        <div className='bg-white dark:bg-[#181818] rounded-lg shadow-lg p-8 border border-gray-200 dark:border-[#232428]'>
+          {/* Header with Business Info */}
           <div className='flex justify-between items-start mb-8'>
             <div>
-              <p className='text-gray-600 dark:text-gray-300'>
+              {invoiceSettings?.logo && (
+                <div className='mb-4'>
+                  <Image
+                    unoptimized
+                    width={100}
+                    height={100}
+                    src={invoiceSettings.logo}
+                    alt='Company Logo'
+                    className={`object-contain ${isMobileView ? 'h-12' : 'h-16'}`}
+                  />
+                </div>
+              )}
+              <div className='text-gray-600 dark:text-[#8b8b8b]'>
+                <p
+                  className={`font-semibold text-gray-900 dark:text-[#fafafa] ${
+                    isMobileView ? 'text-base' : 'text-lg'
+                  }`}
+                >
+                  {invoiceSettings?.businessName || 'Your Company Name'}
+                </p>
+                <p className={`whitespace-pre-line ${isMobileView ? 'text-sm' : 'text-base'}`}>
+                  {invoiceSettings?.businessAddress}
+                </p>
+                {invoiceSettings?.showTaxId && invoiceSettings?.taxId && (
+                  <p className={`mt-1 ${isMobileView ? 'text-sm' : 'text-base'}`}>
+                    Tax ID: {invoiceSettings.taxId}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className={`text-right ${isMobileView ? 'text-sm' : 'text-base'}`}>
+              <p className='text-gray-600 dark:text-[#8b8b8b]'>
                 Due Date: {format(new Date(invoiceData.dueDate), 'PPP')}
+              </p>
+              <p className='text-gray-600 dark:text-[#8b8b8b]'>
+                Invoice Date: {format(new Date(invoiceData.createdAt), 'PPP')}
               </p>
             </div>
           </div>
@@ -160,40 +271,108 @@ export default function InvoicePage() {
           {/* Client Information */}
           <div className={`grid ${isMobileView ? 'grid-cols-1' : 'grid-cols-2'} gap-8 mb-8`}>
             <div>
-              <h2 className='text-lg font-semibold mb-2 text-indigo-600 dark:text-indigo-400'>
+              <h2
+                className={`font-semibold mb-2 text-gray-900 dark:text-[#fafafa] ${
+                  isMobileView ? 'text-base' : 'text-lg'
+                }`}
+              >
                 Bill To:
               </h2>
-              <p className='font-medium text-gray-900 dark:text-white'>
+              <p
+                className={`font-medium text-gray-900 dark:text-[#fafafa] ${
+                  isMobileView ? 'text-sm' : 'text-base'
+                }`}
+              >
                 {invoiceData.client.user.name}
               </p>
-              <p className='text-gray-600 dark:text-gray-300'>
+              <p
+                className={`text-gray-600 dark:text-[#8b8b8b] ${
+                  isMobileView ? 'text-sm' : 'text-base'
+                }`}
+              >
                 {invoiceData.client.address.street}
               </p>
-              <p className='text-gray-600 dark:text-gray-300'>
+              <p
+                className={`text-gray-600 dark:text-[#8b8b8b] ${
+                  isMobileView ? 'text-sm' : 'text-base'
+                }`}
+              >
                 {invoiceData.client.address.city}, {invoiceData.client.address.state}
               </p>
-              <p className='text-gray-600 dark:text-gray-300'>
+              <p
+                className={`text-gray-600 dark:text-[#8b8b8b] ${
+                  isMobileView ? 'text-sm' : 'text-base'
+                }`}
+              >
                 {invoiceData.client.address.country}
               </p>
-              <p className='mt-2 text-gray-600 dark:text-gray-300'>
+              <p
+                className={`mt-2 text-gray-600 dark:text-[#8b8b8b] ${
+                  isMobileView ? 'text-sm' : 'text-base'
+                }`}
+              >
                 Tax ID: {invoiceData.client.taxId}
               </p>
+              {invoiceData.client.user.email && (
+                <p
+                  className={`text-gray-600 dark:text-[#8b8b8b] ${
+                    isMobileView ? 'text-sm' : 'text-base'
+                  }`}
+                >
+                  {invoiceData.client.user.email}
+                </p>
+              )}
+              {invoiceData.client.phone && (
+                <p
+                  className={`text-gray-600 dark:text-[#8b8b8b] ${
+                    isMobileView ? 'text-sm' : 'text-base'
+                  }`}
+                >
+                  {invoiceData.client.phone}
+                </p>
+              )}
             </div>
             <div>
-              <h2 className='text-lg font-semibold mb-2 text-indigo-600 dark:text-indigo-400'>
+              <h2
+                className={`font-semibold mb-2 text-gray-900 dark:text-[#fafafa] ${
+                  isMobileView ? 'text-base' : 'text-lg'
+                }`}
+              >
                 Payment Details:
               </h2>
-              <p className='text-gray-600 dark:text-gray-300'>Payment #{paymentNumber}</p>
-              <p className='text-gray-600 dark:text-gray-300'>
+              <p
+                className={`text-gray-600 dark:text-[#8b8b8b] ${
+                  isMobileView ? 'text-sm' : 'text-base'
+                }`}
+              >
+                Payment #{paymentNumber}
+              </p>
+              <p
+                className={`text-gray-600 dark:text-[#8b8b8b] ${
+                  isMobileView ? 'text-sm' : 'text-base'
+                }`}
+              >
                 Amount: {amount.toFixed(2)} {invoiceData.currency}
               </p>
-              <p className='text-gray-600 dark:text-gray-300'>
+              <p
+                className={`text-gray-600 dark:text-[#8b8b8b] ${
+                  isMobileView ? 'text-sm' : 'text-base'
+                }`}
+              >
                 Method: {method.charAt(0).toUpperCase() + method.slice(1)}
               </p>
-              <p className='text-gray-600 dark:text-gray-300'>
+              <p
+                className={`text-gray-600 dark:text-[#8b8b8b] ${
+                  isMobileView ? 'text-sm' : 'text-base'
+                }`}
+              >
                 Date: {format(new Date(date), 'PPP')}
               </p>
-              <p className='text-gray-600 dark:text-gray-300'>
+              <p
+                className={`text-gray-600 dark:text-[#8b8b8b] ${
+                  isMobileView ? 'text-sm' : 'text-base'
+                }`}
+              >
                 Remaining Balance: {remainingBalance.toFixed(2)} {invoiceData.currency}
               </p>
             </div>
@@ -201,40 +380,105 @@ export default function InvoicePage() {
 
           {/* Items Table */}
           <div className='mb-8 overflow-x-auto'>
-            <h2 className='text-lg font-semibold mb-4 text-indigo-600 dark:text-indigo-400'>
+            <h2
+              className={`font-semibold mb-4 text-gray-900 dark:text-[#fafafa] ${
+                isMobileView ? 'text-base' : 'text-lg'
+              }`}
+            >
               Items
             </h2>
             <table className='w-full'>
               <thead>
-                <tr className='border-b border-gray-200 dark:border-gray-700'>
-                  <th className='text-left py-2 text-gray-900 dark:text-white'>Item</th>
-                  <th className='text-right py-2 text-gray-900 dark:text-white'>Quantity</th>
-                  <th className='text-right py-2 text-gray-900 dark:text-white'>Price</th>
-                  <th className='text-right py-2 text-gray-900 dark:text-white'>Total</th>
+                <tr className='border-b border-gray-200 dark:border-[#232428]'>
+                  <th
+                    className={`text-left py-2 text-gray-900 dark:text-[#fafafa] ${
+                      isMobileView ? 'text-sm' : 'text-base'
+                    }`}
+                  >
+                    Item
+                  </th>
+                  <th
+                    className={`text-right py-2 text-gray-900 dark:text-[#fafafa] ${
+                      isMobileView ? 'text-sm' : 'text-base'
+                    }`}
+                  >
+                    Quantity
+                  </th>
+                  <th
+                    className={`text-right py-2 text-gray-900 dark:text-[#fafafa] ${
+                      isMobileView ? 'text-sm' : 'text-base'
+                    }`}
+                  >
+                    Price
+                  </th>
+                  <th
+                    className={`text-right py-2 text-gray-900 dark:text-[#fafafa] ${
+                      isMobileView ? 'text-sm' : 'text-base'
+                    }`}
+                  >
+                    Tax
+                  </th>
+                  <th
+                    className={`text-right py-2 text-gray-900 dark:text-[#fafafa] ${
+                      isMobileView ? 'text-sm' : 'text-base'
+                    }`}
+                  >
+                    Total
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {invoiceData.items.map((item) => {
+                  const itemTotal = item.price * item.quantity - item.discount + item.tax;
                   return (
-                    <tr key={item._id} className='border-b border-gray-200 dark:border-gray-700'>
+                    <tr key={item._id} className='border-b border-gray-200 dark:border-[#232428]'>
                       <td className='py-2'>
                         <div>
-                          <p className='font-medium text-gray-900 dark:text-white'>{item.name}</p>
+                          <p
+                            className={`font-medium text-gray-900 dark:text-[#fafafa] ${
+                              isMobileView ? 'text-sm' : 'text-base'
+                            }`}
+                          >
+                            {item.name}
+                          </p>
                           {item.description && (
-                            <p className='text-sm text-gray-600 dark:text-gray-300'>
+                            <p
+                              className={`text-sm text-gray-600 dark:text-[#8b8b8b] ${
+                                isMobileView ? 'text-xs' : 'text-sm'
+                              }`}
+                            >
                               {item.description}
                             </p>
                           )}
                         </div>
                       </td>
-                      <td className='text-right py-2 text-gray-600 dark:text-gray-300'>
+                      <td
+                        className={`text-right py-2 text-gray-600 dark:text-[#8b8b8b] ${
+                          isMobileView ? 'text-sm' : 'text-base'
+                        }`}
+                      >
                         {item.quantity}
                       </td>
-                      <td className='text-right py-2 text-gray-600 dark:text-gray-300'>
+                      <td
+                        className={`text-right py-2 text-gray-600 dark:text-[#8b8b8b] ${
+                          isMobileView ? 'text-sm' : 'text-base'
+                        }`}
+                      >
                         {item.price.toFixed(2)} {invoiceData.currency}
                       </td>
-                      <td className='text-right py-2 text-gray-600 dark:text-gray-300'>
-                        {(item.quantity * item.price).toFixed(2)} {invoiceData.currency}
+                      <td
+                        className={`text-right py-2 text-gray-600 dark:text-[#8b8b8b] ${
+                          isMobileView ? 'text-sm' : 'text-base'
+                        }`}
+                      >
+                        {item.tax.toFixed(2)} {invoiceData.currency}
+                      </td>
+                      <td
+                        className={`text-right py-2 text-gray-600 dark:text-[#8b8b8b] ${
+                          isMobileView ? 'text-sm' : 'text-base'
+                        }`}
+                      >
+                        {itemTotal.toFixed(2)} {invoiceData.currency}
                       </td>
                     </tr>
                   );
@@ -245,20 +489,28 @@ export default function InvoicePage() {
 
           {/* Totals */}
           <div className='flex justify-end'>
-            <div className='w-64'>
-              <div className='flex justify-between py-2 text-gray-600 dark:text-gray-300'>
+            <div className={`w-64 ${isMobileView ? 'text-sm' : 'text-base'}`}>
+              <div className='flex justify-between py-2 text-gray-600 dark:text-[#8b8b8b]'>
                 <span>Subtotal:</span>
                 <span>
                   {invoiceData.subtotal.toFixed(2)} {invoiceData.currency}
                 </span>
               </div>
-              <div className='flex justify-between py-2 text-gray-600 dark:text-gray-300'>
+              {invoiceData.discount > 0 && (
+                <div className='flex justify-between py-2 text-gray-600 dark:text-[#8b8b8b]'>
+                  <span>Discount:</span>
+                  <span>
+                    {invoiceData.discount.toFixed(2)} {invoiceData.currency}
+                  </span>
+                </div>
+              )}
+              <div className='flex justify-between py-2 text-gray-600 dark:text-[#8b8b8b]'>
                 <span>Tax ({invoiceData.taxRate}%):</span>
                 <span>
                   {invoiceData.taxAmount.toFixed(2)} {invoiceData.currency}
                 </span>
               </div>
-              <div className='flex justify-between py-2 font-bold border-t border-gray-200 dark:border-gray-700 text-indigo-600 dark:text-indigo-400'>
+              <div className='flex justify-between py-2 font-bold border-t border-gray-200 dark:border-[#232428] text-gray-900 dark:text-[#fafafa]'>
                 <span>Total:</span>
                 <span>
                   {invoiceData.total.toFixed(2)} {invoiceData.currency}
@@ -266,14 +518,36 @@ export default function InvoicePage() {
               </div>
             </div>
           </div>
+
+          {/* Notes */}
+          {(invoiceData.notes || invoiceSettings?.businessNotes) && (
+            <div className='mt-8 border-t border-gray-200 dark:border-[#232428] pt-6'>
+              <h3
+                className={`font-semibold text-gray-900 dark:text-[#fafafa] mb-2 ${
+                  isMobileView ? 'text-base' : 'text-lg'
+                }`}
+              >
+                Notes
+              </h3>
+              <div
+                className={`whitespace-pre-line text-gray-600 dark:text-[#8b8b8b] ${
+                  isMobileView ? 'text-sm' : 'text-base'
+                }`}
+              >
+                {invoiceData.notes}
+                {invoiceData.notes && invoiceSettings?.businessNotes && <br />}
+                {invoiceSettings?.businessNotes}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Email Modal */}
+      {/* Email Modal - Remove this since we're using mailto link now */}
       {showEmailModal && (
         <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50'>
-          <div className='bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md border border-gray-200 dark:border-gray-700'>
-            <h3 className='text-lg font-semibold mb-4 text-indigo-600 dark:text-indigo-400'>
+          <div className='bg-white dark:bg-[#181818] rounded-lg p-6 w-full max-w-md border border-gray-200 dark:border-[#232428]'>
+            <h3 className='text-lg font-semibold mb-4 text-gray-900 dark:text-[#fafafa]'>
               Send Invoice via Email
             </h3>
             <input
@@ -283,23 +557,25 @@ export default function InvoicePage() {
                 return setEmail(e.target.value);
               }}
               placeholder="Enter recipient's email"
-              className='w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg mb-4 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent'
+              className='w-full p-2 bg-white dark:bg-[#232323] border border-gray-300 dark:border-[#313131] rounded-lg mb-4 text-gray-900 dark:text-[#fafafa] placeholder:text-gray-500 dark:placeholder:text-[#8b8b8b] focus:ring-2 focus:ring-blue-500 dark:focus:ring-[#8b8b8b] focus:border-transparent'
             />
             <div className='flex justify-end space-x-4'>
-              <button
+              <Button
                 onClick={() => {
                   return setShowEmailModal(false);
                 }}
-                className='px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'
+                variant='ghost'
+                className='text-muted-foreground hover:text-foreground'
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleSendEmail}
-                className='px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors'
+                variant='default'
+                className='bg-primary hover:bg-primary/90'
               >
                 Send
-              </button>
+              </Button>
             </div>
           </div>
         </div>
