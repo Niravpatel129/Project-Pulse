@@ -47,6 +47,8 @@ interface Invoice {
   updatedAt: string;
   dateSent: string;
   starred: boolean;
+  requireDeposit: boolean;
+  depositPercentage: number;
 }
 
 interface ApiResponse {
