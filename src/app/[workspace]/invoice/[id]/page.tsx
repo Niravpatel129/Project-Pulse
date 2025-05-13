@@ -136,17 +136,6 @@ function PaymentForm({
   const [customAmount, setCustomAmount] = useState<string>('');
   const [showPaymentForm, setShowPaymentForm] = useState(false);
 
-  // Update currentPaymentAmount when payment type or custom amount changes
-  useEffect(() => {
-    if (paymentType === 'custom' && customAmount) {
-      setCurrentPaymentAmount(parseFloat(customAmount));
-    } else if (paymentType === 'deposit') {
-      setCurrentPaymentAmount(invoice.total * (invoice.depositPercentage / 100));
-    } else {
-      setCurrentPaymentAmount(invoice.total);
-    }
-  }, [paymentType, customAmount, invoice, setCurrentPaymentAmount]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -176,18 +165,6 @@ function PaymentForm({
     setIsProcessing(false);
   };
 
-  const depositAmount = invoice.total * (invoice.depositPercentage / 100);
-  const getPaymentAmount = () => {
-    switch (paymentType) {
-      case 'deposit':
-        return depositAmount;
-      case 'custom':
-        return parseFloat(customAmount) || 0;
-      default:
-        return invoice.total;
-    }
-  };
-
   if (!showPaymentForm) {
     return (
       <div className='space-y-8'>
@@ -195,7 +172,8 @@ function PaymentForm({
         <div className='grid grid-cols-3 gap-4'>
           <button
             onClick={() => {
-              return setPaymentType('full');
+              setPaymentType('full');
+              setCurrentPaymentAmount(invoice.total);
             }}
             className={`p-4 rounded-xl border transition-all ${
               paymentType === 'full'
@@ -218,7 +196,9 @@ function PaymentForm({
           {invoice.requireDeposit && (
             <button
               onClick={() => {
-                return setPaymentType('deposit');
+                setPaymentType('deposit');
+                const depositAmount = invoice.total * (invoice.depositPercentage / 100);
+                setCurrentPaymentAmount(depositAmount);
               }}
               className={`p-4 rounded-xl border transition-all ${
                 paymentType === 'deposit'
@@ -230,7 +210,7 @@ function PaymentForm({
                 <div className='text-sm font-medium text-[#8C8C8C]'>Deposit</div>
                 <div className='text-lg font-semibold text-[#fafafa]'>
                   {mapCurrency(invoice.currency)}
-                  {depositAmount.toLocaleString(undefined, {
+                  {(invoice.total * (invoice.depositPercentage / 100)).toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}
@@ -241,7 +221,7 @@ function PaymentForm({
 
           <button
             onClick={() => {
-              return setPaymentType('custom');
+              setPaymentType('custom');
             }}
             className={`p-4 rounded-xl border transition-all ${
               paymentType === 'custom'
@@ -266,7 +246,7 @@ function PaymentForm({
                 type='number'
                 value={customAmount}
                 onChange={(e) => {
-                  return setCustomAmount(e.target.value);
+                  setCustomAmount(e.target.value);
                 }}
                 className='w-full pl-10 pr-4 py-3 bg-[#232323] border border-[#232323] text-[#fafafa] rounded-xl focus:ring-2 focus:ring-[#0066FF] focus:border-[#0066FF] outline-none transition-all placeholder:text-[#8C8C8C]'
                 placeholder='0.00'
@@ -290,6 +270,15 @@ function PaymentForm({
             if (paymentType === 'custom' && (!customAmount || parseFloat(customAmount) <= 0)) {
               return;
             }
+            // Set the payment amount based on the selected type
+            if (paymentType === 'custom') {
+              setCurrentPaymentAmount(parseFloat(customAmount));
+            } else if (paymentType === 'deposit') {
+              const depositAmount = invoice.total * (invoice.depositPercentage / 100);
+              setCurrentPaymentAmount(depositAmount);
+            } else {
+              setCurrentPaymentAmount(invoice.total);
+            }
             setShowPaymentForm(true);
           }}
           disabled={paymentType === 'custom' && (!customAmount || parseFloat(customAmount) <= 0)}
@@ -311,7 +300,7 @@ function PaymentForm({
           <div className='text-sm font-medium text-[#8C8C8C]'>Selected Payment</div>
           <div className='text-lg font-semibold text-[#fafafa]'>
             {mapCurrency(invoice.currency)}
-            {getPaymentAmount().toLocaleString(undefined, {
+            {currentPaymentAmount?.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
@@ -319,7 +308,7 @@ function PaymentForm({
         </div>
         <button
           onClick={() => {
-            return setShowPaymentForm(false);
+            setShowPaymentForm(false);
           }}
           className='text-sm text-[#8C8C8C] hover:text-[#fafafa] transition-colors'
         >
@@ -364,7 +353,7 @@ function PaymentForm({
           ) : (
             <>
               Pay {mapCurrency(invoice.currency)}
-              {getPaymentAmount().toLocaleString(undefined, {
+              {currentPaymentAmount?.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
