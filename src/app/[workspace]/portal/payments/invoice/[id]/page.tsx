@@ -223,24 +223,28 @@ export default function InvoicePage() {
       </div>
 
       {/* Main Content */}
-      <div className={`max-w-7xl mx-auto p-6 ${isMobileView ? 'max-w-md' : ''}`}>
-        <div className='bg-white dark:bg-[#181818] rounded-lg shadow-lg p-8 border border-gray-200 dark:border-[#232428]'>
+      <div
+        className={`max-w-7xl mx-auto p-6 ${
+          isMobileView ? 'max-w-md' : ''
+        } print:p-0 print:max-w-none`}
+      >
+        <div className='bg-white dark:bg-[#181818] rounded-lg shadow-lg p-8 border border-gray-200 dark:border-[#232428] print:shadow-none print:border-none print:p-4'>
           {/* Header with Business Info */}
-          <div className='flex justify-between items-start mb-8'>
+          <div className='flex justify-between items-start mb-8 print:mb-4'>
             <div>
               {invoiceSettings?.logo && (
-                <div className='mb-4'>
+                <div className='mb-4 print:mb-2'>
                   <Image
                     unoptimized
                     width={100}
                     height={100}
                     src={invoiceSettings.logo}
                     alt='Company Logo'
-                    className={`object-contain ${isMobileView ? 'h-12' : 'h-16'}`}
+                    className={`object-contain ${isMobileView ? 'h-12' : 'h-16'} print:h-12`}
                   />
                 </div>
               )}
-              <div className='text-gray-600 dark:text-[#8b8b8b]'>
+              <div className='text-gray-600 dark:text-[#8b8b8b] print:text-sm'>
                 <p
                   className={`font-semibold text-gray-900 dark:text-[#fafafa] ${
                     isMobileView ? 'text-base' : 'text-lg'
@@ -269,7 +273,11 @@ export default function InvoicePage() {
           </div>
 
           {/* Client Information */}
-          <div className={`grid ${isMobileView ? 'grid-cols-1' : 'grid-cols-2'} gap-8 mb-8`}>
+          <div
+            className={`grid ${
+              isMobileView ? 'grid-cols-1' : 'grid-cols-2'
+            } gap-8 mb-8 print:gap-4 print:mb-4`}
+          >
             <div>
               <h2
                 className={`font-semibold mb-2 text-gray-900 dark:text-[#fafafa] ${
@@ -379,49 +387,49 @@ export default function InvoicePage() {
           </div>
 
           {/* Items Table */}
-          <div className='mb-8 overflow-x-auto'>
+          <div className='mb-8 overflow-x-auto print:mb-4'>
             <h2
               className={`font-semibold mb-4 text-gray-900 dark:text-[#fafafa] ${
                 isMobileView ? 'text-base' : 'text-lg'
-              }`}
+              } print:mb-2 print:text-base`}
             >
               Items
             </h2>
-            <table className='w-full'>
+            <table className='w-full print:text-sm'>
               <thead>
                 <tr className='border-b border-gray-200 dark:border-[#232428]'>
                   <th
                     className={`text-left py-2 text-gray-900 dark:text-[#fafafa] ${
                       isMobileView ? 'text-sm' : 'text-base'
-                    }`}
+                    } print:py-1`}
                   >
                     Item
                   </th>
                   <th
                     className={`text-right py-2 text-gray-900 dark:text-[#fafafa] ${
                       isMobileView ? 'text-sm' : 'text-base'
-                    }`}
+                    } print:py-1`}
                   >
                     Quantity
                   </th>
                   <th
                     className={`text-right py-2 text-gray-900 dark:text-[#fafafa] ${
                       isMobileView ? 'text-sm' : 'text-base'
-                    }`}
+                    } print:py-1`}
                   >
                     Price
                   </th>
                   <th
                     className={`text-right py-2 text-gray-900 dark:text-[#fafafa] ${
                       isMobileView ? 'text-sm' : 'text-base'
-                    }`}
+                    } print:py-1`}
                   >
                     Tax
                   </th>
                   <th
                     className={`text-right py-2 text-gray-900 dark:text-[#fafafa] ${
                       isMobileView ? 'text-sm' : 'text-base'
-                    }`}
+                    } print:py-1`}
                   >
                     Total
                   </th>
@@ -432,12 +440,12 @@ export default function InvoicePage() {
                   const itemTotal = item.price * item.quantity - item.discount + item.tax;
                   return (
                     <tr key={item._id} className='border-b border-gray-200 dark:border-[#232428]'>
-                      <td className='py-2'>
+                      <td className='py-2 print:py-1'>
                         <div>
                           <p
                             className={`font-medium text-gray-900 dark:text-[#fafafa] ${
                               isMobileView ? 'text-sm' : 'text-base'
-                            }`}
+                            } print:text-sm`}
                           >
                             {item.name}
                           </p>
@@ -445,7 +453,7 @@ export default function InvoicePage() {
                             <p
                               className={`text-sm text-gray-600 dark:text-[#8b8b8b] ${
                                 isMobileView ? 'text-xs' : 'text-sm'
-                              }`}
+                              } print:text-xs`}
                             >
                               {item.description}
                             </p>
@@ -455,28 +463,28 @@ export default function InvoicePage() {
                       <td
                         className={`text-right py-2 text-gray-600 dark:text-[#8b8b8b] ${
                           isMobileView ? 'text-sm' : 'text-base'
-                        }`}
+                        } print:py-1 print:text-sm`}
                       >
                         {item.quantity}
                       </td>
                       <td
                         className={`text-right py-2 text-gray-600 dark:text-[#8b8b8b] ${
                           isMobileView ? 'text-sm' : 'text-base'
-                        }`}
+                        } print:py-1 print:text-sm`}
                       >
                         {item.price.toFixed(2)} {invoiceData.currency}
                       </td>
                       <td
                         className={`text-right py-2 text-gray-600 dark:text-[#8b8b8b] ${
                           isMobileView ? 'text-sm' : 'text-base'
-                        }`}
+                        } print:py-1 print:text-sm`}
                       >
                         {item.tax.toFixed(2)} {invoiceData.currency}
                       </td>
                       <td
                         className={`text-right py-2 text-gray-600 dark:text-[#8b8b8b] ${
                           isMobileView ? 'text-sm' : 'text-base'
-                        }`}
+                        } print:py-1 print:text-sm`}
                       >
                         {itemTotal.toFixed(2)} {invoiceData.currency}
                       </td>
@@ -489,28 +497,28 @@ export default function InvoicePage() {
 
           {/* Totals */}
           <div className='flex justify-end'>
-            <div className={`w-64 ${isMobileView ? 'text-sm' : 'text-base'}`}>
-              <div className='flex justify-between py-2 text-gray-600 dark:text-[#8b8b8b]'>
+            <div className={`w-64 ${isMobileView ? 'text-sm' : 'text-base'} print:text-sm`}>
+              <div className='flex justify-between py-2 text-gray-600 dark:text-[#8b8b8b] print:py-1'>
                 <span>Subtotal:</span>
                 <span>
                   {invoiceData.subtotal.toFixed(2)} {invoiceData.currency}
                 </span>
               </div>
               {invoiceData.discount > 0 && (
-                <div className='flex justify-between py-2 text-gray-600 dark:text-[#8b8b8b]'>
+                <div className='flex justify-between py-2 text-gray-600 dark:text-[#8b8b8b] print:py-1'>
                   <span>Discount:</span>
                   <span>
                     {invoiceData.discount.toFixed(2)} {invoiceData.currency}
                   </span>
                 </div>
               )}
-              <div className='flex justify-between py-2 text-gray-600 dark:text-[#8b8b8b]'>
+              <div className='flex justify-between py-2 text-gray-600 dark:text-[#8b8b8b] print:py-1'>
                 <span>Tax ({invoiceData.taxRate}%):</span>
                 <span>
                   {invoiceData.taxAmount.toFixed(2)} {invoiceData.currency}
                 </span>
               </div>
-              <div className='flex justify-between py-2 font-bold border-t border-gray-200 dark:border-[#232428] text-gray-900 dark:text-[#fafafa]'>
+              <div className='flex justify-between py-2 font-bold border-t border-gray-200 dark:border-[#232428] text-gray-900 dark:text-[#fafafa] print:py-1'>
                 <span>Total:</span>
                 <span>
                   {invoiceData.total.toFixed(2)} {invoiceData.currency}
@@ -521,18 +529,18 @@ export default function InvoicePage() {
 
           {/* Notes */}
           {(invoiceData.notes || invoiceSettings?.businessNotes) && (
-            <div className='mt-8 border-t border-gray-200 dark:border-[#232428] pt-6'>
+            <div className='mt-8 border-t border-gray-200 dark:border-[#232428] pt-6 print:mt-4 print:pt-2'>
               <h3
                 className={`font-semibold text-gray-900 dark:text-[#fafafa] mb-2 ${
                   isMobileView ? 'text-base' : 'text-lg'
-                }`}
+                } print:text-base print:mb-1`}
               >
                 Notes
               </h3>
               <div
                 className={`whitespace-pre-line text-gray-600 dark:text-[#8b8b8b] ${
                   isMobileView ? 'text-sm' : 'text-base'
-                }`}
+                } print:text-sm`}
               >
                 {invoiceData.notes}
                 {invoiceData.notes && invoiceSettings?.businessNotes && <br />}
