@@ -1032,7 +1032,7 @@ export default function InvoicePreview({
           </div>
 
           <div className='flex items-center justify-between mb-5'>
-            <h3 className='text-[14px] font-semibold text-white'>Receipt</h3>
+            <h3 className='text-[14px] font-semibold text-white'>Invoice</h3>
             <Button
               variant='outline'
               size='sm'
