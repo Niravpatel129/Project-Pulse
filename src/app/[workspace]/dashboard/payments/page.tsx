@@ -70,7 +70,9 @@ export default function PaymentsPage() {
     queryKey: ['payments'],
     queryFn: async () => {
       const response = await newRequest.get<ApiResponse>('/payments');
-      return response.data.data;
+      return response.data.data.sort((a, b) => {
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      });
     },
   });
 

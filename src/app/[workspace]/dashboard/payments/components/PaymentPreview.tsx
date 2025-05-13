@@ -1,4 +1,3 @@
-import { ReceiptPdf } from '@/components/ReceiptPdf/ReceiptPdf';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
@@ -341,24 +340,17 @@ export function PaymentPreview({ payment, onClose }: PaymentPreviewProps) {
         {/* Receipt Section */}
         <div className='px-4 mt-8'>
           <div className='flex items-center justify-between mb-5'>
-            <h3 className='text-[14px] font-semibold text-white'>Receipt</h3>
             <Button
               variant='outline'
               size='sm'
               className='bg-[#232323] border-[#333] text-white text-sm h-8 px-4'
-              onClick={handleDownloadPDF}
+              onClick={() => {
+                window.open(`/portal/payments/invoice/${payment._id}`, '_blank');
+              }}
             >
               <Download className='w-4 h-4 mr-2' />
-              Download PDF
+              Download Receipt
             </Button>
-          </div>
-          <div className='w-full overflow-auto flex justify-center'>
-            <div
-              style={{ transform: 'scale(0.8)', transformOrigin: 'top center' }}
-              ref={receiptRef}
-            >
-              <ReceiptPdf receipt={receiptData} isReadOnly={true} />
-            </div>
           </div>
         </div>
       </div>
