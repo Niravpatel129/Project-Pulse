@@ -187,8 +187,9 @@ export default function InvoicePage() {
   const { data: invoiceSettings } = useInvoiceSettings();
 
   useEffect(() => {
-    // Set initial theme to light
-    setLocalTheme('light');
+    // Get theme from localStorage or default to light
+    const savedTheme = localStorage.getItem('invoice-theme') as 'light' | 'dark';
+    setLocalTheme(savedTheme || 'light');
   }, []);
 
   const { data: invoice } = useQuery<Payment>({
@@ -289,7 +290,9 @@ export default function InvoicePage() {
   };
 
   const toggleTheme = () => {
-    setLocalTheme(localTheme === 'light' ? 'dark' : 'light');
+    const newTheme = localTheme === 'light' ? 'dark' : 'light';
+    setLocalTheme(newTheme);
+    localStorage.setItem('invoice-theme', newTheme);
   };
 
   return (

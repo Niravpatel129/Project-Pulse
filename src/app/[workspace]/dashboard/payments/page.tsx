@@ -170,11 +170,19 @@ export default function PaymentsPage() {
                     </div>
 
                     <div className='flex-1 min-w-0'>
-                      <div className='flex items-center justify-between'>
+                      <div className='flex items-center justify-between mb-1  '>
                         <div className='flex items-center gap-2'>
                           <span className='font-semibold text-[#fafafa] text-[14px] truncate'>
                             {payment.invoice?.client?.user?.name || 'Unknown Customer'}
                           </span>
+                          <Badge
+                            variant='secondary'
+                            className={`${getStatusColor(
+                              payment.status,
+                            )} text-xs px-2 py-0.5 rounded-sm`}
+                          >
+                            {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                          </Badge>
                         </div>
                       </div>
 
@@ -223,12 +231,6 @@ export default function PaymentsPage() {
                             })}{' '}
                             {payment.invoice?.currency}
                           </span>
-                          <Badge
-                            variant='secondary'
-                            className={`${getStatusColor(payment.status)} text-xs px-2 py-0.5`}
-                          >
-                            {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
-                          </Badge>
                         </div>
                       </div>
                     </div>
