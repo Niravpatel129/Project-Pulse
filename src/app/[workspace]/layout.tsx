@@ -10,8 +10,9 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const headersList = await headers();
+  const workspaceParams = await params;
   const host = headersList.get('host') || '';
-  const workspace = params.workspace;
+  const workspace = workspaceParams.workspace;
 
   try {
     const response = await newRequest.get(`/workspaces/logo`, {
