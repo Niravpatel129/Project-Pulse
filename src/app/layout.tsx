@@ -35,7 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
   // Get the hostname from the request headers
   const headersList = await headers();
   const host = headersList.get('host') || '';
-  const hostname = host.split(':')[0]; // Remove port if present
+  const hostname = host.split(':')[0];
   const subdomain = hostname.split('.')[0];
   const isSubdomain = hostname !== 'localhost' && subdomain !== 'www' && subdomain !== 'pulse-app';
 

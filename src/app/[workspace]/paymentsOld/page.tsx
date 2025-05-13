@@ -1,6 +1,6 @@
 'use client';
 
-import PaymentsPage from '@/app/[workspace]/payments/page';
+import PaymentsPage from '@/app/payments/page';
 import { useEffect, useState } from 'react';
 
 export default function DashboardPaymentsPage() {
