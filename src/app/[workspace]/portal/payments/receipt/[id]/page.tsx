@@ -514,9 +514,14 @@ export default function InvoicePage() {
               </div>
             </div>
             <div className={`text-right ${isMobileView ? 'text-sm' : 'text-base'}`}>
-              <p className={`${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'}`}>
-                Due Date: {format(new Date(invoiceData.dueDate), 'PPP')}
-              </p>
+              {invoiceData.dueDate && (
+                <p className={`${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'}`}>
+                  Due Date:{' '}
+                  {invoiceData.dueDate
+                    ? format(new Date(invoiceData.dueDate), 'PPP')
+                    : 'No due date'}
+                </p>
+              )}
               <p className={`${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'}`}>
                 Invoice Date: {format(new Date(invoiceData.createdAt), 'PPP')}
               </p>
