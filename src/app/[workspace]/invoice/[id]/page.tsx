@@ -131,6 +131,18 @@ function PaymentForm({
   const [paymentType, setPaymentType] = useState<'full' | 'deposit' | 'custom'>('full');
   const [customAmount, setCustomAmount] = useState<string>('');
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [currentPaymentAmount, setCurrentPaymentAmount] = useState<number | null>(null);
+
+  // Update currentPaymentAmount when payment type or custom amount changes
+  useEffect(() => {
+    if (paymentType === 'custom' && customAmount) {
+      setCurrentPaymentAmount(parseFloat(customAmount));
+    } else if (paymentType === 'deposit') {
+      setCurrentPaymentAmount(invoice.total * (invoice.depositPercentage / 100));
+    } else {
+      setCurrentPaymentAmount(invoice.total);
+    }
+  }, [paymentType, customAmount, invoice]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -399,14 +411,21 @@ export default function InvoicePage() {
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isDepositPayment, setIsDepositPayment] = useState(false);
+  const [currentPaymentAmount, setCurrentPaymentAmount] = useState<number | null>(null);
 
   const createPaymentIntentMutation = useMutation({
     mutationFn: async () => {
       if (!invoice) throw new Error('Invoice not loaded');
       try {
-        const amount = isDepositPayment
-          ? invoice.total * (invoice.depositPercentage / 100)
-          : invoice.total;
+        let amount: number;
+
+        if (currentPaymentAmount !== null) {
+          amount = currentPaymentAmount;
+        } else if (isDepositPayment) {
+          amount = invoice.total * (invoice.depositPercentage / 100);
+        } else {
+          amount = invoice.total;
+        }
 
         const response = await newRequest.post(`/invoices/${invoiceId}/payment-intent`, {
           amount,
@@ -442,7 +461,7 @@ export default function InvoicePage() {
     if (invoice && invoice.status !== 'paid') {
       createPaymentIntentMutation.mutate();
     }
-  }, [invoice, isDepositPayment]);
+  }, [invoice, isDepositPayment, currentPaymentAmount]);
 
   if (isLoading) {
     return (
