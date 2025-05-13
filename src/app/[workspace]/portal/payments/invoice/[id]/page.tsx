@@ -12,20 +12,35 @@ import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-function InvoiceSkeleton() {
+function InvoiceSkeleton({ localTheme = 'light' }: { localTheme?: 'light' | 'dark' }) {
   return (
-    <div className='w-full min-h-screen bg-white dark:bg-[#141414]'>
+    <div className={`w-full min-h-screen ${localTheme === 'light' ? 'bg-white' : 'bg-[#141414]'}`}>
       {/* Sticky Banner Skeleton */}
-      <div className='sticky top-0 z-50 bg-white/80 dark:bg-[#181818] border-b border-gray-200 dark:border-[#232428] shadow-sm'>
+      <div
+        className={`sticky top-0 z-50 ${
+          localTheme === 'light' ? 'bg-white/80' : 'bg-[#181818]'
+        } border-b ${localTheme === 'light' ? 'border-gray-200' : 'border-[#232428]'} shadow-sm`}
+      >
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center h-16'>
             <div className='flex items-center space-x-4'>
-              <Skeleton className='h-6 w-32' />
-              <Skeleton className='h-6 w-20' />
+              <Skeleton
+                className={`h-6 w-32 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+              />
+              <Skeleton
+                className={`h-6 w-20 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+              />
             </div>
             <div className='flex items-center space-x-2'>
               {[...Array(6)].map((_, i) => {
-                return <Skeleton key={i} className='h-9 w-9 rounded-md' />;
+                return (
+                  <Skeleton
+                    key={i}
+                    className={`h-9 w-9 rounded-md ${
+                      localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'
+                    }`}
+                  />
+                );
               })}
             </div>
           </div>
@@ -34,56 +49,106 @@ function InvoiceSkeleton() {
 
       {/* Main Content Skeleton */}
       <div className='max-w-7xl mx-auto p-6'>
-        <div className='bg-white dark:bg-[#181818] rounded-lg shadow-lg p-8 border border-gray-200 dark:border-[#232428]'>
+        <div
+          className={`${
+            localTheme === 'light' ? 'bg-white' : 'bg-[#181818]'
+          } rounded-lg shadow-lg p-8 border ${
+            localTheme === 'light' ? 'border-gray-200' : 'border-[#232428]'
+          }`}
+        >
           {/* Header with Business Info Skeleton */}
           <div className='flex justify-between items-start mb-8'>
             <div className='space-y-4'>
-              <Skeleton className='h-16 w-32' />
+              <Skeleton
+                className={`h-16 w-32 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+              />
               <div className='space-y-2'>
-                <Skeleton className='h-6 w-48' />
-                <Skeleton className='h-4 w-64' />
-                <Skeleton className='h-4 w-40' />
+                <Skeleton
+                  className={`h-6 w-48 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+                />
+                <Skeleton
+                  className={`h-4 w-64 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+                />
+                <Skeleton
+                  className={`h-4 w-40 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+                />
               </div>
             </div>
             <div className='space-y-2'>
-              <Skeleton className='h-4 w-32' />
-              <Skeleton className='h-4 w-32' />
+              <Skeleton
+                className={`h-4 w-32 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+              />
+              <Skeleton
+                className={`h-4 w-32 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+              />
             </div>
           </div>
 
           {/* Client Information Skeleton */}
           <div className='grid grid-cols-2 gap-8 mb-8'>
             <div className='space-y-4'>
-              <Skeleton className='h-6 w-24' />
+              <Skeleton
+                className={`h-6 w-24 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+              />
               <div className='space-y-2'>
-                <Skeleton className='h-4 w-40' />
-                <Skeleton className='h-4 w-48' />
-                <Skeleton className='h-4 w-36' />
-                <Skeleton className='h-4 w-32' />
+                <Skeleton
+                  className={`h-4 w-40 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+                />
+                <Skeleton
+                  className={`h-4 w-48 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+                />
+                <Skeleton
+                  className={`h-4 w-36 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+                />
+                <Skeleton
+                  className={`h-4 w-32 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+                />
               </div>
             </div>
             <div className='space-y-4'>
-              <Skeleton className='h-6 w-32' />
+              <Skeleton
+                className={`h-6 w-32 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+              />
               <div className='space-y-2'>
-                <Skeleton className='h-4 w-40' />
-                <Skeleton className='h-4 w-48' />
-                <Skeleton className='h-4 w-36' />
-                <Skeleton className='h-4 w-32' />
+                <Skeleton
+                  className={`h-4 w-40 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+                />
+                <Skeleton
+                  className={`h-4 w-48 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+                />
+                <Skeleton
+                  className={`h-4 w-36 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+                />
+                <Skeleton
+                  className={`h-4 w-32 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+                />
               </div>
             </div>
           </div>
 
           {/* Items Table Skeleton */}
           <div className='mb-8'>
-            <Skeleton className='h-6 w-20 mb-4' />
+            <Skeleton
+              className={`h-6 w-20 mb-4 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+            />
             <div className='space-y-4'>
               {[...Array(3)].map((_, i) => {
                 return (
                   <div key={i} className='grid grid-cols-5 gap-4'>
-                    <Skeleton className='h-12 col-span-2' />
-                    <Skeleton className='h-12' />
-                    <Skeleton className='h-12' />
-                    <Skeleton className='h-12' />
+                    <Skeleton
+                      className={`h-12 col-span-2 ${
+                        localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'
+                      }`}
+                    />
+                    <Skeleton
+                      className={`h-12 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+                    />
+                    <Skeleton
+                      className={`h-12 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+                    />
+                    <Skeleton
+                      className={`h-12 ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+                    />
                   </div>
                 );
               })}
@@ -93,10 +158,18 @@ function InvoiceSkeleton() {
           {/* Totals Skeleton */}
           <div className='flex justify-end'>
             <div className='w-64 space-y-2'>
-              <Skeleton className='h-8 w-full' />
-              <Skeleton className='h-8 w-full' />
-              <Skeleton className='h-8 w-full' />
-              <Skeleton className='h-8 w-full' />
+              <Skeleton
+                className={`h-8 w-full ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+              />
+              <Skeleton
+                className={`h-8 w-full ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+              />
+              <Skeleton
+                className={`h-8 w-full ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+              />
+              <Skeleton
+                className={`h-8 w-full ${localTheme === 'light' ? 'bg-gray-200' : 'bg-[#232428]'}`}
+              />
             </div>
           </div>
         </div>
@@ -127,7 +200,7 @@ export default function InvoicePage() {
   });
 
   if (!invoice) {
-    return <InvoiceSkeleton />;
+    return <InvoiceSkeleton localTheme={localTheme} />;
   }
 
   const {

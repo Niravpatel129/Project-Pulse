@@ -240,11 +240,19 @@ export default function Invoices({
                   </div>
 
                   <div className='flex-1 min-w-0'>
-                    <div className='flex items-center justify-between'>
+                    <div className='flex items-center justify-between mb-1'>
                       <div className='flex items-center gap-2'>
                         <span className='font-semibold text-[#fafafa] text-[14px] truncate'>
                           {invoice.client?.user.name || 'Unnamed'}
                         </span>
+                        <Badge
+                          variant='secondary'
+                          className={`${getStatusColor(
+                            invoice.status,
+                          )} text-xs px-2 py-0.5 rounded-sm`}
+                        >
+                          {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                        </Badge>
                       </div>
                     </div>
 
@@ -292,12 +300,6 @@ export default function Invoices({
                           })}{' '}
                           {invoice.currency}
                         </span>
-                        <Badge
-                          variant='secondary'
-                          className={`${getStatusColor(invoice.status)} text-xs px-2 py-0.5`}
-                        >
-                          {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
-                        </Badge>
                       </div>
                     </div>
                   </div>
