@@ -630,13 +630,6 @@ export default function InvoicePage() {
                   >
                     Price
                   </th>
-                  <th
-                    className={`text-right py-2 ${
-                      localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
-                    } ${isMobileView ? 'text-xs' : 'text-base'} print:py-1`}
-                  >
-                    Total
-                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -685,13 +678,6 @@ export default function InvoicePage() {
                         } ${isMobileView ? 'text-xs' : 'text-base'} print:py-1 print:text-sm`}
                       >
                         {item.price.toFixed(2)}
-                      </td>
-                      <td
-                        className={`text-right py-2 ${
-                          localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'
-                        } ${isMobileView ? 'text-xs' : 'text-base'} print:py-1 print:text-sm`}
-                      >
-                        {itemTotal.toFixed(2)}
                       </td>
                     </tr>
                   );
