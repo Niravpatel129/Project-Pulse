@@ -465,7 +465,7 @@ export default function InvoicePage() {
 
       {/* Main Content */}
       <div
-        className={`max-w-7xl mx-auto p-6 ${
+        className={`max-w-7xl mx-auto p-3 md:p-6 ${
           isMobileView ? 'max-w-md' : ''
         } print:p-0 print:max-w-none`}
       >
