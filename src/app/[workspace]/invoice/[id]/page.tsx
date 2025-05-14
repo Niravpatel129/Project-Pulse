@@ -574,10 +574,6 @@ export default function InvoicePage() {
               This invoice has been paid on {new Date(invoice.paidAt || '').toLocaleDateString()}
             </p>
             <div className='bg-[#232323] p-4 rounded-lg text-left mb-4'>
-              <div className='flex justify-between mb-2'>
-                <span className='text-[#8C8C8C]'>Payment ID:</span>
-                <span className='font-mono text-sm text-[#fafafa]'>{invoice.paymentIntentId}</span>
-              </div>
               <div className='flex justify-between'>
                 <span className='text-[#8C8C8C]'>Amount:</span>
                 <span className='font-medium text-[#fafafa]'>
