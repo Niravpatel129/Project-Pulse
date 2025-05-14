@@ -504,7 +504,7 @@ export default function InvoiceSection({
         subtotal: subtotal,
         taxAmount: taxAmount,
         total: total,
-        status: 'open',
+        status: existingInvoice?.status || 'open',
       };
 
       // Make API call to create or update invoice
