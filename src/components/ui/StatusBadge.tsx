@@ -44,9 +44,9 @@ export function StatusBadge({ status, className = '' }: StatusBadgeProps) {
   return (
     <Badge
       variant='secondary'
-      className={`${getStatusColor(status)} text-xs px-2 py-0.5 rounded-sm ${className}`}
+      className={`${getStatusColor(status)} text-xs px-2 py-0.5 capitalize rounded-sm ${className}`}
     >
-      {formattedStatus}
+      {formattedStatus?.replace('_', ' ')}
     </Badge>
   );
 }
