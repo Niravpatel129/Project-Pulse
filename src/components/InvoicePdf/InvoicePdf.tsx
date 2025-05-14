@@ -334,7 +334,6 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
               {invoice.items.some((item) => {
                 return item.discount > 0;
               }) && <th className='py-3 px-4 text-right font-semibold'>Discount</th>}
-              <th className='py-3 px-4 text-right font-semibold'>Tax Amount</th>
               <th className='py-3 px-4 text-right font-semibold'>Total</th>
             </tr>
           </thead>
@@ -405,42 +404,7 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
                       </div>
                     </td>
                   )}
-                  <td
-                    className={`py-3 px-4 text-right ${
-                      isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'
-                    }`}
-                  >
-                    <div className='flex flex-col'>
-                      <span>
-                        $
-                        {taxAmount.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </span>
-                      <span className='text-xs opacity-70'>
-                        {item.taxName ? (
-                          <>
-                            {item.taxName}{' '}
-                            {item.tax.toLocaleString(undefined, {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
-                            %
-                          </>
-                        ) : (
-                          <>
-                            (
-                            {item.tax.toLocaleString(undefined, {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
-                            %)
-                          </>
-                        )}
-                      </span>
-                    </div>
-                  </td>
+
                   <td
                     className={`py-3 px-4 text-right ${
                       isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'
@@ -503,30 +467,56 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
               </div>
             )}
 
-            {/* Show tax if any item has tax */}
-            {invoice.items.some((item) => {
-              return item.tax > 0;
-            }) && (
-              <div className='flex justify-between py-2'>
-                <span className={`font-medium ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-700'}`}>
-                  Tax:
-                </span>
-                <span className={`font-medium ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'}`}>
-                  $
-                  {invoice.items
-                    .reduce((sum, item) => {
-                      const subtotal = item.price * item.quantity;
-                      const discountAmount = (subtotal * (item.discount || 0)) / 100;
-                      const discountedAmount = subtotal - discountAmount;
-                      return sum + (discountedAmount * (item.tax || 0)) / 100;
-                    }, 0)
-                    .toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                </span>
-              </div>
-            )}
+            {/* Show taxes itemized if any item has tax */}
+            {(() => {
+              // Get unique taxes
+              const uniqueTaxes = Array.from(
+                new Set(
+                  invoice.items.map((item) => {
+                    return `${item.tax}% ${item.taxName}`;
+                  }),
+                ),
+              ).filter((tax) => {
+                return !tax.startsWith('0%');
+              });
+
+              // Calculate tax amounts
+              const taxAmounts = {};
+              uniqueTaxes.forEach((taxString) => {
+                const taxRate = parseFloat(taxString.split('%')[0]);
+                const taxItems = invoice.items.filter((item) => {
+                  return `${item.tax}% ${item.taxName}` === taxString;
+                });
+                const taxAmount = taxItems.reduce((sum, item) => {
+                  const subtotal = item.price * item.quantity;
+                  const discountAmount = (subtotal * (item.discount || 0)) / 100;
+                  const discountedAmount = subtotal - discountAmount;
+                  return sum + discountedAmount * (taxRate / 100);
+                }, 0);
+                taxAmounts[taxString] = taxAmount;
+              });
+
+              return uniqueTaxes.map((tax) => {
+                return (
+                  <div key={tax} className='flex justify-between py-2'>
+                    <span
+                      className={`font-medium ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-700'}`}
+                    >
+                      {tax}:
+                    </span>
+                    <span
+                      className={`font-medium ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'}`}
+                    >
+                      $
+                      {taxAmounts[tax].toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                );
+              });
+            })()}
 
             <div className='flex justify-between py-2 text-base border-t border-gray-200 dark:border-[#232428] mt-2 pt-3'>
               <span className={`font-semibold ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-700'}`}>

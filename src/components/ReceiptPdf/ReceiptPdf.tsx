@@ -73,10 +73,7 @@ export function ReceiptPdf({ receipt, isReadOnly = false }: ReceiptProps) {
     localStorage.setItem('receiptTheme', newTheme ? 'dark' : 'light');
   };
 
-  // Check if all items have the same tax rate
-  const allSameTaxRate = receipt.items.every((item) => {
-    return item.tax === receipt.items[0].tax && item.taxName === receipt.items[0].taxName;
-  });
+  // Removed same tax rate check since we're listing all taxes separately
 
   // Calculate subtotal (without tax) and tax total
   const subtotal = receipt.items.reduce((sum, item) => {
@@ -290,16 +287,13 @@ export function ReceiptPdf({ receipt, isReadOnly = false }: ReceiptProps) {
               <th className='py-3 px-4 text-left font-semibold'>Items</th>
               <th className='py-3 px-4 text-center font-semibold'>Quantity</th>
               <th className='py-3 px-4 text-right font-semibold'>Price</th>
-              {!allSameTaxRate && <th className='py-3 px-4 text-right font-semibold'>Tax</th>}
               <th className='py-3 px-4 text-right font-semibold'>Amount</th>
             </tr>
           </thead>
           <tbody>
             {receipt.items.map((item) => {
               const itemSubtotal = item.price * item.quantity;
-              const itemTotal = allSameTaxRate
-                ? itemSubtotal
-                : itemSubtotal + (itemSubtotal * item.tax) / 100;
+              const itemTotal = itemSubtotal;
               return (
                 <tr
                   key={item._id}
@@ -328,20 +322,7 @@ export function ReceiptPdf({ receipt, isReadOnly = false }: ReceiptProps) {
                     })}{' '}
                     {receipt.currency}
                   </td>
-                  {!allSameTaxRate && (
-                    <td
-                      className={`py-3 px-4 text-right ${
-                        isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'
-                      }`}
-                    >
-                      {item.tax}% (
-                      {((itemSubtotal * item.tax) / 100).toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}{' '}
-                      {receipt.currency})
-                    </td>
-                  )}
+
                   <td
                     className={`py-3 px-4 text-right ${
                       isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'
@@ -377,22 +358,53 @@ export function ReceiptPdf({ receipt, isReadOnly = false }: ReceiptProps) {
               </span>
             </div>
 
-            {allSameTaxRate && receipt.items.length > 0 && (
-              <div className='flex justify-between py-2'>
-                <span
-                  className={`font-semibold ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-700'}`}
-                >
-                  Tax ({receipt.items[0].tax}% {receipt.items[0].taxName}):
-                </span>
-                <span className={`${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-700'}`}>
-                  {taxTotal.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}{' '}
-                  {receipt.currency}
-                </span>
-              </div>
-            )}
+            {/* List all taxes */}
+            {(() => {
+              // Get unique taxes
+              const uniqueTaxes = Array.from(
+                new Set(
+                  receipt.items.map((item) => {
+                    return `${item.tax}% ${item.taxName}`;
+                  }),
+                ),
+              ).filter((tax) => {
+                return !tax.startsWith('0%');
+              });
+
+              // Calculate tax amounts
+              const taxAmounts = {};
+              uniqueTaxes.forEach((taxString) => {
+                const taxRate = parseFloat(taxString.split('%')[0]);
+                const taxItems = receipt.items.filter((item) => {
+                  return `${item.tax}% ${item.taxName}` === taxString;
+                });
+                const taxAmount = taxItems.reduce((sum, item) => {
+                  return sum + item.price * item.quantity * (taxRate / 100);
+                }, 0);
+                taxAmounts[taxString] = taxAmount;
+              });
+
+              return uniqueTaxes.map((tax) => {
+                return (
+                  <div key={tax} className='flex justify-between py-2'>
+                    <span
+                      className={`font-semibold ${
+                        isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-700'
+                      }`}
+                    >
+                      {tax}:
+                    </span>
+                    <span className={`${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-700'}`}>
+                      {taxAmounts[tax].toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}{' '}
+                      {receipt.currency}
+                    </span>
+                  </div>
+                );
+              });
+            })()}
 
             <div className='flex justify-between py-2 text-base'>
               <span className={`font-semibold ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-700'}`}>
