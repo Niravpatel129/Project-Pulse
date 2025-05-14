@@ -331,14 +331,23 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
               <th className='py-3 px-4 text-left font-semibold'>Items</th>
               <th className='py-3 px-4 text-center font-semibold'>Quantity</th>
               <th className='py-3 px-4 text-right font-semibold'>Price</th>
-              <th className='py-3 px-4 text-right font-semibold'>Tax</th>
-              <th className='py-3 px-4 text-right font-semibold'>Amount</th>
+              {invoice.items.some((item) => {
+                return item.discount > 0;
+              }) && <th className='py-3 px-4 text-right font-semibold'>Discount</th>}
+              <th className='py-3 px-4 text-right font-semibold'>Tax Amount</th>
+              <th className='py-3 px-4 text-right font-semibold'>Total</th>
             </tr>
           </thead>
           <tbody>
             {invoice.items.map((item) => {
               console.log('🚀 item:', item);
-              const itemTotal = item.price * item.quantity - item.discount + item.tax;
+              // Calculate discounted amount first
+              const subtotal = item.price * item.quantity;
+              const discountAmount = (subtotal * (item.discount || 0)) / 100;
+              const discountedAmount = subtotal - discountAmount;
+              // Calculate tax amount based on the discounted amount
+              const taxAmount = (discountedAmount * (item.tax || 0)) / 100;
+              const itemTotal = discountedAmount + taxAmount;
               return (
                 <tr
                   key={item._id}
@@ -367,16 +376,70 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
                       maximumFractionDigits: 2,
                     })}
                   </td>
+                  {invoice.items.some((item) => {
+                    return item.discount > 0;
+                  }) && (
+                    <td
+                      className={`py-3 px-4 text-right ${
+                        isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'
+                      }`}
+                    >
+                      <div className='flex flex-col'>
+                        <span>
+                          $
+                          {discountAmount.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </span>
+                        {item.discount > 0 && (
+                          <span className='text-xs opacity-70'>
+                            (
+                            {item.discount.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                            %)
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                  )}
                   <td
                     className={`py-3 px-4 text-right ${
                       isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'
                     }`}
                   >
-                    $
-                    {item.tax.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    <div className='flex flex-col'>
+                      <span>
+                        $
+                        {taxAmount.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                      <span className='text-xs opacity-70'>
+                        {item.taxName ? (
+                          <>
+                            {item.taxName}{' '}
+                            {item.tax.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                            %
+                          </>
+                        ) : (
+                          <>
+                            (
+                            {item.tax.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                            %)
+                          </>
+                        )}
+                      </span>
+                    </div>
                   </td>
                   <td
                     className={`py-3 px-4 text-right ${
@@ -400,7 +463,72 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
       <div className='flex flex-col items-end'>
         <div className='w-full max-w-md'>
           <div className='space-y-2 text-sm'>
-            <div className='flex justify-between py-2 text-base'>
+            <div className='flex justify-between py-2'>
+              <span className={`font-medium ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-700'}`}>
+                Subtotal:
+              </span>
+              <span className={`font-medium ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'}`}>
+                $
+                {invoice.items
+                  .reduce((sum, item) => {
+                    return sum + item.price * item.quantity;
+                  }, 0)
+                  .toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+              </span>
+            </div>
+
+            {/* Show discount if any item has discount */}
+            {invoice.items.some((item) => {
+              return item.discount > 0;
+            }) && (
+              <div className='flex justify-between py-2'>
+                <span className={`font-medium ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-700'}`}>
+                  Discount:
+                </span>
+                <span className={`font-medium ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'}`}>
+                  -$
+                  {invoice.items
+                    .reduce((sum, item) => {
+                      const subtotal = item.price * item.quantity;
+                      return sum + (subtotal * (item.discount || 0)) / 100;
+                    }, 0)
+                    .toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                </span>
+              </div>
+            )}
+
+            {/* Show tax if any item has tax */}
+            {invoice.items.some((item) => {
+              return item.tax > 0;
+            }) && (
+              <div className='flex justify-between py-2'>
+                <span className={`font-medium ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-700'}`}>
+                  Tax:
+                </span>
+                <span className={`font-medium ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'}`}>
+                  $
+                  {invoice.items
+                    .reduce((sum, item) => {
+                      const subtotal = item.price * item.quantity;
+                      const discountAmount = (subtotal * (item.discount || 0)) / 100;
+                      const discountedAmount = subtotal - discountAmount;
+                      return sum + (discountedAmount * (item.tax || 0)) / 100;
+                    }, 0)
+                    .toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                </span>
+              </div>
+            )}
+
+            <div className='flex justify-between py-2 text-base border-t border-gray-200 dark:border-[#232428] mt-2 pt-3'>
               <span className={`font-semibold ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-700'}`}>
                 Total:
               </span>
