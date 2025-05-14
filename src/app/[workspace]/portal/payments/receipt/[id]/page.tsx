@@ -668,7 +668,7 @@ export default function InvoicePage() {
                     Item
                   </th>
                   <th
-                    className={`text-right py-2 ${
+                    className={`text-center py-2 ${
                       localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
                     } ${isMobileView ? 'text-xs' : 'text-base'} print:py-1`}
                   >
@@ -724,7 +724,7 @@ export default function InvoicePage() {
                         </div>
                       </td>
                       <td
-                        className={`text-right py-2 ${
+                        className={`text-center py-2 ${
                           localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'
                         } ${isMobileView ? 'text-xs' : 'text-base'} print:py-1 print:text-sm`}
                       >
