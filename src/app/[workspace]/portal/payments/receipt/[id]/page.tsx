@@ -330,7 +330,7 @@ export default function InvoicePage() {
           <div className='flex justify-between items-center h-16'>
             <div className='flex items-center space-x-4'>
               <h1
-                className={`font-semibold text-sm md:text-lg ${
+                className={`font-semibold ${isMobileView ? 'text-xs' : 'text-sm'} md:text-lg ${
                   localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
                 }`}
               >
@@ -349,7 +349,7 @@ export default function InvoicePage() {
                     : localTheme === 'light'
                     ? 'bg-red-100 text-red-700'
                     : 'bg-red-500/10 text-red-500'
-                } ${isMobileView ? 'text-xs' : 'text-sm'}`}
+                } ${isMobileView ? 'text-[10px]' : 'text-sm'}`}
               >
                 {status.charAt(0).toUpperCase() + status.slice(1)}
               </span>
@@ -499,21 +499,21 @@ export default function InvoicePage() {
                 <p
                   className={`font-semibold ${
                     localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
-                  } ${isMobileView ? 'text-base' : 'text-lg'}`}
+                  } ${isMobileView ? 'text-sm' : 'text-lg'}`}
                 >
                   {invoiceSettings?.businessName || 'Your Company Name'}
                 </p>
-                <p className={`whitespace-pre-line ${isMobileView ? 'text-sm' : 'text-base'}`}>
+                <p className={`whitespace-pre-line ${isMobileView ? 'text-xs' : 'text-base'}`}>
                   {invoiceSettings?.businessAddress}
                 </p>
                 {invoiceSettings?.showTaxId && invoiceSettings?.taxId && (
-                  <p className={`mt-1 ${isMobileView ? 'text-sm' : 'text-base'}`}>
+                  <p className={`mt-1 ${isMobileView ? 'text-xs' : 'text-base'}`}>
                     Tax ID: {invoiceSettings.taxId}
                   </p>
                 )}
               </div>
             </div>
-            <div className={`text-right ${isMobileView ? 'text-sm' : 'text-base'}`}>
+            <div className={`text-right ${isMobileView ? 'text-xs' : 'text-base'}`}>
               {invoiceData.dueDate && (
                 <p className={`${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'}`}>
                   Due Date:{' '}
@@ -538,34 +538,34 @@ export default function InvoicePage() {
               <h2
                 className={`font-semibold mb-2 ${
                   localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
-                } ${isMobileView ? 'text-base' : 'text-lg'}`}
+                } ${isMobileView ? 'text-sm' : 'text-lg'}`}
               >
                 Bill To:
               </h2>
               <p
                 className={`font-medium ${
                   localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
-                } ${isMobileView ? 'text-sm' : 'text-base'}`}
+                } ${isMobileView ? 'text-xs' : 'text-base'}`}
               >
                 {invoiceData.client.user.name}
               </p>
               <p
                 className={`${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'} ${
-                  isMobileView ? 'text-sm' : 'text-base'
+                  isMobileView ? 'text-xs' : 'text-base'
                 }`}
               >
                 {invoiceData.client.address.street}
               </p>
               <p
                 className={`${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'} ${
-                  isMobileView ? 'text-sm' : 'text-base'
+                  isMobileView ? 'text-xs' : 'text-base'
                 }`}
               >
                 {invoiceData.client.address.city}, {invoiceData.client.address.state}
               </p>
               <p
                 className={`${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'} ${
-                  isMobileView ? 'text-sm' : 'text-base'
+                  isMobileView ? 'text-xs' : 'text-base'
                 }`}
               >
                 {invoiceData.client.address.country}
@@ -573,7 +573,7 @@ export default function InvoicePage() {
               {invoiceData.client.taxId && (
                 <p
                   className={`mt-2 ${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'} ${
-                    isMobileView ? 'text-sm' : 'text-base'
+                    isMobileView ? 'text-xs' : 'text-base'
                   }`}
                 >
                   Tax ID: {invoiceData.client.taxId}
@@ -582,7 +582,7 @@ export default function InvoicePage() {
               {invoiceData.client.user.email && (
                 <p
                   className={`${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'} ${
-                    isMobileView ? 'text-sm' : 'text-base'
+                    isMobileView ? 'text-xs' : 'text-base'
                   }`}
                 >
                   {invoiceData.client.user.email}
@@ -591,7 +591,7 @@ export default function InvoicePage() {
               {invoiceData.client.phone && (
                 <p
                   className={`${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'} ${
-                    isMobileView ? 'text-sm' : 'text-base'
+                    isMobileView ? 'text-xs' : 'text-base'
                   }`}
                 >
                   {invoiceData.client.phone}
@@ -602,41 +602,41 @@ export default function InvoicePage() {
               <h2
                 className={`font-semibold mb-2 ${
                   localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
-                } ${isMobileView ? 'text-base' : 'text-lg'}`}
+                } ${isMobileView ? 'text-sm' : 'text-lg'}`}
               >
                 Payment Details:
               </h2>
               <p
                 className={`${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'} ${
-                  isMobileView ? 'text-sm' : 'text-base'
+                  isMobileView ? 'text-xs' : 'text-base'
                 }`}
               >
                 Payment #{paymentNumber}
               </p>
               <p
                 className={`${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'} ${
-                  isMobileView ? 'text-sm' : 'text-base'
+                  isMobileView ? 'text-xs' : 'text-base'
                 }`}
               >
                 Amount: {amount.toFixed(2)} {invoiceData.currency}
               </p>
               <p
                 className={`${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'} ${
-                  isMobileView ? 'text-sm' : 'text-base'
+                  isMobileView ? 'text-xs' : 'text-base'
                 }`}
               >
                 Method: {method.charAt(0).toUpperCase() + method.slice(1)}
               </p>
               <p
                 className={`${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'} ${
-                  isMobileView ? 'text-sm' : 'text-base'
+                  isMobileView ? 'text-xs' : 'text-base'
                 }`}
               >
                 Date: {format(new Date(date), 'PPP')}
               </p>
               <p
                 className={`${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'} ${
-                  isMobileView ? 'text-sm' : 'text-base'
+                  isMobileView ? 'text-xs' : 'text-base'
                 }`}
               >
                 Remaining Balance: {remainingBalance.toFixed(2)} {invoiceData.currency}
@@ -649,7 +649,7 @@ export default function InvoicePage() {
             <h2
               className={`font-semibold mb-4 ${
                 localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
-              } ${isMobileView ? 'text-base' : 'text-lg'} print:mb-2 print:text-base`}
+              } ${isMobileView ? 'text-sm' : 'text-lg'} print:mb-2 print:text-base`}
             >
               Items
             </h2>
@@ -663,28 +663,28 @@ export default function InvoicePage() {
                   <th
                     className={`text-left py-2 ${
                       localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
-                    } ${isMobileView ? 'text-sm' : 'text-base'} print:py-1`}
+                    } ${isMobileView ? 'text-xs' : 'text-base'} print:py-1`}
                   >
                     Item
                   </th>
                   <th
                     className={`text-right py-2 ${
                       localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
-                    } ${isMobileView ? 'text-sm' : 'text-base'} print:py-1`}
+                    } ${isMobileView ? 'text-xs' : 'text-base'} print:py-1`}
                   >
                     Quantity
                   </th>
                   <th
                     className={`text-right py-2 ${
                       localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
-                    } ${isMobileView ? 'text-sm' : 'text-base'} print:py-1`}
+                    } ${isMobileView ? 'text-xs' : 'text-base'} print:py-1`}
                   >
                     Price
                   </th>
                   <th
                     className={`text-right py-2 ${
                       localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
-                    } ${isMobileView ? 'text-sm' : 'text-base'} print:py-1`}
+                    } ${isMobileView ? 'text-xs' : 'text-base'} print:py-1`}
                   >
                     Total
                   </th>
@@ -708,7 +708,7 @@ export default function InvoicePage() {
                           <p
                             className={`font-medium ${
                               localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
-                            } ${isMobileView ? 'text-sm' : 'text-base'} print:text-sm`}
+                            } ${isMobileView ? 'text-xs' : 'text-base'} print:text-sm`}
                           >
                             {item.name}
                           </p>
@@ -716,7 +716,7 @@ export default function InvoicePage() {
                             <p
                               className={`text-sm ${
                                 localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'
-                              } ${isMobileView ? 'text-xs' : 'text-sm'} print:text-xs`}
+                              } ${isMobileView ? '!text-[10px]' : 'text-sm'} print:text-xs`}
                             >
                               {item.description}
                             </p>
@@ -726,23 +726,23 @@ export default function InvoicePage() {
                       <td
                         className={`text-right py-2 ${
                           localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'
-                        } ${isMobileView ? 'text-sm' : 'text-base'} print:py-1 print:text-sm`}
+                        } ${isMobileView ? 'text-xs' : 'text-base'} print:py-1 print:text-sm`}
                       >
                         {item.quantity}
                       </td>
                       <td
                         className={`text-right py-2 ${
                           localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'
-                        } ${isMobileView ? 'text-sm' : 'text-base'} print:py-1 print:text-sm`}
+                        } ${isMobileView ? 'text-xs' : 'text-base'} print:py-1 print:text-sm`}
                       >
-                        {item.price.toFixed(2)} {invoiceData.currency}
+                        {item.price.toFixed(2)}
                       </td>
                       <td
                         className={`text-right py-2 ${
                           localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'
-                        } ${isMobileView ? 'text-sm' : 'text-base'} print:py-1 print:text-sm`}
+                        } ${isMobileView ? 'text-xs' : 'text-base'} print:py-1 print:text-sm`}
                       >
-                        {itemTotal.toFixed(2)} {invoiceData.currency}
+                        {itemTotal.toFixed(2)}
                       </td>
                     </tr>
                   );
@@ -753,7 +753,7 @@ export default function InvoicePage() {
 
           {/* Totals */}
           <div className='flex justify-end'>
-            <div className={`w-64 ${isMobileView ? 'text-sm' : 'text-base'} print:text-sm`}>
+            <div className={`w-64 ${isMobileView ? 'text-xs' : 'text-base'} print:text-sm`}>
               <div
                 className={`flex justify-between py-2 ${
                   localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'
@@ -831,14 +831,14 @@ export default function InvoicePage() {
               <h3
                 className={`font-semibold ${
                   localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
-                } mb-2 ${isMobileView ? 'text-base' : 'text-lg'} print:text-base print:mb-1`}
+                } mb-2 ${isMobileView ? 'text-sm' : 'text-lg'} print:text-base print:mb-1`}
               >
                 Notes
               </h3>
               <div
                 className={`whitespace-pre-line ${
                   localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'
-                } ${isMobileView ? 'text-sm' : 'text-base'} print:text-sm`}
+                } ${isMobileView ? 'text-xs' : 'text-base'} print:text-sm`}
               >
                 {invoiceData.notes}
                 {invoiceData.notes && invoiceSettings?.businessNotes && <br />}
