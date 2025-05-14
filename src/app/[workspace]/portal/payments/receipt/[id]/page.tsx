@@ -598,13 +598,6 @@ export default function InvoicePage() {
               >
                 Date: {format(new Date(date), 'PPP')}
               </p>
-              <p
-                className={`${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'} ${
-                  isMobileView ? 'text-xs' : 'text-base'
-                }`}
-              >
-                Remaining Balance: {remainingBalance.toFixed(2)} {invoiceData.currency}
-              </p>
             </div>
           </div>
 

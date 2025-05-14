@@ -1330,6 +1330,7 @@ export default function InvoicePreview({
                   type='number'
                   min='0'
                   step='any'
+                  className='text-black dark:text-white'
                   value={paymentAmount}
                   onChange={(e) => {
                     setAmountTouched(true);
