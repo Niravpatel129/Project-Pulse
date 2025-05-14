@@ -212,12 +212,12 @@ export function Invoice({ invoice, paymentUrl }: InvoiceProps) {
                   ${(invoice.total * (invoice.depositPercentage / 100)).toFixed(2)}
                 </span>
               </div>
-              <div className='flex justify-between items-center'>
+              {/* <div className='flex justify-between items-center'>
                 <span className='font-medium'>Remaining Balance:</span>
                 <span className='font-bold'>
                   ${(invoice.total * (1 - invoice.depositPercentage / 100)).toFixed(2)}
                 </span>
-              </div>
+              </div> */}
             </div>
           </div>
         )}

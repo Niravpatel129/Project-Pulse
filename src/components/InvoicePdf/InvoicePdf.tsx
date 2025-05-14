@@ -91,7 +91,6 @@ interface InvoiceProps {
 }
 
 export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
-  console.log('🚀 invoice:', invoice);
   const { data: invoiceSettings } = useInvoiceSettings();
   const remainingBalance = invoice.total;
   const [isDarkTheme, setIsDarkTheme] = useState(() => {
