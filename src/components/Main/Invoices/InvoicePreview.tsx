@@ -665,10 +665,10 @@ export default function InvoicePreview({
           }}
         />
       </div>
-      <div className='mt-2 overflow-auto h-[calc(100vh-4rem)]'>
+      <div className='mt-4 overflow-auto h-[calc(100vh-4rem)]'>
         <div className='flex flex-col space-y-6 pb-6 border-b border-border rounded-t-lg'>
           {/* Invoice Info Section */}
-          <div className='flex flex-col border-b border-border px-5 '>
+          <div className='flex flex-col border-b border-border px-5 pb-2'>
             <div className='flex items-center'>
               <span className='text-[14px] font-medium text-foreground'>
                 Invoice #{invoice.invoiceNumber}
