@@ -570,13 +570,15 @@ export default function InvoicePage() {
               >
                 {invoiceData.client.address.country}
               </p>
-              <p
-                className={`mt-2 ${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'} ${
-                  isMobileView ? 'text-sm' : 'text-base'
-                }`}
-              >
-                Tax ID: {invoiceData.client.taxId}
-              </p>
+              {invoiceData.client.taxId && (
+                <p
+                  className={`mt-2 ${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'} ${
+                    isMobileView ? 'text-sm' : 'text-base'
+                  }`}
+                >
+                  Tax ID: {invoiceData.client.taxId}
+                </p>
+              )}
               {invoiceData.client.user.email && (
                 <p
                   className={`${localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'} ${
