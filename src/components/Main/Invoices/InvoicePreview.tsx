@@ -598,7 +598,7 @@ export default function InvoicePreview({
     return (
       <div className='flex flex-col items-center justify-center h-full w-full bg-background'>
         <div className='flex flex-col items-center justify-center'>
-          <div className='flex items-center justify-center rounded-full border-2 border-dashed border-[#444] w-32 h-32 mb-6'>
+          <div className='flex items-center justify-center rounded-full border-2 border-dashed border-muted w-32 h-32 mb-6'>
             {/* Envelope Icon */}
             <svg
               xmlns='http://www.w3.org/2000/svg'
@@ -616,8 +616,8 @@ export default function InvoicePreview({
               <path d='m22 6-8.97 6.48a2 2 0 0 1-2.06 0L2 6' />
             </svg>
           </div>
-          <div className='text-white text-xl font-semibold mb-2'>It&apos;s empty here</div>
-          <div className='text-[#8C8C8C] text-base'>Choose an invoice to view details</div>
+          <div className='text-foreground text-xl font-semibold mb-2'>It&apos;s empty here</div>
+          <div className='text-muted-foreground text-base'>Choose an invoice to view details</div>
         </div>
       </div>
     );
@@ -635,7 +635,7 @@ export default function InvoicePreview({
         </div>
         <div className='mt-4 overflow-auto h-[calc(100vh-4rem)]'>
           <div className='flex items-center justify-center h-full'>
-            <span className='text-red-500'>Error loading invoice</span>
+            <span className='text-destructive'>Error loading invoice</span>
           </div>
         </div>
       </div>
@@ -659,24 +659,24 @@ export default function InvoicePreview({
         />
       </div>
       <div className='mt-2 overflow-auto h-[calc(100vh-4rem)]'>
-        <div className='flex flex-col space-y-6 pb-6 border-b border-[#232323] rounded-t-lg'>
+        <div className='flex flex-col space-y-6 pb-6 border-b border-border rounded-t-lg'>
           {/* Invoice Info Section */}
-          <div className='flex flex-col border-b border-[#232323] px-5 '>
+          <div className='flex flex-col border-b border-border px-5 '>
             <div className='flex items-center'>
-              <span className='text-[14px] font-medium text-white'>
+              <span className='text-[14px] font-medium text-foreground'>
                 Invoice #{invoice.invoiceNumber}
               </span>
               <Badge className='ml-2'>{invoice.status}</Badge>
             </div>
             <div className='flex flex-col sm:flex-row gap-4 mt-2'>
               <div className='flex items-center gap-0'>
-                <span className='text-sm text-[#8C8C8C]'>Customer:</span>
+                <span className='text-sm text-muted-foreground'>Customer:</span>
                 <Button variant='link' size='sm'>
                   {invoice.client?.user.name || 'N/A'}
                 </Button>
               </div>
               <div className='flex items-center gap-0'>
-                <span className='text-sm text-[#8C8C8C]'>Business:</span>
+                <span className='text-sm text-muted-foreground'>Business:</span>
                 <Button
                   variant='link'
                   size='sm'
@@ -691,11 +691,11 @@ export default function InvoicePreview({
           </div>
           <div className='grid grid-cols-3 gap-4 px-5'>
             <div className='flex flex-col'>
-              <span className='text-sm text-[#8C8C8C] mb-2'>Amount</span>
+              <span className='text-sm text-muted-foreground mb-2'>Amount</span>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className='text-[14px] font-bold text-white border-b border-dashed border-[#232428] cursor-help'>
+                    <span className='text-[14px] font-bold text-foreground border-b border-dashed border-border cursor-help'>
                       {invoice.total.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
@@ -703,11 +703,11 @@ export default function InvoicePreview({
                       {invoice.currency}
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent className='bg-[#141414] text-[#fafafa] border border-[#232428] shadow-md rounded-md p-3'>
+                  <TooltipContent className='bg-background text-foreground border border-border shadow-md rounded-md p-3'>
                     <div className='space-y-2 w-[180px]'>
                       <div className='flex justify-between items-center'>
-                        <span className='text-[#8C8C8C] text-xs'>Subtotal</span>
-                        <span className='text-[#fafafa] text-xs font-medium'>
+                        <span className='text-muted-foreground text-xs'>Subtotal</span>
+                        <span className='text-foreground text-xs font-medium'>
                           {invoice.items
                             .reduce((sum, item) => {
                               return sum + item.price * item.quantity;
@@ -720,8 +720,8 @@ export default function InvoicePreview({
                         </span>
                       </div>
                       <div className='flex justify-between items-center'>
-                        <span className='text-[#8C8C8C] text-xs'>Tax</span>
-                        <span className='text-[#fafafa] text-xs font-medium'>
+                        <span className='text-muted-foreground text-xs'>Tax</span>
+                        <span className='text-foreground text-xs font-medium'>
                           {invoice.items
                             .reduce((sum, item) => {
                               return sum + (item.tax || 0);
@@ -734,7 +734,7 @@ export default function InvoicePreview({
                         </span>
                       </div>
                       <div className='flex justify-between items-center'>
-                        <span className='text-[#8C8C8C] text-xs'>Discount</span>
+                        <span className='text-muted-foreground text-xs'>Discount</span>
                         <span className='text-[#8b5df8] text-xs font-medium'>
                           -
                           {invoice.items
@@ -748,9 +748,9 @@ export default function InvoicePreview({
                           {invoice.currency}
                         </span>
                       </div>
-                      <div className='pt-1 border-t border-[#232428] flex justify-between items-center'>
-                        <span className='text-[#fafafa] text-xs font-medium'>Total</span>
-                        <span className='text-[#fafafa] text-xs font-bold'>
+                      <div className='pt-1 border-t border-border flex justify-between items-center'>
+                        <span className='text-foreground text-xs font-medium'>Total</span>
+                        <span className='text-foreground text-xs font-bold'>
                           {invoice.total.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
@@ -765,8 +765,8 @@ export default function InvoicePreview({
             </div>
             {invoice.requireDeposit && (
               <div className='flex flex-col'>
-                <span className='text-sm text-[#8C8C8C] mb-2'>Deposit Due</span>
-                <span className='text-[14px] font-semibold text-[#a78bfa]'>
+                <span className='text-sm text-muted-foreground mb-2'>Deposit Due</span>
+                <span className='text-[14px] font-semibold text-[#8b5df8]'>
                   $
                   {(invoice.total * (invoice.depositPercentage / 100)).toLocaleString(undefined, {
                     minimumFractionDigits: 2,
@@ -777,8 +777,8 @@ export default function InvoicePreview({
               </div>
             )}
             <div className='flex flex-col'>
-              <span className='text-sm text-[#8C8C8C] mb-2'>Due Date</span>
-              <span className='text-[14px] font-medium text-white'>
+              <span className='text-sm text-muted-foreground mb-2'>Due Date</span>
+              <span className='text-[14px] font-medium text-foreground'>
                 {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : 'No due date'}
               </span>
             </div>
@@ -787,7 +787,7 @@ export default function InvoicePreview({
         {/* Timeline Section */}
         <div className='py-6 space-y-6 px-5'>
           {/* Timeline */}
-          <div className='bg-[#141414] rounded-lg border border-[#232323] p-6'>
+          <div className='bg-card rounded-lg border border-border p-6'>
             <div className='flex flex-col space-y-6'>
               {/* Create */}
               <div className='flex flex-col sm:flex-row sm:items-center gap-4'>
@@ -805,8 +805,8 @@ export default function InvoicePreview({
                     </svg>
                   </span>
                   <div>
-                    <div className='font-semibold text-white text-[14px] mb-1'>Create</div>
-                    <div className='text-sm text-[#8C8C8C]'>
+                    <div className='font-semibold text-foreground text-[14px] mb-1'>Create</div>
+                    <div className='text-sm text-muted-foreground'>
                       Created: {new Date(invoice.createdAt).toLocaleString()}
                     </div>
                   </div>
@@ -815,7 +815,7 @@ export default function InvoicePreview({
                   <Button
                     variant='outline'
                     size='sm'
-                    className='bg-[#232323] border-[#333] text-white text-sm h-11 w-full sm:w-auto px-6'
+                    className='bg-card border-border text-foreground text-sm h-11 w-full sm:w-auto px-6'
                     onClick={() => {
                       return setIsEditInvoiceOpen(true);
                     }}
@@ -824,7 +824,7 @@ export default function InvoicePreview({
                   </Button>
                 </div>
               </div>
-              <Separator className='bg-[#232323]' />
+              <Separator className='bg-border' />
               {/* Send */}
               <div className='flex flex-col sm:flex-row sm:items-center gap-4'>
                 <div className='flex items-center gap-4'>
@@ -841,8 +841,8 @@ export default function InvoicePreview({
                     </svg>
                   </span>
                   <div>
-                    <div className='font-semibold text-white text-[14px] mb-1'>Send</div>
-                    <div className='text-sm text-[#8C8C8C]'>
+                    <div className='font-semibold text-foreground text-[14px] mb-1'>Send</div>
+                    <div className='text-sm text-muted-foreground'>
                       Last sent:{' '}
                       {invoice.status === 'sent'
                         ? new Date(invoice.dateSent).toLocaleString()
@@ -855,7 +855,7 @@ export default function InvoicePreview({
                   <Button
                     variant='outline'
                     size='sm'
-                    className='bg-[#232323] border-[#333] text-white text-sm h-11 w-full sm:w-auto px-6'
+                    className='bg-card border-border text-foreground text-sm h-11 w-full sm:w-auto px-6'
                     onClick={handleSendInvoice}
                   >
                     {invoice.status === 'sent' || invoice.status === 'paid'
@@ -864,7 +864,7 @@ export default function InvoicePreview({
                   </Button>
                 </div>
               </div>
-              <Separator className='bg-[#232323]' />
+              <Separator className='bg-border' />
               {/* Manage Payments */}
               <div className='flex flex-col sm:flex-row sm:items-center gap-4'>
                 <div className='flex items-center gap-4'>
@@ -881,8 +881,10 @@ export default function InvoicePreview({
                     </svg>
                   </span>
                   <div>
-                    <div className='font-semibold text-white text-[14px] mb-1'>Manage payments</div>
-                    <div className='text-sm text-[#8C8C8C]'>
+                    <div className='font-semibold text-foreground text-[14px] mb-1'>
+                      Manage payments
+                    </div>
+                    <div className='text-sm text-muted-foreground'>
                       Amount due:{' '}
                       {(
                         invoice.total -
@@ -910,7 +912,7 @@ export default function InvoicePreview({
                   <Button
                     variant='outline'
                     size='sm'
-                    className='bg-[#232323] border-[#333] text-white text-sm h-11 w-full sm:w-auto px-6'
+                    className='bg-card border-border text-foreground text-sm h-11 w-full sm:w-auto px-6'
                     onClick={() => {
                       return setIsPaymentDialogOpen(true);
                     }}
@@ -926,24 +928,26 @@ export default function InvoicePreview({
             </div>
             {/* Payments received */}
             <div className='mt-8'>
-              <div className='text-[14px] font-medium text-[#8C8C8C] mb-4'>Payments received:</div>
+              <div className='text-[14px] font-medium text-muted-foreground mb-4'>
+                Payments received:
+              </div>
               {paymentsLoading ? (
-                <div className='text-[14px] text-[#8C8C8C]'>Loading payments...</div>
+                <div className='text-[14px] text-muted-foreground'>Loading payments...</div>
               ) : paymentsError ? (
-                <div className='text-[14px] text-red-500'>Failed to load payments.</div>
+                <div className='text-[14px] text-destructive'>Failed to load payments.</div>
               ) : payments.length > 0 ? (
                 <div className='space-y-6'>
                   {payments.map((payment) => {
                     return (
                       <div key={payment._id} className='mb-2'>
-                        <div className='text-[14px] text-[#8C8C8C]'>
+                        <div className='text-[14px] text-muted-foreground'>
                           {new Date(payment.date).toLocaleDateString(undefined, {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',
                           })}{' '}
                           - A payment for{' '}
-                          <span className='font-semibold text-white'>
+                          <span className='font-semibold text-foreground'>
                             {payment.amount.toLocaleString(undefined, {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
@@ -953,35 +957,37 @@ export default function InvoicePreview({
                           was made using {payment.method}.
                         </div>
                         {payment.memo && payment.memo.length > 0 && (
-                          <div className='text-[13px] text-[#8C8C8C] mt-1'>{payment.memo}</div>
+                          <div className='text-[13px] text-muted-foreground mt-1'>
+                            {payment.memo}
+                          </div>
                         )}
                         <div className='flex flex-wrap gap-1 text-[13px] font-medium mt-2 items-center'>
                           <Button
                             variant='link'
                             size='sm'
-                            className='p-0 h-auto text-[#8C8C8C] hover:text-white'
+                            className='p-0 h-auto text-muted-foreground hover:text-foreground'
                             onClick={() => {
                               return handleSendReceipt(payment);
                             }}
                           >
                             Send a receipt
                           </Button>
-                          <span className='text-[#8C8C8C]'>·</span>
+                          <span className='text-muted-foreground'>·</span>
                           <Button
                             variant='link'
                             size='sm'
-                            className='p-0 h-auto text-[#8C8C8C] hover:text-white'
+                            className='p-0 h-auto text-muted-foreground hover:text-foreground'
                             onClick={() => {
                               return handleEditPayment(payment);
                             }}
                           >
                             Edit payment
                           </Button>
-                          <span className='text-[#8C8C8C]'>·</span>
+                          <span className='text-muted-foreground'>·</span>
                           <Button
                             variant='link'
                             size='sm'
-                            className='p-0 h-auto text-[#8C8C8C] hover:text-white'
+                            className='p-0 h-auto text-muted-foreground hover:text-foreground'
                             onClick={() => {
                               return handleDeletePayment(payment._id);
                             }}
@@ -992,10 +998,10 @@ export default function InvoicePreview({
                       </div>
                     );
                   })}
-                  <Separator className='bg-[#232323] my-4' />
+                  <Separator className='bg-border my-4' />
                   <div className='flex justify-between items-center'>
-                    <span className='text-[14px] text-[#8C8C8C]'>Total Paid:</span>
-                    <span className='text-[14px] font-semibold text-white'>
+                    <span className='text-[14px] text-muted-foreground'>Total Paid:</span>
+                    <span className='text-[14px] font-semibold text-foreground'>
                       {payments
                         .reduce((sum, payment) => {
                           return sum + payment.amount;
@@ -1009,39 +1015,41 @@ export default function InvoicePreview({
                   </div>
                 </div>
               ) : (
-                <div className='text-[14px] text-[#8C8C8C]'>No payments recorded yet.</div>
+                <div className='text-[14px] text-muted-foreground'>No payments recorded yet.</div>
               )}
             </div>
           </div>
           {/* Additional Info Panel */}
-          <div className='bg-[#141414] rounded-lg border border-[#232323] p-6'>
-            <h3 className='text-[14px] font-semibold text-white mb-5'>Additional Information</h3>
+          <div className='bg-card rounded-lg border border-border p-6'>
+            <h3 className='text-[14px] font-semibold text-foreground mb-5'>
+              Additional Information
+            </h3>
             <div className='grid grid-cols-2 gap-6'>
               <div>
-                <div className='text-sm text-[#8C8C8C] mb-2'>Invoice Date</div>
-                <div className='text-[14px] text-white'>
+                <div className='text-sm text-muted-foreground mb-2'>Invoice Date</div>
+                <div className='text-[14px] text-foreground'>
                   {new Date(invoice.createdAt).toLocaleDateString()}
                 </div>
               </div>
               <div>
-                <div className='text-sm text-[#8C8C8C] mb-2'>Due Date</div>
-                <div className='text-[14px] text-white'>
+                <div className='text-sm text-muted-foreground mb-2'>Due Date</div>
+                <div className='text-[14px] text-foreground'>
                   {new Date(invoice.dueDate).toLocaleDateString()}
                 </div>
               </div>
               <div className='col-span-2'>
-                <div className='text-sm text-[#8C8C8C] mb-2'>Notes</div>
-                <div className='text-[14px] text-white'>{invoice.notes || ''}</div>
+                <div className='text-sm text-muted-foreground mb-2'>Notes</div>
+                <div className='text-[14px] text-foreground'>{invoice.notes || ''}</div>
               </div>
             </div>
           </div>
 
           <div className='flex items-center justify-between mb-5'>
-            <h3 className='text-[14px] font-semibold text-white'>Invoice</h3>
+            <h3 className='text-[14px] font-semibold text-foreground'>Invoice</h3>
             <Button
               variant='outline'
               size='sm'
-              className='bg-[#232323] border-[#333] text-white text-sm h-8 px-4'
+              className='bg-card border-border text-foreground text-sm h-8 px-4'
               onClick={handleDownloadPDF}
             >
               <Download className='w-4 h-4 mr-2' />

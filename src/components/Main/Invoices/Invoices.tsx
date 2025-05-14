@@ -131,7 +131,7 @@ export default function Invoices({
       }}
     >
       <motion.div
-        className='flex items-center justify-between px-4 py-2 border-b border-[#232428]'
+        className='flex items-center justify-between px-4 py-2 border-b border-[#E4E4E7] dark:border-[#232428]'
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{
@@ -144,12 +144,12 @@ export default function Invoices({
           <Button
             variant='ghost'
             size='icon'
-            className='text-[#8b8b8b] hover:text-white'
+            className='text-[#3F3F46]/60 dark:text-[#8b8b8b] hover:text-[#3F3F46] dark:hover:text-white'
             onClick={toggleSidebar}
           >
             <FiSidebar size={20} />
           </Button>
-          <h1 className='text-lg font-semibold text-white'>
+          <h1 className='text-lg font-semibold text-[#3F3F46] dark:text-white'>
             {showStarredOnly ? 'Starred Invoices' : 'Invoices'}
           </h1>
         </div>
@@ -157,7 +157,7 @@ export default function Invoices({
           <Button
             variant='ghost'
             size='icon'
-            className='text-[#8b8b8b] hover:text-white'
+            className='text-[#3F3F46]/60 dark:text-[#8b8b8b] hover:text-[#3F3F46] dark:hover:text-white'
             onClick={() => {
               return queryClient.invalidateQueries({ queryKey: ['invoices'] });
             }}
@@ -177,11 +177,11 @@ export default function Invoices({
         }}
       >
         <div className='relative'>
-          <FiSearch className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#8C8C8C]' />
+          <FiSearch className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#3F3F46]/60 dark:text-[#8C8C8C]' />
           <Input
             type='text'
             placeholder='Search...'
-            className='w-full pl-9 bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C] focus-visible:ring-1 focus-visible:ring-[#8C8C8C]'
+            className='w-full pl-9 bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8C8C8C] focus-visible:ring-1 focus-visible:ring-[#3F3F46]/60 dark:focus-visible:ring-[#8C8C8C]'
           />
         </div>
       </motion.div>
@@ -191,7 +191,7 @@ export default function Invoices({
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className='flex flex-col items-center justify-center h-full text-[#8C8C8C] py-8'
+              className='flex flex-col items-center justify-center h-full text-[#3F3F46]/60 dark:text-[#8C8C8C] py-8'
             >
               <p className='text-lg'>No invoices found</p>
               <p className='text-sm mt-2'>
@@ -202,7 +202,6 @@ export default function Invoices({
             </motion.div>
           ) : (
             filteredInvoices?.map((invoice, index) => {
-              console.log('🚀 invoice:', invoice);
               return (
                 <motion.div
                   key={invoice._id}
@@ -212,31 +211,28 @@ export default function Invoices({
                   exit={{ opacity: 0, y: -10 }}
                   transition={{
                     type: 'spring',
-                    stiffness: 300, // Reduced stiffness for softer motion
-                    damping: 25, // Reduced damping for smoother motion
-                    mass: 0.8, // Added mass for more natural movement
+                    stiffness: 300,
+                    damping: 25,
+                    mass: 0.8,
                     opacity: {
                       duration: 0.3,
                       ease: [0.4, 0, 0.2, 1],
                     },
-                    delay: index * 0.03, // Staggered animation for list items
+                    delay: index * 0.03,
                   }}
-                  className={`group relative flex items-center px-3 py-2 my-2 rounded-lg hover:bg-[#252525] transition-all duration-300 ease-in-out cursor-pointer ${
-                    selectedInvoice === invoice._id ? 'bg-[#252525]' : ''
+                  className={`group relative flex items-center px-3 py-2 my-2 rounded-lg hover:bg-[#F4F4F5] dark:hover:bg-[#252525] transition-all duration-300 ease-in-out cursor-pointer ${
+                    selectedInvoice === invoice._id ? 'bg-[#F4F4F5] dark:bg-[#252525]' : ''
                   }`}
                   onClick={(e) => {
-                    console.log('Invoice clicked:', invoice._id);
-                    console.log('Current selectedInvoice:', selectedInvoice);
                     if (onPreviewClick) {
                       setSelectedInvoice(invoice._id);
-                      console.log('Setting selectedInvoice to:', invoice._id);
                       onPreviewClick(invoice);
                     }
                   }}
                 >
                   <div className='relative mr-3'>
                     <Avatar className='h-8 w-8'>
-                      <AvatarFallback className='bg-[#373737] text-[#9f9f9f] text-xs font-semibold capitalize'>
+                      <AvatarFallback className='bg-[#E4E4E7] dark:bg-[#373737] text-[#3F3F46] dark:text-[#9f9f9f] text-xs font-semibold capitalize'>
                         {invoice.client?.user.name[0] || <IoPerson />}
                         {invoice.client?.contact.lastName[0]}
                       </AvatarFallback>
@@ -246,7 +242,7 @@ export default function Invoices({
                   <div className='flex-1 min-w-0'>
                     <div className='flex items-center justify-between mb-1'>
                       <div className='flex items-center gap-2'>
-                        <span className='font-semibold text-[#fafafa] text-[14px] truncate'>
+                        <span className='font-semibold text-[#3F3F46] dark:text-[#fafafa] text-[14px] truncate'>
                           {invoice.client?.user.name || 'Unnamed'}
                         </span>
                         <Badge
@@ -265,22 +261,26 @@ export default function Invoices({
                         <TooltipProvider delayDuration={500}>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className='text-[#8C8C8C] text-sm truncate max-w-[120px] hover:text-white transition-colors'>
+                              <span className='text-[#3F3F46]/60 dark:text-[#8C8C8C] text-sm truncate max-w-[120px] hover:text-[#3F3F46] dark:hover:text-white transition-colors'>
                                 {invoice.items[0]?.description || 'No description'}
                               </span>
                             </TooltipTrigger>
-                            <TooltipContent className='w-80 p-4 bg-[#232323] border border-[#313131] shadow-lg'>
+                            <TooltipContent className='w-80 p-4 bg-white dark:bg-[#232323] border border-[#E4E4E7] dark:border-[#313131] shadow-lg'>
                               <div className='space-y-2'>
-                                <h4 className='font-medium text-white mb-2'>Invoice Items</h4>
+                                <h4 className='font-medium text-[#3F3F46] dark:text-white mb-2'>
+                                  Invoice Items
+                                </h4>
                                 {invoice.items.map((item: any, index: number) => {
                                   return (
                                     <div key={index} className='flex items-start gap-2 text-sm'>
-                                      <span className='text-[#8C8C8C] min-w-[20px]'>
+                                      <span className='text-[#3F3F46]/60 dark:text-[#8C8C8C] min-w-[20px]'>
                                         {index + 1}.
                                       </span>
                                       <div className='flex-1'>
-                                        <p className='text-white'>{item.description}</p>
-                                        <p className='text-[#8C8C8C] text-xs'>
+                                        <p className='text-[#3F3F46] dark:text-white'>
+                                          {item.description}
+                                        </p>
+                                        <p className='text-[#3F3F46]/60 dark:text-[#8C8C8C] text-xs'>
                                           {item.quantity} ×{' '}
                                           {item.price.toLocaleString(undefined, {
                                             minimumFractionDigits: 2,
@@ -296,7 +296,7 @@ export default function Invoices({
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
-                        <span className='text-[#8C8C8C] text-sm'>
+                        <span className='text-[#3F3F46]/60 dark:text-[#8C8C8C] text-sm'>
                           •{' '}
                           {invoice.total.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
@@ -319,7 +319,7 @@ export default function Invoices({
                                   <Button
                                     variant='ghost'
                                     size='icon'
-                                    className='text-[#f5a623] hover:text-white relative'
+                                    className='text-[#f5a623] hover:text-[#3F3F46] dark:hover:text-white relative'
                                     onClick={(e) => {
                                       e.stopPropagation();
                                     }}
@@ -331,7 +331,7 @@ export default function Invoices({
                               <TooltipContent>
                                 <p>Notes</p>
                               </TooltipContent>
-                              <PopoverContent className='w-[350px] p-0 bg-[#181818] text-white rounded-lg shadow-lg border-none'>
+                              <PopoverContent className='w-[350px] p-0 bg-white dark:bg-[#181818] text-[#3F3F46] dark:text-white rounded-lg shadow-lg border border-[#E4E4E7] dark:border-none'>
                                 <NotesPopoverContent
                                   invoiceId={invoice._id}
                                   initialNotes={notesMap[invoice._id] || []}
@@ -345,7 +345,7 @@ export default function Invoices({
                         <Button
                           variant='ghost'
                           size='icon'
-                          className='text-[#f5a623] hover:text-white'
+                          className='text-[#f5a623] hover:text-[#3F3F46] dark:hover:text-white'
                           onClick={(e) => {
                             e.stopPropagation();
                             starMutation.mutate(invoice._id);
@@ -353,7 +353,7 @@ export default function Invoices({
                           disabled={starMutation.isPending}
                         >
                           {starMutation.isPending ? (
-                            <div className='w-4 h-4 border-2 border-[#8b8b8b] border-t-transparent rounded-full animate-spin' />
+                            <div className='w-4 h-4 border-2 border-[#3F3F46]/60 dark:border-[#8b8b8b] border-t-transparent rounded-full animate-spin' />
                           ) : (
                             <BsStarFill size={14} />
                           )}
@@ -361,7 +361,7 @@ export default function Invoices({
                       )}
                     </div>
 
-                    <div className='text-xs text-[#8C8C8C] ml-0 whitespace-nowrap'>
+                    <div className='text-xs text-[#3F3F46]/60 dark:text-[#8C8C8C] ml-0 whitespace-nowrap'>
                       {(() => {
                         const date = new Date(invoice.createdAt);
                         const today = new Date();
@@ -518,11 +518,13 @@ function NotesPopoverContent({
   // If adding a note, show the add note form
   if (adding) {
     return (
-      <div className='p-4 rounded-lg bg-[#181818] min-h-[300px] flex flex-col'>
-        <div className='text-lg font-medium mb-4 flex items-center gap-2'>Notes</div>
+      <div className='p-4 rounded-lg bg-white dark:bg-[#181818] min-h-[300px] flex flex-col'>
+        <div className='text-lg font-medium mb-4 flex items-center gap-2 text-[#3F3F46] dark:text-white'>
+          Notes
+        </div>
         <div className='flex-1 mb-4'>
           <textarea
-            className='w-full min-h-[80px] bg-transparent border-none outline-none resize-none text-white placeholder-[#8b8b8b] text-base p-0 mb-2'
+            className='w-full min-h-[80px] bg-transparent border-none outline-none resize-none text-[#3F3F46] dark:text-white placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8b8b8b] text-base p-0 mb-2'
             placeholder='Add your note here...'
             value={note}
             onChange={(e) => {
@@ -535,7 +537,7 @@ function NotesPopoverContent({
           />
         </div>
         <div className='mb-4 flex items-center gap-2'>
-          <span className='text-[#8b8b8b] text-sm'>Label:</span>
+          <span className='text-[#3F3F46]/60 dark:text-[#8b8b8b] text-sm'>Label:</span>
           {labelColors.map((color) => {
             return (
               <button
@@ -545,14 +547,14 @@ function NotesPopoverContent({
                   return setLabel(color);
                 }}
                 className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                  label === color ? 'border-white' : 'border-transparent'
+                  label === color ? 'border-[#3F3F46] dark:border-white' : 'border-transparent'
                 }`}
                 style={{ background: color }}
                 aria-label={`Label color ${color}`}
               >
                 {label === color && (
                   <span
-                    className='block w-3 h-3 rounded-full border border-[#181818]'
+                    className='block w-3 h-3 rounded-full border border-white dark:border-[#181818]'
                     style={{ background: color === '#fff' ? '#fff' : 'transparent' }}
                   />
                 )}
@@ -561,15 +563,15 @@ function NotesPopoverContent({
           })}
         </div>
         <div className='flex items-center gap-2 mb-4'>
-          <kbd className='px-2 py-1 rounded bg-[#232323] text-[#8b8b8b] text-xs border border-[#313131]'>
+          <kbd className='px-2 py-1 rounded bg-[#F4F4F5] dark:bg-[#232323] text-[#3F3F46]/60 dark:text-[#8b8b8b] text-xs border border-[#E4E4E7] dark:border-[#313131]'>
             ⌘+Enter
           </kbd>
-          <span className='text-[#8b8b8b] text-xs'>to save</span>
+          <span className='text-[#3F3F46]/60 dark:text-[#8b8b8b] text-xs'>to save</span>
         </div>
         <div className='flex justify-between items-center mt-auto'>
           <Button
             variant='ghost'
-            className='text-[#8b8b8b] hover:bg-transparent hover:text-white'
+            className='text-[#3F3F46]/60 dark:text-[#8b8b8b] hover:bg-transparent hover:text-[#3F3F46] dark:hover:text-white'
             onClick={() => {
               setAdding(false);
               setEditIndex(null);
@@ -581,7 +583,7 @@ function NotesPopoverContent({
           </Button>
           <Button
             variant='outline'
-            className='bg-[#313131] text-white border border-[#313131] hover:bg-[#232323]/80 px-6 py-2 rounded-lg'
+            className='bg-[#F4F4F5] dark:bg-[#313131] text-[#3F3F46] dark:text-white border border-[#E4E4E7] dark:border-[#313131] hover:bg-[#E4E4E7] dark:hover:bg-[#232323]/80 px-6 py-2 rounded-lg'
             disabled={!note.trim() || saveNoteMutation.isPending}
             onClick={handleSaveNote}
           >
@@ -598,25 +600,29 @@ function NotesPopoverContent({
       <div className='flex flex-col h-[400px]'>
         {/* Header with badge */}
         <div className='flex items-center gap-2 px-4 pt-4 pb-2'>
-          <span className='text-lg font-medium flex items-center gap-2'>Notes</span>
-          <span className='ml-2 bg-[#232323] text-xs px-2 py-0.5 rounded-full'>{notes.length}</span>
+          <span className='text-lg font-medium flex items-center gap-2 text-[#3F3F46] dark:text-white'>
+            Notes
+          </span>
+          <span className='ml-2 bg-[#F4F4F5] dark:bg-[#232323] text-[#3F3F46] dark:text-[#8b8b8b] text-xs px-2 py-0.5 rounded-full'>
+            {notes.length}
+          </span>
         </div>
         {/* Search */}
         <div className='px-4 pb-2'>
           <div className='relative'>
             <input
-              className='w-full bg-[#232323] text-white rounded-md px-3 py-2 pr-10 text-sm placeholder-[#8b8b8b] border-none outline-none pl-8'
+              className='w-full bg-[#F4F4F5] dark:bg-[#232323] text-[#3F3F46] dark:text-white rounded-md px-3 py-2 pr-10 text-sm placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8b8b8b] border-none outline-none pl-8'
               placeholder='Search notes...'
               value={search}
               onChange={(e) => {
                 return setSearch(e.target.value);
               }}
             />
-            <span className='absolute left-2 top-2.5 text-[#8b8b8b] pointer-events-none'>
+            <span className='absolute left-2 top-2.5 text-[#3F3F46]/60 dark:text-[#8b8b8b] pointer-events-none'>
               <svg width='16' height='16' fill='none' viewBox='0 0 24 24'>
                 <path
                   d='M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z'
-                  stroke='#8b8b8b'
+                  stroke='currentColor'
                   strokeWidth='2'
                   strokeLinecap='round'
                   strokeLinejoin='round'
@@ -628,26 +634,35 @@ function NotesPopoverContent({
         {/* Notes list */}
         <div className='flex-1 overflow-y-auto px-4 pb-2'>
           {isLoading ? (
-            <div className='text-[#8b8b8b] text-center mt-8'>Loading notes...</div>
+            <div className='text-[#3F3F46]/60 dark:text-[#8b8b8b] text-center mt-8'>
+              Loading notes...
+            </div>
           ) : filteredNotes.length === 0 ? (
-            <div className='text-[#8b8b8b] text-center mt-8'>No notes found.</div>
+            <div className='text-[#3F3F46]/60 dark:text-[#8b8b8b] text-center mt-8'>
+              No notes found.
+            </div>
           ) : (
             filteredNotes.map((n: Note) => {
               return (
-                <div key={n._id} className='bg-[#232323] rounded-lg p-3 mb-3 relative'>
+                <div
+                  key={n._id}
+                  className='bg-[#F4F4F5] dark:bg-[#232323] rounded-lg p-3 mb-3 relative'
+                >
                   <div className='flex items-center gap-2 mb-1'>
                     <span
-                      className='w-3 h-3 rounded-full border border-[#181818]'
+                      className='w-3 h-3 rounded-full border border-white dark:border-[#181818]'
                       style={{ background: n.label }}
                     />
-                    <span className='text-white text-sm whitespace-pre-line'>{n.text}</span>
+                    <span className='text-[#3F3F46] dark:text-white text-sm whitespace-pre-line'>
+                      {n.text}
+                    </span>
                   </div>
                   <div className='flex items-center justify-between mt-2'>
-                    <span className='text-[#8b8b8b] text-xs flex items-center gap-1'>
+                    <span className='text-[#3F3F46]/60 dark:text-[#8b8b8b] text-xs flex items-center gap-1'>
                       <svg width='14' height='14' fill='none' viewBox='0 0 24 24'>
                         <path
                           d='M8 2v4M16 2v4M3 10h18M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
-                          stroke='#8b8b8b'
+                          stroke='currentColor'
                           strokeWidth='2'
                           strokeLinecap='round'
                           strokeLinejoin='round'
@@ -657,17 +672,17 @@ function NotesPopoverContent({
                     </span>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <button className='text-[#444] flex items-center gap-1 p-1 rounded hover:bg-[#232323] focus:outline-none'>
+                        <button className='text-[#3F3F46]/40 dark:text-[#444] flex items-center gap-1 p-1 rounded hover:bg-[#E4E4E7] dark:hover:bg-[#232323] focus:outline-none'>
                           <svg width='18' height='18' fill='none' viewBox='0 0 24 24'>
-                            <circle cx='12' cy='6' r='1.5' fill='#444' />
-                            <circle cx='12' cy='12' r='1.5' fill='#444' />
-                            <circle cx='12' cy='18' r='1.5' fill='#444' />
+                            <circle cx='12' cy='6' r='1.5' fill='currentColor' />
+                            <circle cx='12' cy='12' r='1.5' fill='currentColor' />
+                            <circle cx='12' cy='18' r='1.5' fill='currentColor' />
                           </svg>
                         </button>
                       </PopoverTrigger>
-                      <PopoverContent className='w-32 p-0 bg-[#232323] text-white rounded shadow-lg border-none'>
+                      <PopoverContent className='w-32 p-0 bg-white dark:bg-[#232323] text-[#3F3F46] dark:text-white rounded shadow-lg border border-[#E4E4E7] dark:border-none'>
                         <button
-                          className='w-full text-left px-4 py-2 hover:bg-[#313131] text-sm'
+                          className='w-full text-left px-4 py-2 hover:bg-[#F4F4F5] dark:hover:bg-[#313131] text-sm'
                           onClick={() => {
                             return handleEditNote(n);
                           }}
@@ -675,7 +690,7 @@ function NotesPopoverContent({
                           Edit
                         </button>
                         <button
-                          className='w-full text-left px-4 py-2 hover:bg-[#313131] text-sm text-[#f63e68]'
+                          className='w-full text-left px-4 py-2 hover:bg-[#F4F4F5] dark:hover:bg-[#313131] text-sm text-[#f63e68]'
                           onClick={() => {
                             return handleDeleteNote(n._id);
                           }}
@@ -691,10 +706,10 @@ function NotesPopoverContent({
           )}
         </div>
         {/* Add note button */}
-        <div className='p-4 border-t border-[#232323] bg-[#181818]'>
+        <div className='p-4 border-t border-[#E4E4E7] dark:border-[#232323] bg-white dark:bg-[#181818]'>
           <Button
             variant='outline'
-            className='w-full bg-[#232323] text-white border border-[#313131] hover:bg-[#232323]/80 flex items-center gap-2 justify-center'
+            className='w-full bg-[#F4F4F5] dark:bg-[#232323] text-[#3F3F46] dark:text-white border border-[#E4E4E7] dark:border-[#313131] hover:bg-[#E4E4E7] dark:hover:bg-[#232323]/80 flex items-center gap-2 justify-center'
             onClick={() => {
               setAdding(true);
               setEditIndex(null);
@@ -714,19 +729,53 @@ function NotesPopoverContent({
     <div className='flex flex-col items-center justify-center py-10 px-6'>
       <div className='mb-6'>
         <svg width='48' height='48' fill='none' xmlns='http://www.w3.org/2000/svg'>
-          <rect x='8' y='12' width='32' height='28' rx='4' fill='#232323' />
-          <rect x='12' y='16' width='24' height='20' rx='2' fill='#181818' />
-          <rect x='16' y='20' width='16' height='2' rx='1' fill='#232323' />
-          <rect x='16' y='24' width='12' height='2' rx='1' fill='#232323' />
+          <rect
+            x='8'
+            y='12'
+            width='32'
+            height='28'
+            rx='4'
+            style={{ fill: 'var(--fill-color, #F4F4F5)' }}
+            className='dark:[--fill-color:#232323]'
+          />
+          <rect
+            x='12'
+            y='16'
+            width='24'
+            height='20'
+            rx='2'
+            style={{ fill: 'var(--fill-color, white)' }}
+            className='dark:[--fill-color:#181818]'
+          />
+          <rect
+            x='16'
+            y='20'
+            width='16'
+            height='2'
+            rx='1'
+            style={{ fill: 'var(--fill-color, #F4F4F5)' }}
+            className='dark:[--fill-color:#232323]'
+          />
+          <rect
+            x='16'
+            y='24'
+            width='12'
+            height='2'
+            rx='1'
+            style={{ fill: 'var(--fill-color, #F4F4F5)' }}
+            className='dark:[--fill-color:#232323]'
+          />
         </svg>
       </div>
-      <div className='text-lg font-medium mb-2'>No notes for this invoice</div>
-      <div className='text-[#8b8b8b] text-center mb-6 text-sm'>
+      <div className='text-lg font-medium mb-2 text-[#3F3F46] dark:text-white'>
+        No notes for this invoice
+      </div>
+      <div className='text-[#3F3F46]/60 dark:text-[#8b8b8b] text-center mb-6 text-sm'>
         Add notes to keep track of important information or follow-ups.
       </div>
       <Button
         variant='outline'
-        className='bg-[#232323] text-white border border-[#313131] hover:bg-[#232323]/80 px-6 py-2 rounded-lg flex items-center gap-2'
+        className='bg-[#F4F4F5] dark:bg-[#232323] text-[#3F3F46] dark:text-white border border-[#E4E4E7] dark:border-[#313131] hover:bg-[#E4E4E7] dark:hover:bg-[#232323]/80 px-6 py-2 rounded-lg flex items-center gap-2'
         onClick={() => {
           return setAdding(true);
         }}
