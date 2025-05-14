@@ -1,9 +1,9 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useSidebar } from '@/components/ui/sidebar';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -21,28 +21,6 @@ interface InvoicesProps {
   isPreviewOpen?: boolean;
   showStarredOnly?: boolean;
 }
-
-const getStatusColor = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'paid':
-      return 'bg-green-500/10 text-green-500';
-    case 'draft':
-      return 'bg-gray-500/10 text-gray-500';
-    case 'overdue':
-      return 'bg-red-500/10 text-red-500';
-    case 'overpaid':
-      return 'bg-blue-500/10 text-blue-500';
-    case 'partially_paid':
-      return 'bg-orange-500/10 text-orange-500';
-    case 'sent':
-    case 'pending':
-      return 'bg-yellow-500/10 text-yellow-500';
-    case 'open':
-      return 'bg-purple-500/10 text-purple-500';
-    default:
-      return 'bg-gray-500/10 text-gray-500';
-  }
-};
 
 export default function Invoices({
   invoices,
@@ -249,14 +227,7 @@ export default function Invoices({
                         <span className='font-semibold text-[#3F3F46] dark:text-[#fafafa] text-[14px] truncate'>
                           {invoice.client?.user.name || 'Unnamed'}
                         </span>
-                        <Badge
-                          variant='secondary'
-                          className={`${getStatusColor(
-                            invoice.status,
-                          )} text-xs px-2 py-0.5 rounded-sm`}
-                        >
-                          {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
-                        </Badge>
+                        <StatusBadge status={invoice.status} />
                       </div>
                     </div>
 

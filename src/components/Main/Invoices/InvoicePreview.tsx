@@ -3,7 +3,6 @@ import { SendInvoiceDialog } from '@/components/invoice/SendInvoiceDialog';
 import { InvoicePdf } from '@/components/InvoicePdf/InvoicePdf';
 import ProjectManagement from '@/components/project/ProjectManagement';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -25,6 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
@@ -673,7 +673,7 @@ export default function InvoicePreview({
               <span className='text-[14px] font-medium text-foreground'>
                 Invoice #{invoice.invoiceNumber}
               </span>
-              <Badge className='ml-2'>{invoice.status}</Badge>
+              <StatusBadge status={invoice.status} className='ml-2' />
             </div>
             <div className='flex flex-col sm:flex-row gap-4 mt-2'>
               <div className='flex items-center gap-0'>
