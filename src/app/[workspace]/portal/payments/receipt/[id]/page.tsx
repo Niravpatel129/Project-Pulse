@@ -280,7 +280,7 @@ export default function InvoicePage() {
     }.\n\nAmount: ${amount.toFixed(2)} ${invoiceData.currency}\nDue Date: ${format(
       new Date(invoiceData.dueDate),
       'PPP',
-    )}`;
+    )}${invoiceData.dueDate ? '' : 'N/A'}`;
     const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
       body,
     )}`;
@@ -686,13 +686,6 @@ export default function InvoicePage() {
                       localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
                     } ${isMobileView ? 'text-sm' : 'text-base'} print:py-1`}
                   >
-                    Tax
-                  </th>
-                  <th
-                    className={`text-right py-2 ${
-                      localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
-                    } ${isMobileView ? 'text-sm' : 'text-base'} print:py-1`}
-                  >
                     Total
                   </th>
                 </tr>
@@ -749,13 +742,6 @@ export default function InvoicePage() {
                           localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'
                         } ${isMobileView ? 'text-sm' : 'text-base'} print:py-1 print:text-sm`}
                       >
-                        {item.tax}% {item.taxName}
-                      </td>
-                      <td
-                        className={`text-right py-2 ${
-                          localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'
-                        } ${isMobileView ? 'text-sm' : 'text-base'} print:py-1 print:text-sm`}
-                      >
                         {itemTotal.toFixed(2)} {invoiceData.currency}
                       </td>
                     </tr>
@@ -778,6 +764,49 @@ export default function InvoicePage() {
                   {invoiceData.subtotal.toFixed(2)} {invoiceData.currency}
                 </span>
               </div>
+
+              {/* List of taxes */}
+              {(() => {
+                // Get unique taxes
+                const uniqueTaxes = Array.from(
+                  new Set(
+                    invoiceData.items.map((item) => {
+                      return `${item.tax}% ${item.taxName}`;
+                    }),
+                  ),
+                ).filter((tax) => {
+                  return !tax.startsWith('0%');
+                });
+
+                // Calculate tax amounts
+                const taxAmounts = {};
+                uniqueTaxes.forEach((taxString) => {
+                  const taxRate = parseFloat(taxString.split('%')[0]);
+                  const taxItems = invoiceData.items.filter((item) => {
+                    return `${item.tax}% ${item.taxName}` === taxString;
+                  });
+                  const taxAmount = taxItems.reduce((sum, item) => {
+                    return sum + item.price * item.quantity * (taxRate / 100);
+                  }, 0);
+                  taxAmounts[taxString] = taxAmount;
+                });
+
+                return uniqueTaxes.map((tax) => {
+                  return (
+                    <div
+                      key={tax}
+                      className={`flex justify-between py-2 ${
+                        localTheme === 'light' ? 'text-gray-600' : 'text-[#8b8b8b]'
+                      } print:py-1`}
+                    >
+                      <span>{tax}:</span>
+                      <span>
+                        {taxAmounts[tax].toFixed(2)} {invoiceData.currency}
+                      </span>
+                    </div>
+                  );
+                });
+              })()}
 
               <div
                 className={`flex justify-between py-2 font-bold border-t ${
