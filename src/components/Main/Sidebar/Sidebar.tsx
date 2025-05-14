@@ -88,8 +88,8 @@ export default function AppSidebar() {
         >
           <SidebarHeader className='bg-white dark:bg-[#141414] pt-2 group-data-[state=collapsed]:px-2'>
             <div className='flex items-center space-x-3 px-2 py-1'>
-              <Avatar className='h-8 w-8 bg-[#373737] rounded-sm'>
-                <AvatarFallback className='bg-[#373737] text-[#9f9f9f] text-xs font-semibold'>
+              <Avatar className='h-8 w-8 bg-[#E4E4E7] dark:bg-[#373737] rounded-sm'>
+                <AvatarFallback className='bg-[#E4E4E7] dark:bg-[#373737] text-[#3F3F46] dark:text-[#9f9f9f] text-xs font-semibold'>
                   NP
                 </AvatarFallback>
               </Avatar>
