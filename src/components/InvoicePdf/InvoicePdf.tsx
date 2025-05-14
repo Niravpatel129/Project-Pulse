@@ -2,10 +2,8 @@
 
 import { BusinessSettings } from '@/app/[workspace]/invoicesOld/[id]/components/BusinessSettings';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
-import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useState } from 'react';
-import { FiMoon, FiSun } from 'react-icons/fi';
 
 interface ClientAddress {
   street: string;
@@ -93,27 +91,12 @@ interface InvoiceProps {
 export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
   const { data: invoiceSettings } = useInvoiceSettings();
   const remainingBalance = invoice.total;
-  const [isDarkTheme, setIsDarkTheme] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('invoiceTheme');
-      return savedTheme ? savedTheme === 'dark' : true;
-    }
-    return true;
-  });
   const [isHovering, setIsHovering] = useState(false);
   const [isBusinessSettingsOpen, setIsBusinessSettingsOpen] = useState(false);
 
-  const toggleTheme = () => {
-    const newTheme = !isDarkTheme;
-    setIsDarkTheme(newTheme);
-    localStorage.setItem('invoiceTheme', newTheme ? 'dark' : 'light');
-  };
-
   return (
     <div
-      className={`${isDarkTheme ? 'bg-[#141414]' : 'bg-white'} rounded-lg border ${
-        isDarkTheme ? 'border-[#232428]' : 'border-gray-200'
-      } shadow-sm invoice-paper relative mx-auto`}
+      className='bg-background rounded-lg border border-border shadow-sm invoice-paper relative mx-auto'
       style={{
         width: '8.5in',
         minHeight: '11in',
@@ -127,19 +110,6 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
         return setIsHovering(false);
       }}
     >
-      <motion.button
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isHovering ? 1 : 0 }}
-        transition={{ duration: 0.2 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={toggleTheme}
-        className='absolute top-4 right-4 p-2 rounded-lg bg-[#232428] text-[#8C8C8C] hover:bg-[#2A2A2F] transition-colors'
-        title={isDarkTheme ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
-      >
-        {isDarkTheme ? <FiSun size={20} /> : <FiMoon size={20} />}
-      </motion.button>
-
       <style>{`
         @media print {
           .invoice-paper {
@@ -151,9 +121,6 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
             box-shadow: none;
             border: none;
           }
-          .theme-toggle {
-            display: none;
-          }
         }
       `}</style>
       {/* Header */}
@@ -162,7 +129,7 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
           <div
             className={`relative p-2 rounded-lg transition-all ${
               !isReadOnly
-                ? 'cursor-pointer group hover:border-2 hover:border-dashed hover:border-[#8C8C8C]'
+                ? 'cursor-pointer group hover:border-2 hover:border-dashed hover:border-muted-foreground'
                 : ''
             }`}
             onClick={() => {
@@ -182,37 +149,27 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
               />
             ) : (
               <div className='h-16 w-24 flex items-center justify-center'>
-                <span className='text-sm text-[#8C8C8C]'></span>
+                <span className='text-sm text-muted-foreground'></span>
               </div>
             )}
             {!isReadOnly && (
               <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity'>
-                <span className='text-xs text-[#8C8C8C]'>Click to edit logo</span>
+                <span className='text-xs text-muted-foreground'>Click to edit logo</span>
               </div>
             )}
           </div>
         </div>
         <div className='text-right'>
-          <h1
-            className={`text-4xl font-semibold tracking-tight ${
-              isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'
-            }`}
-          >
-            INVOICE
-          </h1>
+          <h1 className='text-4xl font-semibold tracking-tight text-foreground'>INVOICE</h1>
           <div className='mt-2'>
-            <div className={`font-semibold ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-800'}`}>
+            <div className='font-semibold text-foreground'>
               {invoiceSettings?.businessName || 'Your Company Name'}
             </div>
-            <div
-              className={`text-sm whitespace-pre-line ${
-                isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'
-              }`}
-            >
+            <div className='text-sm whitespace-pre-line text-muted-foreground'>
               {invoiceSettings?.businessAddress}
             </div>
             {invoiceSettings?.showTaxId && invoiceSettings?.taxId && (
-              <div className={`text-sm mt-1 ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'}`}>
+              <div className='text-sm mt-1 text-muted-foreground'>
                 Tax ID: {invoiceSettings.taxId}
               </div>
             )}
@@ -221,26 +178,16 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
       </div>
 
       {/* Info Section */}
-      <div
-        className={`flex justify-between items-start border-t border-b ${
-          isDarkTheme ? 'border-[#232428]' : 'border-gray-200'
-        } py-6 mb-8`}
-      >
+      <div className='flex justify-between items-start border-t border-b border-border py-6 mb-8'>
         <div>
           <div className='flex justify-between'>
             <div>
               {invoice?.client?.user?.name && (
                 <>
-                  <h3
-                    className={`text-sm font-medium ${
-                      isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'
-                    }`}
-                  >
-                    Bill To
-                  </h3>
+                  <h3 className='text-sm font-medium text-foreground'>Bill To</h3>
                 </>
               )}
-              <div className={`mt-2 text-sm ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'}`}>
+              <div className='mt-2 text-sm text-muted-foreground'>
                 <p>{invoice?.client?.user?.name}</p>
                 {invoice?.client && (
                   <>
@@ -274,39 +221,25 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
         </div>
         <div className='text-right space-y-1 text-sm'>
           <div>
-            <span className={`font-semibold ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'}`}>
-              Invoice Number:
-            </span>{' '}
-            <span className={`ml-2 ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'}`}>
-              {invoice.invoiceNumber}
-            </span>
+            <span className='font-semibold text-foreground'>Invoice Number:</span>{' '}
+            <span className='ml-2 text-muted-foreground'>{invoice.invoiceNumber}</span>
           </div>
           <div>
-            <span className={`font-semibold ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'}`}>
-              Invoice Date:
-            </span>{' '}
-            <span className={`ml-2 ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'}`}>
+            <span className='font-semibold text-foreground'>Invoice Date:</span>{' '}
+            <span className='ml-2 text-muted-foreground'>
               {new Date(invoice.createdAt).toLocaleDateString()}
             </span>
           </div>
           <div>
-            <span className={`font-semibold ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'}`}>
-              Payment Due:
-            </span>{' '}
-            <span className={`ml-2 ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'}`}>
+            <span className='font-semibold text-foreground'>Payment Due:</span>{' '}
+            <span className='ml-2 text-muted-foreground'>
               {new Date(invoice.dueDate).toLocaleDateString()}
             </span>
           </div>
           <div className=''>
-            <div
-              className={`${
-                isDarkTheme ? 'bg-[#141414]' : 'bg-gray-100'
-              } rounded-lg px-3 py-2 inline-flex items-center font-semibold ${
-                isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-700'
-              }`}
-            >
+            <div className='bg-muted rounded-lg px-3 py-2 inline-flex items-center font-semibold text-muted-foreground'>
               <span>Amount Due:</span>
-              <span className={`ml-2 text-lg ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'}`}>
+              <span className='ml-2 text-lg text-foreground'>
                 {remainingBalance.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
@@ -319,14 +252,10 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
       </div>
 
       {/* Items Table */}
-      <div
-        className={`rounded-lg overflow-hidden border ${
-          isDarkTheme ? 'border-[#232428]' : 'border-gray-200'
-        } mb-8`}
-      >
+      <div className='rounded-lg overflow-hidden border border-border mb-8'>
         <table className='w-full text-sm'>
           <thead>
-            <tr className={`${isDarkTheme ? 'bg-[#232428]' : 'bg-gray-700'} text-white`}>
+            <tr className='bg-muted text-foreground'>
               <th className='py-3 px-4 text-left font-semibold'>Items</th>
               <th className='py-3 px-4 text-center font-semibold'>Quantity</th>
               <th className='py-3 px-4 text-right font-semibold'>Price</th>
@@ -338,7 +267,6 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
           </thead>
           <tbody>
             {invoice.items.map((item) => {
-              console.log('🚀 item:', item);
               // Calculate discounted amount first
               const subtotal = item.price * item.quantity;
               const discountAmount = (subtotal * (item.discount || 0)) / 100;
@@ -347,27 +275,10 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
               const taxAmount = (discountedAmount * (item.tax || 0)) / 100;
               const itemTotal = discountedAmount + taxAmount;
               return (
-                <tr
-                  key={item._id}
-                  className={`border-t ${isDarkTheme ? 'border-[#232428]' : 'border-gray-200'} ${
-                    isDarkTheme ? 'bg-background' : 'bg-white'
-                  }`}
-                >
-                  <td className={`py-3 px-4 ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'}`}>
-                    {item.name}
-                  </td>
-                  <td
-                    className={`py-3 px-4 text-center ${
-                      isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'
-                    }`}
-                  >
-                    {item.quantity}
-                  </td>
-                  <td
-                    className={`py-3 px-4 text-right ${
-                      isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'
-                    }`}
-                  >
+                <tr key={item._id} className='border-t border-border bg-background'>
+                  <td className='py-3 px-4 text-foreground'>{item.name}</td>
+                  <td className='py-3 px-4 text-center text-muted-foreground'>{item.quantity}</td>
+                  <td className='py-3 px-4 text-right text-muted-foreground'>
                     $
                     {item.price.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
@@ -377,11 +288,7 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
                   {invoice.items.some((item) => {
                     return item.discount > 0;
                   }) && (
-                    <td
-                      className={`py-3 px-4 text-right ${
-                        isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'
-                      }`}
-                    >
+                    <td className='py-3 px-4 text-right text-muted-foreground'>
                       <div className='flex flex-col'>
                         <span>
                           $
@@ -404,11 +311,7 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
                     </td>
                   )}
 
-                  <td
-                    className={`py-3 px-4 text-right ${
-                      isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-500'
-                    }`}
-                  >
+                  <td className='py-3 px-4 text-right text-muted-foreground'>
                     $
                     {itemTotal.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
@@ -427,10 +330,8 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
         <div className='w-full max-w-md'>
           <div className='space-y-2 text-sm'>
             <div className='flex justify-between py-2'>
-              <span className={`font-medium ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-700'}`}>
-                Subtotal:
-              </span>
-              <span className={`font-medium ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'}`}>
+              <span className='font-medium text-muted-foreground'>Subtotal:</span>
+              <span className='font-medium text-foreground'>
                 $
                 {invoice.items
                   .reduce((sum, item) => {
@@ -448,10 +349,8 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
               return item.discount > 0;
             }) && (
               <div className='flex justify-between py-2'>
-                <span className={`font-medium ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-700'}`}>
-                  Discount:
-                </span>
-                <span className={`font-medium ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'}`}>
+                <span className='font-medium text-muted-foreground'>Discount:</span>
+                <span className='font-medium text-foreground'>
                   -$
                   {invoice.items
                     .reduce((sum, item) => {
@@ -498,14 +397,8 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
               return uniqueTaxes.map((tax) => {
                 return (
                   <div key={tax} className='flex justify-between py-2'>
-                    <span
-                      className={`font-medium ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-700'}`}
-                    >
-                      {tax}:
-                    </span>
-                    <span
-                      className={`font-medium ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'}`}
-                    >
+                    <span className='font-medium text-muted-foreground'>{tax}:</span>
+                    <span className='font-medium text-foreground'>
                       $
                       {taxAmounts[tax].toLocaleString(undefined, {
                         minimumFractionDigits: 2,
@@ -517,11 +410,9 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
               });
             })()}
 
-            <div className='flex justify-between py-2 text-base border-t border-gray-200 dark:border-[#232428] mt-2 pt-3'>
-              <span className={`font-semibold ${isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-700'}`}>
-                Total:
-              </span>
-              <span className={`font-semibold ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'}`}>
+            <div className='flex justify-between py-2 text-base border-t border-border mt-2 pt-3'>
+              <span className='font-semibold text-muted-foreground'>Total:</span>
+              <span className='font-semibold text-foreground'>
                 {invoice.total.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
@@ -535,17 +426,9 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
 
       {/* Notes */}
       {(invoice?.notes || invoiceSettings?.businessNotes) && (
-        <div
-          className={`mt-8 border-t ${isDarkTheme ? 'border-[#232428]' : 'border-gray-200'} pt-6`}
-        >
-          <h3 className={`font-semibold ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-900'} mb-2`}>
-            Notes
-          </h3>
-          <div
-            className={`text-sm whitespace-pre-line ${
-              isDarkTheme ? 'text-[#8C8C8C]' : 'text-gray-600'
-            }`}
-          >
+        <div className='mt-8 border-t border-border pt-6'>
+          <h3 className='font-semibold text-foreground mb-2'>Notes</h3>
+          <div className='text-sm whitespace-pre-line text-muted-foreground'>
             {invoice.notes}
             {invoice.notes && invoiceSettings?.businessNotes && <br />}
             {invoiceSettings?.businessNotes}
