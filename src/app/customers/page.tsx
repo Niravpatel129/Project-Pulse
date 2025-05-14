@@ -1,6 +1,5 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useClients } from '@/hooks/useClients';
@@ -307,14 +306,6 @@ export default function CustomersPage() {
             >
               Projects
             </div>
-            <div
-              className='col-span-1 cursor-pointer'
-              onClick={() => {
-                return handleSort('status');
-              }}
-            >
-              Status
-            </div>
           </div>
 
           {isLoadingClients ? (
@@ -371,18 +362,6 @@ export default function CustomersPage() {
                     </div>
                     <div className='col-span-2 text-[#3F3F46] dark:text-white'>
                       {client.projects || 0}
-                    </div>
-                    <div className='col-span-1'>
-                      <Badge
-                        variant='secondary'
-                        className={`${
-                          client.status === 'Active'
-                            ? 'bg-green-500/10 text-green-500'
-                            : 'bg-red-500/10 text-red-500'
-                        } text-xs px-2 py-0.5 rounded-sm`}
-                      >
-                        {client.status}
-                      </Badge>
                     </div>
                   </div>
                 );
