@@ -787,7 +787,7 @@ export default function InvoicePreview({
         {/* Timeline Section */}
         <div className='py-6 space-y-6 px-5'>
           {/* Timeline */}
-          <div className='bg-card rounded-lg border border-border p-6'>
+          <div className='bg-card dark:bg-[#141414] rounded-lg border border-border p-6'>
             <div className='flex flex-col space-y-6'>
               {/* Create */}
               <div className='flex flex-col sm:flex-row sm:items-center gap-4'>
@@ -1020,7 +1020,7 @@ export default function InvoicePreview({
             </div>
           </div>
           {/* Additional Info Panel */}
-          <div className='bg-card rounded-lg border border-border p-6'>
+          <div className='bg-card dark:bg-[#141414] rounded-lg border border-border p-6'>
             <h3 className='text-[14px] font-semibold text-foreground mb-5'>
               Additional Information
             </h3>

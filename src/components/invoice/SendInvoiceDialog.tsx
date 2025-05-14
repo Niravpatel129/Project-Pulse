@@ -244,14 +244,14 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
       }}
     >
       <DialogContent
-        className='sm:max-w-[400px] bg-[#181818] text-white border-[#232323]'
+        className='sm:max-w-[400px] bg-white dark:bg-[#181818] text-black dark:text-white border-gray-200 dark:border-[#232323]'
         onClick={(e) => {
           return e.stopPropagation();
         }}
       >
         <DialogHeader>
-          <DialogTitle className='text-white'>Send Invoice</DialogTitle>
-          <DialogDescription className='text-[#8b8b8b]'>
+          <DialogTitle className='text-black dark:text-white'>Send Invoice</DialogTitle>
+          <DialogDescription className='text-gray-500 dark:text-[#8b8b8b]'>
             {isPaid ? (
               <span className='text-yellow-500'>
                 This invoice has already been paid. You can still share the invoice details.
@@ -265,7 +265,7 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
           <div className=''>
             {/* Share Options */}
             <div
-              className='cursor-pointer border border-[#232323] rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-[#313131] group bg-[#232323]'
+              className='cursor-pointer border border-gray-200 dark:border-[#232323] rounded-2xl p-8 flex flex-col items-center justify-center transition-shadow hover:shadow-md hover:border-gray-300 dark:hover:border-[#313131] group bg-gray-100 dark:bg-[#232323]'
               onClick={() => {
                 const publicUrl = `${window.location.origin}/invoice/${invoice._id}`;
                 console.log('🚀 publicUrl:', publicUrl);
@@ -274,9 +274,11 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
                 toast.success('Invoice link copied!');
               }}
             >
-              <LinkIcon className='h-8 w-8 mb-4 text-[#8b8b8b] group-hover:text-white' />
-              <div className='font-bold text-lg mb-1 text-center text-white'>Copy link</div>
-              <div className='text-center text-[#8b8b8b] text-base'>
+              <LinkIcon className='h-8 w-8 mb-4 text-gray-500 dark:text-[#8b8b8b] group-hover:text-gray-700 dark:group-hover:text-white' />
+              <div className='font-bold text-lg mb-1 text-center text-gray-700 dark:text-white'>
+                Copy link
+              </div>
+              <div className='text-center text-gray-500 dark:text-[#8b8b8b] text-base'>
                 Share a link to this invoice
               </div>
             </div>
@@ -285,7 +287,7 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
         <DialogFooter>
           <Button
             variant='outline'
-            className='bg-[#232323] text-white border border-[#313131] hover:bg-[#232323]/80'
+            className='bg-gray-100 dark:bg-[#232323] text-gray-800 dark:text-white border border-gray-300 dark:border-[#313131] hover:bg-gray-200 dark:hover:bg-[#232323]/80'
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -296,7 +298,7 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
           </Button>
           {!isPaid && invoice.status !== 'sent' && (
             <Button
-              className='bg-[#313131] text-white border border-[#313131] hover:bg-[#232323]/80'
+              className='bg-gray-200 dark:bg-[#313131] text-gray-800 dark:text-white border border-gray-300 dark:border-[#313131] hover:bg-gray-300 dark:hover:bg-[#232323]/80'
               onClick={() => {
                 return markAsSentMutation.mutate();
               }}

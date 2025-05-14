@@ -390,31 +390,47 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className='bg-background pb-10 w-full'>
+    <div className='bg-background dark:bg-[#141414] pb-10 w-full'>
       <div className='container mx-auto py-8 px-4 max-w-6xl '>
         <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8'>
           <div>
-            <h1 className='text-3xl font-bold tracking-tight'>Workspace Settings</h1>
-            <p className='text-muted-foreground mt-1'>Manage your workspace settings and team</p>
+            <h1 className='text-3xl font-bold tracking-tight text-[#3F3F46] dark:text-white'>
+              Workspace Settings
+            </h1>
+            <p className='text-[#3F3F46]/60 dark:text-[#8b8b8b] mt-1'>
+              Manage your workspace settings and team
+            </p>
           </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-6'>
           <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
-            <TabsList className='bg-muted/50'>
-              <TabsTrigger value='general' className='data-[state=active]:bg-black'>
+            <TabsList className='bg-muted/50 dark:bg-[#232323]/50'>
+              <TabsTrigger
+                value='general'
+                className='data-[state=active]:bg-black data-[state=active]:text-white'
+              >
                 <Settings className='mr-2 h-4 w-4' />
                 General
               </TabsTrigger>
-              <TabsTrigger value='team' className='data-[state=active]:bg-black'>
+              <TabsTrigger
+                value='team'
+                className='data-[state=active]:bg-black data-[state=active]:text-white'
+              >
                 <Users className='mr-2 h-4 w-4' />
                 Team
               </TabsTrigger>
-              <TabsTrigger value='billing' className='data-[state=active]:bg-black'>
+              <TabsTrigger
+                value='billing'
+                className='data-[state=active]:bg-black data-[state=active]:text-white'
+              >
                 <CreditCard className='mr-2 h-4 w-4' />
                 Billing
               </TabsTrigger>
-              <TabsTrigger value='integrations' className='data-[state=active]:bg-black'>
+              <TabsTrigger
+                value='integrations'
+                className='data-[state=active]:bg-black data-[state=active]:text-white'
+              >
                 <ImageIcon className='mr-2 h-4 w-4' />
                 Integrations
               </TabsTrigger>
@@ -423,17 +439,19 @@ export default function SettingsPage() {
 
           {/* General Settings Tab */}
           <TabsContent value='general' className='space-y-6'>
-            <Card>
+            <Card className='bg-white dark:bg-[#181818] border-[#E4E4E7] dark:border-[#232428]'>
               <CardHeader>
-                <CardTitle>Basic Settings</CardTitle>
-                <CardDescription>
+                <CardTitle className='text-[#3F3F46] dark:text-white'>Basic Settings</CardTitle>
+                <CardDescription className='text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
                   Configure your workspace name, slug, and other details
                 </CardDescription>
               </CardHeader>
               <CardContent className='space-y-6'>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                   <div className='space-y-2'>
-                    <Label htmlFor='workspaceName'>Workspace Name</Label>
+                    <Label htmlFor='workspaceName' className='text-[#3F3F46] dark:text-white'>
+                      Workspace Name
+                    </Label>
                     <Input
                       disabled={true}
                       id='workspaceName'
@@ -442,10 +460,13 @@ export default function SettingsPage() {
                         return setWorkspaceName(e.target.value);
                       }}
                       placeholder='My Workspace'
+                      className='bg-white dark:bg-[#232323] border-[#E4E4E7] dark:border-[#313131] text-[#3F3F46] dark:text-white'
                     />
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='workspaceSlug'>Workspace Slug</Label>
+                    <Label htmlFor='workspaceSlug' className='text-[#3F3F46] dark:text-white'>
+                      Workspace Slug
+                    </Label>
                     <Input
                       disabled={true}
                       id='workspaceSlug'
@@ -454,9 +475,9 @@ export default function SettingsPage() {
                         return setWorkspaceSlug(e.target.value.toLowerCase().replace(/\s+/g, '-'));
                       }}
                       placeholder='my-workspace'
-                      className='lowercase'
+                      className='lowercase bg-white dark:bg-[#232323] border-[#E4E4E7] dark:border-[#313131] text-[#3F3F46] dark:text-white'
                     />
-                    <div className='text-sm text-muted-foreground'>
+                    <div className='text-sm text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
                       This will be used in your workspace URL:
                       <div className=''>{`${
                         workspaceSlug ? workspaceSlug.toLowerCase() : ''
@@ -465,13 +486,13 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <Separator className='my-6' />
+                <Separator className='my-6 bg-[#E4E4E7] dark:bg-[#232428]' />
 
                 <div className='space-y-4'>
                   <div className='flex items-center justify-between'>
                     <div>
-                      <h3 className='font-medium'>Workspace Logo</h3>
-                      <p className='text-sm text-muted-foreground'>
+                      <h3 className='font-medium text-[#3F3F46] dark:text-white'>Workspace Logo</h3>
+                      <p className='text-sm text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
                         Upload a logo for your workspace
                       </p>
                     </div>
@@ -482,8 +503,8 @@ export default function SettingsPage() {
                         ) : workspaceLogo ? (
                           <AvatarImage src={workspaceLogo} alt='Workspace Logo' />
                         ) : (
-                          <AvatarFallback className='bg-primary/10'>
-                            <ImageIcon className='h-8 w-8 text-primary' />
+                          <AvatarFallback className='bg-primary/10 text-primary'>
+                            <ImageIcon className='h-8 w-8' />
                           </AvatarFallback>
                         )}
                       </Avatar>
@@ -500,6 +521,7 @@ export default function SettingsPage() {
                           size='sm'
                           onClick={handleLogoUpload}
                           disabled={updateWorkspaceMutation.isPending || isUploadingLogo}
+                          className='bg-white dark:bg-[#232323] border-[#E4E4E7] dark:border-[#313131] text-[#3F3F46] dark:text-white hover:bg-[#F4F4F5] dark:hover:bg-[#252525]'
                         >
                           {isUploadingLogo ? 'Uploading...' : 'Upload'}
                         </Button>
@@ -514,6 +536,7 @@ export default function SettingsPage() {
                 <Button
                   onClick={handleSaveBasicSettings}
                   disabled={updateWorkspaceMutation.isPending}
+                  className='bg-black hover:bg-black/90 text-white'
                 >
                   {updateWorkspaceMutation.isPending ? 'Saving...' : 'Save Changes'}
                 </Button>
@@ -523,48 +546,53 @@ export default function SettingsPage() {
 
           {/* Team Tab */}
           <TabsContent value='team' className='space-y-6'>
-            <Card>
+            <Card className='bg-white dark:bg-[#181818] border-[#E4E4E7] dark:border-[#232428]'>
               <CardHeader>
                 <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center'>
                   <div>
-                    <CardTitle>Team Members</CardTitle>
-                    <CardDescription>
+                    <CardTitle className='text-[#3F3F46] dark:text-white'>Team Members</CardTitle>
+                    <CardDescription className='text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
                       Manage your workspace team members and their roles
                     </CardDescription>
                   </div>
                   <div className='flex flex-col sm:flex-row gap-2 mt-4 sm:mt-0'>
                     <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
                       <DialogTrigger asChild>
-                        <Button>
+                        <Button className='bg-black hover:bg-black/90 text-white'>
                           <Mail className='mr-2 h-4 w-4' />
                           Invite User
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className='sm:max-w-md'>
+                      <DialogContent className='sm:max-w-md bg-white dark:bg-[#181818] text-[#3F3F46] dark:text-white border-[#E4E4E7] dark:border-[#232428]'>
                         <DialogHeader>
-                          <DialogTitle className='flex items-center'>
+                          <DialogTitle className='flex items-center text-[#3F3F46] dark:text-white'>
                             Invite to Workspace
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Badge
                                   variant='outline'
-                                  className='ml-2 h-5 w-5 rounded-full bg-muted p-0 text-xs cursor-help'
+                                  className='ml-2 h-5 w-5 rounded-full bg-muted dark:bg-[#232323] p-0 text-xs cursor-help border-[#E4E4E7] dark:border-[#313131]'
                                 >
                                   ?
                                 </Badge>
                               </TooltipTrigger>
-                              <TooltipContent>
+                              <TooltipContent className='bg-white dark:bg-[#232323] text-[#3F3F46] dark:text-white border-[#E4E4E7] dark:border-[#313131]'>
                                 This invitation grants access to your entire workspace
                               </TooltipContent>
                             </Tooltip>
                           </DialogTitle>
-                          <DialogDescription>
+                          <DialogDescription className='text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
                             Send an invitation to join your workspace
                           </DialogDescription>
                         </DialogHeader>
                         <div className='space-y-4 py-4'>
                           <div className='space-y-2'>
-                            <Label htmlFor='invite-email'>Email Address</Label>
+                            <Label
+                              htmlFor='invite-email'
+                              className='text-[#3F3F46] dark:text-white'
+                            >
+                              Email Address
+                            </Label>
                             <Input
                               id='invite-email'
                               type='email'
@@ -573,15 +601,18 @@ export default function SettingsPage() {
                                 return setInviteEmail(e.target.value);
                               }}
                               placeholder='colleague@example.com'
+                              className='bg-white dark:bg-[#232323] border-[#E4E4E7] dark:border-[#313131] text-[#3F3F46] dark:text-white'
                             />
                           </div>
                           <div className='space-y-2'>
-                            <Label htmlFor='invite-role'>Role</Label>
+                            <Label htmlFor='invite-role' className='text-[#3F3F46] dark:text-white'>
+                              Role
+                            </Label>
                             <Select value={inviteRole} onValueChange={setInviteRole}>
-                              <SelectTrigger>
+                              <SelectTrigger className='bg-white dark:bg-[#232323] border-[#E4E4E7] dark:border-[#313131] text-[#3F3F46] dark:text-white'>
                                 <SelectValue placeholder='Select a role' />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className='bg-white dark:bg-[#232323] border-[#E4E4E7] dark:border-[#313131] text-[#3F3F46] dark:text-white'>
                                 <SelectItem value='admin'>Admin</SelectItem>
                                 <SelectItem value='moderator'>Moderator</SelectItem>
                                 <SelectItem value='client'>Client</SelectItem>
@@ -590,7 +621,7 @@ export default function SettingsPage() {
                           </div>
                         </div>
                         <Button
-                          className='w-full'
+                          className='w-full bg-black hover:bg-black/90 text-white'
                           onClick={handleInviteUser}
                           disabled={!inviteEmail.trim() || inviteUserMutation.isPending}
                         >
@@ -604,9 +635,11 @@ export default function SettingsPage() {
               <CardContent>
                 <div className='space-y-6'>
                   {isLoadingTeam ? (
-                    <div className='text-center py-6'>Loading team members...</div>
+                    <div className='text-center py-6 text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
+                      Loading team members...
+                    </div>
                   ) : activeTeamMembers.length === 0 ? (
-                    <div className='text-center py-6 text-muted-foreground'>
+                    <div className='text-center py-6 text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
                       No team members yet. Invite someone to get started!
                     </div>
                   ) : (
@@ -615,7 +648,7 @@ export default function SettingsPage() {
                         return (
                           <div
                             key={member._id}
-                            className='flex items-center justify-between p-4 border rounded-lg hover:bg-muted/10 transition-colors'
+                            className='flex items-center justify-between p-4 border border-[#E4E4E7] dark:border-[#232428] rounded-lg hover:bg-[#F4F4F5] dark:hover:bg-[#252525] transition-colors'
                           >
                             <div className='flex items-center gap-4'>
                               <Avatar>
@@ -625,15 +658,17 @@ export default function SettingsPage() {
                                     `https://avatar.vercel.sh/${member.user.email}`
                                   }
                                 />
-                                <AvatarFallback>
+                                <AvatarFallback className='bg-[#E4E4E7] dark:bg-[#232323]'>
                                   {getInitials(member.user.name || member.user.email)}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
-                                <p className='font-medium'>
+                                <p className='font-medium text-[#3F3F46] dark:text-white'>
                                   {member.user.name || member.user.email}
                                 </p>
-                                <p className='text-sm text-muted-foreground'>{member.user.email}</p>
+                                <p className='text-sm text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
+                                  {member.user.email}
+                                </p>
                               </div>
                             </div>
                             <div className='flex items-center gap-2'>
@@ -649,6 +684,7 @@ export default function SettingsPage() {
                                       onClick={() => {
                                         return handleEditMember(member);
                                       }}
+                                      className='text-[#3F3F46]/60 hover:text-[#3F3F46] dark:text-[#8b8b8b] dark:hover:text-white'
                                     >
                                       <Edit className='h-4 w-4' />
                                     </Button>
@@ -660,6 +696,7 @@ export default function SettingsPage() {
                                         return handleRemoveTeamMember(member.user._id);
                                       }}
                                       disabled={removeTeamMemberMutation.isPending}
+                                      className='text-[#3F3F46]/60 hover:text-[#3F3F46] dark:text-[#8b8b8b] dark:hover:text-white'
                                     >
                                       <svg
                                         xmlns='http://www.w3.org/2000/svg'
@@ -693,10 +730,12 @@ export default function SettingsPage() {
 
             {/* Edit User Dialog */}
             <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-              <DialogContent className='sm:max-w-md'>
+              <DialogContent className='sm:max-w-md bg-white dark:bg-[#181818] text-[#3F3F46] dark:text-white border-[#E4E4E7] dark:border-[#232428]'>
                 <DialogHeader>
-                  <DialogTitle>Edit Team Member</DialogTitle>
-                  <DialogDescription>
+                  <DialogTitle className='text-[#3F3F46] dark:text-white'>
+                    Edit Team Member
+                  </DialogTitle>
+                  <DialogDescription className='text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
                     Update role and permissions for{' '}
                     {selectedMember?.user?.name || selectedMember?.user?.email}
                   </DialogDescription>
@@ -712,7 +751,7 @@ export default function SettingsPage() {
                         }
                         alt={selectedMember?.user?.name || 'Team member'}
                       />
-                      <AvatarFallback>
+                      <AvatarFallback className='bg-[#E4E4E7] dark:bg-[#232323]'>
                         {selectedMember?.user?.name
                           ? getInitials(selectedMember.user.name)
                           : selectedMember?.user?.email
@@ -721,25 +760,29 @@ export default function SettingsPage() {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className='font-medium'>
+                      <p className='font-medium text-[#3F3F46] dark:text-white'>
                         {selectedMember?.user?.name || selectedMember?.user?.email}
                       </p>
-                      <p className='text-sm text-muted-foreground'>{selectedMember?.user?.email}</p>
+                      <p className='text-sm text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
+                        {selectedMember?.user?.email}
+                      </p>
                     </div>
                   </div>
 
                   <div className='space-y-2'>
-                    <Label htmlFor='edit-role'>Role</Label>
+                    <Label htmlFor='edit-role' className='text-[#3F3F46] dark:text-white'>
+                      Role
+                    </Label>
                     <Select value={editRole} onValueChange={setEditRole}>
-                      <SelectTrigger>
+                      <SelectTrigger className='bg-white dark:bg-[#232323] border-[#E4E4E7] dark:border-[#313131] text-[#3F3F46] dark:text-white'>
                         <SelectValue placeholder='Select a role' />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className='bg-white dark:bg-[#232323] border-[#E4E4E7] dark:border-[#313131] text-[#3F3F46] dark:text-white'>
                         <SelectItem value='admin'>Admin</SelectItem>
                         <SelectItem value='moderator'>Moderator</SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className='text-xs text-muted-foreground mt-2'>
+                    <p className='text-xs text-[#3F3F46]/60 dark:text-[#8b8b8b] mt-2'>
                       {editRole === 'admin' && 'Full access to all settings and resources'}
                       {editRole === 'moderator' &&
                         'Can manage projects, but has limited access to workspace settings'}
@@ -753,6 +796,7 @@ export default function SettingsPage() {
                     onClick={() => {
                       return setEditDialogOpen(false);
                     }}
+                    className='bg-white dark:bg-[#232323] border-[#E4E4E7] dark:border-[#313131] text-[#3F3F46] dark:text-white hover:bg-[#F4F4F5] dark:hover:bg-[#252525]'
                   >
                     Cancel
                   </Button>
@@ -763,6 +807,7 @@ export default function SettingsPage() {
                       editRole === selectedMember?.role ||
                       updateTeamMemberMutation.isPending
                     }
+                    className='bg-black hover:bg-black/90 text-white'
                   >
                     {updateTeamMemberMutation.isPending ? 'Saving...' : 'Save Changes'}
                   </Button>
@@ -770,14 +815,18 @@ export default function SettingsPage() {
               </DialogContent>
             </Dialog>
 
-            <Card>
+            <Card className='bg-white dark:bg-[#181818] border-[#E4E4E7] dark:border-[#232428]'>
               <CardHeader>
-                <CardTitle>Pending Invitations</CardTitle>
-                <CardDescription>Manage your pending workspace invitations</CardDescription>
+                <CardTitle className='text-[#3F3F46] dark:text-white'>
+                  Pending Invitations
+                </CardTitle>
+                <CardDescription className='text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
+                  Manage your pending workspace invitations
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {!invitations || invitations.length === 0 ? (
-                  <div className='text-center py-6 text-muted-foreground'>
+                  <div className='text-center py-6 text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
                     No pending invitations
                   </div>
                 ) : (
@@ -786,19 +835,21 @@ export default function SettingsPage() {
                       return (
                         <div
                           key={index}
-                          className='flex items-center justify-between p-4 border rounded-lg'
+                          className='flex items-center justify-between p-4 border border-[#E4E4E7] dark:border-[#232428] rounded-lg'
                         >
                           <div className='flex-1'>
-                            <p className='font-medium'>{invitation.email}</p>
+                            <p className='font-medium text-[#3F3F46] dark:text-white'>
+                              {invitation.email}
+                            </p>
                             <div className='flex items-center gap-2 mt-1'>
                               <Badge className={`${getRoleColor(invitation.role)} capitalize`}>
                                 {invitation.role}
                               </Badge>
-                              <span className='text-sm text-muted-foreground'>
+                              <span className='text-sm text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
                                 Invited by {invitation.invitedBy.name || invitation.invitedBy.email}
                               </span>
                             </div>
-                            <p className='text-xs text-muted-foreground mt-1'>
+                            <p className='text-xs text-[#3F3F46]/60 dark:text-[#8b8b8b] mt-1'>
                               Expires {new Date(invitation.expiresAt).toLocaleDateString()}
                             </p>
                           </div>
@@ -809,6 +860,7 @@ export default function SettingsPage() {
                               return handleRevokeInvitation(invitation.token);
                             }}
                             disabled={revokeInvitationMutation.isPending}
+                            className='text-[#3F3F46]/60 hover:text-[#3F3F46] dark:text-[#8b8b8b] dark:hover:text-white'
                           >
                             <XCircle className='h-4 w-4 text-destructive' />
                           </Button>
@@ -826,12 +878,16 @@ export default function SettingsPage() {
           <TabsContent value='integrations' className='p-6'>
             <div className='space-y-6'>
               <div>
-                <h2 className='text-xl font-semibold mb-4'>Payment Integrations</h2>
-                <Card>
+                <h2 className='text-xl font-semibold mb-4 text-[#3F3F46] dark:text-white'>
+                  Payment Integrations
+                </h2>
+                <Card className='bg-white dark:bg-[#181818] border-[#E4E4E7] dark:border-[#232428]'>
                   <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                     <div>
-                      <CardTitle className='text-base'>Stripe Connect</CardTitle>
-                      <CardDescription>
+                      <CardTitle className='text-base text-[#3F3F46] dark:text-white'>
+                        Stripe Connect
+                      </CardTitle>
+                      <CardDescription className='text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
                         Connect your workspace to Stripe to process payments and invoices
                       </CardDescription>
                     </div>
@@ -840,7 +896,12 @@ export default function SettingsPage() {
                         Connected
                       </Badge>
                     ) : (
-                      <Badge variant='outline'>Not Connected</Badge>
+                      <Badge
+                        variant='outline'
+                        className='border-[#E4E4E7] dark:border-[#313131] text-[#3F3F46]/60 dark:text-[#8b8b8b]'
+                      >
+                        Not Connected
+                      </Badge>
                     )}
                   </CardHeader>
                   <CardContent>
@@ -852,8 +913,10 @@ export default function SettingsPage() {
                         <div>
                           {stripeStatus?.status === 'active' ? (
                             <div className='space-y-1'>
-                              <p className='text-sm font-medium'>Stripe Account Connected</p>
-                              <p className='text-xs text-muted-foreground'>
+                              <p className='text-sm font-medium text-[#3F3F46] dark:text-white'>
+                                Stripe Account Connected
+                              </p>
+                              <p className='text-xs text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
                                 Account ID: {stripeStatus?.accountId}
                               </p>
                               <div className='mt-2 space-y-1'>
@@ -863,7 +926,7 @@ export default function SettingsPage() {
                                       stripeStatus?.chargesEnabled ? 'bg-green-500' : 'bg-red-500'
                                     }`}
                                   />
-                                  <p className='text-xs text-muted-foreground'>
+                                  <p className='text-xs text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
                                     Charges: {stripeStatus?.chargesEnabled ? 'Enabled' : 'Disabled'}
                                   </p>
                                 </div>
@@ -873,7 +936,7 @@ export default function SettingsPage() {
                                       stripeStatus?.payoutsEnabled ? 'bg-green-500' : 'bg-red-500'
                                     }`}
                                   />
-                                  <p className='text-xs text-muted-foreground'>
+                                  <p className='text-xs text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
                                     Payouts: {stripeStatus?.payoutsEnabled ? 'Enabled' : 'Disabled'}
                                   </p>
                                 </div>
@@ -883,7 +946,7 @@ export default function SettingsPage() {
                                       stripeStatus?.detailsSubmitted ? 'bg-green-500' : 'bg-red-500'
                                     }`}
                                   />
-                                  <p className='text-xs text-muted-foreground'>
+                                  <p className='text-xs text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
                                     Details:{' '}
                                     {stripeStatus?.detailsSubmitted ? 'Submitted' : 'Pending'}
                                   </p>
@@ -896,7 +959,7 @@ export default function SettingsPage() {
                                         : 'bg-yellow-500'
                                     }`}
                                   />
-                                  <p className='text-xs text-muted-foreground'>
+                                  <p className='text-xs text-[#3F3F46]/60 dark:text-[#8b8b8b]'>
                                     Status:{' '}
                                     {stripeStatus?.status?.charAt(0).toUpperCase() +
                                       stripeStatus?.status?.slice(1)}
@@ -905,7 +968,7 @@ export default function SettingsPage() {
                               </div>
                             </div>
                           ) : (
-                            <p className='text-sm'>
+                            <p className='text-sm text-[#3F3F46] dark:text-white'>
                               Connect your Stripe account to start accepting payments
                             </p>
                           )}
@@ -917,11 +980,17 @@ export default function SettingsPage() {
                           variant='outline'
                           onClick={disconnectStripe}
                           disabled={stripeStatus?.status === 'active'}
+                          className='bg-white dark:bg-[#232323] border-[#E4E4E7] dark:border-[#313131] text-[#3F3F46] dark:text-white hover:bg-[#F4F4F5] dark:hover:bg-[#252525]'
                         >
                           Disconnect
                         </Button>
                       ) : (
-                        <Button onClick={connectStripe}>Connect Stripe</Button>
+                        <Button
+                          onClick={connectStripe}
+                          className='bg-black hover:bg-black/90 text-white'
+                        >
+                          Connect Stripe
+                        </Button>
                       )}
                     </div>
                   </CardContent>
