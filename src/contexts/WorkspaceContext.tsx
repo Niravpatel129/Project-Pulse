@@ -1,5 +1,6 @@
 'use client';
 
+import { newRequest } from '@/utils/newRequest';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 interface Workspace {
@@ -60,30 +61,46 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   }, []);
 
   const connectStripe = async () => {
-    // In a real app, this would redirect to Stripe Connect OAuth flow
-    // Example:
-    // window.location.href = `https://connect.stripe.com/oauth/authorize?response_type=code&client_id=${process.env.STRIPE_CLIENT_ID}&scope=read_write&redirect_uri=${encodeURIComponent(redirectUri)}`;
-
     try {
-      // Mock implementation for demo purposes
-      setWorkspace((prev) => {
-        return prev
-          ? { ...prev, stripeConnected: true, stripeAccountId: `acct_${Date.now()}` }
-          : prev;
-      });
+      // Create Stripe Express account and get onboarding URL
+      const response = await newRequest.post('/stripe/connect/create-account');
+
+      if (!response.data.success || !response.data.data.onboardingUrl) {
+        throw new Error('Failed to create Stripe account');
+      }
+
+      // Update local state if account was created
+      if (response.data.data.account) {
+        setWorkspace((prev) => {
+          return prev
+            ? {
+                ...prev,
+                stripeConnected: true,
+                stripeAccountId: response.data.data.account.accountId,
+              }
+            : prev;
+        });
+      }
+
+      // Redirect to Stripe onboarding
+      window.location.href = response.data.data.onboardingUrl;
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to connect Stripe'));
+      throw err; // Re-throw to let the UI handle the error
     }
   };
 
   const disconnectStripe = async () => {
     try {
-      // Mock implementation for demo purposes
+      // Call backend to disconnect the Stripe account
+      await newRequest.post('/stripe/connect/disconnect');
+
       setWorkspace((prev) => {
         return prev ? { ...prev, stripeConnected: false, stripeAccountId: undefined } : prev;
       });
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to disconnect Stripe'));
+      throw err;
     }
   };
 
