@@ -169,13 +169,13 @@ function PaymentForm({
     return (
       <div className='space-y-8'>
         {/* Payment Options */}
-        <div className='grid grid-cols-3 gap-4'>
+        <div className='flex gap-4'>
           <button
             onClick={() => {
               setPaymentType('full');
               setCurrentPaymentAmount(invoice.total);
             }}
-            className={`p-4 rounded-xl border transition-all ${
+            className={`p-4 w-full rounded-xl border transition-all ${
               paymentType === 'full'
                 ? 'border-[#0066FF] bg-[#0066FF]/5'
                 : 'border-[#232323] hover:border-[#333333]'
@@ -223,7 +223,7 @@ function PaymentForm({
             onClick={() => {
               setPaymentType('custom');
             }}
-            className={`p-4 rounded-xl border transition-all ${
+            className={`p-4 w-full rounded-xl border transition-all ${
               paymentType === 'custom'
                 ? 'border-[#0066FF] bg-[#0066FF]/5'
                 : 'border-[#232323] hover:border-[#333333]'
