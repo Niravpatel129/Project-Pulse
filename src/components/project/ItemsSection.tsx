@@ -625,7 +625,7 @@ export default function ItemsSection({
                           htmlFor='tax-rate'
                           className='text-[#3F3F46] dark:text-[#fafafa] text-sm font-medium'
                         >
-                          Tax Rate {taxRates.length === 0 && '(Loading...)'}
+                          Tax Rate
                         </Label>
                         <Select
                           value={selectedTaxRateId}
