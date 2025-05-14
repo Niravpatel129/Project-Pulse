@@ -692,10 +692,10 @@ export default function InvoicePreview({
           <div className='grid grid-cols-3 gap-4 px-5'>
             <div className='flex flex-col'>
               <span className='text-sm text-muted-foreground mb-2'>Amount</span>
-              <TooltipProvider>
+              <TooltipProvider delayDuration={100}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className='text-[14px] font-bold text-foreground border-b border-dashed border-border cursor-help'>
+                    <span className='text-[14px] font-bold text-foreground cursor-help'>
                       {invoice.total.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
