@@ -48,13 +48,11 @@ export default function CustomersPage() {
     website: '',
     internalNotes: '',
   });
-  const [shippingSameAsBilling, setShippingSameAsBilling] = useState(true);
   const [emailError, setEmailError] = useState<string | null>(null);
   const tabContentRef = useRef<HTMLDivElement>(null);
   const [tabContentHeight, setTabContentHeight] = useState<number | undefined>(undefined);
   const { clients: apiClients, isLoading: isLoadingClients } = useClients();
   const queryClient = useQueryClient();
-  console.log('🚀 clients:', apiClients);
 
   useLayoutEffect(() => {
     if (tabContentRef.current) {
@@ -297,7 +295,7 @@ export default function CustomersPage() {
                 return handleSort('totalSpent');
               }}
             >
-              Total Spent
+              Total Spent (USD)
             </div>
           </div>
 
