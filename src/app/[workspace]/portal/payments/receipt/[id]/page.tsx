@@ -15,7 +15,6 @@ import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import {
   Download,
-  Mail,
   Monitor,
   Moon,
   MoreVertical,
@@ -197,8 +196,6 @@ function InvoiceSkeleton({ localTheme = 'light' }: { localTheme?: 'light' | 'dar
 export default function InvoicePage() {
   const { id } = useParams();
   const [isMobileView, setIsMobileView] = useState(false);
-  const [showEmailModal, setShowEmailModal] = useState(false);
-  const [email, setEmail] = useState('');
   const [localTheme, setLocalTheme] = useState<'light' | 'dark'>('light');
   const { data: invoiceSettings } = useInvoiceSettings();
 
@@ -269,22 +266,6 @@ export default function InvoicePage() {
 
   const handlePrint = () => {
     window.print();
-  };
-
-  const handleSendEmail = () => {
-    const subject = `Invoice ${invoiceData.invoiceNumber} from ${
-      invoiceSettings?.businessName || 'Your Company'
-    }`;
-    const body = `Please find attached the invoice ${
-      invoiceData.invoiceNumber
-    }.\n\nAmount: ${amount.toFixed(2)} ${invoiceData.currency}\nDue Date: ${format(
-      new Date(invoiceData.dueDate),
-      'PPP',
-    )}${invoiceData.dueDate ? '' : 'N/A'}`;
-    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
-      body,
-    )}`;
-    window.open(mailtoLink);
   };
 
   const handleShare = () => {
@@ -385,17 +366,7 @@ export default function InvoicePage() {
                 >
                   <Download size={20} />
                 </Button>
-                <Button
-                  onClick={() => {
-                    return setShowEmailModal(true);
-                  }}
-                  variant='ghost'
-                  size='icon'
-                  className='text-muted-foreground hover:text-foreground'
-                  title='Send via Email'
-                >
-                  <Mail size={20} />
-                </Button>
+
                 <Button
                   onClick={handlePrint}
                   variant='ghost'
@@ -439,14 +410,7 @@ export default function InvoicePage() {
                       <Download size={16} className='mr-2' />
                       Download
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        return setShowEmailModal(true);
-                      }}
-                    >
-                      <Mail size={16} className='mr-2' />
-                      Send via Email
-                    </DropdownMenuItem>
+
                     <DropdownMenuItem onClick={handlePrint}>
                       <Printer size={16} className='mr-2' />
                       Print
@@ -848,62 +812,6 @@ export default function InvoicePage() {
           )}
         </div>
       </div>
-
-      {/* Email Modal */}
-      {showEmailModal && (
-        <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50'>
-          <div
-            className={`${
-              localTheme === 'light' ? 'bg-white' : 'bg-[#181818]'
-            } rounded-lg p-6 w-full max-w-md border ${
-              localTheme === 'light' ? 'border-gray-200' : 'border-[#232428]'
-            }`}
-          >
-            <h3
-              className={`text-lg font-semibold mb-4 ${
-                localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
-              }`}
-            >
-              Send Invoice via Email
-            </h3>
-            <input
-              type='email'
-              value={email}
-              onChange={(e) => {
-                return setEmail(e.target.value);
-              }}
-              placeholder="Enter recipient's email"
-              className={`w-full p-2 ${
-                localTheme === 'light' ? 'bg-white' : 'bg-[#232323]'
-              } border ${
-                localTheme === 'light' ? 'border-gray-300' : 'border-[#313131]'
-              } rounded-lg mb-4 ${
-                localTheme === 'light' ? 'text-gray-900' : 'text-[#fafafa]'
-              } placeholder:${
-                localTheme === 'light' ? 'text-gray-500' : 'text-[#8b8b8b]'
-              } focus:ring-2 focus:ring-blue-500 dark:focus:ring-[#8b8b8b] focus:border-transparent`}
-            />
-            <div className='flex justify-end space-x-4'>
-              <Button
-                onClick={() => {
-                  return setShowEmailModal(false);
-                }}
-                variant='ghost'
-                className='text-muted-foreground hover:text-foreground'
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSendEmail}
-                variant='default'
-                className='bg-primary hover:bg-primary/90'
-              >
-                Send
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
