@@ -16,13 +16,15 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { getTaxRates } from '@/lib/api/tax-rates';
 import { cn } from '@/lib/utils';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Copy, Hash, Loader2, Plus, Scissors, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import SectionFooter from './SectionFooter';
-import TaxRateDialog, { TaxRate } from './TaxRateDialog';
+import TaxRateDialog from './TaxRateDialog';
 import type { ExtendedItem, Item, Section } from './types';
 
 type ItemWithType = Item & { type?: string };
@@ -33,6 +35,7 @@ type ItemsSectionProps = {
   setActiveSection: React.Dispatch<React.SetStateAction<Section>>;
   handleRemoveItem: (id: string, e?: React.MouseEvent) => void;
   projectCurrency: string;
+  projectId: string;
   onChatClick?: () => void;
   onSectionChange?: (section: number) => void;
 };
@@ -43,6 +46,7 @@ export default function ItemsSection({
   setActiveSection,
   handleRemoveItem,
   projectCurrency,
+  projectId,
   onChatClick,
   onSectionChange,
 }: ItemsSectionProps) {
@@ -73,11 +77,6 @@ export default function ItemsSection({
   const [editingItem, setEditingItem] = useState<ExtendedItem | null>(null);
   const [keyboardShortcutsVisible, setKeyboardShortcutsVisible] = useState(false);
   // Add tax rates state
-  const [taxRates, setTaxRates] = useState<TaxRate[]>([
-    { id: 'standard', name: 'Standard Rate', rate: 20 },
-    { id: 'reduced', name: 'Reduced Rate', rate: 5 },
-    { id: 'zero', name: 'Zero Rate', rate: 0 },
-  ]);
   const [selectedTaxRateId, setSelectedTaxRateId] = useState<string>('standard');
   const [isNewTaxRateDialogOpen, setIsNewTaxRateDialogOpen] = useState(false);
   const [addAnother, setAddAnother] = useState(false);
@@ -85,6 +84,19 @@ export default function ItemsSection({
   const [showRemovedItems, setShowRemovedItems] = useState(false);
 
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
+
+  // Fetch tax rates from API
+  const {
+    data: taxRates = [
+      { id: 'standard', name: 'Standard Rate', rate: 20 },
+      { id: 'reduced', name: 'Reduced Rate', rate: 5 },
+      { id: 'zero', name: 'Zero Rate', rate: 0 },
+    ],
+  } = useQuery({
+    queryKey: ['taxRates', projectId],
+    queryFn: getTaxRates,
+  });
 
   const handleEditItem = (item: ExtendedItem) => {
     setEditingItem(item);
@@ -217,20 +229,48 @@ export default function ItemsSection({
     }, 300);
   };
 
-  // Add a useEffect to update the item's tax rate when the selectedTaxRateId changes
+  // Add a useEffect to initialize the tax rate when first loading the component
   useEffect(() => {
-    const selectedRate = taxRates.find((tax) => {
-      return tax.id === selectedTaxRateId;
-    });
-    if (selectedRate) {
-      setNewItem((prev) => {
-        return {
-          ...prev,
-          taxRate: selectedRate.rate,
-        };
+    // Log available tax rates for debugging
+    console.log('Tax rates loaded:', taxRates);
+
+    if (taxRates.length > 0) {
+      console.log('First tax rate:', JSON.stringify(taxRates[0]));
+      console.log(
+        'Tax rate IDs:',
+        taxRates.map((tax) => {
+          return tax.id;
+        }),
+      );
+
+      // Try to find the standard rate first
+      const standardRate = taxRates.find((tax) => {
+        return tax.id === 'standard';
       });
+      if (standardRate) {
+        console.log('Using standard tax rate as default:', standardRate);
+        setSelectedTaxRateId('standard');
+        setNewItem((prev) => {
+          return {
+            ...prev,
+            taxRate: standardRate.rate,
+          };
+        });
+      } else {
+        // If no standard rate, use the first available rate
+        console.log('No standard rate found, using first tax rate:', taxRates[0]);
+        setSelectedTaxRateId(taxRates[0].id);
+        setNewItem((prev) => {
+          return {
+            ...prev,
+            taxRate: taxRates[0].rate,
+          };
+        });
+      }
+    } else {
+      console.log('No tax rates available');
     }
-  }, [selectedTaxRateId, taxRates]);
+  }, [taxRates]);
 
   // New helper function to reset form state
   const resetFormState = () => {
@@ -283,9 +323,66 @@ export default function ItemsSection({
 
   // Function to set the tax rate in the new item from selected tax rate ID
   const updateItemTaxRate = (taxRateId: string) => {
+    // Handle empty ID
+    if (!taxRateId) {
+      console.error('Empty tax rate ID provided');
+      return;
+    }
+
+    console.log(`Selecting tax rate with ID: ${taxRateId}`, taxRates);
     setSelectedTaxRateId(taxRateId);
-    // The useEffect will handle updating the tax rate in newItem
+
+    // Find the tax rate object from the array
+    const selectedRate = taxRates.find((tax) => {
+      return tax.id === taxRateId;
+    });
+
+    // If the tax rate is found, update the item's tax rate
+    if (selectedRate) {
+      console.log(`Found matching tax rate:`, selectedRate);
+      setNewItem((prev) => {
+        return {
+          ...prev,
+          taxRate: selectedRate.rate,
+        };
+      });
+    } else {
+      console.log(
+        `Tax rate with ID '${taxRateId}' not found in current list. Setting ID now and will update when rates refresh.`,
+      );
+
+      // We'll continue to use the selected ID, and when tax rates are refreshed,
+      // the useEffect will update the tax rate value
+    }
   };
+
+  // Effect to update tax rate when tax rates change
+  useEffect(() => {
+    if (selectedTaxRateId && taxRates.length > 0) {
+      const selectedRate = taxRates.find((tax) => {
+        return tax.id === selectedTaxRateId;
+      });
+      if (selectedRate) {
+        console.log(
+          `Tax rates updated, found matching rate for ${selectedTaxRateId}:`,
+          selectedRate,
+        );
+        setNewItem((prev) => {
+          return {
+            ...prev,
+            taxRate: selectedRate.rate,
+          };
+        });
+      } else {
+        console.log(
+          `Selected tax rate ID ${selectedTaxRateId} not found in updated tax rates:`,
+          taxRates.map((tax) => {
+            return { id: tax.id, name: tax.name };
+          }),
+        );
+      }
+    }
+  }, [taxRates, selectedTaxRateId]);
 
   // Add this utility function near the other utility functions
   const calculateItemTotal = (price: string, quantity: string): string => {
@@ -528,17 +625,25 @@ export default function ItemsSection({
                           htmlFor='tax-rate'
                           className='text-[#3F3F46] dark:text-[#fafafa] text-sm font-medium'
                         >
-                          Tax Rate
+                          Tax Rate {taxRates.length === 0 && '(Loading...)'}
                         </Label>
                         <Select
                           value={selectedTaxRateId}
                           onValueChange={(value) => {
+                            console.log('Tax rate selected in dropdown:', value);
+                            console.log(
+                              'Available tax rates:',
+                              taxRates.map((tax) => {
+                                return { id: tax.id, name: tax.name };
+                              }),
+                            );
                             if (value === 'add-new') {
                               setIsNewTaxRateDialogOpen(true);
                               return;
                             }
                             updateItemTaxRate(value);
                           }}
+                          key={`tax-select-${taxRates.length}-${selectedTaxRateId}`}
                         >
                           <SelectTrigger className='w-full bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa]'>
                             <SelectValue placeholder='Select tax rate' />
@@ -546,31 +651,41 @@ export default function ItemsSection({
                           <SelectContent className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428]'>
                             <SelectGroup>
                               <SelectLabel className='text-sm font-medium text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
-                                Available Tax Rates
+                                Available Tax Rates {taxRates.length === 0 && '(None available)'}
                               </SelectLabel>
-                              {taxRates.map((taxRate) => {
-                                return (
-                                  <SelectItem
-                                    key={taxRate.id}
-                                    value={taxRate.id}
-                                    className={cn(
-                                      selectedTaxRateId === taxRate.id
-                                        ? 'bg-[#F4F4F5] dark:bg-[#232428]'
-                                        : '',
-                                      'text-[#3F3F46] dark:text-[#fafafa]',
-                                    )}
-                                  >
-                                    <div className='flex justify-between w-full items-center'>
-                                      <div className='flex items-center'>
-                                        <span className='text-sm'>{taxRate.name}</span>
+                              {taxRates.length > 0 ? (
+                                taxRates.map((taxRate) => {
+                                  return (
+                                    <SelectItem
+                                      key={taxRate.id}
+                                      value={taxRate.id}
+                                      className={cn(
+                                        selectedTaxRateId === taxRate.id
+                                          ? 'bg-[#F4F4F5] dark:bg-[#232428]'
+                                          : '',
+                                        'text-[#3F3F46] dark:text-[#fafafa]',
+                                      )}
+                                    >
+                                      <div className='flex justify-between w-full items-center'>
+                                        <div className='flex items-center'>
+                                          <span className='text-sm'>{taxRate.name}</span>
+                                        </div>
+                                        <span className='text-xs font-medium bg-[#F4F4F5] dark:bg-[#232428] text-[#3F3F46] dark:text-[#fafafa] rounded-full px-2 py-0.5 ml-2'>
+                                          {taxRate.rate}%
+                                        </span>
                                       </div>
-                                      <span className='text-xs font-medium bg-[#F4F4F5] dark:bg-[#232428] text-[#3F3F46] dark:text-[#fafafa] rounded-full px-2 py-0.5 ml-2'>
-                                        {taxRate.rate}%
-                                      </span>
-                                    </div>
-                                  </SelectItem>
-                                );
-                              })}
+                                    </SelectItem>
+                                  );
+                                })
+                              ) : (
+                                <SelectItem value='default' disabled>
+                                  <div className='flex items-center'>
+                                    <span className='text-sm text-muted'>
+                                      No tax rates available
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              )}
                             </SelectGroup>
                             <SelectSeparator className='bg-[#E4E4E7] dark:bg-[#232428]' />
                             <SelectGroup>
@@ -867,11 +982,40 @@ export default function ItemsSection({
       {/* Tax Rate Dialog - Replace with the new component */}
       <TaxRateDialog
         isOpen={isNewTaxRateDialogOpen}
-        onOpenChange={setIsNewTaxRateDialogOpen}
-        taxRates={taxRates}
-        onTaxRatesChange={setTaxRates}
+        onOpenChange={async (open) => {
+          // If dialog is being closed and the selectedTaxRateId has changed
+          if (!open) {
+            console.log('Dialog closing, selected tax rate ID:', selectedTaxRateId);
+
+            // Force refresh the tax rates query and wait for completion
+            await queryClient.invalidateQueries({ queryKey: ['taxRates', projectId] });
+            await queryClient.refetchQueries({ queryKey: ['taxRates', projectId] });
+
+            // After fetching, make sure the selected tax rate is still valid
+            const rates = (queryClient.getQueryData(['taxRates', projectId]) as any[]) || [];
+            console.log(
+              'After refetch, tax rates:',
+              rates.map((r) => {
+                return { id: r.id, name: r.name };
+              }),
+            );
+
+            if (selectedTaxRateId && rates.length > 0) {
+              const found = rates.find((r) => {
+                return r.id === selectedTaxRateId;
+              });
+              if (found) {
+                console.log('Selected tax rate still valid after refetch:', found);
+                updateItemTaxRate(selectedTaxRateId);
+              }
+            }
+          }
+
+          setIsNewTaxRateDialogOpen(open);
+        }}
         selectedTaxRateId={selectedTaxRateId}
         onSelectTaxRate={updateItemTaxRate}
+        projectId={projectId}
       />
 
       {/* Footer */}

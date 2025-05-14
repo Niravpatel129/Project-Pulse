@@ -9,10 +9,12 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { createTaxRate, deleteTaxRate, getTaxRates, updateTaxRate } from '@/lib/api/tax-rates';
 import { cn } from '@/lib/utils';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertCircle, Edit, Plus, Trash } from 'lucide-react';
-import React, { useRef, useState } from 'react';
+import { AlertCircle, Edit, Loader2, Plus, Trash } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 // Define a TaxRate type
@@ -25,10 +27,9 @@ export type TaxRate = {
 type TaxRateDialogProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  taxRates: TaxRate[];
-  onTaxRatesChange: (taxRates: TaxRate[]) => void;
   selectedTaxRateId: string;
   onSelectTaxRate: (id: string) => void;
+  projectId: string;
 };
 
 // Maximum allowed tax rates
@@ -37,10 +38,9 @@ const MAX_TAX_RATES = 8;
 export default function TaxRateDialog({
   isOpen,
   onOpenChange,
-  taxRates,
-  onTaxRatesChange,
   selectedTaxRateId,
   onSelectTaxRate,
+  projectId,
 }: TaxRateDialogProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [currentTaxRate, setCurrentTaxRate] = useState<TaxRate>({
@@ -49,21 +49,123 @@ export default function TaxRateDialog({
     rate: 0,
   });
   const [search, setSearch] = useState('');
-
   const inputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
 
-  // Reset form when dialog is opened/closed
-  React.useEffect(() => {
-    if (!isOpen) {
+  // Debug selected tax rate
+  useEffect(() => {
+    console.log('TaxRateDialog - selectedTaxRateId:', selectedTaxRateId);
+  }, [selectedTaxRateId]);
+
+  // Debug onSelectTaxRate function
+  const handleSelectTaxRate = (id: string) => {
+    console.log('TaxRateDialog - handleSelectTaxRate called with id:', id);
+    onSelectTaxRate(id);
+  };
+
+  // Fetch tax rates query
+  const {
+    data: taxRates = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['taxRates', projectId],
+    queryFn: () => {
+      return getTaxRates();
+    },
+    enabled: isOpen,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Create tax rate mutation
+  const createTaxRateMutation = useMutation({
+    mutationFn: (newTaxRate: Omit<TaxRate, 'id'>) => {
+      return createTaxRate(newTaxRate);
+    },
+    onSuccess: async (data) => {
+      console.log('Create tax rate success, got data:', data);
+
+      // Invalidate query and wait for it to complete
+      await queryClient.invalidateQueries({ queryKey: ['taxRates', projectId] });
+      await queryClient.refetchQueries({ queryKey: ['taxRates', projectId] });
+
+      // Make sure the UI has the latest data before selecting the new rate
+      setTimeout(() => {
+        // Select the new tax rate
+        console.log('Create tax rate success, selecting newly created rate:', data.id);
+        handleSelectTaxRate(data.id);
+
+        // Close the dialog
+        onOpenChange(false);
+      }, 200); // Give time for the query to complete and UI to update
+
+      toast.success(`Tax rate "${data.name}" added successfully`);
       resetForm();
-      setSearch('');
-    } else {
+    },
+    onError: (error) => {
+      console.error('Failed to add tax rate:', error);
+      toast.error('Failed to add tax rate');
+    },
+  });
+
+  // Update tax rate mutation
+  const updateTaxRateMutation = useMutation({
+    mutationFn: ({ id, taxRate }: { id: string; taxRate: Omit<TaxRate, 'id'> }) => {
+      return updateTaxRate(id, taxRate);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['taxRates', projectId] });
+      toast.success(`Tax rate "${data.name}" updated successfully`);
+      resetForm();
+    },
+    onError: (error) => {
+      console.error('Failed to update tax rate:', error);
+      toast.error('Failed to update tax rate');
+    },
+  });
+
+  // Delete tax rate mutation
+  const deleteTaxRateMutation = useMutation({
+    mutationFn: (id: string) => {
+      return deleteTaxRate(id);
+    },
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['taxRates', projectId] });
+      // If the deleted tax was selected, select the standard rate
+      if (selectedTaxRateId === id) {
+        console.log('Selected tax rate was deleted, selecting standard rate');
+        handleSelectTaxRate('standard');
+      }
+      const taxToDelete = taxRates.find((tax) => {
+        return tax.id === id;
+      });
+      toast.success(`Tax rate "${taxToDelete?.name}" deleted successfully`);
+    },
+    onError: (error) => {
+      console.error('Failed to delete tax rate:', error);
+      toast.error('Failed to delete tax rate');
+    },
+  });
+
+  // Focus on input when dialog is opened
+  useEffect(() => {
+    if (isOpen) {
       // Focus on input after a small delay to ensure it's visible
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
+    } else {
+      resetForm();
+      setSearch('');
     }
   }, [isOpen]);
+
+  // Show error if tax rates couldn't be loaded
+  useEffect(() => {
+    if (error) {
+      toast.error('Failed to load tax rates');
+    }
+  }, [error]);
 
   const resetForm = () => {
     setIsEditing(false);
@@ -82,28 +184,22 @@ export default function TaxRateDialog({
       return;
     }
 
-    const taxRateId = isEditing ? currentTaxRate.id : `tax-${Date.now()}`;
-    const newTaxRateObj: TaxRate = {
-      id: taxRateId,
-      name: currentTaxRate.name.trim(),
-      rate: currentTaxRate.rate,
-    };
-
     if (isEditing) {
       // Update existing tax rate
-      const updatedTaxRates = taxRates.map((tax) => {
-        return tax.id === taxRateId ? newTaxRateObj : tax;
+      updateTaxRateMutation.mutate({
+        id: currentTaxRate.id,
+        taxRate: {
+          name: currentTaxRate.name.trim(),
+          rate: currentTaxRate.rate,
+        },
       });
-      onTaxRatesChange(updatedTaxRates);
-      toast.success(`Tax rate "${currentTaxRate.name}" updated successfully`);
     } else {
       // Add new tax rate
-      onTaxRatesChange([...taxRates, newTaxRateObj]);
-      onSelectTaxRate(taxRateId);
-      toast.success(`Tax rate "${currentTaxRate.name}" added successfully`);
+      createTaxRateMutation.mutate({
+        name: currentTaxRate.name.trim(),
+        rate: currentTaxRate.rate,
+      });
     }
-
-    resetForm();
   };
 
   const handleEditTaxRate = (taxRate: TaxRate) => {
@@ -117,27 +213,13 @@ export default function TaxRateDialog({
   };
 
   const handleDeleteTaxRate = (id: string) => {
-    const taxToDelete = taxRates.find((tax) => {
-      return tax.id === id;
-    });
-
     // Don't allow deleting the standard tax rates
     if (['standard', 'reduced', 'zero'].includes(id)) {
       toast.error('Cannot delete default tax rates');
       return;
     }
 
-    const updatedTaxRates = taxRates.filter((tax) => {
-      return tax.id !== id;
-    });
-    onTaxRatesChange(updatedTaxRates);
-
-    // If the deleted tax was selected, select the standard rate
-    if (selectedTaxRateId === id) {
-      onSelectTaxRate('standard');
-    }
-
-    toast.success(`Tax rate "${taxToDelete?.name}" deleted successfully`);
+    deleteTaxRateMutation.mutate(id);
   };
 
   const isDefaultTaxRate = (id: string) => {
@@ -153,6 +235,9 @@ export default function TaxRateDialog({
   const remainingTaxRates = MAX_TAX_RATES - taxRates.length;
   const isNearLimit = remainingTaxRates <= 2 && remainingTaxRates > 0;
   const isAtLimit = remainingTaxRates === 0;
+
+  // Check if any mutation is in progress
+  const isSubmitting = createTaxRateMutation.isPending || updateTaxRateMutation.isPending;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -216,84 +301,110 @@ export default function TaxRateDialog({
 
             {/* Tax rates list */}
             <div className='flex-1 overflow-y-auto rounded-lg border border-[#E4E4E7] dark:border-[#232428]'>
-              <AnimatePresence mode='popLayout'>
-                {filteredTaxRates.length === 0 ? (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className='flex flex-col items-center justify-center h-full text-[#3F3F46]/60 dark:text-[#8C8C8C] p-4'
-                  >
-                    <p className='text-sm'>No tax rates found</p>
-                  </motion.div>
-                ) : (
-                  filteredTaxRates.map((taxRate, index) => {
-                    return (
-                      <motion.div
-                        key={taxRate.id}
-                        layout
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -5 }}
-                        transition={{
-                          type: 'spring',
-                          stiffness: 300,
-                          damping: 25,
-                          mass: 0.8,
-                          delay: index * 0.03,
-                        }}
-                        className={cn(
-                          'p-3 border-b border-[#E4E4E7] dark:border-[#232428] last:border-0',
-                          'hover:bg-[#F4F4F5] dark:hover:bg-[#232428]',
-                          'transition-colors duration-200',
-                          selectedTaxRateId === taxRate.id && 'bg-[#F4F4F5] dark:bg-[#232428]',
-                          'flex justify-between items-center group',
-                        )}
-                      >
-                        <div
-                          className='flex-1 cursor-pointer'
-                          onClick={() => {
-                            return onSelectTaxRate(taxRate.id);
+              {isLoading ? (
+                <div className='flex items-center justify-center h-full'>
+                  <Loader2 size={24} className='animate-spin text-[#8b5df8]' />
+                  <span className='ml-2 text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
+                    Loading tax rates...
+                  </span>
+                </div>
+              ) : (
+                <AnimatePresence mode='popLayout'>
+                  {filteredTaxRates.length === 0 ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className='flex flex-col items-center justify-center h-full text-[#3F3F46]/60 dark:text-[#8C8C8C] p-4'
+                    >
+                      <p className='text-sm'>No tax rates found</p>
+                    </motion.div>
+                  ) : (
+                    filteredTaxRates.map((taxRate, index) => {
+                      return (
+                        <motion.div
+                          key={taxRate.id}
+                          layout
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          transition={{
+                            type: 'spring',
+                            stiffness: 300,
+                            damping: 25,
+                            mass: 0.8,
+                            delay: index * 0.03,
                           }}
+                          className={cn(
+                            'p-3 border-b border-[#E4E4E7] dark:border-[#232428] last:border-0',
+                            'hover:bg-[#F4F4F5] dark:hover:bg-[#232428]',
+                            'transition-colors duration-200',
+                            selectedTaxRateId === taxRate.id && 'bg-[#F4F4F5] dark:bg-[#232428]',
+                            'flex justify-between items-center group',
+                            deleteTaxRateMutation.isPending &&
+                              deleteTaxRateMutation.variables === taxRate.id &&
+                              'opacity-50',
+                          )}
                         >
-                          <div className='flex items-center'>
-                            <span className='text-[#3F3F46] dark:text-[#fafafa] font-medium'>
-                              {taxRate.name}
-                            </span>
-                            <span className='ml-2 text-xs font-medium bg-[#F4F4F5] dark:bg-[#232428] text-[#3F3F46] dark:text-[#fafafa] rounded-full px-2 py-0.5 border border-[#E4E4E7] dark:border-[#313131]'>
-                              {taxRate.rate}%
-                            </span>
+                          <div
+                            className='flex-1 cursor-pointer'
+                            onClick={() => {
+                              console.log('Selecting tax rate:', taxRate);
+                              handleSelectTaxRate(taxRate.id);
+                            }}
+                          >
+                            <div className='flex items-center'>
+                              <span className='text-[#3F3F46] dark:text-[#fafafa] font-medium'>
+                                {taxRate.name}
+                              </span>
+                              <span className='ml-2 text-xs font-medium bg-[#F4F4F5] dark:bg-[#232428] text-[#3F3F46] dark:text-[#fafafa] rounded-full px-2 py-0.5 border border-[#E4E4E7] dark:border-[#313131]'>
+                                {taxRate.rate}%
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                        <div className='flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            onClick={() => {
-                              return handleEditTaxRate(taxRate);
-                            }}
-                            className='h-8 w-8 p-0 rounded-full'
-                            disabled={isDefaultTaxRate(taxRate.id)}
-                          >
-                            <Edit size={14} className='text-[#3F3F46]/60 dark:text-[#8C8C8C]' />
-                          </Button>
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            onClick={() => {
-                              return handleDeleteTaxRate(taxRate.id);
-                            }}
-                            className='h-8 w-8 p-0 rounded-full text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20'
-                            disabled={isDefaultTaxRate(taxRate.id)}
-                          >
-                            <Trash size={14} />
-                          </Button>
-                        </div>
-                      </motion.div>
-                    );
-                  })
-                )}
-              </AnimatePresence>
+                          <div className='flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
+                            <Button
+                              variant='ghost'
+                              size='sm'
+                              onClick={() => {
+                                return handleEditTaxRate(taxRate);
+                              }}
+                              className='h-8 w-8 p-0 rounded-full'
+                              disabled={
+                                isDefaultTaxRate(taxRate.id) ||
+                                isSubmitting ||
+                                deleteTaxRateMutation.isPending
+                              }
+                            >
+                              <Edit size={14} className='text-[#3F3F46]/60 dark:text-[#8C8C8C]' />
+                            </Button>
+                            <Button
+                              variant='ghost'
+                              size='sm'
+                              onClick={() => {
+                                return handleDeleteTaxRate(taxRate.id);
+                              }}
+                              className='h-8 w-8 p-0 rounded-full text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20'
+                              disabled={
+                                isDefaultTaxRate(taxRate.id) ||
+                                isSubmitting ||
+                                deleteTaxRateMutation.isPending
+                              }
+                            >
+                              {deleteTaxRateMutation.isPending &&
+                              deleteTaxRateMutation.variables === taxRate.id ? (
+                                <Loader2 size={14} className='animate-spin' />
+                              ) : (
+                                <Trash size={14} />
+                              )}
+                            </Button>
+                          </div>
+                        </motion.div>
+                      );
+                    })
+                  )}
+                </AnimatePresence>
+              )}
             </div>
           </div>
 
@@ -338,7 +449,7 @@ export default function TaxRateDialog({
                   onChange={(e) => {
                     return setCurrentTaxRate({ ...currentTaxRate, name: e.target.value });
                   }}
-                  disabled={isAtLimit && !isEditing}
+                  disabled={(isAtLimit && !isEditing) || isSubmitting}
                   className='w-full bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8C8C8C]'
                   placeholder='e.g. GST, VAT, Sales Tax'
                 />
@@ -367,7 +478,7 @@ export default function TaxRateDialog({
                       rate: parseFloat(e.target.value) || 0,
                     });
                   }}
-                  disabled={isAtLimit && !isEditing}
+                  disabled={(isAtLimit && !isEditing) || isSubmitting}
                   className='w-full bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8C8C8C]'
                   placeholder='e.g. 7.5'
                 />
@@ -386,6 +497,7 @@ export default function TaxRateDialog({
                         resetForm();
                       }
                     }}
+                    disabled={isSubmitting}
                     className={cn(
                       'border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] hover:bg-[#F4F4F5] dark:hover:bg-[#232428]',
                       !isEditing && 'invisible',
@@ -396,10 +508,21 @@ export default function TaxRateDialog({
                   <Button
                     type='button'
                     onClick={handleAddTaxRate}
-                    disabled={(isAtLimit && !isEditing) || !currentTaxRate.name.trim()}
+                    disabled={
+                      (isAtLimit && !isEditing) || !currentTaxRate.name.trim() || isSubmitting
+                    }
                     className='bg-[#8b5df8] hover:bg-[#7c3aed] text-white transition-colors duration-200'
                   >
-                    {isEditing ? 'Update Tax Rate' : 'Add Tax Rate'}
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 size={16} className='animate-spin mr-2' />
+                        {isEditing ? 'Updating...' : 'Adding...'}
+                      </>
+                    ) : isEditing ? (
+                      'Update Tax Rate'
+                    ) : (
+                      'Add Tax Rate'
+                    )}
                   </Button>
                 </div>
               </div>
