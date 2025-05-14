@@ -87,6 +87,7 @@ export default function SettingsPage() {
       return response.data.data;
     },
   });
+  console.log('🚀 stripeStatus:', stripeStatus);
 
   // Filter out members who have pending invitations
   const activeTeamMembers = teamMembers.filter((member) => {
@@ -891,7 +892,8 @@ export default function SettingsPage() {
                         Connect your workspace to Stripe to process payments and invoices
                       </CardDescription>
                     </div>
-                    {stripeStatus?.status === 'active' ? (
+                    {stripeStatus?.status === 'active' ||
+                    stripeStatus?.status === 'requirements.past_due' ? (
                       <Badge className='bg-green-100 text-green-800 hover:bg-green-100'>
                         Connected
                       </Badge>
@@ -911,7 +913,8 @@ export default function SettingsPage() {
                           <CreditCard className='h-5 w-5 text-purple-600' />
                         </div>
                         <div>
-                          {stripeStatus?.status === 'active' ? (
+                          {stripeStatus?.status === 'active' ||
+                          stripeStatus?.status === 'requirements.past_due' ? (
                             <div className='space-y-1'>
                               <p className='text-sm font-medium text-[#3F3F46] dark:text-white'>
                                 Stripe Account Connected
@@ -975,7 +978,8 @@ export default function SettingsPage() {
                         </div>
                       </div>
 
-                      {stripeStatus?.status === 'active' ? (
+                      {stripeStatus?.status === 'active' ||
+                      stripeStatus?.status === 'requirements.past_due' ? (
                         <Button
                           variant='outline'
                           onClick={disconnectStripe}
