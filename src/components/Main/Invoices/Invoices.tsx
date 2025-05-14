@@ -26,6 +26,8 @@ const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
     case 'paid':
       return 'bg-green-500/10 text-green-500';
+    case 'open':
+      return 'bg-gray-300/10 text-gray-300';
     case 'overdue':
       return 'bg-red-500/10 text-red-500';
     case 'overpaid':
