@@ -54,6 +54,7 @@ export default function CustomersPage() {
   const [tabContentHeight, setTabContentHeight] = useState<number | undefined>(undefined);
   const { clients: apiClients, isLoading: isLoadingClients } = useClients();
   const queryClient = useQueryClient();
+  console.log('🚀 clients:', apiClients);
 
   useLayoutEffect(() => {
     if (tabContentRef.current) {
