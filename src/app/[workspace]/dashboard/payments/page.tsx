@@ -96,23 +96,23 @@ export default function PaymentsPage() {
     <main className='flex-1 w-full overflow-auto bg-background h-screen'>
       <div className='flex h-full'>
         <div className='w-full h-full overflow-auto'>
-          <div className='flex items-center justify-between px-4 py-2 border-b border-[#232428]'>
+          <div className='flex items-center justify-between px-4 py-2 border-b border-[#E4E4E7] dark:border-[#232428]'>
             <div className='flex items-center gap-2'>
               <Button
                 variant='ghost'
                 size='icon'
-                className='text-[#8b8b8b] hover:text-white'
+                className='text-[#3F3F46]/60 dark:text-[#8b8b8b] hover:text-[#3F3F46] dark:hover:text-white'
                 onClick={toggleSidebar}
               >
                 <FiSidebar size={20} />
               </Button>
-              <h1 className='text-lg font-semibold text-white'>Payments</h1>
+              <h1 className='text-lg font-semibold text-[#3F3F46] dark:text-white'>Payments</h1>
             </div>
             <div className='flex items-center gap-2'>
               <Button
                 variant='ghost'
                 size='icon'
-                className='text-[#8b8b8b] hover:text-white'
+                className='text-[#3F3F46]/60 dark:text-[#8b8b8b] hover:text-[#3F3F46] dark:hover:text-white'
                 onClick={() => {
                   return queryClient.invalidateQueries();
                 }}
@@ -124,11 +124,11 @@ export default function PaymentsPage() {
 
           <div className='px-4 py-2'>
             <div className='relative'>
-              <FiSearch className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#8C8C8C]' />
+              <FiSearch className='absolute left-3 top-1/2 transform -translate-y-1/2 text-[#3F3F46]/60 dark:text-[#8C8C8C]' />
               <Input
                 type='text'
                 placeholder='Search payments...'
-                className='w-full pl-9 bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C] focus-visible:ring-1 focus-visible:ring-[#8C8C8C]'
+                className='w-full pl-9 bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8C8C8C] focus-visible:ring-1 focus-visible:ring-[#3F3F46]/60 dark:focus-visible:ring-[#8C8C8C]'
               />
             </div>
           </div>
@@ -154,8 +154,8 @@ export default function PaymentsPage() {
                       },
                       delay: index * 0.03,
                     }}
-                    className={`group relative flex items-center px-3 py-2 my-2 rounded-lg hover:bg-[#252525] transition-all duration-300 ease-in-out cursor-pointer ${
-                      selectedPayment?._id === payment._id ? 'bg-[#252525]' : ''
+                    className={`group relative flex items-center px-3 py-2 my-2 rounded-lg hover:bg-[#F4F4F5] dark:hover:bg-[#252525] transition-all duration-300 ease-in-out cursor-pointer ${
+                      selectedPayment?._id === payment._id ? 'bg-[#F4F4F5] dark:bg-[#252525]' : ''
                     }`}
                     onClick={() => {
                       return handlePreviewClick(payment);
@@ -163,16 +163,16 @@ export default function PaymentsPage() {
                   >
                     <div className='relative mr-3'>
                       <Avatar className='h-8 w-8'>
-                        <AvatarFallback className='bg-[#373737] text-[#9f9f9f] text-xs font-semibold capitalize'>
+                        <AvatarFallback className='bg-[#E4E4E7] dark:bg-[#373737] text-[#3F3F46] dark:text-[#9f9f9f] text-xs font-semibold capitalize'>
                           {payment.invoice?.client?.user?.name?.[0] || <IoPerson />}
                         </AvatarFallback>
                       </Avatar>
                     </div>
 
                     <div className='flex-1 min-w-0'>
-                      <div className='flex items-center justify-between mb-1  '>
+                      <div className='flex items-center justify-between mb-1'>
                         <div className='flex items-center gap-2'>
-                          <span className='font-semibold text-[#fafafa] text-[14px] truncate'>
+                          <span className='font-semibold text-[#3F3F46] dark:text-[#fafafa] text-[14px] truncate'>
                             {payment.invoice?.client?.user?.name || 'Unknown Customer'}
                           </span>
                           <Badge
@@ -191,18 +191,20 @@ export default function PaymentsPage() {
                           <TooltipProvider delayDuration={0}>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className='text-[#8C8C8C] text-sm truncate md:max-w-[300px] max-w-[180px] hover:text-white transition-colors'>
+                                <span className='text-[#3F3F46]/60 dark:text-[#8C8C8C] text-sm truncate md:max-w-[300px] max-w-[180px] hover:text-[#3F3F46] dark:hover:text-white transition-colors'>
                                   {payment.invoice?.invoiceNumber || 'No invoice number'}
                                 </span>
                               </TooltipTrigger>
-                              <TooltipContent className='w-80 p-4 bg-[#232323] border border-[#313131] shadow-lg'>
+                              <TooltipContent className='w-80 p-4 bg-white dark:bg-[#232323] border border-[#E4E4E7] dark:border-[#313131] shadow-lg'>
                                 <div className='space-y-2'>
-                                  <h4 className='font-medium text-white mb-2'>Payment Details</h4>
+                                  <h4 className='font-medium text-[#3F3F46] dark:text-white mb-2'>
+                                    Payment Details
+                                  </h4>
                                   <div className='text-sm'>
-                                    <p className='text-white'>
+                                    <p className='text-[#3F3F46] dark:text-white'>
                                       Invoice: {payment.invoice?.invoiceNumber}
                                     </p>
-                                    <p className='text-[#8C8C8C] text-xs'>
+                                    <p className='text-[#3F3F46]/60 dark:text-[#8C8C8C] text-xs'>
                                       Amount:{' '}
                                       {payment?.amount?.toLocaleString(undefined, {
                                         minimumFractionDigits: 2,
@@ -210,11 +212,11 @@ export default function PaymentsPage() {
                                       })}{' '}
                                       {payment.invoice?.currency}
                                     </p>
-                                    <p className='text-[#8C8C8C] text-xs'>
+                                    <p className='text-[#3F3F46]/60 dark:text-[#8C8C8C] text-xs'>
                                       Method: {payment.method.replace('-', ' ')}
                                     </p>
                                     {payment.memo && (
-                                      <p className='text-[#8C8C8C] text-xs mt-2'>
+                                      <p className='text-[#3F3F46]/60 dark:text-[#8C8C8C] text-xs mt-2'>
                                         Memo: {payment.memo}
                                       </p>
                                     )}
@@ -223,7 +225,7 @@ export default function PaymentsPage() {
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
-                          <span className='text-[#8C8C8C] text-sm'>
+                          <span className='text-[#3F3F46]/60 dark:text-[#8C8C8C] text-sm'>
                             •{' '}
                             {payment?.amount?.toLocaleString(undefined, {
                               minimumFractionDigits: 2,
@@ -236,7 +238,7 @@ export default function PaymentsPage() {
                     </div>
 
                     <div className='flex items-center gap-2 ml-4'>
-                      <div className='text-xs text-[#8C8C8C] ml-0 whitespace-nowrap'>
+                      <div className='text-xs text-[#3F3F46]/60 dark:text-[#8C8C8C] ml-0 whitespace-nowrap'>
                         {(() => {
                           const date = new Date(payment.date);
                           const today = new Date();
@@ -278,8 +280,7 @@ export default function PaymentsPage() {
             ) : (
               <div className='flex flex-col items-center justify-center h-full w-full bg-background'>
                 <div className='flex flex-col items-center justify-center'>
-                  <div className='flex items-center justify-center rounded-full border-2 border-dashed border-[#444] w-32 h-32 mb-6'>
-                    {/* Envelope Icon */}
+                  <div className='flex items-center justify-center rounded-full border-2 border-dashed border-[#E4E4E7] dark:border-[#444] w-32 h-32 mb-6'>
                     <svg
                       xmlns='http://www.w3.org/2000/svg'
                       width='56'
@@ -296,8 +297,12 @@ export default function PaymentsPage() {
                       <path d='m22 6-8.97 6.48a2 2 0 0 1-2.06 0L2 6' />
                     </svg>
                   </div>
-                  <div className='text-white text-xl font-semibold mb-2'>It&apos;s empty here</div>
-                  <div className='text-[#8C8C8C] text-base'>Choose a payment to view details</div>
+                  <div className='text-[#3F3F46] dark:text-white text-xl font-semibold mb-2'>
+                    It&apos;s empty here
+                  </div>
+                  <div className='text-[#3F3F46]/60 dark:text-[#8C8C8C] text-base'>
+                    Choose a payment to view details
+                  </div>
                 </div>
               </div>
             )}

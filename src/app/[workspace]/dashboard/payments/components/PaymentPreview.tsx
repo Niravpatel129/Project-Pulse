@@ -240,13 +240,13 @@ export function PaymentPreview({ payment, onClose }: PaymentPreviewProps) {
 
   return (
     <div className='h-full overflow-y-auto'>
-      <div className='sticky top-0 z-10 bg-background border-b border-[#232428] p-4'>
+      <div className='sticky top-0 z-10 bg-background border-b border-[#E4E4E7] dark:border-[#232428] p-4'>
         <div className='flex items-center justify-between'>
-          <h2 className='text-lg font-semibold text-white'>Payment Details</h2>
+          <h2 className='text-lg font-semibold text-[#3F3F46] dark:text-white'>Payment Details</h2>
           <Button
             variant='ghost'
             size='icon'
-            className='text-[#8b8b8b] hover:text-white'
+            className='text-[#3F3F46]/60 dark:text-[#8b8b8b] hover:text-[#3F3F46] dark:hover:text-white'
             onClick={onClose}
           >
             <svg
@@ -269,10 +269,10 @@ export function PaymentPreview({ payment, onClose }: PaymentPreviewProps) {
       </div>
 
       <div className='py-4 space-y-6'>
-        <div className='flex flex-col space-y-6 pb-6 border-b border-[#232323] rounded-t-lg'>
-          <div className='flex flex-col border-b border-[#232323] px-4'>
+        <div className='flex flex-col space-y-6 pb-6 border-b border-[#E4E4E7] dark:border-[#232323] rounded-t-lg'>
+          <div className='flex flex-col border-b border-[#E4E4E7] dark:border-[#232323] px-4'>
             <div className='flex items-center'>
-              <span className='text-[14px] font-medium text-white'>
+              <span className='text-[14px] font-medium text-[#3F3F46] dark:text-white'>
                 Payment #{payment._id.slice(-6)}
               </span>
               <Badge variant='secondary' className={`ml-2 ${getStatusColor(payment.status)}`}>
@@ -281,14 +281,14 @@ export function PaymentPreview({ payment, onClose }: PaymentPreviewProps) {
             </div>
             <div className='flex flex-col sm:flex-row gap-4 mt-2 mb-2'>
               <div className='flex items-center gap-0'>
-                <span className='text-sm text-[#8C8C8C]'>Customer:</span>
-                <span className='text-sm text-white ml-1'>
+                <span className='text-sm text-[#3F3F46]/60 dark:text-[#8C8C8C]'>Customer:</span>
+                <span className='text-sm text-[#3F3F46] dark:text-white ml-1'>
                   {payment.invoice?.client?.user?.name || 'N/A'}
                 </span>
               </div>
               <div className='flex items-center gap-0'>
-                <span className='text-sm text-[#8C8C8C]'>Invoice:</span>
-                <span className='text-sm text-white ml-1'>
+                <span className='text-sm text-[#3F3F46]/60 dark:text-[#8C8C8C]'>Invoice:</span>
+                <span className='text-sm text-[#3F3F46] dark:text-white ml-1'>
                   {payment.invoice?.invoiceNumber || 'N/A'}
                 </span>
               </div>
@@ -296,8 +296,8 @@ export function PaymentPreview({ payment, onClose }: PaymentPreviewProps) {
           </div>
           <div className='grid grid-cols-2 gap-4 px-4'>
             <div className='flex flex-col'>
-              <span className='text-sm text-[#8C8C8C] mb-2'>Amount</span>
-              <span className='text-[14px] font-bold text-white'>
+              <span className='text-sm text-[#3F3F46]/60 dark:text-[#8C8C8C] mb-2'>Amount</span>
+              <span className='text-[14px] font-bold text-[#3F3F46] dark:text-white'>
                 {payment.amount.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
@@ -306,30 +306,32 @@ export function PaymentPreview({ payment, onClose }: PaymentPreviewProps) {
               </span>
             </div>
             <div className='flex flex-col'>
-              <span className='text-sm text-[#8C8C8C] mb-2'>Method</span>
-              <span className='text-[14px] font-medium text-white capitalize'>
+              <span className='text-sm text-[#3F3F46]/60 dark:text-[#8C8C8C] mb-2'>Method</span>
+              <span className='text-[14px] font-medium text-[#3F3F46] dark:text-white capitalize'>
                 {payment.method.replace('-', ' ')}
               </span>
             </div>
           </div>
         </div>
         <div className='px-4'>
-          <div className='bg-[#141414] rounded-lg border border-[#232323] p-6'>
-            <h3 className='text-[14px] font-semibold text-white mb-5'>Additional Information</h3>
+          <div className='bg-white dark:bg-[#141414] rounded-lg border border-[#E4E4E7] dark:border-[#232323] p-6'>
+            <h3 className='text-[14px] font-semibold text-[#3F3F46] dark:text-white mb-5'>
+              Additional Information
+            </h3>
             <div className='grid grid-cols-1 gap-6'>
               {payment.memo && (
                 <div>
-                  <div className='text-sm text-[#8C8C8C] mb-2'>Memo</div>
-                  <div className='text-[14px] text-white'>{payment.memo}</div>
+                  <div className='text-sm text-[#3F3F46]/60 dark:text-[#8C8C8C] mb-2'>Memo</div>
+                  <div className='text-[14px] text-[#3F3F46] dark:text-white'>{payment.memo}</div>
                 </div>
               )}
               <div>
-                <div className='text-sm text-[#8C8C8C] mb-2'>Payment ID</div>
-                <div className='text-[14px] text-white'>{payment._id}</div>
+                <div className='text-sm text-[#3F3F46]/60 dark:text-[#8C8C8C] mb-2'>Payment ID</div>
+                <div className='text-[14px] text-[#3F3F46] dark:text-white'>{payment._id}</div>
               </div>
               <div>
-                <div className='text-sm text-[#8C8C8C] mb-2'>Date</div>
-                <div className='text-[14px] text-white'>
+                <div className='text-sm text-[#3F3F46]/60 dark:text-[#8C8C8C] mb-2'>Date</div>
+                <div className='text-[14px] text-[#3F3F46] dark:text-white'>
                   {new Date(payment.date).toLocaleString()}
                 </div>
               </div>
@@ -343,7 +345,7 @@ export function PaymentPreview({ payment, onClose }: PaymentPreviewProps) {
             <Button
               variant='outline'
               size='sm'
-              className='bg-[#232323] border-[#333] text-white text-sm h-8 px-4'
+              className='bg-[#F4F4F5] dark:bg-[#232323] border-[#E4E4E7] dark:border-[#333] text-[#3F3F46] dark:text-white text-sm h-8 px-4'
               onClick={() => {
                 window.open(`/portal/payments/receipt/${payment._id}`, '_blank');
               }}
