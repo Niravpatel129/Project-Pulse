@@ -167,7 +167,7 @@ export function ReceiptPdf({ receipt, isReadOnly = false }: ReceiptProps) {
           </h1>
           <div className='mt-2'>
             <div className={`font-semibold ${isDarkTheme ? 'text-[#fafafa]' : 'text-gray-800'}`}>
-              {invoiceSettings?.businessName || 'Your Company Name'}
+              {invoiceSettings?.businessName || ''}
             </div>
             <div
               className={`text-sm whitespace-pre-line ${
