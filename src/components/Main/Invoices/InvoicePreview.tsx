@@ -417,18 +417,25 @@ export default function InvoicePreview({
       taxRate:
         invoice.items.reduce((sum, item) => {
           return sum + (item.tax || 0);
-        }, 0) / invoice.items.length || 0,
+        }, 0) / (invoice.items.length || 1),
       taxId: invoiceSettings?.taxId || '',
       showTaxId: invoiceSettings?.showTaxId || false,
       requireDeposit: invoice.requireDeposit,
       depositPercentage: invoice.depositPercentage,
-      discount: 0,
-      discountAmount: 0,
+      discount:
+        invoice.items.length > 0
+          ? invoice.items.reduce((sum, item) => {
+              return sum + (item.discount || 0);
+            }, 0) / invoice.items.length
+          : 0,
+      discountAmount: invoice.items.reduce((sum, item) => {
+        return sum + item.price * item.quantity * ((item.discount || 0) / 100);
+      }, 0),
       subtotal: invoice.items.reduce((sum, item) => {
         return sum + item.price * item.quantity;
       }, 0),
       taxAmount: invoice.items.reduce((sum, item) => {
-        return sum + (item.tax || 0);
+        return sum + item.price * item.quantity * ((item.tax || 0) / 100);
       }, 0),
       teamNotes: '',
       businessInfo: {
@@ -724,7 +731,7 @@ export default function InvoicePreview({
                         <span className='text-foreground text-xs font-medium'>
                           {invoice.items
                             .reduce((sum, item) => {
-                              return sum + (item.tax || 0);
+                              return sum + item.price * item.quantity * ((item.tax || 0) / 100);
                             }, 0)
                             .toLocaleString(undefined, {
                               minimumFractionDigits: 2,
@@ -739,7 +746,9 @@ export default function InvoicePreview({
                           -
                           {invoice.items
                             .reduce((sum, item) => {
-                              return sum + (item.discount || 0);
+                              return (
+                                sum + item.price * item.quantity * ((item.discount || 0) / 100)
+                              );
                             }, 0)
                             .toLocaleString(undefined, {
                               minimumFractionDigits: 2,
