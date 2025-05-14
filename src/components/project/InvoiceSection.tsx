@@ -246,13 +246,15 @@ function StatefulTextarea({
                   return (
                     <div
                       key={attachment.id}
-                      className='flex items-center justify-between bg-[#232428] p-2 rounded'
+                      className='flex items-center justify-between bg-muted p-2 rounded'
                     >
                       <div className='flex items-center'>
-                        <File className='h-4 w-4 mr-2 text-[#8C8C8C]' />
-                        <span className='text-sm text-[#fafafa]'>{attachment.name}</span>
+                        <File className='h-4 w-4 mr-2 text-muted-foreground' />
+                        <span className='text-sm text-foreground'>{attachment.name}</span>
                         {attachment.size && (
-                          <span className='text-xs text-[#8C8C8C] ml-2'>({attachment.size})</span>
+                          <span className='text-xs text-muted-foreground ml-2'>
+                            ({attachment.size})
+                          </span>
                         )}
                       </div>
                       <Button
@@ -530,13 +532,13 @@ export default function InvoiceSection({
   };
 
   return (
-    <div className='flex flex-col h-full relative bg-[#141414]'>
+    <div className='flex flex-col h-full relative bg-background'>
       <div className='absolute inset-0 pt-6 px-8 pb-16 overflow-y-auto'>
         <div className='mb-8'>
           <div className='flex justify-between items-center mb-4'>
-            <h2 className='text-lg font-semibold text-[#fafafa]'>Invoice Details</h2>
+            <h2 className='text-lg font-semibold text-foreground'>Invoice Details</h2>
           </div>
-          <p className='text-[#8C8C8C] text-sm leading-5 mb-6'>
+          <p className='text-muted-foreground text-sm leading-5 mb-6'>
             Configure invoice details and payment options before generating.
           </p>
 
@@ -549,9 +551,9 @@ export default function InvoiceSection({
             {/* Invoice Settings Section */}
             <AccordionItem
               value='invoice-settings'
-              className='border border-[#232428] rounded-xl px-4 bg-[#141414] shadow-sm hover:shadow-md transition-all duration-200'
+              className='border border-border rounded-xl px-4 bg-background shadow-sm hover:shadow-md transition-all duration-200'
             >
-              <AccordionTrigger className='text-sm font-medium text-[#fafafa] py-4'>
+              <AccordionTrigger className='text-sm font-medium text-foreground py-4'>
                 Invoice Settings
               </AccordionTrigger>
               <AccordionContent>
@@ -560,7 +562,10 @@ export default function InvoiceSection({
                     {/* Workspace Tax Settings */}
                     <div>
                       <div>
-                        <Label htmlFor='tax-id' className='text-xs text-[#8C8C8C] mb-1 block'>
+                        <Label
+                          htmlFor='tax-id'
+                          className='text-xs text-muted-foreground mb-1 block'
+                        >
                           Tax ID / VAT Number
                         </Label>
                         <Input
@@ -571,7 +576,7 @@ export default function InvoiceSection({
                               taxId: e.target.value,
                             });
                           }}
-                          className='w-full bg-[#141414] border-[#232428] rounded-lg px-3 py-2 text-base font-medium text-[#fafafa] outline-none placeholder:text-[#8C8C8C] focus:border-[#8b5df8] focus:ring-2 focus:ring-[#8b5df8]/20 transition-colors'
+                          className='w-full bg-background border-input rounded-lg px-3 py-2 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors'
                           placeholder='e.g. VAT123456789'
                         />
                       </div>
@@ -581,7 +586,10 @@ export default function InvoiceSection({
                     <div className='space-y-4'>
                       {/* Due Date */}
                       <div>
-                        <Label htmlFor='due-date' className='text-xs text-[#8C8C8C] mb-1 block'>
+                        <Label
+                          htmlFor='due-date'
+                          className='text-xs text-muted-foreground mb-1 block'
+                        >
                           Payment Due
                         </Label>
                         <div className='flex gap-2'>
@@ -590,8 +598,8 @@ export default function InvoiceSection({
                               <Button
                                 variant={'outline'}
                                 className={cn(
-                                  'w-full justify-start text-left font-normal bg-[#141414] border-[#232428] rounded-lg px-3 py-2 text-base font-medium text-[#fafafa] outline-none hover:border-[#8b5df8] hover:ring-2 hover:ring-[#8b5df8]/20 transition-colors',
-                                  !dueDate && 'text-[#8C8C8C]',
+                                  'w-full justify-start text-left font-normal bg-background border-input rounded-lg px-3 py-2 text-base font-medium text-foreground outline-none hover:border-primary hover:ring-2 hover:ring-primary/20 transition-colors',
+                                  !dueDate && 'text-muted-foreground',
                                 )}
                               >
                                 <CalendarIcon className='mr-2 h-4 w-4' />
@@ -599,7 +607,7 @@ export default function InvoiceSection({
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent
-                              className='w-auto p-0 min-w-[350px] bg-[#141414] border-[#232428]'
+                              className='w-auto p-0 min-w-[350px] bg-background border-border'
                               align='start'
                             >
                               <Calendar
@@ -609,7 +617,7 @@ export default function InvoiceSection({
                                   setDueDate(date);
                                 }}
                                 initialFocus
-                                className='bg-[#141414] text-[#fafafa]'
+                                className='bg-background text-foreground'
                               />
                             </PopoverContent>
                           </Popover>
@@ -620,7 +628,7 @@ export default function InvoiceSection({
                               onClick={() => {
                                 return setDueDate(null);
                               }}
-                              className='bg-[#141414] border-[#232428] hover:border-[#8b5df8] hover:ring-2 hover:ring-[#8b5df8]/20'
+                              className='bg-background border-input hover:border-primary hover:ring-2 hover:ring-primary/20'
                             >
                               <X className='h-4 w-4' />
                             </Button>
@@ -634,11 +642,11 @@ export default function InvoiceSection({
                           <div>
                             <Label
                               htmlFor='require-deposit'
-                              className='block text-sm font-medium text-[#fafafa]'
+                              className='block text-sm font-medium text-foreground'
                             >
                               Require Deposit
                             </Label>
-                            <p className='text-xs text-[#8C8C8C]'>
+                            <p className='text-xs text-muted-foreground'>
                               Allow client to pay a deposit upfront
                             </p>
                           </div>
@@ -667,13 +675,13 @@ export default function InvoiceSection({
                                   });
                                 }
                               }}
-                              className='w-full bg-[#141414] border-[#232428] rounded-lg px-3 py-2 text-base font-medium text-[#fafafa] outline-none placeholder:text-[#8C8C8C] focus:border-[#8b5df8] focus:ring-2 focus:ring-[#8b5df8]/20 transition-colors'
+                              className='w-full bg-background border-input rounded-lg px-3 py-2 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors'
                               label='Deposit Percentage'
                               placeholder='0'
                             />
                             <div className='flex items-center justify-between text-sm'>
-                              <span className='text-[#8C8C8C]'>Total deposit:</span>
-                              <span className='font-medium text-[#fafafa]'>
+                              <span className='text-muted-foreground'>Total deposit:</span>
+                              <span className='font-medium text-foreground'>
                                 {((total * (invoiceSettings.depositPercentage || 0)) / 100).toFixed(
                                   2,
                                 )}{' '}
@@ -692,9 +700,9 @@ export default function InvoiceSection({
             {/* Notes Section */}
             <AccordionItem
               value='notes'
-              className='border border-[#232428] rounded-xl px-4 bg-[#141414] shadow-sm hover:shadow-md transition-all duration-200'
+              className='border border-border rounded-xl px-4 bg-background shadow-sm hover:shadow-md transition-all duration-200'
             >
-              <AccordionTrigger className='text-sm font-medium text-[#fafafa] py-4'>
+              <AccordionTrigger className='text-sm font-medium text-foreground py-4'>
                 Notes & Additional Information
               </AccordionTrigger>
               <AccordionContent>
@@ -708,7 +716,7 @@ export default function InvoiceSection({
                           invoiceNotes: value,
                         });
                       }}
-                      className='w-full bg-[#141414] border-[#232428] rounded-lg px-3 py-2 text-base font-medium text-[#fafafa] outline-none placeholder:text-[#8C8C8C] focus:border-[#8b5df8] focus:ring-2 focus:ring-[#8b5df8]/20 transition-colors'
+                      className='w-full bg-background border-input rounded-lg px-3 py-2 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors'
                       height='h-20'
                       label='Invoice Notes & Terms'
                       placeholder='Add any additional notes to include on the invoice...'
@@ -725,7 +733,7 @@ export default function InvoiceSection({
                           teamNotes: value,
                         });
                       }}
-                      className='w-full bg-[#141414] border-[#232428] rounded-lg px-3 py-2 text-base font-medium text-[#fafafa] outline-none placeholder:text-[#8C8C8C] focus:border-[#8b5df8] focus:ring-2 focus:ring-[#8b5df8]/20 transition-colors'
+                      className='w-full bg-background border-input rounded-lg px-3 py-2 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors'
                       height='h-20'
                       label='Team Notes (Private)'
                       placeholder='Add private notes for the team...'
@@ -736,7 +744,7 @@ export default function InvoiceSection({
                         });
                       }}
                     />
-                    <p className='text-xs text-[#8C8C8C] mt-1'>
+                    <p className='text-xs text-muted-foreground mt-1'>
                       These notes and attachments are only visible to your team and will not be
                       included in the invoice.
                     </p>

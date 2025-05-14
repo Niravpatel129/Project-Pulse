@@ -712,7 +712,7 @@ export default function ItemsSection({
                     {items.length > 0 ? (
                       <>
                         Your Items{' '}
-                        <span className='ml-2 text-sm font-normal text-[#8C8C8C]'>
+                        <span className='ml-2 text-sm font-normal text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
                           ({items.length})
                         </span>
                       </>
@@ -729,7 +729,7 @@ export default function ItemsSection({
                           }
                           setCurrentNewItemMode('manual');
                         }}
-                        className='bg-[#232428] hover:bg-[#2A2A2F] text-[#fafafa] text-xs py-1 px-3 rounded-full h-auto transition-colors duration-200'
+                        className='bg-[#F4F4F5] dark:bg-[#232428] hover:bg-[#E4E4E7] dark:hover:bg-[#2A2A2F] text-[#3F3F46] dark:text-[#fafafa] text-xs py-1 px-3 rounded-full h-auto transition-colors duration-200'
                         variant='ghost'
                       >
                         <Plus size={14} className='mr-1' />
@@ -751,7 +751,7 @@ export default function ItemsSection({
                         return nameInputRef.current?.focus();
                       }, 10);
                     }}
-                    className='w-full bg-[#454545] hover:bg-[#2A2A2F] text-[#fafafa]'
+                    className='w-full bg-[#F4F4F5] dark:bg-[#454545] hover:bg-[#E4E4E7] dark:hover:bg-[#2A2A2F] text-[#3F3F46] dark:text-[#fafafa]'
                   >
                     Add Item
                   </Button>
@@ -823,7 +823,7 @@ export default function ItemsSection({
                           <div className='group/item'>
                             <div className='flex flex-col'>
                               <div className='flex items-center'>
-                                <span className='text-[#3F3F46] dark:text-[#fafafa] text-[14px] font-semibold group-hover/item:text-[#000] dark:group-hover/item:text-white transition-colors'>
+                                <span className='text-[#3F3F46] dark:text-[#fafafa] text-[14px] font-semibold group-hover/item:text-black dark:group-hover/item:text-white transition-colors'>
                                   {item.name}
                                 </span>
                                 {parseInt(item.quantity) > 1 && (

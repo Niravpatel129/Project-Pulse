@@ -189,7 +189,7 @@ export default function LeftSidebar({
                 <path
                   d='M10 3L4.5 8.5L2 6'
                   stroke='currentColor'
-                  className='text-[#3F3F46] dark:text-[#141414]'
+                  className=' text-[#8b5df8]'
                   strokeWidth='1.5'
                   strokeLinecap='round'
                   strokeLinejoin='round'
@@ -248,7 +248,7 @@ export default function LeftSidebar({
                   <path
                     d='M10 3L4.5 8.5L2 6'
                     stroke='currentColor'
-                    className='text-[#8b5df8]'
+                    className='dark:text-black'
                     strokeWidth='1.5'
                     strokeLinecap='round'
                     strokeLinejoin='round'
@@ -378,7 +378,7 @@ export default function LeftSidebar({
                 <path
                   d='M10 3L4.5 8.5L2 6'
                   stroke='currentColor'
-                  className='text-[#3F3F46] dark:text-[#141414]'
+                  className='text-[#8b5df8] dark:text-[#8b5df8] '
                   strokeWidth='1.5'
                   strokeLinecap='round'
                   strokeLinejoin='round'
