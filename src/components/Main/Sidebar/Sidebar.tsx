@@ -12,7 +12,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Moon, PencilIcon, Sun } from 'lucide-react';
+import { Moon, PencilIcon, Send, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -145,7 +145,7 @@ export default function AppSidebar() {
               >
                 <PencilIcon className='h-4 w-4 group-data-[state=collapsed]:hidden' />
                 <span className='group-data-[state=collapsed]:hidden'>New Invoice</span>
-                <RiFileListFill className='h-4 w-4 group-data-[state=collapsed]:block hidden' />
+                <Send className='h-4 w-4 group-data-[state=collapsed]:block hidden' />
               </Button>
             </div>
 
