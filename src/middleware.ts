@@ -54,7 +54,8 @@ export function middleware(request: NextRequest) {
       !path.includes('/register') &&
       !path.includes('/payment-success') &&
       !path.includes('/lead') &&
-      !path.includes('/portal/lead/')
+      !path.includes('/portal/lead/') &&
+      !path.includes('/portal/payments/receipt/')
     ) {
       // Store the original URL to redirect back after login
       const redirectUrl = new URL('/login', request.url);
