@@ -101,7 +101,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className='flex scrollbar-hide overflow-hidden h-screen w-screen bg-white'>
+    <div className='flex scrollbar-hide overflow-hidden h-screen w-screen bg-white dark:bg-black'>
       {/* Left side - Login form */}
       <div className='w-full md:w-2/5 flex items-center justify-center bg-gray-50 dark:bg-background p-4'>
         <div className='w-full max-w-sm space-y-6'>
@@ -122,7 +122,7 @@ export default function LoginPage() {
                 onChange={(e) => {
                   return setEmail(e.target.value);
                 }}
-                className='w-full'
+                className='w-full bg-white dark:bg-background text-black dark:text-white'
               />
 
               <Input
@@ -136,7 +136,7 @@ export default function LoginPage() {
                 onChange={(e) => {
                   return setPassword(e.target.value);
                 }}
-                className='w-full'
+                className='w-full bg-white dark:bg-background text-black dark:text-white'
               />
 
               <div className='flex items-center space-x-2'>
@@ -149,14 +149,16 @@ export default function LoginPage() {
                 />
                 <label
                   htmlFor='remember-me'
-                  className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+                  className='text-sm font-medium leading-none text-gray-700 dark:text-gray-300 peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
                 >
                   Remember email
                 </label>
               </div>
             </div>
 
-            {(errorMsg || error) && <div className='text-red-500 text-sm'>{errorMsg || error}</div>}
+            {(errorMsg || error) && (
+              <div className='text-red-500 dark:text-red-400 text-sm'>{errorMsg || error}</div>
+            )}
 
             <Button
               type='submit'
@@ -176,7 +178,7 @@ export default function LoginPage() {
 
           {/* Debug info */}
           {isDev && (
-            <div className='text-xs text-gray-500 border-t pt-4'>
+            <div className='text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-4'>
               <p>Debug info:</p>
               <ul className='list-disc pl-4 mt-1'>
                 <li>Authenticated: {isAuthenticated ? 'Yes' : 'No'}</li>
