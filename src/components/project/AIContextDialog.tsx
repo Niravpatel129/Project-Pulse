@@ -62,12 +62,12 @@ export function AIContextDialog({ open, onOpenChange }: AIContextDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='bg-[#141414] border-[#232428] text-[#fafafa] max-w-3xl h-[600px]'>
+      <DialogContent className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] max-w-3xl h-[600px]'>
         <DialogHeader>
           <DialogTitle className='text-lg font-medium'>AI Context</DialogTitle>
         </DialogHeader>
         <Tabs value={activeTab} onValueChange={setActiveTab} className='flex-1'>
-          <TabsList className='grid w-full grid-cols-2 mb-4'>
+          <TabsList className='grid w-full grid-cols-2 mb-4 bg-[#F4F4F5] dark:bg-[#232428]'>
             <TabsTrigger value='documents'>Documents</TabsTrigger>
             <TabsTrigger value='knowledge'>Knowledge Prompts</TabsTrigger>
           </TabsList>
@@ -80,7 +80,7 @@ export function AIContextDialog({ open, onOpenChange }: AIContextDialogProps) {
             </TabsContent>
             <TabsContent value='knowledge' className='space-y-4'>
               <div className='space-y-2 p-1'>
-                <p className='text-sm text-gray-400'>
+                <p className='text-sm text-[#3F3F46]/60 dark:text-gray-400'>
                   Add custom knowledge or context that will be used to inform the AI&apos;s
                   responses.
                 </p>
@@ -91,11 +91,11 @@ export function AIContextDialog({ open, onOpenChange }: AIContextDialogProps) {
                     return setKnowledgePrompt(e.target.value);
                   }}
                   placeholder='Enter any additional context or knowledge that should be considered...'
-                  className='min-h-[200px] bg-[#1a1a1a] border-[#232428] text-[#fafafa]'
+                  className='min-h-[200px] bg-[#F4F4F5] dark:bg-[#1a1a1a] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8C8C8C]'
                   disabled={isLoadingContext}
                 />
                 {knowledgePrompt.length >= 1000 && (
-                  <p className='text-sm text-gray-400'>
+                  <p className='text-sm text-[#3F3F46]/60 dark:text-gray-400'>
                     {knowledgePrompt.length} / 1000 max characters reached
                   </p>
                 )}
@@ -104,6 +104,7 @@ export function AIContextDialog({ open, onOpenChange }: AIContextDialogProps) {
                     onClick={handleSave}
                     disabled={isUpdating || isLoadingContext}
                     variant='outline'
+                    className='border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] hover:bg-[#F4F4F5] dark:hover:bg-[#232428]'
                   >
                     {isUpdating ? 'Saving...' : 'Save Context'}
                   </Button>

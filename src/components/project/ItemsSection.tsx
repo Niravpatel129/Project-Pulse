@@ -372,14 +372,14 @@ export default function ItemsSection({
   };
 
   return (
-    <div className='flex flex-col h-full relative bg-[#141414]'>
+    <div className='flex flex-col h-full relative bg-white dark:bg-[#141414]'>
       <div className='absolute inset-0 pt-4 px-6 pb-16 overflow-y-auto'>
         <div className='mb-4'>
           <div className='flex justify-between items-center mb-3'>
-            <h2 className='text-lg font-semibold text-[#fafafa]'>Items</h2>
+            <h2 className='text-lg font-semibold text-[#3F3F46] dark:text-[#fafafa]'>Items</h2>
           </div>
 
-          <p className='text-[#8C8C8C] text-sm leading-5 mb-4'>
+          <p className='text-[#3F3F46]/60 dark:text-[#8C8C8C] text-sm leading-5 mb-4'>
             Add items to your project. Include name, description, and price for each item.
           </p>
 
@@ -417,7 +417,7 @@ export default function ItemsSection({
                         'flex items-center justify-center transition-all duration-300 h-11',
                         currentNewItemMode === 'manual'
                           ? 'bg-blue-600 text-white hover:bg-blue-700 hover:text-white shadow-md border-0'
-                          : 'hover:bg-[#232428] border-2 border-[#232428] text-[#fafafa]',
+                          : 'hover:bg-[#F4F4F5] dark:hover:bg-[#232428] border-2 border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa]',
                       )}
                       variant='outline'
                     >
@@ -425,7 +425,7 @@ export default function ItemsSection({
                       <span className='font-medium'>Add Item</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className='bg-[#141414] border-[#232428] text-[#fafafa]'>
+                  <TooltipContent className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa]'>
                     <p>Create a new item with a name, description, and price</p>
                   </TooltipContent>
                 </Tooltip>
@@ -442,7 +442,7 @@ export default function ItemsSection({
             {/* Add Item Form */}
             <AnimatePresence mode='wait'>
               {currentNewItemMode === 'manual' && (
-                <motion.div className='border border-[#232428] rounded-xl p-5 bg-[#141414] shadow-sm hover:shadow-md transition-all duration-200 w-full relative'>
+                <motion.div className='border border-[#E4E4E7] dark:border-[#232428] rounded-xl p-5 bg-white dark:bg-[#141414] shadow-sm hover:shadow-md transition-all duration-200 w-full relative'>
                   {/* Close button in top-right corner */}
                   <button
                     type='button'
@@ -458,7 +458,7 @@ export default function ItemsSection({
                       });
                       setCurrentNewItemMode('');
                     }}
-                    className='absolute top-3 right-3 text-[#8C8C8C] hover:text-[#fafafa] p-1 rounded-full hover:bg-[#232428] transition-colors'
+                    className='absolute top-3 right-3 text-[#3F3F46]/60 dark:text-[#8C8C8C] hover:text-[#3F3F46] dark:hover:text-[#fafafa] p-1 rounded-full hover:bg-[#F4F4F5] dark:hover:bg-[#232428] transition-colors'
                   >
                     <X size={18} />
                   </button>
@@ -470,7 +470,10 @@ export default function ItemsSection({
                     className='space-y-4'
                   >
                     <div className='p-1'>
-                      <label htmlFor='item-name' className='text-xs text-[#8C8C8C] mb-1 block'>
+                      <label
+                        htmlFor='item-name'
+                        className='text-xs text-[#3F3F46]/60 dark:text-[#8C8C8C] mb-1 block'
+                      >
                         Item name
                       </label>
                       <Input
@@ -483,7 +486,7 @@ export default function ItemsSection({
                         }}
                         onKeyDown={handleNameKeyDown}
                         placeholder='Enter item name'
-                        className='w-full border border-[#232428] rounded-lg px-3 py-2 text-base font-medium text-[#fafafa] outline-none placeholder:text-[#8C8C8C] focus:border-[#8C8C8C] focus:ring-1 focus:ring-[#8C8C8C] transition-colors'
+                        className='w-full border border-[#E4E4E7] dark:border-[#232428] rounded-lg px-3 py-2 text-base font-medium text-[#3F3F46] dark:text-[#fafafa] outline-none placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8C8C8C] focus:border-[#3F3F46]/60 dark:focus:border-[#8C8C8C] focus:ring-1 focus:ring-[#3F3F46]/60 dark:focus:ring-[#8C8C8C] transition-colors bg-white dark:bg-[#141414]'
                         autoFocus
                         aria-label='Item name'
                       />
@@ -491,7 +494,7 @@ export default function ItemsSection({
                     <div className='p-1'>
                       <label
                         htmlFor='item-description'
-                        className='text-xs text-[#8C8C8C] mb-1 block'
+                        className='text-xs text-[#3F3F46]/60 dark:text-[#8C8C8C] mb-1 block'
                       >
                         Description (optional)
                       </label>
@@ -503,12 +506,15 @@ export default function ItemsSection({
                         }}
                         onKeyDown={handleDescriptionKeyDown}
                         placeholder='Add a description'
-                        className='min-h-[80px] resize-none text-[#fafafa] bg-[#141414] border-[#232428] placeholder:text-[#8C8C8C]'
+                        className='min-h-[80px] resize-none text-[#3F3F46] dark:text-[#fafafa] bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8C8C8C]'
                         aria-label='Item description'
                       />
                     </div>
                     <div className='p-1'>
-                      <label htmlFor='item-price' className='text-xs text-[#8C8C8C] mb-1 block'>
+                      <label
+                        htmlFor='item-price'
+                        className='text-xs text-[#3F3F46]/60 dark:text-[#8C8C8C] mb-1 block'
+                      >
                         Price ({projectCurrency})
                       </label>
                       <Input
@@ -522,12 +528,15 @@ export default function ItemsSection({
                         }}
                         placeholder='0.00'
                         aria-label='Item price'
-                        className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
+                        className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8C8C8C]'
                       />
                     </div>
 
                     <div className='p-1'>
-                      <label htmlFor='item-quantity' className='text-xs text-[#8C8C8C] mb-1 block'>
+                      <label
+                        htmlFor='item-quantity'
+                        className='text-xs text-[#3F3F46]/60 dark:text-[#8C8C8C] mb-1 block'
+                      >
                         Quantity
                       </label>
                       <Input
@@ -543,12 +552,15 @@ export default function ItemsSection({
                         }}
                         placeholder='1'
                         aria-label='Item quantity'
-                        className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
+                        className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8C8C8C]'
                       />
                     </div>
                     <div className='grid grid-cols-2 gap-3 mb-4'>
                       <div className='p-1'>
-                        <Label htmlFor='tax-rate' className='text-[#fafafa] text-sm font-medium'>
+                        <Label
+                          htmlFor='tax-rate'
+                          className='text-[#3F3F46] dark:text-[#fafafa] text-sm font-medium'
+                        >
                           Tax Rate
                         </Label>
                         <Select
@@ -561,12 +573,12 @@ export default function ItemsSection({
                             updateItemTaxRate(value);
                           }}
                         >
-                          <SelectTrigger className='w-full bg-[#141414] border-[#232428] text-[#fafafa]'>
+                          <SelectTrigger className='w-full bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa]'>
                             <SelectValue placeholder='Select tax rate' />
                           </SelectTrigger>
-                          <SelectContent className='bg-[#141414] border-[#232428]'>
+                          <SelectContent className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428]'>
                             <SelectGroup>
-                              <SelectLabel className='text-sm font-medium text-[#8C8C8C]'>
+                              <SelectLabel className='text-sm font-medium text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
                                 Available Tax Rates
                               </SelectLabel>
                               {taxRates.map((taxRate) => {
@@ -575,15 +587,17 @@ export default function ItemsSection({
                                     key={taxRate.id}
                                     value={taxRate.id}
                                     className={cn(
-                                      selectedTaxRateId === taxRate.id ? 'bg-[#232428]' : '',
-                                      'text-[#fafafa]',
+                                      selectedTaxRateId === taxRate.id
+                                        ? 'bg-[#F4F4F5] dark:bg-[#232428]'
+                                        : '',
+                                      'text-[#3F3F46] dark:text-[#fafafa]',
                                     )}
                                   >
                                     <div className='flex justify-between w-full items-center'>
                                       <div className='flex items-center'>
                                         <span className='text-sm'>{taxRate.name}</span>
                                       </div>
-                                      <span className='text-xs font-medium bg-[#232428] text-[#fafafa] rounded-full px-2 py-0.5 ml-2'>
+                                      <span className='text-xs font-medium bg-[#F4F4F5] dark:bg-[#232428] text-[#3F3F46] dark:text-[#fafafa] rounded-full px-2 py-0.5 ml-2'>
                                         {taxRate.rate}%
                                       </span>
                                     </div>
@@ -591,7 +605,7 @@ export default function ItemsSection({
                                 );
                               })}
                             </SelectGroup>
-                            <SelectSeparator className='bg-[#232428]' />
+                            <SelectSeparator className='bg-[#E4E4E7] dark:bg-[#232428]' />
                             <SelectGroup>
                               <SelectItem value='add-new' className='text-[#8b5df8] font-medium'>
                                 <div className='flex items-center'>
@@ -604,7 +618,10 @@ export default function ItemsSection({
                         </Select>
                       </div>
                       <div className='p-1'>
-                        <Label htmlFor='discount' className='text-[#fafafa] text-sm font-medium'>
+                        <Label
+                          htmlFor='discount'
+                          className='text-[#3F3F46] dark:text-[#fafafa] text-sm font-medium'
+                        >
                           Discount (%)
                         </Label>
                         <Input
@@ -619,7 +636,7 @@ export default function ItemsSection({
                               discount: Number(e.target.value),
                             });
                           }}
-                          className='bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
+                          className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8C8C8C]'
                         />
                       </div>
                     </div>
@@ -634,7 +651,7 @@ export default function ItemsSection({
                           />
                           <Label
                             htmlFor='create-more'
-                            className='text-sm text-[#8C8C8C] cursor-pointer'
+                            className='text-sm text-[#3F3F46]/60 dark:text-[#8C8C8C] cursor-pointer'
                           >
                             Create more
                           </Label>
@@ -652,7 +669,7 @@ export default function ItemsSection({
                             onClick={() => {
                               resetFormState();
                             }}
-                            className='px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center min-w-[100px] border border-[#232428] hover:bg-[#232428] text-[#fafafa]'
+                            className='px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center min-w-[100px] border border-[#E4E4E7] dark:border-[#232428] hover:bg-[#F4F4F5] dark:hover:bg-[#232428] text-[#3F3F46] dark:text-[#fafafa]'
                           >
                             Cancel
                           </button>
@@ -691,7 +708,7 @@ export default function ItemsSection({
             {items.length > 0 && (
               <>
                 <div className='flex items-center mb-4'>
-                  <h3 className='text-lg font-semibold text-[#fafafa]'>
+                  <h3 className='text-lg font-semibold text-[#3F3F46] dark:text-[#fafafa]'>
                     {items.length > 0 ? (
                       <>
                         Your Items{' '}
@@ -734,7 +751,7 @@ export default function ItemsSection({
                         return nameInputRef.current?.focus();
                       }, 10);
                     }}
-                    className='w-full bg-[#232428] hover:bg-[#2A2A2F] text-[#fafafa]'
+                    className='w-full bg-[#454545] hover:bg-[#2A2A2F] text-[#fafafa]'
                   >
                     Add Item
                   </Button>
@@ -745,7 +762,7 @@ export default function ItemsSection({
                 return (
                   <motion.div
                     key={item.id}
-                    className='border border-[#232428] rounded-xl p-4 transition-all duration-200 ease-in-out hover:border-[#2A2A2F] group bg-[#141414] shadow-sm hover:shadow-md hover:translate-y-[-1px] relative'
+                    className='border border-[#E4E4E7] dark:border-[#232428] rounded-xl p-4 transition-all duration-200 ease-in-out hover:border-[#D1D1D6] dark:hover:border-[#2A2A2F] group bg-white dark:bg-[#141414] shadow-sm hover:shadow-md hover:translate-y-[-1px] relative'
                   >
                     {/* Action buttons */}
                     <div className='absolute top-2 right-2 flex space-x-1'>
@@ -756,7 +773,7 @@ export default function ItemsSection({
                               onClick={() => {
                                 return handleDuplicateItem(item);
                               }}
-                              className='p-1.5 rounded-full bg-[#232428] text-[#8C8C8C] hover:bg-[#2A2A2F] hover:text-[#fafafa] opacity-0 group-hover:opacity-100 transition-all duration-200'
+                              className='p-1.5 rounded-full bg-[#F4F4F5] dark:bg-[#232428] text-[#3F3F46]/60 dark:text-[#8C8C8C] hover:bg-[#E4E4E7] dark:hover:bg-[#2A2A2F] hover:text-[#3F3F46] dark:hover:text-[#fafafa] opacity-0 group-hover:opacity-100 transition-all duration-200'
                               aria-label='Duplicate item'
                             >
                               <Copy size={16} />
@@ -764,7 +781,7 @@ export default function ItemsSection({
                           </TooltipTrigger>
                           <TooltipContent
                             side='top'
-                            className='bg-[#141414] border-[#232428] text-[#fafafa]'
+                            className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa]'
                           >
                             <p>Duplicate item</p>
                           </TooltipContent>
@@ -778,7 +795,7 @@ export default function ItemsSection({
                               onClick={(e) => {
                                 return handleRemoveItemWithHistory(item.id, e);
                               }}
-                              className='p-1.5 rounded-full bg-[#232428] text-[#8C8C8C] hover:bg-[#411D23] hover:text-[#F43F5E] opacity-0 group-hover:opacity-100 transition-all duration-200'
+                              className='p-1.5 rounded-full bg-[#F4F4F5] dark:bg-[#232428] text-[#3F3F46]/60 dark:text-[#8C8C8C] hover:bg-[#FDE7EB] dark:hover:bg-[#411D23] hover:text-[#F43F5E] opacity-0 group-hover:opacity-100 transition-all duration-200'
                               aria-label='Remove item'
                             >
                               <X size={16} />
@@ -786,7 +803,7 @@ export default function ItemsSection({
                           </TooltipTrigger>
                           <TooltipContent
                             side='top'
-                            className='bg-[#141414] border-[#232428] text-[#fafafa]'
+                            className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa]'
                           >
                             <p>Delete item</p>
                           </TooltipContent>
@@ -806,35 +823,35 @@ export default function ItemsSection({
                           <div className='group/item'>
                             <div className='flex flex-col'>
                               <div className='flex items-center'>
-                                <span className='text-[#fafafa] text-[14px] font-semibold group-hover/item:text-white transition-colors'>
+                                <span className='text-[#3F3F46] dark:text-[#fafafa] text-[14px] font-semibold group-hover/item:text-[#000] dark:group-hover/item:text-white transition-colors'>
                                   {item.name}
                                 </span>
                                 {parseInt(item.quantity) > 1 && (
-                                  <span className='ml-2 text-xs font-medium bg-[#232428] text-[#8C8C8C] rounded-full px-2 py-0.5'>
+                                  <span className='ml-2 text-xs font-medium bg-[#F4F4F5] dark:bg-[#232428] text-[#3F3F46]/60 dark:text-[#8C8C8C] rounded-full px-2 py-0.5'>
                                     {item.quantity}x
                                   </span>
                                 )}
                               </div>
 
                               {item.description ? (
-                                <p className='text-[#8C8C8C] text-sm mt-1 leading-relaxed group-hover/item:text-[#fafafa] transition-colors'>
+                                <p className='text-[#3F3F46]/60 dark:text-[#8C8C8C] text-sm mt-1 leading-relaxed group-hover/item:text-[#3F3F46] dark:group-hover/item:text-[#fafafa] transition-colors'>
                                   {item.description}
                                 </p>
                               ) : (
-                                <p className='text-[#8C8C8C] text-sm mt-1 italic group-hover/item:text-[#fafafa] transition-colors'>
+                                <p className='text-[#3F3F46]/60 dark:text-[#8C8C8C] text-sm mt-1 italic group-hover/item:text-[#3F3F46] dark:group-hover/item:text-[#fafafa] transition-colors'>
                                   Add a description...
                                 </p>
                               )}
 
                               <div className='mt-2 flex flex-wrap items-center gap-2'>
                                 {item.taxRate > 0 && (
-                                  <div className='text-xs text-[#8b5df8] bg-[#232428] rounded-full py-0.5 px-2 flex items-center'>
+                                  <div className='text-xs text-[#8b5df8] bg-[#F4F4F5] dark:bg-[#232428] rounded-full py-0.5 px-2 flex items-center'>
                                     <Hash size={10} className='mr-1' />
                                     {item.taxName || 'Tax'}: {item.taxRate}%
                                   </div>
                                 )}
                                 {item.discount > 0 && (
-                                  <div className='text-xs text-[#eea01a] bg-[#232428] rounded-full py-0.5 px-2 flex items-center'>
+                                  <div className='text-xs text-[#eea01a] bg-[#F4F4F5] dark:bg-[#232428] rounded-full py-0.5 px-2 flex items-center'>
                                     <Scissors size={10} className='mr-1' />
                                     Discount: {item.discount}%
                                   </div>
@@ -843,19 +860,23 @@ export default function ItemsSection({
                               <div className='mt-3 flex items-center justify-between'>
                                 <div className='flex items-center gap-4'>
                                   <div className='flex items-center gap-1'>
-                                    <span className='text-sm text-[#8C8C8C]'>Qty:</span>
-                                    <span className='text-sm font-medium text-[#fafafa]'>
+                                    <span className='text-sm text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
+                                      Qty:
+                                    </span>
+                                    <span className='text-sm font-medium text-[#3F3F46] dark:text-[#fafafa]'>
                                       {item.quantity}
                                     </span>
                                   </div>
                                   <div className='flex items-center gap-2'>
-                                    <span className='text-sm text-[#8C8C8C]'>
+                                    <span className='text-sm text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
                                       {getCurrencySymbol(projectCurrency)}
                                       {item.price}
-                                      <span className='text-[#8C8C8C] ml-1'>/unit</span>
+                                      <span className='text-[#3F3F46]/60 dark:text-[#8C8C8C] ml-1'>
+                                        /unit
+                                      </span>
                                     </span>
                                     {parseInt(item.quantity) > 1 && (
-                                      <span className='text-sm font-medium text-[#fafafa]'>
+                                      <span className='text-sm font-medium text-[#3F3F46] dark:text-[#fafafa]'>
                                         Total: {getCurrencySymbol(projectCurrency)}
                                         {calculateItemTotal(item.price, item.quantity)}
                                       </span>
@@ -878,21 +899,24 @@ export default function ItemsSection({
 
       {/* Tax Rate Dialog */}
       <Dialog open={isNewTaxRateDialogOpen} onOpenChange={setIsNewTaxRateDialogOpen}>
-        <DialogContent className='sm:max-w-[425px] bg-[#141414] border-[#232428]'>
+        <DialogContent className='sm:max-w-[425px] bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428]'>
           <DialogHeader>
-            <DialogTitle className='flex items-center text-lg font-semibold text-[#fafafa]'>
-              <div className='mr-2 p-1.5 bg-[#232428] rounded-full'>
+            <DialogTitle className='flex items-center text-lg font-semibold text-[#3F3F46] dark:text-[#fafafa]'>
+              <div className='mr-2 p-1.5 bg-[#F4F4F5] dark:bg-[#232428] rounded-full'>
                 <Plus size={18} className='text-[#8b5df8]' />
               </div>
               New Tax Rate
             </DialogTitle>
-            <DialogDescription className='text-[#8C8C8C]'>
+            <DialogDescription className='text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
               Create a new tax rate to apply to your items.
             </DialogDescription>
           </DialogHeader>
           <div className='grid gap-5 py-4'>
             <div className='space-y-2'>
-              <Label htmlFor='tax-name' className='text-sm font-medium text-[#fafafa]'>
+              <Label
+                htmlFor='tax-name'
+                className='text-sm font-medium text-[#3F3F46] dark:text-[#fafafa]'
+              >
                 Tax Name
               </Label>
               <Input
@@ -902,14 +926,19 @@ export default function ItemsSection({
                 onChange={(e) => {
                   return setNewTaxRate({ ...newTaxRate, name: e.target.value });
                 }}
-                className='w-full bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
+                className='w-full bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8C8C8C]'
                 placeholder='e.g. GST, VAT, Sales Tax'
                 autoFocus
               />
-              <p className='text-xs text-[#8C8C8C]'>Enter a descriptive name for this tax rate</p>
+              <p className='text-xs text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
+                Enter a descriptive name for this tax rate
+              </p>
             </div>
             <div className='space-y-2'>
-              <Label htmlFor='tax-percentage' className='text-sm font-medium text-[#fafafa]'>
+              <Label
+                htmlFor='tax-percentage'
+                className='text-sm font-medium text-[#3F3F46] dark:text-[#fafafa]'
+              >
                 Rate (%)
               </Label>
               <Input
@@ -922,10 +951,10 @@ export default function ItemsSection({
                 onChange={(e) => {
                   return setNewTaxRate({ ...newTaxRate, rate: parseFloat(e.target.value) });
                 }}
-                className='w-full bg-[#141414] border-[#232428] text-[#fafafa] placeholder:text-[#8C8C8C]'
+                className='w-full bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8C8C8C]'
                 placeholder='e.g. 7.5'
               />
-              <p className='text-xs text-[#8C8C8C]'>
+              <p className='text-xs text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
                 Enter the percentage rate without the % symbol
               </p>
             </div>
@@ -937,7 +966,7 @@ export default function ItemsSection({
               onClick={() => {
                 return setIsNewTaxRateDialogOpen(false);
               }}
-              className='border-[#232428] text-[#fafafa] hover:bg-[#232428]'
+              className='border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] hover:bg-[#F4F4F5] dark:hover:bg-[#232428]'
             >
               Cancel
             </Button>

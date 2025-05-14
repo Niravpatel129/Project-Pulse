@@ -73,6 +73,24 @@ export function AddCustomerDialog({
   const queryClient = useQueryClient();
 
   useLayoutEffect(() => {
+    if (initialData && open) {
+      setNewCustomer({
+        ...newCustomer,
+        ...initialData,
+      });
+
+      const sameAddress =
+        initialData.address?.street === initialData.shippingAddress?.street &&
+        initialData.address?.city === initialData.shippingAddress?.city &&
+        initialData.address?.state === initialData.shippingAddress?.state &&
+        initialData.address?.country === initialData.shippingAddress?.country &&
+        initialData.address?.zip === initialData.shippingAddress?.zip;
+
+      setShippingSameAsBilling(sameAddress);
+    }
+  }, [initialData, open]);
+
+  useLayoutEffect(() => {
     if (tabContentRef.current) {
       setTabContentHeight(tabContentRef.current.scrollHeight);
     }
@@ -160,6 +178,14 @@ export function AddCustomerDialog({
       internalNotes: newCustomer.internalNotes,
     };
 
+    if (onEdit) {
+      onEdit(newCustomer);
+      onOpenChange(false);
+      resetCustomerForm();
+      toast.success(initialData ? 'Customer updated successfully' : 'Customer added successfully');
+      return;
+    }
+
     createClientMutation.mutate(clientData);
   };
 
@@ -171,11 +197,12 @@ export function AddCustomerDialog({
             <div className='mr-2 p-1.5 bg-[#F4F4F5] dark:bg-[#232428] rounded-full'>
               <User size={18} className='text-[#3F3F46] dark:text-[#8b5df8]' />
             </div>
-            Add New Customer
+            {initialData ? 'Edit Customer' : 'Add New Customer'}
           </DialogTitle>
           <p className='text-sm text-[#71717A] dark:text-[#8C8C8C] mt-1'>
-            Fill in your customer information below. Required fields are marked with an asterisk
-            (*).
+            {initialData
+              ? 'Update your customer information below. Required fields are marked with an asterisk (*).'
+              : 'Fill in your customer information below. Required fields are marked with an asterisk (*).'}
           </p>
         </DialogHeader>
 
@@ -638,7 +665,7 @@ export function AddCustomerDialog({
             {createClientMutation.isPending ? (
               <Loader2 className='w-4 h-4 mr-2 animate-spin' />
             ) : null}
-            Add Customer
+            {initialData ? 'Update Customer' : 'Add Customer'}
           </Button>
         </DialogFooter>
       </DialogContent>

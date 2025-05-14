@@ -80,19 +80,22 @@ export default function SectionFooter({
   };
 
   return (
-    <div className='absolute bottom-0 left-0 right-0 flex items-center justify-between py-3 border-t border-[#232428] px-8 bg-[#141414] z-10'>
+    <div className='absolute bottom-0 left-0 right-0 flex items-center justify-between py-3 border-t border-[#E4E4E7] dark:border-[#232428] px-8 bg-white dark:bg-[#141414] z-10'>
       {isMobile ? (
         <Popover modal>
           <PopoverTrigger asChild>
-            <button className='flex items-center text-[#8C8C8C] text-xs border-b border-dashed border-[#232428] pb-1'>
-              <div className='w-4 h-4 rounded-full border-2 border-[#232428] border-t-[#8C8C8C] animate-spin mr-2'></div>
+            <button className='flex items-center text-[#3F3F46]/60 dark:text-[#8C8C8C] text-xs border-b border-dashed border-[#E4E4E7] dark:border-[#232428] pb-1'>
+              <div className='w-4 h-4 rounded-full border-2 border-[#E4E4E7] dark:border-[#232428] border-t-[#3F3F46]/60 dark:border-t-[#8C8C8C] animate-spin mr-2'></div>
               <span>
                 {currentSection}/{totalSections} steps
               </span>
               <ChevronDown className='w-4 h-4 ml-1' />
             </button>
           </PopoverTrigger>
-          <PopoverContent className='w-48 p-2 bg-[#141414] border-[#232428]' align='start'>
+          <PopoverContent
+            className='w-48 p-2 bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428]'
+            align='start'
+          >
             <div className='space-y-1'>
               {Array.from({ length: totalSections }, (_, i) => {
                 return i + 1;
@@ -105,8 +108,8 @@ export default function SectionFooter({
                     }}
                     className={`w-full text-left px-3 py-2 rounded-md text-sm ${
                       section === currentSection
-                        ? 'bg-[#232428] text-[#fafafa]'
-                        : 'hover:bg-[#232428] text-[#8C8C8C]'
+                        ? 'bg-[#F4F4F5] dark:bg-[#232428] text-[#3F3F46] dark:text-[#fafafa]'
+                        : 'hover:bg-[#F4F4F5] dark:hover:bg-[#232428] text-[#3F3F46]/60 dark:text-[#8C8C8C]'
                     }`}
                   >
                     {getSectionName(section)}
@@ -118,16 +121,18 @@ export default function SectionFooter({
         </Popover>
       ) : (
         <div className='flex items-center'>
-          <div className='w-4 h-4 rounded-full border-2 border-[#232428] border-t-[#8C8C8C] animate-spin mr-2'></div>
-          <span className='text-[#8C8C8C] text-xs'>
+          <div className='w-4 h-4 rounded-full border-2 border-[#E4E4E7] dark:border-[#232428] border-t-[#3F3F46]/60 dark:border-t-[#8C8C8C] animate-spin mr-2'></div>
+          <span className='text-[#3F3F46]/60 dark:text-[#8C8C8C] text-xs'>
             {currentSection}/{totalSections} steps
           </span>
         </div>
       )}
       {!isMobile && (
-        <div className='flex items-center text-[#8C8C8C] text-xs'>
+        <div className='flex items-center text-[#3F3F46]/60 dark:text-[#8C8C8C] text-xs'>
           <span>press</span>
-          <span className='mx-1 px-1 border border-[#232428] rounded text-[11px]'>Enter</span>
+          <span className='mx-1 px-1 border border-[#E4E4E7] dark:border-[#232428] rounded text-[11px]'>
+            Enter
+          </span>
           <span className='ml-0.5'>↵</span>
         </div>
       )}
@@ -136,7 +141,7 @@ export default function SectionFooter({
           <Button
             variant='outline'
             onClick={onCancel}
-            className='border-[#232428] text-[#fafafa] hover:bg-[#232428]'
+            className='border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] hover:bg-[#F4F4F5] dark:hover:bg-[#232428]'
           >
             Cancel
           </Button>
@@ -146,7 +151,7 @@ export default function SectionFooter({
             variant='outline'
             onClick={secondaryAction.onClick}
             disabled={secondaryAction.disabled}
-            className='border-[#232428] text-[#fafafa] hover:bg-[#232428]'
+            className='border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] hover:bg-[#F4F4F5] dark:hover:bg-[#232428]'
           >
             {secondaryAction.label}
           </Button>
@@ -155,7 +160,7 @@ export default function SectionFooter({
           <Button
             variant='outline'
             onClick={onChatClick}
-            className='gap-2 border-[#232428] text-[#fafafa] hover:bg-[#232428]'
+            className='gap-2 border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] hover:bg-[#F4F4F5] dark:hover:bg-[#232428]'
           >
             <MessageSquare className='h-4 w-4' />
             Chat
@@ -170,7 +175,7 @@ export default function SectionFooter({
                   disabled={isDisabled}
                   className={cn(
                     isDisabled ? 'opacity-50 cursor-not-allowed' : '',
-                    'w-full mb-2 bg-white/10 hover:bg-white/20 text-[#f7f7f7] ',
+                    'w-full mb-2 bg-blue-600 hover:bg-blue-700 text-white ',
                   )}
                 >
                   {isLastSection ? 'Finish' : customContinueLabel || 'Continue'}
@@ -178,7 +183,10 @@ export default function SectionFooter({
               </span>
             </TooltipTrigger>
             {isDisabled && (
-              <TooltipContent side='top' className='bg-[#141414] text-[#fafafa] border-[#232428]'>
+              <TooltipContent
+                side='top'
+                className='bg-white dark:bg-[#141414] text-[#3F3F46] dark:text-[#fafafa] border-[#E4E4E7] dark:border-[#232428]'
+              >
                 <p>{disabledTooltip}</p>
               </TooltipContent>
             )}

@@ -315,20 +315,22 @@ export default function RightSidebar({
   };
 
   return (
-    <div className='h-full bg-[#141414] border-l border-[#232428] flex flex-col'>
+    <div className='h-full bg-white dark:bg-[#141414] border-l border-[#E4E4E7] dark:border-[#232428] flex flex-col'>
       {/* Header */}
-      <div className='px-6 py-4 border-b border-[#232428] flex-shrink-0'>
+      <div className='px-6 py-4 border-b border-[#E4E4E7] dark:border-[#232428] flex-shrink-0'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-2.5'>
             <Sparkles className='w-4 h-4 text-[#8b5df8]' />
-            <h2 className='text-base font-medium text-[#fafafa] tracking-tight'>AI Assistant</h2>
+            <h2 className='text-base font-medium text-[#3F3F46] dark:text-[#fafafa] tracking-tight'>
+              AI Assistant
+            </h2>
             <TooltipProvider delayDuration={0}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant='ghost'
                     size='icon'
-                    className='h-8 w-8 text-[#8C8C8C] hover:text-[#fafafa] hover:bg-[#232428]'
+                    className='h-8 w-8 text-[#3F3F46]/60 dark:text-[#8C8C8C] hover:text-[#3F3F46] dark:hover:text-[#fafafa] hover:bg-[#F4F4F5] dark:hover:bg-[#232428]'
                     onClick={() => {
                       return setIsContextDialogOpen(true);
                     }}
@@ -336,7 +338,7 @@ export default function RightSidebar({
                     <FileText className='w-4 h-4' />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className='bg-[#141414] border-[#232428] text-[#fafafa]'>
+                <TooltipContent className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa]'>
                   <p className='text-xs'>View AI Context</p>
                 </TooltipContent>
               </Tooltip>
@@ -353,7 +355,7 @@ export default function RightSidebar({
               onClick={handleClear}
               variant='ghost'
               size='icon'
-              className='h-8 w-8 text-[#8C8C8C] hover:text-[#fafafa] hover:bg-[#232428]'
+              className='h-8 w-8 text-[#3F3F46]/60 dark:text-[#8C8C8C] hover:text-[#3F3F46] dark:hover:text-[#fafafa] hover:bg-[#F4F4F5] dark:hover:bg-[#232428]'
             >
               <svg
                 xmlns='http://www.w3.org/2000/svg'
@@ -385,7 +387,7 @@ export default function RightSidebar({
                 >
                   {message.role === 'assistant' ? (
                     <div className='space-y-3'>
-                      <div className='text-sm text-[#fafafa] leading-relaxed bg-[#232428] rounded-lg px-4 py-3'>
+                      <div className='text-sm text-[#3F3F46] dark:text-[#fafafa] leading-relaxed bg-[#F4F4F5] dark:bg-[#232428] rounded-lg px-4 py-3'>
                         <div className='flex items-start gap-2'>
                           <div className='flex-1 break-words overflow-wrap-anywhere'>
                             {message.content}
@@ -394,11 +396,11 @@ export default function RightSidebar({
                             <TooltipProvider delayDuration={0}>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <button className='text-[#8C8C8C] hover:text-[#fafafa] transition-colors'>
+                                  <button className='text-[#3F3F46]/60 dark:text-[#8C8C8C] hover:text-[#3F3F46] dark:hover:text-[#fafafa] transition-colors'>
                                     <Info className='w-4 h-4' />
                                   </button>
                                 </TooltipTrigger>
-                                <TooltipContent className='max-w-[300px] p-3 bg-[#141414] border-[#232428] text-[#fafafa]'>
+                                <TooltipContent className='max-w-[300px] p-3 bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa]'>
                                   <div className='space-y-2 text-xs'>
                                     {message.meta.confidence && (
                                       <div>
@@ -485,7 +487,7 @@ export default function RightSidebar({
                                             <LineItemCard item={item} onClick={handleAddItem} />
                                           </div>
                                         </TooltipTrigger>
-                                        <TooltipContent className='bg-[#141414] border-[#232428] text-[#fafafa] max-w-[300px]'>
+                                        <TooltipContent className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] max-w-[300px]'>
                                           <p className='text-xs'>{item.reasoning}</p>
                                         </TooltipContent>
                                       </Tooltip>
@@ -496,17 +498,21 @@ export default function RightSidebar({
                             )}
                             {data.type === 'INVOICE_CLIENT' && (
                               <div key={`client-${dataIndex}`} className='space-y-2 pl-2'>
-                                <div className='bg-[#232428] rounded-lg border border-[#232428] p-4 space-y-3'>
+                                <div className='bg-[#F4F4F5] dark:bg-[#232428] rounded-lg border border-[#E4E4E7] dark:border-[#232428] p-4 space-y-3'>
                                   <div className='space-y-1'>
-                                    <h4 className='font-medium text-[#fafafa]'>
+                                    <h4 className='font-medium text-[#3F3F46] dark:text-[#fafafa]'>
                                       {data.client.user}
                                     </h4>
-                                    <p className='text-sm text-[#8C8C8C]'>{data.client.contact}</p>
+                                    <p className='text-sm text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
+                                      {data.client.contact}
+                                    </p>
                                     {data.client.phone && (
-                                      <p className='text-sm text-[#8C8C8C]'>{data.client.phone}</p>
+                                      <p className='text-sm text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
+                                        {data.client.phone}
+                                      </p>
                                     )}
                                     {data.client.address && (
-                                      <p className='text-sm text-[#8C8C8C]'>
+                                      <p className='text-sm text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
                                         {data.client.address}
                                       </p>
                                     )}
@@ -515,7 +521,7 @@ export default function RightSidebar({
                                     <Button
                                       variant='outline'
                                       size='sm'
-                                      className='w-full border-[#232428] text-[#fafafa] hover:bg-[#232428]'
+                                      className='w-full border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] hover:bg-[#F4F4F5] dark:hover:bg-[#232428]'
                                       onClick={() => {
                                         // Handle adding client
                                         const clientData = {
@@ -554,14 +560,17 @@ export default function RightSidebar({
                                     </Button>
                                   </div>
                                   {data.suggestions && data.suggestions.length > 0 && (
-                                    <div className='mt-3 pt-3 border-t border-[#232428]'>
-                                      <h5 className='text-xs font-medium text-[#8C8C8C] mb-2'>
+                                    <div className='mt-3 pt-3 border-t border-[#E4E4E7] dark:border-[#232428]'>
+                                      <h5 className='text-xs font-medium text-[#3F3F46]/60 dark:text-[#8C8C8C] mb-2'>
                                         Suggestions
                                       </h5>
                                       <ul className='space-y-1'>
                                         {data.suggestions.map((suggestion, index) => {
                                           return (
-                                            <li key={index} className='text-xs text-[#8C8C8C]'>
+                                            <li
+                                              key={index}
+                                              className='text-xs text-[#3F3F46]/60 dark:text-[#8C8C8C]'
+                                            >
                                               • {suggestion}
                                             </li>
                                           );
@@ -577,7 +586,7 @@ export default function RightSidebar({
                       })}
                     </div>
                   ) : (
-                    <div className='rounded-lg px-4 py-3 bg-[#232428] text-[#fafafa] shadow-sm'>
+                    <div className='rounded-lg px-4 py-3 bg-[#F4F4F5] dark:bg-[#232428] text-[#3F3F46] dark:text-[#fafafa] shadow-sm'>
                       <p className='text-sm leading-relaxed break-words overflow-wrap-anywhere'>
                         {message.content}
                       </p>
@@ -624,7 +633,7 @@ export default function RightSidebar({
                           })}
                         </div>
                       )}
-                      <p className='text-xs text-[#8C8C8C] mt-1.5'>
+                      <p className='text-xs text-[#3F3F46]/60 dark:text-[#8C8C8C] mt-1.5'>
                         {message.timestamp.toLocaleTimeString([], {
                           hour: '2-digit',
                           minute: '2-digit',
@@ -641,7 +650,7 @@ export default function RightSidebar({
                 animate={{ opacity: 1, y: 0 }}
                 className='max-w-[85%]'
               >
-                <div className='text-sm text-[#fafafa] leading-relaxed bg-[#232428] rounded-lg px-4 py-3'>
+                <div className='text-sm text-[#3F3F46] dark:text-[#fafafa] leading-relaxed bg-[#F4F4F5] dark:bg-[#232428] rounded-lg px-4 py-3'>
                   <div className='flex items-center gap-2'>
                     <motion.div
                       animate={{
@@ -705,7 +714,7 @@ export default function RightSidebar({
                     />
                     <button
                       type='button'
-                      className='absolute -top-2 -right-2 w-4 h-4 flex items-center justify-center bg-[#232428] rounded-full text-[#fafafa] shadow-md hover:bg-[#2A2A2F] transition'
+                      className='absolute -top-2 -right-2 w-4 h-4 flex items-center justify-center bg-[#F4F4F5] dark:bg-[#232428] rounded-full text-[#3F3F46] dark:text-[#fafafa] shadow-md hover:bg-[#E4E4E7] dark:hover:bg-[#2A2A2F] transition'
                       onClick={() => {
                         return setImages(
                           images.filter((_, i) => {
@@ -754,7 +763,7 @@ export default function RightSidebar({
               onPaste={handlePaste}
               placeholder='Type your message...'
               disabled={chatMutation.isPending}
-              className='w-full px-4 py-3 text-sm border border-[#232428] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5df8]/20 focus:border-[#8b5df8] min-h-[72px] resize-none transition-colors duration-200 placeholder:text-[#8C8C8C] disabled:opacity-50 disabled:cursor-not-allowed bg-[#141414] text-[#fafafa]'
+              className='w-full px-4 py-3 text-sm border border-[#E4E4E7] dark:border-[#232428] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5df8]/20 focus:border-[#8b5df8] min-h-[72px] resize-none transition-colors duration-200 placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8C8C8C] disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-[#141414] text-[#3F3F46] dark:text-[#fafafa]'
             />
             <Button
               onClick={handleSend}
@@ -810,7 +819,7 @@ export default function RightSidebar({
 
       {/* Image Preview Modal */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className='flex items-center justify-center bg-[#141414] border-[#232428]'>
+        <DialogContent className='flex items-center justify-center bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428]'>
           <DialogTitle className='sr-only'>Preview</DialogTitle>
           {previewImage && (
             <div className='w-full h-full flex items-center justify-center relative'>
