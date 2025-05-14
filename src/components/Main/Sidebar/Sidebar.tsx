@@ -16,13 +16,39 @@ import { Moon, PencilIcon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import {
   RiFileListFill,
   RiMoneyDollarCircleFill,
   RiSettingsFill,
   RiUserFill,
 } from 'react-icons/ri';
+
+// Custom hook for media queries
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    // Prevent SSR issues
+    if (typeof window === 'undefined') return;
+
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+
+    const listener = () => {
+      return setMatches(media.matches);
+    };
+    media.addEventListener('change', listener);
+
+    return () => {
+      return media.removeEventListener('change', listener);
+    };
+  }, [matches, query]);
+
+  return matches;
+}
 
 // Create a context for the sidebar toggle function
 export const SidebarToggleContext = createContext<{
@@ -36,10 +62,18 @@ export const useSidebarToggle = () => {
 };
 
 export default function AppSidebar() {
-  const { state, toggleSidebar } = useSidebar();
+  const { state, toggleSidebar, setOpen } = useSidebar();
   const pathname = usePathname();
   const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
   const { theme, setTheme } = useTheme();
+  const isTablet = useMediaQuery('(max-width: 768px)');
+
+  // Close sidebar when screen size is tablet
+  useEffect(() => {
+    if (isTablet && state !== 'collapsed') {
+      setOpen(false);
+    }
+  }, [isTablet, state, setOpen]);
 
   const navigation = [
     {
