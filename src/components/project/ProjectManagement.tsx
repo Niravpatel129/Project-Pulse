@@ -13,6 +13,7 @@ import { InvoiceSettings, Item, Section } from './types';
 type ProjectManagementProps = {
   onClose: () => void;
   initialStatus?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  projectId?: string;
   existingInvoice?: {
     _id: string;
     client: {
@@ -51,12 +52,16 @@ type ProjectManagementProps = {
 export default function ProjectManagement({
   onClose,
   initialStatus = 'draft',
+  projectId,
   existingInvoice,
 }: ProjectManagementProps) {
   const [activeSection, setActiveSection] = useState<Section>('items');
   const [showRightSidebar, setShowRightSidebar] = useState(false);
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [selectedClient, setSelectedClient] = useState(existingInvoice?.client?._id || '');
+  const [internalProjectId] = useState(
+    projectId || existingInvoice?._id || Math.random().toString(36).substr(2, 9),
+  );
   const [items, setItems] = useState<Item[]>(
     existingInvoice?.items.map((item) => {
       return {
@@ -198,6 +203,7 @@ export default function ProjectManagement({
             setActiveSection={setActiveSection}
             handleRemoveItem={handleRemoveItem}
             projectCurrency={projectCurrency}
+            projectId={internalProjectId}
             onChatClick={() => {
               return setShowRightSidebar(!showRightSidebar);
             }}
