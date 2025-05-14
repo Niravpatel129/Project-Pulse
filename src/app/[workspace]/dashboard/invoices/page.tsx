@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { useIsMobile } from '@/hooks/use-mobile';
 import { newRequest } from '@/utils/newRequest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 interface InvoiceItem {
@@ -62,6 +63,9 @@ export default function InvoicesPage() {
   const [showPreview, setShowPreview] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | undefined>();
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const invoiceId = searchParams.get('inv');
 
   const {
     data: invoicesData,
@@ -75,22 +79,48 @@ export default function InvoicesPage() {
     },
   });
 
+  // Fetch specific invoice if ID is in URL
+  const { data: specificInvoice, isLoading: isLoadingSpecificInvoice } = useQuery({
+    queryKey: ['invoice', invoiceId],
+    queryFn: async () => {
+      if (!invoiceId) return null;
+      const response = await newRequest.get<{ status: string; data: Invoice }>(
+        `/invoices/${invoiceId}`,
+      );
+      return response.data.data;
+    },
+    enabled: !!invoiceId,
+  });
+
+  useEffect(() => {
+    if (specificInvoice) {
+      setSelectedInvoice(specificInvoice);
+      setShowPreview(true);
+    }
+  }, [specificInvoice]);
+
   const handlePreviewClick = (invoice: Invoice | null) => {
-    console.log('handlePreviewClick called with:', invoice);
     if (invoice) {
+      const params = new URLSearchParams(searchParams);
+      params.set('inv', invoice._id);
+      router.push(`?${params.toString()}`);
       setSelectedInvoice(invoice);
       setShowPreview(true);
     } else {
+      const params = new URLSearchParams(searchParams);
+      params.delete('inv');
+      router.push(`?${params.toString()}`);
       setSelectedInvoice(undefined);
       setShowPreview(false);
     }
   };
 
   const handleClosePreview = () => {
-    console.log('handleClosePreview called');
+    const params = new URLSearchParams(searchParams);
+    params.delete('inv');
+    router.push(`?${params.toString()}`);
     setShowPreview(false);
     setSelectedInvoice(undefined);
-    handlePreviewClick(null);
   };
 
   const handleInvoiceUpdate = async (invoiceId: string) => {
