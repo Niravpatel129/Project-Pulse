@@ -222,15 +222,7 @@ export default function InvoicePage() {
     return <InvoiceSkeleton localTheme={localTheme} />;
   }
 
-  const {
-    amount,
-    date,
-    method,
-    paymentNumber,
-    remainingBalance,
-    status,
-    invoice: invoiceData,
-  } = invoice;
+  const { amount, date, method, paymentNumber, status, invoice: invoiceData } = invoice;
 
   const handleDownload = async () => {
     try {
@@ -429,7 +421,7 @@ export default function InvoicePage() {
 
       {/* Main Content */}
       <div
-        className={`max-w-7xl mx-auto p-3 md:p-6 ${
+        className={`max-w-7xl mx-auto p-0 md:p-6 ${
           isMobileView ? 'max-w-md' : ''
         } print:p-0 print:max-w-none`}
       >
