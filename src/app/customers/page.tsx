@@ -298,14 +298,6 @@ export default function CustomersPage() {
             >
               Total Spent
             </div>
-            <div
-              className='col-span-2 cursor-pointer'
-              onClick={() => {
-                return handleSort('projects');
-              }}
-            >
-              Projects
-            </div>
           </div>
 
           {isLoadingClients ? (
@@ -359,9 +351,6 @@ export default function CustomersPage() {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       }) || '0.00'}
-                    </div>
-                    <div className='col-span-2 text-[#3F3F46] dark:text-white'>
-                      {client.projects || 0}
                     </div>
                   </div>
                 );
