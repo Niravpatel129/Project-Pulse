@@ -112,7 +112,7 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
 
   return (
     <div
-      className={`${isDarkTheme ? 'bg-background' : 'bg-white'} rounded-lg border ${
+      className={`${isDarkTheme ? 'bg-[#141414]' : 'bg-white'} rounded-lg border ${
         isDarkTheme ? 'border-[#232428]' : 'border-gray-200'
       } shadow-sm invoice-paper relative mx-auto`}
       style={{
