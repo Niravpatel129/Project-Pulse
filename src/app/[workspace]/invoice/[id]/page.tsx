@@ -387,8 +387,10 @@ export default function InvoicePage() {
     if (typeof window === 'undefined') return null;
 
     try {
-      const stripeKey =
-        'pk_live_51RC3v3AShnUAruhwfThWbkHXdQmj1Swuf2W6pNrvLanujLClvv2upNwZYR1Yr0MspTeadOXa5rxKa8VtORdNgIgi00Etd76FLo';
+      const isDevEnv = process.env.NODE_ENV === 'development';
+      const stripeKey = isDevEnv
+        ? 'pk_test_51RC3v8PRz7XrHwdQr1BXDOGT61TqgFP3gXTfzE0PCKClY4cOalNNddHl8NDwKlEogwjHSGIGBqRDiTEaeV1qoZxF005ZGgv6Cn'
+        : 'pk_live_51RC3v3AShnUAruhwfThWbkHXdQmj1Swuf2W6pNrvLanujLClvv2upNwZYR1Yr0MspTeadOXa5rxKa8VtORdNgIgi00Etd76FLo';
       if (!stripeKey) {
         throw new Error('Stripe publishable key is not defined');
       }

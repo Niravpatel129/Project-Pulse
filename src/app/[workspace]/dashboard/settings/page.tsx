@@ -421,13 +421,7 @@ export default function SettingsPage() {
                 <Users className='mr-2 h-4 w-4' />
                 Team
               </TabsTrigger>
-              <TabsTrigger
-                value='billing'
-                className='data-[state=active]:bg-black data-[state=active]:text-white'
-              >
-                <CreditCard className='mr-2 h-4 w-4' />
-                Billing
-              </TabsTrigger>
+
               <TabsTrigger
                 value='integrations'
                 className='data-[state=active]:bg-black data-[state=active]:text-white'
