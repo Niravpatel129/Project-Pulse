@@ -27,7 +27,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Copy, Hash, Loader2, Plus, Scissors, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import SectionFooter from './SectionFooter';
 import type { ExtendedItem, Item, Section } from './types';
@@ -236,6 +236,21 @@ export default function ItemsSection({
     }, 300);
   };
 
+  // Add a useEffect to update the item's tax rate when the selectedTaxRateId changes
+  useEffect(() => {
+    const selectedRate = taxRates.find((tax) => {
+      return tax.id === selectedTaxRateId;
+    });
+    if (selectedRate) {
+      setNewItem((prev) => {
+        return {
+          ...prev,
+          taxRate: selectedRate.rate,
+        };
+      });
+    }
+  }, [selectedTaxRateId, taxRates]);
+
   // New helper function to reset form state
   const resetFormState = () => {
     setEditingItem(null);
@@ -309,12 +324,7 @@ export default function ItemsSection({
   // Function to set the tax rate in the new item from selected tax rate ID
   const updateItemTaxRate = (taxRateId: string) => {
     setSelectedTaxRateId(taxRateId);
-    const selectedRate = taxRates.find((tax) => {
-      return tax.id === taxRateId;
-    });
-    if (selectedRate) {
-      setNewItem({ ...newItem, taxRate: selectedRate.rate });
-    }
+    // The useEffect will handle updating the tax rate in newItem
   };
 
   // Add this utility function near the other utility functions
@@ -396,33 +406,30 @@ export default function ItemsSection({
                         }
                         setCurrentNewItemMode('manual');
 
-                        // Get the currently selected tax rate
-                        const selectedTax = taxRates.find((tax) => {
-                          return tax.id === selectedTaxRateId;
+                        // Get the standard tax rate (or the first one if not found)
+                        const standardTax =
+                          taxRates.find((tax) => {
+                            return tax.id === 'standard';
+                          }) || taxRates[0];
+                        setSelectedTaxRateId(standardTax ? standardTax.id : 'standard');
+
+                        // Initialize the newItem's taxRate with the selected tax rate
+                        setNewItem((prev) => {
+                          return {
+                            ...prev,
+                            taxRate: standardTax ? standardTax.rate : 0,
+                          };
                         });
-                        if (selectedTax) {
-                          setNewItem((prev) => {
-                            return {
-                              ...prev,
-                              taxRate: selectedTax.rate,
-                            };
-                          });
-                        }
 
                         setTimeout(() => {
                           return nameInputRef.current?.focus();
                         }, 10);
                       }}
-                      className={cn(
-                        'flex items-center justify-center transition-all duration-300 h-11',
-                        currentNewItemMode === 'manual'
-                          ? 'bg-blue-600 text-white hover:bg-blue-700 hover:text-white shadow-md border-0'
-                          : 'hover:bg-[#F4F4F5] dark:hover:bg-[#232428] border-2 border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa]',
-                      )}
-                      variant='outline'
+                      className='bg-[#F4F4F5] dark:bg-[#232428] hover:bg-[#E4E4E7] dark:hover:bg-[#2A2A2F] text-[#3F3F46] dark:text-[#fafafa] text-xs py-1 px-3 rounded-full h-auto transition-colors duration-200'
+                      variant='ghost'
                     >
-                      <Plus size={18} className='mr-2' />
-                      <span className='font-medium'>Add Item</span>
+                      <Plus size={14} className='mr-1' />
+                      Add Item
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa]'>
