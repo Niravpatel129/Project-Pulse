@@ -1,14 +1,6 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -30,14 +22,8 @@ import { Copy, Hash, Loader2, Plus, Scissors, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import SectionFooter from './SectionFooter';
+import TaxRateDialog, { TaxRate } from './TaxRateDialog';
 import type { ExtendedItem, Item, Section } from './types';
-
-// Define a TaxRate type
-type TaxRate = {
-  id: string;
-  name: string;
-  rate: number;
-};
 
 type ItemWithType = Item & { type?: string };
 
@@ -94,16 +80,11 @@ export default function ItemsSection({
   ]);
   const [selectedTaxRateId, setSelectedTaxRateId] = useState<string>('standard');
   const [isNewTaxRateDialogOpen, setIsNewTaxRateDialogOpen] = useState(false);
-  const [newTaxRate, setNewTaxRate] = useState<{ name: string; rate: number }>({
-    name: '',
-    rate: 0,
-  });
   const [addAnother, setAddAnother] = useState(false);
   const [removedItems, setRemovedItems] = useState<Item[]>([]);
   const [showRemovedItems, setShowRemovedItems] = useState(false);
 
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const newTaxNameInputRef = useRef<HTMLInputElement>(null);
 
   const handleEditItem = (item: ExtendedItem) => {
     setEditingItem(item);
@@ -298,27 +279,6 @@ export default function ItemsSection({
       default:
         return currency;
     }
-  };
-
-  // Function to add a new tax rate
-  const handleAddTaxRate = () => {
-    if (!newTaxRate.name.trim()) {
-      showNotification('Tax rate name is required', 'error');
-      return;
-    }
-
-    const taxRateId = `tax-${Date.now()}`;
-    const newTaxRateObj: TaxRate = {
-      id: taxRateId,
-      name: newTaxRate.name.trim(),
-      rate: newTaxRate.rate,
-    };
-
-    setTaxRates([...taxRates, newTaxRateObj]);
-    setSelectedTaxRateId(taxRateId);
-    setNewTaxRate({ name: '', rate: 0 });
-    setIsNewTaxRateDialogOpen(false);
-    showNotification(`Tax rate "${newTaxRate.name}" added successfully`);
   };
 
   // Function to set the tax rate in the new item from selected tax rate ID
@@ -904,93 +864,15 @@ export default function ItemsSection({
         </div>
       </div>
 
-      {/* Tax Rate Dialog */}
-      <Dialog open={isNewTaxRateDialogOpen} onOpenChange={setIsNewTaxRateDialogOpen}>
-        <DialogContent className='sm:max-w-[425px] bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428]'>
-          <DialogHeader>
-            <DialogTitle className='flex items-center text-lg font-semibold text-[#3F3F46] dark:text-[#fafafa]'>
-              <div className='mr-2 p-1.5 bg-[#F4F4F5] dark:bg-[#232428] rounded-full'>
-                <Plus size={18} className='text-[#8b5df8]' />
-              </div>
-              New Tax Rate
-            </DialogTitle>
-            <DialogDescription className='text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
-              Create a new tax rate to apply to your items.
-            </DialogDescription>
-          </DialogHeader>
-          <div className='grid gap-5 py-4'>
-            <div className='space-y-2'>
-              <Label
-                htmlFor='tax-name'
-                className='text-sm font-medium text-[#3F3F46] dark:text-[#fafafa]'
-              >
-                Tax Name
-              </Label>
-              <Input
-                id='tax-name'
-                ref={newTaxNameInputRef}
-                value={newTaxRate.name}
-                onChange={(e) => {
-                  return setNewTaxRate({ ...newTaxRate, name: e.target.value });
-                }}
-                className='w-full bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8C8C8C]'
-                placeholder='e.g. GST, VAT, Sales Tax'
-                autoFocus
-              />
-              <p className='text-xs text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
-                Enter a descriptive name for this tax rate
-              </p>
-            </div>
-            <div className='space-y-2'>
-              <Label
-                htmlFor='tax-percentage'
-                className='text-sm font-medium text-[#3F3F46] dark:text-[#fafafa]'
-              >
-                Rate (%)
-              </Label>
-              <Input
-                id='tax-percentage'
-                type='number'
-                min='0'
-                max='100'
-                step='0.1'
-                value={newTaxRate.rate}
-                onChange={(e) => {
-                  return setNewTaxRate({ ...newTaxRate, rate: parseFloat(e.target.value) });
-                }}
-                className='w-full bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] placeholder:text-[#3F3F46]/60 dark:placeholder:text-[#8C8C8C]'
-                placeholder='e.g. 7.5'
-              />
-              <p className='text-xs text-[#3F3F46]/60 dark:text-[#8C8C8C]'>
-                Enter the percentage rate without the % symbol
-              </p>
-            </div>
-          </div>
-          <DialogFooter className='flex space-x-2 justify-end'>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={() => {
-                return setIsNewTaxRateDialogOpen(false);
-              }}
-              className='border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] hover:bg-[#F4F4F5] dark:hover:bg-[#232428]'
-            >
-              Cancel
-            </Button>
-            <Button
-              type='button'
-              onClick={() => {
-                handleAddTaxRate();
-                setIsNewTaxRateDialogOpen(false);
-              }}
-              className='bg-[#8b5df8] hover:bg-[#7c3aed] text-white'
-            >
-              <Plus size={16} className='mr-2' />
-              Add Tax Rate
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Tax Rate Dialog - Replace with the new component */}
+      <TaxRateDialog
+        isOpen={isNewTaxRateDialogOpen}
+        onOpenChange={setIsNewTaxRateDialogOpen}
+        taxRates={taxRates}
+        onTaxRatesChange={setTaxRates}
+        selectedTaxRateId={selectedTaxRateId}
+        onSelectTaxRate={updateItemTaxRate}
+      />
 
       {/* Footer */}
       <SectionFooter
