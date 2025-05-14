@@ -26,8 +26,8 @@ const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
     case 'paid':
       return 'bg-green-500/10 text-green-500';
-    case 'open':
-      return 'bg-gray-300/10 text-gray-300';
+    case 'draft':
+      return 'bg-gray-500/10 text-gray-500';
     case 'overdue':
       return 'bg-red-500/10 text-red-500';
     case 'overpaid':
@@ -37,6 +37,8 @@ const getStatusColor = (status: string) => {
     case 'sent':
     case 'pending':
       return 'bg-yellow-500/10 text-yellow-500';
+    case 'open':
+      return 'bg-purple-500/10 text-purple-500';
     default:
       return 'bg-gray-500/10 text-gray-500';
   }
