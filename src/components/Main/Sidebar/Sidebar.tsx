@@ -67,6 +67,12 @@ export default function AppSidebar() {
   const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const isTablet = useMediaQuery('(max-width: 768px)');
+  const [mounted, setMounted] = useState(false);
+
+  // Set mounted state after hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close sidebar when screen size is tablet
   useEffect(() => {
@@ -74,6 +80,11 @@ export default function AppSidebar() {
       setOpen(false);
     }
   }, [isTablet, state, setOpen]);
+
+  // Return null during server-side rendering or before mounting
+  if (!mounted) {
+    return null;
+  }
 
   const navigation = [
     {
