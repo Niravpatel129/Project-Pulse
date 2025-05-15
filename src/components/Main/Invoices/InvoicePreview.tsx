@@ -182,9 +182,16 @@ export default function InvoicePreview({
       const response = await newRequest.get<{ status: string; data: Invoice }>(
         `/invoices/${invoiceId}`,
       );
-      return response.data;
+
+      return response.data.data;
     },
     enabled: !!invoiceId && !selectedInvoice,
+    placeholderData: (previousData) => {
+      return previousData;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
   });
 
   const {
@@ -202,9 +209,15 @@ export default function InvoicePreview({
       };
     },
     enabled: !!(invoiceId || selectedInvoice?._id),
+    placeholderData: (previousData) => {
+      return previousData;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
   });
 
-  const invoice = selectedInvoice || response?.data;
+  const invoice = selectedInvoice || response;
   const payments = paymentData?.paymentHistory || [];
 
   const deletePaymentMutation = useMutation({
@@ -283,14 +296,23 @@ export default function InvoicePreview({
   const handleSendDialogClose = async (open: boolean) => {
     setIsSendDialogOpen(open);
     if (!open && invoiceId && onInvoiceUpdate) {
-      // Invalidate local queries first
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] }),
-        queryClient.invalidateQueries({ queryKey: ['invoice-payments', invoiceId] }),
-      ]);
+      // Set a short timeout to ensure UI doesn't flicker
+      setTimeout(async () => {
+        // Invalidate queries but don't refetch immediately
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: ['invoice', invoiceId],
+            refetchType: 'none', // Don't trigger a refetch immediately
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ['invoice-payments', invoiceId],
+            refetchType: 'none', // Don't trigger a refetch immediately
+          }),
+        ]);
 
-      // Update the invoice in the parent component
-      await onInvoiceUpdate(invoiceId);
+        // Update the invoice in the parent component
+        await onInvoiceUpdate(invoiceId);
+      }, 50);
     }
   };
 
@@ -649,6 +671,8 @@ export default function InvoicePreview({
     );
   }
 
+  console.log('🚀 invoice.status:', invoice?.status);
+
   if (!invoice) {
     return null;
   }
@@ -867,7 +891,8 @@ export default function InvoicePreview({
                     className='bg-card border-border text-foreground text-sm h-11 w-full sm:w-auto px-6'
                     onClick={handleSendInvoice}
                   >
-                    {invoice.status === 'sent' || invoice.status === 'paid'
+                    {invoice &&
+                    (invoice.status === 'sent' || invoice.status === 'paid' || invoice.dateSent)
                       ? 'Resend invoice'
                       : 'Send invoice'}
                   </Button>

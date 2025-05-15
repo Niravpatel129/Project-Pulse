@@ -21,6 +21,12 @@ export default function InvoicePage() {
       const response = await newRequest.get(`/invoices/${invoiceId}/public`);
       return response.data.data;
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    placeholderData: (previousData) => {
+      return previousData;
+    }, // Use previous data as placeholder during refetch
   });
 
   const {
