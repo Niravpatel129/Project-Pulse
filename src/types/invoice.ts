@@ -50,7 +50,7 @@ interface InvoiceItem {
   _id: string;
 }
 
-export interface Invoice {
+interface Invoice {
   _id: string;
   invoiceNumber: string;
   client: {
