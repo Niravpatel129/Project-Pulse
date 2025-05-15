@@ -169,9 +169,7 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
               {invoiceSettings?.businessAddress}
             </div>
             {invoiceSettings?.showTaxId && invoiceSettings?.taxId && (
-              <div className='text-sm mt-1 text-muted-foreground'>
-                Tax ID: {invoiceSettings.taxId}
-              </div>
+              <div className='text-sm mt-1 text-muted-foreground'>{invoiceSettings.taxId}</div>
             )}
           </div>
         </div>
@@ -210,9 +208,7 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
                     )}
                     {invoice?.client?.phone && <p className='mt-1'>{invoice?.client?.phone}</p>}
                     {invoice?.client?.user?.email && <p>{invoice?.client?.user?.email}</p>}
-                    {invoice?.client?.taxId && (
-                      <p className='mt-1'>Tax ID: {invoice?.client?.taxId}</p>
-                    )}
+                    {invoice?.client?.taxId && <p className='mt-1'>{invoice?.client?.taxId}</p>}
                   </>
                 )}
               </div>

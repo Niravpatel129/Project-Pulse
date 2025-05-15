@@ -165,9 +165,7 @@ export function Invoice({ invoice, paymentUrl }: InvoiceProps) {
                     )}
                     {invoice?.client?.phone && <p className='mt-1'>{invoice?.client?.phone}</p>}
                     {invoice?.client?.email && <p>{invoice?.client?.email}</p>}
-                    {invoice?.client?.taxId && (
-                      <p className='mt-1'>Tax ID: {invoice?.client?.taxId}</p>
-                    )}
+                    {invoice?.client?.taxId && <p className='mt-1'>{invoice?.client?.taxId}</p>}
                   </>
                 )}
               </div>

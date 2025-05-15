@@ -464,7 +464,7 @@ export default function InvoicePage() {
                 </p>
                 {invoiceSettings?.showTaxId && invoiceSettings?.taxId && (
                   <p className={`mt-1 ${isMobileView ? 'text-xs' : 'text-base'}`}>
-                    Tax ID: {invoiceSettings.taxId}
+                    {invoiceSettings.taxId}
                   </p>
                 )}
               </div>
@@ -532,7 +532,7 @@ export default function InvoicePage() {
                     isMobileView ? 'text-xs' : 'text-base'
                   }`}
                 >
-                  Tax ID: {invoiceData.client.taxId}
+                  {invoiceData.client.taxId}
                 </p>
               )}
               {invoiceData.client.user.email && (

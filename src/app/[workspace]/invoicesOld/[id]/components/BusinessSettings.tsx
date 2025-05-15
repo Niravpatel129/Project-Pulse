@@ -13,7 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useInvoiceSettings } from '@/hooks/useInvoiceSettings';
 import { useUpdateInvoiceSettings } from '@/hooks/useUpdateInvoiceSettings';
-import { X } from 'lucide-react';
+import { UploadCloud, X } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 
@@ -91,6 +91,7 @@ export function BusinessSettings({ open, onOpenChange }: BusinessSettingsProps) 
             <Label>Company Name</Label>
             <Input
               value={businessName}
+              className='w-full text-black dark:text-white'
               onChange={(e) => {
                 return setBusinessName(e.target.value);
               }}
@@ -116,6 +117,7 @@ export function BusinessSettings({ open, onOpenChange }: BusinessSettingsProps) 
                 onChange={(e) => {
                   return setTaxId(e.target.value);
                 }}
+                className='w-full text-black dark:text-white'
                 placeholder='Enter your tax ID'
               />
               <div className='flex items-center gap-2'>
@@ -164,30 +166,16 @@ export function BusinessSettings({ open, onOpenChange }: BusinessSettingsProps) 
                       onClick={() => {
                         return fileInputRef.current?.click();
                       }}
-                      className='h-8 w-8 bg-black/90 hover:bg-black'
+                      className='h-8 w-8 bg-black/90 hover:bg-black text-white hover:text-white dark:text-white dark:hover:text-white'
                     >
-                      <svg
-                        xmlns='http://www.w3.org/2000/svg'
-                        width='16'
-                        height='16'
-                        viewBox='0 0 24 24'
-                        fill='none'
-                        stroke='currentColor'
-                        strokeWidth='2'
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                      >
-                        <path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' />
-                        <polyline points='17 8 12 3 7 8' />
-                        <line x1='12' y1='3' x2='12' y2='15' />
-                      </svg>
+                      <UploadCloud />
                     </Button>
                     <Button
                       type='button'
                       variant='ghost'
                       size='icon'
                       onClick={handleRemoveLogo}
-                      className='h-8 w-8 bg-black/90 hover:bg-black'
+                      className='h-8 w-8 bg-black/90 hover:bg-black text-white hover:text-white dark:text-white dark:hover:text-white'
                     >
                       <X className='h-4 w-4' />
                     </Button>
