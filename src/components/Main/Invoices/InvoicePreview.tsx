@@ -822,7 +822,7 @@ export default function InvoicePreview({
         {/* Timeline Section */}
         <div className='py-6 space-y-6 px-5'>
           {/* Timeline */}
-          <div className='bg-card dark:bg-[#141414] rounded-lg border border-border p-6'>
+          <div className='bg-card dark:bg-[#141414] bg-[#fafafa] rounded-lg border border-border p-6'>
             <div className='flex flex-col space-y-6'>
               {/* Create */}
               <div className='flex flex-col sm:flex-row sm:items-center gap-4'>
@@ -1056,7 +1056,7 @@ export default function InvoicePreview({
             </div>
           </div>
           {/* Additional Info Panel */}
-          <div className='bg-card dark:bg-[#141414] rounded-lg border border-border p-6'>
+          <div className='bg-card dark:bg-[#141414] bg-[#fafafa] rounded-lg border border-border p-6'>
             <h3 className='text-[14px] font-semibold text-foreground mb-5'>
               Additional Information
             </h3>
@@ -1080,19 +1080,19 @@ export default function InvoicePreview({
             </div>
           </div>
 
-          <div className='flex items-center justify-between mb-5'>
-            <h3 className='text-[14px] font-semibold text-foreground'>Invoice</h3>
-            <Button
-              variant='outline'
-              size='sm'
-              className='bg-card border-border text-foreground text-sm h-8 px-4'
-              onClick={handleDownloadPDF}
-            >
-              <Download className='w-4 h-4 mr-2' />
-              Download PDF
-            </Button>
-          </div>
-          <div className='w-full overflow-auto flex justify-center'>
+          <div className='w-full overflow-auto flex flex-col justify-center bg-[#fafafa] dark:bg-[#141414] p-4 border border-border rounded-lg !mt-3'>
+            <div className='flex items-center justify-between mb-4'>
+              <h3 className='text-[14px] font-semibold text-foreground'>Invoice</h3>
+              <Button
+                variant='outline'
+                size='sm'
+                className='bg-card border-border text-foreground text-sm h-8 px-4'
+                onClick={handleDownloadPDF}
+              >
+                <Download className='w-4 h-4 mr-2' />
+                Download PDF
+              </Button>
+            </div>
             <div ref={invoiceRef}>{invoice && <InvoicePdf invoice={invoice as any} />}</div>
           </div>
         </div>
