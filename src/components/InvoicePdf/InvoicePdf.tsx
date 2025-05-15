@@ -94,6 +94,10 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
   const [isHovering, setIsHovering] = useState(false);
   const [isBusinessSettingsOpen, setIsBusinessSettingsOpen] = useState(false);
 
+  if (!invoice || !invoice?.items) {
+    return null;
+  }
+
   return (
     <div
       className='bg-background rounded-lg border border-border shadow-sm invoice-paper relative mx-auto'
@@ -236,7 +240,7 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
             <div className='bg-muted rounded-lg px-3 py-2 inline-flex items-center font-semibold text-muted-foreground'>
               <span>Amount Due:</span>
               <span className='ml-2 text-lg text-foreground'>
-                {remainingBalance.toLocaleString(undefined, {
+                {remainingBalance?.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}{' '}
@@ -255,14 +259,14 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
               <th className='py-3 px-4 text-left font-semibold'>Items</th>
               <th className='py-3 px-4 text-center font-semibold'>Quantity</th>
               <th className='py-3 px-4 text-right font-semibold'>Price</th>
-              {invoice.items.some((item) => {
+              {invoice?.items?.some((item) => {
                 return item.discount > 0;
               }) && <th className='py-3 px-4 text-right font-semibold'>Discount</th>}
               <th className='py-3 px-4 text-right font-semibold'>Total</th>
             </tr>
           </thead>
           <tbody>
-            {invoice.items.map((item) => {
+            {invoice?.items?.map((item) => {
               // Calculate discounted amount first
               const subtotal = item.price * item.quantity;
               const discountAmount = (subtotal * (item.discount || 0)) / 100;

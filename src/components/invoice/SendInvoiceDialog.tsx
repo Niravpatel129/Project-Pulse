@@ -178,48 +178,6 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
   const isPaid = invoice.status === 'paid';
   const invoiceRef = useRef<HTMLDivElement>(null);
 
-  const handleDownloadPDF = async () => {
-    if (typeof window === 'undefined') return;
-    if (!invoiceRef.current) return;
-
-    try {
-      // Dynamically import html2pdf only on the client side
-      const html2pdf = (await import('html2pdf.js')).default;
-
-      const element = invoiceRef.current;
-      const opt = {
-        margin: 0,
-        filename: `invoice-${invoice.invoiceNumber}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          letterRendering: true,
-        },
-        jsPDF: {
-          unit: 'in',
-          format: 'letter',
-          orientation: 'portrait',
-          compress: true,
-        },
-      };
-
-      // Clone the element to avoid modifying the original
-      const clonedElement = element.cloneNode(true) as HTMLElement;
-      // Remove any transform/scale styles that might affect the PDF
-      clonedElement.style.transform = 'none';
-      clonedElement.style.margin = '0';
-      clonedElement.style.padding = '0';
-
-      await html2pdf().set(opt).from(clonedElement).save();
-      toast.success('PDF downloaded successfully');
-    } catch (error) {
-      toast.error('Failed to download PDF');
-      console.error('PDF download error:', error);
-    }
-  };
-
   const markAsSentMutation = useMutation({
     mutationFn: async () => {
       await newRequest.put(`/invoices/${invoice._id}`, { status: 'sent' });
@@ -233,6 +191,10 @@ export function SendInvoiceDialog({ open, onOpenChange, invoice }: SendInvoiceDi
       toast.error(error.message || 'Failed to mark invoice as sent');
     },
   });
+
+  if (!invoice || !invoice?.items) {
+    return null;
+  }
 
   return (
     <Dialog

@@ -334,7 +334,7 @@ export default function InvoicePreview({
           }
         : null,
       status: invoice.status,
-      items: invoice.items.map((item) => {
+      items: invoice.items?.map((item) => {
         return {
           _id: item._id,
           name: item.name,
@@ -399,7 +399,7 @@ export default function InvoicePreview({
           email: invoice.client?.user.email || '',
         },
       },
-      items: invoice.items.map((item) => {
+      items: invoice.items?.map((item) => {
         return {
           name: item.name,
           description: item.description || item.name,
@@ -415,26 +415,26 @@ export default function InvoicePreview({
       notes: invoice.notes || '',
       currency: invoice.currency,
       taxRate:
-        invoice.items.reduce((sum, item) => {
+        invoice.items?.reduce((sum, item) => {
           return sum + (item.tax || 0);
-        }, 0) / (invoice.items.length || 1),
+        }, 0) / (invoice.items?.length || 1),
       taxId: invoiceSettings?.taxId || '',
       showTaxId: invoiceSettings?.showTaxId || false,
       requireDeposit: invoice.requireDeposit,
       depositPercentage: invoice.depositPercentage,
       discount:
-        invoice.items.length > 0
-          ? invoice.items.reduce((sum, item) => {
+        invoice.items?.length > 0
+          ? invoice.items?.reduce((sum, item) => {
               return sum + (item.discount || 0);
-            }, 0) / invoice.items.length
+            }, 0) / invoice.items?.length
           : 0,
-      discountAmount: invoice.items.reduce((sum, item) => {
+      discountAmount: invoice.items?.reduce((sum, item) => {
         return sum + item.price * item.quantity * ((item.discount || 0) / 100);
       }, 0),
-      subtotal: invoice.items.reduce((sum, item) => {
+      subtotal: invoice.items?.reduce((sum, item) => {
         return sum + item.price * item.quantity;
       }, 0),
-      taxAmount: invoice.items.reduce((sum, item) => {
+      taxAmount: invoice.items?.reduce((sum, item) => {
         return sum + item.price * item.quantity * ((item.tax || 0) / 100);
       }, 0),
       teamNotes: '',
@@ -703,7 +703,7 @@ export default function InvoicePreview({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span className='text-[14px] font-bold text-foreground cursor-help'>
-                      {invoice.total.toLocaleString(undefined, {
+                      {invoice?.total?.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}{' '}
@@ -716,7 +716,7 @@ export default function InvoicePreview({
                         <span className='text-muted-foreground text-xs'>Subtotal</span>
                         <span className='text-foreground text-xs font-medium'>
                           {invoice.items
-                            .reduce((sum, item) => {
+                            ?.reduce((sum, item) => {
                               return sum + item.price * item.quantity;
                             }, 0)
                             .toLocaleString(undefined, {
@@ -730,7 +730,7 @@ export default function InvoicePreview({
                         <span className='text-muted-foreground text-xs'>Tax</span>
                         <span className='text-foreground text-xs font-medium'>
                           {invoice.items
-                            .reduce((sum, item) => {
+                            ?.reduce((sum, item) => {
                               return sum + item.price * item.quantity * ((item.tax || 0) / 100);
                             }, 0)
                             .toLocaleString(undefined, {
@@ -745,7 +745,7 @@ export default function InvoicePreview({
                         <span className='text-[#8b5df8] text-xs font-medium'>
                           -
                           {invoice.items
-                            .reduce((sum, item) => {
+                            ?.reduce((sum, item) => {
                               return (
                                 sum + item.price * item.quantity * ((item.discount || 0) / 100)
                               );
@@ -760,7 +760,7 @@ export default function InvoicePreview({
                       <div className='pt-1 border-t border-border flex justify-between items-center'>
                         <span className='text-foreground text-xs font-medium'>Total</span>
                         <span className='text-foreground text-xs font-bold'>
-                          {invoice.total.toLocaleString(undefined, {
+                          {invoice?.total?.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}{' '}
@@ -897,7 +897,7 @@ export default function InvoicePreview({
                       Amount due:{' '}
                       {(
                         invoice.total -
-                        payments.reduce((sum, payment) => {
+                        payments?.reduce((sum, payment) => {
                           return sum + payment.amount;
                         }, 0)
                       ).toLocaleString(undefined, {
@@ -1070,7 +1070,7 @@ export default function InvoicePreview({
               style={{ transform: 'scale(0.8)', transformOrigin: 'top center' }}
               ref={invoiceRef}
             >
-              <InvoicePdf invoice={invoice as any} />
+              {invoice && <InvoicePdf invoice={invoice as any} />}
             </div>
           </div>
         </div>
