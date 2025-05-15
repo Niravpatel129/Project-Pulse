@@ -141,7 +141,7 @@ export default function SectionFooter({
           <Button
             variant='outline'
             onClick={onCancel}
-            className='border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] hover:bg-[#F4F4F5] dark:hover:bg-[#232428]'
+            className='hidden md:block border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa] hover:bg-[#F4F4F5] dark:hover:bg-[#232428]'
           >
             Cancel
           </Button>
