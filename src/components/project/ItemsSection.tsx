@@ -15,7 +15,6 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { getTaxRates } from '@/lib/api/tax-rates';
 import { cn } from '@/lib/utils';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -450,52 +449,44 @@ export default function ItemsSection({
             Add items to your project. Include name, description, and price for each item.
           </p>
 
-          {/* Action Buttons */}
+          {/* Action Buttons - simplified without tooltips */}
           {items.length > 0 && (
             <div className='flex space-x-3 mb-6'>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      onClick={() => {
-                        if (currentNewItemMode === 'manual') {
-                          return setCurrentNewItemMode('');
-                        }
-                        setCurrentNewItemMode('manual');
+              <Button
+                onClick={() => {
+                  if (currentNewItemMode === 'manual') {
+                    return setCurrentNewItemMode('');
+                  }
+                  setCurrentNewItemMode('manual');
 
-                        // Get the standard tax rate (or the first one if not found)
-                        const standardTax =
-                          taxRates.find((tax) => {
-                            return tax.id === 'standard';
-                          }) || taxRates[0];
-                        setSelectedTaxRateId(standardTax ? standardTax.id : 'standard');
+                  // Get the standard tax rate (or the first one if not found)
+                  const standardTax =
+                    taxRates.find((tax) => {
+                      return tax.id === 'standard';
+                    }) || taxRates[0];
+                  setSelectedTaxRateId(standardTax ? standardTax.id : 'standard');
 
-                        // Initialize the newItem's taxRate with the selected tax rate
-                        setNewItem((prev) => {
-                          return {
-                            ...prev,
-                            taxRate: standardTax ? standardTax.rate : 0,
-                          };
-                        });
+                  // Initialize the newItem's taxRate with the selected tax rate
+                  setNewItem((prev) => {
+                    return {
+                      ...prev,
+                      taxRate: standardTax ? standardTax.rate : 0,
+                    };
+                  });
 
-                        setTimeout(() => {
-                          return nameInputRef.current?.focus();
-                        }, 10);
-                      }}
-                      className='bg-[#F4F4F5] dark:bg-[#232428] hover:bg-[#E4E4E7] dark:hover:bg-[#2A2A2F] text-[#3F3F46] dark:text-[#fafafa] text-xs py-1 px-3 rounded-full h-auto transition-colors duration-200'
-                      variant='ghost'
-                    >
-                      <Plus size={14} className='mr-1' />
-                      Add Item
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa]'>
-                    <p>Create a new item with a name, description, and price</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  setTimeout(() => {
+                    return nameInputRef.current?.focus();
+                  }, 10);
+                }}
+                className='bg-[#F4F4F5] dark:bg-[#232428] hover:bg-[#E4E4E7] dark:hover:bg-[#2A2A2F] text-[#3F3F46] dark:text-[#fafafa] text-xs py-1 px-3 rounded-full h-auto transition-colors duration-200'
+                variant='ghost'
+              >
+                <Plus size={14} className='mr-1' />
+                Add Item
+              </Button>
             </div>
           )}
+
           {/* Form Container - Removing fixed height to prevent excess whitespace */}
           <div
             className={cn(
@@ -846,51 +837,27 @@ export default function ItemsSection({
                     key={item.id}
                     className='border border-[#E4E4E7] dark:border-[#232428] rounded-xl p-4 transition-all duration-200 ease-in-out hover:border-[#D1D1D6] dark:hover:border-[#2A2A2F] group bg-white dark:bg-[#141414] shadow-sm hover:shadow-md hover:translate-y-[-1px] relative'
                   >
-                    {/* Action buttons */}
+                    {/* Action buttons - simplified without tooltips */}
                     <div className='absolute top-2 right-2 flex space-x-1'>
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={() => {
-                                return handleDuplicateItem(item);
-                              }}
-                              className='p-1.5 rounded-full bg-[#F4F4F5] dark:bg-[#232428] text-[#3F3F46]/60 dark:text-[#8C8C8C] hover:bg-[#E4E4E7] dark:hover:bg-[#2A2A2F] hover:text-[#3F3F46] dark:hover:text-[#fafafa] opacity-0 group-hover:opacity-100 transition-all duration-200'
-                              aria-label='Duplicate item'
-                            >
-                              <Copy size={16} />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent
-                            side='top'
-                            className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa]'
-                          >
-                            <p>Duplicate item</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <button
+                        onClick={() => {
+                          return handleDuplicateItem(item);
+                        }}
+                        className='p-1.5 rounded-full bg-[#F4F4F5] dark:bg-[#232428] text-[#3F3F46]/60 dark:text-[#8C8C8C] hover:bg-[#E4E4E7] dark:hover:bg-[#2A2A2F] hover:text-[#3F3F46] dark:hover:text-[#fafafa] opacity-0 group-hover:opacity-100 transition-all duration-200'
+                        aria-label='Duplicate item'
+                      >
+                        <Copy size={16} />
+                      </button>
 
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={(e) => {
-                                return handleRemoveItemWithHistory(item.id, e);
-                              }}
-                              className='p-1.5 rounded-full bg-[#F4F4F5] dark:bg-[#232428] text-[#3F3F46]/60 dark:text-[#8C8C8C] hover:bg-[#FDE7EB] dark:hover:bg-[#411D23] hover:text-[#F43F5E] opacity-0 group-hover:opacity-100 transition-all duration-200'
-                              aria-label='Remove item'
-                            >
-                              <X size={16} />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent
-                            side='top'
-                            className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa]'
-                          >
-                            <p>Delete item</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <button
+                        onClick={(e) => {
+                          return handleRemoveItemWithHistory(item.id, e);
+                        }}
+                        className='p-1.5 rounded-full bg-[#F4F4F5] dark:bg-[#232428] text-[#3F3F46]/60 dark:text-[#8C8C8C] hover:bg-[#FDE7EB] dark:hover:bg-[#411D23] hover:text-[#F43F5E] opacity-0 group-hover:opacity-100 transition-all duration-200'
+                        aria-label='Remove item'
+                      >
+                        <X size={16} />
+                      </button>
                     </div>
 
                     <div className='flex justify-between items-start'>
@@ -979,7 +946,7 @@ export default function ItemsSection({
         </div>
       </div>
 
-      {/* Tax Rate Dialog - Replace with the new component */}
+      {/* Tax Rate Dialog */}
       <TaxRateDialog
         isOpen={isNewTaxRateDialogOpen}
         onOpenChange={async (open) => {
