@@ -218,6 +218,8 @@ export default function InvoicePreview({
   });
 
   const invoice = selectedInvoice || response;
+  console.log('🚀 invoice:', invoice);
+
   const payments = paymentData?.paymentHistory || [];
 
   const deletePaymentMutation = useMutation({
@@ -877,7 +879,7 @@ export default function InvoicePreview({
                     <div className='font-semibold text-foreground text-[14px] mb-1'>Send</div>
                     <div className='text-sm text-muted-foreground'>
                       Last sent:{' '}
-                      {invoice.status === 'sent'
+                      {invoice.dateSent
                         ? new Date(invoice.dateSent).toLocaleString()
                         : 'Not sent yet'}{' '}
                       <span className='underline cursor-pointer'>Edit date</span>
