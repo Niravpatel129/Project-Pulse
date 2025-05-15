@@ -86,7 +86,7 @@ export default function InvoicePage() {
         <PaymentSelector
           invoice={invoice}
           onSelectPayment={handleSelectPayment}
-          loading={paymentStatus === 'loading'}
+          loading={isLoading}
         />
       );
     }
