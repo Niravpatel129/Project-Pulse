@@ -102,9 +102,10 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
     <div
       className='bg-background rounded-lg border border-border shadow-sm invoice-paper relative mx-auto'
       style={{
-        width: '8.5in',
+        width: '100%',
+        maxWidth: '8.5in',
         minHeight: '11in',
-        padding: '2.5rem 2rem',
+        padding: '1.5rem 1rem',
         boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
       }}
       onMouseEnter={() => {
@@ -124,6 +125,18 @@ export function InvoicePdf({ invoice, isReadOnly = false }: InvoiceProps) {
             transform: none;
             box-shadow: none;
             border: none;
+          }
+        }
+        
+        @media (max-width: 768px) {
+          .invoice-paper {
+            padding: 1rem 0.75rem;
+          }
+        }
+        
+        @media (max-width: 640px) {
+          .invoice-paper {
+            font-size: 0.875rem;
           }
         }
       `}</style>

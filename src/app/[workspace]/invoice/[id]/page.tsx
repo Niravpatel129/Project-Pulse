@@ -266,56 +266,52 @@ export default function InvoicePage() {
 
       {/* Invoice Preview */}
       <div className='flex flex-col items-center justify-center w-full mt-14'>
-        <div className='rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-8'>
-          <div className='w-full overflow-auto flex justify-center'>
-            <div style={{ transform: 'scale(0.8)', transformOrigin: 'top center' }}>
-              <InvoicePdf
-                invoice={{
-                  _id: invoice._id,
-                  invoiceNumber: invoice.invoiceNumber,
-                  client: {
-                    _id: invoice?.client?._id,
-                    user: {
-                      name: invoice?.client?.user?.name,
-                      email: invoice?.client?.user?.email,
-                    },
-                    phone: invoice?.client?.phone,
-                    address: invoice?.client?.address,
-                    shippingAddress: invoice?.client?.shippingAddress,
-                    contact: invoice?.client?.contact,
-                    taxId: invoice?.client?.taxId,
-                    website: invoice?.client?.website,
-                    isActive: invoice?.client?.isActive,
-                    createdAt: invoice?.client?.createdAt,
-                    updatedAt: invoice?.client?.updatedAt,
-                  },
-                  items: invoice.items.map((item) => {
-                    return {
-                      _id: item._id,
-                      name: item.name,
-                      description: item.description,
-                      quantity: item.quantity,
-                      price: item.price,
-                      discount: item.discount,
-                      tax: item.tax,
-                      taxName: item.taxName,
-                    };
-                  }),
-                  total: invoice.total,
-                  status: invoice.status as any,
-                  dueDate: invoice.dueDate,
-                  notes: invoice.notes,
-                  currency: invoice.currency,
-                  createdBy: {
-                    _id: invoice.createdBy._id,
-                    name: invoice.createdBy.name,
-                  },
-                  createdAt: invoice.createdAt,
-                }}
-                isReadOnly={true}
-              />
-            </div>
-          </div>
+        <div className='w-full max-w-4xl mx-auto'>
+          <InvoicePdf
+            invoice={{
+              _id: invoice._id,
+              invoiceNumber: invoice.invoiceNumber,
+              client: {
+                _id: invoice?.client?._id,
+                user: {
+                  name: invoice?.client?.user?.name,
+                  email: invoice?.client?.user?.email,
+                },
+                phone: invoice?.client?.phone,
+                address: invoice?.client?.address,
+                shippingAddress: invoice?.client?.shippingAddress,
+                contact: invoice?.client?.contact,
+                taxId: invoice?.client?.taxId,
+                website: invoice?.client?.website,
+                isActive: invoice?.client?.isActive,
+                createdAt: invoice?.client?.createdAt,
+                updatedAt: invoice?.client?.updatedAt,
+              },
+              items: invoice.items.map((item) => {
+                return {
+                  _id: item._id,
+                  name: item.name,
+                  description: item.description,
+                  quantity: item.quantity,
+                  price: item.price,
+                  discount: item.discount,
+                  tax: item.tax,
+                  taxName: item.taxName,
+                };
+              }),
+              total: invoice.total,
+              status: invoice.status as any,
+              dueDate: invoice.dueDate,
+              notes: invoice.notes,
+              currency: invoice.currency,
+              createdBy: {
+                _id: invoice.createdBy._id,
+                name: invoice.createdBy.name,
+              },
+              createdAt: invoice.createdAt,
+            }}
+            isReadOnly={true}
+          />
         </div>
       </div>
     </div>
