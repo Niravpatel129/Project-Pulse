@@ -1093,12 +1093,7 @@ export default function InvoicePreview({
             </Button>
           </div>
           <div className='w-full overflow-auto flex justify-center'>
-            <div
-              style={{ transform: 'scale(0.8)', transformOrigin: 'top center' }}
-              ref={invoiceRef}
-            >
-              {invoice && <InvoicePdf invoice={invoice as any} />}
-            </div>
+            <div ref={invoiceRef}>{invoice && <InvoicePdf invoice={invoice as any} />}</div>
           </div>
         </div>
         {/* Receipt Dialog */}
