@@ -202,6 +202,7 @@ export default function InvoicePreview({
     queryKey: ['invoice-payments', invoiceId || selectedInvoice?._id],
     queryFn: async () => {
       const res = await newRequest.get(`/invoices/${invoiceId || selectedInvoice?._id}/payments`);
+      console.log('🚀 res:', res);
       return {
         paymentHistory: res.data.data.paymentHistory,
         currentBalance: res.data.data.currentBalance,
@@ -214,11 +215,10 @@ export default function InvoicePreview({
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
   });
 
   const invoice = selectedInvoice || response;
-  console.log('🚀 invoice:', invoice);
 
   const payments = paymentData?.paymentHistory || [];
 
