@@ -28,6 +28,7 @@ export default function ProjectDialog() {
             forceMount
           >
             <DialogTitle className='sr-only'>Project Management</DialogTitle>
+
             <ProjectManagement
               onClose={() => {
                 return setDialogOpen(false);
