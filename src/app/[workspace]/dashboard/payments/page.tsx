@@ -61,6 +61,7 @@ export default function PaymentsPage() {
   const [showPreview, setShowPreview] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | undefined>();
   const queryClient = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const {
     data: paymentsData,
@@ -114,10 +115,19 @@ export default function PaymentsPage() {
                 size='icon'
                 className='text-[#3F3F46]/60 dark:text-[#8b8b8b] hover:text-[#3F3F46] dark:hover:text-white'
                 onClick={() => {
-                  return queryClient.invalidateQueries();
+                  setIsRefreshing(true);
+                  queryClient.invalidateQueries({ queryKey: ['payments'] });
+                  queryClient.invalidateQueries({ queryKey: ['invoices'] });
+                  queryClient.invalidateQueries({ queryKey: ['clients'] });
+
+                  // Reset the animation after 1 second
+                  setTimeout(() => {
+                    setIsRefreshing(false);
+                  }, 1000);
                 }}
+                disabled={isRefreshing}
               >
-                <FiRefreshCw size={20} />
+                <FiRefreshCw size={20} className={isRefreshing ? 'animate-spin' : ''} />
               </Button>
             </div>
           </div>

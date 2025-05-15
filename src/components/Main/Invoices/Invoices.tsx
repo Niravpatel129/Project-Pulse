@@ -20,6 +20,7 @@ interface InvoicesProps {
   onPreviewClick?: (invoice: any) => void;
   isPreviewOpen?: boolean;
   showStarredOnly?: boolean;
+  onRefresh?: () => void;
 }
 
 export default function Invoices({
@@ -27,10 +28,12 @@ export default function Invoices({
   onPreviewClick,
   isPreviewOpen,
   showStarredOnly = false,
+  onRefresh,
 }: InvoicesProps) {
   const { toggleSidebar } = useSidebar();
   const queryClient = useQueryClient();
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Fetch notes for each invoice
   const { data: notesMap = {} } = useQuery({
@@ -141,10 +144,19 @@ export default function Invoices({
             size='icon'
             className='text-[#3F3F46]/60 dark:text-[#8b8b8b] hover:text-[#3F3F46] dark:hover:text-white'
             onClick={() => {
-              return queryClient.invalidateQueries({ queryKey: ['invoices'] });
+              setIsRefreshing(true);
+              queryClient.invalidateQueries({ queryKey: ['invoices'] });
+              queryClient.invalidateQueries({ queryKey: ['invoices-notes'] });
+              if (onRefresh) onRefresh();
+
+              // Reset the animation after 1 second
+              setTimeout(() => {
+                setIsRefreshing(false);
+              }, 1000);
             }}
+            disabled={isRefreshing}
           >
-            <FiRefreshCw size={20} />
+            <FiRefreshCw size={20} className={isRefreshing ? 'animate-spin' : ''} />
           </Button>
         </div>
       </motion.div>
