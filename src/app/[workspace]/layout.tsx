@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const headersList = await headers();
   const workspaceParams = await params;
   const host = headersList.get('host') || '';
-  const workspace = workspaceParams.workspace;
+  const workspace = workspaceParams?.workspace;
 
   try {
     const response = await newRequest.get(`/workspaces/logo`, {
@@ -27,25 +27,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const data = await response.data.data;
     const logoUrl = data.logo;
+    const workspaceName = data.name || workspace;
 
     return {
       title: {
-        template: `%s - ${workspace}`,
-        default: `${workspace} - Pulse`,
+        template: `%s - ${workspaceName}`,
+        default: `${workspaceName}`,
       },
-      description: `Manage your ${workspace} workspace with Pulse - Streamline workflows and collaborate effectively.`,
-      applicationName: `${workspace} - Pulse`,
-      manifest: `/api/manifest/${workspace}`,
+      description: `Manage your ${workspaceName} workspace with Pulse - Streamline workflows and collaborate effectively.`,
+      applicationName: `${workspaceName}`,
+      manifest: `/api/manifest/${workspaceName}`,
       icons: {
         icon: logoUrl,
         apple: logoUrl,
         shortcut: logoUrl,
       },
       openGraph: {
-        title: `${workspace} - Pulse`,
-        description: `Manage your ${workspace} workspace with Pulse - Streamline workflows and collaborate effectively.`,
-        url: `https://${workspace}.pulse-app.com`,
-        siteName: `${workspace} - Pulse`,
+        title: `${workspaceName}`,
+        description: `Manage your ${workspaceName} workspace with Pulse - Streamline workflows and collaborate effectively.`,
+        url: `https://${workspaceName}.hourblock.com`,
+        siteName: `${workspaceName}`,
         locale: 'en_US',
         type: 'website',
         images: [
@@ -53,14 +54,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             url: logoUrl,
             width: 1200,
             height: 630,
-            alt: `${workspace} - Pulse Workspace`,
+            alt: `${workspaceName} Workspace`,
           },
         ],
       },
       twitter: {
         card: 'summary_large_image',
-        title: `${workspace} - Pulse`,
-        description: `Manage your ${workspace} workspace with Pulse - Streamline workflows and collaborate effectively.`,
+        title: `${workspaceName}`,
+        description: `Manage your ${workspaceName} workspace with Pulse - Streamline workflows and collaborate effectively.`,
         creator: '@PulseApp',
         images: [logoUrl],
       },
@@ -70,10 +71,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: {
         template: `%s - ${workspace}`,
-        default: `${workspace} - Pulse`,
+        default: `${workspace}`,
       },
       description: `Manage your ${workspace} workspace with Pulse - Streamline workflows and collaborate effectively.`,
-      applicationName: `${workspace} - Pulse`,
+      applicationName: `${workspace}`,
       manifest: `/api/manifest/${workspace}`,
       icons: {
         icon: '/favicon.ico',

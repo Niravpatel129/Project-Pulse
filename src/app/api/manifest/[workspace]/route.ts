@@ -8,7 +8,7 @@ export function GET(request, { params }) {
 
   // Generate a dynamic manifest for this specific workspace
   const manifest = {
-    name: `${workspace} - Pulse App`,
+    name: `${workspace}  App`,
     short_name: workspace,
     description: `${workspace} workspace in Pulse Application`,
     start_url: `/`,

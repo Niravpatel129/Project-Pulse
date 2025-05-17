@@ -64,7 +64,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const themeColor = isSubdomain
     ? workspaceColors[subdomain as keyof typeof workspaceColors] || workspaceColors.default
     : '#0066FF';
-  const appName = isSubdomain ? `${subdomain} - Pulse App` : 'Pulse';
+  const appName = isSubdomain ? `${subdomain}` : 'Pulse';
 
   return {
     title: {
