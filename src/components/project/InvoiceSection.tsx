@@ -550,29 +550,6 @@ export default function InvoiceSection({
               <AccordionContent>
                 <div className='p-1'>
                   <div className='space-y-6'>
-                    {/* Workspace Tax Settings */}
-                    <div>
-                      <div>
-                        <Label
-                          htmlFor='tax-id'
-                          className='text-xs text-muted-foreground mb-1 block'
-                        >
-                          Tax ID / VAT Number
-                        </Label>
-                        <Input
-                          id='tax-id'
-                          value={workspaceTaxSettings.taxId || ''}
-                          onChange={(e) => {
-                            handleWorkspaceTaxSettingsChange({
-                              taxId: e.target.value,
-                            });
-                          }}
-                          className='w-full bg-background border-input rounded-lg px-3 py-2 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors'
-                          placeholder='e.g. VAT123456789'
-                        />
-                      </div>
-                    </div>
-
                     {/* Project Settings */}
                     <div className='space-y-4'>
                       {/* Due Date */}

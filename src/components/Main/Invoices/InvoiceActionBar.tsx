@@ -1,3 +1,4 @@
+import FileUploadManagerModal from '@/components/ProjectPage/FileComponents/FileUploadManagerModal';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +21,7 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiCreditCard,
+  FiPaperclip,
   FiStar,
   FiTrash2,
   FiX,
@@ -32,6 +34,14 @@ interface InvoiceActionBarProps {
   invoice?: {
     _id: string;
     starred: boolean;
+    teamNotesAttachments?: Array<{
+      id: string;
+      name: string;
+      url: string;
+      type: string;
+      size: string;
+      _id: string;
+    }>;
   };
   onEditInvoice?: () => void;
 }
@@ -42,7 +52,7 @@ export default function InvoiceActionBar({
   invoice,
   onEditInvoice,
 }: InvoiceActionBarProps) {
-  console.log('🚀 invoice:', invoice);
+  console.log('🚀 invoice.teamNotesAttachments:', invoice?.teamNotesAttachments);
   const queryClient = useQueryClient();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isStarred, setIsStarred] = useState(invoice?.starred || false);
@@ -225,6 +235,45 @@ export default function InvoiceActionBar({
                 </TooltipContent>
                 <PopoverContent className='w-[350px] p-0 bg-card text-foreground rounded-lg shadow-lg border-border'>
                   <NotesPopoverContent invoiceId={invoiceId} initialNotes={notes} />
+                </PopoverContent>
+              </Popover>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant='default'
+                      size='icon'
+                      className='text-muted-foreground bg-secondary hover:bg-secondary/80 h-8 w-8 relative overflow-visible'
+                      aria-label='Attachments'
+                    >
+                      <FiPaperclip
+                        size={16}
+                        className={`${
+                          invoice?.teamNotesAttachments?.length > 0
+                            ? 'text-[#f5a623]'
+                            : 'text-muted-foreground'
+                        }`}
+                      />
+                      {invoice?.teamNotesAttachments?.length > 0 && (
+                        <span className='absolute -top-1 -right-1 bg-background text-foreground text-xs rounded-full w-4 h-4 flex items-center justify-center'>
+                          {invoice.teamNotesAttachments.length}
+                        </span>
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                </PopoverTrigger>
+                <TooltipContent>
+                  <p>Attachments</p>
+                </TooltipContent>
+                <PopoverContent className='w-[350px] p-0 bg-card text-foreground rounded-lg shadow-lg border-border'>
+                  <AttachmentsPopoverContent
+                    invoiceId={invoiceId}
+                    attachments={invoice?.teamNotesAttachments || []}
+                  />
                 </PopoverContent>
               </Popover>
             </Tooltip>
@@ -672,6 +721,156 @@ function NotesPopoverContent({
       >
         <span className='text-xl'>＋</span> Add a note
       </Button>
+    </div>
+  );
+}
+
+interface Attachment {
+  id: string;
+  name: string;
+  url: string;
+  type: string;
+  size: string;
+  _id: string;
+}
+
+function AttachmentsPopoverContent({
+  invoiceId,
+  attachments,
+}: {
+  invoiceId: string;
+  attachments: Attachment[];
+}) {
+  const [isUploading, setIsUploading] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const handleAddAttachment = async (file: any) => {
+    try {
+      await newRequest.post(`/invoices/${invoiceId}/attachments`, {
+        fileId: file._id,
+        name: file.originalName,
+        url: file.downloadURL,
+        type: file.contentType,
+        size: formatFileSize(file.size),
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] });
+      toast.success('Attachment added successfully');
+      setIsUploadModalOpen(false);
+    } catch (error) {
+      toast.error('Failed to add attachment');
+      console.error('Error adding attachment:', error);
+    }
+  };
+
+  const handleDeleteAttachment = async (attachmentId: string) => {
+    try {
+      await newRequest.delete(`/invoices/${invoiceId}/attachments/${attachmentId}`);
+      queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] });
+      toast.success('Attachment deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete attachment');
+      console.error('Error deleting attachment:', error);
+    }
+  };
+
+  const formatFileSize = (size: number): string => {
+    if (size === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(size) / Math.log(k));
+    return parseFloat((size / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) return '🖼️';
+    if (type.startsWith('application/pdf')) return '📄';
+    if (type.startsWith('text/')) return '📝';
+    return '📎';
+  };
+
+  return (
+    <div className='flex flex-col h-[400px]'>
+      {/* Header */}
+      <div className='flex items-center gap-2 px-4 pt-4 pb-2'>
+        <span className='text-lg font-medium flex items-center gap-2'>Attachments</span>
+        <span className='ml-2 bg-secondary text-xs px-2 py-0.5 rounded-full'>
+          {attachments.length}
+        </span>
+      </div>
+
+      {/* Attachments list */}
+      <div className='flex-1 overflow-y-auto px-4 pb-2'>
+        {attachments.length === 0 ? (
+          <div className='flex flex-col items-center justify-center py-10'>
+            <div className='text-4xl mb-4'>📎</div>
+            <div className='text-lg font-medium mb-2'>No attachments yet</div>
+            <div className='text-muted-foreground text-center mb-6 text-sm'>
+              Add files to keep track of important documents.
+            </div>
+          </div>
+        ) : (
+          attachments.map((attachment) => {
+            return (
+              <div key={attachment._id} className='bg-secondary rounded-lg p-3 mb-3'>
+                <div className='flex items-center gap-3'>
+                  <span className='text-2xl'>{getFileIcon(attachment.type)}</span>
+                  <div className='flex-1 min-w-0'>
+                    <div className='font-medium text-sm truncate'>{attachment.name}</div>
+                    <div className='text-xs text-muted-foreground'>{attachment.size}</div>
+                  </div>
+                  <div className='flex items-center gap-2'>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      className='text-muted-foreground hover:text-foreground'
+                      onClick={() => {
+                        return window.open(attachment.url, '_blank');
+                      }}
+                    >
+                      View
+                    </Button>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      className='text-destructive hover:text-destructive/80'
+                      onClick={() => {
+                        return handleDeleteAttachment(attachment._id);
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Upload button */}
+      <div className='p-4 border-t border-border bg-card'>
+        <Button
+          variant='outline'
+          className='w-full bg-secondary text-foreground border border-border hover:bg-secondary/80 flex items-center gap-2 justify-center'
+          onClick={() => {
+            return setIsUploadModalOpen(true);
+          }}
+        >
+          <span className='text-lg'>＋</span> Add attachment
+        </Button>
+      </div>
+
+      {/* File Upload Modal */}
+      <FileUploadManagerModal
+        isOpen={isUploadModalOpen}
+        onClose={() => {
+          return setIsUploadModalOpen(false);
+        }}
+        handleAddFileToProject={handleAddAttachment}
+        initialFiles={[]}
+      />
     </div>
   );
 }
