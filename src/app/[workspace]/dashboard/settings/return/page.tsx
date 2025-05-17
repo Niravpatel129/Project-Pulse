@@ -33,7 +33,7 @@ export default function StripeReturn() {
   // Show loading state
   if (isLoading) {
     return (
-      <div className='min-h-screen bg-background flex items-center justify-center'>
+      <div className='min-h-screen bg-background flex items-center justify-center w-full'>
         <div className='text-center space-y-4'>
           <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto'></div>
           <p className='text-muted-foreground'>Verifying your Stripe account...</p>
@@ -44,7 +44,7 @@ export default function StripeReturn() {
 
   // Show success or error state
   return (
-    <div className='min-h-screen bg-background flex items-center justify-center'>
+    <div className='min-h-screen bg-background flex items-center justify-center w-full'>
       <div className='max-w-md w-full mx-auto p-6'>
         <div className='text-center space-y-4'>
           {stripeStatus?.detailsSubmitted ? (
