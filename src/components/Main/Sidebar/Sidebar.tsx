@@ -12,6 +12,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { useAuth } from '@/contexts/AuthContext';
 import { Moon, PencilIcon, Send, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
@@ -68,6 +69,7 @@ export default function AppSidebar() {
   const { theme, setTheme } = useTheme();
   const isTablet = useMediaQuery('(max-width: 768px)');
   const [mounted, setMounted] = useState(false);
+  const { user } = useAuth();
 
   // Set mounted state after hydration
   useEffect(() => {
@@ -85,6 +87,15 @@ export default function AppSidebar() {
   if (!mounted) {
     return null;
   }
+
+  const getInitials = (name?: string) => {
+    if (!name) return '';
+    const nameParts = name.split(' ');
+    if (nameParts.length > 1) {
+      return nameParts[0][0] + nameParts[1][0];
+    }
+    return name.substring(0, 2);
+  };
 
   const navigation = [
     {
@@ -135,14 +146,12 @@ export default function AppSidebar() {
             <div className='flex items-center space-x-3 px-2 py-1'>
               <Avatar className='h-8 w-8 bg-[#E4E4E7] dark:bg-[#373737] rounded-sm'>
                 <AvatarFallback className='bg-[#E4E4E7] dark:bg-[#373737] text-[#3F3F46] dark:text-[#9f9f9f] text-xs font-semibold'>
-                  NP
+                  {user ? getInitials(user.name) : ''}
                 </AvatarFallback>
               </Avatar>
               <div className='group-data-[state=collapsed]:hidden'>
-                <p className='text-sm font-medium text-[#3F3F46] dark:text-white'>Nirav</p>
-                <p className='text-xs text-[#3F3F46]/60 dark:text-white/60'>
-                  niravpatelp129@gmail.com
-                </p>
+                <p className='text-sm font-medium text-[#3F3F46] dark:text-white'>{user?.name}</p>
+                <p className='text-xs text-[#3F3F46]/60 dark:text-white/60'>{user?.email}</p>
               </div>
             </div>
           </SidebarHeader>
