@@ -754,7 +754,7 @@ function AttachmentsPopoverContent({
         size: formatFileSize(file.size),
       });
 
-      queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] });
+      queryClient.invalidateQueries();
       toast.success('Attachment added successfully');
       setIsUploadModalOpen(false);
     } catch (error) {
@@ -766,7 +766,7 @@ function AttachmentsPopoverContent({
   const handleDeleteAttachment = async (attachmentId: string) => {
     try {
       await newRequest.delete(`/invoices/${invoiceId}/attachments/${attachmentId}`);
-      queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] });
+      queryClient.invalidateQueries();
       toast.success('Attachment deleted successfully');
     } catch (error) {
       toast.error('Failed to delete attachment');
