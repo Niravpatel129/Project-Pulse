@@ -52,7 +52,6 @@ export default function InvoiceActionBar({
   invoice,
   onEditInvoice,
 }: InvoiceActionBarProps) {
-  console.log('🚀 invoice.teamNotesAttachments:', invoice?.teamNotesAttachments);
   const queryClient = useQueryClient();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isStarred, setIsStarred] = useState(invoice?.starred || false);
