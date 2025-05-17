@@ -20,6 +20,7 @@ import { format } from 'date-fns';
 import { CalendarIcon, File, Paperclip, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import FileUploadManagerModal from '../ProjectPage/FileComponents/FileUploadManagerModal';
 import SectionFooter from './SectionFooter';
 import { Client, InvoiceSettings, Item } from './types';
 
@@ -133,13 +134,11 @@ function StatefulTextarea({
     }>,
   ) => void;
 }) {
-  // Internal state that won't cause parent re-renders
   const [value, setValue] = useState(initialValue);
+  const [isFileUploadOpen, setIsFileUploadOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const firstRender = useRef(true);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Only update local state if the initialValue prop changes
   useEffect(() => {
     if (!firstRender.current) {
       setValue(initialValue);
@@ -149,35 +148,33 @@ function StatefulTextarea({
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
-    // Only update local state during typing, don't trigger parent updates
     setValue(newValue);
   };
 
-  // Only trigger parent updates when input loses focus
   const handleBlur = () => {
     onValueChange(value);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0 && onAttachmentsChange) {
-      const files = Array.from(e.target.files);
-      const newAttachments = files.map((file) => {
-        return {
-          id: `attachment-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-          name: file.name,
-          url: URL.createObjectURL(file),
-          size: formatFileSize(file.size),
-          type: file.type,
-        };
-      });
-
-      onAttachmentsChange([...(attachments || []), ...newAttachments]);
-
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+  const handleAddFileToProject = (file: any) => {
+    if (onAttachmentsChange) {
+      const newAttachment = {
+        id: file._id,
+        name: file.originalName,
+        url: file.downloadURL,
+        type: file.contentType,
+        size: formatFileSize(file.size),
+      };
+      onAttachmentsChange([...(attachments || []), newAttachment]);
     }
+    setIsFileUploadOpen(false);
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   const removeAttachment = (id: string) => {
@@ -188,14 +185,6 @@ function StatefulTextarea({
         }),
       );
     }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
@@ -217,21 +206,13 @@ function StatefulTextarea({
 
       {!hideAttachments && (
         <>
-          {/* File attachment section */}
           <div className='mt-2'>
-            <input
-              type='file'
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              className='hidden'
-              multiple
-            />
             <Button
               type='button'
               variant='outline'
               size='sm'
               onClick={() => {
-                return fileInputRef.current?.click();
+                return setIsFileUploadOpen(true);
               }}
               className='mt-2'
             >
@@ -239,7 +220,6 @@ function StatefulTextarea({
               Attach Files
             </Button>
 
-            {/* Display attachments */}
             {attachments && attachments.length > 0 && (
               <div className='mt-2 space-y-2'>
                 {attachments.map((attachment) => {
@@ -273,6 +253,16 @@ function StatefulTextarea({
               </div>
             )}
           </div>
+
+          <FileUploadManagerModal
+            isOpen={isFileUploadOpen}
+            onClose={() => {
+              return setIsFileUploadOpen(false);
+            }}
+            handleAddFileToProject={handleAddFileToProject}
+            initialFiles={attachments}
+            onDeleteFile={removeAttachment}
+          />
         </>
       )}
     </div>
@@ -346,6 +336,7 @@ export default function InvoiceSection({
 }: InvoiceSectionProps) {
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
   const [openAccordionItems, setOpenAccordionItems] = useState<string[]>(['notes']);
+  const [isFileUploadOpen, setIsFileUploadOpen] = useState(false);
   const queryClient = useQueryClient();
 
   // Initialize dueDate from existingInvoice if available

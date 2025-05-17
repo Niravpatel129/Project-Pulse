@@ -13,7 +13,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { newRequest } from '@/utils/newRequest';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { BsStarFill } from 'react-icons/bs';
 import {
@@ -43,8 +42,8 @@ export default function InvoiceActionBar({
   invoice,
   onEditInvoice,
 }: InvoiceActionBarProps) {
+  console.log('🚀 invoice:', invoice);
   const queryClient = useQueryClient();
-  const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isStarred, setIsStarred] = useState(invoice?.starred || false);
 
