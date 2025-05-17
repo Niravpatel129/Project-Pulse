@@ -345,7 +345,7 @@ export default function InvoiceSection({
   onSectionChange,
 }: InvoiceSectionProps) {
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
-  const [openAccordionItems, setOpenAccordionItems] = useState<string[]>(['client-info']);
+  const [openAccordionItems, setOpenAccordionItems] = useState<string[]>(['notes']);
   const queryClient = useQueryClient();
 
   // Initialize dueDate from existingInvoice if available
