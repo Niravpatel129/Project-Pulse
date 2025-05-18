@@ -1,7 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { Calendar, Check, Search, User } from 'lucide-react';
+import { newRequest } from '@/utils/newRequest';
+import { Calendar, Check, Mail, Search, User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 // Interface for email objects
@@ -30,6 +31,9 @@ export function EmailPickerDialog({
 }: EmailPickerDialogProps) {
   const [emailSearchQuery, setEmailSearchQuery] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [isGmailConnected, setIsGmailConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [emails, setEmails] = useState<EmailItem[]>([]);
 
   // Mock emails data for development
   const MOCK_EMAILS: EmailItem[] =
@@ -116,8 +120,119 @@ export function EmailPickerDialog({
           },
         ];
 
+  // Check Gmail connection status when dialog opens
+  useEffect(() => {
+    if (open) {
+      checkGmailStatus();
+    }
+  }, [open]);
+
+  // Fetch Gmail connection status
+  const checkGmailStatus = async () => {
+    try {
+      const response = await newRequest.get('/gmail/status');
+      setIsGmailConnected(response.data.connected);
+
+      if (response.data.connected) {
+        fetchEmails();
+      }
+    } catch (error) {
+      console.error('Failed to check Gmail status:', error);
+      setIsGmailConnected(false);
+    }
+  };
+
+  // Fetch emails from Gmail
+  const fetchEmails = async () => {
+    try {
+      const response = await newRequest.get('/gmail/emails');
+      if (response.data.emails) {
+        setEmails(response.data.emails);
+      }
+    } catch (error) {
+      console.error('Failed to fetch emails:', error);
+      // Fall back to mock emails if API fails
+      setEmails(MOCK_EMAILS);
+    }
+  };
+
+  // Handle Gmail connection
+  const handleConnectGmail = async () => {
+    setIsLoading(true);
+    try {
+      // Get the OAuth URL
+      const response = await newRequest.get('/gmail/auth-url');
+
+      // Create authorization URL with required parameters if not provided by backend
+      let authUrl = response.data.authUrl;
+
+      if (authUrl) {
+        // Ensure the URL has the required response_type parameter
+        const url = new URL(authUrl);
+        if (!url.searchParams.has('response_type')) {
+          url.searchParams.append('response_type', 'code');
+        }
+
+        // Add state parameter to identify this as a gmail request
+        if (!url.searchParams.has('state')) {
+          url.searchParams.append('state', 'gmail_auth');
+        }
+
+        authUrl = url.toString();
+
+        // Create a popup window for authentication
+        const width = 600;
+        const height = 600;
+        const left = window.screenX + (window.outerWidth - width) / 2;
+        const top = window.screenY + (window.outerHeight - height) / 2;
+
+        const popup = window.open(
+          authUrl,
+          'gmailAuth',
+          `width=${width},height=${height},left=${left},top=${top}`,
+        );
+
+        // Set up message listener for communication from the popup
+        const messageHandler = (event: MessageEvent) => {
+          // Validate origin for security
+          if (event.origin !== window.location.origin) return;
+
+          // Handle the auth success message
+          if (event.data?.type === 'GMAIL_AUTH_SUCCESS') {
+            window.removeEventListener('message', messageHandler);
+            setIsLoading(false);
+            checkGmailStatus();
+          }
+
+          // Handle auth error message
+          if (event.data?.type === 'GMAIL_AUTH_ERROR') {
+            window.removeEventListener('message', messageHandler);
+            setIsLoading(false);
+            console.error('Gmail auth error:', event.data.error);
+          }
+        };
+
+        window.addEventListener('message', messageHandler);
+
+        // Also check if popup was closed manually
+        const checkPopupClosed = setInterval(() => {
+          if (popup?.closed) {
+            clearInterval(checkPopupClosed);
+            window.removeEventListener('message', messageHandler);
+            setIsLoading(false);
+          }
+        }, 500);
+      } else {
+        throw new Error('No authorization URL provided');
+      }
+    } catch (error) {
+      console.error('Failed to connect Gmail:', error);
+      setIsLoading(false);
+    }
+  };
+
   // Filter emails based on search query
-  const filteredEmails = MOCK_EMAILS.filter((email) => {
+  const filteredEmails = (emails.length > 0 ? emails : MOCK_EMAILS).filter((email) => {
     if (!emailSearchQuery) return true;
 
     const search = emailSearchQuery.toLowerCase();
@@ -157,7 +272,7 @@ export function EmailPickerDialog({
 
   // Focus the search input when the dialog opens
   useEffect(() => {
-    if (open) {
+    if (open && isGmailConnected) {
       const timer = setTimeout(() => {
         searchInputRef.current?.focus();
       }, 100);
@@ -166,31 +281,50 @@ export function EmailPickerDialog({
         return clearTimeout(timer);
       };
     }
-  }, [open]);
+  }, [open, isGmailConnected]);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className='sm:max-w-[625px] p-0 gap-0 bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428]'>
         <div className='p-4 border-b border-[#E4E4E7] dark:border-[#232428]'>
           <DialogTitle className='text-lg font-medium text-[#3F3F46] dark:text-[#fafafa]'>
-            Select Emails
+            {isGmailConnected ? 'Select Emails' : 'Connect Gmail'}
           </DialogTitle>
-          <div className='relative mt-3'>
-            <Search className='absolute left-2 top-2.5 h-4 w-4 text-[#3F3F46]/60 dark:text-[#8C8C8C]' />
-            <input
-              ref={searchInputRef}
-              className='w-full border border-[#E4E4E7] dark:border-[#232428] rounded-md py-2 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#8b5df8]/20 focus:border-[#8b5df8] bg-white dark:bg-[#141414] text-[#3F3F46] dark:text-[#fafafa]'
-              placeholder='Search emails...'
-              value={emailSearchQuery}
-              onChange={(e) => {
-                return setEmailSearchQuery(e.target.value);
-              }}
-              autoFocus
-            />
-          </div>
+          {isGmailConnected && (
+            <div className='relative mt-3'>
+              <Search className='absolute left-2 top-2.5 h-4 w-4 text-[#3F3F46]/60 dark:text-[#8C8C8C]' />
+              <input
+                ref={searchInputRef}
+                className='w-full border border-[#E4E4E7] dark:border-[#232428] rounded-md py-2 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#8b5df8]/20 focus:border-[#8b5df8] bg-white dark:bg-[#141414] text-[#3F3F46] dark:text-[#fafafa]'
+                placeholder='Search emails...'
+                value={emailSearchQuery}
+                onChange={(e) => {
+                  return setEmailSearchQuery(e.target.value);
+                }}
+                autoFocus
+              />
+            </div>
+          )}
         </div>
         <div className='overflow-y-auto max-h-[350px] p-0'>
-          {filteredEmails.length === 0 ? (
+          {!isGmailConnected ? (
+            <div className='p-8 flex flex-col items-center justify-center'>
+              <Mail className='h-12 w-12 text-[#8b5df8] mb-4' />
+              <h3 className='text-base font-medium text-[#3F3F46] dark:text-[#fafafa] mb-2'>
+                Gmail Connection Required
+              </h3>
+              <p className='text-sm text-[#3F3F46]/60 dark:text-[#8C8C8C] text-center mb-4'>
+                Connect your Gmail account to select emails for your projects.
+              </p>
+              <Button
+                onClick={handleConnectGmail}
+                className='bg-[#8b5df8] hover:bg-[#7c3aed]'
+                disabled={isLoading}
+              >
+                {isLoading ? 'Connecting...' : 'Connect Gmail Account'}
+              </Button>
+            </div>
+          ) : filteredEmails.length === 0 ? (
             <div className='p-4 text-center text-[#3F3F46]/60 dark:text-[#8C8C8C] text-sm'>
               No emails found.
             </div>
@@ -251,15 +385,17 @@ export function EmailPickerDialog({
           >
             Cancel
           </Button>
-          <Button
-            size='sm'
-            onClick={() => {
-              return onOpenChange(false);
-            }}
-            className='bg-[#8b5df8] hover:bg-[#7c3aed]'
-          >
-            Done
-          </Button>
+          {isGmailConnected && (
+            <Button
+              size='sm'
+              onClick={() => {
+                return onOpenChange(false);
+              }}
+              className='bg-[#8b5df8] hover:bg-[#7c3aed]'
+            >
+              Done
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

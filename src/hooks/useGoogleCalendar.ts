@@ -83,6 +83,7 @@ export function useGoogleCalendar() {
 
       const REDIRECT_URI = `${window.location.origin}/sync/google/callback`;
 
+      console.log('🚀 REDIRECT_URI:', REDIRECT_URI);
       const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
       authUrl.searchParams.append('client_id', GOOGLE_CLIENT_ID || '');
       authUrl.searchParams.append('redirect_uri', REDIRECT_URI);
