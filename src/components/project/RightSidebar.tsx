@@ -8,10 +8,11 @@ import { newRequest } from '@/utils/newRequest';
 import { DialogTitle } from '@radix-ui/react-dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { FileText, Info, Mail, Paperclip, Send, Sparkles } from 'lucide-react';
+import { FileText, Info, Mail, Paperclip, Send, Sparkles, X } from 'lucide-react';
 import Image from 'next/image';
 import React, { useEffect, useRef, useState } from 'react';
 import { AIContextDialog } from './AIContextDialog';
+import { EmailItem, EmailPickerDialog } from './EmailPickerDialog';
 import { LineItemCard } from './LineItemCard';
 
 interface LineItem {
@@ -83,7 +84,7 @@ export default function RightSidebar({
   ]);
   const [input, setInput] = useState('');
   const [images, setImages] = useState<string[]>([]);
-  const [selectedEmails, setSelectedEmails] = useState<any[]>([]);
+  const [selectedEmails, setSelectedEmails] = useState<EmailItem[]>([]);
   const [isEmailPickerOpen, setIsEmailPickerOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -260,7 +261,7 @@ export default function RightSidebar({
       const response = await newRequest.post('/clients', clientData);
       queryClient.invalidateQueries({ queryKey: ['clients'] });
       const clientId = response.data.data;
-      console.log('🚀 clientId:', clientId);
+      console.log('�� clientId:', clientId);
       setSelectedClient(clientId);
       setMessages((prev) => {
         return [
@@ -322,30 +323,23 @@ export default function RightSidebar({
   };
 
   // Handle selecting emails from Gmail
-  const handleSelectEmails = async () => {
-    // This will be connected to backend implementation later
-    setIsEmailPickerOpen(true);
+  const handleSelectEmail = (email: EmailItem) => {
+    // Check if email is already selected
+    const isAlreadySelected = selectedEmails.some((e) => {
+      // unselect the email if it is already selected
+      return e.id === email.id;
+    });
 
-    // Mock implementation for now - will be replaced with actual Gmail API integration
-    // When backend is implemented, this will call the Gmail API to fetch emails
-    try {
-      // Mock data for development
-      const mockEmail = {
-        id: 'email-' + Date.now(),
-        subject: 'Sample Gmail Email',
-        sender: 'example@gmail.com',
-        snippet: 'This is a sample email preview...',
-        date: new Date().toISOString(),
-      };
-
+    if (!isAlreadySelected) {
       setSelectedEmails((prev) => {
-        return [...prev, mockEmail];
+        return [...prev, email];
       });
-      setIsEmailPickerOpen(false);
-    } catch (error) {
-      console.error('Error selecting emails:', error);
-      setIsEmailPickerOpen(false);
     }
+  };
+
+  // Focus the search input when popover opens
+  const handleEmailPickerOpenChange = (open: boolean) => {
+    setIsEmailPickerOpen(open);
   };
 
   return (
@@ -809,26 +803,7 @@ export default function RightSidebar({
                       }}
                       aria-label='Remove email'
                     >
-                      <svg
-                        width='10'
-                        height='10'
-                        viewBox='0 0 16 16'
-                        fill='none'
-                        xmlns='http://www.w3.org/2000/svg'
-                      >
-                        <path
-                          d='M4 4L12 12'
-                          stroke='currentColor'
-                          strokeWidth='2'
-                          strokeLinecap='round'
-                        />
-                        <path
-                          d='M12 4L4 12'
-                          stroke='currentColor'
-                          strokeWidth='2'
-                          strokeLinecap='round'
-                        />
-                      </svg>
+                      <X className='w-3 h-3' />
                     </button>
                   </div>
                 );
@@ -854,24 +829,24 @@ export default function RightSidebar({
 
             {/* Attachment buttons */}
             <div className='absolute bottom-3 left-3 flex gap-2'>
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      onClick={handleSelectEmails}
-                      disabled={chatMutation.isPending}
-                      variant='ghost'
-                      size='icon'
-                      className='h-6 w-6 text-[#3F3F46]/60 dark:text-[#8C8C8C] hover:text-[#8b5df8] hover:bg-transparent'
-                    >
-                      <Mail className='w-4 h-4' />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428] text-[#3F3F46] dark:text-[#fafafa]'>
-                    <p className='text-xs'>Add Email from Gmail</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <EmailPickerDialog
+                open={isEmailPickerOpen}
+                onOpenChange={handleEmailPickerOpenChange}
+                onSelectEmail={handleSelectEmail}
+                selectedEmails={selectedEmails}
+              />
+
+              <Button
+                disabled={chatMutation.isPending}
+                variant='ghost'
+                size='icon'
+                className='h-6 w-6 text-[#3F3F46]/60 dark:text-[#8C8C8C] hover:text-[#8b5df8] hover:bg-transparent cursor-pointer'
+                onClick={() => {
+                  return setIsEmailPickerOpen(true);
+                }}
+              >
+                <Mail className='w-4 h-4' />
+              </Button>
 
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
@@ -986,37 +961,6 @@ export default function RightSidebar({
 
       {/* Add the AIContextDialog */}
       <AIContextDialog open={isContextDialogOpen} onOpenChange={setIsContextDialogOpen} />
-
-      {/* Email Picker Dialog (placeholder for Gmail integration) */}
-      <Dialog open={isEmailPickerOpen} onOpenChange={setIsEmailPickerOpen}>
-        <DialogContent className='bg-white dark:bg-[#141414] border-[#E4E4E7] dark:border-[#232428]'>
-          <DialogTitle>Select Email from Gmail</DialogTitle>
-          <div className='py-4'>
-            <p className='text-sm text-[#3F3F46]/60 dark:text-[#8C8C8C] mb-4'>
-              This feature requires backend integration with Gmail API. For now, a mock email will
-              be added when you click the button below.
-            </p>
-            <Button
-              className='w-full bg-[#8b5df8] hover:bg-[#7c3aed]'
-              onClick={() => {
-                const mockEmail = {
-                  id: 'email-' + Date.now(),
-                  subject: 'Sample Gmail Email',
-                  sender: 'example@gmail.com',
-                  snippet: 'This is a sample email preview...',
-                  date: new Date().toISOString(),
-                };
-                setSelectedEmails((prev) => {
-                  return [...prev, mockEmail];
-                });
-                setIsEmailPickerOpen(false);
-              }}
-            >
-              Add Sample Email
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
